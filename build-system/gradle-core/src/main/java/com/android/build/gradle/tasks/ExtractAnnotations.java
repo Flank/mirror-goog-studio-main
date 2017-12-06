@@ -248,11 +248,14 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             // mapped buffers.
             try (Stream<String> lines = Files.asCharSource(file, UTF_8).lines()) {
                 return lines.anyMatch(
-                        line -> line.contains("Def") && (
-                                line.contains(INT_DEF_ANNOTATION) ||
-                                        line.contains(LONG_DEF_ANNOTATION) ||
-                                        line.contains(STRING_DEF_ANNOTATION))
-                );
+                        line ->
+                                line.contains("Def")
+                                        && (line.contains(INT_DEF_ANNOTATION.oldName())
+                                                || line.contains(INT_DEF_ANNOTATION.newName())
+                                                || line.contains(LONG_DEF_ANNOTATION.oldName())
+                                                || line.contains(LONG_DEF_ANNOTATION.newName())
+                                                || line.contains(STRING_DEF_ANNOTATION.oldName())
+                                                || line.contains(STRING_DEF_ANNOTATION.newName())));
             }
         } catch (IOException e) {
             return false;

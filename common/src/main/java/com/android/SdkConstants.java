@@ -16,6 +16,7 @@
 
 package com.android;
 
+import com.android.support.AndroidxName;
 import java.io.File;
 
 /**
@@ -718,7 +719,8 @@ public final class SdkConstants {
     public static final String CLASS_PARCELABLE = "android.os.Parcelable"; //$NON-NLS-1$
     public static final String CLASS_PARCEL = "android.os.Parcel"; //$NON-NLS-1$
     public static final String CLASS_FRAGMENT = "android.app.Fragment"; //$NON-NLS-1$
-    public static final String CLASS_V4_FRAGMENT = "android.support.v4.app.Fragment"; //$NON-NLS-1$
+    public static final AndroidxName CLASS_V4_FRAGMENT =
+            AndroidxName.of("android.support.v4.app.", "Fragment");
     public static final String CLASS_ACTION_PROVIDER = "android.view.ActionProvider"; //$NON-NLS-1$
     public static final String CLASS_BACKUP_AGENT = "android.app.backup.BackupAgent"; //$NON-NLS-1$
     /**
@@ -737,57 +739,65 @@ public final class SdkConstants {
             "android.databinding.ViewDataBinding";
 
     /* Android Support Class Constants */
-    public static final String CLASS_APP_COMPAT_ACTIVITY =
-            "android.support.v7.app.AppCompatActivity"; //$NON-NLS-1$
-    public static final String CLASS_COORDINATOR_LAYOUT =
-            "android.support.design.widget.CoordinatorLayout"; //$NON-NLS-1$
-    public static final String CLASS_APP_BAR_LAYOUT =
-            "android.support.design.widget.AppBarLayout"; //$NON-NLS-1$
-    public static final String CLASS_BOTTOM_NAVIGATION_VIEW =
-            "android.support.design.widget.BottomNavigationView"; //$NON-NLS-1$
-    public static final String CLASS_FLOATING_ACTION_BUTTON =
-            "android.support.design.widget.FloatingActionButton"; //$NON-NLS-1$
-    public static final String CLASS_COLLAPSING_TOOLBAR_LAYOUT =
-            "android.support.design.widget.CollapsingToolbarLayout"; //$NON-NLS-1$
-    public static final String CLASS_NAVIGATION_VIEW =
-            "android.support.design.widget.NavigationView"; //$NON-NLS-1$
-    public static final String CLASS_SNACKBAR =
-            "android.support.design.widget.Snackbar"; //$NON-NLS-1$
-    public static final String CLASS_TAB_LAYOUT =
-            "android.support.design.widget.TabLayout"; //$NON-NLS-1$
-    public static final String CLASS_TAB_ITEM =
-            "android.support.design.widget.TabItem"; //$NON-NLS-1$
-    public static final String CLASS_TEXT_INPUT_LAYOUT =
-            "android.support.design.widget.TextInputLayout"; //$NON-NLS-1$
-    public static final String CLASS_TEXT_INPUT_EDIT_TEXT =
-            "android.support.design.widget.TextInputEditText"; //$NON-NLS-1$
-    public static final String CLASS_NESTED_SCROLL_VIEW =
-            "android.support.v4.widget.NestedScrollView"; //$NON-NLS-1$
-    public static final String CLASS_VIEW_PAGER = "android.support.v4.view.ViewPager"; //$NON-NLS-1$
-    public static final String CLASS_DRAWER_LAYOUT =
-            "android.support.v4.widget.DrawerLayout"; //$NON-NLS-1$
-    public static final String CLASS_GRID_LAYOUT_V7 =
-            "android.support.v7.widget.GridLayout"; //$NON-NLS-1$
-    public static final String CLASS_TOOLBAR_V7 = "android.support.v7.widget.Toolbar"; //$NON-NLS-1$
-    public static final String CLASS_RECYCLER_VIEW =
-            "android.support.v7.widget.RecyclerView"; //$NON-NLS-1$
-    public static final String CLASS_RECYCLER_VIEW_LAYOUT_MANAGER =
-            "android.support.v7.widget.RecyclerView.LayoutManager"; //$NON-NLS-1$
-    public static final String CLASS_CARD_VIEW = "android.support.v7.widget.CardView"; //$NON-NLS-1$
-    public static final String CLASS_ACTION_MENU_VIEW =
-            "android.support.v7.widget.ActionMenuView"; //$NON-NLS-1$
+    public static final AndroidxName CLASS_APP_COMPAT_ACTIVITY =
+            AndroidxName.of("android.support.v7.app.", "AppCompatActivity");
+    public static final AndroidxName CLASS_COORDINATOR_LAYOUT =
+            AndroidxName.of("android.support.design.widget.", "CoordinatorLayout");
+    public static final AndroidxName CLASS_APP_BAR_LAYOUT =
+            AndroidxName.of("android.support.design.widget.", "AppBarLayout");
+    public static final AndroidxName CLASS_BOTTOM_NAVIGATION_VIEW =
+            AndroidxName.of("android.support.design.widget.", "BottomNavigationView");
+    public static final AndroidxName CLASS_FLOATING_ACTION_BUTTON =
+            AndroidxName.of("android.support.design.widget.", "FloatingActionButton");
+    public static final AndroidxName CLASS_COLLAPSING_TOOLBAR_LAYOUT =
+            AndroidxName.of("android.support.design.widget.", "CollapsingToolbarLayout");
+    public static final AndroidxName CLASS_NAVIGATION_VIEW =
+            AndroidxName.of("android.support.design.widget.", "NavigationView");
+    public static final AndroidxName CLASS_SNACKBAR =
+            AndroidxName.of("android.support.design.widget.", "Snackbar");
+    public static final AndroidxName CLASS_TAB_LAYOUT =
+            AndroidxName.of("android.support.design.widget.", "TabLayout");
+    public static final AndroidxName CLASS_TAB_ITEM =
+            AndroidxName.of("android.support.design.widget.", "TabItem");
+    public static final AndroidxName CLASS_TEXT_INPUT_LAYOUT =
+            AndroidxName.of("android.support.design.widget.", "TextInputLayout");
+    public static final AndroidxName CLASS_TEXT_INPUT_EDIT_TEXT =
+            AndroidxName.of("android.support.design.widget.", "TextInputEditText");
+
+    public static final AndroidxName CLASS_NESTED_SCROLL_VIEW =
+            AndroidxName.of("android.support.v4.widget.", "NestedScrollView");
+    public static final AndroidxName CLASS_VIEW_PAGER =
+            AndroidxName.of("android.support.v4.view.", "ViewPager");
+    public static final AndroidxName CLASS_DRAWER_LAYOUT =
+            AndroidxName.of("android.support.v4.widget.", "DrawerLayout");
+
+    public static final AndroidxName CLASS_GRID_LAYOUT_V7 =
+            AndroidxName.of("android.support.v7.widget.", "GridLayout");
+    public static final AndroidxName CLASS_TOOLBAR_V7 =
+            AndroidxName.of("android.support.v7.widget.", "Toolbar");
+    public static final AndroidxName CLASS_RECYCLER_VIEW_V7 =
+            AndroidxName.of("android.support.v7.widget.", "RecyclerView");
+    public static final AndroidxName CLASS_RECYCLER_VIEW_LAYOUT_MANAGER =
+            AndroidxName.of("android.support.v7.widget.", "RecyclerView.LayoutManager");
+    public static final AndroidxName CLASS_CARD_VIEW =
+            AndroidxName.of("android.support.v7.widget.", "CardView");
+    public static final AndroidxName CLASS_ACTION_MENU_VIEW =
+            AndroidxName.of("android.support.v7.widget.", "ActionMenuView");
+
     public static final String CLASS_AD_VIEW = "com.google.android.gms.ads.AdView"; //$NON-NLS-1$
     public static final String CLASS_MAP_FRAGMENT =
             "com.google.android.gms.maps.MapFragment"; //$NON-NLS-1$
     public static final String CLASS_MAP_VIEW = "com.google.android.gms.maps.MapView"; //$NON-NLS-1$
-    public static final String CLASS_BROWSE_FRAGMENT =
-            "android.support.v17.leanback.app.BrowseFragment"; //$NON-NLS-1$
-    public static final String CLASS_DETAILS_FRAGMENT =
-            "android.support.v17.leanback.app.DetailsFragment"; //$NON-NLS-1$
-    public static final String CLASS_PLAYBACK_OVERLAY_FRAGMENT =
-            "android.support.v17.leanback.app.PlaybackOverlayFragment"; //$NON-NLS-1$
-    public static final String CLASS_SEARCH_FRAGMENT =
-            "android.support.v17.leanback.app.SearchFragment"; //$NON-NLS-1$
+
+    public static final AndroidxName CLASS_BROWSE_FRAGMENT =
+            AndroidxName.of("android.support.v17.leanback.app.", "BrowseFragment");
+    public static final AndroidxName CLASS_DETAILS_FRAGMENT =
+            AndroidxName.of("android.support.v17.leanback.app.", "DetailsFragment");
+    public static final AndroidxName CLASS_PLAYBACK_OVERLAY_FRAGMENT =
+            AndroidxName.of("android.support.v17.leanback.app.", "PlaybackOverlayFragment");
+    public static final AndroidxName CLASS_SEARCH_FRAGMENT =
+            AndroidxName.of("android.support.v17.leanback.app.", "SearchFragment");
+
     public static final String CLASS_PERCENT_RELATIVE_LAYOUT =
             "android.support.percent.PercentRelativeLayout"; //$NON-NLS-1$
     public static final String CLASS_PERCENT_FRAME_LAYOUT =
@@ -796,30 +806,30 @@ public final class SdkConstants {
             "android.support.multidex.MultiDexApplication";
 
     /* Android ConstraintLayout Constants */
-    public static final String CLASS_CONSTRAINT_LAYOUT =
-            "android.support.constraint.ConstraintLayout"; //$NON-NLS-1$
-    public static final String CLASS_MOTION_LAYOUT =
-      "android.support.constraint.motion.MotionLayout"; //$NON-NLS-1$
-    public static final String CLASS_CONSTRAINT_LAYOUT_HELPER =
-            "android.support.constraint.ConstraintHelper"; //$NON-NLS-1$
-    public static final String CLASS_CONSTRAINT_LAYOUT_BARRIER =
-            "android.support.constraint.Barrier"; //$NON-NLS-1$
-    public static final String CLASS_CONSTRAINT_LAYOUT_GROUP =
-      "android.support.constraint.Group"; //$NON-NLS-1$
-    public static final String CLASS_CONSTRAINT_LAYOUT_CHAIN =
-            "android.support.constraint.Chain"; //$NON-NLS-1$
-    public static final String CLASS_CONSTRAINT_LAYOUT_LAYER =
-            "android.support.constraint.Layer"; //$NON-NLS-1$
-    public static final String CLASS_CONSTRAINT_LAYOUT_CONSTRAINTS =
-            "android.support.constraint.Constraints"; //$NON-NLS-1$
-    public static final String CLASS_CONSTRAINT_LAYOUT_REFERENCE =
-            "android.support.constraint.Reference"; //$NON-NLS-1$
-    public static final String CLASS_CONSTRAINT_LAYOUT_PARAMS =
-            "android.support.constraint.ConstraintLayout$LayoutParams"; //$NON-NLS-1$
-    public static final String CLASS_TABLE_CONSTRAINT_LAYOUT =
-            "android.support.constraint.TableConstraintLayout"; //$NON-NLS-1$
-    public static final String CLASS_CONSTRAINT_LAYOUT_GUIDELINE =
-            "android.support.constraint.Guideline"; //$NON-NLS-1$
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT =
+            AndroidxName.of("android.support.constraint.", "ConstraintLayout");
+    public static final AndroidxName CLASS_MOTION_LAYOUT =
+            AndroidxName.of("android.support.constraint.motion.", "MotionLayout");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_HELPER =
+            AndroidxName.of("android.support.constraint.", "ConstraintHelper");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_BARRIER =
+            AndroidxName.of("android.support.constraint.", "Barrier");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_GROUP =
+            AndroidxName.of("android.support.constraint.", "Group");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_CHAIN =
+            AndroidxName.of("android.support.constraint.", "Chain");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_LAYER =
+            AndroidxName.of("android.support.constraint.", "Layer");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_CONSTRAINTS =
+            AndroidxName.of("android.support.constraint.", "Constraints");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_REFERENCE =
+            AndroidxName.of("android.support.constraint.", "Reference");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_PARAMS =
+            AndroidxName.of("android.support.constraint.", "ConstraintLayout$LayoutParams");
+    public static final AndroidxName CLASS_TABLE_CONSTRAINT_LAYOUT =
+            AndroidxName.of("android.support.constraint.", "TableConstraintLayout");
+    public static final AndroidxName CLASS_CONSTRAINT_LAYOUT_GUIDELINE =
+            AndroidxName.of("android.support.constraint.", "Guideline");
 
     public static final String CONSTRAINT_LAYOUT_LIB_GROUP_ID = "com.android.support.constraint";
     public static final String CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID = "constraint-layout";
@@ -995,6 +1005,8 @@ public final class SdkConstants {
 
     public static final String R_CLASS = "R"; //$NON-NLS-1$
     public static final String ANDROID_PKG = "android"; //$NON-NLS-1$
+    public static final String ANDROID_SUPPORT_PKG = "com.android.support";
+    public static final String ANDROIDX_PKG = "androidx";
 
     public static final String SHERPA_PREFIX = "app"; //$NON-NLS-1$
     public static final String SHERPA_URI = "http://schemas.android.com/apk/res-auto"; //$NON-NLS-1$
@@ -1131,39 +1143,40 @@ public final class SdkConstants {
     public static final String SEARCH_VIEW = "SearchView"; //$NON-NLS-1$
 
     /* Android Support Tag Constants */
-    public static final String COORDINATOR_LAYOUT = CLASS_COORDINATOR_LAYOUT;
-    public static final String APP_BAR_LAYOUT = CLASS_APP_BAR_LAYOUT;
-    public static final String BOTTOM_NAVIGATION_VIEW = CLASS_BOTTOM_NAVIGATION_VIEW;
-    public static final String FLOATING_ACTION_BUTTON = CLASS_FLOATING_ACTION_BUTTON;
-    public static final String COLLAPSING_TOOLBAR_LAYOUT = CLASS_COLLAPSING_TOOLBAR_LAYOUT;
-    public static final String NAVIGATION_VIEW = CLASS_NAVIGATION_VIEW;
-    public static final String SNACKBAR = CLASS_SNACKBAR;
-    public static final String TAB_LAYOUT = CLASS_TAB_LAYOUT;
-    public static final String TAB_ITEM = CLASS_TAB_ITEM;
-    public static final String TEXT_INPUT_LAYOUT = CLASS_TEXT_INPUT_LAYOUT;
-    public static final String TEXT_INPUT_EDIT_TEXT = CLASS_TEXT_INPUT_EDIT_TEXT;
-    public static final String NESTED_SCROLL_VIEW = CLASS_NESTED_SCROLL_VIEW;
-    public static final String DRAWER_LAYOUT = CLASS_DRAWER_LAYOUT;
-    public static final String VIEW_PAGER = CLASS_VIEW_PAGER;
-    public static final String GRID_LAYOUT_V7 = CLASS_GRID_LAYOUT_V7;
-    public static final String TOOLBAR_V7 = CLASS_TOOLBAR_V7;
-    public static final String RECYCLER_VIEW = CLASS_RECYCLER_VIEW;
-    public static final String CARD_VIEW = CLASS_CARD_VIEW;
-    public static final String ACTION_MENU_VIEW = CLASS_ACTION_MENU_VIEW;
+    public static final AndroidxName COORDINATOR_LAYOUT = CLASS_COORDINATOR_LAYOUT;
+    public static final AndroidxName APP_BAR_LAYOUT = CLASS_APP_BAR_LAYOUT;
+    public static final AndroidxName BOTTOM_NAVIGATION_VIEW = CLASS_BOTTOM_NAVIGATION_VIEW;
+    public static final AndroidxName FLOATING_ACTION_BUTTON = CLASS_FLOATING_ACTION_BUTTON;
+    public static final AndroidxName COLLAPSING_TOOLBAR_LAYOUT = CLASS_COLLAPSING_TOOLBAR_LAYOUT;
+    public static final AndroidxName NAVIGATION_VIEW = CLASS_NAVIGATION_VIEW;
+    public static final AndroidxName SNACKBAR = CLASS_SNACKBAR;
+    public static final AndroidxName TAB_LAYOUT = CLASS_TAB_LAYOUT;
+    public static final AndroidxName TAB_ITEM = CLASS_TAB_ITEM;
+    public static final AndroidxName TEXT_INPUT_LAYOUT = CLASS_TEXT_INPUT_LAYOUT;
+    public static final AndroidxName TEXT_INPUT_EDIT_TEXT = CLASS_TEXT_INPUT_EDIT_TEXT;
+    public static final AndroidxName NESTED_SCROLL_VIEW = CLASS_NESTED_SCROLL_VIEW;
+    public static final AndroidxName DRAWER_LAYOUT = CLASS_DRAWER_LAYOUT;
+    public static final AndroidxName VIEW_PAGER = CLASS_VIEW_PAGER;
+    public static final AndroidxName GRID_LAYOUT_V7 = CLASS_GRID_LAYOUT_V7;
+    public static final AndroidxName TOOLBAR_V7 = CLASS_TOOLBAR_V7;
+    public static final AndroidxName RECYCLER_VIEW = CLASS_RECYCLER_VIEW_V7;
+    public static final AndroidxName CARD_VIEW = CLASS_CARD_VIEW;
+    public static final AndroidxName ACTION_MENU_VIEW = CLASS_ACTION_MENU_VIEW;
     public static final String AD_VIEW = CLASS_AD_VIEW;
     public static final String MAP_FRAGMENT = CLASS_MAP_FRAGMENT;
     public static final String MAP_VIEW = CLASS_MAP_VIEW;
-    public static final String BROWSE_FRAGMENT = CLASS_BROWSE_FRAGMENT;
-    public static final String DETAILS_FRAGMENT = CLASS_DETAILS_FRAGMENT;
-    public static final String PLAYBACK_OVERLAY_FRAGMENT = CLASS_PLAYBACK_OVERLAY_FRAGMENT;
-    public static final String SEARCH_FRAGMENT = CLASS_SEARCH_FRAGMENT;
+    public static final AndroidxName BROWSE_FRAGMENT = CLASS_BROWSE_FRAGMENT;
+    public static final AndroidxName DETAILS_FRAGMENT = CLASS_DETAILS_FRAGMENT;
+    public static final AndroidxName PLAYBACK_OVERLAY_FRAGMENT = CLASS_PLAYBACK_OVERLAY_FRAGMENT;
+    public static final AndroidxName SEARCH_FRAGMENT = CLASS_SEARCH_FRAGMENT;
 
     /* Android ConstraintLayout Tag Constants */
-    public static final String CONSTRAINT_LAYOUT = CLASS_CONSTRAINT_LAYOUT;
-    public static final String MOTION_LAYOUT = CLASS_MOTION_LAYOUT;
-    public static final String TABLE_CONSTRAINT_LAYOUT = CLASS_TABLE_CONSTRAINT_LAYOUT;
-    public static final String CONSTRAINT_LAYOUT_GUIDELINE = CLASS_CONSTRAINT_LAYOUT_GUIDELINE;
-    public static final String CONSTRAINT_LAYOUT_BARRIER = CLASS_CONSTRAINT_LAYOUT_BARRIER;
+    public static final AndroidxName CONSTRAINT_LAYOUT = CLASS_CONSTRAINT_LAYOUT;
+    public static final AndroidxName MOTION_LAYOUT = CLASS_MOTION_LAYOUT;
+    public static final AndroidxName TABLE_CONSTRAINT_LAYOUT = CLASS_TABLE_CONSTRAINT_LAYOUT;
+    public static final AndroidxName CONSTRAINT_LAYOUT_GUIDELINE =
+            CLASS_CONSTRAINT_LAYOUT_GUIDELINE;
+    public static final AndroidxName CONSTRAINT_LAYOUT_BARRIER = CLASS_CONSTRAINT_LAYOUT_BARRIER;
     public static final String CONSTRAINT_BARRIER_TOP = "top";
     public static final String CONSTRAINT_BARRIER_BOTTOM = "bottom";
     public static final String CONSTRAINT_BARRIER_LEFT = "left";
@@ -1867,6 +1880,7 @@ public final class SdkConstants {
 
     // Packages
     public static final String ANDROID_PKG_PREFIX = "android."; //$NON-NLS-1$
+    public static final String ANDROIDX_PKG_PREFIX = "androidx."; //$NON-NLS-1$
     public static final String WIDGET_PKG_PREFIX = "android.widget."; //$NON-NLS-1$
     public static final String VIEW_PKG_PREFIX = "android.view."; //$NON-NLS-1$
 
@@ -2128,8 +2142,8 @@ public final class SdkConstants {
     /** The fully qualified class name of a GridLayout view */
     public static final String FQCN_GRID_LAYOUT = "android.widget.GridLayout"; //$NON-NLS-1$
 
-    public static final String FQCN_GRID_LAYOUT_V7 =
-            "android.support.v7.widget.GridLayout"; //$NON-NLS-1$
+    public static final AndroidxName FQCN_GRID_LAYOUT_V7 =
+            AndroidxName.of("android.support.v7.widget.", "GridLayout");
 
     /** The fully qualified class name of a FrameLayout view */
     public static final String FQCN_FRAME_LAYOUT = "android.widget.FrameLayout"; //$NON-NLS-1$
@@ -2208,7 +2222,8 @@ public final class SdkConstants {
     /** The fully qualified class name of a Space */
     public static final String FQCN_SPACE = "android.widget.Space"; //$NON-NLS-1$
 
-    public static final String FQCN_SPACE_V7 = "android.support.v7.widget.Space"; //$NON-NLS-1$
+    public static final AndroidxName FQCN_SPACE_V7 =
+            AndroidxName.of("android.support.v7.widget.", "Space");
 
     /** The fully qualified class name of a TextView view */
     public static final String FQCN_TEXT_VIEW = "android.widget.TextView"; //$NON-NLS-1$
@@ -2261,10 +2276,15 @@ public final class SdkConstants {
     public static final String ANNOTATIONS_LIB_ARTIFACT = "com.android.support:support-annotations";
 
     // Annotations
-    public static final String SUPPORT_ANNOTATIONS_PREFIX = "android.support.annotation.";
-    public static final String INT_DEF_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "IntDef";
-    public static final String LONG_DEF_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "LongDef";
-    public static final String STRING_DEF_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "StringDef";
+    public static final AndroidxName SUPPORT_ANNOTATIONS_PREFIX =
+            AndroidxName.of("android.support.annotation.");
+
+    public static final AndroidxName INT_DEF_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "IntDef");
+    public static final AndroidxName LONG_DEF_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "LongDef");
+    public static final AndroidxName STRING_DEF_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "StringDef");
     public static final String TYPE_DEF_VALUE_ATTRIBUTE = "value";
     public static final String TYPE_DEF_FLAG_ATTRIBUTE = "flag";
     public static final String FN_ANNOTATIONS_ZIP = "annotations.zip";

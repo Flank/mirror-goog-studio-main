@@ -77,6 +77,7 @@ import com.android.resources.ResourceType;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.SdkVersionInfo;
+import com.android.support.AndroidxName;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintDriver;
@@ -104,27 +105,21 @@ import com.android.utils.XmlUtils;
 import com.intellij.psi.CommonClassNames;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
-import com.intellij.psi.PsiAnnotationParameterList;
 import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiArrayInitializerMemberValue;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMember;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
-import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiNameValuePair;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiPrimitiveType;
-import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiSuperExpression;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -180,7 +175,8 @@ import org.w3c.dom.NodeList;
  */
 public class ApiDetector extends ResourceXmlDetector
         implements SourceCodeScanner, ResourceFolderScanner {
-    public static final String REQUIRES_API_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RequiresApi";
+    public static final AndroidxName REQUIRES_API_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "RequiresApi");
     public static final String SDK_SUPPRESS_ANNOTATION = "android.support.test.filters.SdkSuppress";
 
     /** Accessing an unsupported API */
@@ -1860,7 +1856,7 @@ public class ApiDetector extends ResourceXmlDetector
         private int getRequiresApiFromAnnotations(PsiModifierList modifierList) {
             for (PsiAnnotation annotation : modifierList.getAnnotations()) {
                 String qualifiedName = annotation.getQualifiedName();
-                if (REQUIRES_API_ANNOTATION.equals(qualifiedName)) {
+                if (REQUIRES_API_ANNOTATION.isEquals(qualifiedName)) {
                     UAnnotation wrapped = JavaUAnnotation.wrap(annotation);
                     int api = (int) getLongAttribute(mContext,
                             wrapped, ATTR_VALUE, -1);
@@ -2312,9 +2308,9 @@ public class ApiDetector extends ResourceXmlDetector
 
         for (UAnnotation annotation : annotated.getAnnotations()) {
             String fqcn = annotation.getQualifiedName();
-            if (fqcn != null &&
-                    (fqcn.equals(FQCN_TARGET_API)
-                            || fqcn.equals(REQUIRES_API_ANNOTATION)
+            if (fqcn != null
+                    && (fqcn.equals(FQCN_TARGET_API)
+                            || REQUIRES_API_ANNOTATION.isEquals(fqcn)
                             || fqcn.equals(SDK_SUPPRESS_ANNOTATION)
                             || fqcn.equals(TARGET_API))) { // when missing imports
                 List<UNamedExpression> attributeList = annotation.getAttributeValues();

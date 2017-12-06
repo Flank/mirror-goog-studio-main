@@ -42,7 +42,8 @@ import org.jetbrains.uast.getQualifiedParentOrThis
 
 class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-            CHECK_RESULT_ANNOTATION,
+            CHECK_RESULT_ANNOTATION.oldName(),
+            CHECK_RESULT_ANNOTATION.newName(),
             FINDBUGS_ANNOTATIONS_CHECK_RETURN_VALUE,
             JAVAX_ANNOTATION_CHECK_RETURN_VALUE,
             ERRORPRONE_CAN_IGNORE_RETURN_VALUE,

@@ -434,7 +434,7 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
                 if (TABLE_LAYOUT.equals(parentTag)
                         || TABLE_ROW.equals(parentTag)
                         || GRID_LAYOUT.equals(parentTag)
-                        || FQCN_GRID_LAYOUT_V7.equals(parentTag)) {
+                        || FQCN_GRID_LAYOUT_V7.isEquals(parentTag)) {
                     return;
                 }
 

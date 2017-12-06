@@ -860,6 +860,7 @@ public class JarContentsTest {
                 "com/android/io/",
                 "com/android/prefs/",
                 "com/android/sdklib/",
+                "com/android/support/",
                 "com/android/tools/",
                 "com/android/tools/proguard/",
                 "com/android/utils/",

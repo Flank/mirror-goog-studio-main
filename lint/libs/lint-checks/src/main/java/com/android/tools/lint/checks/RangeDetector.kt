@@ -42,14 +42,20 @@ import org.jetbrains.uast.util.isNewArrayWithInitializer
 
 class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-            INT_RANGE_ANNOTATION,
-            FLOAT_RANGE_ANNOTATION,
-            SIZE_ANNOTATION,
+        INT_RANGE_ANNOTATION.oldName(),
+        INT_RANGE_ANNOTATION.newName(),
+        FLOAT_RANGE_ANNOTATION.oldName(),
+        FLOAT_RANGE_ANNOTATION.newName(),
+        SIZE_ANNOTATION.oldName(),
+        SIZE_ANNOTATION.newName(),
 
-            // Such that the annotation is considered relevant by the annotation handler
-            // even if the typedef check itself is disabled
-            INT_DEF_ANNOTATION,
-            LONG_DEF_ANNOTATION
+        // Such that the annotation is considered relevant by the annotation handler
+        // even if the typedef check itself is disabled
+        INT_DEF_ANNOTATION.oldName(),
+        INT_DEF_ANNOTATION.newName(),
+
+        LONG_DEF_ANNOTATION.oldName(),
+        LONG_DEF_ANNOTATION.newName()
     )
 
     override fun visitAnnotationUsage(
@@ -64,18 +70,20 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             allClassAnnotations: List<UAnnotation>,
             allPackageAnnotations: List<UAnnotation>) {
         when (qualifiedName) {
-            INT_RANGE_ANNOTATION -> {
+            INT_RANGE_ANNOTATION.oldName(), INT_RANGE_ANNOTATION.newName() -> {
                 checkIntRange(context, annotation, usage, annotations)
             }
 
-            FLOAT_RANGE_ANNOTATION -> {
+            FLOAT_RANGE_ANNOTATION.oldName(), FLOAT_RANGE_ANNOTATION.newName() -> {
                 checkFloatRange(context, annotation, usage)
             }
-            SIZE_ANNOTATION -> {
+            SIZE_ANNOTATION.oldName(), SIZE_ANNOTATION.newName() -> {
                 checkSize(context, annotation, usage)
             }
 
-            INT_DEF_ANNOTATION, LONG_DEF_ANNOTATION -> {}
+            INT_DEF_ANNOTATION.oldName(), INT_DEF_ANNOTATION.newName(),
+            LONG_DEF_ANNOTATION.oldName(), LONG_DEF_ANNOTATION.newName() -> {
+            }
         }
     }
 
@@ -292,7 +300,7 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         fun findIntRange(annotations: List<UAnnotation>): UAnnotation? {
             for (annotation in annotations) {
-                if (INT_RANGE_ANNOTATION == annotation.qualifiedName) {
+                if (INT_RANGE_ANNOTATION.isEquals(annotation.qualifiedName)) {
                     return annotation
                 }
             }

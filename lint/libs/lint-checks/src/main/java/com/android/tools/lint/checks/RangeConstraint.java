@@ -35,16 +35,16 @@ public abstract class RangeConstraint {
         if (qualifiedName == null) {
             return null;
         }
-        switch (qualifiedName) {
-            case INT_RANGE_ANNOTATION:
-                return IntRangeConstraint.create(annotation);
-            case FLOAT_RANGE_ANNOTATION:
-                return FloatRangeConstraint.create(annotation);
-            case SIZE_ANNOTATION:
-                return SizeConstraint.create(annotation);
-            default:
-                return null;
+
+        if (INT_RANGE_ANNOTATION.isEquals(qualifiedName)) {
+            return IntRangeConstraint.create(annotation);
+        } else if (FLOAT_RANGE_ANNOTATION.isEquals(qualifiedName)) {
+            return FloatRangeConstraint.create(annotation);
+        } else if (SIZE_ANNOTATION.isEquals(qualifiedName)) {
+            return SizeConstraint.create(annotation);
         }
+
+        return null;
     }
 
     @Nullable

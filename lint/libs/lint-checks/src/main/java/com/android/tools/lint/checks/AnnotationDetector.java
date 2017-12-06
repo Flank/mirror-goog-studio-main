@@ -41,6 +41,7 @@ import static com.android.tools.lint.detector.api.UastLintUtils.getLongAttribute
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.support.AndroidxName;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.UElementHandler;
@@ -112,23 +113,38 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
  */
 public class AnnotationDetector extends Detector implements SourceCodeScanner {
     public static final String GMS_HIDE_ANNOTATION = "com.google.android.gms.common.internal.Hide";
-    public static final String CHECK_RESULT_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "CheckResult";
-    public static final String INT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "IntRange";
-    public static final String FLOAT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "FloatRange";
-    public static final String SIZE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Size";
-    public static final String PERMISSION_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RequiresPermission";
-    public static final String UI_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "UiThread";
-    public static final String MAIN_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "MainThread";
-    public static final String WORKER_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "WorkerThread";
-    public static final String BINDER_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "BinderThread";
-    public static final String ANY_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "AnyThread";
-    public static final String RESTRICT_TO_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RestrictTo";
-    public static final String VISIBLE_FOR_TESTING_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "VisibleForTesting";
-    public static final String PERMISSION_ANNOTATION_READ = PERMISSION_ANNOTATION + ".Read";
-    public static final String PERMISSION_ANNOTATION_WRITE = PERMISSION_ANNOTATION + ".Write";
+    public static final AndroidxName CHECK_RESULT_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "CheckResult");
+    public static final AndroidxName INT_RANGE_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "IntRange");
+    public static final AndroidxName FLOAT_RANGE_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "FloatRange");
+    public static final AndroidxName SIZE_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "Size");
+    public static final AndroidxName PERMISSION_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX.oldName(), "RequiresPermission");
+    public static final AndroidxName UI_THREAD_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "UiThread");
+    public static final AndroidxName MAIN_THREAD_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "MainThread");
+    public static final AndroidxName WORKER_THREAD_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "WorkerThread");
+    public static final AndroidxName BINDER_THREAD_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "BinderThread");
+    public static final AndroidxName ANY_THREAD_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "AnyThread");
+    public static final AndroidxName RESTRICT_TO_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "RestrictTo");
+    public static final AndroidxName VISIBLE_FOR_TESTING_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "VisibleForTesting");
+    public static final AndroidxName PERMISSION_ANNOTATION_READ =
+            AndroidxName.of(PERMISSION_ANNOTATION, "Read");
+    public static final AndroidxName PERMISSION_ANNOTATION_WRITE =
+            AndroidxName.of(PERMISSION_ANNOTATION, "Write");
 
     // TODO: Add analysis to enforce this annotation:
-    public static final String HALF_FLOAT_ANNOTATION = "android.support.annotation.HalfFloat";
+    public static final AndroidxName HALF_FLOAT_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "HalfFloat");
 
     public static final String THREAD_SUFFIX = "Thread";
     public static final String ATTR_SUGGEST = "suggest";
@@ -312,8 +328,8 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                         }
                     }
                 }
-            } else if (type.startsWith(SUPPORT_ANNOTATIONS_PREFIX)) {
-                if (CHECK_RESULT_ANNOTATION.equals(type)) {
+            } else if (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(type)) {
+                if (CHECK_RESULT_ANNOTATION.isEquals(type)) {
                     // Check that the return type of this method is not void!
                     if (annotation.getUastParent() instanceof UMethod) {
                         UMethod method = (UMethod) annotation.getUastParent();
@@ -324,12 +340,12 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                                     "@CheckResult should not be specified on `void` methods");
                         }
                     }
-                } else if (INT_RANGE_ANNOTATION.equals(type)
-                        || FLOAT_RANGE_ANNOTATION.equals(type)) {
+                } else if (INT_RANGE_ANNOTATION.isEquals(type)
+                        || FLOAT_RANGE_ANNOTATION.isEquals(type)) {
                     // Check that the annotated element's type is int or long.
                     // Also make sure that from <= to.
                     boolean invalid;
-                    if (INT_RANGE_ANNOTATION.equals(type)) {
+                    if (INT_RANGE_ANNOTATION.isEquals(type)) {
                         checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
 
                         long from = getLongAttribute(mContext, annotation, ATTR_FROM, Long.MIN_VALUE);
@@ -349,7 +365,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                                 "Invalid range: the `from` attribute must be less than "
                                         + "the `to` attribute");
                     }
-                } else if (SIZE_ANNOTATION.equals(type)) {
+                } else if (SIZE_ANNOTATION.isEquals(type)) {
                     // Check that the annotated element's type is an array, or a collection
                     // (or at least not an int or long; if so, suggest IntRange)
                     // Make sure the size and the modulo is not negative.
@@ -370,15 +386,16 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                         mContext.report(ANNOTATION_USAGE, annotation, mContext.getLocation(annotation),
                                 "The size can't be negative");
                     }
-                } else if (COLOR_INT_ANNOTATION.equals(type) || (PX_ANNOTATION.equals(type))) {
+                } else if (COLOR_INT_ANNOTATION.isEquals(type) || (PX_ANNOTATION.isEquals(type))) {
                     // Check that ColorInt applies to the right type
                     checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
-                } else if (INT_DEF_ANNOTATION.equals(type) || LONG_DEF_ANNOTATION.equals(type)) {
+                } else if (INT_DEF_ANNOTATION.isEquals(type)
+                        || LONG_DEF_ANNOTATION.isEquals(type)) {
                     // Make sure IntDef constants are unique
                     ensureUniqueValues(annotation);
-                } else if (PERMISSION_ANNOTATION.equals(type) ||
-                        PERMISSION_ANNOTATION_READ.equals(type) ||
-                        PERMISSION_ANNOTATION_WRITE.equals(type)) {
+                } else if (PERMISSION_ANNOTATION.isEquals(type)
+                        || PERMISSION_ANNOTATION_READ.isEquals(type)
+                        || PERMISSION_ANNOTATION_WRITE.isEquals(type)) {
                     // Check that if there are no arguments, this is specified on a parameter,
                     // and conversely, on methods and fields there is a valid argument.
                     if (annotation.getUastParent() instanceof UMethod) {
@@ -411,7 +428,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                                     "Only specify one of `value`, `anyOf` or `allOf`");
                         }
                     }
-                } else if (type.equals(HALF_FLOAT_ANNOTATION)) {
+                } else if (HALF_FLOAT_ANNOTATION.isEquals(type)) {
                     // Check that half floats are on shorts
                     checkTargetType(annotation, TYPE_SHORT, null, true);
                 } else if (type.endsWith(RES_SUFFIX)) {
@@ -426,11 +443,11 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                     if (cls.isAnnotationType() && cls.getModifierList() != null) {
                         for (PsiAnnotation a : cls.getModifierList().getAnnotations()) {
                             String name = a.getQualifiedName();
-                            if (INT_DEF_ANNOTATION.equals(name)) {
+                            if (INT_DEF_ANNOTATION.isEquals(name)) {
                                 checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
-                            } else if (LONG_DEF_ANNOTATION.equals(name)) {
+                            } else if (LONG_DEF_ANNOTATION.isEquals(name)) {
                                 checkTargetType(annotation, TYPE_LONG, null, true);
-                            } else if (STRING_DEF_ANNOTATION.equals(type)) {
+                            } else if (STRING_DEF_ANNOTATION.isEquals(type)) {
                                 checkTargetType(annotation, TYPE_STRING, null, true);
                             }
                         }
@@ -1017,7 +1034,7 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 continue;
             }
 
-            if (signature.startsWith(SUPPORT_ANNOTATIONS_PREFIX)
+            if (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(signature)
                     || signature.equals(GMS_HIDE_ANNOTATION)) {
                 // Bail on the nullness annotations early since they're the most commonly
                 // defined ones. They're not analyzed in lint yet.
@@ -1057,11 +1074,11 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                     // @Override, @SuppressWarnings etc. Ignore
                     continue;
                 }
-                if (a.equals(INT_DEF_ANNOTATION)
-                        || a.equals(LONG_DEF_ANNOTATION)
-                        || a.equals(PERMISSION_ANNOTATION)
-                        || a.equals(INT_RANGE_ANNOTATION)
-                        || a.equals(STRING_DEF_ANNOTATION)) {
+                if (INT_DEF_ANNOTATION.isEquals(a)
+                        || LONG_DEF_ANNOTATION.isEquals(a)
+                        || PERMISSION_ANNOTATION.isEquals(a)
+                        || INT_RANGE_ANNOTATION.isEquals(a)
+                        || STRING_DEF_ANNOTATION.isEquals(a)) {
                     if (length == 1 && j == innerAnnotations.length - 1 && result == null) {
                         return innerAnnotations;
                     }

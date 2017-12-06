@@ -1053,10 +1053,11 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                 return;
             }
 
-            if (evaluator.isMemberInSubClassOf(method, CLASS_RESOURCES, false) ||
-                    evaluator.isMemberInSubClassOf(method, CLASS_CONTEXT, false) ||
-                    evaluator.isMemberInSubClassOf(method, CLASS_FRAGMENT, false) ||
-                    evaluator.isMemberInSubClassOf(method, CLASS_V4_FRAGMENT, false)) {
+            if (evaluator.isMemberInSubClassOf(method, CLASS_RESOURCES, false)
+                    || evaluator.isMemberInSubClassOf(method, CLASS_CONTEXT, false)
+                    || evaluator.isMemberInSubClassOf(method, CLASS_FRAGMENT, false)
+                    || evaluator.isMemberInSubClassOf(method, CLASS_V4_FRAGMENT.oldName(), false)
+                    || evaluator.isMemberInSubClassOf(method, CLASS_V4_FRAGMENT.newName(), false)) {
                 checkStringFormatCall(context, method, node, false);
             }
 

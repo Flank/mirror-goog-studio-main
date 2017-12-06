@@ -17,6 +17,7 @@
 package com.android.tools.lint.annotations;
 
 import static com.android.SdkConstants.AMP_ENTITY;
+import static com.android.SdkConstants.ANDROIDX_PKG_PREFIX;
 import static com.android.SdkConstants.APOS_ENTITY;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_VALUE;
@@ -42,6 +43,7 @@ import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.packaging.TypedefRemover;
+import com.android.support.AndroidxName;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.utils.FileUtils;
@@ -189,7 +191,10 @@ public class Extractor {
     public static final String ANDROID_LONG_DEF = "android.annotation.LongDef";
     public static final String ANDROID_INT_RANGE = "android.annotation.IntRange";
     public static final String ANDROID_STRING_DEF = "android.annotation.StringDef";
-    public static final String REQUIRES_PERMISSION = "android.support.annotation.RequiresPermission";
+    public static final AndroidxName REQUIRES_PERMISSION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "RequiresPermission");
+    public static final AndroidxName SYSTEM_SERVICE =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "SystemService");
     public static final String ANDROID_REQUIRES_PERMISSION = "android.annotation.RequiresPermission";
     public static final String IDEA_NULLABLE = "org.jetbrains.annotations.Nullable";
     public static final String IDEA_NOTNULL = "org.jetbrains.annotations.NotNull";
@@ -198,6 +203,22 @@ public class Extractor {
     public static final String IDEA_NON_NLS = "org.jetbrains.annotations.NonNls";
     public static final String ATTR_VAL = "val";
     public static final String ATTR_PURE = "pure";
+
+    private static final ImmutableSet<String> MAGIC_CONSTANT_ANNOTATIONS =
+            ImmutableSet.<String>builder()
+                    .add(INT_DEF_ANNOTATION.oldName())
+                    .add(INT_DEF_ANNOTATION.newName())
+                    .add(LONG_DEF_ANNOTATION.oldName())
+                    .add(LONG_DEF_ANNOTATION.newName())
+                    .add(STRING_DEF_ANNOTATION.oldName())
+                    .add(STRING_DEF_ANNOTATION.newName())
+                    .add(INT_RANGE_ANNOTATION.oldName())
+                    .add(INT_RANGE_ANNOTATION.newName())
+                    .add(ANDROID_INT_RANGE)
+                    .add(ANDROID_INT_DEF)
+                    .add(ANDROID_LONG_DEF)
+                    .add(ANDROID_STRING_DEF)
+                    .build();
 
     @NonNull private final Map<String, List<AnnotationData>> types = new HashMap<>();
 
@@ -475,8 +496,10 @@ public class Extractor {
             // The @IntDef and @String annotations have always had source retention,
             // and always must (because we can't express fully qualified field references
             // in a .class file.)
-            sourceRetention.put(INT_DEF_ANNOTATION, true);
-            sourceRetention.put(STRING_DEF_ANNOTATION, true);
+            sourceRetention.put(INT_DEF_ANNOTATION.oldName(), true);
+            sourceRetention.put(INT_DEF_ANNOTATION.newName(), true);
+            sourceRetention.put(STRING_DEF_ANNOTATION.oldName(), true);
+            sourceRetention.put(STRING_DEF_ANNOTATION.newName(), true);
             // The @Nullable and @NonNull annotations have always had class retention
             sourceRetention.put(SUPPORT_NOTNULL, false);
             sourceRetention.put(SUPPORT_NULLABLE, false);
@@ -578,7 +601,7 @@ public class Extractor {
             return;
         }
 
-        if (fqn.startsWith(SUPPORT_ANNOTATIONS_PREFIX)
+        if (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(fqn)
                 && fqn.endsWith(RESOURCE_TYPE_ANNOTATIONS_SUFFIX)) {
             recordStats(fqn);
             list.add(new AnnotationData(fqn));
@@ -590,8 +613,9 @@ public class Extractor {
             if (fqn.endsWith(RESOURCE_TYPE_ANNOTATIONS_SUFFIX)) {
                 // Translate e.g. android.annotation.DrawableRes to
                 //    android.support.annotation.DrawableRes
-                String resAnnotation = SUPPORT_ANNOTATIONS_PREFIX +
-                        fqn.substring(ANDROID_ANNOTATIONS_PREFIX.length());
+                String resAnnotation =
+                        SUPPORT_ANNOTATIONS_PREFIX.defaultName()
+                                + fqn.substring(ANDROID_ANNOTATIONS_PREFIX.length());
                 if (!includeClassRetentionAnnotations
                         && !hasSourceRetention(resAnnotation, null)) {
                     return;
@@ -602,8 +626,9 @@ public class Extractor {
             } else if (isRelevantFrameworkAnnotation(fqn)) {
                 // Translate other android.annotation annotations into corresponding
                 // support annotations
-                String supportAnnotation = SUPPORT_ANNOTATIONS_PREFIX +
-                        fqn.substring(ANDROID_ANNOTATIONS_PREFIX.length());
+                String supportAnnotation =
+                        SUPPORT_ANNOTATIONS_PREFIX.defaultName()
+                                + fqn.substring(ANDROID_ANNOTATIONS_PREFIX.length());
                 if (!includeClassRetentionAnnotations
                         && !hasSourceRetention(supportAnnotation, null)) {
                     return;
@@ -613,7 +638,7 @@ public class Extractor {
             }
         }
 
-        if (fqn.startsWith(SUPPORT_ANNOTATIONS_PREFIX)) {
+        if (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(fqn)) {
             recordStats(fqn);
             list.add(createData(fqn, annotation));
             return;
@@ -652,7 +677,7 @@ public class Extractor {
         if (fqn == null || fqn.startsWith("java.lang.")) {
             return false;
         }
-        if (fqn.startsWith(SUPPORT_ANNOTATIONS_PREFIX)) {
+        if (SUPPORT_ANNOTATIONS_PREFIX.isPrefix(fqn)) {
             if (fqn.equals(SUPPORT_KEEP)) {
                 return true; // even with class file retention we want to process these
             }
@@ -695,16 +720,8 @@ public class Extractor {
         if (types.containsKey(typeName)) {
             return true;
         }
-        switch (typeName) {
-            case INT_DEF_ANNOTATION:
-            case LONG_DEF_ANNOTATION:
-            case STRING_DEF_ANNOTATION:
-            case INT_RANGE_ANNOTATION:
-            case ANDROID_INT_RANGE:
-            case ANDROID_INT_DEF:
-            case ANDROID_LONG_DEF:
-            case ANDROID_STRING_DEF:
-                return true;
+        if (MAGIC_CONSTANT_ANNOTATIONS.contains(typeName)) {
+            return true;
         }
 
         // See if this annotation is itself annotated.
@@ -760,17 +777,17 @@ public class Extractor {
     }
 
     static boolean isNestedAnnotation(@Nullable String fqn) {
-        return (fqn != null &&
-                (fqn.equals(INT_DEF_ANNOTATION) ||
-                        fqn.equals(LONG_DEF_ANNOTATION) ||
-                        fqn.equals(STRING_DEF_ANNOTATION) ||
-                        fqn.equals(REQUIRES_PERMISSION) ||
-                        fqn.equals(ANDROID_REQUIRES_PERMISSION) ||
-                        fqn.equals(INT_RANGE_ANNOTATION) ||
-                        fqn.equals(ANDROID_INT_RANGE) ||
-                        fqn.equals(ANDROID_INT_DEF) ||
-                        fqn.equals(ANDROID_LONG_DEF) ||
-                        fqn.equals(ANDROID_STRING_DEF)));
+        return (fqn != null
+                && (INT_DEF_ANNOTATION.isEquals(fqn)
+                        || LONG_DEF_ANNOTATION.isEquals(fqn)
+                        || STRING_DEF_ANNOTATION.isEquals(fqn)
+                        || REQUIRES_PERMISSION.isEquals(fqn)
+                        || fqn.equals(ANDROID_REQUIRES_PERMISSION)
+                        || INT_RANGE_ANNOTATION.isEquals(fqn)
+                        || fqn.equals(ANDROID_INT_RANGE)
+                        || fqn.equals(ANDROID_INT_DEF)
+                        || fqn.equals(ANDROID_LONG_DEF)
+                        || fqn.equals(ANDROID_STRING_DEF)));
     }
 
     private boolean writeKeepRules(@NonNull File proguardCfg) {
@@ -1242,9 +1259,10 @@ public class Extractor {
             // Unsupported annotation in import
             return false;
         }
-        if (isNullable(annotation.name) || isNonNull(annotation.name)
+        if (isNullable(annotation.name)
+                || isNonNull(annotation.name)
                 || annotation.name.startsWith(ANDROID_ANNOTATIONS_PREFIX)
-                || annotation.name.startsWith(SUPPORT_ANNOTATIONS_PREFIX)) {
+                || SUPPORT_ANNOTATIONS_PREFIX.isPrefix(annotation.name)) {
             return true;
         } else if (annotation.name.equals(IDEA_CONTRACT)) {
             return true;
@@ -1457,14 +1475,23 @@ public class Extractor {
                 }
             }
 
-            annotation = new AnnotationData(
-                    valName.equals("stringValues") ? STRING_DEF_ANNOTATION : INT_DEF_ANNOTATION,
-                    new String[] {
-                            TYPE_DEF_VALUE_ATTRIBUTE, value,
-                            flag ? TYPE_DEF_FLAG_ATTRIBUTE : null, flag ? VALUE_TRUE : null });
-        } else if (STRING_DEF_ANNOTATION.equals(name) || ANDROID_STRING_DEF.equals(name) ||
-                INT_DEF_ANNOTATION.equals(name) || ANDROID_INT_DEF.equals(name) ||
-                LONG_DEF_ANNOTATION.equals(name) || ANDROID_LONG_DEF.equals(name)) {
+            annotation =
+                    new AnnotationData(
+                            valName.equals("stringValues")
+                                    ? STRING_DEF_ANNOTATION.defaultName()
+                                    : INT_DEF_ANNOTATION.defaultName(),
+                            new String[] {
+                                TYPE_DEF_VALUE_ATTRIBUTE,
+                                value,
+                                flag ? TYPE_DEF_FLAG_ATTRIBUTE : null,
+                                flag ? VALUE_TRUE : null
+                            });
+        } else if (STRING_DEF_ANNOTATION.isEquals(name)
+                || ANDROID_STRING_DEF.equals(name)
+                || INT_DEF_ANNOTATION.isEquals(name)
+                || ANDROID_INT_DEF.equals(name)
+                || LONG_DEF_ANNOTATION.isEquals(name)
+                || ANDROID_LONG_DEF.equals(name)) {
             List<Element> children = getChildren(annotationElement);
             Element valueElement = children.get(0);
             String valName = valueElement.getAttribute(ATTR_NAME);
@@ -1476,13 +1503,36 @@ public class Extractor {
                 assert TYPE_DEF_FLAG_ATTRIBUTE.equals(valueElement.getAttribute(ATTR_NAME));
                 flag = VALUE_TRUE.equals(valueElement.getAttribute(ATTR_VAL));
             }
-            boolean intDef = INT_DEF_ANNOTATION.equals(name) || ANDROID_INT_DEF.equals(name);
-            boolean longDef = LONG_DEF_ANNOTATION.equals(name) || ANDROID_LONG_DEF.equals(name);
-            annotation = new AnnotationData(
-                    intDef ? INT_DEF_ANNOTATION : longDef ?
-                            LONG_DEF_ANNOTATION : STRING_DEF_ANNOTATION,
-                    new String[] { TYPE_DEF_VALUE_ATTRIBUTE, value,
-                    flag ? TYPE_DEF_FLAG_ATTRIBUTE : null, flag ? VALUE_TRUE : null});
+            boolean intDef = INT_DEF_ANNOTATION.isEquals(name) || ANDROID_INT_DEF.equals(name);
+            boolean longDef = LONG_DEF_ANNOTATION.isEquals(name) || ANDROID_LONG_DEF.equals(name);
+
+            String annotationName;
+            if (intDef) {
+                annotationName =
+                        name.startsWith(ANDROIDX_PKG_PREFIX)
+                                ? INT_DEF_ANNOTATION.oldName()
+                                : INT_DEF_ANNOTATION.oldName();
+            } else if (longDef) {
+                annotationName =
+                        name.startsWith(ANDROIDX_PKG_PREFIX)
+                                ? LONG_DEF_ANNOTATION.oldName()
+                                : LONG_DEF_ANNOTATION.oldName();
+            } else {
+                annotationName =
+                        name.startsWith(ANDROIDX_PKG_PREFIX)
+                                ? STRING_DEF_ANNOTATION.newName()
+                                : STRING_DEF_ANNOTATION.oldName();
+            }
+
+            annotation =
+                    new AnnotationData(
+                            annotationName,
+                            new String[] {
+                                TYPE_DEF_VALUE_ATTRIBUTE,
+                                value,
+                                flag ? TYPE_DEF_FLAG_ATTRIBUTE : null,
+                                flag ? VALUE_TRUE : null
+                            });
         } else if (IDEA_CONTRACT.equals(name)) {
             List<Element> children = getChildren(annotationElement);
             Element valueElement = children.get(0);
@@ -1696,9 +1746,7 @@ public class Extractor {
 
                 List<UNamedExpression> attributes = this.attributes;
 
-                if (attributes.size() == 1
-                        && name.startsWith(REQUIRES_PERMISSION)
-                        && name.length() > REQUIRES_PERMISSION.length()) {
+                if (attributes.size() == 1 && REQUIRES_PERMISSION.isPrefix(name, true)) {
                     UExpression expression = attributes.get(0).getExpression();
                     if (expression instanceof UAnnotation) {
                         // The external annotations format does not allow for nested/complex annotations.
@@ -1740,7 +1788,7 @@ public class Extractor {
                     // Platform typedef annotations now declare a prefix attribute for
                     // documentation generation purposes; this should not be part of the
                     // extracted metadata.
-                    if ("prefix".equals(name) && INT_DEF_ANNOTATION.equals(this.name)) {
+                    if ("prefix".equals(name) && INT_DEF_ANNOTATION.isEquals(this.name)) {
                         continue;
                     }
 
@@ -1910,10 +1958,10 @@ public class Extractor {
         }
 
         private boolean isInlinedConstant() { // TODO: Add android.* versions of these
-            return name.equals(INT_DEF_ANNOTATION) ||
-                    name.equals(LONG_DEF_ANNOTATION) ||
-                    name.equals(STRING_DEF_ANNOTATION) ||
-                    name.equals("android.support.annotation.SystemService");
+            return INT_DEF_ANNOTATION.isEquals(name)
+                    || LONG_DEF_ANNOTATION.isEquals(name)
+                    || STRING_DEF_ANNOTATION.isEquals(name)
+                    || SYSTEM_SERVICE.isEquals(name);
         }
     }
 

@@ -64,9 +64,12 @@ import java.util.Arrays
 
 class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-            PERMISSION_ANNOTATION,
-            PERMISSION_ANNOTATION_READ,
-            PERMISSION_ANNOTATION_WRITE
+            PERMISSION_ANNOTATION.oldName(),
+            PERMISSION_ANNOTATION.newName(),
+            PERMISSION_ANNOTATION_READ.oldName(),
+            PERMISSION_ANNOTATION_READ.newName(),
+            PERMISSION_ANNOTATION_WRITE.oldName(),
+            PERMISSION_ANNOTATION_WRITE.newName()
     )
 
     override fun visitAnnotationUsage(
@@ -102,9 +105,9 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             argument: UExpression) {
         var operation: PermissionFinder.Operation? = null
 
-        if (signature == PERMISSION_ANNOTATION_READ) {
+        if (PERMISSION_ANNOTATION_READ.isEquals(signature)) {
             operation = READ
-        } else if (signature == PERMISSION_ANNOTATION_WRITE) {
+        } else if (PERMISSION_ANNOTATION_WRITE.isEquals(signature)) {
             operation = WRITE
         } else {
             val type = argument.getExpressionType()
@@ -240,12 +243,12 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         var merged = permissions
         // Accumulate @RequirePermissions available in the local context
         val method = node.getParentOfType<UMethod>(UMethod::class.java, true) ?: return merged
-        var annotation = method.findAnnotation(PERMISSION_ANNOTATION)
+        var annotation = method.findAnnotation(PERMISSION_ANNOTATION.oldName()) ?: method.findAnnotation(PERMISSION_ANNOTATION.newName())
         merged = mergeAnnotationPermissions(merged, annotation)
 
         val containingClass = method.getContainingUClass()
         if (containingClass != null) {
-            annotation = containingClass.findAnnotation(PERMISSION_ANNOTATION)
+            annotation = containingClass.findAnnotation(PERMISSION_ANNOTATION.oldName()) ?: containingClass.findAnnotation(PERMISSION_ANNOTATION.newName())
             merged = mergeAnnotationPermissions(merged, annotation)
         }
         return merged

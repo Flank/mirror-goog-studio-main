@@ -89,35 +89,63 @@ import java.util.EnumSet
 
 class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-            COLOR_INT_ANNOTATION,
-            DIMENSION_ANNOTATION,
-            PX_ANNOTATION,
-            HALF_FLOAT_ANNOTATION,
+            COLOR_INT_ANNOTATION.oldName(),
+            COLOR_INT_ANNOTATION.newName(),
+            DIMENSION_ANNOTATION.oldName(),
+            DIMENSION_ANNOTATION.newName(),
+            PX_ANNOTATION.oldName(),
+            PX_ANNOTATION.newName(),
+            HALF_FLOAT_ANNOTATION.oldName(),
+            HALF_FLOAT_ANNOTATION.newName(),
 
-            ANIMATOR_RES_ANNOTATION,
-            ANIM_RES_ANNOTATION,
-            ANY_RES_ANNOTATION,
-            ARRAY_RES_ANNOTATION,
-            ATTR_RES_ANNOTATION,
-            BOOL_RES_ANNOTATION,
-            COLOR_RES_ANNOTATION,
-            FONT_RES_ANNOTATION,
-            DIMEN_RES_ANNOTATION,
-            DRAWABLE_RES_ANNOTATION,
-            FRACTION_RES_ANNOTATION,
-            ID_RES_ANNOTATION,
-            INTEGER_RES_ANNOTATION,
-            INTERPOLATOR_RES_ANNOTATION,
-            LAYOUT_RES_ANNOTATION,
-            MENU_RES_ANNOTATION,
-            NAVIGATION_RES_ANNOTATION,
-            PLURALS_RES_ANNOTATION,
-            RAW_RES_ANNOTATION,
-            STRING_RES_ANNOTATION,
-            STYLEABLE_RES_ANNOTATION,
-            STYLE_RES_ANNOTATION,
-            TRANSITION_RES_ANNOTATION,
-            XML_RES_ANNOTATION
+            ANIMATOR_RES_ANNOTATION.oldName(),
+            ANIMATOR_RES_ANNOTATION.newName(),
+            ANIM_RES_ANNOTATION.oldName(),
+            ANIM_RES_ANNOTATION.newName(),
+            ANY_RES_ANNOTATION.oldName(),
+            ANY_RES_ANNOTATION.newName(),
+            ARRAY_RES_ANNOTATION.oldName(),
+            ARRAY_RES_ANNOTATION.newName(),
+            ATTR_RES_ANNOTATION.oldName(),
+            ATTR_RES_ANNOTATION.newName(),
+            BOOL_RES_ANNOTATION.oldName(),
+            BOOL_RES_ANNOTATION.newName(),
+            COLOR_RES_ANNOTATION.oldName(),
+            COLOR_RES_ANNOTATION.newName(),
+            FONT_RES_ANNOTATION.oldName(),
+            FONT_RES_ANNOTATION.newName(),
+            DIMEN_RES_ANNOTATION.oldName(),
+            DIMEN_RES_ANNOTATION.newName(),
+            DRAWABLE_RES_ANNOTATION.oldName(),
+            DRAWABLE_RES_ANNOTATION.newName(),
+            FRACTION_RES_ANNOTATION.oldName(),
+            FRACTION_RES_ANNOTATION.newName(),
+            ID_RES_ANNOTATION.oldName(),
+            ID_RES_ANNOTATION.newName(),
+            INTEGER_RES_ANNOTATION.oldName(),
+            INTEGER_RES_ANNOTATION.newName(),
+            INTERPOLATOR_RES_ANNOTATION.oldName(),
+            INTERPOLATOR_RES_ANNOTATION.newName(),
+            LAYOUT_RES_ANNOTATION.oldName(),
+            LAYOUT_RES_ANNOTATION.newName(),
+            MENU_RES_ANNOTATION.oldName(),
+            MENU_RES_ANNOTATION.newName(),
+            NAVIGATION_RES_ANNOTATION.oldName(),
+            NAVIGATION_RES_ANNOTATION.newName(),
+            PLURALS_RES_ANNOTATION.oldName(),
+            PLURALS_RES_ANNOTATION.newName(),
+            RAW_RES_ANNOTATION.oldName(),
+            RAW_RES_ANNOTATION.newName(),
+            STRING_RES_ANNOTATION.oldName(),
+            STRING_RES_ANNOTATION.newName(),
+            STYLEABLE_RES_ANNOTATION.oldName(),
+            STYLEABLE_RES_ANNOTATION.newName(),
+            STYLE_RES_ANNOTATION.oldName(),
+            STYLE_RES_ANNOTATION.newName(),
+            TRANSITION_RES_ANNOTATION.oldName(),
+            TRANSITION_RES_ANNOTATION.newName(),
+            XML_RES_ANNOTATION.oldName(),
+            XML_RES_ANNOTATION.newName()
     )
 
     // Include all types, including equality and comparisons
@@ -135,9 +163,9 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             allClassAnnotations: List<UAnnotation>,
             allPackageAnnotations: List<UAnnotation>) {
         when (qualifiedName) {
-            COLOR_INT_ANNOTATION -> checkColor(context, usage)
-            HALF_FLOAT_ANNOTATION -> checkHalfFloat(context, usage)
-            DIMENSION_ANNOTATION, PX_ANNOTATION ->  checkPx(context, usage)
+            COLOR_INT_ANNOTATION.oldName(), COLOR_INT_ANNOTATION.newName() -> checkColor(context, usage)
+            HALF_FLOAT_ANNOTATION.oldName(), HALF_FLOAT_ANNOTATION.newName() -> checkHalfFloat(context, usage)
+            DIMENSION_ANNOTATION.oldName(), DIMENSION_ANNOTATION.newName(), PX_ANNOTATION.oldName(), PX_ANNOTATION.newName() ->  checkPx(context, usage)
             else -> {
                 if (isResourceAnnotation(qualifiedName)) {
                     // Make sure it's the first one to avoid duplicate warnings since we check all
@@ -165,8 +193,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                                             + "than equality is dangerous and usually "
                                             + "wrong;  some resource types set top bit "
                                             + "which turns the value negative",
-                                            qualifiedName.substring(
-                                                    SUPPORT_ANNOTATIONS_PREFIX.length)))
+                                            SUPPORT_ANNOTATIONS_PREFIX.removeFrom(qualifiedName)))
                             return
                         }
                     }
@@ -199,7 +226,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     private fun isResourceAnnotation(signature: String): Boolean {
         return ResourceEvaluator.getTypeFromAnnotationSignature(signature) != null ||
-                signature == ANY_RES_ANNOTATION
+                ANY_RES_ANNOTATION.isEquals(signature)
     }
 
     private fun checkColor(context: JavaContext, argument: UElement) {

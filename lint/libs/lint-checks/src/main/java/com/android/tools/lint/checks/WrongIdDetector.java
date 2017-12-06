@@ -22,6 +22,7 @@ import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TYPE;
 import static com.android.SdkConstants.AUTO_URI;
+import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT;
 import static com.android.SdkConstants.CONSTRAINT_REFERENCED_IDS;
 import static com.android.SdkConstants.FD_RES_VALUES;
 import static com.android.SdkConstants.ID_PREFIX;
@@ -187,8 +188,12 @@ public class WrongIdDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(RELATIVE_LAYOUT, TAG_ITEM, PERCENT_RELATIVE_LAYOUT,
-                SdkConstants.CLASS_CONSTRAINT_LAYOUT);
+        return Arrays.asList(
+                RELATIVE_LAYOUT,
+                TAG_ITEM,
+                PERCENT_RELATIVE_LAYOUT,
+                SdkConstants.CLASS_CONSTRAINT_LAYOUT.oldName(),
+                SdkConstants.CLASS_CONSTRAINT_LAYOUT.newName());
     }
 
     @Override
@@ -226,7 +231,8 @@ public class WrongIdDetector extends LayoutDetector {
             }
         }
 
-        boolean isConstraintLayout = layout.getTagName().equals(SdkConstants.CLASS_CONSTRAINT_LAYOUT);
+        boolean isConstraintLayout =
+                SdkConstants.CLASS_CONSTRAINT_LAYOUT.isEquals(layout.getTagName());
 
         for (Element element : XmlUtils.getSubTags(layout)) {
             String selfId = stripIdPrefix(element.getAttributeNS(ANDROID_URI, ATTR_ID));
@@ -417,7 +423,7 @@ public class WrongIdDetector extends LayoutDetector {
         } else {
             assert tagName.equals(RELATIVE_LAYOUT)
                     || tagName.equals(PERCENT_RELATIVE_LAYOUT)
-                    || tagName.equals(SdkConstants.CLASS_CONSTRAINT_LAYOUT);
+                    || CLASS_CONSTRAINT_LAYOUT.isEquals(tagName);
             if (mRelativeLayouts == null) {
                 mRelativeLayouts = new ArrayList<>();
             }

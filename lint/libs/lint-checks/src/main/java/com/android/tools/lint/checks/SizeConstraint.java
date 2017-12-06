@@ -38,7 +38,7 @@ class SizeConstraint extends RangeConstraint {
 
     @NonNull
     public static SizeConstraint create(@NonNull UAnnotation annotation) {
-        assert SIZE_ANNOTATION.equals(annotation.getQualifiedName());
+        assert SIZE_ANNOTATION.isEquals(annotation.getQualifiedName());
         long exact = getAnnotationLongValue(annotation, ATTR_VALUE, -1);
         long min = getAnnotationLongValue(annotation, ATTR_MIN, Long.MIN_VALUE);
         long max = getAnnotationLongValue(annotation, ATTR_MAX, Long.MAX_VALUE);

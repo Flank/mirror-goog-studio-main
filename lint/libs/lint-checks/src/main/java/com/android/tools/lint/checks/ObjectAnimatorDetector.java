@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
+import com.android.support.AndroidxName;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
@@ -70,7 +71,8 @@ import org.jetbrains.uast.UastUtils;
  * Looks for issues around ObjectAnimator usages
  */
 public class ObjectAnimatorDetector extends Detector implements SourceCodeScanner {
-    public static final String KEEP_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Keep";
+    public static final AndroidxName KEEP_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "Keep");
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             ObjectAnimatorDetector.class,
@@ -380,7 +382,7 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
                 PsiModifierList modifierList = owner.getModifierList();
                 if (modifierList != null) {
                     for (PsiAnnotation annotation : modifierList.getAnnotations()) {
-                        if (KEEP_ANNOTATION.equals(annotation.getQualifiedName())) {
+                        if (KEEP_ANNOTATION.isEquals(annotation.getQualifiedName())) {
                             return;
                         }
                     }

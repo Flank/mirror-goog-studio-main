@@ -79,7 +79,8 @@ public class FragmentDetector extends Detector implements SourceCodeScanner {
     @Nullable
     @Override
     public List<String> applicableSuperClasses() {
-        return Arrays.asList(CLASS_FRAGMENT, CLASS_V4_FRAGMENT);
+        return Arrays.asList(
+                CLASS_FRAGMENT, CLASS_V4_FRAGMENT.oldName(), CLASS_V4_FRAGMENT.newName());
     }
 
     @Override

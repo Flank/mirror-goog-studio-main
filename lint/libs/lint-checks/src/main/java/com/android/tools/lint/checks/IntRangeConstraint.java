@@ -32,7 +32,7 @@ class IntRangeConstraint extends RangeConstraint {
 
     @NonNull
     public static IntRangeConstraint create(@NonNull UAnnotation annotation) {
-        assert INT_RANGE_ANNOTATION.equals(annotation.getQualifiedName());
+        assert INT_RANGE_ANNOTATION.isEquals(annotation.getQualifiedName());
         long from = getAnnotationLongValue(annotation, ATTR_FROM, Long.MIN_VALUE);
         long to = getAnnotationLongValue(annotation, ATTR_TO, Long.MAX_VALUE);
         return new IntRangeConstraint(from, to);

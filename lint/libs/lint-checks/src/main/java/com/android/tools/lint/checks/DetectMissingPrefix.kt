@@ -16,25 +16,7 @@
 
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants.ANDROID_PKG_PREFIX
-import com.android.SdkConstants.ANDROID_SUPPORT_PKG_PREFIX
-import com.android.SdkConstants.ANDROID_URI
-import com.android.SdkConstants.ATTR_CLASS
-import com.android.SdkConstants.ATTR_CORE_APP
-import com.android.SdkConstants.ATTR_FONT_FAMILY
-import com.android.SdkConstants.ATTR_LAYOUT
-import com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX
-import com.android.SdkConstants.ATTR_PACKAGE
-import com.android.SdkConstants.ATTR_SRC_COMPAT
-import com.android.SdkConstants.ATTR_STYLE
-import com.android.SdkConstants.AUTO_URI
-import com.android.SdkConstants.CONSTRAINT_LAYOUT
-import com.android.SdkConstants.CONSTRAINT_LAYOUT_GUIDELINE
-import com.android.SdkConstants.TAG_LAYOUT
-import com.android.SdkConstants.TOOLS_URI
-import com.android.SdkConstants.VIEW_FRAGMENT
-import com.android.SdkConstants.VIEW_TAG
-import com.android.SdkConstants.XMLNS
+import com.android.SdkConstants.*
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceFolderType.ANIM
 import com.android.resources.ResourceFolderType.ANIMATOR
@@ -228,11 +210,12 @@ Similarly, in manifest files, nearly all attributes should be in the `android:` 
 
         // For the purposes of this check, the ConstraintLayout isn't a custom view
 
-        if (CONSTRAINT_LAYOUT == tag || CONSTRAINT_LAYOUT_GUIDELINE == tag) {
+        if (CONSTRAINT_LAYOUT.isEquals(tag) || CONSTRAINT_LAYOUT_GUIDELINE.isEquals(tag)) {
             return false
         }
 
         return tag.indexOf('.') != -1 && (!tag.startsWith(ANDROID_PKG_PREFIX) ||
-                tag.startsWith(ANDROID_SUPPORT_PKG_PREFIX))
+                tag.startsWith(ANDROID_SUPPORT_PKG_PREFIX) ||
+                tag.startsWith(ANDROIDX_PKG_PREFIX))
     }
 }

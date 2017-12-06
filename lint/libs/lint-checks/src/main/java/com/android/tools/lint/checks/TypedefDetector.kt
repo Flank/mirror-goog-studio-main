@@ -69,13 +69,17 @@ import org.jetbrains.uast.util.isNewArrayWithInitializer
 
 class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-            INT_DEF_ANNOTATION,
-            LONG_DEF_ANNOTATION,
-            STRING_DEF_ANNOTATION,
+            INT_DEF_ANNOTATION.oldName(),
+            INT_DEF_ANNOTATION.newName(),
+            LONG_DEF_ANNOTATION.oldName(),
+            LONG_DEF_ANNOTATION.newName(),
+            STRING_DEF_ANNOTATION.oldName(),
+            STRING_DEF_ANNOTATION.newName(),
 
             // Such that the annotation is considered relevant by the annotation handler
             // even if the range check itself is disabled
-            INT_RANGE_ANNOTATION
+            INT_RANGE_ANNOTATION.oldName(),
+            INT_RANGE_ANNOTATION.newName()
     )
 
     override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean =
@@ -93,18 +97,18 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             allClassAnnotations: List<UAnnotation>,
             allPackageAnnotations: List<UAnnotation>) {
         when (qualifiedName) {
-            INT_DEF_ANNOTATION,
-            LONG_DEF_ANNOTATION -> {
+            INT_DEF_ANNOTATION.oldName(), INT_DEF_ANNOTATION.newName(),
+            LONG_DEF_ANNOTATION.oldName(), LONG_DEF_ANNOTATION.newName() -> {
                 val flagAttribute = getAnnotationBooleanValue(annotation, TYPE_DEF_FLAG_ATTRIBUTE)
                 val flag = flagAttribute != null && flagAttribute
                 checkTypeDefConstant(context, annotation, usage, null, flag,
                         annotations)
             }
-            STRING_DEF_ANNOTATION -> {
+            STRING_DEF_ANNOTATION.oldName(), STRING_DEF_ANNOTATION.newName() -> {
                 checkTypeDefConstant(context, annotation, usage, null, false,
                         annotations)
             }
-            INT_RANGE_ANNOTATION -> {} // deliberate no-op
+            INT_RANGE_ANNOTATION.oldName(), INT_RANGE_ANNOTATION.newName() -> {} // deliberate no-op
         }
     }
 
@@ -288,9 +292,9 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 var hadTypeDef = false
                 for (a in evaluator.filterRelevantAnnotations(annotations)) {
                     val qualifiedName = a.qualifiedName
-                    if (INT_DEF_ANNOTATION == qualifiedName ||
-                            LONG_DEF_ANNOTATION == qualifiedName ||
-                            STRING_DEF_ANNOTATION == qualifiedName) {
+                    if (INT_DEF_ANNOTATION.isEquals(qualifiedName) ||
+                            LONG_DEF_ANNOTATION.isEquals(qualifiedName) ||
+                            STRING_DEF_ANNOTATION.isEquals(qualifiedName)) {
                         hadTypeDef = true
                         val paramValues = getAnnotationValue(JavaUAnnotation.wrap(a))
                         if (paramValues != null) {
@@ -544,8 +548,8 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         fun findIntDef(annotations: List<UAnnotation>): UAnnotation? {
             for (annotation in annotations) {
                 val qualifiedName = annotation.qualifiedName
-                if (INT_DEF_ANNOTATION == qualifiedName ||
-                        LONG_DEF_ANNOTATION == qualifiedName) {
+                if (INT_DEF_ANNOTATION.isEquals(qualifiedName) ||
+                        LONG_DEF_ANNOTATION.isEquals(qualifiedName)) {
                     return annotation
                 }
             }
