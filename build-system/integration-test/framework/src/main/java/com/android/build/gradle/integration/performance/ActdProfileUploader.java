@@ -231,6 +231,13 @@ public class ActdProfileUploader implements ProfileUploader {
      * say "stable", I mean that the same set of enabled flags will always return the same string,
      * because the flags are first sorted before being serialised to string. This makes the result
      * useful in, for example, the series ID.
+     *
+     * <p>There is a tremendous amount of subtlety here. The default set of flags, when passed
+     * through this function, will return an empty string. This is an implementation detail of how
+     * protos treat enums, but works well for us by not invalidating all series when a new flag is
+     * introduced. If we instead output all flag values including defaults, we would invalidate all
+     * series at the point the flag was introduced because literally all series IDs would change. We
+     * probably don't want that, but there are some arguments either way.
      */
     @VisibleForTesting
     @NonNull

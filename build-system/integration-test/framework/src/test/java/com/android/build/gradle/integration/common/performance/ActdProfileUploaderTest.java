@@ -134,7 +134,6 @@ public class ActdProfileUploaderTest {
     @Test
     public void flags() {
         GradleBenchmarkResult gbr = RandomGradleBenchmark.randomBenchmarkResult();
-        assertThat(ActdProfileUploader.flags(gbr)).isNotEmpty();
 
         // Make sure that we get the same result for the same object passed in multiple times.
         assertThat(ActdProfileUploader.flags(gbr)).isEqualTo(ActdProfileUploader.flags(gbr));

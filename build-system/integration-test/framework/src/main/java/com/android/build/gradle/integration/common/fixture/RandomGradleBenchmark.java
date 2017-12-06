@@ -23,6 +23,11 @@ import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionT
 import com.google.common.collect.Lists;
 import com.google.protobuf.ProtocolMessageEnum;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.Benchmark;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult.Flags;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult.ScheduledBuild;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
@@ -30,19 +35,21 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import com.google.wireless.android.sdk.stats.GradleTaskExecution;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class RandomGradleBenchmark {
+    @NonNull private static final ThreadLocalRandom RAND = ThreadLocalRandom.current();
+
     public static List<Logging.GradleBenchmarkResult> randomBenchmarkResults() {
-        return randomBenchmarkResults(randomNonzeroLong());
+        return randomBenchmarkResults(RAND.nextLong(1, Long.MAX_VALUE));
     }
 
     public static Logging.GradleBenchmarkResult randomBenchmarkResult() {
-        return randomBenchmarkResult(randomNonzeroLong());
+        return randomBenchmarkResult(RAND.nextLong(1, Long.MAX_VALUE));
     }
 
     private static List<Logging.GradleBenchmarkResult> randomBenchmarkResults(long buildId) {
-        int count = randomInt(5, 15);
+        int count = RAND.nextInt(5, 15);
         List<Logging.GradleBenchmarkResult> results = Lists.newArrayListWithCapacity(count);
         for (int i = 0; i < count; i++) {
             results.add(randomBenchmarkResult(buildId));
@@ -51,26 +58,23 @@ public final class RandomGradleBenchmark {
     }
 
     private static Logging.GradleBenchmarkResult randomBenchmarkResult(long buildId) {
-        Logging.GradleBenchmarkResult.Flags flags =
-                Logging.GradleBenchmarkResult.Flags.newBuilder()
-                        .setAapt(random(Logging.GradleBenchmarkResult.Flags.Aapt.values()))
-                        .setBranch(random(Logging.GradleBenchmarkResult.Flags.Branch.values()))
-                        .setCompiler(random(Logging.GradleBenchmarkResult.Flags.Compiler.values()))
-                        .setJacoco(random(Logging.GradleBenchmarkResult.Flags.Jacoco.values()))
-                        .setMinification(
-                                random(Logging.GradleBenchmarkResult.Flags.Minification.values()))
-                        .build();
-
-        Logging.GradleBenchmarkResult.ScheduledBuild.Builder scheduledBuild =
-                Logging.GradleBenchmarkResult.ScheduledBuild.newBuilder()
-                        .setBuildbotBuildNumber(buildId);
+        Flags.Builder flags =
+                Flags.newBuilder()
+                        .setAapt(random(Flags.Aapt.values()))
+                        .setBranch(random(Flags.Branch.values()))
+                        .setCompiler(random(Flags.Compiler.values()))
+                        .setJacoco(random(Flags.Jacoco.values()))
+                        .setMinification(random(Flags.Minification.values()));
 
         GradleBuildProfile.Builder profile =
                 GradleBuildProfile.newBuilder().setBuildTime(randomDuration());
 
-        int projectCount = randomInt(2, 5);
-        int variantCount = randomInt(4, 10);
-        int spanCount = randomInt(10, 11);
+        ScheduledBuild.Builder scheduledBuild =
+                GradleBenchmarkResult.ScheduledBuild.newBuilder().setBuildbotBuildNumber(buildId);
+
+        int projectCount = RAND.nextInt(2, 5);
+        int variantCount = RAND.nextInt(4, 10);
+        int spanCount = RAND.nextInt(10, 11);
 
         for (int i = 0; i < projectCount; i++) {
             GradleBuildProject.Builder project =
@@ -89,8 +93,8 @@ public final class RandomGradleBenchmark {
         for (int i = 0; i < spanCount; i++) {
             GradleBuildProfileSpan.Builder span =
                     GradleBuildProfileSpan.newBuilder()
-                            .setProject(randomInt(0, projectCount - 1))
-                            .setVariant(randomInt(0, variantCount - 1))
+                            .setProject(RAND.nextInt(0, projectCount - 1))
+                            .setVariant(RAND.nextInt(0, variantCount - 1))
                             .setDurationInMs(randomDuration())
                             .setType(random(GradleBuildProfileSpan.ExecutionType.values()));
 
@@ -116,9 +120,9 @@ public final class RandomGradleBenchmark {
             profile.addSpan(span);
         }
 
-        return Logging.GradleBenchmarkResult.newBuilder()
-                .setBenchmarkMode(random(Logging.BenchmarkMode.values()))
-                .setBenchmark(random(Logging.Benchmark.values()))
+        return GradleBenchmarkResult.newBuilder()
+                .setBenchmarkMode(random(BenchmarkMode.values()))
+                .setBenchmark(random(Benchmark.values()))
                 .setFlags(flags)
                 .setProfile(profile)
                 .setScheduledBuild(scheduledBuild)
@@ -138,9 +142,11 @@ public final class RandomGradleBenchmark {
     private static <T extends ProtocolMessageEnum> T random(@NonNull T[] array) {
         T t;
         while (true) {
-            t = array[new Random().nextInt(array.length)];
+            t = array[RAND.nextInt(array.length)];
             try {
-                t.getNumber();
+                if (t.getNumber() == -1) {
+                    continue;
+                }
                 return t;
             } catch (IllegalArgumentException e) {
                 // it's not possible to call .getNumber() on the UNRECOGNIZED enum element, doing so
@@ -151,28 +157,15 @@ public final class RandomGradleBenchmark {
     }
 
     private static long randomDuration() {
-        long value = Math.abs(new Random().nextLong());
-        if (value == Long.MIN_VALUE) {
-            return Long.MAX_VALUE;
-        }
+        long value = RAND.nextLong(0, Long.MAX_VALUE);
 
-        // to make sure samples aren't filtered out, we add the threshold if it's below it
+        // To make sure samples aren't filtered out, we add the lower threshold if our value is
+        // below it. This is something of an implementation detail, but if the implementation is
+        // ever removed, this code should fail to compile. I'm okay with that.
         if (value < ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD_MILLIS) {
             value += ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD_MILLIS;
         }
 
         return value;
-    }
-
-    private static long randomNonzeroLong() {
-        long value = Math.abs(new Random().nextLong());
-        if (value == Long.MIN_VALUE) {
-            return Long.MAX_VALUE;
-        }
-        return value + 1;
-    }
-
-    private static int randomInt(int min, int max) {
-        return new Random().nextInt(max - min + 1) + min;
     }
 }
