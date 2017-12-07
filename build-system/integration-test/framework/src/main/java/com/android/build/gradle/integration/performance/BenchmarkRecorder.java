@@ -22,7 +22,6 @@ import com.android.builder.utils.ExceptionRunnable;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Longs;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
@@ -37,6 +36,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -87,15 +87,6 @@ public final class BenchmarkRecorder {
         public abstract List<GradleBenchmarkResult> filter(List<GradleBenchmarkResult> results);
     }
 
-    @NonNull
-    private static final List<ProfileUploader> DEFAULT_UPLOADERS =
-            ImmutableList.of(
-                    GoogleStorageProfileUploader.INSTANCE
-
-                    // TODO(samwho): disabled this to check if it's the cause of http://b/69351230
-                    // ActdProfileUploader.fromEnvironment()
-                    );
-
     /** Variables for asynchronously uploading profiles. */
     private static final int WORK_QUEUE_SIZE = 64;
 
@@ -119,12 +110,22 @@ public final class BenchmarkRecorder {
 
     @NonNull private final ProfileCapturer capturer;
 
-    public BenchmarkRecorder(@NonNull ProfileCapturer capturer) {
-        this(capturer, DEFAULT_UPLOADERS);
+    private static List<ProfileUploader> defaultUploaders() {
+        List<ProfileUploader> uploaders =
+                Arrays.asList(
+                        GoogleStorageProfileUploader.INSTANCE,
+                        ActdProfileUploader.fromEnvironment());
 
         if (LocalUploader.INSTANCE.getOutputFolder() != null) {
-            this.uploaders.add(LocalUploader.INSTANCE);
+            uploaders.add(LocalUploader.INSTANCE);
         }
+
+        return Collections.unmodifiableList(uploaders);
+    }
+
+    public BenchmarkRecorder(@NonNull ProfileCapturer capturer) {
+        this(capturer, defaultUploaders());
+
     }
 
     public BenchmarkRecorder(

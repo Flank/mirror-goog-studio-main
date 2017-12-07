@@ -41,7 +41,6 @@ import java.util.List;
 
 /** Uploads profiling data to Google Storage from the gradle performance tests. */
 public class GoogleStorageProfileUploader implements ProfileUploader {
-
     private static final Duration UPLOAD_TIMEOUT = Duration.ofMinutes(5);
 
     public static final ProfileUploader INSTANCE = new GoogleStorageProfileUploader();
