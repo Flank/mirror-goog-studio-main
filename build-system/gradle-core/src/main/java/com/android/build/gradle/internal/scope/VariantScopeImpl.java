@@ -30,6 +30,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.BUNDLE_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.scope.CodeShrinker.ANDROID_GRADLE;
@@ -325,7 +326,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (configTypes.contains(API_ELEMENTS)) {
             Preconditions.checkNotNull(
                     variantDependency.getApiElements(),
-                    "Publishing to API Element with no ApiElement configuration object");
+                    "Publishing to API Element with no ApiElements configuration object");
             publishArtifactToConfiguration(
                     variantDependency.getApiElements(), file, builtBy, artifactType);
         }
@@ -333,7 +334,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (configTypes.contains(RUNTIME_ELEMENTS)) {
             Preconditions.checkNotNull(
                     variantDependency.getRuntimeElements(),
-                    "Publishing to Runtime Element with no RuntimeElement configuration object");
+                    "Publishing to Runtime Element with no RuntimeElements configuration object");
             publishArtifactToConfiguration(
                     variantDependency.getRuntimeElements(), file, builtBy, artifactType);
         }
@@ -341,10 +342,19 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (configTypes.contains(METADATA_ELEMENTS)) {
             Preconditions.checkNotNull(
                     variantDependency.getMetadataElements(),
-                    "Publishing to Metadata Element with no MetaDataElement configuration object");
+                    "Publishing to Metadata Element with no MetaDataElements configuration object");
             publishArtifactToConfiguration(
                     variantDependency.getMetadataElements(), file, builtBy, artifactType);
         }
+
+        if (configTypes.contains(BUNDLE_ELEMENTS)) {
+            Preconditions.checkNotNull(
+                    variantDependency.getBundleElements(),
+                    "Publishing to Bundle Element with no BundleElements configuration object");
+            publishArtifactToConfiguration(
+                    variantDependency.getBundleElements(), file, builtBy, artifactType);
+        }
+
     }
 
     private void publishArtifactToConfiguration(
@@ -1441,54 +1451,50 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getClassOutputForDataBinding() {
-        return new File(globalScope.getGeneratedDir(),
-                "source/dataBinding/" + getVariantConfiguration().getDirName());
+        return new File(
+                globalScope.getGeneratedDir(),
+                "source/dataBinding/trigger/" + getVariantConfiguration().getDirName());
     }
+
 
     @Override
     @NonNull
     public File getLayoutInfoOutputForDataBinding() {
-        return new File(globalScope.getIntermediatesDir() + "/data-binding-info/" +
-                getVariantConfiguration().getDirName());
+        return dataBindingIntermediate("layout-info");
     }
 
     @Override
     @NonNull
     public File getLayoutFolderOutputForDataBinding() {
-        return new File(globalScope.getIntermediatesDir() + "/data-binding-layout-out/" +
-                getVariantConfiguration().getDirName());
+        return dataBindingIntermediate("layout-out");
     }
 
     @Override
     @NonNull
     public File getLayoutInputFolderForDataBinding() {
-        return new File(
-                globalScope.getIntermediatesDir()
-                        + "/data-binding-layout-in/"
-                        + getVariantConfiguration().getDirName());
+        return dataBindingIntermediate("layout-in");
     }
 
     @Override
     @NonNull
     public File getBuildFolderForDataBindingCompiler() {
-        return new File(globalScope.getIntermediatesDir() + "/data-binding-compiler/" +
-                getVariantConfiguration().getDirName());
+        return dataBindingIntermediate("compiler");
     }
 
     @Override
     @NonNull
     public File getGeneratedClassListOutputFileForDataBinding() {
-        return new File(
-                globalScope.getIntermediatesDir()
-                        + "/data-binding-class-list/"
-                        + getVariantConfiguration().getDirName()
-                        + "/_generated.txt");
+        return new File(dataBindingIntermediate("class-list"), "_generated.txt");
     }
 
     @NonNull
     @Override
-    public File getBundleFolderForDataBinding() {
-        return intermediate("data-binding-bundle");
+    public File getBundleArtifactFolderForDataBinding() {
+        return dataBindingIntermediate("bundle-bin");
+    }
+
+    private File dataBindingIntermediate(String name) {
+        return intermediate("data-binding", name);
     }
 
     @Override

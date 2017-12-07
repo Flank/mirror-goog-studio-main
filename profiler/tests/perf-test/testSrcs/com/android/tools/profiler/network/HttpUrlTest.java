@@ -56,19 +56,20 @@ public class HttpUrlTest {
         assertThat(driver.getFakeAndroidDriver().waitForInput(getSuccess)).isTrue();
 
         GrpcUtils grpc = driver.getGrpc();
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(grpc.getNetworkStub());
+        final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(grpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
                 stubWrapper.getAllHttpRange(grpc.getProcessId());
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
-        long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
+        final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
         HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains("?activity=HttpUrlGet")).isTrue();
-
-        HttpDetailsResponse responseDetails =
-                stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
-        String responseFields = responseDetails.getResponse().getFields();
-        assertThat(responseFields.contains("HTTP/1.0 200 OK")).isTrue();
+        stubWrapper.waitFor(
+                () -> {
+                    HttpDetailsResponse details =
+                            stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
+                    return details.getResponse().getFields().contains("HTTP/1.0 200 OK");
+                });
 
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();

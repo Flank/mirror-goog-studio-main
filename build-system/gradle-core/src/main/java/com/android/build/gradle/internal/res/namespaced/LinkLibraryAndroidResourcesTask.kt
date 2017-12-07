@@ -60,10 +60,11 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional var tested: FileCollection? = null; private set
 
     @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
-    @get:Input val packageForR get() = packageForRSupplier.get()
+    @get:Input private val packageForR get() = packageForRSupplier.get()
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
-    @get:OutputDirectory @get:Optional var rClassSource: File? = null; private set
+    @get:Optional var rClassSource: File? = null; private set
+    @get:OutputFile lateinit var rDotTxt: File private set
     @get:OutputFile lateinit var staticLibApk: File private set
 
     @get:Internal var fileCache: FileCache? = null; private set
@@ -100,10 +101,12 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
                         .setLibrarySymbolTableFiles(null)
                         .setIsStaticLibrary(true)
                         .setImports(imports.build())
+                        //  TODO: Remove generating R.java once b/69956357 is fixed.
                         .setSourceOutputDir(rClassSource)
                         .setResourceOutputApk(staticLibApk)
                         .setVariantType(VariantType.LIBRARY)
                         .setCustomPackageForR(packageForR)
+                        .setSymbolOutputDir(rDotTxt.parentFile)
                         .setLogger(iLogger)
                         .setBuildToolInfo(builder.buildToolInfo)
                         .build()
@@ -114,7 +117,8 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
     class ConfigAction(
             private val scope: VariantScope,
             private val rClassSource: File?,
-            private val staticLibApk: File) : TaskConfigAction<LinkLibraryAndroidResourcesTask> {
+            private val staticLibApk: File,
+            private val rDotTxt: File) : TaskConfigAction<LinkLibraryAndroidResourcesTask> {
 
         override fun getName() = scope.getTaskName("link", "Resources")
 
@@ -161,6 +165,7 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
             task.setAndroidBuilder(scope.globalScope.androidBuilder)
             task.fileCache = scope.globalScope.buildCache
             task.packageForRSupplier = Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
+            task.rDotTxt = rDotTxt
         }
     }
 

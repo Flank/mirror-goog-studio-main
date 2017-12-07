@@ -35,11 +35,8 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
-import com.android.builder.packaging.PackagerException;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
-import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.signing.KeytoolException;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
@@ -48,6 +45,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 import org.junit.Before;
@@ -114,9 +112,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
                         false) {
                     @Override
                     @NonNull
-                    protected File generateSplitApk(@NonNull DexFiles dexFiles)
-                            throws IOException, KeytoolException, PackagerException,
-                                    InterruptedException, ProcessException, TransformException {
+                    protected File generateSplitApk(@NonNull DexFiles dexFiles) {
                         dexFilesList.add(dexFiles);
                         return new File("/dev/null");
                     }
@@ -134,8 +130,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
 
     @Test
     public void testNonIncrementalBuild()
-            throws TransformException, InterruptedException, IOException, ProcessException,
-            KeytoolException, PackagerException {
+            throws TransformException, InterruptedException, IOException {
 
         TransformOutputProvider transformOutputProvider = new TransformOutputProviderForTests();
         File dexFolderOne = Mockito.mock(File.class);
@@ -192,8 +187,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
 
     @Test
     public void testIncrementalBuild()
-            throws TransformException, InterruptedException, IOException, ProcessException,
-            KeytoolException, PackagerException {
+            throws TransformException, InterruptedException, IOException {
 
         TransformOutputProvider transformOutputProvider = new TransformOutputProviderForTests();
         File dexFolderOne = dexFileFolder.newFolder();
@@ -259,11 +253,87 @@ public class InstantRunSlicesSplitApkBuilderTest {
         }
     }
 
+    @Test
+    public void testIncrementalBuild_sliceContainsMultipleChanged()
+            throws TransformException, InterruptedException, IOException {
+
+        TransformOutputProvider transformOutputProvider = new TransformOutputProviderForTests();
+        File dexFolderOne = dexFileFolder.newFolder();
+        FileUtils.createFile(new File(dexFolderOne, "dexFile1-1.dex"), "some dex");
+        FileUtils.createFile(new File(dexFolderOne, "dexFile1-2.dex"), "some dex");
+
+        File dexFolderTwo = dexFileFolder.newFolder();
+        FileUtils.createFile(new File(dexFolderTwo, "dexFile2-1.dex"), "some dex");
+
+        File dexFolderThree = dexFileFolder.newFolder();
+        FileUtils.createFile(new File(dexFolderThree, "dexFile3-1.dex"), "some dex");
+        FileUtils.createFile(new File(dexFolderThree, "dexFile3-2.dex"), "some dex");
+
+        TransformInput dexOne =
+                TransformTestHelper.directoryBuilder(dexFolderOne)
+                        .setName("dex_one")
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .putChangedFiles(
+                                ImmutableMap.of(
+                                        new File(dexFolderOne, "dexFile1-1.dex"),
+                                        Status.CHANGED,
+                                        new File(dexFolderOne, "dexFile1-2.dex"),
+                                        Status.CHANGED))
+                        .build();
+        TransformInput dexTwo =
+                TransformTestHelper.directoryBuilder(dexFolderTwo)
+                        .setName("dex_two")
+                        .setScope(QualifiedContent.Scope.SUB_PROJECTS)
+                        .putChangedFiles(
+                                ImmutableMap.of(
+                                        new File(dexFolderTwo, "dexFile2-1.dex"),
+                                        Status.NOTCHANGED,
+                                        new File(dexFolderTwo, "dexFile2-2.dex"),
+                                        Status.REMOVED))
+                        .build();
+        TransformInput dexThree =
+                TransformTestHelper.directoryBuilder(dexFolderThree)
+                        .setName("dex_three")
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .putChangedFiles(
+                                ImmutableMap.of(
+                                        new File(dexFolderThree, "dexFile3-2.dex"), Status.ADDED))
+                        .build();
+        TransformInvocation transformInvocation =
+                TransformTestHelper.invocationBuilder()
+                        .setInputs(dexOne, dexTwo, dexThree)
+                        .setTransformOutputProvider(transformOutputProvider)
+                        .setIncremental(true)
+                        .build();
+
+        instantRunSliceSplitApkBuilder.transform(transformInvocation);
+        assertThat(
+                        dexFilesList
+                                .stream()
+                                .map(InstantRunSplitApkBuilder.DexFiles::encodeName)
+                                .collect(Collectors.toList()))
+                .containsExactly("dex_one", "dex_two", "dex_three");
+        for (InstantRunSplitApkBuilder.DexFiles dexFiles : dexFilesList) {
+            switch (dexFiles.encodeName()) {
+                case "dex_one":
+                    assertThat(dexFiles.getDexFiles()).hasSize(2);
+                    break;
+                case "dex_two":
+                    assertThat(dexFiles.getDexFiles()).hasSize(1);
+                    break;
+                case "dex_three":
+                    assertThat(dexFiles.getDexFiles()).hasSize(2);
+                    break;
+                default:
+                    fail("Unexpected split apk generation request : " + dexFiles.encodeName());
+            }
+        }
+    }
+
     private static class TransformOutputProviderForTests implements TransformOutputProvider {
 
         @Override
-        public void deleteAll() throws IOException {
-        }
+        public void deleteAll() {}
 
         @NonNull
         @Override

@@ -16,7 +16,7 @@
 #ifndef PERFD_SESSIONS_SESSION_UTILS_H
 #define PERFD_SESSIONS_SESSION_UTILS_H
 
-#include "proto/profiler.pb.h"
+#include "proto/common.pb.h"
 
 #include <climits>
 

@@ -61,10 +61,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull
     final ProjectConnection projectConnection;
     @NonNull final Consumer<GradleBuildResult> lastBuildResultConsumer;
-    @Nullable final BenchmarkRecorder benchmarkRecorder;
     @NonNull private final List<String> arguments = Lists.newArrayList();
     @NonNull private final ProjectOptionsBuilder options = new ProjectOptionsBuilder();
-    @NonNull final Path profilesDirectory;
     @NonNull final Path projectDirectory;
     @Nullable private final String heapSize;
     @Nullable Logging.BenchmarkMode benchmarkMode;
@@ -82,16 +80,12 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
             @NonNull Path projectDirectory,
             @NonNull Path buildDotGradleFile,
-            @Nullable BenchmarkRecorder benchmarkRecorder,
-            @NonNull Path profilesDirectory,
             @Nullable String heapSize) {
         this(
                 projectConnection,
                 lastBuildResultConsumer,
                 projectDirectory,
                 buildDotGradleFile,
-                benchmarkRecorder,
-                profilesDirectory,
                 heapSize,
                 false);
     }
@@ -101,21 +95,14 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
             @NonNull Path projectDirectory,
             @NonNull Path buildDotGradleFile,
-            @Nullable BenchmarkRecorder benchmarkRecorder,
-            @NonNull Path profilesDirectory,
             @Nullable String heapSize,
             boolean disableRetryLogic) {
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
-        this.benchmarkRecorder = benchmarkRecorder;
-        if (benchmarkRecorder != null) {
-            this.loggingLevel = LoggingLevel.LIFECYCLE;
-        }
         this.projectConnection = projectConnection;
         if (!buildDotGradleFile.getFileName().toString().equals("build.gradle")) {
             arguments.add("--build-file=" + buildDotGradleFile.toString());
         }
-        this.profilesDirectory = profilesDirectory;
         this.heapSize = heapSize;
         with(StringOption.BUILD_CACHE_DIR, getBuildCacheDir().getAbsolutePath());
         this.disableRetryLogic = disableRetryLogic;
@@ -128,31 +115,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     final Path getJvmLogDir() {
         return projectDirectory.resolve("jvmLogs");
-    }
-
-    /** Upload this builds detailed profile as a benchmark. */
-    public final T recordBenchmark(@NonNull Logging.BenchmarkMode benchmarkMode) {
-        Preconditions.checkState(
-                benchmarkRecorder != null,
-                "BenchmarkRecorder must be set for this GradleTestProject when it is created in "
-                        + "order to record a benchmark.");
-        this.benchmarkMode = benchmarkMode;
-
-        return (T) this;
-    }
-
-    /**
-     * Temporarily disable benchmarking for the duration of the given runnable.
-     *
-     * <p>If the executor was previously set to record, that state will be restored at the end of
-     * the runnable.
-     */
-    public final T dontRecord(Runnable r) {
-        Logging.BenchmarkMode prev = benchmarkMode;
-        benchmarkMode = null;
-        r.run();
-        benchmarkMode = prev;
-        return (T) this;
     }
 
     public final T with(@NonNull BooleanOption option, boolean value) {

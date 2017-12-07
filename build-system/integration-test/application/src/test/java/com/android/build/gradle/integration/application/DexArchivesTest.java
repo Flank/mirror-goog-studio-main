@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.SubStreamSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.annotations.NonNull;

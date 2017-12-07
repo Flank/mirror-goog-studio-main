@@ -67,8 +67,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 gradleTestProject::setLastBuildResult,
                 gradleTestProject.getTestDir().toPath(),
                 gradleTestProject.getBuildFile().toPath(),
-                gradleTestProject.getBenchmarkRecorder(),
-                gradleTestProject.getProfileDirectory(),
                 gradleTestProject.getHeapSize(),
                 disableRetryLogic);
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();
@@ -178,8 +176,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
             launcher.addProgressListener(progressListener, OperationType.TASK);
 
-            ProfileCapturer profiler =
-                    new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory);
             launcher.withArguments(Iterables.toArray(args, String.class));
 
             WaitingResultHandler handler = new WaitingResultHandler();
@@ -216,7 +212,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             if (!allowStderr && !result.getStderr().isEmpty()) {
                 throw new AssertionError("Unexpected stderr: " + stderr);
             }
-            profiler.recordProfile();
 
             return result;
         }
@@ -261,11 +256,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         switch (aaptGeneration) {
             case AAPT_V1:
                 with(BooleanOption.ENABLE_AAPT2, false);
-                break;
-            case AAPT_V2:
-                with(BooleanOption.ENABLE_AAPT2, true);
-                with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, false);
-                with(BooleanOption.ENABLE_DAEMON_MODE_AAPT2, false);
                 break;
             case AAPT_V2_JNI:
                 with(BooleanOption.ENABLE_AAPT2, true);

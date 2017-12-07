@@ -16,14 +16,11 @@
 
 package com.android.build.gradle.internal.api.dsl.options
 
-import com.android.builder.core.BuilderConstants
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.builder.core.BuilderConstants
 import com.android.builder.errors.EvalIssueReporter
-import com.android.ide.common.signing.KeystoreHelper
-import com.android.prefs.AndroidLocation
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.model.ObjectFactory
-import org.gradle.tooling.BuildException
 import java.io.File
 
 private val DEFAULT_PASSWORD = "android"
@@ -32,7 +29,8 @@ private val DEFAULT_ALIAS = "AndroidDebugKey"
 class SigningConfigFactory(
             private val objectFactory: ObjectFactory,
             private val deprecationReporter: DeprecationReporter,
-            private val issueReporter: EvalIssueReporter)
+            private val issueReporter: EvalIssueReporter,
+            private val defaultDebugKeystoreLocation: File)
         : NamedDomainObjectFactory<SigningConfigImpl> {
 
     override fun create(name: String): SigningConfigImpl {
@@ -40,15 +38,10 @@ class SigningConfigFactory(
                 name, deprecationReporter, issueReporter)
 
         if (BuilderConstants.DEBUG == name) {
-            try {
-                newInstance.storeFile = File(KeystoreHelper.defaultDebugKeystoreLocation())
-                newInstance.storePassword = DEFAULT_PASSWORD
-                newInstance.keyAlias = DEFAULT_ALIAS
-                newInstance.keyPassword = DEFAULT_PASSWORD
-            } catch (e: AndroidLocation.AndroidLocationException) {
-                throw BuildException("Failed to get default debug keystore location.", e)
-            }
-
+            newInstance.storeFile = defaultDebugKeystoreLocation
+            newInstance.storePassword = DEFAULT_PASSWORD
+            newInstance.keyAlias = DEFAULT_ALIAS
+            newInstance.keyPassword = DEFAULT_PASSWORD
         }
 
         return newInstance

@@ -1,5 +1,6 @@
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 import static com.android.tools.lint.detector.api.LintUtils.getNextInstruction;
 import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
@@ -583,7 +584,7 @@ public class VersionChecks {
             }
         } else if (element instanceof UCallExpression) {
             UCallExpression callExpression = (UCallExpression) element;
-            if (GET_BUILD_SDK_INT.equals(callExpression.getMethodName())) {
+            if (GET_BUILD_SDK_INT.equals(getMethodName(callExpression))) {
                 return true;
             } // else look inside the body?
         }

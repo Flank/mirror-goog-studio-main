@@ -126,8 +126,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UFile;
+import org.jetbrains.uast.UIdentifier;
 import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UastUtils;
 import org.objectweb.asm.Opcodes;
@@ -188,6 +190,7 @@ public class LintUtils {
         }
     }
 
+    @Deprecated
     @Nullable
     public static PsiElement getCallName(@NonNull PsiCallExpression expression) {
         PsiElement firstChild = expression.getFirstChild();
@@ -1956,5 +1959,22 @@ public class LintUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * Looks up the method name of a given call. You should be able to just
+     * call {@link UCallExpression#getMethodName()} but due to bugs in UAST
+     * a workaround is currently necessary in some cases.
+     *
+     * @param call the call to look up
+     * @return the call name, if any
+     */
+    @Nullable
+    public static String getMethodName(@NonNull UCallExpression call) {
+        UIdentifier methodIdentifier = call.getMethodIdentifier();
+        if (methodIdentifier != null) {
+            return methodIdentifier.getName();
+        }
+        return call.getMethodName();
     }
 }

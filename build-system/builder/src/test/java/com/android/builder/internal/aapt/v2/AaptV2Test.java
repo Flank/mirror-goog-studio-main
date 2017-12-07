@@ -26,7 +26,6 @@ import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptTestUtils;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.WaitableExecutor;
-import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.repository.Revision;
@@ -52,7 +51,6 @@ import org.junit.runners.Parameterized;
 public class AaptV2Test {
 
     private enum AaptGeneration {
-        AAPT_V2,
         AAPT_V2_JNI,
         AAPT_V2_DAEMON
     }
@@ -85,26 +83,6 @@ public class AaptV2Test {
         }
 
         switch (generation) {
-            case AAPT_V2:
-                Revision revision = Revision.parseRevision("24.0.0 rc2");
-
-                FakeProgressIndicator progress = new FakeProgressIndicator();
-                BuildToolInfo buildToolInfo =
-                        AndroidSdkHandler.getInstance(TestUtils.getSdk())
-                                .getLatestBuildTool(progress, true);
-                if (buildToolInfo == null || buildToolInfo.getRevision().compareTo(revision) < 0) {
-                    throw new RuntimeException(
-                            "Test requires at least build-tools revision "
-                                    + revision.toShortString());
-                }
-
-                //noinspection deprecation
-                return new OutOfProcessAaptV2(
-                        new DefaultProcessExecutor(logger),
-                        new LoggedProcessOutputHandler(logger),
-                        buildToolInfo,
-                        mTemporaryFolder.newFolder(),
-                        logger);
             case AAPT_V2_JNI:
                 return new AaptV2Jni(
                         mTemporaryFolder.newFolder(),
@@ -172,10 +150,6 @@ public class AaptV2Test {
 
     @Test
     public void crunchFlagIsRespected() throws Exception {
-        if (generation == AaptGeneration.AAPT_V2) {
-            throw new AssumptionViolatedException("Not in SDK version of AAPT2 yet");
-        }
-
         try (Aapt aapt = makeAapt()) {
             File in = AaptTestUtils.getTestPng(mTemporaryFolder);
             File outDir = AaptTestUtils.getOutputDir(mTemporaryFolder);

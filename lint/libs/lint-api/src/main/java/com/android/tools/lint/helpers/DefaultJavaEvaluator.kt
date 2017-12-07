@@ -47,7 +47,7 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
-import org.jetbrains.uast.getContainingFile
+import org.jetbrains.uast.getContainingUFile
 
 open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.project.Project?,
         private val myLintProject: Project?) : JavaEvaluator() {
@@ -134,7 +134,7 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
     }
 
     override fun findJarPath(element: UElement): String? {
-        val uFile = element.getContainingFile()
+        val uFile = element.getContainingUFile()
         return if (uFile != null) findJarPath(uFile.psi as PsiFile?) else null
     }
 
@@ -194,7 +194,7 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
     }
 
     override fun getPackage(node: UElement): PsiPackage? {
-        val uFile = node.getContainingFile() // Can't be getContainingUFile yet, IDE UAST must be newer
+        val uFile = node.getContainingUFile()
         return if (uFile != null) {
             getPackage(uFile.psi)
         } else null

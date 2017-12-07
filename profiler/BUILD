@@ -8,7 +8,7 @@ load("//tools/base/bazel:bazel.bzl", "java_jarjar")
 java_jarjar(
     name = "studio-profiler-grpc-1.0-jarjar",
     srcs = [
-        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
         "//prebuilts/tools/common/m2/repository/io/grpc/grpc-auth/1.0.3:jar",
         "//prebuilts/tools/common/m2/repository/io/grpc/grpc-context/1.0.3:jar",
         "//prebuilts/tools/common/m2/repository/io/grpc/grpc-core/1.0.3:jar",
@@ -29,6 +29,7 @@ java_jarjar(
         "//prebuilts/tools/common/m2/repository/io/netty/netty-resolver/4.1.6.Final:jar",
         "//prebuilts/tools/common/m2/repository/io/netty/netty-transport/4.1.6.Final:jar",
         "//tools/base/profiler/proto:libprofiler_java_proto.jar",
+        "//tools/base/third_party:com.google.protobuf_protobuf-java",
     ],
     rules = "jarjar_rules.txt",
     visibility = ["//visibility:public"],

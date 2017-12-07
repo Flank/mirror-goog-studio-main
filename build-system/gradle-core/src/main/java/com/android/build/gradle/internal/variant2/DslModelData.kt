@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.api.sourcesets.AndroidSourceSetFactory
 import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.api.sourcesets.FilesProvider
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreLocation
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
@@ -49,7 +50,6 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
 import java.util.function.BinaryOperator
-import java.util.stream.Collectors
 
 /**
  * Internal DSL model exposed to the extension objects.
@@ -128,10 +128,14 @@ class DslModelDataImpl<in E: BaseExtension2>(
                     _buildTypes)
 
     // wrapped container for signing config
-    internal val _signingConfigs: NamedDomainObjectContainer<SigningConfigImpl> =
+    private val _signingConfigs: NamedDomainObjectContainer<SigningConfigImpl> =
             containerFactory.createContainer(
                     SigningConfigImpl::class.java,
-                    SigningConfigFactory(objectFactory, deprecationReporter, issueReporter))
+                    SigningConfigFactory(
+                            objectFactory,
+                            deprecationReporter,
+                            issueReporter,
+                            getDefaultDebugKeystoreLocation()))
 
     // sealable container for signing config
     override val signingConfigs: SealableNamedDomainObjectContainer<SigningConfig, SigningConfigImpl> =

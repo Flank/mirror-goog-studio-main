@@ -332,7 +332,7 @@ object KotlinLintAnalyzerFacade {
     private fun findKotlinStandardLibraries(): List<JavaRoot> {
         val classPath: String = System.getProperty("java.class.path")
         val paths = mutableListOf<JavaRoot>()
-        for (path in classPath.split(':')) {
+        for (path in classPath.split(File.pathSeparatorChar)) {
             if (path.contains("kotlin-")) {
                 val file = File(path)
                 val name = file.name

@@ -6,6 +6,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.ANNOTATION_PROCESSOR_LIST;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
 
 import com.android.annotations.NonNull;
@@ -74,12 +75,8 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             // normal classpath.
             javacTask
                     .getOptions()
-                    .setBootClasspath(
-                            Joiner.on(File.pathSeparator)
-                                    .join(
-                                            globalScope
-                                                    .getAndroidBuilder()
-                                                    .getBootClasspathAsStrings(false)));
+                    .setBootstrapClasspath(
+                            project.files(globalScope.getAndroidBuilder().getBootClasspath(false)));
         }
 
         FileCollection classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
@@ -154,11 +151,11 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             }
         }
 
-        javacTask.getOptions().getCompilerArgs().add("-s");
-        javacTask.getOptions().getCompilerArgs().add(
-                scope.getAnnotationProcessorOutputDir().getAbsolutePath());
+        javacTask
+                .getOptions()
+                .setAnnotationProcessorGeneratedSourcesDirectory(
+                        scope.getAnnotationProcessorOutputDir());
         javacTask.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
-
 
         if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
             if (scope.hasOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
@@ -168,9 +165,14 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 javacTask.dataBindingDependencyArtifacts =
                         scope.getOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS);
             }
+            if (scope.hasOutput(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)) {
+                javacTask.dataBindingClassLogDir =
+                        scope.getOutput(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT);
+            }
             // the data binding artifact is created by the annotation processor, so we register this
             // task output (which also publishes it) with javac as the generating task.
-            javacTask.dataBindingArtifactOutputDirectory = scope.getBundleFolderForDataBinding();
+            javacTask.dataBindingArtifactOutputDirectory =
+                    scope.getBundleArtifactFolderForDataBinding();
             scope.addTaskOutput(
                     TaskOutputHolder.TaskOutputType.DATA_BINDING_ARTIFACT,
                     javacTask.dataBindingArtifactOutputDirectory,

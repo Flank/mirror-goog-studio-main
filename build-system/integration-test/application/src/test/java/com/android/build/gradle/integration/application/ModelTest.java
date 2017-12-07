@@ -124,5 +124,4 @@ public class ModelTest {
                 ModelHelper.getAndroidTestArtifact(model).getInstrumentedTestTaskName(),
                 "connectedDebugAndroidTest");
     }
-
 }

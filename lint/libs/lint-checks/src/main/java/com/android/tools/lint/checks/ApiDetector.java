@@ -62,25 +62,21 @@ import static com.android.tools.lint.checks.VersionChecks.isWithinVersionCheckCo
 import static com.android.tools.lint.detector.api.ClassContext.getFqcn;
 import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
 import static com.android.tools.lint.detector.api.UastLintUtils.getLongAttribute;
-import static com.android.utils.CharSequences.indexOf;
 import static com.android.utils.SdkUtils.getResourceFieldName;
 import static com.intellij.pom.java.LanguageLevel.JDK_1_7;
 import static com.intellij.pom.java.LanguageLevel.JDK_1_8;
 import static java.lang.Boolean.TRUE;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.repository.Revision;
-import com.android.repository.api.LocalPackage;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.SdkVersionInfo;
-import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintDriver;
@@ -88,7 +84,6 @@ import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector.ResourceFolderScanner;
 import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
@@ -354,62 +349,6 @@ public class ApiDetector extends ResourceXmlDetector
                 mWarnedMissingDb = true;
                 context.report(IssueRegistry.LINT_ERROR, Location.create(context.file),
                         "Can't find API database; API check not performed");
-            } else {
-                if (mApiDatabase == null || mApiDatabase.getTarget() != null) {
-                    // Don't warn about compileSdk/platform-tools mismatch if the API database
-                    // corresponds to an SDK platform
-                    return;
-                }
-
-                // See if you don't have at least version 23.0.1 of platform tools installed
-                AndroidSdkHandler sdk = context.getClient().getSdk();
-                if (sdk == null) {
-                    return;
-                }
-                LocalPackage pkgInfo = sdk.getLocalPackage(SdkConstants.FD_PLATFORM_TOOLS,
-                        context.getClient().getRepositoryLogger());
-                if (pkgInfo == null) {
-                    return;
-                }
-                Revision revision = pkgInfo.getVersion();
-
-                // The platform tools must be at at least the same revision
-                // as the compileSdkVersion!
-                // And as a special case, for 23, they must be at 23.0.1
-                // because 23.0.0 accidentally shipped without Android M APIs.
-                int compileSdkVersion = context.getProject().getBuildSdk();
-                if (compileSdkVersion == 23) {
-                    if (revision.getMajor() > 23 || revision.getMajor() == 23
-                      && (revision.getMinor() > 0 || revision.getMicro() > 0)) {
-                        return;
-                    }
-                } else if (compileSdkVersion <= revision.getMajor()) {
-                    return;
-                }
-
-                // Pick a location: when incrementally linting in the IDE, tie
-                // it to the current file
-                List<File> currentFiles = context.getProject().getSubset();
-                Location location;
-                if (currentFiles != null && currentFiles.size() == 1) {
-                    File file = currentFiles.get(0);
-                    CharSequence contents = context.getClient().readFile(file);
-                    int firstLineEnd = indexOf(contents, '\n');
-                    if (firstLineEnd == -1) {
-                        firstLineEnd = contents.length();
-                    }
-                    location = Location.create(file,
-                        new DefaultPosition(0, 0, 0), new
-                        DefaultPosition(0, firstLineEnd, firstLineEnd));
-                } else {
-                    location = Location.create(context.file);
-                }
-                context.report(UNSUPPORTED,
-                        location,
-                        String.format("The SDK platform-tools version (%1$s) is too old "
-                                        + "to check APIs compiled with API %2$d; please update",
-                                revision.toShortString(),
-                                compileSdkVersion));
             }
         }
     }
@@ -1871,6 +1810,22 @@ public class ApiDetector extends ResourceXmlDetector
                     && owner.equals("java.lang.Throwable") && desc.equals("(Ljava.lang.Throwable;)")
                     && isUsingDesugar(mContext, expression)) {
                 return;
+            }
+
+            if (name.equals("forEach") && owner.equals("java.lang.Iterable")) {
+                List<UExpression> arguments = expression.getValueArguments();
+                if (arguments.size() == 1) {
+                    PsiType expressionType = arguments.get(0).getExpressionType();
+                    if (expressionType != null &&
+                            expressionType.getCanonicalText().startsWith("kotlin.")) {
+                        // Workaround for 69534659: The resolve method returns the wrong call.
+                        // See if it looks like this is the case: the error is on
+                        // a forEach call on java.lang.Iterable (which takes a
+                        // java.util.function.Consumer as an argument), but here we're
+                        // passing in a kotlin.jvm.functions.Function1
+                        return;
+                    }
+                }
             }
 
             String signature;

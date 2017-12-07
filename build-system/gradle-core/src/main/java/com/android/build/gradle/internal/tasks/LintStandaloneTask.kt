@@ -58,7 +58,7 @@ open class LintStandaloneTask : DefaultTask() {
     /** This resolves the dependency of the lintChecks configuration */
     private fun computeLocalChecks(): List<File> {
         val configuration = lintChecks ?: return emptyList()
-        val attributes = Action<AttributeContainer> { container: AttributeContainer ->
+        val attributes = Action { container: AttributeContainer ->
             container.attribute(
                     ARTIFACT_TYPE, AndroidArtifacts.ArtifactType.JAR.type)
         }

@@ -13,5 +13,6 @@
     <orderEntry type="module" module-name="testutils" />
     <orderEntry type="module" module-name="common" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

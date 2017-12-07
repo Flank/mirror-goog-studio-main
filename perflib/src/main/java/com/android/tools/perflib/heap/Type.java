@@ -17,19 +17,19 @@
 package com.android.tools.perflib.heap;
 
 import com.google.common.collect.Maps;
-
 import java.util.Map;
 
 public enum Type {
-    OBJECT(2, 0), // Pointer sizes are dependent on the hprof file, so set it to 0 for now.
-    BOOLEAN(4, 1),
-    CHAR(5, 2),
-    FLOAT(6, 4),
-    DOUBLE(7, 8),
-    BYTE(8, 1),
-    SHORT(9, 2),
-    INT(10, 4),
-    LONG(11, 8);
+    // Pointer sizes are dependent on the hprof file, so set it to 0 for now.
+    OBJECT(2, 0, null, null),
+    BOOLEAN(4, 1, "boolean[]", "[Z"),
+    CHAR(5, 2, "char[]", "[C"),
+    FLOAT(6, 4, "float[]", "[F"),
+    DOUBLE(7, 8, "double[]", "[D"),
+    BYTE(8, 1, "byte[]", "[B"),
+    SHORT(9, 2, "short[]", "[S"),
+    INT(10, 4, "int[]", "[I"),
+    LONG(11, 8, "long[]", "[J");
 
     private static Map<Integer, Type> sTypeMap = Maps.newHashMap();
 
@@ -37,15 +37,21 @@ public enum Type {
 
     private int mSize;
 
+    private String mAndroidArrayName;
+
+    private String mJavaArrayName;
+
     static {
         for (Type type : Type.values()) {
             sTypeMap.put(type.mId, type);
         }
     }
 
-    Type(int type, int size) {
+    Type(int type, int size, String androidArrayName, String javaArrayName) {
         mId = type;
         mSize = size;
+        mAndroidArrayName = androidArrayName;
+        mJavaArrayName = javaArrayName;
     }
 
     public static Type getType(int id) {
@@ -60,18 +66,11 @@ public enum Type {
         return mId;
     }
 
-    public static String getClassNameOfPrimitiveArray(Type type) {
-        switch (type) {
-            case BOOLEAN: return "boolean[]";
-            case CHAR: return "char[]";
-            case FLOAT: return "float[]";
-            case DOUBLE: return "double[]";
-            case BYTE: return "byte[]";
-            case SHORT: return "short[]";
-            case INT: return "int[]";
-            case LONG: return "long[]";
-            default: throw new IllegalArgumentException("OBJECT type is not a primitive type");
+    public String getClassNameOfPrimitiveArray(boolean useJavaName) {
+        if (this == OBJECT) {
+            throw new IllegalArgumentException("OBJECT type is not a primitive type");
         }
+        return useJavaName ? mJavaArrayName : mAndroidArrayName;
     }
 }
 

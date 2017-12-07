@@ -20,8 +20,11 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.google.common.collect.ImmutableList;
-import org.junit.AssumptionViolatedException;
+import com.android.build.gradle.options.BooleanOption;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,35 +34,40 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class DataBindingIntegrationTestAppsConnectedTest {
     @Rule public GradleTestProject project;
-
-    public DataBindingIntegrationTestAppsConnectedTest(String projectName) {
-        project = GradleTestProject.builder().fromDataBindingIntegrationTest(projectName).create();
-    }
-
-    @Parameterized.Parameters(name = "_{0}")
-    public static Iterable<String> classNames() {
-        // "App With Spaces", not supported by bazel :/
-        return ImmutableList.of(
-                "IndependentLibrary",
-                "TestApp",
-                "ProguardedAppWithTest",
-                "AppWithDataBindingInTests");
-    }
-
     @Rule public Adb adb = new Adb();
+
+    public DataBindingIntegrationTestAppsConnectedTest(String projectName, boolean useV2) {
+        project =
+                GradleTestProject.builder()
+                        .fromDataBindingIntegrationTest(projectName)
+                        .addGradleProperties(
+                                BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName()
+                                        + "="
+                                        + useV2)
+                        .create();
+    }
+
+    @Parameterized.Parameters(name = "app_{0}_useV2_{1}")
+    public static Iterable<Object[]> classNames() {
+        // "App With Spaces", not supported by bazel :/
+        List<Object[]> params = new ArrayList<>();
+        for (boolean useV2 : new boolean[] {true, false}) {
+            params.add(new Object[] {"IndependentLibrary", useV2});
+            params.add(new Object[] {"TestApp", useV2});
+            params.add(new Object[] {"ProguardedAppWithTest", useV2});
+            params.add(new Object[] {"AppWithDataBindingInTests", useV2});
+        }
+        return params;
+    }
+
+    @Before
+    public void clean() throws IOException, InterruptedException {
+        project.execute("clean");
+    }
 
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
-        String projectName = project.getName();
-        if (projectName.equals("TestApp") || projectName.equals("ProguardedAppWithTest")) {
-            // Disabled due to b/69446221
-            throw new AssumptionViolatedException(
-                    String.format(
-                            "Project %s disabled for connected tests due to missing prebuilts.",
-                            projectName));
-        }
-
         project.executeConnectedCheck();
     }
 }

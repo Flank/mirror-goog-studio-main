@@ -42,7 +42,7 @@ public enum BooleanOption implements Option<Boolean> {
 
     ENABLE_D8("android.enableD8", true),
     ENABLE_D8_DESUGARING("android.enableD8.desugaring", false),
-    ENABLE_D8_MAIN_DEX_LIST("android.enableD8MainDexList", false),
+    ENABLE_D8_MAIN_DEX_LIST("android.enableD8MainDexList", true),
 
     ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk"),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
@@ -53,6 +53,8 @@ public enum BooleanOption implements Option<Boolean> {
     KEEP_TIMESTAMPS_IN_APK("android.keepTimestampsInApk"),
 
     ENABLE_NEW_DSL_AND_API("android.enableNewDsl"),
+
+    ENABLE_DATA_BINDING_V2("android.databinding.enableV2", false),
 
     IDE_INVOKED_FROM_IDE(AndroidProject.PROPERTY_INVOKED_FROM_IDE),
     IDE_BUILD_MODEL_ONLY(AndroidProject.PROPERTY_BUILD_MODEL_ONLY),

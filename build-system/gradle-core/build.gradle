@@ -53,7 +53,6 @@ dependencies {
     testCompile project(':base:instant-run:instant-run-annotations')
     testCompile project(':base:instant-run:instant-run-runtime')
 
-
     // Add gradleApi to classpath for compilation, but use provided configuration so that groovy is
     // not exposed as a runtime dependency.
     provided gradleApi()
@@ -66,6 +65,7 @@ dependencies {
     testCompile gradleApi()
     testCompile libs.junit
     testCompile libs.truth
+    testCompile libs.kotlin_test
     testCompile libs.mockito_core
     testCompile libs.guava
     testCompile libs.equalsverifier
@@ -73,6 +73,12 @@ dependencies {
     testCompile project(':base:testutils')
     testCompile 'org.jetbrains:annotations:13.0'
     testCompile libs.jsoup
+}
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
 
 jar {

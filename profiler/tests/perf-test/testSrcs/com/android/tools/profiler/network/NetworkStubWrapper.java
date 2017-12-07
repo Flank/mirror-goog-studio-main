@@ -19,6 +19,7 @@ package com.android.tools.profiler.network;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
 import com.android.tools.profiler.proto.NetworkServiceGrpc.NetworkServiceBlockingStub;
+import java.util.function.Supplier;
 
 /** Wrapper of stub calls that is shared among tests. */
 final class NetworkStubWrapper {
@@ -47,25 +48,33 @@ final class NetworkStubWrapper {
     }
 
     /**
-     * Returns payload id after repeatedly fetch it until it is non-empty or time out, otherwise,
-     * returns empty string. Because there is some time gap between connection tracking and payload
-     * track complete, it need some time to set the payload id.
+     * Run the loop and wait until condition is true. This method does NOT timeout so you should
+     * only wait for conditions that are guaranteed to eventually be true.
      */
-    String getPayloadId(long connectionId, Type type) {
-        while (true) {
-            NetworkProfiler.HttpDetailsResponse result = getHttpDetails(connectionId, type);
-            String payloadId =
-                    type == Type.RESPONSE_BODY
-                            ? result.getResponseBody().getPayloadId()
-                            : result.getRequestBody().getPayloadId();
-            if (!payloadId.isEmpty()) {
-                return payloadId;
-            }
+    void waitFor(Supplier<Boolean> condition) {
+        while (!condition.get()) {
             try {
                 Thread.sleep(SLEEP_TIME_MS);
             } catch (InterruptedException e) {
                 e.printStackTrace(System.out);
             }
         }
+    }
+
+    /**
+     * Returns payload id after repeatedly fetch it until it is non-empty or time out, otherwise,
+     * returns empty string. Because there is some time gap between connection tracking and payload
+     * track complete, it need some time to set the payload id.
+     */
+    String getPayloadId(final long connectionId, final Type type) {
+        final Supplier<String> getPayloadId =
+                () -> {
+                    NetworkProfiler.HttpDetailsResponse result = getHttpDetails(connectionId, type);
+                    return type == Type.RESPONSE_BODY
+                            ? result.getResponseBody().getPayloadId()
+                            : result.getRequestBody().getPayloadId();
+                };
+        waitFor(() -> !getPayloadId.get().isEmpty());
+        return getPayloadId.get();
     }
 }

@@ -43,6 +43,7 @@ public class GroovyStubGenerator extends JarOutputCompiler {
     protected boolean compile(List<String> files, String classPath, File outDir)
             throws IOException {
         CompilerConfiguration config = new CompilerConfiguration();
+        config.setClasspath(classPath.replaceAll(":", File.pathSeparator));
         ClassLoader parent = ClassLoader.getSystemClassLoader();
         GroovyClassLoader gcl = new GroovyClassLoader(parent, config);
         JavaStubCompilationUnit cu = new JavaStubCompilationUnit(config, gcl, outDir);

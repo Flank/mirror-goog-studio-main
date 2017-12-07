@@ -167,9 +167,11 @@ public class DexMergerTransform extends Transform {
     @NonNull
     @Override
     public Map<String, Object> getParameterInputs() {
-        Map<String, Object> params = Maps.newHashMapWithExpectedSize(2);
+        Map<String, Object> params = Maps.newHashMapWithExpectedSize(4);
         params.put("dexing-type", dexingType.name());
         params.put("dex-merger-tool", dexMerger.name());
+        params.put("is-debuggable", isDebuggable);
+        params.put("min-sdk-version", minSdkVersion);
 
         return params;
     }
@@ -208,17 +210,15 @@ public class DexMergerTransform extends Transform {
         ProcessOutput output = null;
         List<ForkJoinTask<Void>> mergeTasks;
         try (Closeable ignored = output = outputHandler.createOutput()) {
-            if (dexingType == DexingType.NATIVE_MULTIDEX) {
+            if (dexingType == DexingType.NATIVE_MULTIDEX && isDebuggable) {
                 mergeTasks =
-                        handleNativeMultiDex(
+                        handleNativeMultiDexDebug(
                                 transformInvocation.getInputs(),
                                 output,
                                 outputProvider,
                                 transformInvocation.isIncremental());
             } else {
-                mergeTasks =
-                        handleLegacyAndMonoDex(
-                                transformInvocation.getInputs(), output, outputProvider);
+                mergeTasks = mergeDex(transformInvocation.getInputs(), output, outputProvider);
             }
 
             // now wait for all merge tasks completion
@@ -238,9 +238,12 @@ public class DexMergerTransform extends Transform {
         }
     }
 
-    /** For legacy and mono-dex we always merge all dex archives, non-incrementally. */
+    /**
+     * For legacy and mono-dex we always merge all dex archives, non-incrementally. For release
+     * native multidex we do the same, to get the smallest possible dex files.
+     */
     @NonNull
-    private List<ForkJoinTask<Void>> handleLegacyAndMonoDex(
+    private List<ForkJoinTask<Void>> mergeDex(
             @NonNull Collection<TransformInput> inputs,
             @NonNull ProcessOutput output,
             @NonNull TransformOutputProvider outputProvider)
@@ -282,7 +285,7 @@ public class DexMergerTransform extends Transform {
      * multiple DEX files).
      */
     @NonNull
-    private List<ForkJoinTask<Void>> handleNativeMultiDex(
+    private List<ForkJoinTask<Void>> handleNativeMultiDexDebug(
             @NonNull Collection<TransformInput> inputs,
             @NonNull ProcessOutput output,
             @NonNull TransformOutputProvider outputProvider,

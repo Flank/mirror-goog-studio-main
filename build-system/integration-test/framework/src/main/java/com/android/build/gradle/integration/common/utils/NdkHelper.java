@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.DefaultNdkInfo;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.ndk.NdkInfo;
@@ -28,6 +29,7 @@ import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.util.Collection;
 import java.util.Objects;
 
 /**
@@ -80,5 +82,11 @@ public class NdkHelper {
     @NonNull
     public static NdkInfo getNdkInfo() {
         return new DefaultNdkInfo(GradleTestProject.ANDROID_NDK_HOME);
+    }
+
+    @NonNull
+    public static Collection<Abi> getAbiList() {
+        NdkInfo info = getNdkInfo();
+        return info.getDefaultAbis();
     }
 }

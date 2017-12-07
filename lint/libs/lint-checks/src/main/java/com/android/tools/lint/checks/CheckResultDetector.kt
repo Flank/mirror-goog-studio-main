@@ -45,7 +45,8 @@ class CheckResultDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             FINDBUGS_ANNOTATIONS_CHECK_RETURN_VALUE,
             JAVAX_ANNOTATION_CHECK_RETURN_VALUE,
             ERRORPRONE_CAN_IGNORE_RETURN_VALUE,
-            "io.reactivex.annotations.CheckReturnValue"
+            "io.reactivex.annotations.CheckReturnValue",
+            "com.google.errorprone.annotations.CheckReturnValue"
     )
 
     override fun visitAnnotationUsage(

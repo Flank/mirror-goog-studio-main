@@ -106,7 +106,7 @@ class PluginDelegate<out E: BaseExtension2>(
         val defaultConfig = DefaultConfigImpl(
                 VariantPropertiesImpl(issueReporter),
                 BuildTypeOrProductFlavorImpl(
-                        deprecationReporter, issueReporter) { baseFlavor.postprocessing },
+                        deprecationReporter, issueReporter) { baseFlavor.postProcessing },
                 ProductFlavorOrVariantImpl(issueReporter),
                 FallbackStrategyImpl(deprecationReporter, issueReporter),
                 baseFlavor,

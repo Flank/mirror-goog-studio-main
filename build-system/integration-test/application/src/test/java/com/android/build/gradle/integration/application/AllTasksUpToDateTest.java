@@ -60,9 +60,6 @@ public class AllTasksUpToDateTest {
         Truth.assertThat(executedTasks)
                 // Known exceptions:
                 .containsExactly(
-                        // Validate signing has no outputs, so it's never up-to-date.
-                        ":validateSigningDebug",
-                        ":validateSigningDebugAndroidTest",
                         // Lint declares no outputs, so it's never up-to-date. It's probably for the
                         // better, because it's hard to declare all inputs (they include the SDK
                         // and contents of the Google maven repo).

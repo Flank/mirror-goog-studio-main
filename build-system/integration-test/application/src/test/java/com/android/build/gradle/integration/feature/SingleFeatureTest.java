@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.testutils.apk.Apk;
 import java.io.File;
 import org.junit.AfterClass;

@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
+
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
@@ -131,7 +133,7 @@ public class ToastDetector extends Detector implements UastScanner {
                 seenTarget = true;
             } else {
                 if ((seenTarget || target.equals(node.getReceiver()))
-                        && "show".equals(node.getMethodName())) {
+                        && "show".equals(getMethodName(node))) {
                     // TODO: Do more flow analysis to see whether we're really calling show
                     // on the right type of object?
                     found = true;

@@ -134,64 +134,67 @@ public class ExtractAnnotationsDriverTest {
         new ExtractAnnotationsDriver().run(args);
 
         // Check extracted annotations
-        checkPackageXml("test.pkg", output, ""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<root>\n"
-                + "  <item name=\"test.pkg\">\n"
-                + "    <annotation name=\"android.support.annotation.IntRange\">\n"
-                + "      <val name=\"from\" val=\"20\" />\n"
-                + "    </annotation>\n"
-                + "  </item>\n"
-                + "  <item name=\"test.pkg.IntDefTest void setFlags(java.lang.Object, int) 1\">\n"
-                + "    <annotation name=\"android.support.annotation.IntDef\">\n"
-                + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
-                + "      <val name=\"flag\" val=\"true\" />\n"
-                + "    </annotation>\n"
-                + "  </item>\n"
-                + "  <item name=\"test.pkg.IntDefTest void setStyle(int, int) 0\">\n"
-                + "    <annotation name=\"android.support.annotation.IntDef\">\n"
-                + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT}\" />\n"
-                + "    </annotation>\n"
-                + "    <annotation name=\"android.support.annotation.IntRange\">\n"
-                + "      <val name=\"from\" val=\"20\" />\n"
-                + "    </annotation>\n"
-                + "  </item>\n"
-                + "  <item name=\"test.pkg.IntDefTest.Inner void setInner(int) 0\">\n"
-                + "    <annotation name=\"android.support.annotation.IntDef\">\n"
-                + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
-                + "      <val name=\"flag\" val=\"true\" />\n"
-                + "    </annotation>\n"
-                + "  </item>\n"
-                + "  <item name=\"test.pkg.MyEnhancedList\">\n"
-                + "    <annotation name=\"android.support.annotation.IntRange\">\n"
-                + "      <val name=\"from\" val=\"0\" />\n"
-                + "    </annotation>\n"
-                + "  </item>\n"
-                + "  <item name=\"test.pkg.MyEnhancedList E getReversed(java.util.List&lt;java.lang.String&gt;, java.util.Comparator&lt;? super E&gt;)\">\n"
-                + "    <annotation name=\"android.support.annotation.IntRange\">\n"
-                + "      <val name=\"from\" val=\"10\" />\n"
-                + "    </annotation>\n"
-                + "  </item>\n"
-                + "  <item name=\"test.pkg.PermissionsTest CONTENT_URI\">\n"
-                + "    <annotation name=\"android.support.annotation.RequiresPermission.Read\">\n"
-                + "      <val name=\"value\" val=\"&quot;android.permission.MY_READ_PERMISSION_STRING&quot;\" />\n"
-                + "    </annotation>\n"
-                + "    <annotation name=\"android.support.annotation.RequiresPermission.Write\">\n"
-                + "      <val name=\"value\" val=\"&quot;android.permission.MY_WRITE_PERMISSION_STRING&quot;\" />\n"
-                + "    </annotation>\n"
-                + "  </item>\n"
-                + "  <item name=\"test.pkg.PermissionsTest void myMethod()\">\n"
-                + "    <annotation name=\"android.support.annotation.RequiresPermission\">\n"
-                + "      <val name=\"value\" val=\"&quot;android.permission.MY_PERMISSION_STRING&quot;\" />\n"
-                + "    </annotation>\n"
-                + "  </item>\n"
-                + "  <item name=\"test.pkg.PermissionsTest void myMethod2()\">\n"
-                + "    <annotation name=\"android.support.annotation.RequiresPermission\">\n"
-                + "      <val name=\"anyOf\" val=\"{&quot;android.permission.MY_PERMISSION_STRING&quot;, &quot;android.permission.MY_PERMISSION_STRING2&quot;}\" />\n"
-                + "    </annotation>\n"
-                + "  </item>\n"
-                + "</root>\n"
-                + "\n");
+        checkPackageXml("test.pkg", output, "" +
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<root>\n" +
+                "  <item name=\"test.pkg\">\n" +
+                "    <annotation name=\"android.support.annotation.IntRange\">\n" +
+                "      <val name=\"from\" val=\"20\" />\n" +
+                "    </annotation>\n" +
+                "  </item>\n" +
+                "  <item name=\"test.pkg.IntDefTest void setFlags(java.lang.Object, int) 1\">\n" +
+                "    <annotation name=\"android.support.annotation.IntDef\">\n" +
+                "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n" +
+                "      <val name=\"flag\" val=\"true\" />\n" +
+                "    </annotation>\n" +
+                "  </item>\n" +
+                "  <item name=\"test.pkg.IntDefTest void setStyle(int, int) 0\">\n" +
+                "    <annotation name=\"android.support.annotation.IntDef\">\n" +
+                "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT}\" />\n" +
+                "    </annotation>\n" +
+                "    <annotation name=\"android.support.annotation.IntRange\">\n" +
+                "      <val name=\"from\" val=\"20\" />\n" +
+                "    </annotation>\n" +
+                "  </item>\n" +
+                "  <item name=\"test.pkg.IntDefTest.Inner void setInner(int) 0\">\n" +
+                "    <annotation name=\"android.support.annotation.IntDef\">\n" +
+                "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n" +
+                "      <val name=\"flag\" val=\"true\" />\n" +
+                "    </annotation>\n" +
+                "  </item>\n" +
+                "  <item name=\"test.pkg.MyEnhancedList\">\n" +
+                "    <annotation name=\"android.support.annotation.IntRange\">\n" +
+                "      <val name=\"from\" val=\"0\" />\n" +
+                "    </annotation>\n" +
+                "  </item>\n" +
+                "  <item name=\"test.pkg.MyEnhancedList E getReversed(java.util.List&lt;java.lang.String&gt;, java.util.Comparator&lt;? super E&gt;)\">\n" +
+                "    <annotation name=\"android.support.annotation.IntRange\">\n" +
+                "      <val name=\"from\" val=\"10\" />\n" +
+                "    </annotation>\n" +
+                "  </item>\n" +
+                "  <item name=\"test.pkg.MyEnhancedList java.lang.String getPrefix()\">\n" +
+                "    <annotation name=\"android.support.annotation.Nullable\" />\n" +
+                "  </item>\n" +
+                "  <item name=\"test.pkg.PermissionsTest CONTENT_URI\">\n" +
+                "    <annotation name=\"android.support.annotation.RequiresPermission.Read\">\n" +
+                "      <val name=\"value\" val=\"&quot;android.permission.MY_READ_PERMISSION_STRING&quot;\" />\n" +
+                "    </annotation>\n" +
+                "    <annotation name=\"android.support.annotation.RequiresPermission.Write\">\n" +
+                "      <val name=\"value\" val=\"&quot;android.permission.MY_WRITE_PERMISSION_STRING&quot;\" />\n" +
+                "    </annotation>\n" +
+                "  </item>\n" +
+                "  <item name=\"test.pkg.PermissionsTest void myMethod()\">\n" +
+                "    <annotation name=\"android.support.annotation.RequiresPermission\">\n" +
+                "      <val name=\"value\" val=\"&quot;android.permission.MY_PERMISSION_STRING&quot;\" />\n" +
+                "    </annotation>\n" +
+                "  </item>\n" +
+                "  <item name=\"test.pkg.PermissionsTest void myMethod2()\">\n" +
+                "    <annotation name=\"android.support.annotation.RequiresPermission\">\n" +
+                "      <val name=\"anyOf\" val=\"{&quot;android.permission.MY_PERMISSION_STRING&quot;, &quot;android.permission.MY_PERMISSION_STRING2&quot;}\" />\n" +
+                "    </annotation>\n" +
+                "  </item>\n" +
+                "</root>\n" +
+                "\n");
 
         // Check proguard rules
         assertEquals(""
@@ -401,6 +404,7 @@ public class ExtractAnnotationsDriverTest {
             + "package test.pkg;\n"
             + "\n"
             + "import android.support.annotation.IntRange;\n"
+            + "import android.support.annotation.Nullable;\n"
             + "\n"
             + "import java.util.Comparator;\n"
             + "import java.util.List;\n"
@@ -409,6 +413,7 @@ public class ExtractAnnotationsDriverTest {
             + "public interface MyEnhancedList<E> extends List<E> {\n"
             + "    @IntRange(from = 10)\n"
             + "    E getReversed(List<String> filter, Comparator<? super E> comparator);\n"
+            + "    @Nullable String getPrefix();\n"
             + "}\n");
 
     private final TestFile intDefTest = TestFiles.java(""

@@ -95,7 +95,12 @@ class JpsGraph {
                             .getDependencyExtension(dep);
                     if (dep instanceof JpsModuleDependency && extension != null &&
                             scopes.contains(extension.getScope())) {
-                        ins.add(((JpsModuleDependency) dep).getModule());
+                        JpsModuleDependency moduleDep = (JpsModuleDependency) dep;
+                        if (moduleDep.getModule() == null) {
+                            System.err.println("Invalid module reference: " + moduleDep.getModuleReference().getModuleName());
+                        } else {
+                            ins.add(moduleDep.getModule());
+                        }
                     }
                 }
                 return ins.iterator();

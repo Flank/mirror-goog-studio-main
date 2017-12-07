@@ -135,21 +135,27 @@ class ConfigurationExtensionTest(val pluginType: TestProjects.Plugin) {
             "lollipopDemoDebugRuntimeClasspath" to "provided",
             "lollipopDemoDebugRuntimeClasspath" to "compileOnly")
 
-    // test to prod relationship
+    // test to prod relationship.
+    // This is done at the CompileClasspath/RuntimeClasspath level.
     private val testToProd = multimapOf(
-            // basic raw configs
-            "testImplementation" to "implementation",
-            "testRuntimeOnly" to "runtimeOnly",
-            // flavor and build type configs
-            "testDemoImplementation" to "demoImplementation",
-            "testDebugImplementation" to "debugImplementation",
-            "androidTestDemoImplementation" to "demoImplementation",
-            "androidTestDebugImplementation" to "debugImplementation",
-            // multi flavors and variant configs
-            "testLollipopDemoImplementation" to "lollipopDemoImplementation",
-            "androidTestLollipopDemoImplementation" to "lollipopDemoImplementation",
-            "testLollipopDemoDebugImplementation" to "lollipopDemoDebugImplementation",
-            "androidTestLollipopDemoDebugImplementation" to "lollipopDemoDebugImplementation")
+            "lollipopDemoDebugUnitTestCompileClasspath" to "lollipopDemoDebugCompileClasspath",
+            "lollipopDemoDebugUnitTestRuntimeClasspath" to "lollipopDemoDebugRuntimeClasspath",
+            "lollipopFullDebugUnitTestCompileClasspath" to "lollipopFullDebugCompileClasspath",
+            "lollipopFullDebugUnitTestRuntimeClasspath" to "lollipopFullDebugRuntimeClasspath",
+            "mncDemoDebugUnitTestCompileClasspath" to "mncDemoDebugCompileClasspath",
+            "mncDemoDebugUnitTestRuntimeClasspath" to "mncDemoDebugRuntimeClasspath",
+            "mncFullDebugUnitTestCompileClasspath" to "mncFullDebugCompileClasspath",
+            "mncFullDebugUnitTestRuntimeClasspath" to "mncFullDebugRuntimeClasspath",
+
+            "lollipopDemoDebugAndroidTestCompileClasspath" to "lollipopDemoDebugCompileClasspath",
+            "lollipopDemoDebugAndroidTestRuntimeClasspath" to "lollipopDemoDebugRuntimeClasspath",
+            "lollipopFullDebugAndroidTestCompileClasspath" to "lollipopFullDebugCompileClasspath",
+            "lollipopFullDebugAndroidTestRuntimeClasspath" to "lollipopFullDebugRuntimeClasspath",
+            "mncDemoDebugAndroidTestCompileClasspath" to "mncDemoDebugCompileClasspath",
+            "mncDemoDebugAndroidTestRuntimeClasspath" to "mncDemoDebugRuntimeClasspath",
+            "mncFullDebugAndroidTestCompileClasspath" to "mncFullDebugCompileClasspath",
+            "mncFullDebugAndroidTestRuntimeClasspath" to "mncFullDebugRuntimeClasspath")
+
 
     // forbidden relationship
     private val forbiddenTestToProd = multimapOf(

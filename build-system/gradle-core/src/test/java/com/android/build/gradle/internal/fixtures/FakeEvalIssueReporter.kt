@@ -20,7 +20,9 @@ import com.android.build.gradle.internal.ide.SyncIssueImpl
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 
-class FakeEvalIssueReporter: EvalIssueReporter {
+class FakeEvalIssueReporter(private val throwOnError : Boolean) : EvalIssueReporter {
+
+    constructor() : this(false) {}
 
     val messages = mutableListOf<String>()
 
@@ -29,6 +31,9 @@ class FakeEvalIssueReporter: EvalIssueReporter {
             msg: String,
             data: String?): SyncIssue {
         messages.add(msg)
+        if (severity == EvalIssueReporter.Severity.ERROR && throwOnError) {
+            throw RuntimeException(msg)
+        }
         return SyncIssueImpl(type, severity, data, msg, listOf())
     }
 }

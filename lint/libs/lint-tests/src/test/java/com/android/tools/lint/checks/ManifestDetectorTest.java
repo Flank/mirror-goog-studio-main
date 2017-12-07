@@ -1708,6 +1708,75 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testAppIndexingNoWarn() throws Exception {
+        lint().files(
+                projectProperties().compileSdk(26),
+                manifest("src/main/AndroidManifest.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.helloworld\" >\n"
+                        + "    <uses-sdk android:targetSdkVersion=\"25\" />"
+                        + "\n"
+                        + "    <application\n"
+                        + "        android:label=\"@string/app_name\"\n"
+                        + "        android:allowBackup=\"false\"\n"
+                        + "        android:theme=\"@style/AppTheme\" >\n"
+                        + "        <service android:name=\".MyService\">\n"
+                        + "              <intent-filter>\n"
+                        + "                  <action android:name=\"com.google.firebase.appindexing.UPDATE_INDEX\" />\n"
+                        + "              </intent-filter>\n"
+                        + "        </service>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>\n"),
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'compile com.google.firebase:firebase-appindexing:11.0.4'\n"
+                        + "}"))
+                .issues(ManifestDetector.APP_INDEXING_SERVICE)
+                .run()
+                .expectClean();
+    }
+
+    public void testAppIndexingTargetSdk26() throws Exception {
+        String expected = ""
+                + "src/main/AndroidManifest.xml:11: Warning: UPDATE_INDEX is configured as a service in your app, which is no longer supported for the API level you're targeting. Use a BroadcastReceiver instead. [AppIndexingService]\n"
+                + "                  <action android:name=\"com.google.firebase.appindexing.UPDATE_INDEX\" />\n"
+                + "                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n";
+        lint().files(
+                projectProperties().compileSdk(26),
+                manifest("src/main/AndroidManifest.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.helloworld\" >\n"
+                        + "    <uses-sdk android:targetSdkVersion=\"26\" />"
+                        + "\n"
+                        + "    <application\n"
+                        + "        android:label=\"@string/app_name\"\n"
+                        + "        android:allowBackup=\"false\"\n"
+                        + "        android:theme=\"@style/AppTheme\" >\n"
+                        + "        <service android:name=\".MyService\">\n"
+                        + "              <intent-filter>\n"
+                        + "                  <action android:name=\"com.google.firebase.appindexing.UPDATE_INDEX\" />\n"
+                        + "              </intent-filter>\n"
+                        + "        </service>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>\n"),
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'compile com.google.firebase:firebase-appindexing:11.0.4'\n"
+                        + "}"))
+                .issues(ManifestDetector.APP_INDEXING_SERVICE)
+                .run()
+                .expect(expected);
+    }
+
     private File getMockSupportLibraryInstallation() {
         if (mSdkDir == null) {
             // Make fake SDK "installation" such that we can predict the set

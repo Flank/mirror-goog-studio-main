@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.api.dsl.model
 
 import com.android.build.api.dsl.model.BuildTypeOrVariant
-import com.android.build.api.dsl.options.PostprocessingOptions
-import com.android.build.gradle.internal.api.dsl.options.PostprocessingOptionsImpl
+import com.android.build.api.dsl.options.PostProcessingOptions
+import com.android.build.gradle.internal.api.dsl.options.PostProcessingOptionsImpl
 import com.android.build.gradle.internal.api.dsl.sealing.OptionalSupplier
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.errors.DeprecationReporter
@@ -31,7 +31,7 @@ class BuildTypeOrVariantImpl(
             issueReporter: EvalIssueReporter)
         : SealableObject(issueReporter), BuildTypeOrVariant {
 
-    private val _postprocessing = OptionalSupplier({ PostprocessingOptionsImpl(issueReporter) })
+    private val _postProcessing = OptionalSupplier({ PostProcessingOptionsImpl(issueReporter) })
 
     override var debuggable: Boolean = false
         set(value) {
@@ -96,16 +96,16 @@ class BuildTypeOrVariantImpl(
             }
         }
 
-    override fun postprocessing(action: Action<PostprocessingOptions>) {
-        action.execute(_postprocessing.get(isSealed()))
+    override fun postProcessing(action: Action<PostProcessingOptions>) {
+        action.execute(_postProcessing.get(isSealed()))
     }
 
-    override val postprocessing: PostprocessingOptions
-        get() = _postprocessing.get(isSealed())
+    override val postProcessing: PostProcessingOptions
+        get() = _postProcessing.get(isSealed())
 
     internal fun initWith(that: BuildTypeOrVariantImpl) {
         if (checkSeal()) {
-            _postprocessing.copyFrom(that._postprocessing)
+            _postProcessing.copyFrom(that._postProcessing)
 
             debuggable = that.debuggable
             testCoverageEnabled = that.testCoverageEnabled
@@ -121,7 +121,7 @@ class BuildTypeOrVariantImpl(
 
     override fun seal() {
         super.seal()
-        _postprocessing.instance?.seal()
+        _postProcessing.instance?.seal()
     }
 
     // DEPRECATED

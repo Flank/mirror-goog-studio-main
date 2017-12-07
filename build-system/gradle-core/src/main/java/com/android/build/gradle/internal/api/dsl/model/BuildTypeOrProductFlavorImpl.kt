@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.api.dsl.model
 
 import com.android.build.api.dsl.model.BuildTypeOrProductFlavor
-import com.android.build.api.dsl.options.PostprocessingFiles
+import com.android.build.api.dsl.options.PostProcessingFiles
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
@@ -25,7 +25,7 @@ import com.android.builder.errors.EvalIssueReporter
 class BuildTypeOrProductFlavorImpl(
             private val deprecationReporter: DeprecationReporter,
             issueReporter: EvalIssueReporter,
-            private val postprocessingFiles: () -> PostprocessingFiles)
+            private val postProcessingFiles: () -> PostProcessingFiles)
         : SealableObject(issueReporter), BuildTypeOrProductFlavor {
 
     override var applicationIdSuffix: String? = null
@@ -47,7 +47,7 @@ class BuildTypeOrProductFlavorImpl(
                 "Postprocessing.proguardFiles",
                 "proguardFile()",
                 DeprecationReporter.DeprecationTarget.EOY2018)
-        postprocessingFiles.invoke().proguardFiles.add(proguardFile)
+        postProcessingFiles.invoke().proguardFiles.add(proguardFile)
     }
 
     @Suppress("OverridingDeprecatedMember")
@@ -56,7 +56,7 @@ class BuildTypeOrProductFlavorImpl(
                 "Postprocessing.proguardFiles",
                 "proguardFiles()",
                 DeprecationReporter.DeprecationTarget.EOY2018)
-        postprocessingFiles.invoke().proguardFiles.addAll(files.toMutableList())
+        postProcessingFiles.invoke().proguardFiles.addAll(files.toMutableList())
     }
 
     @Suppress("OverridingDeprecatedMember")
@@ -65,7 +65,7 @@ class BuildTypeOrProductFlavorImpl(
                 "Postprocessing.proguardFiles",
                 "setProguardFiles()",
                 DeprecationReporter.DeprecationTarget.EOY2018)
-        postprocessingFiles.invoke().proguardFiles.addAll(proguardFileIterable.toMutableList())
+        postProcessingFiles.invoke().proguardFiles.addAll(proguardFileIterable.toMutableList())
     }
 
     @Suppress("OverridingDeprecatedMember")
@@ -74,7 +74,7 @@ class BuildTypeOrProductFlavorImpl(
                 "Postprocessing.testProguardFiles",
                 "testProguardFile()",
                 DeprecationReporter.DeprecationTarget.EOY2018)
-        postprocessingFiles.invoke().testProguardFiles.add(proguardFile)
+        postProcessingFiles.invoke().testProguardFiles.add(proguardFile)
     }
 
     @Suppress("OverridingDeprecatedMember")
@@ -83,7 +83,7 @@ class BuildTypeOrProductFlavorImpl(
                 "Postprocessing.testProguardFiles",
                 "testProguardFiles()",
                 DeprecationReporter.DeprecationTarget.EOY2018)
-        postprocessingFiles.invoke().testProguardFiles.addAll(proguardFiles.toMutableList())
+        postProcessingFiles.invoke().testProguardFiles.addAll(proguardFiles.toMutableList())
     }
 
     @Suppress("OverridingDeprecatedMember")
@@ -92,7 +92,7 @@ class BuildTypeOrProductFlavorImpl(
                 "Postprocessing.testProguardFiles",
                 "setTestProguardFiles()",
                 DeprecationReporter.DeprecationTarget.EOY2018)
-        postprocessingFiles.invoke().testProguardFiles.addAll(files.toMutableList())
+        postProcessingFiles.invoke().testProguardFiles.addAll(files.toMutableList())
     }
 
     @Suppress("OverridingDeprecatedMember")
@@ -101,7 +101,7 @@ class BuildTypeOrProductFlavorImpl(
                 "Postprocessing.consumerProguardFiles",
                 "consumerProguardFile()",
                 DeprecationReporter.DeprecationTarget.EOY2018)
-        postprocessingFiles.invoke().consumerProguardFiles.add(proguardFile)
+        postProcessingFiles.invoke().consumerProguardFiles.add(proguardFile)
     }
 
     @Suppress("OverridingDeprecatedMember")
@@ -110,7 +110,7 @@ class BuildTypeOrProductFlavorImpl(
                 "Postprocessing.consumerProguardFiles",
                 "consumerProguardFiles()",
                 DeprecationReporter.DeprecationTarget.EOY2018)
-        postprocessingFiles.invoke().consumerProguardFiles.addAll(proguardFiles.toMutableList())
+        postProcessingFiles.invoke().consumerProguardFiles.addAll(proguardFiles.toMutableList())
     }
 
     @Suppress("OverridingDeprecatedMember")
@@ -119,7 +119,7 @@ class BuildTypeOrProductFlavorImpl(
                 "Postprocessing.consumerProguardFiles",
                 "setConsumerProguardFile()",
                 DeprecationReporter.DeprecationTarget.EOY2018)
-        postprocessingFiles.invoke().consumerProguardFiles.addAll(proguardFileIterable.toMutableList())
+        postProcessingFiles.invoke().consumerProguardFiles.addAll(proguardFileIterable.toMutableList())
     }
 
     fun initWith(that: BuildTypeOrProductFlavorImpl) {

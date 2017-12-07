@@ -19,18 +19,25 @@ package com.android.build.gradle.integration.databinding;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.TestUtils;
 import com.android.testutils.truth.DexClassSubject;
+import com.android.testutils.truth.DexSubject;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
-import org.junit.Ignore;
+import java.util.List;
+import org.apache.commons.io.Charsets;
+import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-
+@RunWith(FilterableParameterized.class)
 public class DataBindingIncrementalTest {
 
     @Rule
@@ -38,41 +45,86 @@ public class DataBindingIncrementalTest {
 
     private static final String EXPORT_INFO_TASK = ":dataBindingExportBuildInfoDebug";
 
-    private static final String MERGE_RESOURCES_TASK = ":mergeDebugResources";
-
     private static final String MAIN_ACTIVITY_BINDING_CLASS =
             "Landroid/databinding/testapp/databinding/ActivityMainBinding;";
+    private static final String MAIN_ACTIVITY_BINDING_CLASS_IMPL =
+            "Landroid/databinding/testapp/databinding/ActivityMainBindingImpl;";
+    private static final String MAIN_ACTIVITY_BINDING_CLASS_LAND_IMPL =
+            "Landroid/databinding/testapp/databinding/ActivityMainBindingLandImpl;";
+
+    private static final String MAIN_ACTIVITY_2_BINDING_CLASS =
+            "Landroid/databinding/testapp/databinding/Activity2Binding;";
+    private static final String MAIN_ACTIVITY_2_BINDING_CLASS_IMPL =
+            "Landroid/databinding/testapp/databinding/Activity2BindingImpl;";
+
 
     private static final String ACTIVITY_MAIN_XML = "src/main/res/layout/activity_main.xml";
 
     private static final String ACTIVITY_MAIN_JAVA
             = "src/main/java/android/databinding/testapp/MainActivity.java";
 
-    public DataBindingIncrementalTest() {
+    private final boolean enableV2;
+
+    private final List<String> mainActivityBindingClasses;
+
+    @Parameterized.Parameters(name = "useV2_{0}")
+    public static Iterable<Boolean> classNames() {
+        return ImmutableList.of(true, false);
+    }
+
+    public DataBindingIncrementalTest(boolean enableV2) {
+        this.enableV2 = enableV2;
+        if (enableV2) {
+            mainActivityBindingClasses =
+                    ImmutableList.of(MAIN_ACTIVITY_BINDING_CLASS, MAIN_ACTIVITY_BINDING_CLASS_IMPL);
+        } else {
+            mainActivityBindingClasses = ImmutableList.of(MAIN_ACTIVITY_BINDING_CLASS);
+        }
+        String props = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + enableV2;
         project =
                 GradleTestProject.builder()
                         .fromTestProject("databindingIncremental")
+                        .addGradleProperties(props)
                         .create();
+    }
+
+    private File getGeneratedInfoClass() {
+        return project.getGeneratedSourceFile(
+                "source",
+                "dataBinding",
+                "trigger",
+                "debug",
+                "android",
+                "databinding",
+                "layouts",
+                "DataBindingInfo.java");
+    }
+
+    private File getInfoIntermediate(String fileName) {
+        return project.getIntermediateFile("data-binding", "debug", "layout-info", fileName);
     }
 
     @Test
     public void compileWithoutChange() throws Exception {
-        GradleBuildResult result = project.executor().run(EXPORT_INFO_TASK);
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
-
-        result = project.executor().run(EXPORT_INFO_TASK);
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasUpToDate();
-        assertRecompile();
+        project.executor().run(EXPORT_INFO_TASK);
+        File infoClass = getGeneratedInfoClass();
+        assertThat(infoClass).exists();
+        String contents = FileUtils.readFileToString(infoClass, Charsets.UTF_8);
+        project.executor().run(EXPORT_INFO_TASK);
+        assertThat(getGeneratedInfoClass()).hasContents(contents);
     }
 
     @Test
     public void changeJavaCode() throws Exception {
         project.execute(EXPORT_INFO_TASK);
-        TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_JAVA), 44, "return false;");
-        GradleBuildResult result = project.executor().run(EXPORT_INFO_TASK);
+        File infoClass = getGeneratedInfoClass();
+        assertThat(infoClass).exists();
+        String contents = FileUtils.readFileToString(infoClass, Charsets.UTF_8);
 
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
-        assertRecompile();
+        TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_JAVA), 44, "return false;");
+        project.executor().run(EXPORT_INFO_TASK);
+        String updated = FileUtils.readFileToString(getGeneratedInfoClass(), Charsets.UTF_8);
+        assertThat(updated).isNotEqualTo(contents);
     }
 
     @Test
@@ -82,37 +134,35 @@ public class DataBindingIncrementalTest {
                 "<variable name=\"foo2\" type=\"String\"/>");
         TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 29,
                 "<TextView android:text='@{foo2 + \" \" + foo2}'");
-        GradleBuildResult result = project.executor().run("assembleDebug");
+        project.executor().run("assembleDebug");
 
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
-
-        DexClassSubject bindingClass =
-                assertThat(project.getApk(DEBUG))
-                        .hasMainDexFile()
-                        .that()
-                        .containsClass(MAIN_ACTIVITY_BINDING_CLASS)
-                        .that();
-        bindingClass.doesNotHaveMethod("setFoo");
-        bindingClass.hasMethod("setFoo2");
-        assertRecompile();
+        for (String className : mainActivityBindingClasses) {
+            DexClassSubject bindingClass =
+                    assertThat(project.getApk(DEBUG))
+                            .hasMainDexFile()
+                            .that()
+                            .containsClass(className)
+                            .that();
+            bindingClass.doesNotHaveMethod("setFoo");
+            bindingClass.hasMethod("setFoo2");
+        }
     }
 
     @Test
-    @Ignore("b/68252584")
     public void addVariable() throws Exception {
         project.execute(EXPORT_INFO_TASK);
         TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 20,
                 "<variable name=\"foo\" type=\"String\"/><variable name=\"foo2\" type=\"String\"/>");
-        GradleBuildResult result = project.executor().run("assembleDebug");
+        project.executor().run("assembleDebug");
 
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
-        assertThat(project.getApk(DEBUG))
-                .hasMainDexFile()
-                .that()
-                .containsClass(MAIN_ACTIVITY_BINDING_CLASS)
-                .that()
-                .hasMethods("setFoo", "setFoo2");
-        assertRecompile();
+        for (String className : mainActivityBindingClasses) {
+            assertThat(project.getApk(DEBUG))
+                    .hasMainDexFile()
+                    .that()
+                    .containsClass(className)
+                    .that()
+                    .hasMethods("setFoo", "setFoo2");
+        }
     }
 
     @Test
@@ -120,9 +170,7 @@ public class DataBindingIncrementalTest {
         project.execute(EXPORT_INFO_TASK);
         TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 30,
                 "android:id=\"@+id/myTextView\"");
-        GradleBuildResult result = project.executor().run("assembleDebug");
-
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
+        project.executor().run("assembleDebug");
 
         assertThat(project.getApk(DEBUG))
                 .hasMainDexFile()
@@ -131,74 +179,81 @@ public class DataBindingIncrementalTest {
                 .that()
                 .hasField("myTextView");
 
-        TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 30, "");
-        result = project.executor().run("assembleDebug");
+        if (enableV2) {
+            assertThat(project.getApk(DEBUG))
+                    .hasMainDexFile()
+                    .that()
+                    .containsClass(MAIN_ACTIVITY_BINDING_CLASS_IMPL)
+                    .that()
+                    .doesNotHaveField("myTextView");
+        }
 
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
+        TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 30, "");
+        project.executor().run("assembleDebug");
+
         assertThat(project.getApk(DEBUG))
                 .hasMainDexFile()
                 .that()
                 .containsClass(MAIN_ACTIVITY_BINDING_CLASS)
                 .that()
                 .doesNotHaveField("myTextView");
-        assertRecompile();
     }
 
     @Test
-    @Ignore("b/68252584")
     public void addNewLayoutFolderAndFile() throws Exception {
         project.execute(EXPORT_INFO_TASK);
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File landscapeActivity = new File(mainActivity
                 .getParentFile().getParentFile(), "layout-land/activity_main.xml");
-        landscapeActivity.getParentFile().mkdirs();
+        assertThat(landscapeActivity.getParentFile().mkdirs()).isTrue();
         Files.copy(mainActivity, landscapeActivity);
-        GradleBuildResult result = project.executor().run("assembleDebug");
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
+        project.executor().run("assembleDebug");
 
-        assertThat(project.getApk(DEBUG))
-                .hasMainDexFile()
-                .that()
-                .containsClass(
-                        "Landroid/databinding/testapp/databinding/ActivityMainBindingLandImpl;");
+        DexSubject apk = assertThat(project.getApk(DEBUG)).hasMainDexFile().that();
+        apk.containsClass(MAIN_ACTIVITY_BINDING_CLASS);
+        apk.containsClass(MAIN_ACTIVITY_BINDING_CLASS_LAND_IMPL);
+        apk.containsClass(MAIN_ACTIVITY_BINDING_CLASS_IMPL);
 
         // delete and recompile
         assertThat(landscapeActivity.delete()).isTrue();
-        result = project.executor().run("assembleDebug");
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
+        project.executor().run("assembleDebug");
         assertThat(project.getApk(DEBUG))
-                .doesNotContainClass(
-                        "Landroid/databinding/testapp/databinding/ActivityMainBindingLandImpl;");
+                .doesNotContainClass(MAIN_ACTIVITY_BINDING_CLASS_LAND_IMPL);
+        if (!enableV2) {
+            assertThat(project.getApk(DEBUG))
+                    .doesNotContainClass(MAIN_ACTIVITY_2_BINDING_CLASS_IMPL);
+        }
+        for (String className : mainActivityBindingClasses) {
+            assertThat(project.getApk(DEBUG)).containsClass(className);
+        }
     }
 
     @Test
-    @Ignore("b/68252584")
     public void addNewLayout() throws Exception {
         project.execute(EXPORT_INFO_TASK);
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File activity2 = new File(mainActivity.getParentFile(), "activity2.xml");
         Files.copy(mainActivity, activity2);
-        assertThat(
-                        project.getIntermediateFile(
-                                "data-binding-info", "debug", "activity2-layout.xml"))
-                .doesNotExist();
+        assertThat(getInfoIntermediate("activity2-layout.xml")).doesNotExist();
 
-        GradleBuildResult result = project.executor().run("assembleDebug");
+        project.executor().run("assembleDebug");
 
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
-
-        assertThat(
-                        project.getIntermediateFile(
-                                "data-binding-info", "debug", "activity2-layout.xml"))
-                .exists();
+        assertThat(getInfoIntermediate("activity2-layout.xml")).exists();
 
         assertThat(project.getApk(DEBUG))
                 .hasMainDexFile()
                 .that()
-                .containsClass("Landroid/databinding/testapp/databinding/Activity2Binding;")
+                .containsClass(MAIN_ACTIVITY_2_BINDING_CLASS)
                 .that()
                 .hasMethod("setFoo");
-        assertRecompile();
+        if (enableV2) {
+            assertThat(project.getApk(DEBUG))
+                    .hasMainDexFile()
+                    .that()
+                    .containsClass(MAIN_ACTIVITY_2_BINDING_CLASS_IMPL)
+                    .that()
+                    .hasMethod("setFoo");
+        }
     }
 
     @Test
@@ -207,70 +262,61 @@ public class DataBindingIncrementalTest {
         File activity2 = new File(mainActivity.getParentFile(), "activity2.xml");
         Files.copy(mainActivity, activity2);
         project.execute("assembleDebug");
-        assertThat(project.getApk(DEBUG))
-                .containsClass("Landroid/databinding/testapp/databinding/Activity2Binding;");
-        assertThat(
-                        project.getIntermediateFile(
-                                "data-binding-info", "debug", "activity2-layout.xml"))
-                .exists();
+        assertThat(project.getApk(DEBUG)).containsClass(MAIN_ACTIVITY_2_BINDING_CLASS);
+        if (enableV2) {
+            assertThat(project.getApk(DEBUG)).containsClass(MAIN_ACTIVITY_2_BINDING_CLASS_IMPL);
+        }
+
+        assertThat(getInfoIntermediate("activity2-layout.xml")).exists();
         assertThat(activity2.delete()).isTrue();
         project.execute("assembleDebug");
-        assertThat(project.getApk(DEBUG))
-                .doesNotContainClass("Landroid/databinding/testapp/databinding/Activity2Binding;");
-        assertThat(
-                        project.getIntermediateFile(
-                                "data-binding-info", "debug", "activity2-layout.xml"))
-                .doesNotExist();
-        assertRecompile();
+        assertThat(project.getApk(DEBUG)).doesNotContainClass(MAIN_ACTIVITY_2_BINDING_CLASS);
+        assertThat(project.getApk(DEBUG)).doesNotContainClass(MAIN_ACTIVITY_2_BINDING_CLASS_IMPL);
+        assertThat(getInfoIntermediate("activity2-layout.xml")).doesNotExist();
     }
 
     @Test
-    @Ignore("b/68252584")
     public void renameLayout() throws Exception {
         String activity3ClassName = "Landroid/databinding/testapp/databinding/Activity3Binding;";
+        String activity3ClassNameImpl =
+                "Landroid/databinding/testapp/databinding/Activity3BindingImpl;";
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File activity3 = new File(mainActivity.getParentFile(), "activity3.xml");
         Files.copy(mainActivity, activity3);
-        GradleBuildResult result = project.nonRetryingExecutor().run("assembleDebug");
+        project.executor().run("assembleDebug");
 
-        File activity3DataBindingInfo =
-                project.getIntermediateFile("data-binding-info", "debug", "activity3-layout.xml");
+        File activity3DataBindingInfo = getInfoIntermediate("activity3-layout.xml");
         assertThat(activity3DataBindingInfo).exists();
         long dataBindingInfoLastModified = activity3DataBindingInfo.lastModified();
         TestUtils.waitForFileSystemTick();
 
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
         assertThat(project.getApk(DEBUG)).containsClass(activity3ClassName);
+        if (enableV2) {
+            assertThat(project.getApk(DEBUG)).containsClass(activity3ClassNameImpl);
+        }
 
         // Modify the file.
-        long activity2LayoutLastModified = activity3.lastModified();
+        long activity3LayoutLastModified = activity3.lastModified();
         TestUtils.waitForFileSystemTick();
         TestFileUtils.replaceLine(activity3, 19, "<data class=\"MyCustomName\">");
 
         // Make sure that the file was actually modified.
-        assertThat(activity3.lastModified()).isNotEqualTo(activity2LayoutLastModified);
+        assertThat(activity3.lastModified()).isNotEqualTo(activity3LayoutLastModified);
 
-        result = project.nonRetryingExecutor().run("assembleDebug");
-
+        project.executor().run("assembleDebug");
 
         assertThat(activity3DataBindingInfo).exists();
         assertThat(activity3DataBindingInfo.lastModified())
                 .isNotEqualTo(dataBindingInfoLastModified);
-
+        
         assertThat(project.getApk(DEBUG)).doesNotContainClass(activity3ClassName);
-        assertThat(project.getApk(DEBUG))
-                .containsClass("Landroid/databinding/testapp/databinding/MyCustomName;");
+        assertThat(project.getApk(DEBUG)).doesNotContainClass(activity3ClassNameImpl);
 
-        // Make sure merge resources task and export info tasks were re-run.
-        assertThat(result.getTask(MERGE_RESOURCES_TASK)).wasNotUpToDate();
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
-
-        assertRecompile();
-    }
-
-    private void assertRecompile() throws Exception {
-        GradleBuildResult result = project.executor().run(EXPORT_INFO_TASK);
-
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasUpToDate();
+        String customName = "Landroid/databinding/testapp/databinding/MyCustomName;";
+        String customNameImpl = "Landroid/databinding/testapp/databinding/MyCustomNameImpl;";
+        assertThat(project.getApk(DEBUG)).containsClass(customName);
+        if (enableV2) {
+            assertThat(project.getApk(DEBUG)).containsClass(customNameImpl);
+        }
     }
 }

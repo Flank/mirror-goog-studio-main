@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
+import com.android.SdkConstants.FN_RESOURCE_TEXT
 import com.android.build.gradle.internal.TaskFactory
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
@@ -65,8 +66,7 @@ class NamespacedResourcesTaskManager(
         // Compile
         createCompileResourcesTask()
         createLinkResourcesTask()
-        createCompileCompileOnlyRClassTask()
-        createJarCompileOnlyRClassClassesTask()
+        createNamespacedLibraryRFiles()
 
         if (variantScope.variantData.type == VariantType.LIBRARY || variantScope.testedVariantData?.type == VariantType.LIBRARY) {
             createNamespacedLibraryProcessResourcesTask(
@@ -82,37 +82,30 @@ class NamespacedResourcesTaskManager(
         createCompileRuntimeRClassTask()
     }
 
-    private fun createCompileCompileOnlyRClassTask() {
-        val compileOnlyRClassClassesDir = File(
-                variantScope.globalScope.intermediatesDir,
-                "res-r/" + variantScope.variantConfiguration.dirName)
-
-        val task = taskFactory.create(
-                CompileRClassTask.ConfigAction(
-                        variantScope.getTaskName("compile", "RClass"),
-                        variantScope.getOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_SOURCES),
-                        compileOnlyRClassClassesDir
-                ))
-        variantScope.addTaskOutput(
-                TaskOutputType.COMPILE_ONLY_R_CLASS_CLASSES,
-                compileOnlyRClassClassesDir,
-                task.name)
-    }
-
-    private fun createJarCompileOnlyRClassClassesTask() {
+    private fun createNamespacedLibraryRFiles() {
         val rClassJarFile = File(
                 variantScope.globalScope.intermediatesDir,
                 "res-rJar/" + variantScope.variantConfiguration.dirName + "/R.jar")
-        val task =
-                taskFactory.create(
-                        JarRClassTask.ConfigAction(
-                                variantScope.getTaskName("jar", "RClass"),
-                                variantScope.getOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_CLASSES),
-                                rClassJarFile))
+        val resIdsFile = File(
+                variantScope.globalScope.intermediatesDir,
+                "res-ids/" + variantScope.variantConfiguration.dirName + "res-ids.txt")
+
+        val task = taskFactory.create(
+                GenerateNamespacedLibraryRFilesTask.ConfigAction(
+                        variantScope,
+                        variantScope.getOutput(TaskOutputType.SYMBOL_LIST),
+                        rClassJarFile,
+                        resIdsFile))
+
         variantScope.addTaskOutput(
                 TaskOutputType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                 rClassJarFile,
                 task.name)
+        variantScope.addTaskOutput(
+                TaskOutputType.NAMESPACED_SYMBOL_LIST_WITH_PACKAGE_NAME,
+                resIdsFile,
+                task.name)
+
     }
 
     private fun createCompileRuntimeRClassTask() {
@@ -212,21 +205,26 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createLinkResourcesTask() {
+        val rDotTxt = File(globalScope.intermediatesDir,
+                "symbols/" + variantScope.variantConfiguration.dirName + "/" + FN_RESOURCE_TEXT)
         val resourceStaticLibrary =
                 FileUtils.join(globalScope.intermediatesDir,
                         "res-linked",
                         variantScope.variantConfiguration.dirName,
                         "res.apk")
+        // We only need this because of b/69956357. Remove generating R.java once bug is fixed.
         val compileOnlyRClassSourceDir = File(globalScope.generatedDir,
                 "source/r/" + variantScope.variantConfiguration.dirName)
         val link = taskFactory.create(
                 LinkLibraryAndroidResourcesTask.ConfigAction(
-                        variantScope, compileOnlyRClassSourceDir, resourceStaticLibrary))
+                        variantScope, compileOnlyRClassSourceDir, resourceStaticLibrary, rDotTxt))
         variantScope.addTaskOutput(
                 TaskOutputType.RES_STATIC_LIBRARY,
                 resourceStaticLibrary,
                 link.name)
         variantScope.addTaskOutput(
-                TaskOutputType.COMPILE_ONLY_R_CLASS_SOURCES, compileOnlyRClassSourceDir, link.name)
+                TaskOutputType.SYMBOL_LIST,
+                rDotTxt,
+                link.name)
     }
 }

@@ -117,7 +117,10 @@ public class FakeAndroid implements SimpleWebServer.RequestHandler {
             }
             if (param.getKey().equals("set-property")) {
                 String[] property = param.getValue().split(",");
-                System.setProperty(property[0], property[1]);
+                String propertyKey = property[0];
+                String propertyValue = property[1];
+                System.setProperty(propertyKey, propertyValue);
+                System.out.printf("%s=%s\n", propertyKey, propertyValue);
             }
             if (param.getKey().equals("load-dex")) {
                 loadDex(param.getValue());

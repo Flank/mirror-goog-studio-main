@@ -19,7 +19,7 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "NetworkProfiler";
 
-import "profiler.proto";
+import "common.proto";
 
 service NetworkService {
   // Requests profiler data from the app with ID being |process_id|, in the time range

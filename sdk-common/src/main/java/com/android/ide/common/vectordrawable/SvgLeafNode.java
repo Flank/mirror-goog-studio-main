@@ -18,6 +18,7 @@ package com.android.ide.common.vectordrawable;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_FILL_OPACITY;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_OPACITY;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_OPACITY;
+import static com.android.ide.common.vectordrawable.Svg2Vector.presentationMap;
 
 import com.android.annotations.Nullable;
 import com.google.common.collect.ImmutableMap;
@@ -33,16 +34,6 @@ import org.w3c.dom.Node;
 /** Represents an SVG file's leaf element. */
 class SvgLeafNode extends SvgNode {
     private static final Logger logger = Logger.getLogger(SvgLeafNode.class.getSimpleName());
-
-    private String mPathData;
-
-    private boolean mHasFillGradient = false;
-
-    private boolean mHasStrokeGradient = false;
-
-    private SvgGradientNode mFillGradientNode;
-
-    private SvgGradientNode mStrokeGradientNode;
 
     public static final ImmutableMap<String, String> colorMap =
         ImmutableMap.<String, String>builder()
@@ -196,6 +187,12 @@ class SvgLeafNode extends SvgNode {
             .put("yellowgreen", "#9acd32")
             .build();
 
+    private String mPathData;
+    private boolean mHasFillGradient;
+    private boolean mHasStrokeGradient;
+    private SvgGradientNode mFillGradientNode;
+    private SvgGradientNode mStrokeGradientNode;
+
     public SvgLeafNode(SvgTree svgTree, Node node, String nodeName) {
         super(svgTree, node, nodeName);
     }
@@ -220,7 +217,7 @@ class SvgLeafNode extends SvgNode {
 
         StringBuilder sb = new StringBuilder();
         for (String key : mVdAttributesMap.keySet()) {
-            String vectorDrawableAttr = Svg2Vector.presentationMap.get(key);
+            String vectorDrawableAttr = presentationMap.get(key);
             String svgValue = mVdAttributesMap.get(key);
             String vdValue = svgValue.trim();
             // There are several cases we need to convert from SVG format to
@@ -235,11 +232,8 @@ class SvgLeafNode extends SvgNode {
                 String vdValueRGB = vdValue;
                 vdValue = convertRGBToHex(vdValue);
                 if (vdValue == null) {
-                    getTree()
-                            .logErrorLine(
-                                    "Unsupported Color format " + vdValueRGB,
-                                    getDocumentNode(),
-                                    SvgTree.SvgLogLevel.ERROR);
+                    getTree().logErrorLine("Unsupported Color format " + vdValueRGB,
+                            getDocumentNode(), SvgTree.SvgLogLevel.ERROR);
                 }
             } else if (colorMap.containsKey(vdValue.toLowerCase(Locale.ENGLISH))) {
                 vdValue = colorMap.get(vdValue.toLowerCase(Locale.ENGLISH));
@@ -277,6 +271,7 @@ class SvgLeafNode extends SvgNode {
 
     /**
      * A utility function to get the opacity value as a floating point number.
+     *
      * @param key The key of the opacity
      * @return the clamped opacity value, return 1 if not found.
      */

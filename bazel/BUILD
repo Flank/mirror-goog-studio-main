@@ -28,7 +28,7 @@ java_library(
     # TODO: Update and use the prebuilts dependency
     deps = [
         ":utils",
-        "//tools/idea/lib:groovy-all-2.4.6",
+        "//tools/idea/.idea/libraries:Groovy",
     ],
 )
 
@@ -306,18 +306,6 @@ config_setting(
 config_setting(
     name = "android_cpu_armeabi",
     values = {"cpu": "armeabi"},
-    visibility = ["//visibility:public"],
-)
-
-maven_repo(
-    name = "offline_repo",
-    artifacts = [
-        "//tools/data-binding:tools.compiler",
-        "//tools/base/build-system/gradle",
-        "//tools/base/build-system/java-lib-plugin/java-lib-model-builder",
-        "//tools/base/lint:tools.lint-gradle",
-    ],
-    include_sources = True,
     visibility = ["//visibility:public"],
 )
 

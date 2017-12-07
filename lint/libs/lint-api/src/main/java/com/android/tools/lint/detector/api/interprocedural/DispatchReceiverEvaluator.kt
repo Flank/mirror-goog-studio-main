@@ -362,7 +362,7 @@ fun UCallExpression.getDispatchReceivers(
     // for determining whether this is a function expression invocation rather than
     // a normal method call.
     if (methodName == "invoke" && classReference != null) {
-        val lambda = methodIdentifier?.psi?.navigationElement.toUElementOfType<ULambdaExpression>()
+        val lambda = methodIdentifier?.sourcePsi?.navigationElement.toUElementOfType<ULambdaExpression>()
         if (lambda != null)
             return receiverEval[lambda]
 

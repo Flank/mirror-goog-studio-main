@@ -54,6 +54,11 @@ maven_java_library(
         "//tools/base/repository:tools.repository",
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
+        # org.apache.httpcomponents:httpclient:4.2.6 depends on
+        # commons-logging:commons-logging:1.1.1, but other targets use a newer version.
+        # Include the dependeny explicitly to bump the version in gradle's resolved dependency
+        # graph, as the custom maven logic in tools/base resolves everything together.
+        "//tools/base/third_party:commons-logging_commons-logging",
         "//tools/base/third_party:org.apache.commons_commons-compress",
         "//tools/base/third_party:org.apache.httpcomponents_httpclient",
     ],

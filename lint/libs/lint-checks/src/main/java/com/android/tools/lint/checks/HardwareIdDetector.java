@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
@@ -353,7 +355,7 @@ public class HardwareIdDetector extends Detector implements Detector.UastScanner
                 @NonNull String containingClass,
                 @NonNull String desiredMethodName, int paramIndex) {
 
-            if (!desiredMethodName.equals(expression.getMethodName())) {
+            if (!desiredMethodName.equals(getMethodName(expression))) {
                 return false;
             }
             // Check that the qualifier used is the same.

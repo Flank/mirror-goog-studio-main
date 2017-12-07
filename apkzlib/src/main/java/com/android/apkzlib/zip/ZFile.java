@@ -597,7 +597,7 @@ public class ZFile implements Closeable {
         readCentralDirectory();
 
         /*
-         * Compute where the last file ends. We will need this to compute thee extra offset.
+         * Go over all files and create the usage map, verifying there is no overlap in the files.
          */
         long entryEndOffset;
         long directoryStartOffset;
@@ -624,6 +624,51 @@ public class ZFile implements Closeable {
                  * can be clever enough to remove the local extra when we start modifying the zip
                  * file.
                  */
+
+                Verify.verify(start >= 0, "start < 0");
+                Verify.verify(end < map.size(), "end >= map.size()");
+
+                FileUseMapEntry<?> found = map.at(start);
+                Verify.verifyNotNull(found);
+
+                // We've got a problem if the found entry is not free or is a free entry but
+                // doesn't cover the whole file.
+                if (!found.isFree() || found.getEnd() < end) {
+                    if (found.isFree()) {
+                        found = map.after(found);
+                        Verify.verify(found != null && !found.isFree());
+                    }
+
+                    Object foundEntry = found.getStore();
+                    Verify.verify(foundEntry != null);
+
+                    // Obtains a custom description of an entry.
+                    IOExceptionFunction<StoredEntry, String> describe =
+                            e ->
+                                    String.format(
+                                            "'%s' (offset: %d, size: %d)",
+                                            e.getCentralDirectoryHeader().getName(),
+                                            e.getCentralDirectoryHeader().getOffset(),
+                                            e.getInFileSize());
+
+                    String overlappingEntryDescription;
+                    if (foundEntry instanceof StoredEntry) {
+                        StoredEntry foundStored = (StoredEntry) foundEntry;
+                        overlappingEntryDescription = describe.apply((StoredEntry) foundEntry);
+                    } else {
+                        overlappingEntryDescription =
+                                "Central Directory / EOCD: "
+                                        + found.getStart()
+                                        + " - "
+                                        + found.getEnd();
+                    }
+
+                    throw new IOException(
+                            "Cannot read entry "
+                                    + describe.apply(entry)
+                                    + " because it overlaps with "
+                                    + overlappingEntryDescription);
+                }
 
                 FileUseMapEntry<StoredEntry> mapEntry = map.add(start, end, entry);
                 entries.put(entry.getCentralDirectoryHeader().getName(), mapEntry);

@@ -14,5 +14,6 @@
     <orderEntry type="module" module-name="android-annotations" />
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

@@ -1,0 +1,100 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package profiler.proto;
+option java_package = "com.android.tools.profiler.proto";
+option java_outer_classname = "Common";
+
+enum AppId {
+  // Enum with default value required by proto
+  UNSPECIFIED = 0;
+  // Indicates that a feature is not tied to any single app
+  ANY = -1;
+}
+
+// TODO: Add more essential fields.
+message CommonData {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 end_timestamp = 3;
+}
+
+// Note that |Device| instance refers to a device (physical/emulator) associated
+// with a particular boot. e.g. if the same device is started twice, they are
+// considered two separate |Device| instances.
+message Device {
+  enum State {
+    UNSPECIFIED = 0;
+    ONLINE = 1;
+    OFFLINE = 2; // e.g. emulator that is turned off
+    DISCONNECTED = 3; // e.g. unplugged
+  }
+  // Numeric representation of the device's |serial| and |boot_id| properties.
+  // Used for quickly indexing the device instead of having to perform string comparisons.
+  int64 device_id = 1;
+  string manufacturer = 2; // e.g. 'Google', 'Motorola'
+  string model = 3; // e.g. 'Nexus 5', 'Pixel XL'
+  string serial = 4; // unique ID for this device
+  string version = 5; // e.g. '5.1.1', '8.0.0'
+  int32 api_level = 6; // e.g. 19, 25
+  // |feature_level| will either be the same as |api_level| or |api_level + 1| if the current
+  // device is a preview version. Code should check against |feature_level|, not |api_level|, to
+  // see if a feature is available in the framework or not. If |feature_level != api_level|, then
+  // |codename| will also be set.
+  int32 feature_level = 7;
+  string codename = 8; // Identifies preview versions by API letter (e.g. 'O'), or '' for release
+  string boot_id = 9; // unique ID regenerated each boot time
+  bool is_emulator = 10;
+  State state = 11;
+}
+
+message Process {
+  enum State {
+    UNSPECIFIED = 0;
+    ALIVE = 1;
+    DEAD = 2;
+  }
+  // Full name of the Android application/service
+  string name = 1;
+  // App's PID. Note that this is actually an int16, but gRPC only provides int32.
+  int32 pid = 2;
+  // References Device's |device_id| property.
+  int64 device_id = 3;
+  State state = 4;
+  // The device time when this Process was first detected by the profiler.
+  int64 start_timestamp_ns = 5;
+  // e.g. 'arm', 'arm86', 'x86', 'x86_64'
+  // Also see SdkConstans.CPU_ARCH_*
+  string abi_cpu_arch = 6;
+}
+
+// A Session represents a range of profiling data for an app running on a
+// device. While of course different apps or different devices will imply
+// separate sessions, the same app on the same device can also be broken up
+// into several sessions.
+message Session {
+  // ID uniquely identifying this session. This will be unique across devices.
+  int64 session_id = 1;
+  // A device's unique identifier, references Device's |device_id| property.
+  int64 device_id = 2;
+  // The PID of the app. Note that this is actually an int16, but gRPC only
+  // provides int32.
+  int32 pid = 3;
+  int64 start_timestamp = 4;
+  // If LLONG_MAX, the session is ongoing and hasn't ended yet.
+  int64 end_timestamp = 5;
+}

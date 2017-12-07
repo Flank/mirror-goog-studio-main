@@ -10,5 +10,6 @@
     <orderEntry type="library" name="guava-tools" level="project" />
     <orderEntry type="library" name="icu4j" level="project" />
     <orderEntry type="module" module-name="sdk-common-base" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

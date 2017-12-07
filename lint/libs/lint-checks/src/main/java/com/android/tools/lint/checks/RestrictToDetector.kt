@@ -43,7 +43,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UReferenceExpression
-import org.jetbrains.uast.getContainingFile
+import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.util.isArrayInitializer
 
@@ -157,7 +157,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             // (2) package private is available in the same package
             // (3) protected is available either from subclasses or in same package
 
-            val uFile = node.getContainingFile() // Can't use getContainingUFile yet; IDE needs update
+            val uFile = node.getContainingUFile()
             val containingFile1 = UastLintUtils.getPsiFile(uFile)
             val containingFile2 = UastLintUtils.getContainingFile(method)
             if (containingFile1 == containingFile2 || containingFile2 == null) {

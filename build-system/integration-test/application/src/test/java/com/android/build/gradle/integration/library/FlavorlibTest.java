@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.VARIANT;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
@@ -38,7 +37,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Assemble tests for flavorlib.

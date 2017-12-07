@@ -42,12 +42,15 @@ public final class GradleTestProjectBuilder {
     private boolean withoutNdk = false;
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
     @Nullable private String heapSize;
-    @Nullable private BenchmarkRecorder benchmarkRecorder;
     @NonNull private Path relativeProfileDirectory = Paths.get("build", "android-profile");
     private boolean withDependencyChecker = true;
     // Indicates if we need to create a project without setting cmake.dir in local.properties.
     private boolean withCmakeDirInLocalProp = false;
     @NonNull String cmakeVersion;
+
+    private boolean withDeviceProvider = true;
+    private boolean withSdk = true;
+    private boolean withAndroidGradlePlugin = true;
 
     /** Create a GradleTestProject. */
     @NonNull
@@ -64,10 +67,12 @@ public final class GradleTestProjectBuilder {
                 gradleProperties,
                 heapSize,
                 buildToolsVersion,
-                benchmarkRecorder,
                 relativeProfileDirectory,
                 cmakeVersion,
-                withCmakeDirInLocalProp);
+                withCmakeDirInLocalProp,
+                withDeviceProvider,
+                withSdk,
+                withAndroidGradlePlugin);
     }
 
     /**
@@ -83,6 +88,21 @@ public final class GradleTestProjectBuilder {
     /** Create a project without setting ndk.dir in local.properties. */
     public GradleTestProjectBuilder withoutNdk() {
         this.withoutNdk = true;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withDeviceProvider(boolean withDeviceProvider) {
+        this.withDeviceProvider = withDeviceProvider;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withSdk(boolean withSdk) {
+        this.withSdk = withSdk;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withAndroidGradlePlugin(boolean withAndroidGradlePlugin) {
+        this.withAndroidGradlePlugin = withAndroidGradlePlugin;
         return this;
     }
 
@@ -177,11 +197,6 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder withBuildToolsVersion(String buildToolsVersion) {
         this.buildToolsVersion = buildToolsVersion;
-        return this;
-    }
-
-    public GradleTestProjectBuilder forBenchmarkRecording(BenchmarkRecorder benchmarkRecorder) {
-        this.benchmarkRecorder = benchmarkRecorder;
         return this;
     }
 

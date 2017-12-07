@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 
 import static com.android.tools.lint.checks.CutPasteDetector.isReachableFrom;
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -216,7 +217,7 @@ public class RecyclerViewDetector extends Detector implements UastScanner {
     }
 
     private static boolean isExecutePendingBindingsCall(UCallExpression call) {
-        return "executePendingBindings".equals(call.getMethodName());
+        return "executePendingBindings".equals(getMethodName(call));
     }
 
     @Nullable

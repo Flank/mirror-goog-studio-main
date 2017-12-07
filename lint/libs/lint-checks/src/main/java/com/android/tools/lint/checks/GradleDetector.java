@@ -87,7 +87,6 @@ import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UFile;
-import org.jetbrains.uast.UIdentifier;
 import org.jetbrains.uast.ULambdaExpression;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
@@ -410,10 +409,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             @Override
             public boolean visitCallExpression(UCallExpression node) {
                 List<UExpression> valueArguments = node.getValueArguments();
-                // BUG: This returns <ERROR_FUNCTION> !
-                // String methodName = node.getMethodName();
-                // but we have a workaround
-                String propertyName = getKtsCallName(node);
+                String propertyName = LintUtils.getMethodName(node);
                 if (propertyName != null && valueArguments.size() == 1) {
                     UExpression arg = valueArguments.get(0);
                     if (!(arg instanceof ULambdaExpression)) {
@@ -423,9 +419,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                         UCallExpression parentCall = getSurroundingNamedBlock(node);
                         if (parentCall != null) {
                             UCallExpression parentParentCall = getSurroundingNamedBlock(parentCall);
-                            String parentName = getKtsCallName(parentCall);
+                            String parentName = LintUtils.getMethodName(parentCall);
                             String parentParentName = parentParentCall != null ?
-                              getKtsCallName(parentParentCall) : null;
+                                    LintUtils.getMethodName(parentParentCall) : null;
                             if (parentName != null) {
                                 if (isInterestingBlock(parentName, parentParentName)) {
                                     String value = arg.asSourceString();
@@ -455,19 +451,6 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     return (UCallExpression) parentCall;
                 }
             }
-        }
-
-        return null;
-    }
-
-    @Nullable
-    private static String getKtsCallName(@NonNull UCallExpression call) {
-        // Normally can just call call.getMethodName but due to a (KTS?) bug this
-        // returns <ERROR_FUNCTION>; luckily however the method identifiers are set
-        // correctly
-        UIdentifier identifier = call.getMethodIdentifier();
-        if (identifier != null) {
-            return identifier.getName();
         }
 
         return null;

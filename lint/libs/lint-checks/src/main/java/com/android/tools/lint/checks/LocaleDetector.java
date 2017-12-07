@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.FORMAT_METHOD;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_STRING;
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.LintClient;
@@ -119,7 +120,7 @@ public class LocaleDetector extends Detector implements UastScanner {
         UCallExpression parentCall =
                 UastUtils.getParentOfType(node, UCallExpression.class, true);
         if (parentCall != null) {
-            String name = parentCall.getMethodName();
+            String name = getMethodName(parentCall);
             //noinspection ConstantConditions
             if (name != null && name.length() == 1) { // "d", "i", "e" etc in Log
                 PsiMethod method = parentCall.resolve();
@@ -163,7 +164,7 @@ public class LocaleDetector extends Detector implements UastScanner {
             }
 
             Location location;
-            if (FORMAT_METHOD.equals(call.getMethodName())) {
+            if (FORMAT_METHOD.equals(getMethodName(call))) {
                 // For String#format, include receiver (String), but not for .toUppercase etc
                 // since the receiver can often be a complex expression
                 location = context.getCallLocation(call, true, true);

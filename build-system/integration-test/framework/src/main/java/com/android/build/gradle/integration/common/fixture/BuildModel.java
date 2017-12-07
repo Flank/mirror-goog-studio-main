@@ -74,8 +74,6 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
                 project::setLastBuildResult,
                 project.getTestDir().toPath(),
                 project.getBuildFile().toPath(),
-                project.getBenchmarkRecorder(),
-                project.getProfileDirectory(),
                 project.getHeapSize());
     }
 
@@ -239,10 +237,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
             ModelContainer<T> result;
             // See ProfileCapturer javadoc for explanation.
             try {
-                ProfileCapturer profileCapturer =
-                        new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory);
                 result = executor.withArguments(getArguments()).run();
-                profileCapturer.recordProfile();
 
                 lastBuildResultConsumer.accept(
                         new GradleBuildResult(stdout, stderr, ImmutableList.of(), null));

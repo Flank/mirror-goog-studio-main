@@ -53,6 +53,11 @@ public class JarMerger implements Closeable {
         InputStream filter(@NonNull String entryPath, @NonNull InputStream input);
     }
 
+    public interface Relocator {
+        @NonNull
+        String relocate(@NonNull String entryPath);
+    }
+
     public static final FileTime ZERO_TIME = FileTime.fromMillis(0);
 
     private final byte[] buffer = new byte[8192];
@@ -73,13 +78,14 @@ public class JarMerger implements Closeable {
     }
 
     public void addDirectory(@NonNull Path directory) throws IOException {
-        addDirectory(directory, filter, null);
+        addDirectory(directory, filter, null, null);
     }
 
     public void addDirectory(
             @NonNull Path directory,
             @Nullable ZipEntryFilter filterOverride,
-            @Nullable Transformer transformer)
+            @Nullable Transformer transformer,
+            @Nullable Relocator relocator)
             throws IOException {
         ImmutableSortedMap.Builder<String, Path> candidateFiles = ImmutableSortedMap.naturalOrder();
         Files.walkFileTree(
@@ -97,6 +103,11 @@ public class JarMerger implements Closeable {
                         } catch (ZipAbortException e) {
                             throw new IOException(e);
                         }
+
+                        if (relocator != null) {
+                            entryPath = relocator.relocate(entryPath);
+                        }
+
                         candidateFiles.put(entryPath, file);
                         return FileVisitResult.CONTINUE;
                     }
@@ -118,10 +129,13 @@ public class JarMerger implements Closeable {
     }
 
     public void addJar(@NonNull Path file) throws IOException {
-        addJar(file, filter);
+        addJar(file, filter, null);
     }
 
-    public void addJar(@NonNull Path file, @Nullable ZipEntryFilter filterOverride)
+    public void addJar(
+            @NonNull Path file,
+            @Nullable ZipEntryFilter filterOverride,
+            @Nullable Relocator relocator)
             throws IOException {
         try (ZipInputStream zis =
                 new ZipInputStream(new BufferedInputStream(Files.newInputStream(file)))) {
@@ -144,12 +158,18 @@ public class JarMerger implements Closeable {
                     throw new IOException(e);
                 }
 
-                // Preserve the STORED method of the input entry, otherwise create a new entry so
-                // that the compressed len is recomputed.
-                JarEntry newEntry =
-                        entry.getMethod() == ZipEntry.STORED
-                                ? new JarEntry(entry)
-                                : new JarEntry(name);
+                if (relocator != null) {
+                    name = relocator.relocate(name);
+                }
+
+                JarEntry newEntry = new JarEntry(name);
+                newEntry.setMethod(entry.getMethod());
+                if (newEntry.getMethod() == ZipEntry.STORED) {
+                    newEntry.setSize(entry.getSize());
+                    newEntry.setCompressedSize(entry.getCompressedSize());
+                    newEntry.setCrc(entry.getCrc());
+                }
+                newEntry.setLastModifiedTime(FileTime.fromMillis(0));
 
                 // read the content of the entry from the input stream, and write it into the
                 // archive.

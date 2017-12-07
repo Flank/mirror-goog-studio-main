@@ -98,6 +98,10 @@ public final class AaptV2CommandBuilder {
             builder.add("-v");
         }
 
+        if (config.isGenerateProtos()) {
+            builder.add("--proto-format");
+        }
+
         File stableResourceIdsFile = new File(intermediateDir, "stable-resource-ids.txt");
         // TODO: For now, we ignore this file, but as soon as aapt2 supports it, we'll use it.
 

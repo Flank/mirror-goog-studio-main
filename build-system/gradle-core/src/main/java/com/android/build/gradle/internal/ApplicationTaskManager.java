@@ -254,9 +254,6 @@ public class ApplicationTaskManager extends TaskManager {
     }
 
     private void addCompileTask(@NonNull VariantScope variantScope) {
-        // create data binding merge task before the javac task so that it can
-        // parse jars before any consumer
-        createDataBindingMergeArtifactsTaskIfNecessary(variantScope);
         JavaCompile javacTask = createJavacTask(variantScope);
         VariantScope.Java8LangSupport java8LangSupport = variantScope.getJava8LangSupportType();
         if (java8LangSupport == VariantScope.Java8LangSupport.INVALID) {

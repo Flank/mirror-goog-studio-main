@@ -427,6 +427,15 @@ class ManifestModel {
          */
         META_DATA(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
 
+        // TODO add nav-graph info to page below?
+        /**
+         * Nav-graph (contained in activity) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/nav-graph-element.html>Nav-graph
+         * Xml documentation</a>}
+         */
+        NAV_GRAPH(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
+
         /** Child packages declaration (contained in manifest) */
         PACKAGE(
                 MergeType.MERGE,
@@ -435,7 +444,7 @@ class ManifestModel {
          * Path-permission (contained in provider) <br>
          * <b>See also : </b> {@link <a
          * href=http://developer.android.com/guide/topics/manifest/path-permission-element.html>
-         * Meta-data Xml documentation</a>}
+         * Path-permission Xml documentation</a>}
          */
         PATH_PERMISSION(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 

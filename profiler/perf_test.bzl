@@ -49,7 +49,7 @@ def perf_test(name, srcs, test_app, native_lib="", deps = []):
           native_lib
       ],
       jvm_flags = [
-              "-Dtest.suite.jar=AllTest.jar",
+              "-Dtest.suite.jar=" + name + ".jar",
               "-Dperfd.location=$(location //tools/base/profiler/native/perfd)",
               "-Dart.location=/prebuilts/tools/linux-x86_64/art/bin/art",
               "-Dagent.location=/tools/base/profiler/native/agent",

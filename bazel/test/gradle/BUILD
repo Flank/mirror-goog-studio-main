@@ -11,12 +11,12 @@ gradle_build(
         "//prebuilts/studio/sdk:build-tools/latest",
         "//tools/buildSrc/base:version.properties",
     ] + glob(["library/**"]),
-    gradle_version = "4.4-20171031235950+0000",
+    gradle_version = "4.4-rc-3",
     output_file = "outputs/aar/library-release.aar",
     output_file_source = "outputs/aar/library-release.aar",
     repos = [
-        "//tools/base/bazel:offline_repo_repo.zip",
-        "//tools/adt/idea/android:test_deps_repo.zip",
+        "//tools/base/build-system:gradle_plugin_repo.zip",
+        "//tools/adt/idea/android:test_deps.zip",
     ],
     tasks = ["build"],
 )

@@ -16,6 +16,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION;
+import static com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION;
 import static com.android.ide.common.repository.GoogleMavenRepository.MAVEN_GOOGLE_CACHE_DIR_KEY;
 import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
 import static com.android.tools.lint.checks.GradleDetector.ACCIDENTAL_OCTAL;
@@ -129,7 +130,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
         task.networkData("https://maven.google.com/com/android/tools/build/group-index.xml", ""
                 + "<?xml version='1.0' encoding='UTF-8'?>\n"
                 + "<com.android.tools.build>\n"
-                + "  <gradle versions=\"2.3.3,3.0.0-alpha1\"/>\n"
+                + "  <gradle versions=\"3.0.0-alpha1,3.0.0-alpha2,3.0.0-alpha3,3.0.0-alpha4,3.0.0-alpha5,3.0.0-alpha6,3.0.0-alpha7,3.0.0-alpha8,3.0.0-alpha9,3.0.0-beta1,3.0.0-beta2,3.0.0-beta3,3.0.0-beta4,3.0.0-beta5,3.0.0-beta6,3.0.0-beta7,3.0.0-rc1,3.0.0-rc2,3.0.0,3.1.0-alpha01,3.1.0-alpha02,3.1.0-alpha03\"/>\n"
                 + "</com.android.tools.build>");
 
         // Also ensure we don't have a stale cache on disk.
@@ -334,7 +335,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
     public void testVersionsFromGradleCache() {
         String expected = ""
-                + "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.0.0-alpha1 [GradleDependency]\n"
+                + "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.1.0-alpha03 [GradleDependency]\n"
                 + "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "build.gradle:10: Warning: A newer version of org.apache.httpcomponents:httpcomponents-core than 4.2 is available: 4.4 [GradleDependency]\n"
@@ -368,10 +369,10 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(expected)
                 .expectFixDiffs(""
-                        + "Fix for build.gradle line 5: Change to 3.0.0-alpha1:\n"
+                        + "Fix for build.gradle line 5: Change to 3.1.0-alpha03:\n"
                         + "@@ -6 +6\n"
                         + "-         classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n"
-                        + "+         classpath 'com.android.tools.build:gradle:3.0.0-alpha1'\n"
+                        + "+         classpath 'com.android.tools.build:gradle:3.1.0-alpha03'\n"
                         + "Fix for build.gradle line 9: Change to 4.4:\n"
                         + "@@ -10 +10\n"
                         + "-     compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n"
@@ -497,7 +498,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
     public void testIncompatiblePlugin() {
         String expected = ""
                 + "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is "
-                + GRADLE_PLUGIN_MINIMUM_VERSION + " and the recommended version is 2.3.3 [GradlePluginVersion]\n"
+                + GRADLE_PLUGIN_MINIMUM_VERSION + " and the recommended version is " + GRADLE_PLUGIN_RECOMMENDED_VERSION + " [GradlePluginVersion]\n"
                 + "    classpath 'com.android.tools.build:gradle:0.1.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
@@ -1130,13 +1131,13 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
     public void testPreviewVersions() {
         String expected = ""
-                + "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is 2.3.3 [GradlePluginVersion]\n"
+                + "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " + GRADLE_PLUGIN_RECOMMENDED_VERSION + " [GradlePluginVersion]\n"
                 + "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: 2.3.3 [GradleDependency]\n"
+                + "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: " + GRADLE_PLUGIN_RECOMMENDED_VERSION + " [GradleDependency]\n"
                 + "        classpath 'com.android.tools.build:gradle:1.0.0'\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:8: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.0.0-alpha1 [GradleDependency]\n"
+                + "build.gradle:8: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.1.0-alpha03 [GradleDependency]\n"
                 + "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 2 warnings\n";

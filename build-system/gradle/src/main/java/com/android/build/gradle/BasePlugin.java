@@ -50,6 +50,7 @@ import com.android.build.gradle.internal.dsl.SigningConfigFactory;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.plugin.PluginDelegate;
 import com.android.build.gradle.internal.plugin.ProjectWrapper;
@@ -253,7 +254,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
         ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
                 .setAndroidPlugin(getAnalyticsPluginType())
-                .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST);
+                .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST)
+                .setOptions(AnalyticsUtil.toProto(projectOptions));
 
         if (!projectOptions.get(BooleanOption.ENABLE_NEW_DSL_AND_API)) {
             TaskInputHelper.enableBypass();
@@ -322,7 +324,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         final Gradle gradle = project.getGradle();
 
         extraModelInfo = new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
-        checkGradleVersion();
+        checkGradleVersion(project, getLogger(), projectOptions);
 
         sdkHandler = new SdkHandler(project, getLogger());
         if (!gradle.getStartParameter().isOffline()
@@ -452,7 +454,11 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         ProductFlavor.class,
                         new ProductFlavorFactory(objectFactory, project, project.getLogger()));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
-                project.container(SigningConfig.class, new SigningConfigFactory(objectFactory));
+                project.container(
+                        SigningConfig.class,
+                        new SigningConfigFactory(
+                                objectFactory,
+                                GradleKeystoreHelper.getDefaultDebugKeystoreLocation()));
 
         final NamedDomainObjectContainer<BaseVariantOutput> buildOutputs =
                 project.container(BaseVariantOutput.class);
@@ -605,7 +611,10 @@ public abstract class BasePlugin<E extends BaseExtension2>
     }
 
 
-    private void checkGradleVersion() {
+    static void checkGradleVersion(
+            @NonNull Project project,
+            @NonNull ILogger logger,
+            @Nullable ProjectOptions projectOptions) {
         String currentVersion = project.getGradle().getGradleVersion();
         if (GRADLE_MIN_VERSION.compareTo(currentVersion) > 0) {
             File file = new File("gradle" + separator + "wrapper" + separator +
@@ -619,13 +628,14 @@ public abstract class BasePlugin<E extends BaseExtension2>
                             currentVersion,
                             file.getAbsolutePath(),
                             GRADLE_MIN_VERSION);
-            if (projectOptions.get(BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY)
-                    || projectOptions.get(BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY_OLD)) {
-                getLogger().warning(errorMessage);
-                getLogger()
-                        .warning(
-                                "As %s is set, continuing anyway.",
-                                BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.getPropertyName());
+            if (projectOptions != null
+                    && (projectOptions.get(BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY)
+                            || projectOptions.get(
+                                    BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY_OLD))) {
+                logger.warning(errorMessage);
+                logger.warning(
+                        "As %s is set, continuing anyway.",
+                        BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.getPropertyName());
             } else {
                 throw new RuntimeException(errorMessage);
             }

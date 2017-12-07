@@ -1,3 +1,30 @@
+com.android.build.api.artifact.ArtifactType
+com.android.build.api.artifact.ArtifactType.name: java.lang.String ()
+com.android.build.api.artifact.BuildArtifactTransformBuilder
+com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction
+com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction.accept: void (T, com.android.build.api.artifact.InputArtifactProvider, com.android.build.api.artifact.OutputFileProvider)
+com.android.build.api.artifact.BuildArtifactTransformBuilder$OperationType
+com.android.build.api.artifact.BuildArtifactTransformBuilder$OperationType.valueOf: com.android.build.api.artifact.BuildArtifactTransformBuilder$OperationType (java.lang.String)
+com.android.build.api.artifact.BuildArtifactTransformBuilder$OperationType.values: com.android.build.api.artifact.BuildArtifactTransformBuilder$OperationType[] ()
+com.android.build.api.artifact.BuildArtifactTransformBuilder$SimpleConfigurationAction
+com.android.build.api.artifact.BuildArtifactTransformBuilder$SimpleConfigurationAction.accept: void (T, com.android.build.api.artifact.BuildableArtifact, java.io.File)
+com.android.build.api.artifact.BuildArtifactTransformBuilder.create: T (com.android.build.api.artifact.BuildArtifactTransformBuilder.com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction<? super T>)
+com.android.build.api.artifact.BuildArtifactTransformBuilder.create: T (kotlin.jvm.functions.Function3<? super T, ? super com.android.build.api.artifact.InputArtifactProvider, ? super com.android.build.api.artifact.OutputFileProvider, kotlin.Unit>)
+com.android.build.api.artifact.BuildArtifactTransformBuilder.input: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (com.android.build.api.artifact.ArtifactType)
+com.android.build.api.artifact.BuildArtifactTransformBuilder.output: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (com.android.build.api.artifact.ArtifactType, com.android.build.api.artifact.BuildArtifactTransformBuilder$OperationType)
+com.android.build.api.artifact.BuildArtifactTransformBuilder.outputFile: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (java.lang.String, com.android.build.api.artifact.ArtifactType[])
+com.android.build.api.artifact.BuildArtifactType
+com.android.build.api.artifact.BuildArtifactType.valueOf: com.android.build.api.artifact.BuildArtifactType (java.lang.String)
+com.android.build.api.artifact.BuildArtifactType.values: com.android.build.api.artifact.BuildArtifactType[] ()
+com.android.build.api.artifact.BuildableArtifact
+com.android.build.api.artifact.BuildableArtifact.getFiles: java.util.Set<java.io.File> ()
+com.android.build.api.artifact.BuildableArtifact.isEmpty: boolean ()
+com.android.build.api.artifact.InputArtifactProvider
+com.android.build.api.artifact.InputArtifactProvider.getArtifact: com.android.build.api.artifact.BuildableArtifact ()
+com.android.build.api.artifact.InputArtifactProvider.getArtifact: com.android.build.api.artifact.BuildableArtifact (com.android.build.api.artifact.BuildArtifactType)
+com.android.build.api.artifact.OutputFileProvider
+com.android.build.api.artifact.OutputFileProvider.getFile: java.io.File ()
+com.android.build.api.artifact.OutputFileProvider.getFile: java.io.File (java.lang.String)
 com.android.build.api.dsl.ApiVersion
 com.android.build.api.dsl.ApiVersion.getApiLevel: java.lang.Integer ()
 com.android.build.api.dsl.ApiVersion.getApiString: java.lang.String ()
@@ -30,6 +57,8 @@ com.android.build.api.dsl.extension.BuildProperties.setResourcePrefix: void (jav
 com.android.build.api.dsl.extension.BuildProperties.sourceSets: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.api.sourcesets.AndroidSourceSet>>)
 com.android.build.api.dsl.extension.BuildProperties.useLibrary: void (java.lang.String)
 com.android.build.api.dsl.extension.BuildProperties.useLibrary: void (java.lang.String, boolean)
+com.android.build.api.dsl.extension.BundleExtension
+com.android.build.api.dsl.extension.BundleExtension.bundle: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.api.dsl.extension.EmbeddedTestProperties
 com.android.build.api.dsl.extension.EmbeddedTestProperties.getTestBuildType: java.lang.String ()
 com.android.build.api.dsl.extension.EmbeddedTestProperties.getTestOptions: com.android.builder.model.TestOptions ()
@@ -106,7 +135,7 @@ com.android.build.api.dsl.extension.VariantOrExtensionProperties.getLintOptions:
 com.android.build.api.dsl.extension.VariantOrExtensionProperties.lintOptions: void (org.gradle.api.Action<com.android.build.api.dsl.options.LintOptions>)
 com.android.build.api.dsl.model.BaseFlavor
 com.android.build.api.dsl.model.BaseFlavor.getGeneratedDensities: java.util.Set<java.lang.String> ()
-com.android.build.api.dsl.model.BaseFlavor.getPostprocessing: com.android.build.api.dsl.options.PostprocessingFilesOptions ()
+com.android.build.api.dsl.model.BaseFlavor.getPostProcessing: com.android.build.api.dsl.options.PostProcessingFilesOptions ()
 com.android.build.api.dsl.model.BaseFlavor.getTestApplicationId: java.lang.String ()
 com.android.build.api.dsl.model.BaseFlavor.getTestFunctionalTest: java.lang.Boolean ()
 com.android.build.api.dsl.model.BaseFlavor.getTestHandleProfiling: java.lang.Boolean ()
@@ -116,7 +145,7 @@ com.android.build.api.dsl.model.BaseFlavor.getWearAppUnbundled: java.lang.Boolea
 com.android.build.api.dsl.model.BaseFlavor.missingDimensionStrategy: void (java.lang.String, java.lang.String)
 com.android.build.api.dsl.model.BaseFlavor.missingDimensionStrategy: void (java.lang.String, java.lang.String[])
 com.android.build.api.dsl.model.BaseFlavor.missingDimensionStrategy: void (java.lang.String, java.util.List<java.lang.String>)
-com.android.build.api.dsl.model.BaseFlavor.postprocessing: void (org.gradle.api.Action<com.android.build.api.dsl.options.PostprocessingFilesOptions>)
+com.android.build.api.dsl.model.BaseFlavor.postProcessing: void (org.gradle.api.Action<com.android.build.api.dsl.options.PostProcessingFilesOptions>)
 com.android.build.api.dsl.model.BaseFlavor.setGeneratedDensities: void (java.lang.Iterable<java.lang.String>)
 com.android.build.api.dsl.model.BaseFlavor.setTestApplicationId: void (java.lang.String)
 com.android.build.api.dsl.model.BaseFlavor.setTestFunctionalTest: void (boolean)
@@ -159,7 +188,7 @@ com.android.build.api.dsl.model.BuildTypeOrVariant.getCrunchPngs: boolean ()
 com.android.build.api.dsl.model.BuildTypeOrVariant.getDebuggable: boolean ()
 com.android.build.api.dsl.model.BuildTypeOrVariant.getEmbedMicroApp: boolean ()
 com.android.build.api.dsl.model.BuildTypeOrVariant.getJniDebuggable: boolean ()
-com.android.build.api.dsl.model.BuildTypeOrVariant.getPostprocessing: com.android.build.api.dsl.options.PostprocessingOptions ()
+com.android.build.api.dsl.model.BuildTypeOrVariant.getPostProcessing: com.android.build.api.dsl.options.PostProcessingOptions ()
 com.android.build.api.dsl.model.BuildTypeOrVariant.getPseudoLocalesEnabled: boolean ()
 com.android.build.api.dsl.model.BuildTypeOrVariant.getRenderscriptDebuggable: boolean ()
 com.android.build.api.dsl.model.BuildTypeOrVariant.getRenderscriptOptimLevel: int ()
@@ -172,7 +201,7 @@ com.android.build.api.dsl.model.BuildTypeOrVariant.isPseudoLocalesEnabled: boole
 com.android.build.api.dsl.model.BuildTypeOrVariant.isRenderscriptDebuggable: boolean ()
 com.android.build.api.dsl.model.BuildTypeOrVariant.isTestCoverageEnabled: boolean ()
 com.android.build.api.dsl.model.BuildTypeOrVariant.isZipAlignEnabled: boolean ()
-com.android.build.api.dsl.model.BuildTypeOrVariant.postprocessing: void (org.gradle.api.Action<com.android.build.api.dsl.options.PostprocessingOptions>)
+com.android.build.api.dsl.model.BuildTypeOrVariant.postProcessing: void (org.gradle.api.Action<com.android.build.api.dsl.options.PostProcessingOptions>)
 com.android.build.api.dsl.model.BuildTypeOrVariant.setCrunchPngs: void (boolean)
 com.android.build.api.dsl.model.BuildTypeOrVariant.setDebuggable: void (boolean)
 com.android.build.api.dsl.model.BuildTypeOrVariant.setEmbedMicroApp: void (boolean)
@@ -284,6 +313,12 @@ com.android.build.api.dsl.options.AnnotationProcessorOptions
 com.android.build.api.dsl.options.AnnotationProcessorOptions.getArguments: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.build.api.dsl.options.AnnotationProcessorOptions.getClassNames: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.options.AnnotationProcessorOptions.getIncludeCompileClasspath: java.lang.Boolean ()
+com.android.build.api.dsl.options.BuildArtifactsOptions
+com.android.build.api.dsl.options.BuildArtifactsOptions.appendTo: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, com.android.build.api.artifact.BuildArtifactTransformBuilder.com.android.build.api.artifact.BuildArtifactTransformBuilder$SimpleConfigurationAction<? super T>)
+com.android.build.api.dsl.options.BuildArtifactsOptions.appendTo: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, kotlin.jvm.functions.Function3<? super T, ? super com.android.build.api.artifact.BuildableArtifact, ? super java.io.File, kotlin.Unit>)
+com.android.build.api.dsl.options.BuildArtifactsOptions.builder: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (java.lang.String, java.lang.Class<T>)
+com.android.build.api.dsl.options.BuildArtifactsOptions.replace: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, com.android.build.api.artifact.BuildArtifactTransformBuilder.com.android.build.api.artifact.BuildArtifactTransformBuilder$SimpleConfigurationAction<? super T>)
+com.android.build.api.dsl.options.BuildArtifactsOptions.replace: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, kotlin.jvm.functions.Function3<? super T, ? super com.android.build.api.artifact.BuildableArtifact, ? super java.io.File, kotlin.Unit>)
 com.android.build.api.dsl.options.CompileOptions
 com.android.build.api.dsl.options.CompileOptions.getDefaultJavaVersion: org.gradle.api.JavaVersion ()
 com.android.build.api.dsl.options.CompileOptions.getEncoding: java.lang.String ()
@@ -460,25 +495,25 @@ com.android.build.api.dsl.options.PackagingOptions.setDoNotStrip: void (java.uti
 com.android.build.api.dsl.options.PackagingOptions.setExcludes: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.options.PackagingOptions.setMerges: void (java.util.Set<java.lang.String>)
 com.android.build.api.dsl.options.PackagingOptions.setPickFirsts: void (java.util.Set<java.lang.String>)
-com.android.build.api.dsl.options.PostprocessingFiles
-com.android.build.api.dsl.options.PostprocessingFiles.getConsumerProguardFiles: java.util.List<java.lang.Object> ()
-com.android.build.api.dsl.options.PostprocessingFiles.getProguardFiles: java.util.List<java.lang.Object> ()
-com.android.build.api.dsl.options.PostprocessingFiles.getTestProguardFiles: java.util.List<java.lang.Object> ()
-com.android.build.api.dsl.options.PostprocessingFiles.setConsumerProguardFiles: void (java.util.List<java.lang.Object>)
-com.android.build.api.dsl.options.PostprocessingFiles.setProguardFiles: void (java.util.List<java.lang.Object>)
-com.android.build.api.dsl.options.PostprocessingFiles.setTestProguardFiles: void (java.util.List<java.lang.Object>)
-com.android.build.api.dsl.options.PostprocessingFilesOptions
-com.android.build.api.dsl.options.PostprocessingOptions
-com.android.build.api.dsl.options.PostprocessingOptions.getCodeShrinker: java.lang.String ()
-com.android.build.api.dsl.options.PostprocessingOptions.isObfuscate: boolean ()
-com.android.build.api.dsl.options.PostprocessingOptions.isOptimizeCode: boolean ()
-com.android.build.api.dsl.options.PostprocessingOptions.isRemoveUnusedCode: boolean ()
-com.android.build.api.dsl.options.PostprocessingOptions.isRemoveUnusedResources: boolean ()
-com.android.build.api.dsl.options.PostprocessingOptions.setCodeShrinker: void (java.lang.String)
-com.android.build.api.dsl.options.PostprocessingOptions.setObfuscate: void (boolean)
-com.android.build.api.dsl.options.PostprocessingOptions.setOptimizeCode: void (boolean)
-com.android.build.api.dsl.options.PostprocessingOptions.setRemoveUnusedCode: void (boolean)
-com.android.build.api.dsl.options.PostprocessingOptions.setRemoveUnusedResources: void (boolean)
+com.android.build.api.dsl.options.PostProcessingFiles
+com.android.build.api.dsl.options.PostProcessingFiles.getConsumerProguardFiles: java.util.List<java.lang.Object> ()
+com.android.build.api.dsl.options.PostProcessingFiles.getProguardFiles: java.util.List<java.lang.Object> ()
+com.android.build.api.dsl.options.PostProcessingFiles.getTestProguardFiles: java.util.List<java.lang.Object> ()
+com.android.build.api.dsl.options.PostProcessingFiles.setConsumerProguardFiles: void (java.util.List<java.lang.Object>)
+com.android.build.api.dsl.options.PostProcessingFiles.setProguardFiles: void (java.util.List<java.lang.Object>)
+com.android.build.api.dsl.options.PostProcessingFiles.setTestProguardFiles: void (java.util.List<java.lang.Object>)
+com.android.build.api.dsl.options.PostProcessingFilesOptions
+com.android.build.api.dsl.options.PostProcessingOptions
+com.android.build.api.dsl.options.PostProcessingOptions.getCodeShrinker: java.lang.String ()
+com.android.build.api.dsl.options.PostProcessingOptions.isObfuscate: boolean ()
+com.android.build.api.dsl.options.PostProcessingOptions.isOptimizeCode: boolean ()
+com.android.build.api.dsl.options.PostProcessingOptions.isRemoveUnusedCode: boolean ()
+com.android.build.api.dsl.options.PostProcessingOptions.isRemoveUnusedResources: boolean ()
+com.android.build.api.dsl.options.PostProcessingOptions.setCodeShrinker: void (java.lang.String)
+com.android.build.api.dsl.options.PostProcessingOptions.setObfuscate: void (boolean)
+com.android.build.api.dsl.options.PostProcessingOptions.setOptimizeCode: void (boolean)
+com.android.build.api.dsl.options.PostProcessingOptions.setRemoveUnusedCode: void (boolean)
+com.android.build.api.dsl.options.PostProcessingOptions.setRemoveUnusedResources: void (boolean)
 com.android.build.api.dsl.options.ShaderOptions
 com.android.build.api.dsl.options.ShaderOptions.getGlslcArgs: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.options.ShaderOptions.getScopedGlslcArgs: com.google.common.collect.ListMultimap<java.lang.String, java.lang.String> ()

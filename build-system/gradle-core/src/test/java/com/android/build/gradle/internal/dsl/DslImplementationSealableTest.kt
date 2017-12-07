@@ -26,8 +26,8 @@ import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.options.ExternalNativeBuildOptionsImpl
 import com.android.build.gradle.internal.api.dsl.options.JavaCompileOptionsImpl
 import com.android.build.gradle.internal.api.dsl.options.NdkOptionsImpl
-import com.android.build.gradle.internal.api.dsl.options.PostprocessingFilesOptionsImpl
-import com.android.build.gradle.internal.api.dsl.options.PostprocessingOptionsImpl
+import com.android.build.gradle.internal.api.dsl.options.PostProcessingFilesOptionsImpl
+import com.android.build.gradle.internal.api.dsl.options.PostProcessingOptionsImpl
 import com.android.build.gradle.internal.api.dsl.options.ShaderOptionsImpl
 import com.android.build.gradle.internal.api.dsl.options.SigningConfigImpl
 import com.android.build.gradle.internal.errors.DeprecationReporter
@@ -60,7 +60,7 @@ class DslImplementationSealableTest {
             com.android.build.api.dsl.options.JavaCompileOptions::class,
             com.android.build.api.dsl.options.NdkOptions::class,
             com.android.build.api.dsl.options.ShaderOptions::class,
-            com.android.build.api.dsl.options.PostprocessingOptions::class)
+            com.android.build.api.dsl.options.PostProcessingOptions::class)
 
     val testedTypes: MutableList<KClass<*>> = mutableListOf()
 
@@ -146,7 +146,7 @@ class DslImplementationSealableTest {
                         "foo",
                         VariantPropertiesImpl(issueReporter),
                         BuildTypeOrProductFlavorImpl(depecationReporter, issueReporter) {
-                            PostprocessingFilesOptionsImpl(issueReporter)
+                            PostProcessingFilesOptionsImpl(issueReporter)
                         },
                         BuildTypeOrVariantImpl("buildType",
                                 depecationReporter, issueReporter),
@@ -162,8 +162,8 @@ class DslImplementationSealableTest {
                     return NdkOptionsImpl(issueReporter)
             com.android.build.api.dsl.options.ShaderOptions::class ->
                     return ShaderOptionsImpl(issueReporter)
-            com.android.build.api.dsl.options.PostprocessingOptions::class ->
-                    return PostprocessingOptionsImpl(issueReporter)
+            com.android.build.api.dsl.options.PostProcessingOptions::class ->
+                    return PostProcessingOptionsImpl(issueReporter)
         }
         throw IllegalArgumentException("I don't know how to instantiate $type")
     }

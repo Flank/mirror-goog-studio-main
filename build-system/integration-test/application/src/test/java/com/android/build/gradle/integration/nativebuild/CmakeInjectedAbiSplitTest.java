@@ -20,6 +20,7 @@ import static com.android.testutils.truth.MoreTruth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.options.BooleanOption;
@@ -132,7 +133,7 @@ public class CmakeInjectedAbiSplitTest {
 
     private static void checkApkContent(Apk apk, Abi... abis) throws IOException {
         List<Abi> abiList = Arrays.asList(abis);
-        for (Abi abi : Abi.values()) {
+        for (Abi abi : NdkHelper.getAbiList()) {
             String path = "lib/" + abi.getName() + '/' + "libhello-jni.so";
             if (abiList.contains(abi)) {
                 assertThat(apk).contains(path);

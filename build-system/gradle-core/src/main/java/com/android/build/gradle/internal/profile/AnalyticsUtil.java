@@ -27,6 +27,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.LongOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
@@ -41,6 +42,8 @@ import com.google.wireless.android.sdk.stats.ApiVersion;
 import com.google.wireless.android.sdk.stats.DeviceInfo;
 import com.google.wireless.android.sdk.stats.GradleBuildSplits;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
+import com.google.wireless.android.sdk.stats.GradleIntegerOptionEntry;
+import com.google.wireless.android.sdk.stats.GradleProjectOptionsSettings;
 import com.google.wireless.android.sdk.stats.TestRun;
 import java.util.Locale;
 
@@ -253,8 +256,9 @@ public class AnalyticsUtil {
         }
     }
 
+    @VisibleForTesting
     @NonNull
-    public static com.android.tools.build.gradle.internal.profile.BooleanOption toProto(
+    static com.android.tools.build.gradle.internal.profile.BooleanOption toProto(
             @NonNull BooleanOption option) {
         try {
             return com.android.tools.build.gradle.internal.profile.BooleanOption.valueOf(
@@ -265,8 +269,9 @@ public class AnalyticsUtil {
         }
     }
 
+    @VisibleForTesting
     @NonNull
-    public static com.android.tools.build.gradle.internal.profile.OptionalBooleanOption toProto(
+    static com.android.tools.build.gradle.internal.profile.OptionalBooleanOption toProto(
             @NonNull OptionalBooleanOption option) {
         try {
             return com.android.tools.build.gradle.internal.profile.OptionalBooleanOption.valueOf(
@@ -277,8 +282,9 @@ public class AnalyticsUtil {
         }
     }
 
+    @VisibleForTesting
     @NonNull
-    public static com.android.tools.build.gradle.internal.profile.IntegerOption toProto(
+    static com.android.tools.build.gradle.internal.profile.IntegerOption toProto(
             @NonNull IntegerOption option) {
         try {
             return com.android.tools.build.gradle.internal.profile.IntegerOption.valueOf(
@@ -289,8 +295,9 @@ public class AnalyticsUtil {
         }
     }
 
+    @VisibleForTesting
     @NonNull
-    public static com.android.tools.build.gradle.internal.profile.LongOption toProto(
+    static com.android.tools.build.gradle.internal.profile.LongOption toProto(
             @NonNull LongOption option) {
         try {
             return com.android.tools.build.gradle.internal.profile.LongOption.valueOf(
@@ -300,8 +307,9 @@ public class AnalyticsUtil {
         }
     }
 
+    @VisibleForTesting
     @NonNull
-    public static com.android.tools.build.gradle.internal.profile.StringOption toProto(
+    static com.android.tools.build.gradle.internal.profile.StringOption toProto(
             @NonNull StringOption option) {
         try {
             return com.android.tools.build.gradle.internal.profile.StringOption.valueOf(
@@ -310,5 +318,51 @@ public class AnalyticsUtil {
             return com.android.tools.build.gradle.internal.profile.StringOption
                     .UNKNOWN_STRING_OPTION;
         }
+    }
+
+    @NonNull
+    public static GradleProjectOptionsSettings toProto(@NonNull ProjectOptions projectOptions) {
+        GradleProjectOptionsSettings.Builder builder = GradleProjectOptionsSettings.newBuilder();
+        projectOptions
+                .getExplicitlySetBooleanOptions()
+                .forEach(
+                        (BooleanOption option, Boolean value) -> {
+                            if (value) {
+                                builder.addTrueBooleanOptions(toProto(option).getNumber());
+                            } else {
+                                builder.addFalseBooleanOptions(toProto(option).getNumber());
+                            }
+                        });
+
+        projectOptions
+                .getExplicitlySetOptionalBooleanOptions()
+                .forEach(
+                        (OptionalBooleanOption option, Boolean value) -> {
+                            if (value) {
+                                builder.addTrueOptionalBooleanOptions(toProto(option).getNumber());
+                            } else {
+                                builder.addFalseOptionalBooleanOptions(toProto(option).getNumber());
+                            }
+                        });
+
+        projectOptions
+                .getExplicitlySetIntegerOptions()
+                .forEach(
+                        (IntegerOption option, Integer value) -> {
+                            builder.addIntegerOptionValues(
+                                    GradleIntegerOptionEntry.newBuilder()
+                                            .setIntegerOption(toProto(option).getNumber())
+                                            .setIntegerOptionValue(value));
+                        });
+
+        for (LongOption longOption : projectOptions.getExplicitlySetLongOptions().keySet()) {
+            builder.addLongOptions(toProto(longOption).getNumber());
+        }
+
+        for (StringOption stringOption : projectOptions.getExplicitlySetStringOptions().keySet()) {
+            builder.addStringOptions(toProto(stringOption).getNumber());
+        }
+
+        return builder.build();
     }
 }

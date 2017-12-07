@@ -793,9 +793,14 @@ public class XmlElement extends OrphanXmlElement {
                 @NonNull XmlElement otherChildNode = new XmlElement((Element) potentialNode, mDocument);
                 if (childNode.getType() == otherChildNode.getType()) {
                     // check if this element uses a key.
-                    if (childNode.getType().getNodeKeyResolver().getKeyAttributesNames()
-                            .isEmpty()) {
-                        // no key... try all the other elements, if we find one equal, we are done.
+                    if (childNode.getType().areMultipleDeclarationAllowed()
+                            || childNode
+                                    .getType()
+                                    .getNodeKeyResolver()
+                                    .getKeyAttributesNames()
+                                    .isEmpty()) {
+                        // no key, or multiple nodes with same key allowed...
+                        // try all the other elements, if we find one equal, we are done.
                         message = childNode.compareTo(otherChildNode);
                         if (!message.isPresent()) {
                             return Optional.absent();

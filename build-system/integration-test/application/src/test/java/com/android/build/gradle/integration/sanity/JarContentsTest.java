@@ -79,9 +79,8 @@ public class JarContentsTest {
 
     private static final String EXTERNAL_DEPS = "/com/android/tools/external/";
 
-    private static final String GMAVEN_ZIP = "tools/base/gmaven_repo.zip";
-    private static final String JAVALIBMODELBUILDER_ZIP =
-            "tools/base/java-lib-model-builder_repo.zip";
+    private static final String GMAVEN_ZIP = "tools/base/gmaven.zip";
+    private static final String JAVALIBMODELBUILDER_ZIP = "tools/base/java-lib-model-builder.zip";
 
     private static final SetMultimap<String, String> EXPECTED;
 
@@ -126,6 +125,7 @@ public class JarContentsTest {
                 "com/android/",
                 "com/android/build/",
                 "com/android/build/api/",
+                "com/android/build/api/artifact/",
                 "com/android/build/api/attributes/",
                 "com/android/build/api/dsl/",
                 "com/android/build/api/dsl/extension/",
@@ -246,8 +246,8 @@ public class JarContentsTest {
                 "com/android/tools/aapt2/",
                 "com/android/tools/r8/",
                 "com/android/tools/r8/annotations/",
-                "com/android/tools/r8/bisect/",
                 "com/android/tools/r8/benchmarks/",
+                "com/android/tools/r8/bisect/",
                 "com/android/tools/r8/cf/",
                 "com/android/tools/r8/cf/code/",
                 "com/android/tools/r8/code/",
@@ -281,6 +281,8 @@ public class JarContentsTest {
                 "com/android/tools/r8/errors/",
                 "com/android/tools/r8/graph/",
                 "com/android/tools/r8/ir/",
+                "com/android/tools/r8/ir/analysis/",
+                "com/android/tools/r8/ir/analysis/constant/",
                 "com/android/tools/r8/ir/code/",
                 "com/android/tools/r8/ir/conversion/",
                 "com/android/tools/r8/ir/desugar/",
@@ -321,6 +323,7 @@ public class JarContentsTest {
                 "com/android/tools/r8/org/objectweb/asm/tree/analysis/",
                 "com/android/tools/r8/org/objectweb/asm/util/",
                 "com/android/tools/r8/origin/",
+                "com/android/tools/r8/position/",
                 "com/android/tools/r8/shaking/",
                 "com/android/tools/r8/shaking/protolite/",
                 "com/android/tools/r8/utils/",
@@ -427,7 +430,8 @@ public class JarContentsTest {
                 "META-INF/gradle-plugins/com.android.instantapp.properties",
                 "META-INF/gradle-plugins/com.android.library.properties",
                 "META-INF/gradle-plugins/com.android.lint.properties",
-                "META-INF/gradle-plugins/com.android.test.properties");
+                "META-INF/gradle-plugins/com.android.test.properties",
+                "META-INF/gradle-plugins/com.android.bundle.properties");
         expected.putAll(
                 "com/android/tools/build/apksig",
                 "com/",
@@ -466,6 +470,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/actions/",
                 "com/android/build/gradle/internal/annotations/",
                 "com/android/build/gradle/internal/api/",
+                "com/android/build/gradle/internal/api/artifact/",
                 "com/android/build/gradle/internal/api/dsl/",
                 "com/android/build/gradle/internal/api/dsl/extensions/",
                 "com/android/build/gradle/internal/api/dsl/model/",
@@ -1027,6 +1032,8 @@ public class JarContentsTest {
                 "android/databinding/",
                 "android/databinding/parser/",
                 "android/databinding/tool/",
+                "android/databinding/tool/expr/",
+                "android/databinding/tool/ext/",
                 "android/databinding/tool/processing/",
                 "android/databinding/tool/processing/scopes/",
                 "android/databinding/tool/store/",
@@ -1050,7 +1057,6 @@ public class JarContentsTest {
                 "android/databinding/annotationprocessor/",
                 "android/databinding/tool/",
                 "android/databinding/tool/expr/",
-                "android/databinding/tool/ext/",
                 "android/databinding/tool/reflection/",
                 "android/databinding/tool/reflection/annotation/",
                 "android/databinding/tool/solver/",

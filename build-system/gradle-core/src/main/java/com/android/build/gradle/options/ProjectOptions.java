@@ -201,4 +201,24 @@ public final class ProjectOptions {
                 });
         return builder.toString();
     }
+
+    public ImmutableMap<BooleanOption, Boolean> getExplicitlySetBooleanOptions() {
+        return booleanOptions;
+    }
+
+    public ImmutableMap<OptionalBooleanOption, Boolean> getExplicitlySetOptionalBooleanOptions() {
+        return optionalBooleanOptions;
+    }
+
+    public ImmutableMap<IntegerOption, Integer> getExplicitlySetIntegerOptions() {
+        return integerOptions;
+    }
+
+    public ImmutableMap<LongOption, Long> getExplicitlySetLongOptions() {
+        return longOptions;
+    }
+
+    public ImmutableMap<StringOption, String> getExplicitlySetStringOptions() {
+        return stringOptions;
+    }
 }

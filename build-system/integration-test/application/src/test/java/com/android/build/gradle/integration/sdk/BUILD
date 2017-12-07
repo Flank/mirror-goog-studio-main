@@ -28,7 +28,7 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test:test-projects/commonBuildScript.gradle",
     ],
     maven_repos = [
-        "//tools/base/build-system/integration-test/application:gradle_plugin",
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     deps = [

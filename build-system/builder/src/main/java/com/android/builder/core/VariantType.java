@@ -26,10 +26,10 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant;
  * Type of a variant.
  */
 public enum VariantType {
-    DEFAULT(false, GradleBuildVariant.VariantType.APPLICATION),
-    LIBRARY(true, GradleBuildVariant.VariantType.LIBRARY),
-    FEATURE(true, GradleBuildVariant.VariantType.FEATURE),
-    INSTANTAPP(false, GradleBuildVariant.VariantType.INSTANTAPP),
+    DEFAULT(false, true, GradleBuildVariant.VariantType.APPLICATION),
+    LIBRARY(true, false, GradleBuildVariant.VariantType.LIBRARY),
+    FEATURE(true, true, GradleBuildVariant.VariantType.FEATURE),
+    INSTANTAPP(false, false, GradleBuildVariant.VariantType.INSTANTAPP),
     ANDROID_TEST(
             "androidTest",
             "AndroidTest",
@@ -64,10 +64,12 @@ public enum VariantType {
     private final int mArtifactType;
     private final boolean exportsDataBindingClassList;
     private final GradleBuildVariant.VariantType mAnalyticsVariantType;
+    private final boolean canHaveSplits;
 
     /** App, Library variant. */
     VariantType(
             boolean exportsDataBindingClassList,
+            boolean canHaveSplits,
             GradleBuildVariant.VariantType analyticsVariantType) {
         this.mIsForTesting = false;
         this.mPrefix = "";
@@ -76,6 +78,7 @@ public enum VariantType {
         this.mArtifactType = ArtifactMetaData.TYPE_ANDROID;
         this.isSingleBuildType = false;
         this.exportsDataBindingClassList = exportsDataBindingClassList;
+        this.canHaveSplits = canHaveSplits;
         this.mAnalyticsVariantType = analyticsVariantType;
     }
 
@@ -94,6 +97,7 @@ public enum VariantType {
         this.mSuffix = suffix;
         this.isSingleBuildType = isSingleBuildType;
         this.exportsDataBindingClassList = false;
+        this.canHaveSplits = false;
         this.mAnalyticsVariantType = analyticsVariantType;
     }
 
@@ -151,6 +155,11 @@ public enum VariantType {
      */
     public boolean isExportDataBindingClassList() {
         return exportsDataBindingClassList;
+    }
+
+    /** Whether this variant can have split outputs. */
+    public boolean getCanHaveSplits() {
+        return canHaveSplits;
     }
 
     /**

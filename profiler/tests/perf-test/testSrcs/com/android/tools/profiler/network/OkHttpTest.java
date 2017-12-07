@@ -30,13 +30,12 @@ import com.android.tools.profiler.proto.Profiler.BytesRequest;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-@Ignore // TODO: Re-enable (b/69805152)
 @RunWith(Parameterized.class)
 public class OkHttpTest {
 
@@ -70,19 +69,15 @@ public class OkHttpTest {
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp3Get");
         assertThat(myAndroidDriver.waitForInput(okHttp3Get)).isTrue();
 
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
                 stubWrapper.getAllHttpRange(myGrpc.getProcessId());
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
-        long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
+        final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
         HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains("?method=" + okHttp3Get)).isTrue();
-
-        HttpDetailsResponse responseDetails =
-                stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
-        String responseFields = responseDetails.getResponse().getFields();
-        assertThat(responseFields.contains("response-status-code = 200")).isTrue();
+        waitForResponseFields200(stubWrapper, connectionId);
 
         HttpDetailsResponse threadDetails =
                 stubWrapper.getHttpDetails(connectionId, Type.ACCESSING_THREADS);
@@ -112,11 +107,6 @@ public class OkHttpTest {
         assertThat(requestDetails.getRequest().getUrl().contains("?method=" + okHttp3Post))
             .isTrue();
 
-        HttpDetailsResponse responseDetails =
-                stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
-        String responseFields = responseDetails.getResponse().getFields();
-        assertThat(responseFields.contains("response-status-code = 200")).isTrue();
-
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
         Profiler.BytesResponse bytesResponse =
@@ -139,11 +129,7 @@ public class OkHttpTest {
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
         HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains("?method=" + okHttp2Get)).isTrue();
-
-        HttpDetailsResponse responseDetails =
-                stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
-        String responseFields = responseDetails.getResponse().getFields();
-        assertThat(responseFields.contains("response-status-code = 200")).isTrue();
+        waitForResponseFields200(stubWrapper, connectionId);
 
         HttpDetailsResponse threadDetails =
                 stubWrapper.getHttpDetails(connectionId, Type.ACCESSING_THREADS);
@@ -172,11 +158,6 @@ public class OkHttpTest {
         HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains("?method=" + okHttp2Post))
             .isTrue();
-
-        HttpDetailsResponse responseDetails =
-                stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
-        String responseFields = responseDetails.getResponse().getFields();
-        assertThat(responseFields.contains("response-status-code = 200")).isTrue();
 
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
@@ -249,12 +230,18 @@ public class OkHttpTest {
         assertNetworkErrorBehavior(stubWrapper);
     }
 
-    private void assertNetworkErrorBehavior(NetworkStubWrapper stubWrapper) {
+    private void assertNetworkErrorBehavior(final NetworkStubWrapper stubWrapper) {
         // Wait until get two responses: 1 aborted and 1 completed.
-        NetworkProfiler.HttpRangeResponse httpRangeResponse = null;
-        while (httpRangeResponse == null || httpRangeResponse.getDataList().size() != 2) {
-            httpRangeResponse = stubWrapper.getAllHttpRange(myGrpc.getProcessId());
-        }
+        // Both failed and successful requests should have valid time ranges.
+        stubWrapper.waitFor(
+                () -> {
+                    List<HttpConnectionData> list =
+                            stubWrapper.getAllHttpRange(myGrpc.getProcessId()).getDataList();
+                    return list.size() == 2
+                            && list.stream().allMatch(item -> (item.getEndTimestamp() > 0));
+                });
+        NetworkProfiler.HttpRangeResponse httpRangeResponse =
+                stubWrapper.getAllHttpRange(myGrpc.getProcessId());
 
         // The first request should have no response fields after being aborted
         HttpConnectionData connectionAborted = httpRangeResponse.getDataList().get(0);
@@ -270,15 +257,19 @@ public class OkHttpTest {
 
         // The second request should have completed normally
         HttpConnectionData connectionSuccess = httpRangeResponse.getDataList().get(1);
-        responseDetails = stubWrapper.getHttpDetails(connectionSuccess.getConnId(), Type.RESPONSE);
-        assertThat(responseDetails.getResponse().getFields().contains("response-status-code = 200"))
-                .isTrue();
+        waitForResponseFields200(stubWrapper, connectionSuccess.getConnId());
 
-        // Both failed and successful requests should have valid time ranges (and the successful
-        // connection should naturally start after the failed connection finished)
-        assertThat(connectionAborted.getEndTimestamp()).isGreaterThan((long) 0);
-        assertThat(connectionSuccess.getEndTimestamp()).isGreaterThan((long) 0);
+        // The successful connection should naturally start after the failed connection finished)
         assertThat(connectionAborted.getEndTimestamp())
                 .isLessThan(connectionSuccess.getStartTimestamp());
+    }
+
+    private static void waitForResponseFields200(
+            final NetworkStubWrapper stubWrapper, final long connId) {
+        stubWrapper.waitFor(
+                () -> {
+                    HttpDetailsResponse details = stubWrapper.getHttpDetails(connId, Type.RESPONSE);
+                    return details.getResponse().getFields().contains("response-status-code = 200");
+                });
     }
 }

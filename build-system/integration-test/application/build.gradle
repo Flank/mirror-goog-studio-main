@@ -82,7 +82,9 @@ def testEnvironment =
                     // For AccentCharacterAndProguardTest
                     key.startsWith("LC_") ||
                     key.startsWith("LANG") ||
-                    key.startsWith("BUILDBOT_")
+                    key.startsWith("BUILDBOT_") ||
+                    // For local benchmarking
+                    key == "LOCAL_BENCHMARK_LOCATION"
         }
 
 testEnvironment << [

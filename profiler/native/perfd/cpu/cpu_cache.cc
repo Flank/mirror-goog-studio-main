@@ -21,7 +21,7 @@
 #include <mutex>
 #include <vector>
 
-#include "proto/profiler.pb.h"
+#include "proto/common.pb.h"
 
 using profiler::proto::CpuProfilerData;
 using std::vector;

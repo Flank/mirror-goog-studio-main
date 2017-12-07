@@ -58,13 +58,37 @@ java_library(
 )
 
 perf_test(
-    name = "AllTest",
+    name = "HttpTest",
     srcs = [
         "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
-        "testSrcs/com/android/tools/profiler/JniTest.java",
-        "testSrcs/com/android/tools/profiler/MemoryTest.java",
         "testSrcs/com/android/tools/profiler/network/HttpUrlTest.java",
         "testSrcs/com/android/tools/profiler/network/OkHttpTest.java",
+    ],
+    native_lib = "//tools/base/profiler/tests/test-app:libnativetest.so",
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
+    deps = [
+        ":tests",
+        "//tools/idea/.idea/libraries:truth",
+    ],
+)
+
+perf_test(
+    name = "MemoryTest",
+    srcs = [
+        "testSrcs/com/android/tools/profiler/MemoryTest.java",
+    ],
+    native_lib = "//tools/base/profiler/tests/test-app:libnativetest.so",
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
+    deps = [
+        ":tests",
+        "//tools/idea/.idea/libraries:truth",
+    ],
+)
+
+perf_test(
+    name = "JniTest",
+    srcs = [
+        "testSrcs/com/android/tools/profiler/JniTest.java",
     ],
     native_lib = "//tools/base/profiler/tests/test-app:libnativetest.so",
     test_app = "//tools/base/profiler/tests/test-app:test-app",

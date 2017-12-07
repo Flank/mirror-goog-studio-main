@@ -22,11 +22,12 @@ import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.DiagnosticsHandler;
-import com.android.tools.r8.Location;
-import com.android.tools.r8.TextRangeLocation;
 import com.android.tools.r8.origin.ArchiveEntryOrigin;
 import com.android.tools.r8.origin.Origin;
 import com.android.tools.r8.origin.PathOrigin;
+import com.android.tools.r8.position.Position;
+import com.android.tools.r8.position.TextPosition;
+import com.android.tools.r8.position.TextRange;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -86,32 +87,58 @@ class D8DiagnosticsHandler implements DiagnosticsHandler {
     protected Message convertToMessage(Message.Kind kind, Diagnostic diagnostic) {
         String textMessage = diagnostic.getDiagnosticMessage();
 
-        Location location = diagnostic.getLocation();
+        Origin origin = diagnostic.getOrigin();
+        Position positionInOrigin = diagnostic.getPosition();
         SourceFilePosition position;
-        if (location instanceof TextRangeLocation && location.getOrigin() instanceof PathOrigin) {
-            TextRangeLocation textRange = (TextRangeLocation) location;
+        if (origin instanceof PathOrigin) {
+            TextPosition startTextPosition;
+            TextPosition endTextPosition;
+            if (positionInOrigin instanceof TextRange) {
+                TextRange textRange = (TextRange) positionInOrigin;
+                startTextPosition = textRange.getStart();
+                endTextPosition = textRange.getEnd();
+            } else if (positionInOrigin instanceof TextPosition) {
+                startTextPosition = (TextPosition) positionInOrigin;
+                endTextPosition = startTextPosition;
+            } else {
+                startTextPosition = null;
+                endTextPosition = null;
+            }
+            if (startTextPosition != null) {
+                position =
+                        new SourceFilePosition(
+                                ((PathOrigin) origin.parent()).getPath().toFile(),
+                                new SourcePosition(
+                                        startTextPosition.getLine(),
+                                        startTextPosition.getColumn(),
+                                        toIntOffset(startTextPosition.getOffset()),
+                                        endTextPosition.getLine(),
+                                        endTextPosition.getColumn(),
+                                        toIntOffset(endTextPosition.getOffset())));
+
+            } else {
+                position = SourceFilePosition.UNKNOWN;
+            }
+        } else if (origin.parent() instanceof PathOrigin) {
             position =
                     new SourceFilePosition(
-                            ((PathOrigin) location.getOrigin()).getPath().toFile(),
-                            new SourcePosition(
-                                    textRange.getStart().getLine(),
-                                    textRange.getStart().getColumn(),
-                                    -1,
-                                    textRange.getEnd().getLine(),
-                                    textRange.getEnd().getColumn(),
-                                    -1));
-        } else if (location.getOrigin() instanceof PathOrigin) {
-            position =
-                    new SourceFilePosition(
-                            ((PathOrigin) location.getOrigin()).getPath().toFile(),
+                            ((PathOrigin) origin.parent()).getPath().toFile(),
                             SourcePosition.UNKNOWN);
         } else {
             position = SourceFilePosition.UNKNOWN;
-            if (location != Location.UNKNOWN) {
-                textMessage = location.getDescription() + ": " + textMessage;
+            if (origin != Origin.unknown()) {
+                textMessage = origin.toString() + ": " + textMessage;
             }
         }
 
         return new Message(kind, textMessage, textMessage, "D8", position);
+    }
+
+    private static int toIntOffset(long offset) {
+        if (offset >= 0 && offset <= Integer.MAX_VALUE) {
+            return (int) offset;
+        } else {
+            return -1;
+        }
     }
 }

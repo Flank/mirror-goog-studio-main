@@ -63,7 +63,6 @@ import com.intellij.openapi.vfs.VirtualFileSystem;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiClassOwner;
 import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
@@ -225,9 +224,9 @@ public class Extractor {
     private Map<String,Boolean> sourceRetention;
     private final List<Item> keepItems = new ArrayList<>();
 
-    public static List<? extends PsiClassOwner> createUnitsForFiles(@NonNull Project project,
+    public static List<? extends PsiFile> createUnitsForFiles(@NonNull Project project,
             @NonNull List<File> specificSources) {
-        List<PsiClassOwner> units = new ArrayList<>(specificSources.size());
+        List<PsiFile> units = new ArrayList<>(specificSources.size());
         VirtualFileSystem fileSystem = StandardFileSystems.local();
         PsiManager manager = PsiManager.getInstance(project);
 
@@ -235,15 +234,15 @@ public class Extractor {
             VirtualFile virtualFile = fileSystem.findFileByPath(source.getPath());
             if (virtualFile != null) {
                 PsiFile psiFile = manager.findFile(virtualFile);
-                if (psiFile instanceof PsiClassOwner) {
-                    units.add((PsiClassOwner) psiFile);
+                if (psiFile != null) {
+                    units.add(psiFile);
                 }
             }
         }
         return units;
     }
 
-    public static List<? extends PsiClassOwner> createUnitsInDirectories(@NonNull Project project,
+    public static List<? extends PsiFile> createUnitsInDirectories(@NonNull Project project,
             @NonNull List<File> sourceDirs) {
         List<File> specificSources = gatherSources(sourceDirs);
         return createUnitsForFiles(project, specificSources);
@@ -285,7 +284,7 @@ public class Extractor {
         this.sortAnnotations = sortAnnotations;
     }
 
-    public void extractFromProjectSource(List<? extends PsiClassOwner> units) {
+    public void extractFromProjectSource(List<? extends PsiFile> units) {
         if (units.isEmpty()) {
             return;
         }
@@ -295,7 +294,7 @@ public class Extractor {
 
         AnnotationVisitor visitor = new AnnotationVisitor(false, true);
 
-        for (PsiClassOwner unit : units) {
+        for (PsiFile unit : units) {
             UElement uFile = uastContext.convertElementWithParent(unit, UFile.class);
             if (uFile == null) {
                 System.out.println("Warning: Could not convert " + unit.getName() + " with UAST");

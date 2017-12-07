@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -230,7 +232,7 @@ public class FirebaseAnalyticsDetector extends Detector implements Detector.Uast
         }
 
          private void checkMethodCall(UCallExpression expression) {
-            String method = expression.getMethodName();
+            String method = getMethodName(expression);
             if (method == null ||
                      (!method.equals("putString") && !method.equals("putLong")
                     && !method.equals("putDouble"))) {

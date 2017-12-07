@@ -686,6 +686,11 @@ public abstract class BaseVariantData implements TaskContainer {
                 sourceSets.add(
                         project.fileTree(scope.getClassOutputForDataBinding())
                                 .builtBy(scope.getDataBindingExportBuildInfoTask().getName()));
+                FileCollection baseClassSource =
+                        scope.getOutput(
+                                TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_SOURCE_OUT);
+                sourceSets.add(
+                        project.fileTree(baseClassSource.getSingleFile()).builtBy(baseClassSource));
             }
 
             if (!variantConfiguration.getRenderscriptNdkModeEnabled()

@@ -17,84 +17,202 @@ syntax = "proto3";
 
 package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
-option java_outer_classname = "Common";
+option java_outer_classname = "Profiler";
 
-enum AppId {
-  // Enum with default value required by proto
-  UNSPECIFIED = 0;
-  // Indicates that a feature is not tied to any single app
-  ANY = -1;
+import "common.proto";
+
+service ProfilerService {
+  // Gets current timestamp that used in the device's profiling data.
+  // A client may use this API to relate profiling data' timestamps to other
+  // clocks such as the desktop's calendar time.
+  // TODO(b/29223899): Add device's calendar time.
+  rpc GetCurrentTime(TimeRequest) returns (TimeResponse) {
+  }
+
+  // Gets version.
+  rpc GetVersion(VersionRequest) returns (VersionResponse) {
+  }
+
+  // Gets the currently connected devices.
+  // TODO: expand with timing information for historical requests.
+  rpc GetDevices(GetDevicesRequest) returns (GetDevicesResponse) {
+  }
+
+  // Gets the running processes of a given device
+  // TODO expand with timing information for historical requests.
+  rpc GetProcesses(GetProcessesRequest) returns (GetProcessesResponse) {
+  }
+
+  // Query for cached byte data associated with some ID. Other services may
+  // return an ID which can be used to fetch data using this central cache.
+  rpc GetBytes(BytesRequest) returns (BytesResponse) {
+  }
+
+  // Query for whether the agent is alive.
+  rpc GetAgentStatus(AgentStatusRequest) returns (AgentStatusResponse) {
+  }
+
+  // TODO (b/67508564): Delete this and updated affected sites to call
+  // BeginSession instead.
+  rpc AttachAgent(AgentAttachRequest) returns (AgentAttachResponse) {
+  }
+
+  // Start a new session. As a side effect, this also starts all profilers for
+  // the PID being targeted by this session.
+  // If a session with the same PID is already running, this method will
+  // essentially be a no-op (except it will move the session to the top of the
+  // sorted-by-recency list).
+  rpc BeginSession(BeginSessionRequest) returns (BeginSessionResponse) {
+  }
+
+  // Stop a target session (if currently running). As a side effect,
+  // this also stops all profilers for the PID being targeted by this session.
+  rpc EndSession(EndSessionRequest) returns (EndSessionResponse) {
+  }
+
+  // Request a session by ID.
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
+  }
+
+  // Requests all sessions in the time range from |start_timestamp| (exclusive)
+  // to |end_timestamp| (inclusive), or mathematically written as the interval
+  // (start_timestamp, end_timestamp]. Results will be returned ordered by
+  // recency (most recent first).
+  rpc GetSessions(GetSessionsRequest) returns (GetSessionsResponse) {
+  }
+
+  // Delete a session by ID. If it is currently running, |EndSession| will
+  // automatically be called on it.
+  rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse) {
+  }
 }
 
-// TODO: Add more essential fields.
-message CommonData {
+message AgentAttachRequest {
   int32 process_id = 1;
   Session session = 2;
-  int64 end_timestamp = 3;
+  // TODO: This is temporary, remove when moving process discovery.
+  string agent_lib_file_name = 3;
 }
 
-// Note that |Device| instance refers to a device (physical/emulator) associated
-// with a particular boot. e.g. if the same device is started twice, they are
-// considered two separate |Device| instances.
-message Device {
-  enum State {
-    UNSPECIFIED = 0;
-    ONLINE = 1;
-    OFFLINE = 2; // e.g. emulator that is turned off
-    DISCONNECTED = 3; // e.g. unplugged
+message AgentAttachResponse {
+  enum Status {
+    UNSPECIFICED = 0;
+    SUCCESS = 1;
+    FAILURE_UNKNOWN = 2;
   }
-  // Numeric representation of the device's |serial| and |boot_id| properties.
-  // Used for quickly indexing the device instead of having to perform string comparisons.
+  Status status = 1;
+}
+
+message TimeRequest {
   int64 device_id = 1;
-  string manufacturer = 2; // e.g. 'Google', 'Motorola'
-  string model = 3; // e.g. 'Nexus 5', 'Pixel XL'
-  string serial = 4; // unique ID for this device
-  string version = 5; // e.g. '5.1.1', '8.0.0'
-  int32 api_level = 6; // e.g. 19, 25
-  // |feature_level| will either be the same as |api_level| or |api_level + 1| if the current
-  // device is a preview version. Code should check against |feature_level|, not |api_level|, to
-  // see if a feature is available in the framework or not. If |feature_level != api_level|, then
-  // |codename| will also be set.
-  int32 feature_level = 7;
-  string codename = 8; // Identifies preview versions by API letter (e.g. 'O'), or '' for release
-  string boot_id = 9; // unique ID regenerated each boot time
-  bool is_emulator = 10;
-  State state = 11;
 }
 
-message Process {
-  enum State {
-    UNSPECIFIED = 0;
-    ALIVE = 1;
-    DEAD = 2;
-  }
-  // Full name of the Android application/service
-  string name = 1;
-  // App's PID. Note that this is actually an int16, but gRPC only provides int32.
-  int32 pid = 2;
-  // References Device's |device_id| property.
-  int64 device_id = 3;
-  State state = 4;
-  // The device time when this Process was first detected by the profiler.
-  int64 start_timestamp_ns = 5;
-  // e.g. 'arm', 'arm86', 'x86', 'x86_64'
-  // Also see SdkConstans.CPU_ARCH_*
-  string abi_cpu_arch = 6;
+message TimeResponse {
+  // What's used as timestamps in all profiler data (unless otherwise specified).
+  // (a.k.a: Timestamp from clock_gettime(CLOCK_MONOTONIC, ...), ns precision.)
+  int64 timestamp_ns = 1;
+
+  // The number of microseconds since the Epoch.
+  // (a.k.a: Timestamp from gettimeofday, us precision.)
+  int64 epoch_timestamp_us = 2;
 }
 
-// A Session represents a range of profiling data for an app running on a
-// device. While of course different apps or different devices will imply
-// separate sessions, the same app on the same device can also be broken up
-// into several sessions.
-message Session {
-  // ID uniquely identifying this session. This will be unique across devices.
+message VersionRequest {
+  int64 device_id = 1;
+}
+
+message VersionResponse {
+  string version = 1;
+}
+
+message GetDevicesRequest {
+}
+
+message GetDevicesResponse {
+  repeated Device device = 1;
+}
+
+message GetProcessesRequest {
+  int64 device_id = 1;
+}
+
+message GetProcessesResponse {
+  repeated Process process = 2;
+}
+
+message BeginSessionRequest {
+  int64 device_id = 1;
+  int32 process_id = 2;
+}
+
+message BeginSessionResponse {
+  Session session = 1;
+}
+
+message EndSessionRequest {
   int64 session_id = 1;
-  // A device's unique identifier, references Device's |device_id| property.
+  // TODO remove when device_id can be queried from
+  // session_id on Studio-side.
   int64 device_id = 2;
-  // The PID of the app. Note that this is actually an int16, but gRPC only
-  // provides int32.
-  int32 pid = 3;
-  int64 start_timestamp = 4;
-  // If LLONG_MAX, the session is ongoing and hasn't ended yet.
-  int64 end_timestamp = 5;
+}
+
+message EndSessionResponse {
+  Session session = 1;
+}
+
+message GetSessionRequest {
+  int64 session_id = 1;
+}
+
+message GetSessionResponse {
+  // Will not be set if no session with a matching ID was found.
+  Session session = 1;
+}
+
+message GetSessionsRequest {
+  int64 start_timestamp = 1;
+  int64 end_timestamp = 2;
+}
+
+message GetSessionsResponse {
+  repeated Session sessions = 1;
+}
+
+message DeleteSessionRequest {
+  int64 session_id = 1;
+}
+
+message DeleteSessionResponse {
+}
+
+
+message BytesRequest {
+  // ID for fetching contents from a cache. The value will always be safe to use
+  // as a filename, if you want to cache the contents locally to disk for
+  // example.
+  string id = 1;
+  Session session = 2;
+}
+
+message BytesResponse {
+  // Byte contents from a cache, or "" if no data was found associated with the
+  // cache key used to fetch it, or if the data was removed after some timeout.
+  bytes contents = 1;
+}
+
+message AgentStatusRequest {
+  int64 device_id = 1;
+  int32 process_id = 2;
+}
+
+message AgentStatusResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    ATTACHED = 1;
+    DETACHED = 2;
+  }
+  Status status = 1;
+  // The last time a heartbeat was received from the requested agent.
+  // If no heartbeat was ever detected, this returns INT64_MIN.
+  int64 last_timestamp = 2;
 }

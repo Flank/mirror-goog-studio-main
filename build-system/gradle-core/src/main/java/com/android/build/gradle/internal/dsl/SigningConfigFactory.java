@@ -19,20 +19,19 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.signing.DefaultSigningConfig;
-import com.android.ide.common.signing.KeystoreHelper;
-import com.android.prefs.AndroidLocation;
 import java.io.File;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.tooling.BuildException;
 
 /** Factory to create SigningConfig object using an {@link ObjectFactory} to add the DSL methods. */
 public class SigningConfigFactory implements NamedDomainObjectFactory<SigningConfig> {
 
     private final ObjectFactory objectFactory;
+    private final File defaultDebugKeystoreLocation;
 
-    public SigningConfigFactory(ObjectFactory objectFactory) {
+    public SigningConfigFactory(ObjectFactory objectFactory, File defaultDebugKeystoreLocation) {
         this.objectFactory = objectFactory;
+        this.defaultDebugKeystoreLocation = defaultDebugKeystoreLocation;
     }
 
     @Override
@@ -40,13 +39,8 @@ public class SigningConfigFactory implements NamedDomainObjectFactory<SigningCon
     public SigningConfig create(@NonNull String name) {
         SigningConfig signingConfig = objectFactory.newInstance(SigningConfig.class, name);
         if (BuilderConstants.DEBUG.equals(name)) {
-            try {
-                signingConfig.initWith(
-                        DefaultSigningConfig.debugSigningConfig(
-                                new File(KeystoreHelper.defaultDebugKeystoreLocation())));
-            } catch (AndroidLocation.AndroidLocationException e) {
-                throw new BuildException("Failed to get default debug keystore location.", e);
-            }
+            signingConfig.initWith(
+                    DefaultSigningConfig.debugSigningConfig(defaultDebugKeystoreLocation));
         }
         return signingConfig;
     }

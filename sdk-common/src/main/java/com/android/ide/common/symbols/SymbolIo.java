@@ -426,6 +426,21 @@ public final class SymbolIo {
         } catch (SAXException | ParserConfigurationException e) {
             throw new IOException(e);
         }
+        writeSymbolTableWithPackage(symbolTable, packageName, outputFile);
+    }
+
+    /**
+     * Writes the symbol table with the package name as the first line.
+     *
+     * @param symbolTable The R.txt file. If it does not exist, the result will be a file containing
+     *     only the package name
+     * @param packageName The package name for the module. If not null, it will be written as the
+     *     first line of output.
+     * @param outputFile The file to write the result to.
+     */
+    public static void writeSymbolTableWithPackage(
+            @NonNull Path symbolTable, @Nullable String packageName, @NonNull Path outputFile)
+            throws IOException {
         try (OutputStream os = new BufferedOutputStream(Files.newOutputStream(outputFile))) {
             if (packageName != null) {
                 os.write(packageName.getBytes(Charsets.UTF_8));

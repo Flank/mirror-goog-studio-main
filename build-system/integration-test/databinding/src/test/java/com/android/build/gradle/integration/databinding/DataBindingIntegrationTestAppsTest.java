@@ -18,8 +18,10 @@ package com.android.build.gradle.integration.databinding;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.google.common.collect.ImmutableList;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,18 +32,28 @@ import org.junit.runners.Parameterized;
 public class DataBindingIntegrationTestAppsTest {
     @Rule public GradleTestProject project;
 
-    public DataBindingIntegrationTestAppsTest(String projectName) {
-        project = GradleTestProject.builder().fromDataBindingIntegrationTest(projectName).create();
+    public DataBindingIntegrationTestAppsTest(String projectName, boolean useV2) {
+        project =
+                GradleTestProject.builder()
+                        .fromDataBindingIntegrationTest(projectName)
+                        .addGradleProperties(
+                                BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName()
+                                        + "="
+                                        + useV2)
+                        .create();
     }
 
-    @Parameterized.Parameters(name = "_{0}")
-    public static Iterable<String> classNames() {
+    @Parameterized.Parameters(name = "app_{0}_useV2_{1}")
+    public static Iterable<Object[]> classNames() {
         // "App With Spaces", not supported by bazel :/
-        return ImmutableList.of(
-                "IndependentLibrary",
-                "TestApp",
-                "ProguardedAppWithTest",
-                "AppWithDataBindingInTests");
+        List<Object[]> params = new ArrayList<>();
+        for (boolean useV2 : new boolean[] {true, false}) {
+            params.add(new Object[] {"IndependentLibrary", useV2});
+            params.add(new Object[] {"TestApp", useV2});
+            params.add(new Object[] {"ProguardedAppWithTest", useV2});
+            params.add(new Object[] {"AppWithDataBindingInTests", useV2});
+        }
+        return params;
     }
 
     @Before

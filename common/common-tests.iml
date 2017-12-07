@@ -13,5 +13,6 @@
     <orderEntry type="module" module-name="android-annotations" exported="" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="module" module-name="common" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

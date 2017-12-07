@@ -42,7 +42,7 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UastContext
-import org.jetbrains.uast.getContainingFile
+import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getIoFile
 import org.jetbrains.uast.psi.UElementWithLocation
 import java.io.File
@@ -219,7 +219,7 @@ open class DefaultUastParser(
     override // subclasses may want to override/optimize
     fun getLocation(context: JavaContext, element: UElement): Location {
         if (element is UElementWithLocation) {
-            val file = element.getContainingFile() ?: return Location.NONE
+            val file = element.getContainingUFile() ?: return Location.NONE
             val ioFile = file.getIoFile() ?: return Location.NONE
             val text = file.psi.text
             val location = Location.create(ioFile, text, element.startOffset, element.endOffset)
@@ -285,7 +285,7 @@ open class DefaultUastParser(
 
     override fun createLocation(element: UElement): Location {
         if (element is UElementWithLocation) {
-            val file = element.getContainingFile() ?: return Location.NONE
+            val file = element.getContainingUFile() ?: return Location.NONE
             val ioFile = file.getIoFile() ?: return Location.NONE
             val text = file.psi.text
             val location = Location.create(ioFile, text, element.startOffset,

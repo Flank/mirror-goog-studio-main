@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.performance
 import com.android.build.gradle.integration.common.fixture.BuildModel
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
+import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.options.BooleanOption
@@ -27,22 +28,21 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 data class Benchmark(
+        // These first three parameters should uniquely identify your benchmark
         val scenario: ProjectScenario,
         val benchmark: Logging.Benchmark,
         val benchmarkMode: Logging.BenchmarkMode,
+
         val projectFactory: (GradleTestProjectBuilder) -> GradleTestProject,
         val postApplyProject: (GradleTestProject) -> GradleTestProject = { p -> p },
-        val setup: (GradleTestProject, RunGradleTasks, BuildModel) -> Unit,
-        val recordedAction: (RunGradleTasks, BuildModel) -> Unit) {
+        val action: ((() -> Unit) -> Unit, GradleTestProject, RunGradleTasks, BuildModel) -> Unit) {
     fun run() {
         /*
          * Any common project configuration should happen here. Note that it isn't possible to take
          * a subproject until _after_ project.apply has been called, so if you do need to do that
          * you'll have to supply a postApplyProject function and do it in there.
          */
-        var project = projectFactory(
-                GradleTestProject.builder()
-                        .forBenchmarkRecording(BenchmarkRecorder(benchmark, scenario)))
+        var project = projectFactory(GradleTestProject.builder())
 
         val statement =
                 object : Statement() {
@@ -65,29 +65,12 @@ data class Benchmark(
                                 .with(BooleanOption.ENABLE_D8, scenario.useD8())
                                 .withUseDexArchive(scenario.useDexArchive())
 
-                        setup(project, executor, model)
 
-                        /*
-                         * Note that both the executor and model are put into recording mode. This
-                         * means that if you do something with the model, and do something with the
-                         * executor, you will end up with two GradleBenchmarkResults at the end, and
-                         * it's highly likely that the distinctness check on these results will fail
-                         * because they will be too similar.
-                         *
-                         * As such, in a recordedAction, you want to either do only something with
-                         * the executor _or_ the model, or you want to disable recording on one of
-                         * them like so:
-                         *
-                         *   executor.dontRecord {
-                         *     // code here...
-                         *   }
-                         *
-                         * This method has the benefit of returning them to whatever state they
-                         * were in previously.
-                         */
-                        recordedAction(
-                                executor.recordBenchmark(benchmarkMode),
-                                model.recordBenchmark(benchmarkMode))
+                        val recorder = BenchmarkRecorder(ProfileCapturer(project.profileDirectory))
+                        val record = { r: () -> Unit -> recorder.record(scenario, benchmark, benchmarkMode, r) }
+
+                        action(record, project, executor, model)
+                        recorder.uploadAsync()
                     }
                 }
 

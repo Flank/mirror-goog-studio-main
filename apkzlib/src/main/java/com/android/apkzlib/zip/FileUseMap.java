@@ -538,6 +538,43 @@ class FileUseMap {
         return map.lower(entry);
     }
 
+    /**
+     * Obtains the entry that is located after the one provided.
+     *
+     * @param entry the map entry to get the next one for; must belong to the map
+     * @return the entry after the provided one, {@code null} if {@code entry} is the last entry in
+     *     the map
+     */
+    @Nullable
+    FileUseMapEntry<?> after(@Nonnull FileUseMapEntry<?> entry) {
+        Preconditions.checkNotNull(entry, "entry == null");
+
+        return map.higher(entry);
+    }
+
+    /**
+     * Obtains the entry at the given offset.
+     *
+     * @param offset the offset to look for
+     * @return the entry found or {@code null} if there is no entry (not even a free one) at the
+     *     given offset
+     */
+    @Nullable
+    FileUseMapEntry<?> at(long offset) {
+        Preconditions.checkArgument(offset >= 0, "offset < 0");
+        Preconditions.checkArgument(offset < size, "offset >= size");
+
+        FileUseMapEntry<?> entry = map.floor(FileUseMapEntry.makeFree(offset, offset + 1));
+        if (entry == null) {
+            return null;
+        }
+
+        Verify.verify(entry.getStart() <= offset);
+        Verify.verify(entry.getEnd() > offset);
+
+        return entry;
+    }
+
     @Override
     public String toString() {
         StringJoiner j = new StringJoiner(", ");

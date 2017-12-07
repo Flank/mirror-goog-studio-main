@@ -102,8 +102,10 @@ public class PerfDriver {
         myMockApp.start();
         myPerfdDriver.start();
         //Block until we are in a state for the test to continue.
-        assertTrue(myPerfdDriver.waitForInput("Server listening on"));
-        assertTrue(myMockApp.waitForInput("Test Framework Server Listening"));
+        assertTrue(myPerfdDriver.waitForInput("Server listening on", ProcessRunner.NO_TIMEOUT));
+        assertTrue(
+                myMockApp.waitForInput(
+                        "Test Framework Server Listening", ProcessRunner.NO_TIMEOUT));
         myMockApp.setProperty(
                 "profiler.service.address", String.format("%s:%d", PerfDriver.LOCAL_HOST, myPort));
         if (!myIsOPlusDevice) {
@@ -176,12 +178,16 @@ public class PerfDriver {
             myConfigFile = File.createTempFile("agent_config", ".data");
             myConfigFile.deleteOnExit();
             FileOutputStream outputStream = new FileOutputStream(myConfigFile);
+            Agent.AgentConfig.MemoryConfig memConfig =
+                    Agent.AgentConfig.MemoryConfig.newBuilder().setTrackGlobalJniRefs(true).build();
+
             Agent.AgentConfig config =
                     Agent.AgentConfig.newBuilder()
                             // The test below are using JVMTI, however this flag controls if we are
                             // using an abstract unix socket or if we are using a host and port.
                             // TODO: Update framework to support abstract sockets.
                             .setUseJvmti(false)
+                            .setMemConfig(memConfig)
                             .setServiceAddress(LOCAL_HOST + ":" + myPort)
                             .setSocketType(Agent.SocketType.UNSPECIFIED_SOCKET)
                             .setProfilerNetworkRequestPayload(true)

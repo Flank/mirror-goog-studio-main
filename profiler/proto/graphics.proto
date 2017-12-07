@@ -19,7 +19,7 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "GraphicsProfiler";
 
-import "profiler.proto";
+import "common.proto";
 
 service GraphicsService {
   // Returns graphics data from the monitored Activity. This will return no data for

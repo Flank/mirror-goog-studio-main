@@ -29,6 +29,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
@@ -37,10 +38,13 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.ANNOTATION_PROCESSOR_LIST;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK_MAPPING;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_MANIFEST;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LINKED_RES_FOR_BUNDLE;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MANIFEST_MERGE_REPORT;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
@@ -48,6 +52,9 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MOCKABLE_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PLATFORM_R_TXT;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLISHED_DEX;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLISHED_JAVA_RES;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLISHED_NATIVE_LIBS;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
@@ -82,13 +89,16 @@ import com.android.build.gradle.internal.incremental.InstantRunAnchorTaskConfigA
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
+import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask;
+import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
 import com.android.build.gradle.internal.scope.BuildOutputs;
@@ -111,6 +121,7 @@ import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
+import com.android.build.gradle.internal.tasks.PipelineToPublicationTask;
 import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
@@ -120,7 +131,9 @@ import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
 import com.android.build.gradle.internal.tasks.ValidateSigningTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeArtifactsTransform;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeGenClassLogTransform;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.BuiltInShrinkerTransform;
@@ -628,6 +641,26 @@ public abstract class TaskManager {
                                     variantScope.getArtifactCollection(
                                             COMPILE_CLASSPATH, EXTERNAL, DATA_BINDING_ARTIFACT))
                             .build());
+            transformManager.addStream(
+                    OriginalStream.builder(project, "sub-project-data-binding-base-classes")
+                            .addContentTypes(TransformManager.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
+                            .addScope(Scope.SUB_PROJECTS)
+                            .setArtifactCollection(
+                                    variantScope.getArtifactCollection(
+                                            COMPILE_CLASSPATH,
+                                            MODULE,
+                                            DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
+                            .build());
+            transformManager.addStream(
+                    OriginalStream.builder(project, "ext-libs-data-binding-base-classes")
+                            .addContentTypes(TransformManager.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
+                            .addScope(Scope.EXTERNAL_LIBRARIES)
+                            .setArtifactCollection(
+                                    variantScope.getArtifactCollection(
+                                            COMPILE_CLASSPATH,
+                                            EXTERNAL,
+                                            DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
+                            .build());
         }
 
         // for the sub modules, new intermediary classes artifact has its own stream
@@ -884,11 +917,12 @@ public abstract class TaskManager {
 
         boolean alsoOutputNotCompiledResources =
                 scope.useResourceShrinker()
-                        || globalScope
-                                .getExtension()
-                                .getTestOptions()
-                                .getUnitTests()
-                                .isIncludeAndroidResources();
+                        || (scope.getTestedVariantData() == null
+                                && globalScope
+                                        .getExtension()
+                                        .getTestOptions()
+                                        .getUnitTests()
+                                        .isIncludeAndroidResources());
 
         return basicCreateMergeResourcesTask(
                 scope,
@@ -1172,7 +1206,7 @@ public abstract class TaskManager {
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
                 scope.getDexingType() == DexingType.LEGACY_MULTIDEX;
 
-        if (!isLibrary()) {
+        if (scope.getVariantData().getType().getCanHaveSplits()) {
             // split list calculation and save to this file.
             File splitListOutputFile = new File(scope.getSplitSupportDirectory(), FN_SPLIT_LIST);
             SplitsDiscovery splitsDiscoveryAndroidTask =
@@ -1257,6 +1291,23 @@ public abstract class TaskManager {
             }
 
             scope.setProcessResourcesTask(processAndroidResources);
+
+            // create the task that creates the aapt output for the bundle.
+            File resourcesAsProtosFile =
+                    FileUtils.join(
+                            globalScope.getIntermediatesDir(),
+                            "res-bundle",
+                            scope.getVariantConfiguration().getDirName(),
+                            "bundled-res.ap_");
+
+            LinkAndroidResForBundleTask linkResForBundle =
+                    taskFactory.create(
+                            new LinkAndroidResForBundleTask.ConfigAction(
+                                    scope, resourcesAsProtosFile));
+
+            // publish it.
+            scope.addTaskOutput(
+                    LINKED_RES_FOR_BUNDLE, resourcesAsProtosFile, linkResForBundle.getName());
         }
         scope.addTaskOutput(VariantScope.TaskOutputType.SYMBOL_LIST, symbolFile, taskName);
 
@@ -1868,9 +1919,6 @@ public abstract class TaskManager {
 
         // add tasks to merge jni libs.
         createMergeJniLibFoldersTasks(variantScope);
-        // create data binding merge task before the javac task so that it can
-        // parse jars before any consumer
-        createDataBindingMergeArtifactsTaskIfNecessary(variantScope);
 
         // Add data binding tasks if enabled
         createDataBindingTasksIfNecessary(variantScope, MergeType.MERGE);
@@ -2311,6 +2359,40 @@ public abstract class TaskManager {
                 task.dependsOn(preColdSwapTask);
             }
         }
+
+        // ---- Create tasks to publish the pipeline output as needed.
+
+        final File intermediatesDir = variantScope.getGlobalScope().getIntermediatesDir();
+        createPipelineToPublishTask(
+                variantScope,
+                transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX),
+                FileUtils.join(intermediatesDir, "bundling", "dex"),
+                PUBLISHED_DEX);
+
+        createPipelineToPublishTask(
+                variantScope,
+                transformManager.getPipelineOutputAsFileCollection(StreamFilter.RESOURCES),
+                FileUtils.join(intermediatesDir, "bundling", "java-res"),
+                PUBLISHED_JAVA_RES);
+
+        createPipelineToPublishTask(
+                variantScope,
+                transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS),
+                FileUtils.join(intermediatesDir, "bundling", "native-libs"),
+                PUBLISHED_NATIVE_LIBS);
+    }
+
+    private void createPipelineToPublishTask(
+            @NonNull VariantScope variantScope,
+            @NonNull FileCollection fileCollection,
+            @NonNull File outputFile,
+            @NonNull TaskOutputHolder.TaskOutputType outputType) {
+        PipelineToPublicationTask task =
+                taskFactory.create(
+                        new PipelineToPublicationTask.ConfigAction(
+                                variantScope, fileCollection, outputFile, outputType));
+
+        variantScope.addTaskOutput(outputType, outputFile, task.getName());
     }
 
     private void maybeCreateDesugarTask(
@@ -2418,6 +2500,7 @@ public abstract class TaskManager {
                 .addTransform(taskFactory, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
 
+        boolean isDebuggable = variantScope.getVariantConfiguration().getBuildType().isDebuggable();
         if (dexingType != DexingType.LEGACY_MULTIDEX
                 && variantScope.getCodeShrinker() == null
                 && extension.getTransforms().isEmpty()) {
@@ -2426,7 +2509,7 @@ public abstract class TaskManager {
                             dexingType,
                             variantScope.getDexMerger(),
                             variantScope.getMinSdkVersion().getFeatureLevel(),
-                            variantScope.getVariantConfiguration().getBuildType().isDebuggable(),
+                            isDebuggable,
                             variantScope.getGlobalScope().getMessageReceiver(),
                             DexMergerTransformCallable::new);
 
@@ -2442,7 +2525,7 @@ public abstract class TaskManager {
                         variantScope.getGlobalScope().getMessageReceiver(),
                         variantScope.getDexMerger(),
                         variantScope.getMinSdkVersion().getFeatureLevel(),
-                        variantScope.getVariantConfiguration().getBuildType().isDebuggable());
+                        isDebuggable);
         Optional<TransformTask> dexTask =
                 transformManager.addTransform(taskFactory, variantScope, dexTransform);
         // need to manually make dex task depend on MultiDexTransform since there's no stream
@@ -2687,8 +2770,7 @@ public abstract class TaskManager {
      * Must be called before the javac task is created so that we it can be earlier in the transform
      * pipeline.
      */
-    protected void createDataBindingMergeArtifactsTaskIfNecessary(
-            @NonNull VariantScope variantScope) {
+    private void createDataBindingMergeArtifactsTask(@NonNull VariantScope variantScope) {
         if (!extension.getDataBinding().isEnabled()) {
             return;
         }
@@ -2701,8 +2783,6 @@ public abstract class TaskManager {
                 return;
             }
         }
-        setDataBindingAnnotationProcessorParams(variantScope);
-
         File outFolder =
                 new File(
                         variantScope.getBuildFolderForDataBindingCompiler(),
@@ -2726,11 +2806,45 @@ public abstract class TaskManager {
                                 task.getName()));
     }
 
+    private void createDataBindingMergeBaseClassesTask(@NonNull VariantScope variantScope) {
+        final BaseVariantData variantData = variantScope.getVariantData();
+        VariantType type = variantData.getType();
+        boolean isTest = type == VariantType.ANDROID_TEST || type == VariantType.UNIT_TEST;
+        if (isTest && !extension.getDataBinding().isEnabledForTests()) {
+            BaseVariantData testedVariantData = checkNotNull(variantScope.getTestedVariantData());
+            if (testedVariantData.getType() != LIBRARY) {
+                return;
+            }
+        }
+        File outFolder =
+                variantScope.getIntermediateDir(DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS);
+
+        Optional<TransformTask> mergeBaseClassesTask;
+        mergeBaseClassesTask =
+                variantScope
+                        .getTransformManager()
+                        .addTransform(
+                                taskFactory,
+                                variantScope,
+                                new DataBindingMergeGenClassLogTransform(getLogger(), outFolder));
+
+        mergeBaseClassesTask.ifPresent(
+                task ->
+                        variantScope.addTaskOutput(
+                                DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
+                                outFolder,
+                                task.getName()));
+    }
+
     protected void createDataBindingTasksIfNecessary(
             @NonNull VariantScope scope, @NonNull MergeType mergeType) {
         if (!extension.getDataBinding().isEnabled()) {
             return;
         }
+        createDataBindingMergeBaseClassesTask(scope);
+        createDataBindingMergeArtifactsTask(scope);
+
+
         VariantType type = scope.getVariantData().getType();
         boolean isTest = type == VariantType.ANDROID_TEST || type == VariantType.UNIT_TEST;
         if (isTest && !extension.getDataBinding().isEnabledForTests()) {
@@ -2749,6 +2863,34 @@ public abstract class TaskManager {
         exportBuildInfo.dependsOn(scope.getSourceGenTask());
 
         scope.setDataBindingExportBuildInfoTask(exportBuildInfo);
+
+        // setup generate base class task
+        File baseClassOutFolder =
+                new File(
+                        globalScope.getGeneratedDir(),
+                        "source/dataBinding/baseClasses/"
+                                + scope.getVariantConfiguration().getDirName());
+        File baseClassLogFolder =
+                scope.getIntermediateDir(
+                        TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT);
+
+        DataBindingGenBaseClassesTask.ConfigAction genBaseClassConfigAction =
+                new DataBindingGenBaseClassesTask.ConfigAction(
+                        scope, baseClassOutFolder, baseClassLogFolder);
+
+        DataBindingGenBaseClassesTask generateBaseClasses =
+                taskFactory.create(genBaseClassConfigAction);
+        scope.addTaskOutput(
+                DATA_BINDING_BASE_CLASS_SOURCE_OUT,
+                baseClassOutFolder,
+                generateBaseClasses.getName());
+        scope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
+                baseClassLogFolder,
+                generateBaseClasses.getName());
+        generateBaseClasses.dependsOn(scope.getVariantData().mergeResourcesTask);
+
+        setDataBindingAnnotationProcessorParams(scope);
     }
 
     private void setDataBindingAnnotationProcessorParams(@NonNull VariantScope scope) {
@@ -2787,14 +2929,20 @@ public abstract class TaskManager {
                 type = DataBindingCompilerArgs.Type.APPLICATION;
             }
             int minApi = variantConfiguration.getMinSdkVersion().getApiLevel();
+            File classLogDir =
+                    scope.getOutput(
+                                    TaskOutputHolder.TaskOutputType
+                                            .DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
+                            .getSingleFile();
             DataBindingCompilerArgs args =
                     DataBindingCompilerArgs.builder()
-                            .bundleFolder(scope.getBundleFolderForDataBinding())
+                            .bundleFolder(scope.getBundleArtifactFolderForDataBinding())
                             .enabledForTests(extension.getDataBinding().isEnabledForTests())
                             .enableDebugLogs(getLogger().isDebugEnabled())
                             .buildFolder(scope.getBuildFolderForDataBindingCompiler())
                             .sdkDir(scope.getGlobalScope().getSdkHandler().getSdkFolder())
                             .xmlOutDir(scope.getLayoutInfoOutputForDataBinding())
+                            .classLogDir(classLogDir)
                             .exportClassListTo(
                                     variantData.getType().isExportDataBindingClassList()
                                             ? scope.getGeneratedClassListOutputFileForDataBinding()
@@ -2805,6 +2953,10 @@ public abstract class TaskManager {
                             .minApi(minApi)
                             .testVariant(isTest)
                             .type(type)
+                            .enableV2(
+                                    scope.getGlobalScope()
+                                            .getProjectOptions()
+                                            .get(BooleanOption.ENABLE_DATA_BINDING_V2))
                             .build();
             ots.arguments(args.toMap());
         } else {
@@ -3012,8 +3164,9 @@ public abstract class TaskManager {
     }
 
     protected Task getValidateSigningTask(@NonNull PackagingScope packagingScope) {
+        File defaultDebugKeystoreLocation = GradleKeystoreHelper.getDefaultDebugKeystoreLocation();
         ValidateSigningTask.ConfigAction configAction =
-                new ValidateSigningTask.ConfigAction(packagingScope);
+                new ValidateSigningTask.ConfigAction(packagingScope, defaultDebugKeystoreLocation);
 
         Task validateSigningTask = taskFactory.findByName(configAction.getName());
         if (validateSigningTask == null) {
@@ -3212,7 +3365,6 @@ public abstract class TaskManager {
                         scope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
                         shrinkerOutput,
                         AaptGeneration.fromProjectOptions(projectOptions),
-                        scope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST),
                         logger);
 
         Optional<TransformTask> shrinkTask =

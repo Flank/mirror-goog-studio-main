@@ -306,7 +306,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getGeneratedClassListOutputFileForDataBinding();
 
     @NonNull
-    File getBundleFolderForDataBinding();
+    File getBundleArtifactFolderForDataBinding();
 
     @NonNull
     File getProguardOutputFolder();

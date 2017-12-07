@@ -5,8 +5,8 @@ HOW DO I RUN THE TEST
   ALL:
   "bazel test //tools/base/profiler/tests/perf-test/..."
   INDIVIDUAL:
-  "bazel test //tools/base/profiler/tests/perf-test:AllTest-Instrumented"
-  "bazel test //tools/base/profiler/tests/perf-test:AllTest-Jvmti"
+  "bazel test //tools/base/profiler/tests/perf-test:HttpTest"
+  "bazel test //tools/base/profiler/tests/perf-test:MemoryTest"
   OPTIONAL ARGS:
   "bazel test --test_output=all --nocache_test_results \
   //tools/base/profiler/tests/..."

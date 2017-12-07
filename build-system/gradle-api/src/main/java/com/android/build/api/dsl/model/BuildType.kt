@@ -17,7 +17,7 @@
 package com.android.build.api.dsl.model
 
 import com.android.build.api.dsl.Initializable
-import com.android.build.api.dsl.options.PostprocessingOptions
+import com.android.build.api.dsl.options.PostProcessingOptions
 import org.gradle.api.Incubating
 import org.gradle.api.Named
 
@@ -32,9 +32,9 @@ import org.gradle.api.Named
 interface BuildType : BuildTypeOrProductFlavor, BuildTypeOrVariant, VariantProperties, FallbackStrategy, Initializable<BuildType>, Named {
 
     /**
-     * @see PostprocessingOptions.isObfuscate
-     * @see PostprocessingOptions.isRemoveUnusedCode
-     * @see .getPostprocessing
+     * @see PostProcessingOptions.isObfuscate
+     * @see PostProcessingOptions.isRemoveUnusedCode
+     * @see .getPostProcessing
      */
     // -- deprecated
 
@@ -43,32 +43,32 @@ interface BuildType : BuildTypeOrProductFlavor, BuildTypeOrVariant, VariantPrope
 
     /**
      * This methods sets both obfuscation and shrinking.
-     * @see PostprocessingOptions.isObfuscate
-     * @see PostprocessingOptions.isRemoveUnusedCode
-     * @see .getPostprocessing
+     * @see PostProcessingOptions.isObfuscate
+     * @see PostProcessingOptions.isRemoveUnusedCode
+     * @see .getPostProcessing
      */
-    @Deprecated("Use setters on [PostprocessingOptions].")
+    @Deprecated("Use setters on [PostProcessingOptions].")
     var minifyEnabled: Boolean
 
-    @Deprecated("Use setters on [PostprocessingOptions]")
+    @Deprecated("Use setters on [PostProcessingOptions]")
     fun isMinifiedEnabled(): Boolean
 
     /**
-     * @see .getPostprocessing
+     * @see .getPostProcessing
      */
-    @Deprecated("Use {@link PostprocessingOptions#setRemoveUnusedResources(boolean)}")
+    @Deprecated("Use {@link PostProcessingOptions#setRemoveUnusedResources(boolean)}")
     var shrinkResources: Boolean
 
-    @Deprecated("Use {@link PostprocessingOptions#setRemoveUnusedResources(boolean)}")
+    @Deprecated("Use {@link PostProcessingOptions#setRemoveUnusedResources(boolean)}")
     fun isShrinkResources(): Boolean
 
     /**
-     * @see .getPostprocessing
+     * @see .getPostProcessing
      */
-    @Deprecated("Use {@link PostprocessingOptions#getCodeShrinker()}")
+    @Deprecated("Use {@link PostProcessingOptions#getCodeShrinker()}")
     val useProguard: Boolean?
 
-    @Deprecated("Use {@link PostprocessingOptions#getCodeShrinker()}")
+    @Deprecated("Use {@link PostProcessingOptions#getCodeShrinker()}")
     fun isUseProguard(): Boolean?
 
     /*

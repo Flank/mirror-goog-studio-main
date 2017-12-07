@@ -20,7 +20,7 @@
 #include "perfd/event/event_service.h"
 #include "perfd/event/internal_event_service.h"
 #include "perfd/profiler_component.h"
-#include "proto/profiler_service.grpc.pb.h"
+#include "proto/profiler.grpc.pb.h"
 
 namespace profiler {
 

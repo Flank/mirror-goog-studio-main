@@ -164,7 +164,7 @@ class ResourceReference(
             }
 
             val resourceType = ResourceType.getEnum(resTypeClass.name ?: return null) ?: return null
-            val resourceName = variable.name ?: return null
+            val resourceName = variable.name
             val node: UExpression = when (element) {
                 is UExpression -> element
                 is UVariable -> JavaUDeclarationsExpression(null, listOf(element))

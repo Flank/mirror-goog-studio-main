@@ -240,6 +240,8 @@ public class TaskStateList {
     }
 
     int getTaskIndex(String taskName) {
+        Preconditions.checkArgument(
+                taskName.startsWith(":"), "Task name (\"" + taskName + "\") must start with ':'");
         Preconditions.checkArgument(allTasks.contains(taskName), "Task %s not run", taskName);
         return orderedTasks.indexOf(taskName);
     }

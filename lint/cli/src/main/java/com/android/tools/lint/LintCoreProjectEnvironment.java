@@ -103,6 +103,13 @@ public class LintCoreProjectEnvironment extends JavaCoreProjectEnvironment {
 
             if (path.exists()) {
                 if (path.isFile()) {
+                    // Make sure these paths are absolute - nested jar file systems
+                    // do not work correctly with relative paths (for example
+                    // JavaPsiFacade.findClass will not find classes in these jar
+                    // file systems.)
+                    if (!path.isAbsolute()) {
+                        path = path.getAbsoluteFile();
+                    }
                     addJarToClassPath(path);
                 } else if (path.isDirectory()) {
                     VirtualFile virtualFile = local.findFileByPath(path.getPath());

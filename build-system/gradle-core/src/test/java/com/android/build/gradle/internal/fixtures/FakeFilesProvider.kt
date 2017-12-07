@@ -26,7 +26,7 @@ class FakeFilesProvider : FilesProvider {
     override fun file(file: Any) = File(file.toString())
 
     override fun files(vararg files: Any): ConfigurableFileCollection {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return FakeConfigurableFileCollection(*files)
     }
 
     override fun fileTree(args: Map<String, *>): ConfigurableFileTree {

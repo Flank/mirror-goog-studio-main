@@ -17,6 +17,7 @@
 package com.android.manifmerger
 
 import com.android.SdkConstants
+import com.android.annotations.VisibleForTesting
 import com.android.ide.common.blame.SourceFile
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.manifmerger.DeepLink.DeepLinkException
@@ -33,6 +34,7 @@ import org.w3c.dom.NamedNodeMap
  * Has a pointer to the root [Element] and provides services to get lists of the directly
  * referenced navigation xml IDs and [DeepLink]s
  */
+@VisibleForTesting
 class NavigationXmlDocument(private val sourceFile: SourceFile, private val rootElement: Element) {
 
     /**

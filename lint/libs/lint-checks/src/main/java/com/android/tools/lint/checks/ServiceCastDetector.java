@@ -20,6 +20,7 @@ import static com.android.SdkConstants.CLASS_ACTIVITY;
 import static com.android.SdkConstants.CLASS_APPLICATION;
 import static com.android.SdkConstants.CLASS_CONTEXT;
 import static com.android.SdkConstants.CLASS_VIEW;
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -314,7 +315,7 @@ public class ServiceCastDetector extends Detector implements UastScanner {
                     .replace().text(qualifier).with(qualifier + ".getApplicationContext()")
                     .build();
         } else {
-            String qualifier = call.getMethodName();
+            String qualifier = getMethodName(call);
             message += String.format("Try changing `%1$s` to `getApplicationContext().%1$s`",
                     qualifier);
             fix = fix()

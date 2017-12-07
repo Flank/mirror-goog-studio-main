@@ -34,6 +34,7 @@ import static com.android.SdkConstants.TAG_PROVIDER;
 import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
 import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
 
 import com.android.annotations.NonNull;
@@ -415,7 +416,7 @@ public class SecurityDetector extends Detector implements XmlScanner, UastScanne
     public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
         List<UExpression> args = node.getValueArguments();
-        String methodName = node.getMethodName();
+        String methodName = getMethodName(node);
         if (context.getEvaluator().isMemberInSubClassOf(method, FILE_CLASS, false)) {
             // Report calls to java.io.File.setReadable(true, false) or
             // java.io.File.setWritable(true, false)

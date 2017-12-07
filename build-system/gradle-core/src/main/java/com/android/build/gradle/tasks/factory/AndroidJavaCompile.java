@@ -58,7 +58,17 @@ public class AndroidJavaCompile extends JavaCompile {
 
     String variantName;
 
+    /**
+     * Collection of artifacts that were produced by dependencies' data binding annotation
+     * processors.
+     */
     FileCollection dataBindingDependencyArtifacts;
+
+    /**
+     * Log file created by GenBaseClassesTask which is used to generate implementations in the data
+     * binding annotation processor.
+     */
+    FileCollection dataBindingClassLogDir;
 
     File dataBindingArtifactOutputDirectory;
 
@@ -84,6 +94,13 @@ public class AndroidJavaCompile extends JavaCompile {
     @Optional
     public FileCollection getDataBindingDependencyArtifacts() {
         return dataBindingDependencyArtifacts;
+    }
+
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @InputFiles
+    @Optional
+    public FileCollection getDataBindingClassLogDir() {
+        return dataBindingClassLogDir;
     }
 
     @Override

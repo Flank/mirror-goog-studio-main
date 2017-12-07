@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -87,53 +88,72 @@ public class DataBindingMergeArtifactsTransform extends Transform {
     }
 
     private void incrementalUpdate(@NonNull Collection<TransformInput> inputs) {
-        inputs.forEach(input -> input.getDirectoryInputs().forEach(directoryInput -> {
-            directoryInput.getChangedFiles().forEach((file, status) -> {
-                if (isResource(file.getName())) {
-                    switch (status) {
-                        case NOTCHANGED:
-                            // Ignore
-                            break;
-                        case ADDED:
-                        case CHANGED:
-                            try {
-                                FileUtils.copyFile(file, new File(outFolder, file.getName()));
-                            } catch (IOException e) {
-                                logger.error(e, "Cannot copy data binding artifacts from "
-                                        + "dependency.");
+        inputs.forEach(
+                input -> {
+                    input.getDirectoryInputs().forEach(this::handleDirectoryInput);
+                });
+        inputs.forEach(this::handleJarInputs);
+    }
+
+    private void handleJarInputs(TransformInput input) {
+        input.getJarInputs()
+                .forEach(
+                        jarInput -> {
+                            switch (jarInput.getStatus()) {
+                                case NOTCHANGED:
+                                    // Ignore
+                                    break;
+                                case ADDED:
+                                case CHANGED:
+                                    try {
+                                        extractBinFilesFromJar(jarInput.getFile());
+                                    } catch (IOException e) {
+                                        logger.error(
+                                                e, "Cannot extract data binding from input jar ");
+                                        throw new UncheckedIOException(e);
+                                    }
+                                    break;
+                                case REMOVED:
+                                    File jarOutFolder = getOutFolderForJarFile(jarInput.getFile());
+                                    deleteUnchecked(jarOutFolder);
+                                    break;
                             }
-                            break;
-                        case REMOVED:
-                            FileUtils.deleteQuietly(new File(outFolder, file.getName()));
-                            break;
-                    }
-                }
-            });
-        }));
-        inputs.forEach(input -> input.getJarInputs().forEach(jarInput -> {
-            switch (jarInput.getStatus()) {
-                case NOTCHANGED:
-                    // Ignore
-                    break;
-                case ADDED:
-                case CHANGED:
-                    try {
-                        extractBinFilesFromJar(jarInput.getFile());
-                    } catch (IOException e) {
-                        logger.error(e, "Cannot extract data binding from input jar ");
-                    }
-                    break;
-                case REMOVED:
-                    File jarOutFolder = getOutFolderForJarFile(jarInput.getFile());
-                    FileUtils.deleteQuietly(jarOutFolder);
-                    break;
-            }
-        }));
+                        });
+    }
+
+    private void handleDirectoryInput(DirectoryInput directoryInput) {
+        directoryInput
+                .getChangedFiles()
+                .forEach(
+                        (file, status) -> {
+                            if (isResource(file.getName())) {
+                                switch (status) {
+                                    case NOTCHANGED:
+                                        // Ignore
+                                        break;
+                                    case ADDED:
+                                    case CHANGED:
+                                        try {
+                                            FileUtils.copyFile(
+                                                    file, new File(outFolder, file.getName()));
+                                        } catch (IOException e) {
+                                            logger.error(
+                                                    e,
+                                                    "Cannot copy data binding artifacts from "
+                                                            + "dependency.");
+                                            throw new UncheckedIOException(e);
+                                        }
+                                        break;
+                                    case REMOVED:
+                                        deleteUnchecked(new File(outFolder, file.getName()));
+                                        break;
+                                }
+                            }
+                        });
     }
 
     private void fullCopy(Collection<TransformInput> inputs) throws IOException {
-        FileUtils.deleteQuietly(outFolder);
-        FileUtils.forceMkdir(outFolder);
+        com.android.utils.FileUtils.cleanOutputDir(outFolder);
         for (TransformInput input : inputs) {
             for (DirectoryInput dirInput : input.getDirectoryInputs()) {
                 File dataBindingDir = dirInput.getFile();
@@ -169,6 +189,17 @@ public class DataBindingMergeArtifactsTransform extends Transform {
         return false;
     }
 
+    private void deleteUnchecked(File file) {
+        if (file.exists()) {
+            try {
+                FileUtils.forceDelete(file);
+            } catch (IOException e) {
+                logger.error(e, "Data Binding Transform: Unable to delete " + file);
+                throw new UncheckedIOException(e);
+            }
+        }
+    }
+
     @NonNull
     @Override
     public Set<QualifiedContent.ContentType> getInputTypes() {
@@ -202,8 +233,7 @@ public class DataBindingMergeArtifactsTransform extends Transform {
 
     private void extractBinFilesFromJar(File jarFile) throws IOException {
         File jarOutFolder = getOutFolderForJarFile(jarFile);
-        FileUtils.deleteQuietly(jarOutFolder);
-        FileUtils.forceMkdir(jarOutFolder);
+        com.android.utils.FileUtils.cleanOutputDir(jarOutFolder);
 
         try (Closer localCloser = Closer.create()) {
             FileInputStream fis = localCloser.register(new FileInputStream(jarFile));
