@@ -218,6 +218,11 @@ public final class BenchmarkRecorder {
         List<GradleBenchmarkResult> filteredResults = strategy.filter(results);
         Preconditions.checkArgument(!results.isEmpty(), "UploadStrategy returned no results");
 
+        System.out.println(
+                "[BenchmarkRecorder]: scheduling "
+                        + filteredResults.size()
+                        + " GradleBenchmarkResult protos for asynchronous upload as a single upload task");
+
         for (ProfileUploader uploader : uploaders) {
             synchronized (BenchmarkRecorder.class) {
                 OUTSTANDING_UPLOADS.add(
@@ -236,6 +241,10 @@ public final class BenchmarkRecorder {
     public static void awaitUploads(long timeout, @NonNull TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
         synchronized (BenchmarkRecorder.class) {
+            System.out.println(
+                    "[BenchmarkRecorder]: waiting for "
+                            + OUTSTANDING_UPLOADS.size()
+                            + " upload tasks to complete");
             for (Future<?> future : OUTSTANDING_UPLOADS) {
                 future.get(timeout, unit);
             }
