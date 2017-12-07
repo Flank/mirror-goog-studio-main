@@ -157,7 +157,7 @@ public final class RandomGradleBenchmark {
     }
 
     private static long randomDuration() {
-        long value = RAND.nextLong(0, Long.MAX_VALUE);
+        long value = RAND.nextLong(1, 10000);
 
         // To make sure samples aren't filtered out, we add the lower threshold if our value is
         // below it. This is something of an implementation detail, but if the implementation is

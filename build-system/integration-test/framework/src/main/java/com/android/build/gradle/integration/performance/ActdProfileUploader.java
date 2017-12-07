@@ -549,7 +549,19 @@ public class ActdProfileUploader implements ProfileUploader {
                     sample.buildId,
                     sample,
                     (a, b) -> {
-                        a.value += b.value;
+                        /*
+                         * But Sam, these are longs! How likely is it that they'll ever overflow?
+                         *
+                         * Good question, Timmy. In reality? Probably never. But the way we test
+                         * this code is by throwing lots of random data at it, and in these tests
+                         * it's possible to find overflows. When you do, it's not immediately
+                         * obvious that the problem is an overflow problem. So these cycles we're
+                         * spending to do an exact add are to save time debugging when tests go
+                         * wrong.
+                         */
+                        a.value = Math.addExact(a.value, b.value);
+                        Preconditions.checkArgument(a.value > 0, "negative duration found");
+
                         return a;
                     });
         }
