@@ -31,6 +31,8 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,7 +62,8 @@ public class BenchmarkRecorderTest {
 
     @Test
     public void checkPerformanceDataGiven() throws Throwable {
-        Timestamp minimumTimestamp = Timestamps.fromNanos(System.nanoTime());
+        Timestamp minimumTimestamp = Timestamps.fromMillis(System.currentTimeMillis());
+        int currentYear = LocalDateTime.now().getYear();
 
         // Because the profiler deals with lots of static state in the
         // plugin, make sure a sequence of actions with and without the
@@ -106,5 +109,19 @@ public class BenchmarkRecorderTest {
                 .isEqualTo(benchmarkResults.get(0).getTimestamp());
         assertThat(benchmarkResults.get(2).getTimestamp())
                 .isEqualTo(benchmarkResults.get(0).getTimestamp());
+
+        // The next bits are to make sure nothing crazy goes wrong with the dates. I accidentally
+        // introduced a bug once that set all of the dates to some time in 1970, so this would
+        // guard against that sort of thing.
+        LocalDateTime minDate =
+                LocalDateTime.ofEpochSecond(minimumTimestamp.getSeconds(), 0, ZoneOffset.UTC);
+        assertThat(minDate.getYear()).isEqualTo(currentYear);
+
+        for (GradleBenchmarkResult result : benchmarkResults) {
+            LocalDateTime date =
+                    LocalDateTime.ofEpochSecond(
+                            result.getTimestamp().getSeconds(), 0, ZoneOffset.UTC);
+            assertThat(date.getYear()).isEqualTo(currentYear);
+        }
     }
 }

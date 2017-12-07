@@ -203,7 +203,7 @@ public final class BenchmarkRecorder {
             return;
         }
 
-        Timestamp timestamp = Timestamps.fromNanos(System.nanoTime());
+        Timestamp timestamp = Timestamps.fromMillis(System.currentTimeMillis());
         List<GradleBenchmarkResult> results =
                 benchmarkResults
                         .stream()
