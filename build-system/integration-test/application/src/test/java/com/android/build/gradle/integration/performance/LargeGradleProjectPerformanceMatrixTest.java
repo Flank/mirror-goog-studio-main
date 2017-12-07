@@ -45,10 +45,9 @@ public class LargeGradleProjectPerformanceMatrixTest {
 
     @Rule public final GradleTestProject project;
     @NonNull private final ProjectScenario projectScenario;
-    @NonNull private final BenchmarkRecorder recorder;
+    @NonNull private BenchmarkRecorder recorder;
 
-    public LargeGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario)
-            throws IOException {
+    public LargeGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario) {
         this.projectScenario = projectScenario;
         project =
                 GradleTestProject.builder()
@@ -56,7 +55,6 @@ public class LargeGradleProjectPerformanceMatrixTest {
                         .withHeap("20G")
                         .create();
 
-        recorder = new BenchmarkRecorder(new ProfileCapturer(project.getProfileDirectory()));
     }
 
     @Parameterized.Parameters(name = "{0}")
@@ -70,6 +68,11 @@ public class LargeGradleProjectPerformanceMatrixTest {
     public void initializeProject() throws Exception {
         PerformanceTestProjects.initializeUberSkeleton(project);
         project.executor().run("addSources");
+    }
+
+    @Before
+    public void initializeRecorder() throws Exception {
+        recorder = new BenchmarkRecorder(new ProfileCapturer(project.getProfileDirectory()));
     }
 
     @After
