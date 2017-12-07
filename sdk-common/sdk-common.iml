@@ -29,15 +29,7 @@
     <orderEntry type="module" module-name="android-annotations" />
     <orderEntry type="module" module-name="ddmlib" />
     <orderEntry type="library" name="Guava" level="project" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/aia-manifest-proto-1.0-jarjar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
+    <orderEntry type="library" name="aia-manifest-proto-1.0-jarjar" level="project" />
   </component>
 </module>
