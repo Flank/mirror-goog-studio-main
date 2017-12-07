@@ -48,11 +48,13 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * A connection to the host-side android debug bridge (adb)
+ *
  * <p>This is the central point to communicate with any devices, emulators, or the applications
  * running on them.
+ *
  * <p><b>{@link #init(boolean)} must be called before anything is done.</b>
  */
-public final class AndroidDebugBridge {
+public class AndroidDebugBridge {
     /*
      * Minimum and maximum version of adb supported. This correspond to
      * ADB_SERVER_VERSION found in //device/tools/adb/adb.h
