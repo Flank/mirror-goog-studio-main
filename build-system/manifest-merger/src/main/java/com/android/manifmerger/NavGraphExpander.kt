@@ -33,6 +33,7 @@ import com.android.annotations.VisibleForTesting
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.utils.XmlUtils
 import com.google.common.collect.ImmutableList
+import org.w3c.dom.Element
 import org.w3c.dom.NamedNodeMap
 
 /**
@@ -143,20 +144,10 @@ object NavGraphExpander {
         val actionRecorder = mergingReportBuilder.actionRecorder
         for (deepLink in deepLinkList) {
             // first create <intent-filter> element
-            val intentFilterXmlElement =
-                    addChildXmlElement(
-                            SdkConstants.TAG_INTENT_FILTER,
-                            xmlElement,
-                            deepLink.sourceFilePosition,
-                            actionRecorder)
+            val intentFilterElement =
+                    addChildElement(SdkConstants.TAG_INTENT_FILTER, xmlElement.xml)
             if (deepLink.isAutoVerify) {
-                addXmlAttribute(
-                        ANDROID_URI,
-                        ATTR_AUTO_VERIFY,
-                        "true",
-                        intentFilterXmlElement,
-                        deepLink.sourceFilePosition,
-                        actionRecorder)
+                addAttribute(ANDROID_URI, ATTR_AUTO_VERIFY, "true", intentFilterElement)
             }
             // then add children elements to <intent-filter> element
             val childElementDataList: MutableList<ChildElementData> =
@@ -188,15 +179,13 @@ object NavGraphExpander {
                 else -> childElementDataList.add(ChildElementData(TAG_DATA, ATTR_PATH, path))
             }
             childElementDataList.forEach {
-                addChildXmlElementWithSingleXmlAttribute(
-                        it.tagName,
-                        intentFilterXmlElement,
-                        ANDROID_URI,
-                        it.attrName,
-                        it.attrValue,
-                        deepLink.sourceFilePosition,
-                        actionRecorder)
+                addChildElementWithSingleAttribute(
+                        it.tagName, intentFilterElement, ANDROID_URI, it.attrName, it.attrValue)
             }
+            // finally record all added elements and attributes
+            val intentFilterXmlElement = XmlElement(intentFilterElement, xmlElement.document)
+            recordXmlElementAddition(
+                    intentFilterXmlElement, deepLink.sourceFilePosition, actionRecorder)
         }
     }
 
@@ -275,74 +264,63 @@ object NavGraphExpander {
         return builder.build()
     }
 
-    /**
-     * Add a new xmlElement with a single specified xmlAttribute to parentXmlElement, and
-     * record the additions in the actionRecorder.
-     */
-    private fun addChildXmlElementWithSingleXmlAttribute(
+    /** Add a new Element with a single specified Attribute to parentElement */
+    private fun addChildElementWithSingleAttribute(
             childTagName: String,
-            parentXmlElement: XmlElement,
+            parentElement: Element,
             nsUri: String,
             attrName: String,
-            attrValue: String,
-            sourceFilePosition: SourceFilePosition,
-            actionRecorder: ActionRecorder) {
-        val childXmlElement =
-                addChildXmlElement(
-                        childTagName, parentXmlElement, sourceFilePosition, actionRecorder)
-        addXmlAttribute(
-                nsUri, attrName, attrValue, childXmlElement, sourceFilePosition, actionRecorder)
+            attrValue: String) {
+        val childElement = addChildElement(childTagName, parentElement)
+        addAttribute(nsUri, attrName, attrValue, childElement)
     }
 
-    /**
-     * Add a new xmlElement with no xmlAttributes to parentXmlElement, and
-     * record the addition in the actionRecorder.
-     */
-    private fun addChildXmlElement(
-            childTagName: String,
-            parentXmlElement: XmlElement,
-            sourceFilePosition: SourceFilePosition,
-            actionRecorder: ActionRecorder): XmlElement {
-        val parentElement = parentXmlElement.xml
+    /** Add a new Element with no Attributes to parentElement */
+    private fun addChildElement(childTagName: String, parentElement: Element): Element {
         val document = parentElement.ownerDocument
-        val xmlDocument = parentXmlElement.document
         val childElement = document.createElement(childTagName)
-        parentElement.appendChild(childElement)
-        val childXmlElement = XmlElement(childElement, xmlDocument)
+        return parentElement.appendChild(childElement) as? Element ?:
+                throw RuntimeException(
+                        "Unable to add $childTagName element to ${parentElement.tagName} element.")
+    }
+
+    /** Add a new Attribute to the element */
+    private fun addAttribute(nsUri: String, attrName: String, attrValue: String, element: Element) {
+        val prefix = XmlUtils.lookupNamespacePrefix(element, nsUri, true)
+        element.setAttributeNS(nsUri, prefix + XmlUtils.NS_SEPARATOR + attrName, attrValue)
+    }
+
+    /** Record addition of xmlElement and all of its descendants (attributes and elements) */
+    private fun recordXmlElementAddition(
+            xmlElement: XmlElement,
+            sourceFilePosition: SourceFilePosition,
+            actionRecorder: ActionRecorder) {
         val nodeRecord =
                 Actions.NodeRecord(
                         Actions.ActionType.ADDED,
                         sourceFilePosition,
-                        childXmlElement.id,
+                        xmlElement.id,
                         null,
-                        childXmlElement.operationType)
-        actionRecorder.recordNodeAction(childXmlElement, nodeRecord)
-        return childXmlElement
+                        xmlElement.operationType)
+        actionRecorder.recordNodeAction(xmlElement, nodeRecord)
+        for (xmlAttribute in xmlElement.attributes) {
+            recordXmlAttributeAddition(xmlAttribute, sourceFilePosition, actionRecorder)
+        }
+        for (childXmlElement in xmlElement.mergeableElements) {
+            recordXmlElementAddition(childXmlElement, sourceFilePosition, actionRecorder)
+        }
     }
 
-    /**
-     * Add a new xmlAttribute to the xmlElement, and record the addition in the actionRecorder.
-     */
-    private fun addXmlAttribute(
-            nsUri: String,
-            attrName: String,
-            attrValue: String,
-            xmlElement: XmlElement,
+    /** Record addition of xmlAttribute */
+    private fun recordXmlAttributeAddition(
+            xmlAttribute: XmlAttribute,
             sourceFilePosition: SourceFilePosition,
             actionRecorder: ActionRecorder) {
-        val element = xmlElement.xml
-        val prefix = XmlUtils.lookupNamespacePrefix(element, nsUri, true)
-        element.setAttributeNS(nsUri, prefix + XmlUtils.NS_SEPARATOR + attrName, attrValue)
-        val attr = element.getAttributeNodeNS(nsUri, attrName)
-        val xmlAttribute = XmlAttribute(xmlElement, attr, null)
         val attributeRecord =
                 Actions.AttributeRecord(
-                        Actions.ActionType.ADDED,
-                        sourceFilePosition,
-                        xmlAttribute.id,
-                        null,
-                        null)
+                        Actions.ActionType.ADDED, sourceFilePosition, xmlAttribute.id, null, null)
         actionRecorder.recordAttributeAction(xmlAttribute, attributeRecord)
+
     }
 
     /** class to hold data for child elements of added <intent-filter> element. */
