@@ -47,7 +47,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -62,8 +61,6 @@ public class GradleVariantConfiguration
         extends VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> {
 
     @NonNull private final ProjectOptions projectOptions;
-    @NonNull
-    private OptionalInt instantRunSupportStatusOverride = OptionalInt.empty();
     @NonNull
     private final MergedNdkConfig mergedNdkConfig = new MergedNdkConfig();
     @NonNull
@@ -428,10 +425,6 @@ public class GradleVariantConfiguration
      * Returns a status code indicating whether Instant Run is supported and why.
      */
     public int getInstantRunSupportStatus() {
-        if (instantRunSupportStatusOverride.isPresent()) {
-            return instantRunSupportStatusOverride.getAsInt();
-        }
-
         if (!getBuildType().isDebuggable()) {
             return InstantRun.STATUS_NOT_SUPPORTED_FOR_NON_DEBUG_VARIANT;
         }
@@ -439,10 +432,6 @@ public class GradleVariantConfiguration
             return InstantRun.STATUS_NOT_SUPPORTED_VARIANT_USED_FOR_TESTING;
         }
         return InstantRun.STATUS_SUPPORTED;
-    }
-
-    public void setInstantRunSupportStatusOverride(int instantRunSupportStatusOverride) {
-        this.instantRunSupportStatusOverride = OptionalInt.of(instantRunSupportStatusOverride);
     }
 
     @NonNull
