@@ -76,8 +76,8 @@ def perf_test(name, srcs, test_app, native_lib="", deps = []):
         native_lib,
         "//tools/base/profiler/tests/perf-test:art-runner",
       ],
-      srcs = select({
-        "//tools/base/bazel:darwin": ["//tools/base/bazel/test:NoOpTest.java"],
-        "//tools/base/bazel:windows": ["//tools/base/bazel/test:NoOpTest.java"],
-        "//conditions:default": srcs}),
+      tags = [
+        "no_mac",
+        "no_windows",
+      ]
     )
