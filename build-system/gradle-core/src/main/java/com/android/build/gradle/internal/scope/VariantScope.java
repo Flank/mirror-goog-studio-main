@@ -164,6 +164,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getJavaOutputDir();
 
     @NonNull
+    BuildArtifactHolder getBuildArtifactHolder();
+
+    @NonNull
     FileCollection getArtifactFileCollection(
             @NonNull AndroidArtifacts.ConsumedConfigType configType,
             @NonNull AndroidArtifacts.ArtifactScope scope,

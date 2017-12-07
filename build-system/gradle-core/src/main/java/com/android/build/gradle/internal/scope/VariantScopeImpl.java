@@ -197,6 +197,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Nullable private CodeShrinker defaultCodeShrinker;
 
+    @NonNull private BuildArtifactHolder buildArtifactHolder;
+
     /**
      * This is an instance of {@link JacocoReportTask} in android test variants, an umbrella {@link
      * Task} in app and lib variants and null in unit test variants.
@@ -227,6 +229,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI),
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY),
                         projectOptions.get(BooleanOption.ENABLE_SEPARATE_APK_RESOURCES));
+        this.buildArtifactHolder =
+                new BuildArtifactHolder(
+                        getProject(),
+                        getFullVariantName(),
+                        intermediate("artifact_transform"),
+                        getVariantConfiguration().getDirName(),
+                        ImmutableList.of(),
+                        globalScope.getErrorHandler());
 
         validatePostprocessingOptions();
     }
@@ -961,6 +971,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 variantData.getVariantConfiguration().getDirName());
     }
 
+    @NonNull
+    @Override
+    public BuildArtifactHolder getBuildArtifactHolder() {
+        return buildArtifactHolder;
+    }
+
     @Override
     @NonNull
     public FileCollection getArtifactFileCollection(
@@ -1569,10 +1585,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getIntermediateDir(@NonNull TaskOutputType taskOutputType) {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                taskOutputType.name().toLowerCase(Locale.US),
-                getVariantConfiguration().getDirName());
+        return intermediate(taskOutputType.name().toLowerCase(Locale.US));
     }
 
     @NonNull

@@ -49,6 +49,7 @@ import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidZip;
+import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
@@ -114,6 +115,8 @@ public class LibraryTaskManager extends TaskManager {
         createDependencyStreams(variantScope);
 
         createCheckManifestTask(variantScope);
+
+        taskFactory.create(new BuildArtifactReportTask.ConfigAction(variantScope));
 
         // Add a task to create the res values
         recorder.record(

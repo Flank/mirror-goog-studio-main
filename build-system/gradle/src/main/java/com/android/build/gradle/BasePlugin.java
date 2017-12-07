@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
@@ -259,6 +260,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST)
                 .setOptions(AnalyticsUtil.toProto(projectOptions));
 
+        BuildableArtifactImpl.Companion.disableResolution();
         if (!projectOptions.get(BooleanOption.ENABLE_NEW_DSL_AND_API)) {
             TaskInputHelper.enableBypass();
 
@@ -384,6 +386,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     @Override
                     public void buildStarted(Gradle gradle) {
                         TaskInputHelper.enableBypass();
+                        BuildableArtifactImpl.Companion.disableResolution();
                     }
 
                     @Override
@@ -789,6 +792,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         }
                     });
         }
+        BuildableArtifactImpl.Companion.enableResolution();
     }
 
     private void checkSplitConfiguration() {

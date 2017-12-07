@@ -68,22 +68,22 @@ class BuildArtifactHolder(
         // A list of all BuildableFiles for the artifact.  Technically, only the first and the
         // last BuildableFiles are needed.  Storing the all BuildableFiles allows better error
         // messages to be generated in the future.
-        private var artifactHistory: MutableList<BuildableArtifact> = mutableListOf(first)
+        var history: MutableList<BuildableArtifact> = mutableListOf(first)
 
         /** The latest [BuildableArtifact] created for this artifact */
         var last : BuildableArtifact
-            get() = artifactHistory.last()
+            get() = history.last()
             set(value) {
-                artifactHistory.add(value)
+                history.add(value)
             }
 
         /** The first [BuildableArtifact] created for this artifact */
         val first : BuildableArtifact
-            get() = artifactHistory.first()
+            get() = history.first()
 
         fun modifyFirst(collection: FileCollection) {
             initialized = true
-            (artifactHistory.first() as BuildableArtifactImpl).fileCollection = collection
+            (history.first() as BuildableArtifactImpl).fileCollection = collection
         }
     }
 
@@ -240,4 +240,14 @@ class BuildArtifactHolder(
                     taskName,
                     variantDirName,
                     filename)
+
+    /**
+     * Return history of all [BuildableArtifact] for an [ArtifactType].
+     */
+    //FIXME: VisibleForTesting.  Make this internal when bazel supports it for tests (b/71602857)
+    fun getHistory(artifactType: ArtifactType) : List<BuildableArtifact> {
+        val record = artifactRecordMap[artifactType]
+                ?: throw MissingBuildableArtifactException(artifactType)
+        return record.history
+    }
 }

@@ -85,9 +85,16 @@ class BuildArtifactHolderTest {
         holder.createFirstArtifactFiles(JAVAC_CLASSES, "baz", "task0")
 
         assertThat(files1.single()).isEqualTo(file("task1", "foo"))
+        // TaskDependency.getDependencies accepts null.
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         assertThat(files1.buildDependencies.getDependencies(null)).containsExactly(task1)
         assertThat(files2.single()).isEqualTo(file("task2", "bar"))
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         assertThat(files2.buildDependencies.getDependencies(null)).containsExactly(task2)
+
+        val history = holder.getHistory(JAVAC_CLASSES)
+        assertThat(history[1]).isSameAs(files1)
+        assertThat(history[2]).isSameAs(files2)
     }
 
     @Test
@@ -104,10 +111,18 @@ class BuildArtifactHolderTest {
         assertThat(files2).containsExactly(
                 file("task1", "foo"), file("task2", "bar"), file(JAVAC_CLASSES.name, "baz"))
 
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         assertThat(files0.buildDependencies.getDependencies(null)).containsExactly(task0)
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         assertThat(files1.buildDependencies.getDependencies(null)).containsExactly(task0, task1)
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         assertThat(files2.buildDependencies.getDependencies(null))
                 .containsExactly(task0, task1, task2)
+
+        val history = holder.getHistory(JAVAC_CLASSES)
+        assertThat(history[0]).isSameAs(files0)
+        assertThat(history[1]).isSameAs(files1)
+        assertThat(history[2]).isSameAs(files2)
     }
 
     @Test
@@ -117,12 +132,14 @@ class BuildArtifactHolderTest {
         val files1 = holder.getArtifactFiles(JAVAC_CLASSES)
 
         assertThat(files1.single()).isEqualTo(file("task1", "foo"))
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         assertThat(files1.buildDependencies.getDependencies(null)).containsExactly(task1)
 
         // Check the original output is modified.
         val newFiles = holder.createFirstArtifactFiles(JAVAC_CLASSES, listOf("foo"), "task0")
         assertThat(newFiles).isSameAs(files0)
         assertThat(files0.single()).isEqualTo(file(JAVAC_CLASSES.name, "foo"))
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         assertThat(files0.buildDependencies.getDependencies(null)).containsExactly(task0)
 
         // Should not be able to create first output more than once

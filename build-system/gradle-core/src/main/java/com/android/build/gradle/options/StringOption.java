@@ -51,6 +51,8 @@ public enum StringOption implements Option<String> {
     // Testing
     DEVICE_POOL_SERIAL("com.android.test.devicepool.serial"),
     PROFILE_OUTPUT_DIR("android.advanced.profileOutputDir"),
+
+    BUILD_ARTIFACT_REPORT_FILE("android.buildartifact.reportfile"),
     ;
 
     @NonNull private final String propertyName;

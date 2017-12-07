@@ -86,6 +86,8 @@ class BuildArtifactsOptionsImplTest {
             val task = t as TestTask
             assertThat(task.inputFiles.single()).hasName("foo")
             assertThat(task.outputFile).hasName(JAVAC_CLASSES.name)
+            // TaskDependency.getDependencies accepts null.
+            @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
             assertThat(task.inputFiles.buildDependencies.getDependencies(null))
                     .containsExactly(task0)
         }
@@ -116,6 +118,7 @@ class BuildArtifactsOptionsImplTest {
             val task = t as TestTask
             assertThat(task.inputFiles.single()).hasName("foo")
             assertThat(task.outputFile).hasName(JAVAC_CLASSES.name)
+            @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
             assertThat(task.inputFiles.buildDependencies.getDependencies(null))
                     .containsExactly(task0)
         }
@@ -146,6 +149,7 @@ class BuildArtifactsOptionsImplTest {
             val task = t as TestTask
             assertThat(task.inputFiles.single()).hasName("foo")
             assertThat(task.outputFile).hasName(JAVAC_CLASSES.name)
+            @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
             assertThat(task.inputFiles.buildDependencies.getDependencies(null))
                     .containsExactly(task0)
         }
