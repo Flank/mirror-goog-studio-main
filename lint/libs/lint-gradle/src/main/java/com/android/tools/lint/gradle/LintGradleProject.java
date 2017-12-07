@@ -219,11 +219,9 @@ public class LintGradleProject extends Project {
                 @NonNull File dir,
                 @NonNull File referenceDir,
                 @NonNull AndroidProject project,
-                @NonNull Variant variant) {
-            //TODO FIXME: handle multi-apk
-            super(client, dir, referenceDir,
-                    variant.getMainArtifact().getOutputs().iterator().next().getGeneratedManifest());
-
+                @NonNull Variant variant,
+                @Nullable File manifest) {
+            super(client, dir, referenceDir, manifest);
             mProject = project;
             mVariant = variant;
         }
@@ -997,7 +995,8 @@ public class LintGradleProject extends Project {
             if (project.getProjectType() == AndroidProject.PROJECT_TYPE_INSTANTAPP) {
                 lintProject = new InstantAppGradleProject(client, dir, dir);
             } else {
-                lintProject = new AppGradleProject(client, dir, dir, project, variant);
+                File manifest = client.getMergedManifest();
+                lintProject = new AppGradleProject(client, dir, dir, project, variant, manifest);
             }
             appProjects.put(project, lintProject);
 

@@ -366,6 +366,11 @@ public class LintGradleClient extends LintCliClient {
     }
 
     @Nullable
+    public File getMergedManifest() {
+        return variantInputs.getMergedManifest();
+    }
+
+    @Nullable
     @Override
     public Document getMergedManifest(@NonNull Project project) {
         File manifest = variantInputs.getMergedManifest();
