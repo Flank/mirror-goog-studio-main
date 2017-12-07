@@ -51,14 +51,14 @@ import org.gradle.tooling.events.ProgressEvent;
 import org.gradle.tooling.events.ProgressListener;
 
 /** A Gradle tooling api build builder. */
-public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
+public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecutor> {
 
     @Nullable private final String buildToolsVersion;
 
     private boolean isExpectingFailure = false;
     private boolean allowStderr = true; // TODO: change default to false.
 
-    RunGradleTasks(
+    GradleTaskExecutor(
             @NonNull GradleTestProject gradleTestProject,
             @NonNull ProjectConnection projectConnection,
             boolean disableRetryLogic) {
@@ -77,14 +77,14 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      *
      * <p>The resulting exception is stored in the {@link GradleBuildResult}.
      */
-    public RunGradleTasks expectFailure() {
+    public GradleTaskExecutor expectFailure() {
         isExpectingFailure = true;
         allowStderr(true);
         return this;
     }
 
     /** Disable or enable the assertion that there is no stderr. */
-    public RunGradleTasks allowStderr(boolean allowStderr) {
+    public GradleTaskExecutor allowStderr(boolean allowStderr) {
         this.allowStderr = allowStderr;
         return this;
     }
@@ -95,7 +95,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * @param androidVersion The target device version
      * @param flags additional instant run flags, see {@link OptionalCompilationStep}.
      */
-    public RunGradleTasks withInstantRun(
+    public GradleTaskExecutor withInstantRun(
             AndroidVersion androidVersion, @NonNull OptionalCompilationStep... flags) {
         setInstantRunArgs(androidVersion, null /* density */, flags);
         return this;
@@ -107,15 +107,14 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * @param device The connected device.
      * @param flags additional instant run flags, see {@link OptionalCompilationStep}.
      */
-    public RunGradleTasks withInstantRun(
-            @NonNull IDevice device,
-            @NonNull OptionalCompilationStep... flags) {
+    public GradleTaskExecutor withInstantRun(
+            @NonNull IDevice device, @NonNull OptionalCompilationStep... flags) {
         setInstantRunArgs(
                 device.getVersion(), Density.getEnum(device.getDensity()), flags);
         return this;
     }
 
-    public RunGradleTasks withSdkAutoDownload() {
+    public GradleTaskExecutor withSdkAutoDownload() {
         return with(BooleanOption.ENABLE_SDK_DOWNLOAD, true);
     }
 
@@ -234,25 +233,21 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         }
     }
 
-    public RunGradleTasks withUseDexArchive(boolean useDexArchive) {
+    public GradleTaskExecutor withUseDexArchive(boolean useDexArchive) {
         with(BooleanOption.ENABLE_DEX_ARCHIVE, useDexArchive);
         return this;
     }
 
 
-    /**
-     * Makes the project execute with AAPT2 flag set to {@param enableAapt2}.
-     */
-    public RunGradleTasks withEnabledAapt2(boolean enableAapt2) {
+    /** Makes the project execute with AAPT2 flag set to {@param enableAapt2}. */
+    public GradleTaskExecutor withEnabledAapt2(boolean enableAapt2) {
         with(enableAapt2 ? AaptGeneration.AAPT_V2_DAEMON_MODE : AaptGeneration.AAPT_V1);
         return this;
     }
 
-    /**
-     * Makes the project execute with AAPT2 flag set to {@param enableAapt2}.
-     */
+    /** Makes the project execute with AAPT2 flag set to {@param enableAapt2}. */
     @SuppressWarnings("deprecation") // AAPT_V2 should not be used, but if it is, we handle it.
-    public RunGradleTasks with(@NonNull AaptGeneration aaptGeneration) {
+    public GradleTaskExecutor with(@NonNull AaptGeneration aaptGeneration) {
         switch (aaptGeneration) {
             case AAPT_V1:
                 with(BooleanOption.ENABLE_AAPT2, false);

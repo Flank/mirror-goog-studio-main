@@ -22,8 +22,8 @@ import static org.junit.Assert.assertNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
@@ -404,11 +404,11 @@ public class SdkAutoDownloadTest {
     }
 
     @NonNull
-    private RunGradleTasks getExecutor() {
+    private GradleTaskExecutor getExecutor() {
         return getOfflineExecutor().withoutOfflineFlag();
     }
 
-    private RunGradleTasks getOfflineExecutor() {
+    private GradleTaskExecutor getOfflineExecutor() {
         return project.executor()
                 .withSdkAutoDownload()
                 .withArgument(

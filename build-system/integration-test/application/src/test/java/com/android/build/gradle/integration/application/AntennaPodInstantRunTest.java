@@ -19,8 +19,8 @@ package com.android.build.gradle.integration.application;
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -108,7 +108,7 @@ public class AntennaPodInstantRunTest {
     }
 
     @NonNull
-    private RunGradleTasks getExecutor() {
+    private GradleTaskExecutor getExecutor() {
         if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
             return project.executor().with(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS, false);
         } else {

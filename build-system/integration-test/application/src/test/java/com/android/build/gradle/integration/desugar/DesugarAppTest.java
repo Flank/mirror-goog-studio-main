@@ -23,8 +23,8 @@ import static com.android.builder.core.DesugarProcessBuilder.MIN_SUPPORTED_API_T
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
@@ -516,7 +516,7 @@ public class DesugarAppTest {
                         "}"));
     }
 
-    private RunGradleTasks getProjectExecutor() {
+    private GradleTaskExecutor getProjectExecutor() {
         return project.executor().with(BooleanOption.ENABLE_GRADLE_WORKERS, enableGradleWorkers);
     }
 }

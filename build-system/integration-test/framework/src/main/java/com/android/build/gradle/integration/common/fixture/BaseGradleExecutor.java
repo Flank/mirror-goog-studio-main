@@ -19,12 +19,10 @@ package com.android.build.gradle.integration.common.fixture;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
-import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -44,7 +42,7 @@ import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
 
 /**
- * Common flags shared by {@link BuildModel} and {@link RunGradleTasks}.
+ * Common flags shared by {@link BuildModel} and {@link GradleTaskExecutor}.
  *
  * @param <T> The concrete implementing class.
  */

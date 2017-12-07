@@ -42,7 +42,7 @@ import org.gradle.tooling.events.ProgressEvent;
 /**
  * The result from running a build.
  *
- * <p>See {@link GradleTestProject#executor()} and {@link RunGradleTasks}.
+ * <p>See {@link GradleTestProject#executor()} and {@link GradleTaskExecutor}.
  */
 public class GradleBuildResult {
 

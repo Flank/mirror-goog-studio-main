@@ -20,9 +20,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.BuildModel;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
@@ -251,7 +251,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
     }
 
     @NonNull
-    private RunGradleTasks executor() {
+    private GradleTaskExecutor executor() {
         return projectScenario.configureExecutor(project.executor());
     }
 

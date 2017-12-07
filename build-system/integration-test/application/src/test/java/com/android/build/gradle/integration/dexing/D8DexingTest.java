@@ -17,8 +17,8 @@
 package com.android.build.gradle.integration.dexing;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
@@ -50,7 +50,7 @@ public class D8DexingTest {
     }
 
     @NonNull
-    private RunGradleTasks executor() {
+    private GradleTaskExecutor executor() {
         return project.executor().with(BooleanOption.ENABLE_D8, true);
     }
 }

@@ -20,7 +20,7 @@ import com.android.build.gradle.integration.common.fixture.BuildModel
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.options.BooleanOption
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
@@ -35,7 +35,7 @@ data class Benchmark(
 
         val projectFactory: (GradleTestProjectBuilder) -> GradleTestProject,
         val postApplyProject: (GradleTestProject) -> GradleTestProject = { p -> p },
-        val action: ((() -> Unit) -> Unit, GradleTestProject, RunGradleTasks, BuildModel) -> Unit) {
+        val action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, BuildModel) -> Unit) {
     fun run() {
         /*
          * Any common project configuration should happen here. Note that it isn't possible to take

@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.performance
 
 import com.android.build.gradle.integration.common.fixture.BuildModel
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.integration.common.utils.TestFileUtils
@@ -157,7 +157,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
     fun benchmark(
             scenario: ProjectScenario,
             benchmarkMode: Logging.BenchmarkMode,
-            action: ((() -> Unit) -> Unit, GradleTestProject, RunGradleTasks, BuildModel) -> Unit): Benchmark {
+            action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, BuildModel) -> Unit): Benchmark {
         return Benchmark(
                 scenario = scenario,
                 benchmark = Logging.Benchmark.ANTENNA_POD,
@@ -185,7 +185,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
     private fun instantRunBenchmark(
             scenario: ProjectScenario,
             benchmarkMode: Logging.BenchmarkMode,
-            action: ((() -> Unit) -> Unit, GradleTestProject, RunGradleTasks, BuildModel) -> Unit): Benchmark {
+            action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, BuildModel) -> Unit): Benchmark {
         return benchmark(
                 scenario = scenario,
                 benchmarkMode = benchmarkMode,
