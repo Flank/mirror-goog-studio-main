@@ -1160,8 +1160,8 @@ public final class GradleTestProject implements TestRule {
 
     /** Fluent method to get the model. */
     @NonNull
-    public BuildModel model() {
-        return new BuildModel(this, getProjectConnection());
+    public ModelBuilder model() {
+        return new ModelBuilder(this, getProjectConnection());
     }
 
     /**

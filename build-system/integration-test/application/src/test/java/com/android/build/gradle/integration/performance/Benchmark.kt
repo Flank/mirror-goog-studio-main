@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.performance
 
-import com.android.build.gradle.integration.common.fixture.BuildModel
+import com.android.build.gradle.integration.common.fixture.ModelBuilder
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer
@@ -35,7 +35,7 @@ data class Benchmark(
 
         val projectFactory: (GradleTestProjectBuilder) -> GradleTestProject,
         val postApplyProject: (GradleTestProject) -> GradleTestProject = { p -> p },
-        val action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, BuildModel) -> Unit) {
+        val action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, ModelBuilder) -> Unit) {
     fun run() {
         /*
          * Any common project configuration should happen here. Note that it isn't possible to take

@@ -19,9 +19,9 @@ package com.android.build.gradle.integration.performance;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BuildModel;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelBuilder;
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
@@ -246,7 +246,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
     }
 
     @NonNull
-    private BuildModel model() {
+    private ModelBuilder model() {
         return project.model().withoutOfflineFlag().ignoreSyncIssueWarnings();
     }
 

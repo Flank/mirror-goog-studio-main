@@ -42,7 +42,7 @@ import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
 
 /**
- * Common flags shared by {@link BuildModel} and {@link GradleTaskExecutor}.
+ * Common flags shared by {@link ModelBuilder} and {@link GradleTaskExecutor}.
  *
  * @param <T> The concrete implementing class.
  */

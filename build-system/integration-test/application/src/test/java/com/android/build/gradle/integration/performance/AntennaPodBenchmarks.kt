@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.performance
 
-import com.android.build.gradle.integration.common.fixture.BuildModel
+import com.android.build.gradle.integration.common.fixture.ModelBuilder
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.utils.ModelHelper
@@ -157,7 +157,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
     fun benchmark(
             scenario: ProjectScenario,
             benchmarkMode: Logging.BenchmarkMode,
-            action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, BuildModel) -> Unit): Benchmark {
+            action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, ModelBuilder) -> Unit): Benchmark {
         return Benchmark(
                 scenario = scenario,
                 benchmark = Logging.Benchmark.ANTENNA_POD,
@@ -185,7 +185,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
     private fun instantRunBenchmark(
             scenario: ProjectScenario,
             benchmarkMode: Logging.BenchmarkMode,
-            action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, BuildModel) -> Unit): Benchmark {
+            action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, ModelBuilder) -> Unit): Benchmark {
         return benchmark(
                 scenario = scenario,
                 benchmarkMode = benchmarkMode,
@@ -225,7 +225,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                 """.trimIndent())
     }
 
-    private fun assertInstantRunInvoked(model: BuildModel) {
+    private fun assertInstantRunInvoked(model: ModelBuilder) {
         /*
          * The following lines of code verify that an instant run happened
          * by asserting that we can parse an InstantRunBuildInfo. If we

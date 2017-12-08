@@ -50,7 +50,7 @@ import org.gradle.tooling.model.GradleTask;
  * <p>Example: <code>project.model().asStudio1().getMulti()</code> fetches the model for all
  * subprojects as Studio 1.0 does.
  */
-public class BuildModel extends BaseGradleExecutor<BuildModel> {
+public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
 
     public enum Feature {
         /** full dependencies, including package graph, and provided and skipped properties. */
@@ -68,7 +68,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
 
     private int modelLevel = AndroidProject.MODEL_LEVEL_LATEST;
 
-    BuildModel(@NonNull GradleTestProject project, @NonNull ProjectConnection projectConnection) {
+    ModelBuilder(@NonNull GradleTestProject project, @NonNull ProjectConnection projectConnection) {
         super(
                 projectConnection,
                 project::setLastBuildResult,
@@ -79,7 +79,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
 
     /** Do not fail if there are sync issues */
     @NonNull
-    public BuildModel ignoreSyncIssues() {
+    public ModelBuilder ignoreSyncIssues() {
         Preconditions.checkState(modelLevel != AndroidProject.MODEL_LEVEL_0_ORIGINAL,
                 "Studio 1 was not aware of sync issues.");
         maxSyncIssueSeverityLevel = SyncIssue.SEVERITY_ERROR;
@@ -87,7 +87,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     }
 
     @NonNull
-    public BuildModel ignoreSyncIssueWarnings() {
+    public ModelBuilder ignoreSyncIssueWarnings() {
         Preconditions.checkState(
                 modelLevel != AndroidProject.MODEL_LEVEL_0_ORIGINAL,
                 "Studio 1 was not aware of sync issues.");
@@ -100,12 +100,12 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
      *
      * <p>See AndroidProject.MODEL_LEVEL_...
      */
-    public BuildModel level(int modelLevel) {
+    public ModelBuilder level(int modelLevel) {
         this.modelLevel = modelLevel;
         return this;
     }
 
-    public BuildModel withFeature(Feature feature) {
+    public ModelBuilder withFeature(Feature feature) {
         with(feature.option, true);
         return this;
     }
