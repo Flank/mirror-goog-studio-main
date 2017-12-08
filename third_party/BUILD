@@ -815,7 +815,8 @@ maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-android-extensions",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.2.0:jar",
     visibility = ["//visibility:public"],
-    exports = [":org.jetbrains.kotlin_kotlin-compiler-embeddable"],
+    exports = [],
+    runtime_deps = [":org.jetbrains.kotlin_kotlin-compiler-embeddable"],
 )
 
 maven_java_library(
@@ -823,6 +824,7 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-annotation-processing-gradle/1.2.0:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
+    runtime_deps = [":org.jetbrains.kotlin_kotlin-compiler-embeddable"],
 )
 
 maven_java_library(
@@ -837,13 +839,22 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.2.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
+    runtime_deps = [
+        ":org.jetbrains.kotlin_kotlin-reflect",
+        ":org.jetbrains.kotlin_kotlin-script-runtime",
+        ":org.jetbrains.kotlin_kotlin-stdlib",
+    ],
 )
 
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-compiler-runner",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-runner/1.2.0:jar",
     visibility = ["//visibility:public"],
-    exports = [":org.jetbrains.kotlin_kotlin-compiler-embeddable"],
+    exports = [
+        ":org.jetbrains.kotlin_kotlin-build-common",
+        ":org.jetbrains.kotlin_kotlin-daemon-client",
+    ],
+    runtime_deps = [":org.jetbrains.kotlin_kotlin-compiler-embeddable"],
 )
 
 maven_java_library(
@@ -858,14 +869,14 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin/1.2.0:jar",
     visibility = ["//visibility:public"],
     exports = [
-        ":org.jetbrains.kotlin_kotlin-android-extensions",
-        ":org.jetbrains.kotlin_kotlin-annotation-processing-gradle",
-        ":org.jetbrains.kotlin_kotlin-build-common",
-        ":org.jetbrains.kotlin_kotlin-compiler-embeddable",
-        ":org.jetbrains.kotlin_kotlin-compiler-runner",
-        ":org.jetbrains.kotlin_kotlin-daemon-client",
         ":org.jetbrains.kotlin_kotlin-gradle-plugin-api",
         ":org.jetbrains.kotlin_kotlin-stdlib",
+    ],
+    runtime_deps = [
+        ":org.jetbrains.kotlin_kotlin-android-extensions",
+        ":org.jetbrains.kotlin_kotlin-annotation-processing-gradle",
+        ":org.jetbrains.kotlin_kotlin-compiler-embeddable",
+        ":org.jetbrains.kotlin_kotlin-compiler-runner",
     ],
 )
 
@@ -881,6 +892,13 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.2.0:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
+)
+
+maven_java_library(
+    name = "org.jetbrains.kotlin_kotlin-script-runtime",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-script-runtime/1.2.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
 )
 
 maven_java_library(
@@ -910,13 +928,6 @@ maven_java_library(
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-test",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-test/1.2.0:jar",
-    visibility = ["//visibility:public"],
-    exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
-)
-
-maven_java_library(
-    name = "org.jetbrains.kotlin_kotlin-test-junit",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-test-junit/1.2.0:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )
