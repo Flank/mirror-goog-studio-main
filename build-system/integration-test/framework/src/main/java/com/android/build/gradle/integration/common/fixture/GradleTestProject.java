@@ -468,10 +468,14 @@ public final class GradleTestProject implements TestRule {
 
     private void createTestDirectory(Class<?> testClass, String methodName)
             throws IOException, StreamException {
-        // On windows, move the temporary copy as close to root to avoid running into path too
-        // long exceptions.
+        // On Windows machines, make sure the test directory's path is short enough to avoid running
+        // into path too long exceptions. Typically, on local Windows machines, OUT_DIR's path is
+        // long, whereas on Windows build bots, OUT_DIR's path is already short (see
+        // https://issuetracker.google.com/69271554). In the first case, let's move the test
+        // directory close to root (user home), and in the second case, let's use OUT_DIR directly.
         testDir =
                 SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
+                                && System.getenv("BUILDBOT_BUILDERNAME") == null
                         ? new File(new File(System.getProperty("user.home")), "android-tests")
                         : OUT_DIR;
 
