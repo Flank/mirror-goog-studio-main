@@ -90,7 +90,7 @@ class ${activityClass} : ${superClass}()<#if !hasAppBar && features == 'tabs'>, 
                 arrayOf("Section 1", "Section 2", "Section 3"))
 
         spinner.onItemSelectedListener = object : OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 // When the given dropdown item is selected, show its contents in the
                 // container view.
                 <#if Support?has_content>supportFragmentManager<#else>fragmentManager</#if>.beginTransaction()
