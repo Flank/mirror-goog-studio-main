@@ -79,5 +79,6 @@ def perf_test(name, srcs, test_app, native_lib="", deps = []):
       tags = [
         "no_mac",
         "no_windows",
-      ]
+      ],
+      srcs = srcs
     )
