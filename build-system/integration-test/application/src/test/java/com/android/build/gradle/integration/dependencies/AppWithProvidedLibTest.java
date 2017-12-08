@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.builder;
-import static com.android.build.gradle.integration.common.fixture.ModelBuilder.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
@@ -54,7 +53,7 @@ public class AppWithProvidedLibTest {
                 "dependencies {\n" +
                 "    provided project(\":library\")\n" +
                 "}\n");
-        modelContainer = project.model().withFeature(FULL_DEPENDENCIES).ignoreSyncIssues().getMulti();
+        modelContainer = project.model().withFullDependencies().ignoreSyncIssues().getMulti();
     }
 
     @AfterClass

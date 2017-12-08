@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.fixture.ModelBuilder.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
@@ -58,7 +57,7 @@ public class AppWithPackageDirectJarTest {
                 "    apk project(\":jar\")\n" +
                 "}\n");
         project.execute("clean", ":app:assembleDebug");
-        modelContainer = project.model().withFeature(FULL_DEPENDENCIES).getMulti();
+        modelContainer = project.model().withFullDependencies().getMulti();
     }
 
     @AfterClass

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.library;
 
-import static com.android.build.gradle.integration.common.fixture.ModelBuilder.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
@@ -139,7 +138,7 @@ public class JacocoDependenciesTest {
         ModelContainer<AndroidProject> container =
                 project.model()
                         .level(AndroidProject.MODEL_LEVEL_LATEST)
-                        .withFeature(FULL_DEPENDENCIES)
+                        .withFullDependencies()
                         .getMulti();
         LibraryGraphHelper helper = new LibraryGraphHelper(container);
         Variant appDebug =

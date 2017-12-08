@@ -1,6 +1,5 @@
 package com.android.build.gradle.integration.testing;
 
-import static com.android.build.gradle.integration.common.fixture.ModelBuilder.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
@@ -60,7 +59,7 @@ public class SeparateTestWithAarDependencyTest {
                         + "}\n");
 
         project.execute("clean", "assemble");
-        models = project.model().withFeature(FULL_DEPENDENCIES).getMulti();
+        models = project.model().withFullDependencies().getMulti();
         helper = new LibraryGraphHelper(models);
     }
 

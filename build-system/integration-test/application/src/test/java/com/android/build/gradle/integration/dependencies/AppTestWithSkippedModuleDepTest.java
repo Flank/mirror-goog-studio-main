@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.fixture.ModelBuilder.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
@@ -65,7 +64,7 @@ public class AppTestWithSkippedModuleDepTest {
                 + "}\n");
 
         project.execute("clean", ":app:assembleDebug", ":app:assembleAndroidTest");
-        modelContainer = project.model().withFeature(FULL_DEPENDENCIES).getMulti();
+        modelContainer = project.model().withFullDependencies().getMulti();
         helper = new LibraryGraphHelper(modelContainer);
     }
 

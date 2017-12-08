@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.fixture.ModelBuilder.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
@@ -61,7 +60,7 @@ public class LibWithProvidedLocalJarTest {
                 "}\n");
 
         project.execute("clean", "assembleDebug");
-        model = project.model().withFeature(FULL_DEPENDENCIES).getSingle();
+        model = project.model().withFullDependencies().getSingle();
     }
 
     @AfterClass

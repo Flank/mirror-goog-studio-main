@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.fixture.ModelBuilder.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
@@ -76,7 +75,7 @@ public class OptionalAarTest {
         // doesn't build the aar anymore.
 
         project.execute("clean", ":app:assembleDebug", "library:assembleDebug");
-        models = project.model().withFeature(FULL_DEPENDENCIES).getMulti();
+        models = project.model().withFullDependencies().getMulti();
         helper = new LibraryGraphHelper(models);
 
     }

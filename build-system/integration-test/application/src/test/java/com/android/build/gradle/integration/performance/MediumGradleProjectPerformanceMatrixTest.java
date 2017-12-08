@@ -29,6 +29,7 @@ import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.utils.ExceptionRunnable;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
@@ -247,7 +248,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
     @NonNull
     private ModelBuilder model() {
-        return project.model().withoutOfflineFlag().ignoreSyncIssueWarnings();
+        return project.model().withoutOfflineFlag().ignoreSyncIssues(SyncIssue.SEVERITY_WARNING);
     }
 
     @NonNull

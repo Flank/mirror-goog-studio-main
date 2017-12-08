@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.fixture.ModelBuilder.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Filter.PROVIDED;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
@@ -66,7 +65,7 @@ public class LibWithProvidedDirectJarTest {
                 "}\n");
 
         project.execute("clean", ":library:assembleDebug");
-        modelContainer = project.model().withFeature(FULL_DEPENDENCIES).getMulti();
+        modelContainer = project.model().withFullDependencies().getMulti();
         helper = new LibraryGraphHelper(modelContainer);
     }
 

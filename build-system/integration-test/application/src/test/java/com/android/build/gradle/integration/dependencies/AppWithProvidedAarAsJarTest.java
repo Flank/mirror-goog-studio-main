@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.fixture.ModelBuilder.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Filter.PROVIDED;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
@@ -103,8 +102,8 @@ public class AppWithProvidedAarAsJarTest {
 
     @Test
     public void checkProvidedJarIsDeclaredAsProvided() throws Exception {
-        ModelContainer<AndroidProject> modelContainer = project.model()
-                .withFeature(FULL_DEPENDENCIES).getMulti();
+        ModelContainer<AndroidProject> modelContainer =
+                project.model().withFullDependencies().getMulti();
 
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 

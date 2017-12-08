@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.ModelBuilder;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -87,8 +86,7 @@ public class AppWithProvidedLocalJarTest {
 
     @Test
     public void checkFullModel() throws Exception {
-        ModelContainer<AndroidProject> model =
-                project.model().withFeature(ModelBuilder.Feature.FULL_DEPENDENCIES).getSingle();
+        ModelContainer<AndroidProject> model = project.model().withFullDependencies().getSingle();
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
         Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");

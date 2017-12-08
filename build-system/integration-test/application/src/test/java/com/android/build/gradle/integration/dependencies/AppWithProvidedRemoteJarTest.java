@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.fixture.ModelBuilder.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
@@ -80,7 +79,7 @@ public class AppWithProvidedRemoteJarTest {
     @Test
     public void checkProvidedRemoteJarIsInTheMainArtifactDependency() throws Exception {
         GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
-                project.model().withFeature(FULL_DEPENDENCIES).getSingle();
+                project.model().withFullDependencies().getSingle();
 
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 

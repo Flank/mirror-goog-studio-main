@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.fixture.ModelBuilder.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
@@ -72,8 +71,8 @@ public class AppWithProvidedProjectJarTest {
 
     @Test
     public void checkProvidedJarIsInTheMainArtifactDependency() throws Exception {
-        ModelContainer<AndroidProject> modelContainer = project.model()
-                .withFeature(FULL_DEPENDENCIES).getMulti();
+        ModelContainer<AndroidProject> modelContainer =
+                project.model().withFullDependencies().getMulti();
 
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 

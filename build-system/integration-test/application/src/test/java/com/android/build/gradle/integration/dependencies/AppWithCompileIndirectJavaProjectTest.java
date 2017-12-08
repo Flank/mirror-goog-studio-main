@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.fixture.ModelBuilder.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
@@ -154,10 +153,11 @@ public class AppWithCompileIndirectJavaProjectTest {
 
     @Test
     public void checkLevel4Model() throws Exception {
-        ModelContainer<AndroidProject> modelContainer = project.model()
-                .level(AndroidProject.MODEL_LEVEL_LATEST)
-                .withFeature(FULL_DEPENDENCIES)
-                .getMulti();
+        ModelContainer<AndroidProject> modelContainer =
+                project.model()
+                        .level(AndroidProject.MODEL_LEVEL_LATEST)
+                        .withFullDependencies()
+                        .getMulti();
 
         Map<String, AndroidProject> models = modelContainer.getModelMap();
 
