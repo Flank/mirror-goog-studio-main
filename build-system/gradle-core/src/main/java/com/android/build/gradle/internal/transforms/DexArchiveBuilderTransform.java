@@ -271,9 +271,11 @@ public class DexArchiveBuilderTransform extends Transform {
                                     bootclasspath,
                                     classpath,
                                     additionalPaths);
-                    cacheableItems.add(
-                            new DexArchiveBuilderCacheHandler.CacheableItem(
-                                    jarInput, dexArchives, bootclasspath, classpath));
+                    if (!dexArchives.isEmpty()) {
+                        cacheableItems.add(
+                                new DexArchiveBuilderCacheHandler.CacheableItem(
+                                        jarInput, dexArchives, bootclasspath, classpath));
+                    }
                 }
             }
 

@@ -23,6 +23,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
@@ -41,6 +42,7 @@ import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.TestUtils;
 import com.android.testutils.truth.MoreTruth;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.File;
@@ -50,6 +52,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Rule;
@@ -366,6 +369,49 @@ public class DexArchiveBuilderTransformDesugaringTest {
 
         assertThat(catTimestamp).isLessThan(getDex(Cat.class).lastModified());
         assertThat(toyTimestamp).isEqualTo(getDex(Toy.class).lastModified());
+    }
+
+    /** Regression test to make sure we do not add unchanged files to cache. */
+    @Test
+    public void test_incremental_notChangedNotAddedToCache() throws Exception {
+        Path jar = tmpDir.getRoot().toPath().resolve("input.jar");
+        TestInputsGenerator.pathWithClasses(jar, ImmutableSet.of(CarbonForm.class, Animal.class));
+
+        TransformInput jarInput =
+                TransformTestHelper.singleJarBuilder(jar.toFile())
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setTransformOutputProvider(outputProvider)
+                        .addInput(jarInput)
+                        .setIncremental(false)
+                        .build();
+        FileCache cache = FileCache.getInstanceWithSingleProcessLocking(tmpDir.newFolder());
+        getTransform(cache).transform(invocation);
+        String[] numEntries = Objects.requireNonNull(cache.getCacheDirectory().list());
+
+        File referencedJar = tmpDir.newFile("referenced.jar");
+        TestInputsGenerator.jarWithEmptyClasses(referencedJar.toPath(), ImmutableList.of("A"));
+        TransformInput referencedInput =
+                TransformTestHelper.singleJarBuilder(referencedJar).build();
+
+        jarInput =
+                TransformTestHelper.singleJarBuilder(jar.toFile())
+                        .setStatus(Status.NOTCHANGED)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
+        invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setTransformOutputProvider(outputProvider)
+                        .addInput(jarInput)
+                        .addReferenceInput(referencedInput)
+                        .setIncremental(true)
+                        .build();
+        getTransform(cache).transform(invocation);
+        assertThat(cache.getCacheDirectory().list()).named("cache entries").isEqualTo(numEntries);
     }
 
     @NonNull
