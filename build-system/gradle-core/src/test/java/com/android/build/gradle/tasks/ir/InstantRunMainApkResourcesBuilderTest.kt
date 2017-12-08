@@ -72,7 +72,7 @@ open class InstantRunMainApkResourcesBuilderTest {
     @Mock private lateinit var globalScope: GlobalScope
     @Mock private lateinit var fileCache: FileCache
     private val projectOptions = ProjectOptions(ImmutableMap.of())
-    private val outputScope = OutputScope(MultiOutputPolicy.MULTI_APK)
+    private val outputScope = OutputScope()
 
 
 

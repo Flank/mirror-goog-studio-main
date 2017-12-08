@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.OutputFactory;
-import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -95,11 +94,10 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
                     .getCompatibleScreens());
         }
 
-        OutputScope outputScope = variant.getOutputScope();
         OutputFactory outputFactory = variant.getOutputFactory();
 
         // create its output
-        if (outputScope.getMultiOutputPolicy() == MultiOutputPolicy.MULTI_APK) {
+        if (variant.getMultiOutputPolicy() == MultiOutputPolicy.MULTI_APK) {
 
             // if the abi list is not empty and we must generate a universal apk, add it.
             if (abis.isEmpty()) {

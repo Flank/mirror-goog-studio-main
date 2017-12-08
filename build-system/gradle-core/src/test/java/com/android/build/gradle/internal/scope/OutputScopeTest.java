@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.ide.common.build.ApkData;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
@@ -50,7 +49,7 @@ public class OutputScopeTest {
 
     @Test
     public void testPersistence() throws IOException {
-        OutputScope outputScope = new OutputScope(MultiOutputPolicy.MULTI_APK);
+        OutputScope outputScope = new OutputScope();
         OutputFactory outputFactory =
                 new OutputFactory("project", variantConfiguration, outputScope);
 

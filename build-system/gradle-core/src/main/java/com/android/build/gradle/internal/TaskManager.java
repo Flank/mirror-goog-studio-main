@@ -1347,10 +1347,7 @@ public abstract class TaskManager {
         BaseVariantData variantData = scope.getVariantData();
 
         checkState(
-                variantData
-                        .getOutputScope()
-                        .getMultiOutputPolicy()
-                        .equals(MultiOutputPolicy.SPLITS),
+                variantData.getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
                 "Can only create split resources tasks for pure splits.");
 
         File densityOrLanguagesPackages = scope.getSplitDensityOrLanguagesPackagesOutputDirectory();
@@ -1376,10 +1373,7 @@ public abstract class TaskManager {
         BaseVariantData variantData = scope.getVariantData();
 
         checkState(
-                variantData
-                        .getOutputScope()
-                        .getMultiOutputPolicy()
-                        .equals(MultiOutputPolicy.SPLITS),
+                variantData.getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
                 "split ABI tasks are only compatible with pure splits.");
 
         Set<String> filters = AbiSplitOptions.getAbiFilters(extension.getSplits().getAbiFilters());
@@ -3011,7 +3005,7 @@ public abstract class TaskManager {
                         : MERGED_MANIFESTS;
 
         final boolean splitsArePossible =
-                variantScope.getOutputScope().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
+                variantScope.getVariantData().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
 
         FileCollection manifests = variantScope.getOutput(manifestType);
         // this is where the final APKs will be located.

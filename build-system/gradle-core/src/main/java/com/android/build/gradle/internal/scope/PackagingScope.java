@@ -105,14 +105,6 @@ public interface PackagingScope extends TaskOutputHolder {
     File getInstantRunSplitApkOutputFolder();
 
     @NonNull
-    String getApplicationId();
-
-    int getVersionCode();
-
-    @Nullable
-    String getVersionName();
-
-    @NonNull
     AaptOptions getAaptOptions();
 
     @NonNull

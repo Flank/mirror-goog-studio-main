@@ -227,7 +227,7 @@ public class ApplicationTaskManager extends TaskManager {
 
         createStripNativeLibraryTask(taskFactory, variantScope);
 
-        if (variantScope.getOutputScope().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
+        if (variantScope.getVariantData().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
             if (extension.getBuildToolsRevision().getMajor() < 21) {
                 throw new RuntimeException(
                         "Pure splits can only be used with buildtools 21 and later");
@@ -322,7 +322,7 @@ public class ApplicationTaskManager extends TaskManager {
                         variantScope.getInstantRunBuildContext(),
                         variantScope.getGlobalScope().getAndroidBuilder(),
                         variantScope.getGlobalScope().getBuildCache(),
-                        packagingScope,
+                        variantScope.getVariantConfiguration().getApplicationId(),
                         packagingScope.getSigningConfig(),
                         AaptGeneration.fromProjectOptions(projectOptions),
                         packagingScope.getAaptOptions(),
@@ -335,7 +335,9 @@ public class ApplicationTaskManager extends TaskManager {
                                         variantScope, "InstantRunDependenciesApkBuilder"),
                                 "aapt-temp"),
                         variantScope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
-                        variantScope.getOutput(resourcesWithMainManifest));
+                        variantScope.getOutput(resourcesWithMainManifest),
+                        variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST),
+                        variantScope.getOutputScope().getMainSplit());
 
         Optional<TransformTask> dependenciesApkBuilderTask =
                 variantScope
@@ -353,7 +355,7 @@ public class ApplicationTaskManager extends TaskManager {
                         variantScope.getInstantRunBuildContext(),
                         variantScope.getGlobalScope().getAndroidBuilder(),
                         variantScope.getGlobalScope().getBuildCache(),
-                        packagingScope,
+                        variantScope.getVariantConfiguration().getApplicationId(),
                         packagingScope.getSigningConfig(),
                         AaptGeneration.fromProjectOptions(projectOptions),
                         packagingScope.getAaptOptions(),
@@ -365,7 +367,9 @@ public class ApplicationTaskManager extends TaskManager {
                                 "aapt-temp"),
                         globalScope.getProjectOptions().get(OptionalBooleanOption.SERIAL_AAPT2),
                         variantScope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
-                        variantScope.getOutput(resourcesWithMainManifest));
+                        variantScope.getOutput(resourcesWithMainManifest),
+                        variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST),
+                        variantScope.getOutputScope().getMainSplit());
 
         Optional<TransformTask> transformTaskAndroidTask =
                 variantScope

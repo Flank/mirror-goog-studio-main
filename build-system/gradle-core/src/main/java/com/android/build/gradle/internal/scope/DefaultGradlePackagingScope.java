@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
-import com.android.ide.common.build.ApkData;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Set;
@@ -106,7 +105,7 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     @NonNull
     @Override
     public MultiOutputPolicy getMultiOutputPolicy() {
-        return mVariantScope.getVariantData().getOutputScope().getMultiOutputPolicy();
+        return mVariantScope.getVariantData().getMultiOutputPolicy();
     }
 
     @NonNull
@@ -170,28 +169,6 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     @Override
     public File getInstantRunSplitApkOutputFolder() {
         return mVariantScope.getInstantRunSplitApkOutputFolder();
-    }
-
-    @NonNull
-    @Override
-    public String getApplicationId() {
-        return mVariantScope.getVariantConfiguration().getApplicationId();
-    }
-
-    @Override
-    public int getVersionCode() {
-        // FIX ME : DELETE this API and have everyone use the concept of mainSplit.
-        ApkData mainApkData = mVariantScope.getOutputScope().getMainSplit();
-        if (mainApkData != null) {
-            return mainApkData.getVersionCode();
-        }
-        return mVariantScope.getVariantConfiguration().getVersionCode();
-    }
-
-    @Nullable
-    @Override
-    public String getVersionName() {
-        return mVariantScope.getVariantConfiguration().getVersionName();
     }
 
     @NonNull

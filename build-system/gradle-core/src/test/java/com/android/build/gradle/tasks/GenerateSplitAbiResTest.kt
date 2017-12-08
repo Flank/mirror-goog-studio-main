@@ -67,7 +67,7 @@ class GenerateSplitAbiResTest {
     @Mock lateinit internal var mockedOutputFactory: OutputFactory
 
     internal var localProjectOptions = ProjectOptions(ImmutableMap.of<String, Any>())
-    internal val apkData = OutputFactory.DefaultApkData(VariantOutput.OutputType.SPLIT,
+    internal val apkData = OutputFactory.ConfigurationSplitApkData(
             "x86",
             "app",
             "app",

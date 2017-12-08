@@ -25,6 +25,7 @@ import com.android.ide.common.build.ApkData;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
+import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimaps;
@@ -59,27 +60,18 @@ import org.gradle.tooling.BuildException;
  */
 public class OutputScope implements Serializable {
 
-    @NonNull private final MultiOutputPolicy multiOutputPolicy;
     @NonNull private final List<ApkData> apkDatas;
 
     @NonNull
     private final SetMultimap<VariantScope.OutputType, BuildOutput> splitOutputs =
             Multimaps.synchronizedSetMultimap(HashMultimap.create());
 
-    public OutputScope(@NonNull MultiOutputPolicy multiOutputPolicy) {
-        this.multiOutputPolicy = multiOutputPolicy;
+    public OutputScope() {
         this.apkDatas = new ArrayList<>();
     }
 
-    public OutputScope(
-            @NonNull MultiOutputPolicy multiOutputPolicy, @NonNull Collection<ApkData> apkDatas) {
-        this.multiOutputPolicy = multiOutputPolicy;
+    public OutputScope(@NonNull Collection<ApkData> apkDatas) {
         this.apkDatas = new ArrayList<>(apkDatas);
-    }
-
-    @NonNull
-    public MultiOutputPolicy getMultiOutputPolicy() {
-        return multiOutputPolicy;
     }
 
     void addSplit(@NonNull ApkData apkData) {
@@ -107,13 +99,17 @@ public class OutputScope implements Serializable {
         return null;
     }
 
-    @Nullable
+    @NonNull
     public ApkData getMainSplit() {
 
         // no ABI specified, look for the main split.
-        List<ApkData> splitsByType = getSplitsByType(OutputFile.OutputType.MAIN);
-        if (!splitsByType.isEmpty()) {
-            return splitsByType.get(0);
+        Optional<ApkData> splitsByType =
+                apkDatas.stream()
+                        .filter(apkInfo -> apkInfo.getType() == OutputFile.OutputType.MAIN)
+                        .findFirst();
+
+        if (splitsByType.isPresent()) {
+            return splitsByType.get();
         }
         // can't find the main split, look for the universal full split.
         Optional<ApkData> universal =
@@ -130,7 +126,13 @@ public class OutputScope implements Serializable {
                         .stream()
                         .filter(split -> split.getType() == OutputFile.OutputType.FULL_SPLIT)
                         .findFirst();
-        return firstFullSplit.orElse(null);
+        if (firstFullSplit.isPresent()) {
+            return firstFullSplit.get();
+        }
+        throw new RuntimeException(
+                String.format(
+                        "Cannot determine main APK output from %1$s",
+                        Joiner.on(":").join(apkDatas)));
     }
 
     @NonNull
@@ -339,13 +341,12 @@ public class OutputScope implements Serializable {
         }
         OutputScope that = (OutputScope) o;
         return Objects.equals(splitOutputs, that.splitOutputs)
-                && Objects.equals(apkDatas, that.apkDatas)
-                && multiOutputPolicy == that.multiOutputPolicy;
+                && Objects.equals(apkDatas, that.apkDatas);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), splitOutputs, apkDatas, multiOutputPolicy);
+        return Objects.hash(super.hashCode(), splitOutputs, apkDatas);
     }
 
     public void addOutputForSplit(

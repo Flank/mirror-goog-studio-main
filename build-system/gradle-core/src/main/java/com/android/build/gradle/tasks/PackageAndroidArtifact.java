@@ -51,10 +51,12 @@ import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkData;
+import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.res2.FileStatus;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,6 +75,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -193,7 +196,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     @GuardedBy("this")
     @Nullable
-    private Map<ApkData, File> outputFiles;
+    private Map<ApkInfo, File> outputFiles;
 
     @Nullable protected OutputFileProvider outputFileProvider;
 
@@ -334,7 +337,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     }
 
     @NonNull
-    private synchronized Map<ApkData, File> getOutputFiles() {
+    private synchronized Map<ApkInfo, File> getOutputFiles() {
         if (outputFiles == null) {
             //noinspection NonPrivateFieldAccessedInSynchronizedContext
             outputFiles =
@@ -349,13 +352,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     }
 
     @NonNull
-    private static Map<ApkData, File> computeOutputFiles(
+    private static Map<ApkInfo, File> computeOutputFiles(
             @NonNull OutputScope outputScope,
             @NonNull Collection<BuildOutput> buildOutputs,
             @NonNull VariantScope.OutputType outputType,
             @Nullable OutputFileProvider outputFileProvider,
             @NonNull File outputDirectory) {
-        Map<ApkData, File> outputFiles = Maps.newHashMap();
+        Map<ApkInfo, File> outputFiles = Maps.newHashMap();
 
         for (ApkData apkData : outputScope.getApkDatas()) {
             BuildOutput buildOutput = OutputScope.getOutput(buildOutputs, outputType, apkData);
@@ -391,9 +394,50 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
         Collection<BuildOutput> mergedResources =
                 BuildOutputs.load(getTaskInputType(), resourceFiles);
+
+        // check that we don't have colliding output file names
+        checkFileNameUniqueness(getOutputFiles());
+
         outputScope.parallelForEachOutput(
                 mergedResources, getTaskInputType(), getTaskOutputType(), this::splitFullAction);
         outputScope.save(getTaskOutputType(), outputDirectory);
+    }
+
+    @VisibleForTesting
+    static void checkFileNameUniqueness(Map<ApkInfo, File> outputFiles) {
+        Collection<File> fileOutputs = outputFiles.values();
+        java.util.Optional<String> repeatingFileName =
+                fileOutputs
+                        .stream()
+                        .filter(fileOutput -> Collections.frequency(fileOutputs, fileOutput) > 1)
+                        .map(File::getName)
+                        .findFirst();
+        if (repeatingFileName.isPresent()) {
+            List<String> conflictingApks =
+                    outputFiles
+                            .keySet()
+                            .stream()
+                            .filter(
+                                    apkData ->
+                                            outputFiles
+                                                    .get(apkData)
+                                                    .getName()
+                                                    .equals(repeatingFileName.get()))
+                            .map(
+                                    apkData -> {
+                                        if (apkData.getFilters().isEmpty()) {
+                                            return apkData.getType().toString();
+                                        } else {
+                                            return Joiner.on("-").join(apkData.getFilters());
+                                        }
+                                    })
+                            .collect(Collectors.toList());
+            throw new RuntimeException(
+                    String.format(
+                            "Several variant outputs are configured to use "
+                                    + "the same file name \"%1$s\", filters : %2$s",
+                            repeatingFileName.get(), Joiner.on(":").join(conflictingApks)));
+        }
     }
 
     public File splitFullAction(@NonNull ApkData apkData, @Nullable File processedResources)

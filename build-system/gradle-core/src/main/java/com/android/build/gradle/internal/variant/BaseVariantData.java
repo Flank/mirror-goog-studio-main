@@ -161,6 +161,8 @@ public abstract class BaseVariantData implements TaskContainer {
     @NonNull private final OutputFactory outputFactory;
     public VariantOutputFactory variantOutputFactory;
 
+    private final MultiOutputPolicy multiOutputPolicy;
+
     public BaseVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig,
@@ -171,7 +173,7 @@ public abstract class BaseVariantData implements TaskContainer {
         this.taskManager = taskManager;
 
         // eventually, this will require a more open ended comparison.
-        MultiOutputPolicy multiOutputPolicy =
+        multiOutputPolicy =
                 (androidConfig.getGeneratePureSplits()
                                         || variantConfiguration.getType() == VariantType.FEATURE)
                                 && variantConfiguration.getMinSdkVersionValue() >= 21
@@ -197,7 +199,7 @@ public abstract class BaseVariantData implements TaskContainer {
                                 globalScope.getErrorHandler(),
                                 recorder),
                         this);
-        outputScope = new OutputScope(multiOutputPolicy);
+        outputScope = new OutputScope();
         outputFactory =
                 new OutputFactory(
                         globalScope.getProjectBaseName(), variantConfiguration, outputScope);
@@ -252,6 +254,11 @@ public abstract class BaseVariantData implements TaskContainer {
     @Override
     public Task getTaskByKind(TaskKind name) {
         return registeredTasks.get(name);
+    }
+
+    @NonNull
+    public MultiOutputPolicy getMultiOutputPolicy() {
+        return multiOutputPolicy;
     }
 
     @Nullable

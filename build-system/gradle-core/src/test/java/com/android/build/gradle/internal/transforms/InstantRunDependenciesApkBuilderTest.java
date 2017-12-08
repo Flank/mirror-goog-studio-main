@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
+import com.android.build.VariantOutput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
@@ -32,16 +33,18 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
-import com.android.build.gradle.internal.scope.PackagingScope;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
+import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.signing.KeytoolException;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
@@ -69,20 +72,30 @@ public class InstantRunDependenciesApkBuilderTest {
     @Mock InstantRunBuildContext buildContext;
     @Mock AndroidBuilder androidBuilder;
     @Mock CoreSigningConfig coreSigningConfig;
-    @Mock PackagingScope packagingScope;
     @Mock FileCollection mainResources;
-
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
+    @Mock FileCollection apkList;
+
 
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder supportDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder dexFileFolder = new TemporaryFolder();
     @Rule public TemporaryFolder fileCacheDirectory = new TemporaryFolder();
+    @Rule public TemporaryFolder apkListDirectory = new TemporaryFolder();
 
     InstantRunDependenciesApkBuilder instantRunSliceSplitApkBuilder;
     final List<InstantRunSplitApkBuilder.DexFiles> dexFilesList =
             new CopyOnWriteArrayList<>();
+
+    final ApkInfo apkInfo =
+            ApkInfo.of(
+                    VariantOutput.OutputType.MAIN,
+                    ImmutableList.of(),
+                    12345,
+                    "test_version_name",
+                    true,
+                    null);
 
     @Before
     public void setUpMock() {
@@ -90,13 +103,16 @@ public class InstantRunDependenciesApkBuilderTest {
         when(androidBuilder.getTargetInfo()).thenReturn(targetInfo);
         when(targetInfo.getBuildTools()).thenReturn(buildTools);
         when(buildTools.getPath(BuildToolInfo.PathId.ZIP_ALIGN)).thenReturn("/path/to/zip-align");
-        when(packagingScope.getApplicationId()).thenReturn("com.foo.test");
-        when(packagingScope.getVersionName()).thenReturn("test_version_name");
-        when(packagingScope.getVersionCode()).thenReturn(12345);
     }
 
     @Before
     public void setup() throws IOException {
+
+        File apkListFile = apkListDirectory.newFile("apk-list.json");
+        org.apache.commons.io.FileUtils.write(
+                apkListFile, BuildOutputs.persistApkList(ImmutableList.of(apkInfo)));
+        when(apkList.getSingleFile()).thenReturn(apkListFile);
+
         instantRunSliceSplitApkBuilder =
                 new InstantRunDependenciesApkBuilder(
                         logger,
@@ -104,7 +120,7 @@ public class InstantRunDependenciesApkBuilderTest {
                         buildContext,
                         androidBuilder,
                         FileCache.getInstanceWithSingleProcessLocking(fileCacheDirectory.getRoot()),
-                        packagingScope,
+                        "com.foo.test",
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AaptOptions(null, false, null),
@@ -112,10 +128,13 @@ public class InstantRunDependenciesApkBuilderTest {
                         supportDirectory.newFolder("instant-run"),
                         supportDirectory.newFolder("aapt-temp"),
                         mainResources,
-                        mainResources) {
+                        mainResources,
+                        apkList,
+                        apkInfo) {
                     @NonNull
                     @Override
-                    protected File generateSplitApk(@NonNull DexFiles dexFiles)
+                    protected File generateSplitApk(
+                            @NonNull ApkInfo apkInfo, @NonNull DexFiles dexFiles)
                             throws IOException, KeytoolException, PackagerException,
                                     InterruptedException, ProcessException, TransformException {
                         dexFilesList.add(dexFiles);

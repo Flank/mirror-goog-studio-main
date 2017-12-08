@@ -177,17 +177,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return applicationId;
     }
 
-    @Input
-    @Optional
-    public String getVersionName() {
-        return versionName;
-    }
-
-    @Input
-    public int getVersionCode() {
-        return versionCode;
-    }
-
     FileCollection splitListInput;
 
     private OutputScope outputScope;
@@ -197,8 +186,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     private boolean enableAapt2;
 
     private String applicationId;
-    private String versionName;
-    private int versionCode;
 
     private File supportDirectory;
 
@@ -451,8 +438,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 supportDirectory,
                                 IR_APK_FILE_NAME,
                                 applicationId,
-                                versionName,
-                                versionCode,
+                                apkData.getVersionName(),
+                                apkData.getVersionCode(),
                                 manifestOutput
                                         .getProperties()
                                         .get(SdkConstants.ATTR_MIN_SDK_VERSION));
@@ -679,9 +666,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             processResources.setEnableAapt2(projectOptions.get(BooleanOption.ENABLE_AAPT2));
 
-            processResources.versionCode = config.getVersionCode();
             processResources.applicationId = config.getApplicationId();
-            processResources.versionName = config.getVersionName();
 
             // per exec
             processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
@@ -694,8 +679,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             processResources.apkList =
                     variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST);
 
-            processResources.multiOutputPolicy =
-                    variantData.getOutputScope().getMultiOutputPolicy();
+            processResources.multiOutputPolicy = variantData.getMultiOutputPolicy();
 
             processResources.dependenciesFileCollection =
                     variantScope.getArtifactFileCollection(
@@ -855,9 +839,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);
             task.setEnableAapt2(true);
 
-            task.versionCode = config.getVersionCode();
             task.applicationId = config.getApplicationId();
-            task.versionName = config.getVersionName();
 
             // per exec
             task.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
@@ -865,7 +847,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 task.splitListInput =
                         variantScope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
             }
-            task.multiOutputPolicy = variantData.getOutputScope().getMultiOutputPolicy();
+            task.multiOutputPolicy = variantData.getMultiOutputPolicy();
             task.apkList = variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST);
 
             task.sourceOutputDir = sourceOutputDir;

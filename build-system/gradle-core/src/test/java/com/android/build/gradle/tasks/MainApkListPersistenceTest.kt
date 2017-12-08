@@ -64,7 +64,7 @@ open class MainApkListPersistenceTest {
     @Throws(IOException::class)
     fun setUp() {
         MockitoAnnotations.initMocks(this)
-        outputScope = OutputScope(MultiOutputPolicy.MULTI_APK)
+        outputScope = OutputScope()
         testDir = temporaryFolder.newFolder()
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
         Mockito.`when`(variantScope.getTaskName(ArgumentMatchers.any(String::class.java)))

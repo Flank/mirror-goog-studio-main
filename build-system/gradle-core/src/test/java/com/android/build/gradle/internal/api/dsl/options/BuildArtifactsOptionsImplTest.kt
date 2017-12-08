@@ -93,6 +93,7 @@ class BuildArtifactsOptionsImplTest {
                 .containsExactly("foo", JAVAC_CLASSES.name)
     }
 
+    @Test
     fun appendToConfigurationAction() {
         options.appendTo(
                 JAVAC_CLASSES,
