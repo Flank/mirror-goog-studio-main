@@ -11,5 +11,9 @@ iml_module(
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
-    deps = ["//tools/idea/.idea/libraries:JUnit4[test]"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/idea/.idea/libraries:JUnit4[test]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+    ],
 )

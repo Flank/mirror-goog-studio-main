@@ -6,5 +6,9 @@ iml_module(
     iml_files = ["chunkio-processor.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
-    deps = ["//tools/base/chunkio:studio.chunkio[module]"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/chunkio:studio.chunkio[module]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+    ],
 )

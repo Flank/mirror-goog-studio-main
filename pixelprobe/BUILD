@@ -19,5 +19,6 @@ iml_module(
         "//tools/base/chunkio:studio.chunkio[module]",
         "//tools/base/chunkio-processor:studio.chunkio-processor[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )

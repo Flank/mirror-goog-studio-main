@@ -7,6 +7,7 @@ iml_module(
     iml_files = ["android-annotations.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    deps = ["//tools/idea/.idea/libraries:KotlinJavaRuntime"],
 )
 
 maven_java_library(

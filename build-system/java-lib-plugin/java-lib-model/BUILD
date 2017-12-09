@@ -7,7 +7,11 @@ iml_module(
     iml_files = ["java-lib-model.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
-    deps = ["//tools/base/annotations:studio.android-annotations[module]"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+    ],
 )
 
 maven_java_library(

@@ -10,7 +10,11 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/common:studio.common"],
-    deps = ["//tools/base/common:studio.common[module]"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/common:studio.common[module]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+    ],
 )
 
 maven_java_library(

@@ -10,7 +10,11 @@ iml_module(
     ],
     tags = ["managed"],
     visibility = ["//visibility:public"],
-    deps = ["//tools/base/annotations:studio.android-annotations[module]"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+    ],
 )
 
 iml_module(
@@ -27,6 +31,7 @@ iml_module(
         "//tools/base/ddmlib:studio.ddmlib[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:mockito[test]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )
 

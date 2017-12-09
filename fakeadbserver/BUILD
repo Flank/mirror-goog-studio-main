@@ -14,6 +14,7 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/testutils:studio.testutils[module, test]",
         "//tools/idea/.idea/libraries:Guava[test]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )
 
