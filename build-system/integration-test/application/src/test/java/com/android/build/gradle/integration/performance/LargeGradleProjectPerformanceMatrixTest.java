@@ -82,7 +82,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
 
     @AfterClass
     public static void waitForUpload() throws Exception {
-        BenchmarkRecorder.awaitUploads(15, TimeUnit.MINUTES);
+        BenchmarkRecorder.awaitUploads(60, TimeUnit.MINUTES);
     }
 
     @Test

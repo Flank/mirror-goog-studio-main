@@ -90,7 +90,7 @@ public final class BenchmarkRecorder {
     /** Variables for asynchronously uploading profiles. */
     private static final int WORK_QUEUE_SIZE = 64;
 
-    private static final int NUM_THREADS = 1;
+    private static final int NUM_THREADS = 3;
 
     @NonNull
     private static final ExecutorService EXECUTOR =
