@@ -105,7 +105,7 @@ kotlin_test(
 
 maven_java_import(
     name = "tools.apksig",
-    jars = ["//tools/apksig:libapksig.jar"],
+    jars = ["//tools/apksig:libapksig-all.jar"],
     pom = ":apksig.pom",
     visibility = ["//visibility:public"],
 )
