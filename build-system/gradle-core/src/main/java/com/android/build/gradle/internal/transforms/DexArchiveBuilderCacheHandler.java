@@ -82,6 +82,12 @@ class DexArchiveBuilderCacheHandler {
     private final int minSdkVersion;
     private final boolean isDebuggable;
     @NonNull private final DexerTool dexer;
+    /**
+     * A cache session to share between all cache access. We can do that because each {@link
+     * DexArchiveBuilderCacheHandler} is used only by one DexArchiveBuilderTransform and all files
+     * we use as cache inputs are left unchanged during the DexArchiveBuilderTransform.
+     */
+    @NonNull private final FileCache.CacheSession cacheSession = FileCache.newSession();
 
     DexArchiveBuilderCacheHandler(
             @Nullable FileCache userLevelCache,
@@ -115,7 +121,8 @@ class DexArchiveBuilderCacheHandler {
                         minSdkVersion,
                         isDebuggable,
                         bootclasspath,
-                        classpath);
+                        classpath,
+                        cacheSession);
         return cache.cacheEntryExists(buildCacheInputs)
                 ? cache.getFileInCache(buildCacheInputs)
                 : null;
@@ -139,7 +146,8 @@ class DexArchiveBuilderCacheHandler {
                                 minSdkVersion,
                                 isDebuggable,
                                 cacheableItem.bootclasspath,
-                                cacheableItem.classpath);
+                                cacheableItem.classpath,
+                                cacheSession);
                 FileCache.QueryResult result =
                         cache.createFileInCacheIfAbsent(
                                 buildCacheInputs,
@@ -258,12 +266,14 @@ class DexArchiveBuilderCacheHandler {
             int minSdkVersion,
             boolean isDebuggable,
             @NonNull List<String> bootclasspath,
-            @NonNull List<String> classpath)
+            @NonNull List<String> classpath,
+            FileCache.CacheSession cacheSession)
             throws IOException {
         // To use the cache, we need to specify all the inputs that affect the outcome of a pre-dex
         // (see DxDexKey for an exhaustive list of these inputs)
         FileCache.Inputs.Builder buildCacheInputs =
-                new FileCache.Inputs.Builder(FileCache.Command.PREDEX_LIBRARY_TO_DEX_ARCHIVE);
+                new FileCache.Inputs.Builder(
+                        FileCache.Command.PREDEX_LIBRARY_TO_DEX_ARCHIVE, cacheSession);
 
         buildCacheInputs
                 .putFile(

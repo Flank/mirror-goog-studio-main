@@ -37,6 +37,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -811,6 +812,8 @@ public class FileCache {
 
             @NonNull private final Command command;
 
+            @NonNull private final CacheSession session;
+
             @NonNull
             private final LinkedHashMap<String, String> parameters = Maps.newLinkedHashMap();
 
@@ -821,7 +824,34 @@ public class FileCache {
              *     usually corresponds to a Gradle task)
              */
             public Builder(@NonNull Command command) {
+                this(
+                        command,
+                        new CacheSession() {
+
+                            @Override
+                            @NonNull
+                            String getDirectoryHash(@NonNull File directory) {
+                                return Builder.getDirectoryHash(directory);
+                            }
+
+                            @Override
+                            @NonNull
+                            String getRegularFileHash(@NonNull File regularFile) {
+                                return Builder.getFileHash(regularFile);
+                            }
+                        });
+            }
+
+            /**
+             * Creates a {@link Builder} instance to construct an {@link Inputs} object.
+             *
+             * @param command the command that identifies a file creator callback function (which
+             *     usually corresponds to a Gradle task)
+             * @param session The session the newly created Builder will belong to.
+             */
+            public Builder(@NonNull Command command, @NonNull CacheSession session) {
                 this.command = command;
+                this.session = session;
             }
 
             /**
@@ -871,11 +901,11 @@ public class FileCache {
                 Preconditions.checkArgument(file.isFile(), file + " is not a file.");
                 switch (fileProperties) {
                     case HASH:
-                        putString(name, getFileHash(file));
+                        putString(name, session.getRegularFileHash(file));
                         break;
                     case PATH_HASH:
                         putString(name + ".path", file.getPath());
-                        putString(name + ".hash", getFileHash(file));
+                        putString(name + ".hash", session.getRegularFileHash(file));
                         break;
                     case PATH_SIZE_TIMESTAMP:
                         putString(name + ".path", file.getPath());
@@ -903,11 +933,11 @@ public class FileCache {
                         directory.isDirectory(), directory + " is not a directory.");
                 switch (directoryProperties) {
                     case HASH:
-                        putString(name, getDirectoryHash(directory));
+                        putString(name, session.getDirectoryHash(directory));
                         break;
                     case PATH_HASH:
                         putString(name + ".path", directory.getPath());
-                        putString(name + ".hash", getDirectoryHash(directory));
+                        putString(name + ".hash", session.getDirectoryHash(directory));
                         break;
                     default:
                         throw new RuntimeException("Unknown enum " + directoryProperties);
@@ -1200,5 +1230,43 @@ public class FileCache {
 
         /** The cache entry exists and is corrupted. */
         CORRUPTED,
+    }
+
+    /**
+     * A common point between different cache operations occurring during one single task, the cache
+     * session allows to factorize some operations, For example file hash are computed only once per
+     * session. Files used as input of the cache operations are supposed to stay unchanged during
+     * the usage of one {@link CacheSession} instance.
+     */
+    public abstract static class CacheSession {
+        private CacheSession() {}
+
+        @NonNull
+        abstract String getDirectoryHash(@NonNull File directory);
+
+        @NonNull
+        abstract String getRegularFileHash(@NonNull File regularFile);
+    }
+
+    /** Create a new {@link CacheSession}. */
+    public static CacheSession newSession() {
+        return new CacheSession() {
+            @NonNull
+            private final ConcurrentHashMap<File, String> pathHashes = new ConcurrentHashMap<>();
+
+            @Override
+            @NonNull
+            String getDirectoryHash(@NonNull File directory) {
+                return pathHashes.computeIfAbsent(
+                        directory, dir -> Inputs.Builder.getDirectoryHash(dir));
+            }
+
+            @Override
+            @NonNull
+            String getRegularFileHash(@NonNull File regularFile) {
+                return pathHashes.computeIfAbsent(
+                        regularFile, file -> Inputs.Builder.getFileHash(file));
+            }
+        };
     }
 }

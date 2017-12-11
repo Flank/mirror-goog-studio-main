@@ -1625,7 +1625,84 @@ public class FileCacheTest {
         assertThat(FileCache.Inputs.Builder.getDirectoryHash(fooDir))
                 .isEqualTo(FileCache.Inputs.Builder.getDirectoryHash(barDir));
     }
-    
+
+    @Test
+    public void testCacheSession() throws Exception {
+        FileCache.CacheSession session = FileCache.newSession();
+        FileCache.CacheSession otherSession = FileCache.newSession();
+
+        // Test file with some contents
+        File inputFile = temporaryFolder.newFile();
+        writeStringToFile("Some text", inputFile);
+        String fileInitialKey =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST, session)
+                        .putFile("file", inputFile, FileCache.FileProperties.HASH)
+                        .build()
+                        .getKey();
+
+        // Change file content
+        writeStringToFile("Some different text", inputFile);
+
+        // Take key again with different sessions.
+        String changedFileKeyWithoutSession =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFile("file", inputFile, FileCache.FileProperties.HASH)
+                        .build()
+                        .getKey();
+        String changedFileKeyWithSession =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST, session)
+                        .putFile("file", inputFile, FileCache.FileProperties.HASH)
+                        .build()
+                        .getKey();
+        String changedFileKeyWithOtherSession =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST, otherSession)
+                        .putFile("file", inputFile, FileCache.FileProperties.HASH)
+                        .build()
+                        .getKey();
+
+        // File was changed so key must change unless we reuse the same session.
+        assertThat(changedFileKeyWithoutSession).isNotEqualTo(fileInitialKey);
+        assertThat(changedFileKeyWithSession).isEqualTo(fileInitialKey);
+        assertThat(changedFileKeyWithOtherSession).isNotEqualTo(fileInitialKey);
+
+        // reset sessions
+        session = FileCache.newSession();
+        otherSession = FileCache.newSession();
+
+        // Test directory with some contents
+        File inputDir = temporaryFolder.newFolder();
+        writeSampleContentsToDirectory(inputDir);
+        String dirInitialKey =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST, session)
+                        .putDirectory("dir", inputDir, FileCache.DirectoryProperties.HASH)
+                        .build()
+                        .getKey();
+
+        // change directory structure
+        java.nio.file.Files.createDirectory(new File(inputDir, "additionalDirectory").toPath());
+
+        String changedDirKeyWithoutSession =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putDirectory("dir", inputDir, FileCache.DirectoryProperties.HASH)
+                        .build()
+                        .getKey();
+        String changedDirKeyWithSession =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST, session)
+                        .putDirectory("dir", inputDir, FileCache.DirectoryProperties.HASH)
+                        .build()
+                        .getKey();
+        String changedDirKeyWithOtherSession =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST, otherSession)
+                        .putDirectory("dir", inputDir, FileCache.DirectoryProperties.HASH)
+                        .build()
+                        .getKey();
+
+        // Directory content was changed so key must change unless we reuse the same session.
+        assertThat(changedDirKeyWithoutSession).isNotEqualTo(dirInitialKey);
+        assertThat(changedDirKeyWithSession).isEqualTo(dirInitialKey);
+        assertThat(changedDirKeyWithOtherSession).isNotEqualTo(dirInitialKey);
+    }
+
     private static void writeStringToFile(@NonNull String content, @NonNull File file)
             throws IOException {
         Files.asCharSink(file, StandardCharsets.UTF_8).write(content);
