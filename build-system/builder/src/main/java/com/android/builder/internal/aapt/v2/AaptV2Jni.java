@@ -188,12 +188,12 @@ public class AaptV2Jni extends AbstractAapt {
                 }
             }
         } catch (IOException e) {
-            throw new AaptException(e, "Unexpected error handling AAPT output");
+            throw new AaptException("Unexpected error handling AAPT output", e);
         }
         try {
             processOutputHandler.handleOutput(output);
         } catch (ProcessException e) {
-            throw new AaptException(e, "Unexpected error handling AAPT output");
+            throw new AaptException("Unexpected error handling AAPT output", e);
         }
     }
 

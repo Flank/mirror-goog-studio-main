@@ -396,11 +396,11 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
             futureResult = cruncher.compile(cruncherKey, request, null);
         } catch (ResourceCompilationException e) {
             throw new AaptException(
-                    e,
                     String.format(
                             "Failed to crunch file '%s' into '%s'",
                             request.getInput().getAbsolutePath(),
-                            compileOutputFor(request).getAbsolutePath()));
+                            compileOutputFor(request).getAbsolutePath()),
+                    e);
         }
         futureResult.addListener(
                 () -> {
