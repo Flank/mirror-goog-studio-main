@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import Lpackage.AnyClassWithMethodInvocation;
 import com.android.build.gradle.internal.incremental.fixture.VerifierHarness;
 import com.google.common.collect.Lists;
+import com.kotlin.JvmOverloadsTest;
 import com.verifier.tests.AddClassAnnotation;
 import com.verifier.tests.AddInstanceField;
 import com.verifier.tests.AddInterfaceImplementation;
@@ -516,4 +517,11 @@ public class InstantRunVerifierTest {
                 harness.verify(com.kotlin.MyDataClass.class, "verifier"));
     }
 
+    @Test
+    public void testJvmOverloadsConstructorChange() throws IOException {
+        assertEquals(COMPATIBLE, harness.verify(JvmOverloadsTest.class, null));
+        assertEquals(
+                InstantRunVerifierStatus.SYNTHETIC_CONSTRUCTOR_CHANGE,
+                harness.verify(JvmOverloadsTest.class, "verifier"));
+    }
 }

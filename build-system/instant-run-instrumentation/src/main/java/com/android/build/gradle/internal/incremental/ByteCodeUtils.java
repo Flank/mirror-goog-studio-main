@@ -27,6 +27,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.Method;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.util.Textifier;
 import org.objectweb.asm.util.TraceMethodVisitor;
@@ -204,5 +205,31 @@ public class ByteCodeUtils {
         }
 
         return Optional.of(Joiner.on('.').join(parts.subList(0, parts.size() - 1)));
+    }
+
+    /**
+     * Returns true if a method is annotated with the passed annotation, false otherwise.
+     *
+     * @param method the asm method object.
+     * @param annotationInternalName annotation internal name like Ljava/lang/Annotation;
+     */
+    public static boolean isAnnotatedWith(MethodNode method, String annotationInternalName) {
+        List<AnnotationNode> annotations = (List<AnnotationNode>) method.invisibleAnnotations;
+        if (annotations != null && isAnnotationPartOf(annotations, annotationInternalName)) {
+            return true;
+        }
+        annotations = (List<AnnotationNode>) method.visibleAnnotations;
+        return annotations != null && isAnnotationPartOf(annotations, annotationInternalName);
+    }
+
+    private static boolean isAnnotationPartOf(
+            @NonNull List<AnnotationNode> annotations, @NonNull String annotationInternalName) {
+
+        for (AnnotationNode annotation : annotations) {
+            if (annotation.desc.equals(annotationInternalName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
