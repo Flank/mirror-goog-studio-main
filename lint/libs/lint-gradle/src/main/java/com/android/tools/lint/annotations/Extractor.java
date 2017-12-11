@@ -104,6 +104,7 @@ import java.util.zip.ZipEntry;
 import org.jetbrains.uast.UAnnotated;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UAnonymousClass;
+import org.jetbrains.uast.UBinaryExpressionWithType;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UClass;
 import org.jetbrains.uast.UClassInitializer;
@@ -1916,6 +1917,13 @@ public class Extractor {
                 if (appendLiteralValue(sb, literalValue)) {
                     return true;
                 }
+            } else if (expression instanceof UBinaryExpressionWithType) {
+                if (UastExpressionUtils.isTypeCast(expression)) {
+                    UBinaryExpressionWithType cast = (UBinaryExpressionWithType) expression;
+                    UExpression operand = cast.getOperand();
+                    return appendExpression(sb, operand);
+                }
+                return false;
             }
 
             // For example, binary expressions like 3 + 4

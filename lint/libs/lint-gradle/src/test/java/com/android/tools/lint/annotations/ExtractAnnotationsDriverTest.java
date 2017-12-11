@@ -447,7 +447,7 @@ public class ExtractAnnotationsDriverTest {
             + "    @Keep"
             + "    public void testIntDef(int arg) {\n"
             + "    }\n"
-            + "    @IntDef(value = {STYLE_NORMAL, STYLE_NO_TITLE, STYLE_NO_FRAME, STYLE_NO_INPUT, 3, 3 + 1}, flag=true)\n"
+            + "    @IntDef(value = {(int)STYLE_NORMAL, STYLE_NO_TITLE, STYLE_NO_FRAME, (int)STYLE_NO_INPUT, 3, 3 + 1}, flag=true)\n"
             + "    @Retention(RetentionPolicy.SOURCE)\n"
             + "    private @interface DialogFlags {}\n"
             + "\n"
