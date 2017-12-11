@@ -83,6 +83,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.uast.UBlockExpression;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
@@ -1229,6 +1230,11 @@ public class GradleDetector extends Detector implements GradleScanner {
 
     @VisibleForTesting
     static GoogleMavenRepository googleMavenRepository;
+
+    @TestOnly
+    public static void cleanUp() {
+        googleMavenRepository = null;
+    }
 
     @Nullable
     private static GradleVersion getGoogleMavenRepoVersion(@NonNull Context context,
