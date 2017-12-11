@@ -560,7 +560,7 @@ public class ActdProfileUploader implements ProfileUploader {
                          * wrong.
                          */
                         a.value = Math.addExact(a.value, b.value);
-                        Preconditions.checkArgument(a.value > 0, "negative duration found");
+                        Preconditions.checkArgument(a.value >= 0, "negative duration found");
 
                         return a;
                     });
