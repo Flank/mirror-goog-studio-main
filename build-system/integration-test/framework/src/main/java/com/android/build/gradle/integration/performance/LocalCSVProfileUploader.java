@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.android.utils.FileUtils;
@@ -36,44 +36,48 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LocalUploader implements ProfileUploader {
-    public static final LocalUploader INSTANCE = new LocalUploader();
+public class LocalCSVProfileUploader implements ProfileUploader {
+    private final File dir;
 
-    private static final String ENVIRONMENT_VARIABLE = "LOCAL_BENCHMARK_LOCATION";
+    @VisibleForTesting
+    public static LocalCSVProfileUploader toDirectory(File dir) {
+        return new LocalCSVProfileUploader(dir);
+    }
 
-    private LocalUploader() {}
+    public static LocalCSVProfileUploader fromEnvironment() {
+        return new LocalCSVProfileUploader(System.getenv("LOCAL_BENCHMARK_LOCATION"));
+    }
 
-    @Nullable
-    public File getOutputFolder() {
-        String folderLocation = System.getenv(ENVIRONMENT_VARIABLE);
-        if (folderLocation == null) {
-            return null;
-        }
-        return new File(folderLocation);
+    private LocalCSVProfileUploader(String dirPath) {
+        this(dirPath == null ? null : new File(dirPath));
+    }
+
+    private LocalCSVProfileUploader(File dir) {
+        this.dir = dir;
     }
 
     @Override
     public void uploadData(@NonNull List<Logging.GradleBenchmarkResult> benchmarkResults)
             throws IOException {
+        if (this.dir == null) {
+            return;
+        }
+
         Preconditions.checkNotNull(benchmarkResults);
         Preconditions.checkArgument(!benchmarkResults.isEmpty(), "got an empty list of results");
 
         // Create a CSV file.
-        File folder = getOutputFolder();
-        if (folder == null) {
-            return;
+        if (!dir.exists()) {
+            FileUtils.mkdirs(dir);
         }
-        if (!folder.exists()) {
-            FileUtils.mkdirs(folder);
-        }
-        if (folder.exists() && !folder.isDirectory()) {
-            FileUtils.delete(folder);
-            FileUtils.mkdirs(folder);
+        if (dir.exists() && !dir.isDirectory()) {
+            FileUtils.delete(dir);
+            FileUtils.mkdirs(dir);
         }
         String fileName = "bench_" + Instant.now().toString().replace(':', '_') + ".csv";
 
         try (PrintWriter printWriter =
-                new PrintWriter(new FileOutputStream(new File(folder, fileName)))) {
+                new PrintWriter(new FileOutputStream(new File(dir, fileName)))) {
             for (Logging.GradleBenchmarkResult benchmarkResult : benchmarkResults) {
                 // Build a human-readable map of project and variant names.
                 Map<Long, Pair<String, Map<Long, String>>> projects = new HashMap<>();

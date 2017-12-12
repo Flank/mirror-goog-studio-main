@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.*;
 
 import com.android.build.gradle.integration.common.fixture.RandomGradleBenchmark;
-import com.android.build.gradle.integration.performance.LocalUploader;
+import com.android.build.gradle.integration.performance.LocalCSVProfileUploader;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
@@ -35,16 +35,17 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class LocalUploaderTest {
+public class LocalCSVProfileUploaderTest {
     private static final Pattern pattern = Pattern.compile("bench_.*\\.csv");
-    private LocalUploader localUploader;
+    private LocalCSVProfileUploader localUploader;
 
     @Rule public final TemporaryFolder testFolder = new TemporaryFolder();
+    private File outDir;
 
     @Before
     public void setUp() throws IOException {
-        localUploader = spy(LocalUploader.INSTANCE);
-        doReturn(testFolder.newFolder()).when(localUploader).getOutputFolder();
+        outDir = testFolder.newFolder();
+        localUploader = LocalCSVProfileUploader.toDirectory(outDir);
     }
 
     @Test
@@ -54,9 +55,7 @@ public class LocalUploaderTest {
 
         localUploader.uploadData(ImmutableList.of(benchmarkResult));
 
-        File outputFolder = localUploader.getOutputFolder();
-        assertThat(outputFolder).isNotNull();
-        List<File> benchFiles = FileUtils.find(outputFolder, pattern);
+        List<File> benchFiles = FileUtils.find(outDir, pattern);
         assertThat(benchFiles).hasSize(1);
 
         List<String> lines = Files.readAllLines(benchFiles.get(0).toPath());
