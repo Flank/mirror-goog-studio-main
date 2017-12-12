@@ -34,6 +34,8 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.Preconditions;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -55,6 +57,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -72,6 +75,13 @@ public class ActdProfileUploader implements ProfileUploader {
      * down it counts as a 100% regression/improvement. These are noisy, and we want to ignore them.
      */
     public static final long BENCHMARK_VALUE_THRESHOLD_MILLIS = 50;
+
+    /**
+     * Caches the responses we get back from buildbot. They should never change once produced, so
+     * this should be a safe thing to do.
+     */
+    private static final Cache<String, BuildbotResponse> BUILD_CACHE =
+            CacheBuilder.newBuilder().initialCapacity(16).maximumSize(16).build();
 
     @NonNull private static final String ACTD_PROJECT_ID = "SamProjectTest3";
     @NonNull private static final String ACTD_ADD_BUILD_URL = "/apis/addBuild";
@@ -257,7 +267,7 @@ public class ActdProfileUploader implements ProfileUploader {
      */
     @VisibleForTesting
     @NonNull
-    public Infos infos(long buildId) throws IOException {
+    public Infos infos(long buildId) throws ExecutionException {
         Infos infos = new Infos();
 
         if (mode == Mode.BACKFILL) {
@@ -315,8 +325,14 @@ public class ActdProfileUploader implements ProfileUploader {
     }
 
     @NonNull
-    private BuildbotResponse getBuildInfo(long buildId) throws IOException {
-        return jsonGet(buildbotBuildInfoUrl(buildId), BuildbotResponse.class);
+    private BuildbotResponse getBuildInfo(long buildId) throws ExecutionException {
+        String url = buildbotBuildInfoUrl(buildId);
+        return BUILD_CACHE.get(url, () -> jsonGet(url, BuildbotResponse.class));
+    }
+
+    @VisibleForTesting
+    public static void clearCache() {
+        BUILD_CACHE.invalidateAll();
     }
 
     /**
@@ -325,7 +341,7 @@ public class ActdProfileUploader implements ProfileUploader {
      * <p>If the build was triggered manually, this method will return null.
      */
     @Nullable
-    private Change getChange(long buildId) throws IOException {
+    private Change getChange(long buildId) throws ExecutionException {
         BuildbotResponse res = getBuildInfo(buildId);
 
         // When a build is manually triggered, there is no source stamp and thus no changes.
@@ -486,8 +502,8 @@ public class ActdProfileUploader implements ProfileUploader {
                                                     Change change;
                                                     try {
                                                         change = getChange(sample.buildId);
-                                                    } catch (IOException e) {
-                                                        throw new UncheckedIOException(e);
+                                                    } catch (ExecutionException e) {
+                                                        throw new RuntimeException(e);
                                                     }
                                                     sample.url =
                                                             change == null ? "" : change.revlink;
@@ -571,7 +587,7 @@ public class ActdProfileUploader implements ProfileUploader {
 
     @VisibleForTesting
     @NonNull
-    public BuildRequest buildRequest(long buildId) throws IOException {
+    public BuildRequest buildRequest(long buildId) throws ExecutionException {
         BuildRequest buildReq = new BuildRequest();
         buildReq.projectId = actdProjectId;
         buildReq.build.infos = infos(buildId);
@@ -628,8 +644,8 @@ public class ActdProfileUploader implements ProfileUploader {
                         buildId -> {
                             try {
                                 return buildRequest(buildId);
-                            } catch (IOException e) {
-                                throw new UncheckedIOException(e);
+                            } catch (ExecutionException e) {
+                                throw new RuntimeException(e);
                             }
                         })
                 .collect(Collectors.toList());

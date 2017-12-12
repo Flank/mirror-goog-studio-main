@@ -34,6 +34,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,6 +67,7 @@ public class ActdProfileUploaderTest {
                                 ActdProfileUploader.Mode.NORMAL));
 
         doReturn(buildInfo).when(uploader).jsonGet(anyString(), eq(BuildbotResponse.class));
+        ActdProfileUploader.clearCache();
     }
 
     private static void assertValidInfos(@Nullable Infos infos) {
@@ -91,12 +93,12 @@ public class ActdProfileUploaderTest {
     }
 
     @Test
-    public void infos() throws IOException {
+    public void infos() throws ExecutionException {
         assertValidInfos(uploader.infos(1));
     }
 
     @Test
-    public void infosManualTrigger() throws IOException {
+    public void infosManualTrigger() throws IOException, ExecutionException {
         doReturn(new BuildbotResponse())
                 .when(uploader)
                 .jsonGet(anyString(), eq(BuildbotResponse.class));
@@ -116,8 +118,8 @@ public class ActdProfileUploaderTest {
         try {
             uploader.infos(1);
             fail("uploader.infos(1) should have thrown an exception");
-        } catch (IOException e) {
-            assertThat(e).isInstanceOf(SocketException.class);
+        } catch (ExecutionException e) {
+            assertThat(e.getCause()).isInstanceOf(SocketException.class);
         }
 
         doThrow(SocketTimeoutException.class)
@@ -126,8 +128,8 @@ public class ActdProfileUploaderTest {
         try {
             uploader.infos(1);
             fail("uploader.infos(1) should have thrown an exception");
-        } catch (IOException e) {
-            assertThat(e).isInstanceOf(SocketTimeoutException.class);
+        } catch (ExecutionException e) {
+            assertThat(e.getCause()).isInstanceOf(SocketTimeoutException.class);
         }
     }
 
@@ -193,7 +195,7 @@ public class ActdProfileUploaderTest {
     }
 
     @Test
-    public void buildRequest() throws IOException {
+    public void buildRequest() throws ExecutionException {
         ActdProfileUploader.BuildRequest buildRequest = uploader.buildRequest(1);
 
         assertThat(buildRequest.build).isNotNull();
