@@ -53,7 +53,7 @@ data class Benchmark(
          * a subproject until _after_ project.apply has been called, so if you do need to do that
          * you'll have to supply a postApplyProject function and do it in there.
          */
-        var project = projectFactory(GradleTestProject.builder())
+        var project = projectFactory(GradleTestProject.builder().enableProfileOutput())
         var profileLocation: Path? = null
 
         val statement =
@@ -77,7 +77,7 @@ data class Benchmark(
                                 .with(BooleanOption.ENABLE_D8, scenario.useD8())
                                 .withUseDexArchive(scenario.useDexArchive())
 
-                        val capturer = ProfileCapturer(project.profileDirectory)
+                        val capturer = ProfileCapturer(project)
                         val recorder = BenchmarkRecorder(capturer)
                         val recordCalled = AtomicBoolean(false)
                         val record = { r: () -> Unit ->

@@ -21,15 +21,12 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
-import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.instant.InstantRunTestUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
-import java.io.File
 import java.nio.file.Paths
-import java.util.concurrent.ThreadLocalRandom
 import java.util.function.Supplier
 
 object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
@@ -167,7 +164,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                 projectFactory = { projectBuilder ->
                     projectBuilder
                         .fromExternalProject("AntennaPod")
-                        .withRelativeProfileDirectory(
+                        .enableProfileOutputInDirectory(
                                 Paths.get("AntennaPod", "build", "android-profile"))
                         .withHeap("1536M")
                         .create()

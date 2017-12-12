@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTe
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.testutils.TestUtils;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -35,6 +34,8 @@ import java.util.List;
 
 public final class GradleTestProjectBuilder {
 
+    public static final Path DEFAULT_PROFILE_DIR = Paths.get("build", "android-profile");
+
     @Nullable private String name;
     @Nullable private TestProject testProject = null;
     @Nullable private String targetGradleVersion;
@@ -42,7 +43,7 @@ public final class GradleTestProjectBuilder {
     private boolean withoutNdk = false;
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
     @Nullable private String heapSize;
-    @NonNull private Path relativeProfileDirectory = Paths.get("build", "android-profile");
+    @Nullable private Path profileDirectory;
     private boolean withDependencyChecker = true;
     // Indicates if we need to create a project without setting cmake.dir in local.properties.
     private boolean withCmakeDirInLocalProp = false;
@@ -67,7 +68,7 @@ public final class GradleTestProjectBuilder {
                 gradleProperties,
                 heapSize,
                 buildToolsVersion,
-                relativeProfileDirectory,
+                profileDirectory,
                 cmakeVersion,
                 withCmakeDirInLocalProp,
                 withDeviceProvider,
@@ -200,14 +201,25 @@ public final class GradleTestProjectBuilder {
         return this;
     }
 
+
     /**
-     * Sets the location to look for profiles. Defaults to build/android-profile
-     *
-     * <p>This is useful for projects where the root directory is not the root gradle project.
+     * Enable profile output generation. Typically used in benchmark tests. By default, places the
+     * outputs in build/android-profile.
      */
-    public GradleTestProjectBuilder withRelativeProfileDirectory(
-            @NonNull Path relativeProfileDirectory) {
-        this.relativeProfileDirectory = relativeProfileDirectory;
+    public GradleTestProjectBuilder enableProfileOutput() {
+        this.profileDirectory = DEFAULT_PROFILE_DIR;
+        return this;
+    }
+
+    /**
+     * Enable profile output generation in the given folder. Typically used in benchmark tests.
+     *
+     * <p>Allows both absolute and relative paths. If a relative path is given, the path will be
+     * resolved against the root directory of the project.
+     */
+    public GradleTestProjectBuilder enableProfileOutputInDirectory(
+            @Nullable Path profileDirectory) {
+        this.profileDirectory = profileDirectory;
         return this;
     }
 

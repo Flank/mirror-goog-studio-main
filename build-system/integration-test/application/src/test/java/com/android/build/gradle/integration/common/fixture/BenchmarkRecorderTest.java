@@ -45,7 +45,9 @@ public class BenchmarkRecorderTest {
     private final List<GradleBenchmarkResult> benchmarkResults = new ArrayList<>();
 
     HelloWorldApp app = KotlinHelloWorldApp.forPlugin("com.android.application");
-    @Rule public GradleTestProject project = GradleTestProject.builder().fromTestApp(app).create();
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestApp(app).enableProfileOutput().create();
 
     BenchmarkRecorder recorder;
 
@@ -56,8 +58,7 @@ public class BenchmarkRecorderTest {
     public void setUp() throws Exception {
         recorder =
                 new BenchmarkRecorder(
-                        new ProfileCapturer(project.getProfileDirectory()),
-                        Arrays.asList(benchmarkResults::addAll));
+                        new ProfileCapturer(project), Arrays.asList(benchmarkResults::addAll));
     }
 
     @Test

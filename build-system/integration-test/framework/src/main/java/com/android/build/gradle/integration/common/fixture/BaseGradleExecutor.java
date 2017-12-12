@@ -91,6 +91,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
             @NonNull Path projectDirectory,
             @NonNull Path buildDotGradleFile,
+            @Nullable Path profileDirectory,
             @Nullable String heapSize) {
         this(
                 projectConnection,
@@ -98,6 +99,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                 projectDirectory,
                 buildDotGradleFile,
                 heapSize,
+                profileDirectory,
                 false);
     }
 
@@ -107,6 +109,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull Path projectDirectory,
             @NonNull Path buildDotGradleFile,
             @Nullable String heapSize,
+            @Nullable Path profileDirectory,
             boolean disableRetryLogic) {
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
@@ -116,6 +119,10 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
         this.heapSize = heapSize;
         with(StringOption.BUILD_CACHE_DIR, getBuildCacheDir().getAbsolutePath());
+
+        if (profileDirectory != null) {
+            with(StringOption.PROFILE_OUTPUT_DIR, profileDirectory.toString());
+        }
         this.disableRetryLogic = disableRetryLogic;
     }
 

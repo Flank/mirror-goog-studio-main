@@ -27,12 +27,14 @@ import org.junit.Test;
 
 public class ProfileCapturerTest {
     HelloWorldApp app = HelloWorldApp.forPlugin("com.android.application");
-    @Rule public GradleTestProject project = GradleTestProject.builder().fromTestApp(app).create();
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestApp(app).enableProfileOutput().create();
     ProfileCapturer capturer;
 
     @Before
     public void setUp() throws Exception {
-        capturer = new ProfileCapturer(project.getProfileDirectory());
+        capturer = new ProfileCapturer(project);
     }
 
     @Test

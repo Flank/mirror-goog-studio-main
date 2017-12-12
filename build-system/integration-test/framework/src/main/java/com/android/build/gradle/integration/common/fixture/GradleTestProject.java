@@ -245,7 +245,7 @@ public final class GradleTestProject implements TestRule {
 
     @Nullable private final String buildToolsVersion;
 
-    @NonNull private final Path relativeProfileDirectory;
+    @Nullable private final Path profileDirectory;
 
     @Nullable private String heapSize;
 
@@ -265,7 +265,7 @@ public final class GradleTestProject implements TestRule {
             @NonNull Collection<String> gradleProperties,
             @Nullable String heapSize,
             @Nullable String buildToolsVersion,
-            @NonNull Path relativeProfileDirectory,
+            @Nullable Path profileDirectory,
             @NonNull String cmakeVersion,
             boolean withCmake,
             boolean withDeviceProvider,
@@ -286,7 +286,7 @@ public final class GradleTestProject implements TestRule {
         this.buildToolsVersion = buildToolsVersion;
         this.openConnections = Lists.newArrayList();
         this.rootProject = this;
-        this.relativeProfileDirectory = relativeProfileDirectory;
+        this.profileDirectory = profileDirectory;
         this.cmakeVersion = cmakeVersion;
         this.withCmakeDirInLocalProp = withCmake;
     }
@@ -313,7 +313,7 @@ public final class GradleTestProject implements TestRule {
         openConnections = null;
         buildToolsVersion = null;
         this.rootProject = rootProject;
-        this.relativeProfileDirectory = rootProject.relativeProfileDirectory;
+        this.profileDirectory = rootProject.profileDirectory;
         this.cmakeVersion = rootProject.cmakeVersion;
         this.withDeviceProvider = rootProject.withDeviceProvider;
         this.withSdk = rootProject.withSdk;
@@ -837,10 +837,19 @@ public final class GradleTestProject implements TestRule {
         return FileUtils.join(getTestDir(), "build", AndroidProject.FD_GENERATED);
     }
 
-    /** Returns the directory to look for profiles in. Defaults to build/profile/ */
-    @NonNull
+    /**
+     * Returns the directory in which profiles will be generated. A null value indicates that
+     * profiles may not be generated, though setting {@link
+     * com.android.build.gradle.options.StringOption#PROFILE_OUTPUT_DIR} in gradle.properties will
+     * induce profile generation without affecting this return value
+     */
+    @Nullable
     public Path getProfileDirectory() {
-        return rootProject.getTestDir().toPath().resolve(relativeProfileDirectory);
+        if (profileDirectory == null || profileDirectory.isAbsolute()) {
+            return profileDirectory;
+        } else {
+            return rootProject.getTestDir().toPath().resolve(profileDirectory);
+        }
     }
 
     /**

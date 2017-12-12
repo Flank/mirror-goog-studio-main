@@ -56,6 +56,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                 project::setLastBuildResult,
                 project.getTestDir().toPath(),
                 project.getBuildFile().toPath(),
+                project.getProfileDirectory(),
                 project.getHeapSize());
     }
 

@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.common.fixture;
 
 import com.android.annotations.NonNull;
 import com.android.builder.utils.ExceptionRunnable;
+import com.google.common.base.Preconditions;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -56,7 +57,11 @@ public final class ProfileCapturer {
     @NonNull private final DirectoryPoller poller;
     @NonNull private Collection<Path> lastPoll = Collections.emptySet();
 
-    public ProfileCapturer(@NonNull Path profileDirectory) throws IOException {
+    public ProfileCapturer(@NonNull GradleTestProject project) throws IOException {
+        Preconditions.checkArgument(
+                project.getProfileDirectory() != null,
+                "Profile output must be enabled by the GradleTestProject to use ProfileCapturer. Use GradleTestProjectBuilder::enableProfileOutput to do so."); //FIXME more information
+        Path profileDirectory = project.getProfileDirectory();
         this.poller = new DirectoryPoller(profileDirectory, ".rawproto");
     }
 
