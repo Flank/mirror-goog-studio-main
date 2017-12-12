@@ -11,7 +11,7 @@ gradle_build(
         "//prebuilts/studio/sdk:build-tools/latest",
         "//tools/buildSrc/base:version.properties",
     ] + glob(["library/**"]),
-    gradle_version = "4.4-rc-3",
+    gradle_version = "4.4",
     output_file = "outputs/aar/library-release.aar",
     output_file_source = "outputs/aar/library-release.aar",
     repos = [
