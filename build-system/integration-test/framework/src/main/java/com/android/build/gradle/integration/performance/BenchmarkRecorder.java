@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -215,11 +216,6 @@ public final class BenchmarkRecorder {
         List<GradleBenchmarkResult> filteredResults = strategy.filter(results);
         Preconditions.checkArgument(!results.isEmpty(), "UploadStrategy returned no results");
 
-        System.out.println(
-                "[BenchmarkRecorder]: scheduling "
-                        + filteredResults.size()
-                        + " GradleBenchmarkResult protos for asynchronous upload as a single upload task");
-
         for (ProfileUploader uploader : uploaders) {
             synchronized (BenchmarkRecorder.class) {
                 OUTSTANDING_UPLOADS.add(
@@ -238,14 +234,13 @@ public final class BenchmarkRecorder {
     public static void awaitUploads(long timeout, @NonNull TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
         synchronized (BenchmarkRecorder.class) {
-            System.out.println(
-                    "[BenchmarkRecorder]: waiting for "
-                            + OUTSTANDING_UPLOADS.size()
-                            + " upload tasks to complete");
+            long start = System.nanoTime();
             for (Future<?> future : OUTSTANDING_UPLOADS) {
                 future.get(timeout, unit);
             }
             OUTSTANDING_UPLOADS.clear();
+            Duration elapsed = Duration.ofNanos(System.nanoTime() - start);
+            System.out.println("[BenchmarkRecorder]: spent " + elapsed + " waiting for uploads");
         }
     }
 
