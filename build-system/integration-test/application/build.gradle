@@ -84,7 +84,8 @@ def testEnvironment =
                     key.startsWith("LANG") ||
                     key.startsWith("BUILDBOT_") ||
                     // For local benchmarking
-                    key == "LOCAL_BENCHMARK_LOCATION"
+                    key == "LOCAL_BENCHMARK_LOCATION" ||
+                    key == "LOCAL_PROTO_BENCHMARK_LOCATION"
         }
 
 testEnvironment << [

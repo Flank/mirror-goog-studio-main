@@ -116,7 +116,8 @@ public final class BenchmarkRecorder {
                 Arrays.asList(
                         GoogleStorageProfileUploader.INSTANCE,
                         ActdProfileUploader.fromEnvironment(),
-                        LocalCSVProfileUploader.fromEnvironment());
+                        LocalCSVProfileUploader.fromEnvironment(),
+                        LocalProtoProfileUploader.fromEnvironment());
 
         return Collections.unmodifiableList(uploaders);
     }
