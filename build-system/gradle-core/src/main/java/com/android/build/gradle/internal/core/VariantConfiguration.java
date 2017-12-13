@@ -1156,7 +1156,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         Set<File> fileSet = Sets.newHashSetWithExpectedSize(numFiles);
-        fileLists.forEach(files -> fileSet.addAll(files));
+        fileLists.forEach(fileSet::addAll);
         return fileSet;
     }
 
@@ -1300,17 +1300,17 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public Collection<File> getRenderscriptSourceList() {
-        return getSourceFiles(p -> p.getRenderscriptDirectories());
+        return getSourceFiles(SourceProvider::getRenderscriptDirectories);
     }
 
     @NonNull
     public Collection<File> getAidlSourceList() {
-        return getSourceFiles(p -> p.getAidlDirectories());
+        return getSourceFiles(SourceProvider::getAidlDirectories);
     }
 
     @NonNull
     public Collection<File> getJniSourceList() {
-        return getSourceFiles(p -> p.getCDirectories());
+        return getSourceFiles(SourceProvider::getCDirectories);
     }
 
     /**

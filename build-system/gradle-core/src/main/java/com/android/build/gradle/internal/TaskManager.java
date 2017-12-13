@@ -1497,10 +1497,11 @@ public abstract class TaskManager {
         processJavaResourcesTask.dependsOn(variantScope.getPreBuildTask());
 
         // create the task outputs for others to consume
-        variantScope.addTaskOutput(
-                VariantScope.TaskOutputType.JAVA_RES,
-                destinationDir,
-                processJavaResourcesTask.getName());
+        FileCollection collection =
+                variantScope.addTaskOutput(
+                        VariantScope.TaskOutputType.JAVA_RES,
+                        destinationDir,
+                        processJavaResourcesTask.getName());
 
         // create the stream generated from this task
         variantScope
@@ -1509,8 +1510,7 @@ public abstract class TaskManager {
                         OriginalStream.builder(project, "processed-java-res")
                                 .addContentType(DefaultContentType.RESOURCES)
                                 .addScope(Scope.PROJECT)
-                                .setFolder(destinationDir)
-                                .setDependency(processJavaResourcesTask.getName())
+                                .setFileCollection(collection)
                                 .build());
     }
 
