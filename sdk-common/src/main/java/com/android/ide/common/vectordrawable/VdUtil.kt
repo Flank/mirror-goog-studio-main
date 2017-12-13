@@ -45,3 +45,42 @@ fun getCoordinateFormat(maxViewportSize: Float): DecimalFormat {
   return format
 }
 
+// Workaround for https://youtrack.jetbrains.com/issue/KT-4749
+private const val ALPHA_MASK = 0xFF000000.toInt()
+
+/**
+ * Parses a color value in #AARRGGBB format.
+ *
+ * @param color the color value string
+ * @return the integer color value
+ */
+fun parseColorValue(color: String): Int {
+  return when (color.length) {
+    7 -> {
+      // #RRGGBB
+      Integer.parseUnsignedInt(color.substring(1), 16) or ALPHA_MASK
+    }
+    9 -> {
+      // #AARRGGBB
+      Integer.parseUnsignedInt(color.substring(1), 16)
+    }
+    4 -> {
+      // #RGB
+      val v = Integer.parseUnsignedInt(color.substring(1), 16)
+      var k = (v shr 8 and 0xF) * 0x110000
+      k = k or (v shr 4 and 0xF) * 0x1100
+      k = k or (v and 0xF) * 0x11
+      k or ALPHA_MASK
+    }
+    5 -> {
+      // #ARGB
+      val v = Integer.parseUnsignedInt(color.substring(1), 16)
+      var k = (v shr 12 and 0xF) * 0x11000000
+      k = k or (v shr 8 and 0xF) * 0x110000
+      k = k or (v shr 4 and 0xF) * 0x1100
+      k = k or (v and 0xF) * 0x11
+      k or ALPHA_MASK
+    }
+    else -> ALPHA_MASK
+  }
+}

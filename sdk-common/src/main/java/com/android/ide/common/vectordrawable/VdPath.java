@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
+
 import com.android.SdkConstants;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableMap;
@@ -432,41 +434,6 @@ class VdPath extends VdElement {
         }
     }
 
-    /** Returns color value in #AARRGGBB format. */
-    protected static int calculateColor(String value) {
-        int len = value.length();
-        int ret;
-        int k = 0;
-        switch (len) {
-            case 7: // #RRGGBB
-                ret = (int) Long.parseLong(value.substring(1), 16);
-                ret |= 0xFF000000;
-                break;
-            case 9: // #AARRGGBB
-                ret = (int) Long.parseLong(value.substring(1), 16);
-                break;
-            case 4: // #RGB
-                ret = (int) Long.parseLong(value.substring(1), 16);
-
-                k |= ((ret >> 8) & 0xF) * 0x110000;
-                k |= ((ret >> 4) & 0xF) * 0x1100;
-                k |= ((ret) & 0xF) * 0x11;
-                ret = k | 0xFF000000;
-                break;
-            case 5: // #ARGB
-                ret = (int) Long.parseLong(value.substring(1), 16);
-                k |= ((ret >> 12) & 0xF) * 0x11000000;
-                k |= ((ret >> 8) & 0xF) * 0x110000;
-                k |= ((ret >> 4) & 0xF) * 0x1100;
-                k |= ((ret) & 0xF) * 0x11;
-                ret = k;
-                break;
-            default:
-                return 0xFF000000;
-        }
-        return ret;
-    }
-
     private void setNameValue(String name, String value) {
         if (value.startsWith("@")) {
             throw new ResourcesNotSupportedException(name, value);
@@ -477,11 +444,11 @@ class VdPath extends VdElement {
         } else if (PATH_ID.equals(name)) {
             mName = value;
         } else if (PATH_FILL.equals(name)) {
-            mFillColor = calculateColor(value);
+            mFillColor = parseColorValue(value);
         } else if (PATH_FILL_TYPE.equals(name)) {
             mFillType = parseFillType(value);
         } else if (PATH_STROKE.equals(name)) {
-            mStrokeColor = calculateColor(value);
+            mStrokeColor = parseColorValue(value);
         } else if (PATH_FILL_OPACITY.equals(name)) {
             mFillAlpha = Float.parseFloat(value);
         } else if (PATH_STROKE_OPACITY.equals(name)) {
@@ -736,7 +703,7 @@ class VdPath extends VdElement {
             for (int j = 0; j < mGradientStops.size(); j++) {
                 GradientStop stop = mGradientStops.get(j);
                 float fraction = Float.parseFloat(stop.getOffset());
-                int colorInt = calculateColor(stop.getColor());
+                int colorInt = parseColorValue(stop.getColor());
                 //TODO: If opacity for android gradient items becomes supported, use mOpacity to modify colors.
                 Color color = new Color(colorInt, true);
 

@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
 import static com.android.utils.XmlUtils.formatFloatAttribute;
 
 import com.google.common.collect.ImmutableMap;
@@ -373,7 +374,7 @@ public class SvgGradientNode extends SvgNode {
                                 getDocumentNode(),
                                 SvgTree.SvgLogLevel.WARNING);
             }
-            int color1 = VdPath.applyAlpha(VdPath.calculateColor(color), opacity);
+            int color1 = VdPath.applyAlpha(parseColorValue(color), opacity);
             StringBuilder hex =
                     new StringBuilder(Integer.toHexString(color1).toUpperCase(Locale.ENGLISH));
             while (hex.length() < 8) {
