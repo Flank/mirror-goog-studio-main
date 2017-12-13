@@ -35,8 +35,10 @@ import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.Pair;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.Set;
@@ -74,6 +76,8 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
         Set<String> densities = variant.getFilters(OutputFile.FilterType.DENSITY);
         Set<String> abis = variant.getFilters(OutputFile.FilterType.ABI);
+
+        checkSplitsConflicts(variant, abis);
 
         if (!densities.isEmpty()) {
             variant.setCompatibleScreens(extension.getSplits().getDensity()
@@ -125,7 +129,33 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             outputFactory.addMainApk();
         }
 
+
         return variant;
+    }
+
+    private void checkSplitsConflicts(
+            @NonNull ApplicationVariantData variantData, @NonNull Set<String> abiFilters) {
+
+        // if we don't have any ABI splits, nothing is conflicting.
+        if (abiFilters.isEmpty()) {
+            return;
+        }
+
+        // check supportedAbis in Ndk configuration versus ABI splits.
+        Set<String> ndkConfigAbiFilters =
+                variantData.getVariantConfiguration().getNdkConfig().getAbiFilters();
+        if (ndkConfigAbiFilters == null || ndkConfigAbiFilters.isEmpty()) {
+            return;
+        }
+
+        // if we have any ABI splits, whether it's a full or pure ABI splits, it's an error.
+        EvalIssueReporter issueReporter = globalScope.getAndroidBuilder().getIssueReporter();
+        issueReporter.reportError(
+                EvalIssueReporter.Type.GENERIC,
+                String.format(
+                        "Conflicting configuration : '%1$s' in ndk abiFilters "
+                                + "cannot be present when splits abi filters are set : %2$s",
+                        Joiner.on(",").join(ndkConfigAbiFilters), Joiner.on(",").join(abiFilters)));
     }
 
     @Override
