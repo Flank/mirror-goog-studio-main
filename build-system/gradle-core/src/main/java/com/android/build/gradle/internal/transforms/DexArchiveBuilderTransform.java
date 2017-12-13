@@ -88,6 +88,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import org.gradle.tooling.BuildException;
@@ -231,11 +232,24 @@ public class DexArchiveBuilderTransform extends Transform {
             outputProvider.deleteAll();
         }
 
-        Set<File> additionalPaths =
-                incrementalAnalysis(transformInvocation)
-                        .stream()
-                        .map(Path::toFile)
-                        .collect(Collectors.toSet());
+        Set<File> additionalPaths;
+        DesugarIncrementalTransformHelper desugarIncrementalTransformHelper;
+        if (!enableIncrementalDesugaring
+                || java8LangSupportType != VariantScope.Java8LangSupport.D8) {
+            additionalPaths = ImmutableSet.of();
+            desugarIncrementalTransformHelper = null;
+        } else {
+            desugarIncrementalTransformHelper =
+                    new DesugarIncrementalTransformHelper(
+                            projectVariant, transformInvocation, executor);
+            additionalPaths =
+                    desugarIncrementalTransformHelper
+                            .getAdditionalPaths()
+                            .stream()
+                            .map(Path::toFile)
+                            .collect(Collectors.toSet());
+        }
+
         ClassFileProviderFactory classFileProviderFactory = new ClassFileProviderFactory();
         List<DexArchiveBuilderCacheHandler.CacheableItem> cacheableItems = new ArrayList<>();
         boolean isIncremental = transformInvocation.isIncremental();
@@ -261,6 +275,14 @@ public class DexArchiveBuilderTransform extends Transform {
 
                 for (JarInput jarInput : input.getJarInputs()) {
                     logger.verbose("Jar input %s", jarInput.getFile().toString());
+
+                    D8DesugaringCacheInfo cacheInfo =
+                            getD8DesugaringCacheInfo(
+                                    desugarIncrementalTransformHelper,
+                                    bootclasspath,
+                                    classpath,
+                                    jarInput);
+
                     List<File> dexArchives =
                             processJarInput(
                                     transformInvocation.getContext(),
@@ -270,11 +292,14 @@ public class DexArchiveBuilderTransform extends Transform {
                                     classFileProviderFactory,
                                     bootclasspath,
                                     classpath,
-                                    additionalPaths);
-                    if (!dexArchives.isEmpty()) {
+                                    additionalPaths,
+                                    cacheInfo);
+                    if (cacheInfo != D8DesugaringCacheInfo.DONT_CACHE && !dexArchives.isEmpty()) {
                         cacheableItems.add(
                                 new DexArchiveBuilderCacheHandler.CacheableItem(
-                                        jarInput, dexArchives, bootclasspath, classpath));
+                                        jarInput,
+                                        dexArchives,
+                                        cacheInfo.orderedD8DesugaringDependencies));
                     }
                 }
             }
@@ -306,6 +331,67 @@ public class DexArchiveBuilderTransform extends Transform {
             logger.error(null, Throwables.getStackTraceAsString(e));
             throw new TransformException(e);
         }
+    }
+
+    @NonNull
+    private D8DesugaringCacheInfo getD8DesugaringCacheInfo(
+            @Nullable DesugarIncrementalTransformHelper desugarIncrementalTransformHelper,
+            @NonNull List<String> bootclasspath,
+            @NonNull List<String> classpath,
+            @NonNull JarInput jarInput) {
+
+        if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
+            return D8DesugaringCacheInfo.NO_INFO;
+        }
+
+        if (!enableIncrementalDesugaring) {
+            // Dependency graph is not available: lets state that we depend on all bootclasspath and
+            // classpath.
+            return new D8DesugaringCacheInfo(
+                    Stream.concat(bootclasspath.stream(), classpath.stream())
+                            .distinct()
+                            .map(string -> Paths.get(string))
+                            .collect(Collectors.toList()));
+        }
+
+        Preconditions.checkNotNull(desugarIncrementalTransformHelper);
+
+        Set<Path> unorderedD8DesugaringDependencies =
+                desugarIncrementalTransformHelper.getDependenciesPaths(jarInput.getFile().toPath());
+
+        // Don't cache libraries depending on class files in folders:
+        // Folders content is expected to change often so probably not worth paying the cache cost
+        // if we frequently need to rebuild anyway.
+        // Supporting dependency to class files would also require special care to respect order.
+        if (unorderedD8DesugaringDependencies
+                .stream()
+                .anyMatch(path -> !path.toString().endsWith(SdkConstants.DOT_JAR))) {
+            return D8DesugaringCacheInfo.DONT_CACHE;
+        }
+
+        // DesugaringGraph is not calculating the bootclasspath dependencies so just keep the full
+        // bootclasspath for now.
+        List<Path> bootclasspathPaths =
+                bootclasspath
+                        .stream()
+                        .distinct()
+                        .map(string -> Paths.get(string))
+                        .collect(Collectors.toList());
+
+        List<Path> classpathJars =
+                classpath
+                        .stream()
+                        .distinct()
+                        .map((string) -> Paths.get(string))
+                        .filter((path) -> unorderedD8DesugaringDependencies.contains(path))
+                        .collect(Collectors.toList());
+
+        List<Path> allDependencies =
+                new ArrayList<>(bootclasspathPaths.size() + classpathJars.size());
+
+        allDependencies.addAll(bootclasspathPaths);
+        allDependencies.addAll(classpathJars);
+        return new D8DesugaringCacheInfo(allDependencies);
     }
 
     private static void removeDeletedEntries(
@@ -344,7 +430,8 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull ClassFileProviderFactory classFileProviderFactory,
             @NonNull List<String> bootclasspath,
             @NonNull List<String> classpath,
-            @NonNull Set<File> additionalPaths)
+            @NonNull Set<File> additionalPaths,
+            @NonNull D8DesugaringCacheInfo cacheInfo)
             throws Exception {
         if (!isIncremental || additionalPaths.contains(jarInput.getFile())) {
             Preconditions.checkState(
@@ -358,7 +445,8 @@ public class DexArchiveBuilderTransform extends Transform {
                     transformOutputProvider,
                     classFileProviderFactory,
                     bootclasspath,
-                    classpath);
+                    classpath,
+                    cacheInfo);
         } else if (jarInput.getStatus() != Status.NOTCHANGED) {
             // delete all preDex jars if they exists.
             for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {
@@ -382,7 +470,8 @@ public class DexArchiveBuilderTransform extends Transform {
                         transformOutputProvider,
                         classFileProviderFactory,
                         bootclasspath,
-                        classpath);
+                        classpath,
+                        cacheInfo);
             }
         }
         return ImmutableList.of();
@@ -394,30 +483,33 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull TransformOutputProvider transformOutputProvider,
             @NonNull ClassFileProviderFactory classFileProviderFactory,
             @NonNull List<String> bootclasspath,
-            @NonNull List<String> classpath)
+            @NonNull List<String> classpath,
+            @NonNull D8DesugaringCacheInfo cacheInfo)
             throws Exception {
 
-        File cachedVersion =
-                cacheHandler.getCachedVersionIfPresent(toConvert, bootclasspath, classpath);
-        if (cachedVersion == null) {
-            return convertToDexArchive(
-                    context,
-                    toConvert,
-                    transformOutputProvider,
-                    false,
-                    classFileProviderFactory,
-                    bootclasspath,
-                    classpath,
-                    ImmutableSet.of());
-        } else {
-            File outputFile = getPreDexJar(transformOutputProvider, toConvert, null);
-            Files.copy(
-                    cachedVersion.toPath(),
-                    outputFile.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING);
-            // no need to try to cache an already cached version.
-            return ImmutableList.of();
+        if (cacheInfo != D8DesugaringCacheInfo.DONT_CACHE) {
+            File cachedVersion =
+                    cacheHandler.getCachedVersionIfPresent(
+                            toConvert, cacheInfo.orderedD8DesugaringDependencies);
+            if (cachedVersion != null) {
+                File outputFile = getPreDexJar(transformOutputProvider, toConvert, null);
+                Files.copy(
+                        cachedVersion.toPath(),
+                        outputFile.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING);
+                // no need to try to cache an already cached version.
+                return ImmutableList.of();
+            }
         }
+        return convertToDexArchive(
+                context,
+                toConvert,
+                transformOutputProvider,
+                false,
+                classFileProviderFactory,
+                bootclasspath,
+                classpath,
+                ImmutableSet.of());
     }
 
     public static class DexConversionParameters implements Serializable {
@@ -505,6 +597,23 @@ public class DexArchiveBuilderTransform extends Transform {
             } catch (Exception e) {
                 throw new BuildException(e.getMessage(), e);
             }
+        }
+    }
+
+    private static class D8DesugaringCacheInfo {
+
+        @NonNull
+        private static final D8DesugaringCacheInfo NO_INFO =
+                new D8DesugaringCacheInfo(Collections.emptyList());
+
+        @NonNull
+        private static final D8DesugaringCacheInfo DONT_CACHE =
+                new D8DesugaringCacheInfo(Collections.emptyList());
+
+        @NonNull private final List<Path> orderedD8DesugaringDependencies;
+
+        private D8DesugaringCacheInfo(@NonNull List<Path> orderedD8DesugaringDependencies) {
+            this.orderedD8DesugaringDependencies = orderedD8DesugaringDependencies;
         }
     }
 
@@ -781,18 +890,5 @@ public class DexArchiveBuilderTransform extends Transform {
                         ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
                         directoryInput.getScopes(),
                         Format.DIRECTORY));
-    }
-
-    @NonNull
-    private Set<Path> incrementalAnalysis(@NonNull TransformInvocation invocation)
-            throws InterruptedException {
-        if (!enableIncrementalDesugaring
-                || java8LangSupportType != VariantScope.Java8LangSupport.D8) {
-            return ImmutableSet.of();
-        }
-
-        DesugarIncrementalTransformHelper helper =
-                new DesugarIncrementalTransformHelper(projectVariant);
-        return helper.getAdditionalPaths(invocation, executor);
     }
 }

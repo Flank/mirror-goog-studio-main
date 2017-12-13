@@ -132,6 +132,7 @@ public class DexArchiveBuilderTransformBuilder {
         Preconditions.checkNotNull(messageReceiver);
         Preconditions.checkNotNull(dexer);
         Preconditions.checkNotNull(java8LangSupportType);
+        Preconditions.checkNotNull(projectVariant);
         return new DexArchiveBuilderTransform(
                 androidJarClasspath,
                 dexOptions,

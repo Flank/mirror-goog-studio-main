@@ -18,9 +18,11 @@ package com.android.builder.desugaring;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +45,20 @@ import java.util.stream.Collectors;
  * </ul>
  */
 public class DesugaringGraph {
+    @NonNull
+    public static final DesugaringGraph EMPTY =
+            new DesugaringGraph(Collections.emptyList()) {
+                @Override
+                public void update(@NonNull Collection<DesugaringData> data) {
+                    throw new AssertionError();
+                }
+
+                @NonNull
+                @Override
+                public Set<Path> getDependentPaths(@NonNull Path path) {
+                    return ImmutableSet.of();
+                }
+            };
 
     @NonNull private final TypeDependencies typeDependencies;
     @NonNull private final TypePaths typePaths;
@@ -61,6 +77,24 @@ public class DesugaringGraph {
     public void update(@NonNull Collection<DesugaringData> data) {
         removeItems(data);
         insertLiveItems(data);
+    }
+
+    /** Returns a set of paths the given path is depending on. */
+    @NonNull
+    public Set<Path> getDependenciesPaths(@NonNull Path path) {
+        Set<String> types = typePaths.getTypes(path);
+
+        Set<String> impactedTypes = Sets.newHashSet();
+        for (String type : types) {
+            impactedTypes.addAll(typeDependencies.getAllDependencies(type));
+        }
+
+        Set<Path> impactedPaths = Sets.newHashSetWithExpectedSize(impactedTypes.size());
+        for (String impactedType : impactedTypes) {
+            impactedPaths.addAll(typePaths.getPaths(impactedType));
+        }
+        impactedPaths.remove(path);
+        return impactedPaths;
     }
 
     /**

@@ -33,6 +33,7 @@ import com.android.builder.desugaring.DesugaringGraph;
 import com.android.builder.desugaring.DesugaringGraphs;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.google.common.base.Stopwatch;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -44,12 +45,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * This helper analyzes the transform inputs, updates the {@link DesugaringGraph} it owns, and its
  * main goal is to provide paths that should also be also considered out of date, in addition to the
- * changed files. See {@link #getAdditionalPaths(TransformInvocation, WaitableExecutor)} for
- * details.
+ * changed files. See {@link #getAdditionalPaths()} for details.
  */
 class DesugarIncrementalTransformHelper {
 
@@ -58,9 +59,32 @@ class DesugarIncrementalTransformHelper {
             LoggerWrapper.getLogger(DesugarIncrementalTransformHelper.class);
 
     @NonNull private final String projectVariant;
+    @NonNull private final TransformInvocation invocation;
+    @NonNull private final WaitableExecutor executor;
 
-    DesugarIncrementalTransformHelper(@NonNull String projectVariant) {
+    @NonNull
+    private final Supplier<Set<Path>> changedPaths = Suppliers.memoize(this::findChangedPaths);
+
+    @NonNull private final Supplier<DesugaringGraph> desugaringGraph;
+
+    DesugarIncrementalTransformHelper(
+            @NonNull String projectVariant,
+            @NonNull TransformInvocation invocation,
+            @NonNull WaitableExecutor executor) {
         this.projectVariant = projectVariant;
+        this.invocation = invocation;
+        this.executor = executor;
+        DesugaringGraph graph;
+        if (!invocation.isIncremental()) {
+            DesugaringGraphs.invalidate(projectVariant);
+            graph = null;
+        } else {
+            graph =
+                    DesugaringGraphs.updateVariant(
+                            projectVariant, () -> getIncrementalData(changedPaths, executor));
+        }
+        desugaringGraph =
+                graph != null ? () -> graph : Suppliers.memoize(this::makeDesugaringGraph);
     }
 
     /**
@@ -74,40 +98,18 @@ class DesugarIncrementalTransformHelper {
      * impacted, non-changed, paths will be returned as a result.
      */
     @NonNull
-    Set<Path> getAdditionalPaths(
-            @NonNull TransformInvocation invocation, @NonNull WaitableExecutor executor)
-            throws InterruptedException {
+    Set<Path> getAdditionalPaths() throws InterruptedException {
         if (!invocation.isIncremental()) {
-            DesugaringGraphs.invalidate(projectVariant);
             return ImmutableSet.of();
         }
 
         Stopwatch stopwatch = Stopwatch.createStarted();
         logger.verbose("Desugaring dependencies incrementally.");
 
-        Set<Path> changedPaths = getChangedPaths(invocation);
-        DesugaringGraph graph =
-                DesugaringGraphs.forVariant(
-                        projectVariant,
-                        () -> {
-                            try {
-                                return getInitalGraphData(invocation, executor);
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException("Unable to get desugaring graph", e);
-                            }
-                        },
-                        () -> {
-                            try {
-                                return getIncrementalData(changedPaths, executor);
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException("Unable to get desugaring graph", e);
-                            }
-                        });
-
         Set<Path> additionalPaths = new HashSet<>();
-        for (Path changed : changedPaths) {
-            for (Path path : graph.getDependentPaths(changed)) {
-                if (!changedPaths.contains(path)) {
+        for (Path changed : changedPaths.get()) {
+            for (Path path : desugaringGraph.get().getDependentPaths(changed)) {
+                if (!changedPaths.get().contains(path)) {
                     additionalPaths.add(path);
                 }
             }
@@ -121,9 +123,21 @@ class DesugarIncrementalTransformHelper {
     }
 
     @NonNull
+    private DesugaringGraph makeDesugaringGraph() {
+        if (!invocation.isIncremental()) {
+            // Rebuild totally the graph whatever the cache status
+            return DesugaringGraphs.forVariant(
+                    projectVariant, getInitalGraphData(invocation, executor));
+        }
+        return DesugaringGraphs.forVariant(
+                projectVariant,
+                () -> getInitalGraphData(invocation, executor),
+                () -> getIncrementalData(changedPaths, executor));
+    }
+
+    @NonNull
     private static Collection<DesugaringData> getInitalGraphData(
-            @NonNull TransformInvocation invocation, @NonNull WaitableExecutor executor)
-            throws InterruptedException {
+            @NonNull TransformInvocation invocation, @NonNull WaitableExecutor executor) {
         Set<DesugaringData> data = Sets.newConcurrentHashSet();
         for (TransformInput input : getAllInputs(invocation)) {
             for (QualifiedContent qualifiedContent :
@@ -144,17 +158,20 @@ class DesugarIncrementalTransformHelper {
             }
         }
 
-        executor.waitForTasksWithQuickFail(true);
+        try {
+            executor.waitForTasksWithQuickFail(true);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Unable to get desugaring graph", e);
+        }
 
         return data;
     }
 
     @NonNull
     private static Set<DesugaringData> getIncrementalData(
-            @NonNull Set<Path> changedPaths, @NonNull WaitableExecutor executor)
-            throws InterruptedException {
+            @NonNull Supplier<Set<Path>> changedPaths, @NonNull WaitableExecutor executor) {
         Set<DesugaringData> data = Sets.newConcurrentHashSet();
-        for (Path input : changedPaths) {
+        for (Path input : changedPaths.get()) {
             if (Files.notExists(input)) {
                 data.add(DesugaringClassAnalyzer.forRemoved(input));
             } else {
@@ -171,12 +188,16 @@ class DesugarIncrementalTransformHelper {
             }
         }
 
-        executor.waitForTasksWithQuickFail(true);
+        try {
+            executor.waitForTasksWithQuickFail(true);
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Unable to get desugaring graph", e);
+        }
         return data;
     }
 
     @NonNull
-    private static Set<Path> getChangedPaths(@NonNull TransformInvocation invocation) {
+    private Set<Path> findChangedPaths() {
         Set<Path> changedPaths = Sets.newHashSet();
         for (TransformInput input : getAllInputs(invocation)) {
             for (DirectoryInput dirInput : input.getDirectoryInputs()) {
@@ -204,5 +225,9 @@ class DesugarIncrementalTransformHelper {
     @NonNull
     private static Iterable<TransformInput> getAllInputs(@NonNull TransformInvocation invocation) {
         return Iterables.concat(invocation.getInputs(), invocation.getReferencedInputs());
+    }
+
+    public Set<Path> getDependenciesPaths(Path path) {
+        return desugaringGraph.get().getDependenciesPaths(path);
     }
 }

@@ -51,9 +51,10 @@ public class DesugaringClassAnalyzerTest {
     public void testBaseInterface() throws IOException {
         DesugaringGraph graph = analyze(BaseInterface.class);
 
-        assertDirectDependenciesGraph(
+        assertDirectDependencyGraph(
                 ImmutableMap.of(Object.class, ImmutableSet.of(BaseInterface.class)), graph);
-        assertFullDependenciesGraph(Object.class, ImmutableSet.of(BaseInterface.class), graph);
+        assertFullDependentGraph(Object.class, ImmutableSet.of(BaseInterface.class), graph);
+        assertFullDependenciesGraph(BaseInterface.class, ImmutableSet.of(), graph);
     }
 
     @Test
@@ -61,7 +62,7 @@ public class DesugaringClassAnalyzerTest {
         DesugaringGraph graph =
                 analyze(BaseInterface.class, SampleInterface.class, SampleClass.class);
 
-        assertDirectDependenciesGraph(
+        assertDirectDependencyGraph(
                 ImmutableMap.of(
                         Object.class,
                                 ImmutableSet.of(
@@ -72,28 +73,55 @@ public class DesugaringClassAnalyzerTest {
                         SampleInterface.class, ImmutableSet.of(SampleClass.class)),
                 graph);
 
-        assertFullDependenciesGraph(
+        assertFullDependentGraph(
                 Object.class,
                 ImmutableSet.of(BaseInterface.class, SampleInterface.class, SampleClass.class),
                 graph);
-        assertFullDependenciesGraph(
+        assertFullDependentGraph(
                 BaseInterface.class,
                 ImmutableSet.of(SampleInterface.class, SampleClass.class),
                 graph);
+        assertFullDependenciesGraph(
+                SampleInterface.class, ImmutableSet.of(BaseInterface.class), graph);
     }
 
     @Test
     public void testSubClassAndLambda() throws IOException {
-        DesugaringGraph graph = analyze(LambdaClass.class, FunInterface.class);
+        DesugaringGraph graph =
+                analyze(
+                        SampleClass.class,
+                        LambdaClass.class,
+                        FunInterface.class,
+                        SampleInterface.class,
+                        BaseInterface.class);
 
-        assertDirectDependenciesGraph(
+        assertDirectDependencyGraph(
                 ImmutableMap.of(
-                        Object.class, ImmutableSet.of(FunInterface.class),
+                        Object.class,
+                                ImmutableSet.of(
+                                        FunInterface.class,
+                                        SampleClass.class,
+                                        SampleInterface.class,
+                                        BaseInterface.class),
                         SampleClass.class, ImmutableSet.of(LambdaClass.class),
-                        FunInterface.class, ImmutableSet.of(LambdaClass.class)),
+                        FunInterface.class, ImmutableSet.of(LambdaClass.class),
+                        SampleInterface.class, ImmutableSet.of(SampleClass.class),
+                        BaseInterface.class, ImmutableSet.of(SampleInterface.class)),
                 graph);
-        assertFullDependenciesGraph(SampleClass.class, ImmutableSet.of(LambdaClass.class), graph);
-        assertFullDependenciesGraph(LambdaClass.class, ImmutableSet.of(), graph);
+        assertFullDependentGraph(SampleClass.class, ImmutableSet.of(LambdaClass.class), graph);
+        assertFullDependentGraph(LambdaClass.class, ImmutableSet.of(), graph);
+        assertFullDependenciesGraph(
+                SampleClass.class,
+                ImmutableSet.of(SampleInterface.class, BaseInterface.class),
+                graph);
+        assertFullDependenciesGraph(
+                LambdaClass.class,
+                ImmutableSet.of(
+                        SampleClass.class,
+                        SampleInterface.class,
+                        BaseInterface.class,
+                        FunInterface.class),
+                graph);
     }
 
     @Test
@@ -101,7 +129,7 @@ public class DesugaringClassAnalyzerTest {
         DesugaringGraph graph =
                 analyze(LambdaOfSubtype.class, FunInterface.class, FunInterfaceSubtype.class);
 
-        assertDirectDependenciesGraph(
+        assertDirectDependencyGraph(
                 ImmutableMap.of(
                         Object.class,
                                 ImmutableSet.of(
@@ -111,22 +139,27 @@ public class DesugaringClassAnalyzerTest {
                         FunInterface.class, ImmutableSet.of(FunInterfaceSubtype.class),
                         FunInterfaceSubtype.class, ImmutableSet.of(LambdaOfSubtype.class)),
                 graph);
-        assertFullDependenciesGraph(
+        assertFullDependentGraph(
                 FunInterface.class,
                 ImmutableSet.of(FunInterfaceSubtype.class, LambdaOfSubtype.class),
+                graph);
+        assertFullDependenciesGraph(
+                LambdaOfSubtype.class,
+                ImmutableSet.of(FunInterface.class, FunInterfaceSubtype.class),
                 graph);
     }
 
     @Test
     public void testClassHasSuperClassAndSuperInterface() throws IOException {
-        DesugaringGraph graph = analyze(ClassSuperClassAndInterface.class);
+        DesugaringGraph graph =
+                analyze(ClassSuperClassAndInterface.class, SampleClass.class, BaseInterface.class);
 
-        assertDirectDependenciesGraph(
+        assertDirectDependencyGraph(
                 ImmutableMap.of(
                         SampleClass.class, ImmutableSet.of(ClassSuperClassAndInterface.class),
                         BaseInterface.class, ImmutableSet.of(ClassSuperClassAndInterface.class)),
                 graph);
-        assertFullDependenciesGraph(
+        assertFullDependentGraph(
                 BaseInterface.class, ImmutableSet.of(ClassSuperClassAndInterface.class), graph);
     }
 
@@ -134,7 +167,7 @@ public class DesugaringClassAnalyzerTest {
     public void testClassWithLambdaInParams() throws IOException {
         DesugaringGraph graph = analyze(ClassLambdaInParam.class);
 
-        assertDirectDependenciesGraph(
+        assertDirectDependencyGraph(
                 ImmutableMap.of(
                         Object.class, ImmutableSet.of(ClassLambdaInParam.class),
                         FunInterfaceSubtype.class, ImmutableSet.of(ClassLambdaInParam.class)),
@@ -152,20 +185,25 @@ public class DesugaringClassAnalyzerTest {
         return new DesugaringGraph(data);
     }
 
-    private void assertDirectDependenciesGraph(
-            @NonNull Map<Class<?>, Set<Class<?>>> ownerToDeps, @NonNull DesugaringGraph graph) {
-        for (Class<?> owner : ownerToDeps.keySet()) {
+    private void assertDirectDependencyGraph(
+            @NonNull Map<Class<?>, Set<Class<?>>> ownerToDependents,
+            @NonNull DesugaringGraph graph) {
+        for (Class<?> owner : ownerToDependents.keySet()) {
             Set<String> internalNames =
-                    ownerToDeps.get(owner).stream().map(this::internal).collect(Collectors.toSet());
+                    ownerToDependents
+                            .get(owner)
+                            .stream()
+                            .map(this::internal)
+                            .collect(Collectors.toSet());
 
             assertThat(graph.getDependents(internal(owner)))
-                    .named("direct dependencies of " + owner.getName())
+                    .named("direct dependents of " + owner.getName())
                     .containsExactlyElementsIn(internalNames);
         }
 
         // now confirm reverse lookup
         Map<Class<?>, Set<Class<?>>> depToOwners = Maps.newHashMap();
-        for (Map.Entry<Class<?>, Set<Class<?>>> ownerAndDeps : ownerToDeps.entrySet()) {
+        for (Map.Entry<Class<?>, Set<Class<?>>> ownerAndDeps : ownerToDependents.entrySet()) {
             for (Class<?> dep : ownerAndDeps.getValue()) {
                 Set<Class<?>> owners = depToOwners.getOrDefault(dep, Sets.newHashSet());
                 owners.add(ownerAndDeps.getKey());
@@ -183,14 +221,43 @@ public class DesugaringClassAnalyzerTest {
         }
     }
 
+    private void assertFullDependentGraph(
+            @NonNull Class<?> owner,
+            @NonNull Collection<Class<?>> dependents,
+            @NonNull DesugaringGraph graph) {
+        Set<String> internalNames =
+                dependents.stream().map(this::internal).collect(Collectors.toSet());
+        assertThat(graph.getAllDependentTypes(internal(owner)))
+                .named("Full list of classes depending on " + owner.getName())
+                .containsExactlyElementsIn(internalNames);
+
+        if (!owner.equals(Object.class)) {
+            Set<Path> dependenciesPaths =
+                    dependents
+                            .stream()
+                            .filter(clazz -> !clazz.equals(Object.class))
+                            .map(this::getPath)
+                            .collect(Collectors.toSet());
+            assertThat(graph.getDependentPaths(getPath(owner)))
+                    .named("Full list of path depending on " + owner.getName())
+                    .containsExactlyElementsIn(dependenciesPaths);
+        }
+    }
+
     private void assertFullDependenciesGraph(
             @NonNull Class<?> owner,
-            @NonNull Collection<Class<?>> deps,
+            @NonNull Collection<Class<?>> dependencies,
             @NonNull DesugaringGraph graph) {
-        Set<String> internalNames = deps.stream().map(this::internal).collect(Collectors.toSet());
-        assertThat(graph.getAllDependentTypes(internal(owner)))
-                .named("Full list of dependencies for " + owner.getName())
-                .containsExactlyElementsIn(internalNames);
+
+        Set<Path> dependentPaths =
+                dependencies
+                        .stream()
+                        .filter(clazz -> !clazz.equals(Object.class))
+                        .map(this::getPath)
+                        .collect(Collectors.toSet());
+        assertThat(graph.getDependenciesPaths(getPath(owner)))
+                .named("Full list of path " + owner.getName() + " is depending on")
+                .containsExactlyElementsIn(dependentPaths);
     }
 
     @NonNull
