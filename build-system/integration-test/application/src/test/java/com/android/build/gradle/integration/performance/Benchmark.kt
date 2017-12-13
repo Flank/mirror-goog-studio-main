@@ -19,13 +19,18 @@ package com.android.build.gradle.integration.performance
 import com.android.build.gradle.integration.common.fixture.ModelBuilder
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
-import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
+import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.options.BooleanOption
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
+import java.time.Duration
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
+
+typealias BenchmarkAction = (((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, ModelBuilder) -> Unit)
 
 data class Benchmark(
         // These first three parameters should uniquely identify your benchmark
@@ -35,8 +40,12 @@ data class Benchmark(
 
         val projectFactory: (GradleTestProjectBuilder) -> GradleTestProject,
         val postApplyProject: (GradleTestProject) -> GradleTestProject = { p -> p },
-        val action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, ModelBuilder) -> Unit) {
-    fun run() {
+        val action: BenchmarkAction) {
+    fun run(): BenchmarkResult {
+        var recordStart = 0L
+        var recordEnd = 0L
+        var totalStart = System.nanoTime()
+
         /*
          * Any common project configuration should happen here. Note that it isn't possible to take
          * a subproject until _after_ project.apply has been called, so if you do need to do that
@@ -65,16 +74,41 @@ data class Benchmark(
                                 .with(BooleanOption.ENABLE_D8, scenario.useD8())
                                 .withUseDexArchive(scenario.useDexArchive())
 
-
                         val recorder = BenchmarkRecorder(ProfileCapturer(project.profileDirectory))
-                        val record = { r: () -> Unit -> recorder.record(scenario, benchmark, benchmarkMode, r) }
+                        val recordCalled = AtomicBoolean(false)
+                        val record = { r: () -> Unit ->
+                            recordStart = System.nanoTime()
+                            try {
+                                if (recordCalled.get()) {
+                                    throw IllegalStateException("record lambda used twice, please make sure your benchmark is only measuring one action")
+                                }
+                                recordCalled.set(true)
+
+                                val numProfiles = recorder.record(scenario, benchmark, benchmarkMode, r)
+                                if (numProfiles != 1) {
+                                    throw IllegalStateException("record lambda generated more than one profile, this is not allowed")
+                                }
+                            } finally {
+                                recordEnd = System.nanoTime()
+                            }
+                        }
 
                         action(record, project, executor, model)
+                        if (!recordCalled.get()) {
+                            throw IllegalStateException("no recorded section in your benchmark, did you forget to use the record function?")
+                        }
+
                         recorder.uploadAsync()
                     }
                 }
 
         project.apply(statement, testDescription()).evaluate()
+
+        return BenchmarkResult(
+                benchmark = this,
+                recordedDuration = Duration.ofNanos(recordEnd - recordStart),
+                totalDuration = Duration.ofNanos(System.nanoTime() - totalStart)
+        )
     }
 
     private fun testDescription(): Description {

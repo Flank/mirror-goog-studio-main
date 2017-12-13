@@ -133,14 +133,27 @@ public final class BenchmarkRecorder {
         this.capturer = capturer;
     }
 
-    public void record(
+    /**
+     * Records any captured benchmarks in the given runnable inside this class's state, ready to be
+     * uploaded at a later time.
+     *
+     * @param scenario the ProjectScenario to use in the resulting benchmark result
+     * @param benchmark the Benchmark to use in the resulting benchmark result
+     * @param benchmarkMode the BenchmarkMode to use in the resulting benchmark result
+     * @param r the runnable to capture profiles inside
+     * @return the number of profiles captured
+     * @throws Exception if an exception is thrown in the runnable, it gets rethrown
+     */
+    public int record(
             @NonNull ProjectScenario scenario,
             @NonNull Benchmark benchmark,
             @NonNull BenchmarkMode benchmarkMode,
             @NonNull ExceptionRunnable r)
             throws Exception {
 
-        for (GradleBuildProfile profile : capturer.capture(r)) {
+        List<GradleBuildProfile> profiles = capturer.capture(r);
+
+        for (GradleBuildProfile profile : profiles) {
             GradleBenchmarkResult.Builder result =
                     GradleBenchmarkResult.newBuilder()
                             .setProfile(profile)
@@ -190,6 +203,8 @@ public final class BenchmarkRecorder {
 
             benchmarkResults.add(result);
         }
+
+        return profiles.size();
     }
 
     public void uploadAsync() {

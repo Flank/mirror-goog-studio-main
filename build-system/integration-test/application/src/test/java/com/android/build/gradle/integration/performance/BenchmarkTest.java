@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.performance;
 
 import com.google.common.base.Strings;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,6 +33,7 @@ import org.junit.runners.JUnit4;
 public class BenchmarkTest {
     @Test
     public void run() throws Exception {
+        long start = System.nanoTime();
         List<Benchmark> benchmarks = new ArrayList<>();
 
         /*
@@ -95,12 +97,34 @@ public class BenchmarkTest {
         }
 
         System.out.println("running " + shard.size() + " benchmarks");
+
+        Duration benchmarkDuration = Duration.ofNanos(0);
+        Duration recordedDuration = Duration.ofNanos(0);
+
         /*
          * Run the benchmarks.
          */
-        shard.forEach(Benchmark::run);
+        int i = 0;
+        System.out.println();
+        for (Benchmark b : shard) {
+            i++;
+            BenchmarkResult result = b.run();
+
+            benchmarkDuration = benchmarkDuration.plus(result.getTotalDuration());
+            recordedDuration = recordedDuration.plus(result.getRecordedDuration());
+
+            System.out.println(i + "/" + shard.size());
+            System.out.println(result);
+            System.out.println();
+        }
 
         BenchmarkRecorder.awaitUploads(15, TimeUnit.MINUTES);
+
+        Duration totalDuration = Duration.ofNanos(System.nanoTime() - start);
+
+        System.out.println("Total recorded duration: " + recordedDuration);
+        System.out.println("Total benchmark duration: " + benchmarkDuration);
+        System.out.println("Overall duration: " + totalDuration);
     }
 
     public static List<Benchmark> filterByScenario(List<Benchmark> benchmarks, String scenarioStr) {
