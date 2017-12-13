@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class JniTest {
@@ -82,6 +83,7 @@ public class JniTest {
     }
 
     // Just create native activity and see that it can load native library.
+    @Ignore
     @Test
     public void countCreatedAndDeleteRefEvents() throws Exception {
         FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
