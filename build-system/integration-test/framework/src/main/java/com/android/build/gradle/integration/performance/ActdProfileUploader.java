@@ -118,7 +118,6 @@ public class ActdProfileUploader implements ProfileUploader {
                 System.exit(1);
             }
 
-            System.out.println("starting upload from " + protoDir);
             uploader.uploadDataFromDirectory(protoDir);
         }
     }
@@ -694,11 +693,6 @@ public class ActdProfileUploader implements ProfileUploader {
         Collection<SerieRequest> serieRequests = serieRequests(sampleRequests);
         Collection<BuildRequest> buildRequests = buildRequests(sampleRequests);
 
-        System.out.println("got " + buildRequests.size() + " build requests");
-        System.out.println("got " + serieRequests.size() + " series requests");
-        System.out.println("got " + sampleRequests.size() + " sample requests");
-
-        System.out.println("adding builds...");
         buildRequests
                 .stream()
                 .parallel()
@@ -716,7 +710,6 @@ public class ActdProfileUploader implements ProfileUploader {
                             }
                         });
 
-        System.out.println("adding series...");
         serieRequests
                 .stream()
                 .parallel()
@@ -734,7 +727,6 @@ public class ActdProfileUploader implements ProfileUploader {
                             }
                         });
 
-        System.out.println("adding samples...");
         sampleRequests
                 .stream()
                 .parallel()
