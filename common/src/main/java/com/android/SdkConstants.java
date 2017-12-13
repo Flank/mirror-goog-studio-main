@@ -267,6 +267,8 @@ public final class SdkConstants {
     public static final String FN_JACK_COVERAGE_PLUGIN = "jack-coverage-plugin.jar"; //$NON-NLS-1$
     /** jack-jacoco-report.jar */
     public static final String FN_JACK_JACOCO_REPORTER = "jack-jacoco-reporter.jar"; //$NON-NLS-1$
+    /** core-lambda-stubs.jar necessary for lambda compilation. */
+    public static final String FN_CORE_LAMBDA_STUBS = "core-lambda-stubs.jar"; // $NON-NLS-1$
 
     /** split-select */
     public static final String FN_SPLIT_SELECT = "split-select" + ext(".exe", "");
@@ -2244,7 +2246,7 @@ public final class SdkConstants {
     public static final String GRADLE_ANDROID_TEST_COMPILE_CONFIGURATION = "androidTestCompile";
 
     public static final String GRADLE_ANDROID_TEST_UTIL_CONFIGURATION = "androidTestUtil";
-    public static final String CURRENT_BUILD_TOOLS_VERSION = "27.0.1";
+    public static final String CURRENT_BUILD_TOOLS_VERSION = "27.0.3";
     public static final String SUPPORT_LIB_GROUP_ID = "com.android.support";
     public static final String SUPPORT_LIB_ARTIFACT = "com.android.support:support-v4";
     public static final String DESIGN_LIB_ARTIFACT = "com.android.support:design";

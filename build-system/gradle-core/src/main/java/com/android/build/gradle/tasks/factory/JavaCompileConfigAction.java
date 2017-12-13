@@ -17,12 +17,13 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import java.io.File;
 import java.util.Map;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 
@@ -68,22 +69,39 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             javacTask.source(fileTree);
         }
 
-        final boolean keepDefaultBootstrap = scope.keepDefaultBootstrap();
-
-        if (!keepDefaultBootstrap) {
-            // Set boot classpath if we don't need to keep the default.  Otherwise, this is added as
-            // normal classpath.
+        FileCollection classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_CORE_LAMBDA_STUBS)) {
+            File coreLambdaStubsJar =
+                    new File(
+                            globalScope
+                                    .getAndroidBuilder()
+                                    .getBuildToolInfo()
+                                    .getPath(BuildToolInfo.PathId.CORE_LAMBDA_STUBS));
             javacTask
                     .getOptions()
                     .setBootstrapClasspath(
-                            project.files(globalScope.getAndroidBuilder().getBootClasspath(false)));
-        }
+                            project.files(
+                                    globalScope.getAndroidBuilder().getBootClasspath(false),
+                                    coreLambdaStubsJar));
+        } else {
+            final boolean keepDefaultBootstrap = scope.keepDefaultBootstrap();
 
-        FileCollection classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
-        if (keepDefaultBootstrap) {
-            classpath =
-                    classpath.plus(
-                            project.files(globalScope.getAndroidBuilder().getBootClasspath(false)));
+            if (!keepDefaultBootstrap) {
+                // Set boot classpath if we don't need to keep the default.  Otherwise, this is
+                // added as
+                // normal classpath.
+                javacTask
+                        .getOptions()
+                        .setBootstrapClasspath(
+                                project.files(
+                                        globalScope.getAndroidBuilder().getBootClasspath(false)));
+            }
+            if (keepDefaultBootstrap) {
+                classpath =
+                        classpath.plus(
+                                project.files(
+                                        globalScope.getAndroidBuilder().getBootClasspath(false)));
+            }
         }
         javacTask.setClasspath(classpath);
 
@@ -98,9 +116,6 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 scope.getJava8LangSupportType());
 
         javacTask.getOptions().setEncoding(compileOptions.getEncoding());
-
-        Configuration annotationProcessorConfiguration =
-                scope.getVariantDependencies().getAnnotationProcessorConfiguration();
 
         Boolean includeCompileClasspath =
                 scope.getVariantConfiguration()

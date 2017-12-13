@@ -49,6 +49,12 @@ filegroup(
 )
 
 filegroup(
+    name = "build-tools/latest",
+    srcs = [":build-tools/27.0.3"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "build-tools/27.0.1",
     srcs = glob(
         include = ["*/build-tools/27.0.1/**"],
@@ -56,12 +62,6 @@ filegroup(
     visibility = [
         "//tools/base/build-system/integration-test:__subpackages__",
     ],
-)
-
-filegroup(
-    name = "build-tools/latest",
-    srcs = [":build-tools/27.0.1"],
-    visibility = ["//visibility:public"],
 )
 
 filegroup(
