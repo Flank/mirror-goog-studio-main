@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class JniTest {
@@ -83,7 +82,6 @@ public class JniTest {
     }
 
     // Just create native activity and see that it can load native library.
-    @Ignore
     @Test
     public void countCreatedAndDeleteRefEvents() throws Exception {
         FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
@@ -117,7 +115,7 @@ public class JniTest {
         assertThat(androidDriver.waitForInput("deleteRefs")).isTrue();
 
         boolean allRefsAccounted = false;
-        int maxLoopCount = refCount * 100;
+        int maxLoopCount = refCount * 200;
 
         // Aborts if we loop too many times and somehow didn't get
         // back jni ref events. This way the test won't timeout
@@ -125,6 +123,12 @@ public class JniTest {
         while (!allRefsAccounted && maxLoopCount-- > 0) {
             jvmtiData = stubWrapper.getJvmtiData(mySession, startTime, Long.MAX_VALUE);
             long endTime = jvmtiData.getEndTimestamp();
+            System.out.printf(
+                    "getJvmtiData, start time=%d, end time=%d, alloc entries=%d, jni entries=%d\n",
+                    startTime,
+                    endTime,
+                    jvmtiData.getAllocationSamplesList().size(),
+                    jvmtiData.getJniReferenceEventBatchesList().size());
 
             for (BatchAllocationSample sample : jvmtiData.getAllocationSamplesList()) {
                 assertThat(sample.getTimestamp()).isGreaterThan(startTime);
@@ -133,11 +137,7 @@ public class JniTest {
                         AllocationEvent.Allocation alloc = event.getAllocData();
                         if (alloc.getClassTag() == testEntityId) {
                             tags.add(alloc.getTag());
-                        }
-                    } else if (event.getEventCase() == AllocationEvent.EventCase.FREE_DATA) {
-                        AllocationEvent.Deallocation dealloc = event.getFreeData();
-                        if (tags.contains(dealloc.getTag())) {
-                            tags.remove(dealloc.getTag());
+                            System.out.printf("Add obj tag: %d\n", alloc.getTag());
                         }
                     }
                 }
@@ -149,6 +149,8 @@ public class JniTest {
                     long refValue = event.getRefValue();
                     if (event.getEventType() == JNIGlobalReferenceEvent.Type.CREATE_GLOBAL_REF) {
                         if (tags.contains(event.getObjectTag())) {
+                            System.out.printf(
+                                    "Add JNI ref: %d tag:%d\n", refValue, event.getObjectTag());
                             String refRelatedOutput = String.format("JNI ref created %d", refValue);
                             assertThat(androidDriver.waitForInput(refRelatedOutput)).isTrue();
                             assertThat(refs.add(refValue)).isTrue();
@@ -158,10 +160,11 @@ public class JniTest {
                     if (event.getEventType() == JNIGlobalReferenceEvent.Type.DELETE_GLOBAL_REF) {
                         // Test that reference value was reported when created
                         if (refs.contains(refValue)) {
+                            System.out.printf(
+                                    "Remove JNI ref: %d tag:%d\n", refValue, event.getObjectTag());
                             String refRelatedOutput = String.format("JNI ref deleted %d", refValue);
                             assertThat(androidDriver.waitForInput(refRelatedOutput)).isTrue();
                             assertThat(tags.contains(event.getObjectTag())).isTrue();
-
                             refs.remove(refValue);
                             if (refs.isEmpty() && refsReported == refCount) {
                                 allRefsAccounted = true;
