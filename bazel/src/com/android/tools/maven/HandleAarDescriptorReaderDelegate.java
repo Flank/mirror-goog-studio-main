@@ -29,11 +29,17 @@ public class HandleAarDescriptorReaderDelegate extends ArtifactDescriptorReaderD
             RepositorySystemSession session, ArtifactDescriptorResult result, Model model) {
         super.populateResult(session, result, model);
 
-        if (!model.getPackaging().equals(result.getArtifact().getExtension())
-                && !model.getPackaging().equals("bundle")) {
+        if (model.getPackaging().equals("pom")) {
+            // This is the case for downloading protoc exes.
+            return;
+        }
+
+        if (!MavenRepository.getArtifactExtension(model)
+                .equals(result.getArtifact().getExtension())) {
             // This is something that Gradle seems to handle automatically, we have to do the same.
             result.setArtifact(
-                    new DifferentExtensionArtifact(model.getPackaging(), result.getArtifact()));
+                    new DifferentExtensionArtifact(
+                            MavenRepository.getArtifactExtension(model), result.getArtifact()));
         }
     }
 
