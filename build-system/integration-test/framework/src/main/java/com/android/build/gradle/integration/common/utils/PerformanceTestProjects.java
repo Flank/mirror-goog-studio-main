@@ -50,7 +50,8 @@ public class PerformanceTestProjects {
         return localRepositoriesSnippet.toString();
     }
 
-    public static void initializeAntennaPod(GradleTestProject mainProject) throws IOException {
+    public static GradleTestProject initializeAntennaPod(GradleTestProject mainProject)
+            throws IOException {
         GradleTestProject project = mainProject.getSubproject("AntennaPod");
 
         Files.move(
@@ -135,6 +136,7 @@ public class PerformanceTestProjects {
                 "]");
 
         antennaPodSetRetrolambdaEnabled(mainProject, false);
+        return mainProject;
     }
 
     public static void antennaPodSetRetrolambdaEnabled(
@@ -163,8 +165,8 @@ public class PerformanceTestProjects {
     }
 
 
-    public static void initializeWordpress(@NonNull GradleTestProject project) throws IOException {
-
+    public static GradleTestProject initializeWordpress(@NonNull GradleTestProject project)
+            throws IOException {
         Files.copy(
                 project.file("WordPress/gradle.properties-example").toPath(),
                 project.file("WordPress/gradle.properties").toPath());
@@ -397,10 +399,18 @@ public class PerformanceTestProjects {
                 "<action android:name=\"com\\.google\\.android\\.c2dm\\.intent\\.REGISTRATION\" />",
                 "");
 
+        // Replace files direct access to file collection lazy access, since variants resolved
+        // dependencies cannot be accessed in configuration time
+        TestFileUtils.searchAndReplace(
+                project.file("libs/utils/WordPressUtils/build.gradle"),
+                "files\\(variant\\.javaCompile\\.classpath\\.files, android\\.getBootClasspath\\(\\)\\)",
+                "files{[variant.javaCompile.classpath.files, android.getBootClasspath()]}");
+
+        return project;
     }
 
 
-    public static void initializeUberSkeleton(@NonNull GradleTestProject project)
+    public static GradleTestProject initializeUberSkeleton(@NonNull GradleTestProject project)
             throws IOException {
 
         TestFileUtils.searchAndReplace(
@@ -582,6 +592,7 @@ public class PerformanceTestProjects {
                         .collect(Collectors.toList());
 
         modifyBuildFiles(allBuildFiles);
+        return project;
     }
 
     public static void assertNoSyncErrors(@NonNull Map<String, AndroidProject> models) {

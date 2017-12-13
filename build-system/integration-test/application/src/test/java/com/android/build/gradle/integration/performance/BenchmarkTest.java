@@ -41,6 +41,7 @@ public class BenchmarkTest {
          */
         benchmarks.addAll(AntennaPodBenchmarks.INSTANCE.get());
         benchmarks.addAll(LargeGradleProjectBenchmarks.INSTANCE.get());
+        benchmarks.addAll(MediumGradleProjectBenchmarks.INSTANCE.get());
 
         /*
          * We sort the benchmarks to make sure they're in a predictable, stable order. This is
