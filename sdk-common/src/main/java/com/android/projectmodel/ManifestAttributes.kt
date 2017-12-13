@@ -16,6 +16,7 @@
 package com.android.projectmodel
 
 import com.android.sdklib.AndroidVersion
+import kotlin.reflect.full.memberProperties
 
 /**
  * Holds the set of simple values that can be present in an Android manifest. Multiple [ManifestAttributes] instances
@@ -89,4 +90,17 @@ data class ManifestAttributes(
                     compileSdkVersion = other.compileSdkVersion ?: compileSdkVersion,
                     debuggable = other.debuggable ?: debuggable
             )
+
+    override fun toString(): String {
+        val componentStrings = ArrayList<String>()
+        val defaultValues = ManifestAttributes()
+        for (prop in ManifestAttributes::class.memberProperties) {
+            val defaultValue = prop.get(defaultValues)
+            val actualValue = prop.get(this)
+            if (defaultValue != actualValue) {
+                componentStrings.add("${prop.name}=$actualValue")
+            }
+        }
+        return componentStrings.joinToString(",", "ManifestAttributes(", ")")
+    }
 }
