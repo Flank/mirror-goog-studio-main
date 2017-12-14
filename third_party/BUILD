@@ -666,7 +666,7 @@ maven_java_library(
 
 maven_java_library(
     name = "org.codehaus.groovy_groovy-all",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/groovy/groovy-all/2.4.11:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/groovy/groovy-all/2.4.12:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
