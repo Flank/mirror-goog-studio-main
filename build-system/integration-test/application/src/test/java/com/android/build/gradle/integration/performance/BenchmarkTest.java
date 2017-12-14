@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.junit.Test;
@@ -143,8 +145,19 @@ public class BenchmarkTest {
             return;
         }
 
-        System.out.println("running " + shard.size() + " benchmarks");
+        /*
+         * After all of the sharding and filtering, we want to randomise the order that the
+         * benchmarks run in, in order to make sure there are no temporal dependencies between them.
+         *
+         * We generate a seed beforehand and print it to the logs to make temporal dependencies
+         * easier to debug when they happen, as the user will then be able to reproduce the order
+         * the benchmarks were run in by setting the PERF_SHUFFLE_SEED environment variable.
+         */
+        Long shuffleSeed = shuffleSeed();
+        System.out.println("shuffling benchmarks with seed: " + shuffleSeed);
+        Collections.shuffle(shard, new Random(shuffleSeed));
 
+        System.out.println("running " + shard.size() + " benchmarks");
         Duration benchmarkDuration = Duration.ofNanos(0);
         Duration recordedDuration = Duration.ofNanos(0);
 
@@ -168,7 +181,6 @@ public class BenchmarkTest {
         BenchmarkRecorder.awaitUploads(15, TimeUnit.MINUTES);
 
         Duration totalDuration = Duration.ofNanos(System.nanoTime() - start);
-
         System.out.println("Total recorded duration: " + recordedDuration);
         System.out.println("Total benchmark duration: " + benchmarkDuration);
         System.out.println("Overall duration: " + totalDuration);
@@ -206,5 +218,14 @@ public class BenchmarkTest {
             val = def;
         }
         return val;
+    }
+
+    private static Long shuffleSeed() {
+        String shuffleSeed = System.getenv("PERF_SHUFFLE_SEED");
+        if (!Strings.isNullOrEmpty(shuffleSeed)) {
+            return Long.parseLong(shuffleSeed);
+        }
+
+        return ThreadLocalRandom.current().nextLong();
     }
 }
