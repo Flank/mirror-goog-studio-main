@@ -114,8 +114,16 @@ public final class XmlBuilder {
 
     @NonNull
     public XmlBuilder endTag(@NonNull String name) {
-        boolean useEmptyElementTag = !name.endsWith("Layout") && !name.equals(PREFERENCE_CATEGORY);
+        return endTagImpl(name, !name.endsWith("Layout") && !name.equals(PREFERENCE_CATEGORY));
+    }
 
+    @NonNull
+    public XmlBuilder seperateEndTag(@NonNull String name) {
+        return endTagImpl(name, false);
+    }
+
+    @NonNull
+    private XmlBuilder endTagImpl(@NonNull String name, boolean useEmptyElementTag) {
         if (lastAppendedConstruct.equals(Construct.START_TAG)
                 || lastAppendedConstruct.equals(Construct.ATTRIBUTE)) {
             int length = stringBuilder.length();
