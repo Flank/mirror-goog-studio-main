@@ -53,7 +53,7 @@ import java.util.function.Supplier
 open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: FileCollection private set
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDir: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDirectories: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional var featureDependencies: FileCollection? = null; private set
@@ -97,7 +97,7 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
                         .setAndroidTarget(builder.target)
                         .setManifestFile(File(manifestFileDirectory.singleFile, SdkConstants.ANDROID_MANIFEST_XML))
                         .setOptions(AaptOptions(null, false, null))
-                        .setResourceDir(inputResourcesDir.singleFile)
+                        .setResourceDirs(inputResourcesDirectories.asIterable())
                         .setLibrarySymbolTableFiles(null)
                         .setIsStaticLibrary(true)
                         .setImports(imports.build())
@@ -132,7 +132,7 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
                     } else {
                         scope.getOutput(TaskOutputType.MERGED_MANIFESTS)
                     }
-            task.inputResourcesDir = scope.getOutput(TaskOutputType.RES_COMPILED_FLAT_FILES)
+            task.inputResourcesDirectories = scope.getOutput(TaskOutputType.RES_COMPILED_FLAT_FILES)
             task.libraryDependencies =
                     scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,

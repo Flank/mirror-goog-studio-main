@@ -73,7 +73,7 @@ public final class MinimalSubProject extends AbstractAndroidTestApp implements A
 
     @Override
     public boolean containsFullBuildScript() {
-        return true;
+        return false;
     }
 
     @NonNull

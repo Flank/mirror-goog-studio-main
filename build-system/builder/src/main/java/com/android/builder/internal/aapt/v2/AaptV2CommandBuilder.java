@@ -131,7 +131,7 @@ public final class AaptV2CommandBuilder {
         }
         builder.add("-o", resourceOutputApk.getAbsolutePath());
 
-        if (config.getResourceDir() != null) {
+        if (config.getResourceDirs() != null) {
             try {
                 if (config.isListResourceFiles()) {
                     // AAPT2 only accepts individual files passed to the -R flag. In order to not
@@ -144,21 +144,28 @@ public final class AaptV2CommandBuilder {
 
                     // Resources list could have changed since last run.
                     FileUtils.deleteIfExists(file);
-                    try (FileOutputStream fos = new FileOutputStream(file);
-                         PrintWriter pw = new PrintWriter(fos)) {
+                    for (File dir : config.getResourceDirs()) {
+                        try (FileOutputStream fos = new FileOutputStream(file);
+                                PrintWriter pw = new PrintWriter(fos)) {
 
-                        Files.walk(config.getResourceDir().toPath())
-                                .filter(Files::isRegularFile)
-                                .forEach((p) -> pw.print(p.toString() + " "));
+                            Files.walk(dir.toPath())
+                                    .filter(Files::isRegularFile)
+                                    .forEach((p) -> pw.print(p.toString() + " "));
+                        }
                     }
                     builder.add("-R", "@" + file.getAbsolutePath());
                 } else {
-                    Files.walk(config.getResourceDir().toPath())
-                            .filter(Files::isRegularFile)
-                            .forEach((p) -> builder.add("-R", p.toString()));
+                    for (File dir : config.getResourceDirs()) {
+                        Files.walk(dir.toPath())
+                                .filter(Files::isRegularFile)
+                                .forEach((p) -> builder.add("-R", p.toString()));
+                    }
                 }
             } catch (IOException e) {
-                throw new AaptException("Failed to walk path " + config.getResourceDir());
+                throw new AaptException(
+                        "Failed to walk paths "
+                                + Joiner.on(File.pathSeparatorChar).join(config.getResourceDirs()),
+                        e);
             }
         }
 

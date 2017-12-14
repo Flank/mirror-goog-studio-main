@@ -80,7 +80,7 @@ public abstract class AbstractAapt implements Aapt {
      *         <li>Proguard output file (see {@link AaptPackageConfig#getProguardOutputFile()});
      *         <li>Resource configs (see {@link AaptPackageConfig#getResourceConfigs()}); if none is
      *             set, an empty collection is assumed;
-     *         <li>Resource dir (see {@link AaptPackageConfig#getResourceDir()});
+     *         <li>Resource dir (see {@link AaptPackageConfig#getResourceDirs()});
      *         <li>Resource output APK (see {@link AaptPackageConfig#getResourceOutputApk()});
      *         <li>Source output directory (see {@link AaptPackageConfig#getSourceOutputDir()});
      *         <li>Splits (see {@link AaptPackageConfig#getSplits()});

@@ -200,8 +200,9 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         Preconditions.checkNotNull(manifestFile);
         builder.addArgs("-M", FileUtils.toExportableSystemDependentPath(manifestFile));
 
-        if (config.getResourceDir() != null) {
-            builder.addArgs("-S", config.getResourceDir().getAbsolutePath());
+        if (config.getResourceDirs() != null) {
+            builder.addArgs(
+                    "-S", Iterables.getOnlyElement(config.getResourceDirs()).getAbsolutePath());
         }
 
         // outputs

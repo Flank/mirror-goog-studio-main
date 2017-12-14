@@ -80,10 +80,8 @@ public class AaptPackageConfig implements Cloneable {
      */
     private boolean mVerbose;
 
-    /**
-     * The resource directory (see {@link Builder#setResourceDir(File)}).
-     */
-    private File mResourceDir;
+    /** The resource directories (see {@link Builder#setResourceDir(File)}). */
+    private ImmutableList<File> mResourceDirs;
 
     /**
      * Where to write proguard output (see {@link Builder#setProguardOutputFile(File)}).
@@ -280,8 +278,8 @@ public class AaptPackageConfig implements Cloneable {
      * @return the resource directory, {@code null} if not defined
      */
     @Nullable
-    public File getResourceDir() {
-        return mResourceDir;
+    public List<File> getResourceDirs() {
+        return mResourceDirs;
     }
 
     /**
@@ -576,7 +574,20 @@ public class AaptPackageConfig implements Cloneable {
                         + "' is not a readable directory.");
             }
 
-            mConfig.mResourceDir = resourceDir;
+            mConfig.mResourceDirs = ImmutableList.of(resourceDir);
+            return this;
+        }
+
+        /**
+         * Sets the resources folders. See {@link
+         * AbstractAapt#validatePackageConfig(AaptPackageConfig)} for details on field rules.
+         *
+         * @param resourceDir the resource folder; if it exists, it must be a valid directory
+         * @return {@code this}
+         */
+        @NonNull
+        public Builder setResourceDirs(@NonNull Iterable<File> resourceDir) {
+            mConfig.mResourceDirs = ImmutableList.copyOf(resourceDir);
             return this;
         }
 

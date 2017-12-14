@@ -25,11 +25,10 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.tasks.MergeResources
 import com.android.builder.core.VariantType
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
-import com.google.common.collect.ImmutableSet
+import org.gradle.api.Task
 import java.io.File
 
 /**
@@ -51,7 +50,6 @@ class NamespacedResourcesTaskManager(
      *  2. Links the app and its dependency to produce the final APK. This re-uses the same
      *  [LinkApplicationAndroidResourcesTask] task, as it needs to be split aware.
      *
-
      * TODO: Test support, Synthesize non-namespaced output.
      */
     fun createNamespacedResourceTasks(
@@ -183,25 +181,47 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createCompileResourcesTask() {
-        val compiled =
+        val compiledDirectory =
                 FileUtils.join(
                         variantScope.globalScope.intermediatesDir,
                         SdkConstants.FD_RES,
                         SdkConstants.FD_COMPILED,
                         variantScope.variantConfiguration.dirName)
-        val compile = taskFactory.create(
-                MergeResources.ConfigAction(
-                        variantScope,
-                        "compile",
-                        compiled,
-                        null,
-                        false,
-                        true,
-                        false,
-                        ImmutableSet.of()))
-        compile.dependsOn(variantScope.resourceGenTask)
+
+
+        val sourceSets = variantScope.variantData.variantConfiguration.sortedSourceProviders
+
+        val tasks = mutableListOf<Task>()
+        // Preserving the sourceset order in overlays is important.
+        val directories = mutableListOf<File>()
+
+        for (sourceSet in sourceSets) {
+            // Just number the multiple resource directories in a source set.
+            // e.g. if debug has two directories, they will be stored in the output directory as
+            // 'debug' and 'debug2'
+            for ((index, resDirectory) in sourceSet.resDirectories.withIndex()) {
+                val sourceSetDirName =
+                        if (index == 0) sourceSet.name else """${sourceSet.name}${index + 1}"""
+                val outputDir = File(compiledDirectory, sourceSetDirName)
+                val name = "compile${sourceSetDirName.capitalize()}" +
+                        "ResourcesFor${variantScope.fullVariantName.capitalize()}"
+                tasks.add(taskFactory.create(CompileSourceSetResources.ConfigAction(
+                        name = name,
+                        inputDirectory = resDirectory,
+                        outputDirectory = outputDir,
+                        variantScope = variantScope,
+                        aaptIntermediateDirectory = variantScope.getIncrementalDir(name))))
+                directories.add(outputDir)
+            }
+        }
+        val compiled = variantScope.globalScope.project.files(directories)
+
+        tasks.forEach {
+            it.dependsOn(variantScope.resourceGenTask)
+            compiled.builtBy(it)
+        }
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.RES_COMPILED_FLAT_FILES, compiled, compile.name)
+                TaskOutputHolder.TaskOutputType.RES_COMPILED_FLAT_FILES, compiled, null)
     }
 
     private fun createLinkResourcesTask() {
