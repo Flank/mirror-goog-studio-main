@@ -22,21 +22,21 @@ import java.util.List;
 
 /** File conventions for Linux. */
 public class PosixFileConventions extends AbstractOsFileConventions {
-    @Override
     @NonNull
-    public List<String> tokenizeString(@NonNull String commandString) {
-        return StringHelperPOSIX.tokenizeString(commandString);
+    @Override
+    public List<String> tokenizeCommandLineToEscaped(@NonNull String commandString) {
+        return StringHelperPOSIX.tokenizeCommandLineToEscaped(commandString);
+    }
+
+    @NonNull
+    @Override
+    public List<String> tokenizeCommandLineToRaw(@NonNull String commandString) {
+        return StringHelperPOSIX.tokenizeCommandLineToRaw(commandString);
     }
 
     @Override
     @NonNull
     public List<String> splitCommandLine(@NonNull String commandString) {
         return StringHelperPOSIX.splitCommandLine(commandString);
-    }
-
-    @Override
-    @NonNull
-    public String quoteAndJoinTokens(@NonNull List<String> tokens) {
-        return StringHelperPOSIX.quoteAndJoinTokens(tokens);
     }
 }

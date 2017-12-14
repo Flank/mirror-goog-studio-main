@@ -24,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
+import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.truth.NativeBuildConfigValueSubject;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
@@ -426,14 +427,16 @@ public class NdkSampleTest {
                 return file.startsWith("/");
             }
 
+            @NonNull
             @Override
-            public String getFileName(String filename) {
+            public String getFileName(@NonNull String filename) {
                 int pos = getLastIndexOfAnyFilenameSeparator(filename);
                 return filename.substring(pos + 1);
             }
 
+            @NonNull
             @Override
-            public String getFileParent(String filename) {
+            public String getFileParent(@NonNull String filename) {
                 int pos = getLastIndexOfAnyFilenameSeparator(filename);
                 return filename.substring(0, pos);
             }
@@ -454,26 +457,30 @@ public class NdkSampleTest {
                 return segment.equals(":/") || segment.equals(":\\");
             }
 
+            @NonNull
             @Override
-            public String getFileName(String filename) {
+            public String getFileName(@NonNull String filename) {
                 int pos = getLastIndexOfAnyFilenameSeparator(filename);
                 return filename.substring(pos + 1);
             }
 
+            @NonNull
             @Override
-            public String getFileParent(String filename) {
+            public String getFileParent(@NonNull String filename) {
                 int pos = getLastIndexOfAnyFilenameSeparator(filename);
                 return filename.substring(0, pos);
             }
 
+            @NonNull
             @Override
-            public File toFile(String filename) {
+            public File toFile(@NonNull String filename) {
                 filename = filename.replace('\\', '/');
                 return new File(filename);
             }
 
+            @NonNull
             @Override
-            public File toFile(File parent, String child) {
+            public File toFile(@NonNull File parent, @NonNull String child) {
                 return new File(parent.toString().replace('\\', '/'), child.replace('\\', '/'));
             }
         };
@@ -532,7 +539,7 @@ public class NdkSampleTest {
     private static void checkExpectedCompilerParserBehavior(@NonNull List<CommandLine> commands) {
         for (CommandLine command : commands) {
             if (new CommandClassifier.NativeCompilerBuildTool().isMatch(command)) {
-                for (String arg : command.args) {
+                for (String arg : command.escapedFlags) {
                     if (arg.startsWith("-")) {
                         String trimmed = arg;
                         while (trimmed.startsWith("-")) {
@@ -622,9 +629,22 @@ public class NdkSampleTest {
                                         + "BulletMultiThreaded/btThreadSupportInterface.cpp"));
     }
 
+    // Related to issuetracker.google.com/69110338. Covers case where there is a compiler flag
+    // with spaces like -DMY_FLAG='my value'
+    @Test
+    public void singleQuotedDefine() throws IOException, InterruptedException {
+        NativeBuildConfigValue config = checkJson("samples/tick-in-define-repro");
+        assertConfig(config).hasExactLibrariesNamed("example-debug-armeabi-v7a");
+        NativeSourceFileValue file =
+                config.libraries.get("example-debug-armeabi-v7a").files.iterator().next();
+        // Below is the actual fact we're trying to assert for this bug. We need to preserve
+        // the single quotes around hello world
+        assertThat(file.flags).contains("-DTOM='hello world'");
+    }
+
     // Related to b.android.com/216676. Same source file name produces same target name.
     @Test
-    public void duplicate_source_names() throws IOException, InterruptedException {
+    public void duplicateSourceNames() throws IOException, InterruptedException {
         NativeBuildConfigValue config = checkJson("samples/duplicate-source-names");
         assertConfig(config)
                 .hasExactLibrariesNamed(
@@ -675,7 +695,7 @@ public class NdkSampleTest {
     // Related to b.android.com/218397. On Windows, the wrong target name was used because it
     // was passed through File class which caused slashes to be normalized to back slash.
     @Test
-    public void windows_target_name() throws IOException, InterruptedException {
+    public void windowsTargetName() throws IOException, InterruptedException {
         NativeBuildConfigValue config = checkJson("samples/windows-target-name",
                 SdkConstants.PLATFORM_WINDOWS);
         assertConfig(config)
@@ -698,17 +718,17 @@ public class NdkSampleTest {
 
     // Related to b.android.com/214626
     @Test
-    public void LOCAL_MODULE_FILENAME() throws IOException, InterruptedException {
+    public void localModuleFilename() throws IOException, InterruptedException {
         checkJson("samples/LOCAL_MODULE_FILENAME");
     }
 
     @Test
-    public void include_flag() throws IOException, InterruptedException {
+    public void includeFlag() throws IOException, InterruptedException {
         checkJson("samples/include-flag");
     }
 
     @Test
-    public void clang_example() throws IOException, InterruptedException {
+    public void clangExample() throws IOException, InterruptedException {
         NativeBuildConfigValue config = checkJson("samples/clang");
         // Assert that full paths coming from the ndk-build output aren't further qualified with
         // executution path.
@@ -723,19 +743,19 @@ public class NdkSampleTest {
     }
 
     @Test
-    public void neon_example() throws IOException, InterruptedException {
+    public void neonExample() throws IOException, InterruptedException {
         checkJson("samples/neon");
     }
 
     @Test
-    public void ccache_example() throws IOException, InterruptedException {
+    public void ccacheExample() throws IOException, InterruptedException {
         // CCache is turned on in ndk build by setting NDK_CCACHE to a path to ccache
         // executable.
         checkJson("samples/ccache");
     }
 
     @Test
-    public void google_test_example() throws IOException, InterruptedException {
+    public void googleTestExample() throws IOException, InterruptedException {
         NativeBuildConfigValue config = checkJson("samples/google-test-example");
         assertConfig(config)
                 .hasExactLibraryOutputs(
@@ -750,65 +770,65 @@ public class NdkSampleTest {
     }
 
     @Test
-    public void missing_include_example() throws IOException, InterruptedException {
+    public void missingIncludeExample() throws IOException, InterruptedException {
         checkJson("samples/missing-include");
     }
 
     @Test
-    public void san_angeles_linux() throws IOException, InterruptedException {
+    public void sanAngelesExample() throws IOException, InterruptedException {
         checkJson("samples/san-angeles", SdkConstants.PLATFORM_LINUX);
     }
 
     @Test
-    public void san_angeles_windows() throws IOException, InterruptedException {
+    public void sanAngelesWindows() throws IOException, InterruptedException {
         checkJson("samples/san-angeles", SdkConstants.PLATFORM_WINDOWS);
     }
 
     // input: support-files/ndk-sample-baselines/Teapot.json
     @Test
-    public void Teapot() throws IOException, InterruptedException {
+    public void teapot() throws IOException, InterruptedException {
         checkJson("samples/Teapot");
     }
 
     // input: support-files/ndk-sample-baselines/native-audio.json
     @Test
-    public void native_audio() throws IOException, InterruptedException {
+    public void nativeAudio() throws IOException, InterruptedException {
         checkJson("samples/native-audio");
     }
 
     // input: support-files/ndk-sample-baselines/native-codec.json
     @Test
-    public void native_codec() throws IOException, InterruptedException {
+    public void nativeCodec() throws IOException, InterruptedException {
         checkJson("samples/native-codec");
     }
 
     // input: support-files/ndk-sample-baselines/native-media.json
     @Test
-    public void native_media() throws IOException, InterruptedException {
+    public void nativeMedia() throws IOException, InterruptedException {
         checkJson("samples/native-media");
     }
 
     // input: support-files/ndk-sample-baselines/native-plasma.json
     @Test
-    public void native_plasma() throws IOException, InterruptedException {
+    public void nativePlasma() throws IOException, InterruptedException {
         checkJson("samples/native-plasma");
     }
 
     // input: support-files/ndk-sample-baselines/bitmap-plasma.json
     @Test
-    public void bitmap_plasma() throws IOException, InterruptedException {
+    public void bitmapPlasm() throws IOException, InterruptedException {
         checkJson("samples/bitmap-plasma");
     }
 
     // input: support-files/ndk-sample-baselines/native-activity.json
     @Test
-    public void native_activity() throws IOException, InterruptedException {
+    public void nativeActivity() throws IOException, InterruptedException {
         checkJson("samples/native-activity");
     }
 
     // input: support-files/ndk-sample-baselines/HelloComputeNDK.json
     @Test
-    public void HelloComputeNDK() throws IOException, InterruptedException {
+    public void helloComputeNDK() throws IOException, InterruptedException {
         NativeBuildConfigValue config = checkJson("samples/HelloComputeNDK");
         assertConfig(config)
                 .hasExactLibraryOutputs(
@@ -828,25 +848,25 @@ public class NdkSampleTest {
 
     // input: support-files/ndk-sample-baselines/test-libstdc++.json
     @Test
-    public void test_libstdcpp() throws IOException, InterruptedException {
+    public void testLibstdcpp() throws IOException, InterruptedException {
         checkJson("samples/test-libstdc++");
     }
 
     // input: support-files/ndk-sample-baselines/hello-gl2.json
     @Test
-    public void hello_gl2() throws IOException, InterruptedException {
+    public void helloGl2() throws IOException, InterruptedException {
         checkJson("samples/hello-gl2");
     }
 
     // input: support-files/ndk-sample-baselines/two-libs.json
     @Test
-    public void two_libs() throws IOException, InterruptedException {
+    public void twoLibs() throws IOException, InterruptedException {
         checkJson("samples/two-libs");
     }
 
     // input: support-files/ndk-sample-baselines/module-exports.json
     @Test
-    public void module_exports() throws IOException, InterruptedException {
+    public void moduleExports() throws IOException, InterruptedException {
         checkJson("samples/module-exports");
     }
 }

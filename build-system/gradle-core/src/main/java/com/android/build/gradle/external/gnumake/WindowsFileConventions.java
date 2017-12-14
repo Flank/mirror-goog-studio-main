@@ -22,20 +22,22 @@ import java.util.List;
 
 /** File conventions for Windows. */
 public class WindowsFileConventions extends AbstractOsFileConventions {
-    @Override
+
     @NonNull
-    public List<String> tokenizeString(@NonNull String commandString) {
-        return StringHelperWindows.tokenizeString(commandString);
+    @Override
+    public List<String> tokenizeCommandLineToEscaped(@NonNull String commandString) {
+        return StringHelperWindows.tokenizeCommandLineToEscaped(commandString);
+    }
+
+    @NonNull
+    @Override
+    public List<String> tokenizeCommandLineToRaw(@NonNull String commandString) {
+        return StringHelperWindows.tokenizeCommandLineToRaw(commandString);
     }
 
     @Override
     @NonNull
     public List<String> splitCommandLine(@NonNull String commandString) {
         return StringHelperWindows.splitCommandLine(commandString);
-    }
-
-    @Override
-    public String quoteAndJoinTokens(@NonNull List<String> tokens) {
-        return StringHelperWindows.quoteAndJoinTokens(tokens);
     }
 }

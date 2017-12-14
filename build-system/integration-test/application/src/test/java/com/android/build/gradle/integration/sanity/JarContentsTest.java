@@ -510,8 +510,6 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/transforms/",
                 "com/android/build/gradle/internal/variant/",
                 "com/android/build/gradle/internal/variant2/",
-                "com/android/build/gradle/ndk/",
-                "com/android/build/gradle/ndk/internal/",
                 "com/android/build/gradle/options/",
                 "com/android/build/gradle/proguard-common.txt",
                 "com/android/build/gradle/proguard-header.txt",

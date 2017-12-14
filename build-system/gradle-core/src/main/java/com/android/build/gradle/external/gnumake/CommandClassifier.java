@@ -118,8 +118,10 @@ class CommandClassifier {
         @Nullable
         @Override
         public BuildStepInfo createCommand(@NonNull CommandLine command) {
-            String[] arr = new String[command.args.size()];
-            arr = command.args.toArray(arr);
+            String[] arr = new String[command.escapedFlags.size()];
+            for (int i = 0; i < arr.length; ++i) {
+                arr[i] = command.escapedFlags.get(i);
+            }
             @SuppressWarnings("unchecked")
             List<String> options = (List<String>) PARSER.parse(arr).nonOptionArguments();
 
@@ -185,11 +187,12 @@ class CommandClassifier {
 
         @NonNull
         private static CommandLine translateToCompilerCommandLine(@NonNull CommandLine command) {
-            List<String> args = Lists.newArrayList(command.args);
-            String baseCommand = args.get(0);
-            args.remove(0);
-            return new CommandLine(baseCommand, args);
-
+            List<String> escaped = Lists.newArrayList(command.escapedFlags);
+            List<String> raw = Lists.newArrayList(command.rawFlags);
+            String baseCommand = escaped.get(0);
+            escaped.remove(0);
+            raw.remove(0);
+            return new CommandLine(baseCommand, escaped, raw);
         }
     }
 
@@ -202,8 +205,10 @@ class CommandClassifier {
         @NonNull
         @Override
         public BuildStepInfo createCommand(@NonNull CommandLine command) {
-            String[] arr = new String[command.args.size()];
-            arr = command.args.toArray(arr);
+            String[] arr = new String[command.escapedFlags.size()];
+            for (int i = 0; i < arr.length; ++i) {
+                arr[i] = command.escapedFlags.get(i);
+            }
             OptionSet options = CompilerParser.get().parse(arr);
 
             List<String> outputs = new ArrayList<>();
@@ -233,7 +238,7 @@ class CommandClassifier {
                                             + " %s\nbut received: \n%s\nin command:\n%s\n",
                                     this,
                                     Joiner.on("\n").join(outputValues),
-                                    Joiner.on("\n").join(command.args)));
+                                    Joiner.on("\n").join(command.rawFlags)));
                 }
                 String output = (String) options.valueOf("o");
                 outputs.add(output);
@@ -250,7 +255,7 @@ class CommandClassifier {
                                         + " %s\nbut received: \n%s\nin command:\n%s\n",
                                 this,
                                 Joiner.on("\n").join(inputs),
-                                Joiner.on("\n").join(command.args)));
+                                Joiner.on("\n").join(command.rawFlags)));
             }
 
             return new BuildStepInfo(command, inputs, outputs, inputsAreSourceFiles);

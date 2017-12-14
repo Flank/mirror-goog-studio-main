@@ -116,7 +116,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
             String command = commands.get(commandIndex);
             String target = targetNames.get(commandIndex);
             getLogger().lifecycle(String.format("Clean %s", target));
-            List<String> tokens = StringHelper.tokenizeString(command);
+            List<String> tokens = StringHelper.tokenizeCommandLineToEscaped(command);
             ProcessInfoBuilder processBuilder = new ProcessInfoBuilder();
             processBuilder.setExecutable(tokens.get(0));
             for (int i = 1; i < tokens.size(); ++i) {

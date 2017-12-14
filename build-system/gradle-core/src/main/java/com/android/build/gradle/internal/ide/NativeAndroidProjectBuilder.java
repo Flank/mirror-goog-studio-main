@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsonStreamingParser;
-import com.android.build.gradle.ndk.internal.NativeCompilerArgsUtil;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
@@ -122,16 +121,6 @@ class NativeAndroidProjectBuilder {
             super(reader);
             this.variantName = variantName;
             this.builder = builder;
-        }
-
-        @NonNull
-        static NativeAndroidProjectBuilder createAccumulator(@NonNull String projectName) {
-            return new NativeAndroidProjectBuilder(projectName);
-        }
-
-        @NonNull
-        private static List<String> convertFlagFormat(@NonNull String flags) {
-            return NativeCompilerArgsUtil.transform(StringHelper.tokenizeString(flags));
         }
 
         @Override
@@ -243,7 +232,8 @@ class NativeAndroidProjectBuilder {
 
         @Override
         public void visitLibraryFileFlags(@NonNull String flags) {
-            this.currentLibraryFileSettingsName = getSettingsName(convertFlagFormat(flags));
+            this.currentLibraryFileSettingsName =
+                    getSettingsName(StringHelper.tokenizeCommandLineToEscaped(flags));
         }
 
         @Override

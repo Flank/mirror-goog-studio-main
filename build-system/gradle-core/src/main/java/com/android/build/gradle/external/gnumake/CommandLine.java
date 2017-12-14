@@ -16,6 +16,7 @@
 package com.android.build.gradle.external.gnumake;
 
 
+import com.android.annotations.NonNull;
 import com.google.common.base.Joiner;
 import java.util.List;
 
@@ -23,22 +24,27 @@ import java.util.List;
  * A shell command with n arguments.
  */
 class CommandLine {
-    public final String executable;
-    public final List<String> args;
+    @NonNull public final String executable;
+    @NonNull public final List<String> escapedFlags;
+    @NonNull public final List<String> rawFlags;
 
-    CommandLine(String executable, List<String> args) {
+    CommandLine(
+            @NonNull String executable,
+            @NonNull List<String> escapedFlags,
+            @NonNull List<String> rawFlags) {
         this.executable = executable;
-        this.args = args;
+        this.escapedFlags = escapedFlags;
+        this.rawFlags = rawFlags;
     }
 
     @Override
     public boolean equals(Object obj) {
         CommandLine other = (CommandLine) obj;
-        return executable.equals(other.executable) && args.equals(other.args);
+        return executable.equals(other.executable) && rawFlags.equals(other.rawFlags);
     }
 
     @Override
     public String toString() {
-        return executable + " " + Joiner.on(' ').join(args);
+        return executable + " " + Joiner.on(' ').join(rawFlags);
     }
 }

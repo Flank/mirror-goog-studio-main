@@ -450,7 +450,7 @@ public class ExternalNativeBuildTaskUtils {
 
             ProgressiveLoggingProcessOutput() {
                 outputStream = new ProgressiveLoggingOutputStream(logStdioToInfo, standardOutput);
-                errorStream = new ProgressiveLoggingOutputStream(true /* logStdioToInfo */, null);
+                errorStream = new ProgressiveLoggingOutputStream(true /* logToInfo */, null);
             }
 
             @NonNull
@@ -508,16 +508,11 @@ public class ExternalNativeBuildTaskUtils {
                     if (nextByteIndex == 0) {
                         return;
                     }
-                    String line = new String(buffer, 0, nextByteIndex, "UTF-8");
                     if (logToInfo) {
+                        String line = new String(buffer, 0, nextByteIndex, "UTF-8");
                         logger.info(line);
                     }
                     nextByteIndex = 0;
-                }
-
-                @Override
-                public void flush() throws IOException {
-                    printBuffer();
                 }
 
                 @Override

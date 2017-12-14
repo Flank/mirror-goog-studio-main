@@ -18,11 +18,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-fpic\" \"-finline-functions\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-fmessage-length\u003d0\" \"-fno-inline-functions-called-once\" \"-fgcse-after-reload\" \"-frerun-cse-after-loop\" \"-frename-registers\" \"-no-canonical-prefixes\" \"-g\" \"-O2\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-9/arch-mips/usr/include\""
+          "flags": "-fpic -finline-functions -ffunction-sections -funwind-tables -fstack-protector-strong -fmessage-length\u003d0 -fno-inline-functions-called-once -fgcse-after-reload -frerun-cse-after-loop -frename-registers -no-canonical-prefixes -g -O2 -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-9/arch-mips/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/mips/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/mips/libhello-jni.so"
       }
     },
     "hello-jni-release-mips64": {
@@ -35,11 +35,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-fpic\" \"-finline-functions\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-fmessage-length\u003d0\" \"-fno-inline-functions-called-once\" \"-fgcse-after-reload\" \"-frerun-cse-after-loop\" \"-frename-registers\" \"-no-canonical-prefixes\" \"-g\" \"-O2\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-21/arch-mips64/usr/include\""
+          "flags": "-fpic -finline-functions -ffunction-sections -funwind-tables -fstack-protector-strong -fmessage-length\u003d0 -fno-inline-functions-called-once -fgcse-after-reload -frerun-cse-after-loop -frename-registers -no-canonical-prefixes -g -O2 -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-21/arch-mips64/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/mips64/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/mips64/libhello-jni.so"
       }
     },
     "hello-jni-debug-armeabi-v7a": {
@@ -52,11 +52,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-fpic\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-no-canonical-prefixes\" \"-g\" \"-march\u003darmv7-a\" \"-mfpu\u003dvfpv3-d16\" \"-mfloat-abi\u003dsoftfp\" \"-mthumb\" \"-Os\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-9/arch-arm/usr/include\""
+          "flags": "-fpic -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -g -march\u003darmv7-a -mfpu\u003dvfpv3-d16 -mfloat-abi\u003dsoftfp -mthumb -Os -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-9/arch-arm/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/armeabi-v7a/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/armeabi-v7a/libhello-jni.so"
       }
     },
     "hello-jni-debug-armeabi": {
@@ -69,11 +69,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-fpic\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-no-canonical-prefixes\" \"-g\" \"-march\u003darmv5te\" \"-mtune\u003dxscale\" \"-msoft-float\" \"-mthumb\" \"-Os\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-9/arch-arm/usr/include\""
+          "flags": "-fpic -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -g -march\u003darmv5te -mtune\u003dxscale -msoft-float -mthumb -Os -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-9/arch-arm/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/armeabi/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/armeabi/libhello-jni.so"
       }
     },
     "hello-jni-debug-x86_64": {
@@ -86,11 +86,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-no-canonical-prefixes\" \"-g\" \"-O2\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-21/arch-x86_64/usr/include\""
+          "flags": "-ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -g -O2 -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-21/arch-x86_64/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/x86_64/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/x86_64/libhello-jni.so"
       }
     },
     "hello-jni-release-arm64-v8a": {
@@ -103,11 +103,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-fpic\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-no-canonical-prefixes\" \"-g\" \"-O2\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-21/arch-arm64/usr/include\""
+          "flags": "-fpic -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -g -O2 -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-21/arch-arm64/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/arm64-v8a/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/arm64-v8a/libhello-jni.so"
       }
     },
     "hello-jni-release-armeabi": {
@@ -120,11 +120,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-fpic\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-no-canonical-prefixes\" \"-g\" \"-march\u003darmv5te\" \"-mtune\u003dxscale\" \"-msoft-float\" \"-mthumb\" \"-Os\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-9/arch-arm/usr/include\""
+          "flags": "-fpic -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -g -march\u003darmv5te -mtune\u003dxscale -msoft-float -mthumb -Os -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-9/arch-arm/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/armeabi/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/armeabi/libhello-jni.so"
       }
     },
     "hello-jni-release-x86": {
@@ -137,11 +137,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-ffunction-sections\" \"-funwind-tables\" \"-no-canonical-prefixes\" \"-g\" \"-fstack-protector-strong\" \"-O2\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-9/arch-x86/usr/include\""
+          "flags": "-ffunction-sections -funwind-tables -no-canonical-prefixes -g -fstack-protector-strong -O2 -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-9/arch-x86/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/x86/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/x86/libhello-jni.so"
       }
     },
     "hello-jni-debug-mips64": {
@@ -154,11 +154,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-fpic\" \"-finline-functions\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-fmessage-length\u003d0\" \"-fno-inline-functions-called-once\" \"-fgcse-after-reload\" \"-frerun-cse-after-loop\" \"-frename-registers\" \"-no-canonical-prefixes\" \"-g\" \"-O2\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-21/arch-mips64/usr/include\""
+          "flags": "-fpic -finline-functions -ffunction-sections -funwind-tables -fstack-protector-strong -fmessage-length\u003d0 -fno-inline-functions-called-once -fgcse-after-reload -frerun-cse-after-loop -frename-registers -no-canonical-prefixes -g -O2 -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-21/arch-mips64/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/mips64/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/mips64/libhello-jni.so"
       }
     },
     "hello-jni-release-x86_64": {
@@ -171,11 +171,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-no-canonical-prefixes\" \"-g\" \"-O2\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-21/arch-x86_64/usr/include\""
+          "flags": "-ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -g -O2 -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-21/arch-x86_64/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/x86_64/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/x86_64/libhello-jni.so"
       }
     },
     "hello-jni-debug-arm64-v8a": {
@@ -188,11 +188,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-fpic\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-no-canonical-prefixes\" \"-g\" \"-O2\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-21/arch-arm64/usr/include\""
+          "flags": "-fpic -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -g -O2 -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-21/arch-arm64/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/arm64-v8a/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/arm64-v8a/libhello-jni.so"
       }
     },
     "hello-jni-debug-x86": {
@@ -205,11 +205,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-ffunction-sections\" \"-funwind-tables\" \"-no-canonical-prefixes\" \"-g\" \"-fstack-protector-strong\" \"-O2\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-9/arch-x86/usr/include\""
+          "flags": "-ffunction-sections -funwind-tables -no-canonical-prefixes -g -fstack-protector-strong -O2 -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-9/arch-x86/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/x86/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/x86/libhello-jni.so"
       }
     },
     "hello-jni-release-armeabi-v7a": {
@@ -222,11 +222,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-fpic\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-no-canonical-prefixes\" \"-g\" \"-march\u003darmv7-a\" \"-mfpu\u003dvfpv3-d16\" \"-mfloat-abi\u003dsoftfp\" \"-mthumb\" \"-Os\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-9/arch-arm/usr/include\""
+          "flags": "-fpic -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -g -march\u003darmv7-a -mfpu\u003dvfpv3-d16 -mfloat-abi\u003dsoftfp -mthumb -Os -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-9/arch-arm/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/armeabi-v7a/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/armeabi-v7a/libhello-jni.so"
       }
     },
     "hello-jni-release-mips": {
@@ -239,11 +239,11 @@
           "src": {
             "path": "{executeFromHere}/{project}/src/main/jni/hello-jni.c"
           },
-          "flags": "\"-fpic\" \"-finline-functions\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-fmessage-length\u003d0\" \"-fno-inline-functions-called-once\" \"-fgcse-after-reload\" \"-frerun-cse-after-loop\" \"-frename-registers\" \"-no-canonical-prefixes\" \"-g\" \"-O2\" \"-DNDEBUG\" \"-I{project}/src/main/jni\" \"-DANDROID\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-isystem\" \"{ndk}/platforms/android-9/arch-mips/usr/include\""
+          "flags": "-fpic -finline-functions -ffunction-sections -funwind-tables -fstack-protector-strong -fmessage-length\u003d0 -fno-inline-functions-called-once -fgcse-after-reload -frerun-cse-after-loop -frename-registers -no-canonical-prefixes -g -O2 -DNDEBUG -I{project}/src/main/jni -DANDROID -Wa,--noexecstack -Wformat -Werror\u003dformat-security -isystem {ndk}/platforms/android-9/arch-mips/usr/include"
         }
       ],
       "output": {
-        "path": "{project}\\.externalNativeBuild\\ndkBuild\\debug\\obj/local/mips/libhello-jni.so"
+        "path": "{project}/.externalNativeBuild/ndkBuild/debug/obj/local/mips/libhello-jni.so"
       }
     }
   },

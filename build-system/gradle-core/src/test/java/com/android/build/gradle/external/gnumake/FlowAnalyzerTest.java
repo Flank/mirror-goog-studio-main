@@ -81,11 +81,12 @@ public class FlowAnalyzerTest {
                 @NonNull String input,
                 @NonNull List<String> outputs,
                 boolean inputsAreSourceFiles) {
-            infos.add(new BuildStepInfo(
-                    new CommandLine(command, commandArgs),
-                    Lists.newArrayList(input),
-                    outputs,
-                    inputsAreSourceFiles));
+            infos.add(
+                    new BuildStepInfo(
+                            new CommandLine(command, commandArgs, commandArgs),
+                            Lists.newArrayList(input),
+                            outputs,
+                            inputsAreSourceFiles));
             return this;
         }
     }

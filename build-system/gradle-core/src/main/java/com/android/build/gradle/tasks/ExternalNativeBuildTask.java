@@ -276,7 +276,7 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
             String libraryName = libraryNames.get(library);
             getLogger().lifecycle(String.format("Build %s", libraryName));
             String command = commands.get(library);
-            List<String> tokens = StringHelper.tokenizeString(command);
+            List<String> tokens = StringHelper.tokenizeCommandLineToEscaped(command);
             ProcessInfoBuilder processBuilder = new ProcessInfoBuilder();
             processBuilder.setExecutable(tokens.get(0));
             for (int i = 1; i < tokens.size(); ++i) {

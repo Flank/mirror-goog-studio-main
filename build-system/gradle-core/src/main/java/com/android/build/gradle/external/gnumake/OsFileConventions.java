@@ -31,25 +31,25 @@ import java.util.List;
  */
 interface OsFileConventions {
     @NonNull
-    List<String> tokenizeString(@NonNull String commandString);
+    List<String> tokenizeCommandLineToEscaped(@NonNull String commandString);
+
+    @NonNull
+    List<String> tokenizeCommandLineToRaw(@NonNull String commandString);
 
     @NonNull
     List<String> splitCommandLine(@NonNull String commandString);
 
-    @NonNull
-    String quoteAndJoinTokens(@NonNull List<String> tokens);
-
     boolean isPathAbsolute(@NonNull String file);
 
     @NonNull
-    String getFileParent(String filename);
+    String getFileParent(@NonNull String filename);
 
     @NonNull
-    String getFileName(String filename);
+    String getFileName(@NonNull String filename);
 
     @NonNull
-    File toFile(String filename);
+    File toFile(@NonNull String filename);
 
     @NonNull
-    File toFile(File parent, String child);
+    File toFile(@NonNull File parent, @NonNull String child);
 }
