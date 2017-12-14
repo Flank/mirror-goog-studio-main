@@ -40,8 +40,6 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
 
     private const val ACTIVITY_PATH = "app/src/main/java/de/danoeh/antennapod/activity/MainActivity.java"
 
-    private val INSTANT_RUN_TARGET_DEVICE_VERSION = AndroidVersion(24, null)
-
     override fun get(): List<Benchmark> {
         var benchmarks: List<Benchmark> = mutableListOf()
 
@@ -76,7 +74,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE,
                             action = { record, project, executor, _ ->
                                 executor.run(":app:assembleDebug")
-                                addMethodToActivity(project.file(ACTIVITY_PATH))
+                                PerformanceTestUtil.addMethodToActivity(project.file(ACTIVITY_PATH))
                                 record { executor.run(":app:assembleDebug") }
                             }
                     ),
@@ -86,7 +84,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
                             action = { record, project, executor, _ ->
                                 executor.run(":app:assembleDebug")
-                                changeActivity(project.file(ACTIVITY_PATH))
+                                PerformanceTestUtil.changeActivity(project.file(ACTIVITY_PATH))
                                 record { executor.run(":app:assembleDebug") }
                             }
                     ),
@@ -104,7 +102,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__API_CHANGE,
                             action = { record, project, executor, _ ->
                                 executor.run(":app:assembleDebug")
-                                addMethodToActivity(project.file(ACTIVITY_PATH))
+                                PerformanceTestUtil.addMethodToActivity(project.file(ACTIVITY_PATH))
                                 record { executor.run(":app:assembleDebug") }
                             }
                     ),
@@ -114,7 +112,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
                             action = { record, project, executor, _ ->
                                 executor.run(":app:assembleDebug")
-                                changeActivity(project.file(ACTIVITY_PATH))
+                                PerformanceTestUtil.changeActivity(project.file(ACTIVITY_PATH))
                                 record { executor.run(":app:assembleDebug") }
                             }
                     ),
@@ -185,44 +183,15 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
     private fun instantRunBenchmark(
             scenario: ProjectScenario,
             benchmarkMode: Logging.BenchmarkMode,
-            action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, ModelBuilder) -> Unit): Benchmark {
+            action: BenchmarkAction,
+            instantRunTargetDeviceVersion: AndroidVersion = AndroidVersion(24, null)): Benchmark {
         return benchmark(
                 scenario = scenario,
                 benchmarkMode = benchmarkMode,
                 action = { record, project, executor, model ->
-                    action(record, project, executor.withInstantRun(INSTANT_RUN_TARGET_DEVICE_VERSION), model)
+                    action(record, project, executor.withInstantRun(instantRunTargetDeviceVersion), model)
                     assertInstantRunInvoked(model)
                 })
-    }
-
-    private fun addMethodToActivity(file: File) {
-        val newMethodName = "newMethod" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE)
-        TestFileUtils.searchAndReplace(
-                file,
-                "public void onStart\\(\\) \\{",
-                """
-                    public void onStart() {
-                       $newMethodName();
-                """.trimIndent())
-
-        TestFileUtils.addMethod(
-                file,
-                """
-                    private void $newMethodName () {
-                        Log.d(TAG, "$newMethodName called");
-                    }
-                """.trimIndent())
-    }
-
-    private fun changeActivity(file: File) {
-        val rand = "rand" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE)
-        TestFileUtils.searchAndReplace(
-                file,
-                "public void onStart\\(\\) \\{",
-                """
-                    public void onStart() {
-                       Log.d(TAG, "onStart called $rand");
-                """.trimIndent())
     }
 
     private fun assertInstantRunInvoked(model: ModelBuilder) {

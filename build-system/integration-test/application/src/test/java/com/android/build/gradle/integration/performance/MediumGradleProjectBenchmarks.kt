@@ -72,7 +72,7 @@ object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = BenchmarkMode.BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
                             action = { record, project, executor, _ ->
                                 executor.run("assembleVanillaDebug")
-                                changeActivity(project.file(ACTIVITY))
+                                PerformanceTestUtil.changeActivity(project.file(ACTIVITY))
                                 record { executor.run("assembleVanillaDebug") }
                             }
                     ),
@@ -82,7 +82,7 @@ object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = BenchmarkMode.BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE,
                             action = { record, project, executor, _ ->
                                 executor.run("assembleVanillaDebug")
-                                addMethodToActivity(project.file(ACTIVITY))
+                                PerformanceTestUtil.addMethodToActivity(project.file(ACTIVITY))
                                 record { executor.run("assembleVanillaDebug") }
                             }
                     ),
@@ -148,35 +148,5 @@ object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                     action(record, project, executor, model)
                 }
         )
-    }
-
-    private fun addMethodToActivity(file: File) {
-        val newMethodName = "newMethod" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE)
-        TestFileUtils.searchAndReplace(
-                file,
-                "void onCreate\\((.*?)\\) \\{",
-                """
-                    void onCreate($1) {
-                       $newMethodName();
-                """.trimIndent())
-
-        TestFileUtils.addMethod(
-                file,
-                """
-                    public void $newMethodName () {
-                        android.util.Log.d("perftests", "$newMethodName called");
-                    }
-                """.trimIndent())
-    }
-
-    private fun changeActivity(file: File) {
-        val rand = "rand" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE)
-        TestFileUtils.searchAndReplace(
-                file,
-                "void onCreate\\((.*?)\\) \\{",
-                """
-                    void onCreate($1) {
-                       android.util.Log.d("perftests", "onCreate called $rand");
-                """.trimIndent())
     }
 }

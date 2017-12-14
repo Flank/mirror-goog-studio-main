@@ -17,11 +17,15 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.base.Preconditions;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class PerformanceTestUtil {
 
@@ -161,5 +165,43 @@ public final class PerformanceTestUtil {
             shard.add(list.get(i));
         }
         return shard;
+    }
+
+    public static void addMethodToActivity(File file) throws IOException {
+        String newMethodName =
+                "newMethod" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+        TestFileUtils.searchAndReplace(
+                file,
+                "void onCreate\\((.*?)\\) \\{",
+                "void onCreate($1) { " + newMethodName + "(); }");
+
+        TestFileUtils.addMethod(
+                file,
+                "public void "
+                        + newMethodName
+                        + "() { android.util.Log.d(\"perftests\", \""
+                        + newMethodName
+                        + " called\"); }");
+    }
+
+    public static void changeActivity(File file) throws IOException {
+        String rand = "rand" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+        TestFileUtils.searchAndReplace(
+                file,
+                "void onCreate\\((.*?)\\) \\{",
+                "void onCreate($1) { android.util.Log.d(\"perftests\", \"onCreate called "
+                        + rand
+                        + "\");");
+    }
+
+    public static void changeStringResource(File file) throws IOException {
+        TestFileUtils.searchAndReplace(file, "</string>", " added by test</string>");
+    }
+
+    public static void addStringResource(File file) throws IOException {
+        TestFileUtils.searchAndReplace(
+                file,
+                "</resources>",
+                "<string name=\"generated_by_test_for_perf\">my string</string></resources>");
     }
 }

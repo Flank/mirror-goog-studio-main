@@ -87,7 +87,7 @@ object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = BUILD_INC__SUB_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
                             action = { record, project, executor, _ ->
                                 executor.run(":phthalic:assembleDebug")
-                                changeActivity(project.file(ACTIVITY_PATH))
+                                PerformanceTestUtil.changeActivity(project.file(ACTIVITY_PATH))
                                 record { executor.run(":phthalic:assembleDebug") }
                             }
                     ),
@@ -97,7 +97,7 @@ object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = BUILD_INC__SUB_PROJECT__JAVA__API_CHANGE,
                             action = { record, project, executor, _ ->
                                 executor.run(":phthalic:assembleDebug")
-                                addMethodToActivity(project.file(ACTIVITY_PATH))
+                                PerformanceTestUtil.addMethodToActivity(project.file(ACTIVITY_PATH))
                                 record { executor.run(":phthalic:assembleDebug") }
                             }
                     ),
@@ -107,7 +107,7 @@ object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = BUILD_INC__SUB_PROJECT__RES__EDIT,
                             action = { record, project, executor, _ ->
                                 executor.run(":phthalic:assembleDebug")
-                                changeStringResource(project.file(RES_PATH))
+                                PerformanceTestUtil.changeStringResource(project.file(RES_PATH))
                                 record { executor.run(":phthalic:assembleDebug") }
                             }
                     ),
@@ -117,7 +117,7 @@ object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = BUILD_INC__SUB_PROJECT__RES__ADD,
                             action = { record, project, executor, _ ->
                                 executor.run(":phthalic:assembleDebug")
-                                addStringResource(project.file(RES_PATH))
+                                PerformanceTestUtil.addStringResource(project.file(RES_PATH))
                                 record { executor.run(":phthalic:assembleDebug") }
                             }
                     ),
@@ -158,46 +158,5 @@ object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                     action(record, project, executor, model)
                 }
         )
-    }
-
-    private fun addMethodToActivity(file: File) {
-        val newMethodName = "newMethod" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE)
-        TestFileUtils.searchAndReplace(
-                file,
-                "void onCreate\\((.*?)\\) \\{",
-                """
-                    void onCreate($1) {
-                       $newMethodName();
-                """.trimIndent())
-
-        TestFileUtils.addMethod(
-                file,
-                """
-                    public void $newMethodName () {
-                        android.util.Log.d("perftests", "$newMethodName called");
-                    }
-                """.trimIndent())
-    }
-
-    private fun changeActivity(file: File) {
-        val rand = "rand" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE)
-        TestFileUtils.searchAndReplace(
-                file,
-                "void onCreate\\((.*?)\\) \\{",
-                """
-                    void onCreate($1) {
-                       android.util.Log.d("perftests", "onCreate called $rand");
-                """.trimIndent())
-    }
-
-    private fun changeStringResource(file: File) {
-        TestFileUtils.searchAndReplace(file, "</string>", " added by test</string>");
-    }
-
-    private fun addStringResource(file: File) {
-        TestFileUtils.searchAndReplace(
-                file,
-                "</resources>",
-                "<string name=\"generated_by_test_for_perf\">my string</string></resources>");
     }
 }
