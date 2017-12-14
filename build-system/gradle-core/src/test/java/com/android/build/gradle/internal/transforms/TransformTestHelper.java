@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.workers.WorkerExecutor;
 import org.mockito.Mockito;
 
 /**
@@ -133,6 +134,11 @@ class TransformTestHelper {
 
         public InvocationBuilder setContext(@NonNull Context context) {
             this.context = context;
+            return this;
+        }
+
+        public InvocationBuilder setGradleWorkerExecutor(@NonNull WorkerExecutor executor) {
+            Mockito.when(context.getWorkerExecutor()).thenReturn(executor);
             return this;
         }
 

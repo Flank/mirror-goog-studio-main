@@ -30,7 +30,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import org.gradle.api.logging.Logging;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -86,14 +85,13 @@ public class JacocoReportTaskTest {
         File classDir = setUpClassDirectory();
         File reportDir = mTemporaryFolder.newFolder();
 
-        JacocoReportTask.generateReport(
+        JacocoReportTask.JacocoReportWorkerAction.generateReport(
                 ImmutableList.of(coverageFile),
                 reportDir,
                 ImmutableList.of(classDir),
                 ImmutableList.of(sourceRoot),
                 4,
-                "debug",
-                Logging.getLogger(JacocoReportTaskTest.class));
+                "debug");
 
         File indexHtml = new File(reportDir, "index.html");
         Document document = Jsoup.parse(indexHtml, Charsets.UTF_8.name(),

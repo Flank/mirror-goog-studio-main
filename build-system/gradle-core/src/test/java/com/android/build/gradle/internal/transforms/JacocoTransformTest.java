@@ -22,6 +22,7 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.fixtures.DirectWorkerExecutor;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
@@ -46,8 +47,7 @@ public class JacocoTransformTest {
     }
 
     @Test
-    public void testCopyFiles()
-            throws IOException, TransformException, InterruptedException, ClassNotFoundException {
+    public void testCopyFiles() throws IOException, TransformException, InterruptedException {
 
         File inputDir = tmp.newFolder("in");
         Path inputDirPath = inputDir.toPath();
@@ -65,6 +65,7 @@ public class JacocoTransformTest {
                 TransformTestHelper.invocationBuilder()
                         .setInputs(ImmutableSet.of(directoryInput))
                         .setTransformOutputProvider(outputProvider)
+                        .setGradleWorkerExecutor(new DirectWorkerExecutor())
                         .build();
 
         JacocoTransform transform = new JacocoTransform();
