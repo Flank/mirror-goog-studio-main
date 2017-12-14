@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent;
+import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
@@ -36,11 +37,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.workers.IsolationMode;
 import org.jacoco.core.instr.Instrumenter;
 import org.jacoco.core.runtime.OfflineInstrumentationAccessGenerator;
@@ -55,8 +58,11 @@ public class JacocoTransform extends Transform {
     // in the intermediate classes jar.
     private static final Pattern KOTLIN_MODULE_PATTERN =
             Pattern.compile("^META-INF/.*\\.kotlin_module$");
+    @NonNull private final Configuration jacocoAntTaskConfiguration;
 
-    public JacocoTransform() {}
+    public JacocoTransform(@NonNull Configuration jacocoAntTaskConfiguration) {
+        this.jacocoAntTaskConfiguration = jacocoAntTaskConfiguration;
+    }
 
     @NonNull
     @Override
@@ -85,6 +91,12 @@ public class JacocoTransform extends Transform {
     @Override
     public boolean isCacheable() {
         return true;
+    }
+
+    @NonNull
+    @Override
+    public Collection<SecondaryFile> getSecondaryFiles() {
+        return ImmutableList.of(SecondaryFile.nonIncremental(jacocoAntTaskConfiguration));
     }
 
     @Override
@@ -124,6 +136,8 @@ public class JacocoTransform extends Transform {
                                 JacocoWorkerAction.class,
                                 workerConfiguration -> {
                                     workerConfiguration.setIsolationMode(IsolationMode.CLASSLOADER);
+                                    workerConfiguration.classpath(
+                                            jacocoAntTaskConfiguration.getFiles());
                                     workerConfiguration.setParams(toProcess, inputDir, outputDir);
                                 });
             }

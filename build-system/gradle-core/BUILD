@@ -33,16 +33,14 @@ kotlin_library(
     bundled_deps = [
         "//tools/base/build-system/instant-run-instrumentation",
     ],
-    exclusions = {
-        "org.jacoco:org.jacoco.core": ["org.ow2.asm:asm-debug-all"],
-        "org.jacoco:org.jacoco.report": ["org.ow2.asm:asm-debug-all"],
-    },
     java_srcs = [":proguard-parser"],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-core",
     resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
+        ":jacoco.core_neverlink",
+        ":jacoco.report_neverlink",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api_neverlink",
@@ -68,8 +66,6 @@ kotlin_library(
         "//tools/base/third_party:org.antlr_antlr-runtime",
         "//tools/base/third_party:org.apache.commons_commons-compress",  # TODO: remove?
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
-        "//tools/base/third_party:org.jacoco_org.jacoco.core",
-        "//tools/base/third_party:org.jacoco_org.jacoco.report",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains_annotations",
         "//tools/base/third_party:org.ow2.asm_asm",
@@ -78,6 +74,18 @@ kotlin_library(
         "//tools/base/third_party:org.ow2.asm_asm-util",
         "//tools/data-binding:tools.compilerCommon",
     ],
+)
+
+maven_java_library(
+    name = "jacoco.core_neverlink",
+    neverlink = 1,
+    exports = ["//tools/base/third_party:org.jacoco_org.jacoco.core"],
+)
+
+maven_java_library(
+    name = "jacoco.report_neverlink",
+    neverlink = 1,
+    exports = ["//tools/base/third_party:org.jacoco_org.jacoco.report"],
 )
 
 maven_pom(
@@ -125,6 +133,8 @@ kotlin_test(
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
         "//tools/base/third_party:org.antlr_antlr-runtime",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
+        "//tools/base/third_party:org.jacoco_org.jacoco.core",
+        "//tools/base/third_party:org.jacoco_org.jacoco.report",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
         "//tools/base/third_party:org.jsoup_jsoup",

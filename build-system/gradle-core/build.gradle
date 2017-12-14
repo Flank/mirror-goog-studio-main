@@ -41,14 +41,11 @@ dependencies {
     compile libs.asm_analysis
     compile libs.asm_commons
     compile libs.asm_util
-    compile libs.jacoco_core, {
-      exclude group: 'org.ow2.asm', module: 'asm-debug-all'
-    }
-    compile libs.jacoco_report, {
-      exclude group: 'org.ow2.asm', module: 'asm-debug-all'
-    }
     compile libs.jopt
     compile libs.proguard
+
+    compileOnly libs.jacoco_core
+    compileOnly libs.jacoco_report
 
     testCompile project(':base:instant-run:instant-run-annotations')
     testCompile project(':base:instant-run:instant-run-runtime')
@@ -73,6 +70,8 @@ dependencies {
     testCompile project(':base:testutils')
     testCompile 'org.jetbrains:annotations:13.0'
     testCompile libs.jsoup
+    testCompile libs.jacoco_core
+    testCompile libs.jacoco_report
 }
 
 compileKotlin {

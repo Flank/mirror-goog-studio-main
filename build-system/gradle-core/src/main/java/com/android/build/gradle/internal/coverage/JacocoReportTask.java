@@ -43,6 +43,7 @@ import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -83,7 +84,6 @@ public class JacocoReportTask extends DefaultTask {
     private File coverageFile;
     private File reportDir;
     private String reportName;
-
 
     private int tabWidth = 4;
 
@@ -184,6 +184,7 @@ public class JacocoReportTask extends DefaultTask {
                 JacocoReportWorkerAction.class,
                 workerConfiguration -> {
                     workerConfiguration.setIsolationMode(IsolationMode.CLASSLOADER);
+                    workerConfiguration.classpath(jacocoClasspath.getFiles());
                     workerConfiguration.setParams(
                             coverageFiles,
                             getReportDir(),
@@ -195,10 +196,13 @@ public class JacocoReportTask extends DefaultTask {
     }
 
     public static class ConfigAction implements TaskConfigAction<JacocoReportTask> {
-        private VariantScope scope;
+        @NonNull private VariantScope scope;
+        @NonNull private final Configuration jacocoAntConfiguration;
 
-        public ConfigAction(VariantScope scope) {
+        public ConfigAction(
+                @NonNull VariantScope scope, @NonNull Configuration jacocoAntConfiguration) {
             this.scope = scope;
+            this.jacocoAntConfiguration = jacocoAntConfiguration;
         }
 
         @NonNull
@@ -225,8 +229,7 @@ public class JacocoReportTask extends DefaultTask {
             checkNotNull(scope.getTestedVariantData());
             final VariantScope testedScope = scope.getTestedVariantData().getScope();
 
-            task.jacocoClasspath =
-                    project.getConfigurations().getAt(JacocoPlugin.ANT_CONFIGURATION_NAME);
+            task.jacocoClasspath = jacocoAntConfiguration;
 
             task.coverageDirectory =
                     TaskInputHelper.memoize(

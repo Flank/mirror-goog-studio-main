@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.library;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
-import static com.android.build.gradle.internal.coverage.JacocoPlugin.DEFAULT_JACOCO_VERSION;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 
 import com.android.annotations.NonNull;
@@ -29,6 +28,7 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
+import com.android.build.gradle.internal.coverage.JacocoOptions;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -87,36 +87,31 @@ public class JacocoDependenciesTest {
     }
 
     @Test
-    public void checkAgentRuntimeVersion() throws IOException {
+    public void checkDefaultVersion() throws IOException {
+        assertAgentMavenCoordinates(
+                "org.jacoco:org.jacoco.agent:" + JacocoOptions.DEFAULT_VERSION + ":runtime@jar");
+    }
+
+    @Test
+    public void checkVersionForced() throws IOException {
         TestFileUtils.searchAndReplace(
                 project.getSubproject("library").getBuildFile(),
                 "apply plugin: 'com.android.library'",
                 "\n"
-                        + "project.buildscript { buildscript -> \n"
-                        + "  apply from: '../../commonLocalRepo.gradle', to:buildscript\n"
-                        + "  dependencies {\n"
-                        + "    classpath 'org.jacoco:org.jacoco.core:0.7.5.201505241946'\n"
-                        + "  }\n"
-                        + "}\n"
                         + "apply plugin: 'com.android.library'\n"
                         + "dependencies {\n"
-                        + "  implementation 'org.jacoco:org.jacoco.agent:0.7.5.201505241946:runtime'\n"
+                        + "  implementation 'org.jacoco:org.jacoco.agent:0.7.8:runtime'\n"
                         + "}\n");
         assertAgentMavenCoordinates(
-                "org.jacoco:org.jacoco.agent:" + DEFAULT_JACOCO_VERSION + ":runtime@jar");
+                "org.jacoco:org.jacoco.agent:" + JacocoOptions.DEFAULT_VERSION + ":runtime@jar");
     }
 
     @Test
     public void checkAgentRuntimeVersionWhenOverridden() throws IOException {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\n"
-                        + "buildscript { \n"
-                        + "  dependencies {\n"
-                        + "    classpath 'org.jacoco:org.jacoco.core:0.7.5.201505241946'\n"
-                        + "  }\n"
-                        + "}\n");
-        assertAgentMavenCoordinates("org.jacoco:org.jacoco.agent:0.7.5.201505241946:runtime@jar");
+                project.getSubproject("library").getBuildFile(),
+                "\n" + "android.jacoco.version '0.7.8'\n");
+        assertAgentMavenCoordinates("org.jacoco:org.jacoco.agent:0.7.8:runtime@jar");
     }
 
     @Test

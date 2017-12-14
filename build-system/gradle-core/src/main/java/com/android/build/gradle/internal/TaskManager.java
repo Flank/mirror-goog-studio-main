@@ -22,7 +22,6 @@ import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.FN_SPLIT_LIST;
-import static com.android.build.gradle.internal.coverage.JacocoPlugin.AGENT_CONFIGURATION_NAME;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
@@ -78,7 +77,7 @@ import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.coverage.JacocoPlugin;
+import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
@@ -2152,12 +2151,15 @@ public abstract class TaskManager {
                 connectedAndroidTest -> connectedAndroidTest.dependsOn(connectedTask.getName()));
 
         if (baseVariantData.getVariantConfiguration().getBuildType().isTestCoverageEnabled()) {
-            applyJacocoPlugin();
 
+            Configuration jacocoAntConfiguration =
+                    JacocoConfigurations.getJacocoAntTaskConfiguration(
+                            project, extension.getJacoco().getVersion());
             JacocoReportTask reportTask =
-                    taskFactory.create(new JacocoReportTask.ConfigAction(variantScope));
-            reportTask.dependsOn(
-                    project.getConfigurations().getAt(JacocoPlugin.ANT_CONFIGURATION_NAME));
+                    taskFactory.create(
+                            new JacocoReportTask.ConfigAction(
+                                    variantScope, jacocoAntConfiguration));
+
             reportTask.dependsOn(connectedTask.getName());
 
             variantScope.setCoverageReportTask(reportTask);
@@ -2722,19 +2724,18 @@ public abstract class TaskManager {
                                         && config.getTestedConfig().getType()
                                                 == VariantType.LIBRARY));
         if (isTestCoverageEnabled) {
-            // if not applied, apply the jacoco plugin
-            JacocoPlugin jacocoPlugin = applyJacocoPlugin();
-
             final Configuration agentConfiguration =
-                    project.getConfigurations().getByName(AGENT_CONFIGURATION_NAME);
+                    JacocoConfigurations.getJacocoRuntimeConfiguration(
+                            project, extension.getJacoco().getVersion());
 
             variantScope
                     .getVariantDependencies()
                     .getRuntimeClasspath()
                     .extendsFrom(agentConfiguration);
 
-
-            String jacocoAgentRuntimeDependency = jacocoPlugin.getAgentRuntimeDependency();
+            String jacocoAgentRuntimeDependency =
+                    JacocoConfigurations.getAgentRuntimeDependency(
+                            extension.getJacoco().getVersion());
             // we need to force the same version of Jacoco we use for instrumentation
             variantScope
                     .getVariantDependencies()
@@ -2743,19 +2744,12 @@ public abstract class TaskManager {
         }
     }
 
-    @NonNull
-    private JacocoPlugin applyJacocoPlugin() {
-        JacocoPlugin jacocoPlugin = project.getPlugins().findPlugin(JacocoPlugin.class);
-        if (jacocoPlugin == null) {
-            jacocoPlugin = project.getPlugins().apply(JacocoPlugin.class);
-        }
-        return jacocoPlugin;
-    }
-
     public void createJacocoTransform(
             @NonNull final VariantScope variantScope) {
-
-        JacocoTransform jacocoTransform = new JacocoTransform();
+        JacocoTransform jacocoTransform =
+                new JacocoTransform(
+                        JacocoConfigurations.getJacocoAntTaskConfiguration(
+                                project, extension.getJacoco().getVersion()));
 
         variantScope.getTransformManager().addTransform(taskFactory, variantScope, jacocoTransform);
     }
