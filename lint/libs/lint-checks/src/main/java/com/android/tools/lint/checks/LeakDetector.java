@@ -117,7 +117,8 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
         boolean isAnonymous = declaration instanceof UAnonymousClass;
 
         // Only consider static inner classes
-        boolean isStatic = context.getEvaluator().isStatic(declaration) || containingClass == null;
+        JavaEvaluator evaluator = context.getEvaluator();
+        boolean isStatic = evaluator.isStatic(declaration) || containingClass == null;
         if (isStatic || isAnonymous) { // containingClass == null: implicitly static
             // But look for fields that store contexts
             for (UField field : declaration.getFields()) {
@@ -131,12 +132,23 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
 
         String superClass = null;
         for (String cls : SUPER_CLASSES) {
-            if (context.getEvaluator().inheritsFrom(declaration, cls, false)) {
+            if (evaluator.inheritsFrom(declaration, cls, false)) {
                 superClass = cls;
                 break;
             }
         }
         assert superClass != null;
+
+        UElement uastParent = declaration.getUastParent();
+        if (uastParent != null) {
+            //noinspection unchecked
+            UMethod method = UastUtils.getParentOfType(
+                    uastParent, UMethod.class, true,
+                    UClass.class, UObjectLiteralExpression.class);
+            if (method != null && evaluator.isStatic(method)) {
+                return;
+            }
+        }
 
         //noinspection unchecked
         UCallExpression invocation = UastUtils.getParentOfType(
@@ -153,6 +165,9 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
             name = "anonymous " + ((UAnonymousClass)declaration).getBaseClassReference().getQualifiedName();
         } else {
             name = declaration.getQualifiedName();
+            if (name == null) {
+                name = declaration.getName();
+            }
         }
 
         String superClassName = superClass.substring(superClass.lastIndexOf('.') + 1);
