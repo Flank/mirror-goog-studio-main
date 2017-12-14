@@ -1,11 +1,9 @@
 package com.android.ide.common.resources;
 
-import com.android.SdkConstants;
 import com.android.ide.common.rendering.api.*;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.Density;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.io.IOException;
@@ -251,7 +249,7 @@ public class ResourceResolverTest extends TestCase {
         assertEquals("@color/bright_foreground_light",
                 resolver.findResValue("?colorForeground", true).getValue());
         ResourceValue target =
-                new ResourceValue(ResourceUrl.create(null, ResourceType.STRING, "dummy"), "?foo");
+                new ResourceValue(ResourceNamespace.RES_AUTO, ResourceType.STRING, "dummy", "?foo");
         assertEquals("#ff000000", resolver.resolveResValue(target).getValue());
 
         // getFrameworkResource
@@ -277,17 +275,18 @@ public class ResourceResolverTest extends TestCase {
                 "#ffffffff",
                 resolver.resolveResValue(
                                 new ResourceValue(
-                                        ResourceUrl.create(
-                                                SdkConstants.ANDROID_NS_NAME,
-                                                ResourceType.STRING,
-                                                "bright_foreground_dark"),
+                                        ResourceNamespace.ANDROID,
+                                        ResourceType.STRING,
+                                        "bright_foreground_dark",
                                         "@android:color/background_light"))
                         .getValue());
 
         assertFalse(
                 resolver.resolveResValue(
                                 new ResourceValue(
-                                        ResourceUrl.create(null, ResourceType.ID, "my_id"),
+                                        ResourceNamespace.RES_AUTO,
+                                        ResourceType.ID,
+                                        "my_id",
                                         "@+id/some_new_id"))
                         .isFramework());
         // error expected.
@@ -297,8 +296,9 @@ public class ResourceResolverTest extends TestCase {
             val =
                     resolver.resolveResValue(
                             new ResourceValue(
-                                    ResourceUrl.create(
-                                            null, ResourceType.STRING, "bright_foreground_dark"),
+                                    ResourceNamespace.RES_AUTO,
+                                    ResourceType.STRING,
+                                    "bright_foreground_dark",
                                     "@color/background_light"));
         } catch (AssertionError expected) {
             failed = true;

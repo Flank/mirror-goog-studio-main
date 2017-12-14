@@ -15,15 +15,13 @@
  */
 package com.android.ide.common.rendering.api;
 
-import com.android.resources.ResourceUrl;
-
 /** A {@link ResourceValue} intended for text nodes where we need access to the raw XML text */
 public class TextResourceValue extends ResourceValue {
     private String mRawXmlValue;
 
     public TextResourceValue(
-            ResourceUrl url, String textValue, String rawXmlValue, String libraryName) {
-        super(url, textValue, libraryName);
+            ResourceReference reference, String textValue, String rawXmlValue, String libraryName) {
+        super(reference, textValue, libraryName);
         mRawXmlValue = rawXmlValue;
     }
 

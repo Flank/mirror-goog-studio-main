@@ -19,11 +19,11 @@ package com.android.ide.common.resources;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.LayoutLog;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.res2.ResourceRepository;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Map;
@@ -282,7 +282,7 @@ public class ResourceItemResolverTest extends TestCase {
         resolver.setLookupChainList(chain);
         chain.clear();
         ResourceValue target =
-                new ResourceValue(ResourceUrl.create(null, ResourceType.STRING, "dummy"), "?foo");
+                new ResourceValue(ResourceNamespace.RES_AUTO, ResourceType.STRING, "dummy", "?foo");
         assertEquals("#ff000000", resolver.resolveResValue(target).getValue());
         assertEquals(
                 "?foo => ?android:colorForeground => @color/bright_foreground_light => "

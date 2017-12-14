@@ -26,6 +26,7 @@ import static com.android.SdkConstants.TAG_SKIP;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.symbols.ResourceValuesXmlParser;
 import com.android.resources.ResourceType;
 import com.android.utils.PositionXmlParser;
@@ -65,7 +66,7 @@ class ValueResourceParser2 {
     @Nullable
     private final String mLibraryName;
 
-    @Nullable private final String mNamespace;
+    @NonNull private final ResourceNamespace mNamespace;
 
     private boolean mTrackSourcePositions = true;
 
@@ -75,7 +76,9 @@ class ValueResourceParser2 {
      * @param file the file to parse.
      */
     ValueResourceParser2(
-            @NonNull File file, @Nullable String namespace, @Nullable String libraryName) {
+            @NonNull File file,
+            @NonNull ResourceNamespace namespace,
+            @Nullable String libraryName) {
         mFile = file;
         mNamespace = namespace;
         mLibraryName = libraryName;
@@ -145,7 +148,7 @@ class ValueResourceParser2 {
     static ResourceItem getResource(
             @NonNull Node node,
             @Nullable File from,
-            @Nullable String namespace,
+            @NonNull ResourceNamespace namespace,
             @Nullable String libraryName)
             throws MergingException {
         ResourceType type = getType(node, from);
@@ -250,7 +253,7 @@ class ValueResourceParser2 {
             @NonNull List<ResourceItem> list,
             @Nullable Map<ResourceType, Set<String>> map,
             @Nullable File from,
-            @Nullable String namespace,
+            @NonNull ResourceNamespace namespace,
             @Nullable String libraryName)
             throws MergingException {
         assert styleableNode.getNodeName().equals(ResourceType.DECLARE_STYLEABLE.getName());

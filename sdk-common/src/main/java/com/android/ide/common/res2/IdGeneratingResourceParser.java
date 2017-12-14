@@ -25,7 +25,7 @@ import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_LAYOUT;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.symbols.ResourceExtraXmlParser;
 import com.android.resources.ResourceType;
 import com.android.utils.XmlUtils;
@@ -35,7 +35,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -55,7 +54,7 @@ class IdGeneratingResourceParser {
 
     private final ResourceItem mFileResourceItem;
     private final List<ResourceItem> mIdResourceItems;
-    private final String mNamespace;
+    private final ResourceNamespace mNamespace;
 
     /**
      * Parse the file for new IDs, given the source document's name and type. After this completes,
@@ -72,7 +71,7 @@ class IdGeneratingResourceParser {
             @NonNull File file,
             @NonNull String sourceName,
             @NonNull ResourceType sourceType,
-            @Nullable String namespace)
+            @NonNull ResourceNamespace namespace)
             throws MergingException {
         Document mDocument = readDocument(file);
         if (hasDataBindings(mDocument)) {
@@ -191,7 +190,9 @@ class IdGeneratingResourceParser {
          * @param type the type of the resource (ID, layout, menu).
          */
         public IdResourceItem(
-                @NonNull String name, @Nullable String namespace, @NonNull ResourceType type) {
+                @NonNull String name,
+                @NonNull ResourceNamespace namespace,
+                @NonNull ResourceType type) {
             // Use a null value, since the source XML is something like:
             //     <LinearLayout ... id="@+id/xxx">...</LinearLayout>
             // which is large and inefficient for encoding the resource item, and inefficient to hold on to.

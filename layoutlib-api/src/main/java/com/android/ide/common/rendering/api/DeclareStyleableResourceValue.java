@@ -19,7 +19,6 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,14 +33,17 @@ public class DeclareStyleableResourceValue extends ResourceValue {
     @NonNull
     private List<AttrResourceValue> mAttrs = new ArrayList<>();
 
-    public DeclareStyleableResourceValue(@NonNull ResourceUrl url, @Nullable String value) {
-        this(url, value, null);
+    public DeclareStyleableResourceValue(
+            @NonNull ResourceReference reference, @Nullable String value) {
+        this(reference, value, null);
     }
 
     public DeclareStyleableResourceValue(
-            @NonNull ResourceUrl url, @Nullable String value, @Nullable String libraryName) {
-        super(url, value, libraryName);
-        assert url.type == ResourceType.DECLARE_STYLEABLE;
+            @NonNull ResourceReference reference,
+            @Nullable String value,
+            @Nullable String libraryName) {
+        super(reference, value, libraryName);
+        assert reference.getResourceType() == ResourceType.DECLARE_STYLEABLE;
     }
 
     @NonNull

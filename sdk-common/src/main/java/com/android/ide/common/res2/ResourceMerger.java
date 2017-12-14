@@ -24,6 +24,7 @@ import static com.android.ide.common.res2.ResourceFile.ATTR_QUALIFIER;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.resources.ResourceType;
@@ -96,7 +97,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
          */
         public MergedResourceItem(
                 @NonNull String name,
-                @Nullable String namespace,
+                @NonNull ResourceNamespace namespace,
                 @NonNull ResourceType type,
                 @NonNull String qualifiers,
                 @Nullable Node value,
@@ -139,9 +140,10 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
         String generated = NodeUtils.getAttribute(node, GeneratedResourceSet.ATTR_GENERATED);
         ResourceSet set;
         if (SdkConstants.VALUE_TRUE.equals(generated)) {
-            set = new GeneratedResourceSet("", null);
+            set = new GeneratedResourceSet("", ResourceNamespace.TODO, null);
         } else {
-            set = new ResourceSet("", null, null, true);
+            // TODO: namespaces
+            set = new ResourceSet("", ResourceNamespace.TODO, null, true);
         }
         ResourceSet newResourceSet = (ResourceSet) set.createFromXml(node);
 
@@ -185,7 +187,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
         String itemName = sourceItem.getName();
         String qualifier = sourceItem.getQualifiers();
         String libraryName = sourceItem.getLibraryName();
-        String namespace = sourceItem.getNamespace();
+        ResourceNamespace namespace = sourceItem.getNamespace();
         // get the matching mergedItem
         ResourceItem previouslyWrittenItem = getMergedItem(qualifier, itemName);
 
@@ -389,7 +391,8 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
         String name = ValueResourceParser2.getName(node);
 
         if (name != null && type != null) {
-            return new MergedResourceItem(name, null, type, qualifiers, node, null);
+            return new MergedResourceItem(
+                    name, ResourceNamespace.TODO, type, qualifiers, node, null);
         }
 
         return null;

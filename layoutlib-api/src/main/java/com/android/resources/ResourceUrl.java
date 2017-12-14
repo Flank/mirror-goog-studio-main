@@ -15,16 +15,17 @@
  */
 package com.android.resources;
 
-import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_EMPTY;
-import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_NULL;
-import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_UNDEFINED;
+import static com.android.ide.common.rendering.api.RenderResources.*;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.rendering.api.ResourceReference;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * A {@linkplain ResourceUrl} represents a parsed resource url such as {@code @string/foo} or {@code
@@ -246,6 +247,29 @@ public class ResourceUrl implements Serializable {
     @NonNull
     public ResourceUrl asThemeUrl() {
         return new ResourceUrl(type, name, namespace, framework, create, true);
+    }
+
+    /**
+     * Tries to resolve this {@link ResourceUrl} into a valid {@link ResourceReference} by expanding
+     * the namespace alias (or lack thereof) based on the context in which this {@link ResourceUrl}
+     * was used.
+     *
+     * @param contextNamespace aapt namespace of the module in which this URL was used
+     * @param namespaceLookup logic for expanding namespaces aliases, most likely by walking up the
+     *     XML tree.
+     * @see ResourceNamespace#fromNamespacePrefix(String, ResourceNamespace, Function)
+     */
+    @Nullable
+    public ResourceReference resolve(
+            @NonNull ResourceNamespace contextNamespace,
+            @NonNull Function<String, String> namespaceLookup) {
+        ResourceNamespace resolvedNamespace =
+                ResourceNamespace.fromNamespacePrefix(
+                        this.namespace, contextNamespace, namespaceLookup);
+        if (resolvedNamespace == null) {
+            return null;
+        }
+        return new ResourceReference(resolvedNamespace, type, name);
     }
 
     @Override

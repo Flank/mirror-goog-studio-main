@@ -18,10 +18,10 @@ package com.android.ide.common.resources;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ValueResourceParser.IValueResourceRepository;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import com.google.common.io.Closeables;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -141,7 +141,7 @@ public class IdResourceParser {
                         String id = value.substring(value.indexOf('/') + 1);
                         ResourceValue newId =
                                 new ResourceValue(
-                                        ResourceUrl.create(ResourceType.ID, id, mIsFramework),
+                                        new ResourceReference(ResourceType.ID, id, mIsFramework),
                                         null);
                         mRepository.addResourceValue(newId);
                     }

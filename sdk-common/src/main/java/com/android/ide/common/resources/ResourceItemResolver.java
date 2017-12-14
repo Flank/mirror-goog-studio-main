@@ -130,8 +130,7 @@ public class ResourceItemResolver extends RenderResources {
                 reference.startsWith(PREFIX_RESOURCE_REF)) {
             ResourceValue prev = mLookupChain.get(mLookupChain.size() - 1);
             if (!reference.equals(prev.getValue())) {
-                ResourceValue next =
-                        new ResourceValue(prev.getResourceUrl(), reference, prev.getLibraryName());
+                ResourceValue next = new ResourceValue(prev, reference, prev.getLibraryName());
                 mLookupChain.add(next);
             }
         }

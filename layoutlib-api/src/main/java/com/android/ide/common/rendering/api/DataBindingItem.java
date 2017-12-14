@@ -17,7 +17,6 @@
 package com.android.ide.common.rendering.api;
 
 import com.android.resources.ResourceType;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -43,25 +42,14 @@ public class DataBindingItem implements Iterable<DataBindingItem> {
     }
 
     public DataBindingItem(String name, boolean platformLayout, int count) {
-        this(new ResourceReference(name, platformLayout), count);
+        this(
+                new ResourceReference(
+                        ResourceNamespace.fromBoolean(platformLayout), ResourceType.LAYOUT, name),
+                count);
     }
 
-    public DataBindingItem(String name, boolean platformLayout) {
-        this(name, platformLayout, 1);
-    }
-
-    public DataBindingItem(String name, int count) {
-        this(name, false /*platformLayout*/, count);
-    }
-
-    public DataBindingItem(String name) {
-        this(name, false /*platformLayout*/, 1);
-    }
-
-    /**
-     * Returns the {@link ResourceReference} for the view. The {@link ResourceType} for the
-     * referenced resource is implied to be {@link ResourceType#LAYOUT}.
-     */
+    /** Returns the {@link ResourceReference} for the view. */
+    @SuppressWarnings("unused") // Used by layoutlib.
     public ResourceReference getViewReference() {
         return mReference;
     }
@@ -75,7 +63,7 @@ public class DataBindingItem implements Iterable<DataBindingItem> {
 
     public void addChild(DataBindingItem child) {
         if (mChildren == null) {
-            mChildren = new ArrayList<DataBindingItem>();
+            mChildren = new ArrayList<>();
         }
 
         mChildren.add(child);

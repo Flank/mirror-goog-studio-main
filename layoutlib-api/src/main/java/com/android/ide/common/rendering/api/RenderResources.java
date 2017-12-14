@@ -17,7 +17,6 @@
 package com.android.ide.common.rendering.api;
 
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import java.util.List;
 
 /**
@@ -262,8 +261,7 @@ public class RenderResources {
      */
     public ResourceValue resolveValue(
             ResourceType type, String name, String value, boolean isFrameworkValue) {
-        return resolveResValue(
-                new ResourceValue(ResourceUrl.create(type, name, isFrameworkValue), value));
+        return resolveResValue(new ResourceValue(type, name, value, isFrameworkValue));
     }
 
     /**

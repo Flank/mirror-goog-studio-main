@@ -18,7 +18,6 @@ package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.resources.ResourceUrl;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,8 +32,8 @@ public class AttrResourceValue extends ResourceValue {
 
     @Nullable private Map<String, Integer> mValueMap;
 
-    public AttrResourceValue(@NonNull ResourceUrl url, @Nullable String libraryName) {
-        super(url, null, libraryName);
+    public AttrResourceValue(@NonNull ResourceReference reference, @Nullable String libraryName) {
+        super(reference, null, libraryName);
     }
 
     /**

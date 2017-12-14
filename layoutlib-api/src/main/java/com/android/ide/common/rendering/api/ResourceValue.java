@@ -20,24 +20,24 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
+import com.google.common.base.MoreObjects;
+import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * Represents an android resource with a name and a string value.
  */
 public class ResourceValue extends ResourceReference {
-    private final ResourceType mType;
-    private final String mLibraryName;
-    private final String mNamespace;
-    protected String mValue;
+    @Nullable private final String mLibraryName;
+    @Nullable protected String mValue;
 
-    public ResourceValue(@NonNull ResourceUrl url, @Nullable String value) {
-        this(url, value, null);
-    }
+    @NonNull
+    private Function<String, String> mNamespaceLookup = ResourceNamespace.EMPTY_NAMESPACE_CONTEXT;
 
     /**
      * Constructor still used by layoutlib. Remove ASAP.
      *
-     * @deprecated Use {@link #ResourceValue(ResourceUrl, String)}
+     * @deprecated Use {@link #ResourceValue(ResourceType, String, String, boolean)}
      */
     @Deprecated
     public ResourceValue(
@@ -45,24 +45,42 @@ public class ResourceValue extends ResourceReference {
             @NonNull String name,
             @Nullable String value,
             boolean isFramework) {
-        this(ResourceUrl.create(type, name, isFramework), value);
+        this(ResourceNamespace.fromBoolean(isFramework), type, name, value);
     }
 
     public ResourceValue(
-            @NonNull ResourceUrl url, @Nullable String value, @Nullable String libraryName) {
-        super(url.name, url.framework);
-        mNamespace = url.namespace;
+            @NonNull ResourceReference reference,
+            @Nullable String value,
+            @Nullable String libraryName) {
+        this(
+                reference.getNamespace(),
+                reference.getResourceType(),
+                reference.getName(),
+                value,
+                libraryName);
+    }
+
+    public ResourceValue(@NonNull ResourceReference reference, @Nullable String value) {
+        this(reference, value, null);
+    }
+
+    public ResourceValue(
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType type,
+            @NonNull String name,
+            @Nullable String value) {
+        this(namespace, type, name, value, null);
+    }
+
+    public ResourceValue(
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType type,
+            @NonNull String name,
+            @Nullable String value,
+            @Nullable String libraryName) {
+        super(namespace, type, name);
         mValue = value;
-        mType = url.type;
         mLibraryName = libraryName;
-    }
-
-    public ResourceUrl getResourceUrl() {
-        return ResourceUrl.create(mNamespace, mType, getName());
-    }
-
-    public ResourceType getResourceType() {
-        return mType;
     }
 
     /**
@@ -76,6 +94,7 @@ public class ResourceValue extends ResourceReference {
      * Returns true if the resource is user defined.
      */
     public boolean isUserDefined() {
+        // TODO: namespaces
         return !isFramework() && mLibraryName == null;
     }
 
@@ -86,6 +105,29 @@ public class ResourceValue extends ResourceReference {
     @Nullable
     public String getValue() {
         return mValue;
+    }
+
+    /**
+     * If this {@link ResourceValue} references another one, returns a {@link ResourceReference} to
+     * it, otherwise null.
+     *
+     * <p>This method should be called before inspecting the textual value ({@link #getValue}), as
+     * it handles namespaces correctly.
+     *
+     * <p>TODO(namespaces): Use this in ResourceResolver.
+     */
+    @Nullable
+    public ResourceReference getReference() {
+        if (mValue == null) {
+            return null;
+        }
+
+        ResourceUrl url = ResourceUrl.parse(mValue);
+        if (url == null) {
+            return null;
+        }
+
+        return url.resolve(getNamespace(), mNamespaceLookup);
     }
 
     /**
@@ -116,42 +158,49 @@ public class ResourceValue extends ResourceReference {
         mValue = value.mValue;
     }
 
+    /**
+     * Specifies logic used to resolve namespace aliases for values that come from XML files.
+     *
+     * <p>This method is meant to be called by the XML parser that created this {@link
+     * ResourceValue}.
+     */
+    public void setNamespaceLookup(@NonNull Function<String, String> namespaceLookup) {
+        this.mNamespaceLookup = namespaceLookup;
+    }
+
     @Override
-    public String toString() {
-        return getClass().getSimpleName() + " [" + mType + "/" + getName() + " = " + mValue  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                + " (framework:" + isFramework() + ")]"; //$NON-NLS-1$ //$NON-NLS-2$
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        ResourceValue that = (ResourceValue) o;
+
+        return Objects.equals(mLibraryName, that.mLibraryName)
+                && Objects.equals(mValue, that.mValue);
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((mType == null) ? 0 : mType.hashCode());
-        result = prime * result + ((mValue == null) ? 0 : mValue.hashCode());
+        result = 31 * result + Objects.hashCode(mLibraryName);
+        result = 31 * result + Objects.hashCode(mValue);
         return result;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (!super.equals(obj))
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ResourceValue other = (ResourceValue) obj;
-        if (mType == null) {
-            //noinspection VariableNotUsedInsideIf
-            if (other.mType != null)
-                return false;
-        } else if (!mType.equals(other.mType))
-            return false;
-        if (mValue == null) {
-            //noinspection VariableNotUsedInsideIf
-            if (other.mValue != null)
-                return false;
-        } else if (!mValue.equals(other.mValue))
-            return false;
-        return true;
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("namespace", getNamespace())
+                .add("type", getResourceType())
+                .add("name", getName())
+                .add("value", mValue)
+                .toString();
     }
 }

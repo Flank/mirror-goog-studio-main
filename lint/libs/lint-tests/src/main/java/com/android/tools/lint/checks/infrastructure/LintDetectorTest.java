@@ -23,6 +23,7 @@ import static com.android.SdkConstants.NEW_ID_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.MergingException;
 import com.android.ide.common.res2.ResourceFile;
@@ -986,7 +987,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
             ResourceSet resourceSet =
                     new ResourceSet(
-                            project.getName(), null, getProjectResourceLibraryName(), true) {
+                            project.getName(),
+                            ResourceNamespace.RES_AUTO,
+                            getProjectResourceLibraryName(),
+                            true) {
                         @Override
                         protected void checkItems() {
                             // No checking in ProjectResources; duplicates can happen, but
@@ -1013,7 +1017,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 // to do that here.
                 // TODO: namespaces
                 Map<ResourceType, ListMultimap<String, ResourceItem>> items =
-                        repository.getItems().row(null);
+                        repository.getItems().row(ResourceNamespace.RES_AUTO);
                 ListMultimap<String, ResourceItem> layouts = items
                         .get(ResourceType.LAYOUT);
                 if (layouts != null) {
@@ -1038,7 +1042,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                                 }
                                 for (String id : ids) {
                                     ResourceItem idItem =
-                                            new ResourceItem(id, null, ResourceType.ID, null, null);
+                                            new ResourceItem(
+                                                    id,
+                                                    ResourceNamespace.RES_AUTO,
+                                                    ResourceType.ID,
+                                                    null,
+                                                    null);
                                     String qualifiers = file.getParentFile().getName();
                                     if (qualifiers.startsWith("layout-")) {
                                         qualifiers = qualifiers.substring("layout-".length());

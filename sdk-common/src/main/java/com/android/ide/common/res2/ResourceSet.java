@@ -24,6 +24,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.Message;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceConstants;
@@ -57,7 +58,8 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     public static final String ATTR_FROM_DEPENDENCY = "from-dependency";
 
     private final String mLibraryName;
-    private final String mNamespace;
+
+    @NonNull private final ResourceNamespace mNamespace;
     private ResourceSet mGeneratedSet;
     private ResourcePreprocessor mPreprocessor;
     private boolean mIsFromDependency;
@@ -65,7 +67,11 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     private boolean mDontNormalizeQualifiers;
     private boolean mTrackSourcePositions = true;
 
-    public ResourceSet(String name, String namespace, String libraryName, boolean validateEnabled) {
+    public ResourceSet(
+            String name,
+            @NonNull ResourceNamespace namespace,
+            String libraryName,
+            boolean validateEnabled) {
         super(name, validateEnabled);
         mNamespace = namespace;
         mPreprocessor = NoOpResourcePreprocessor.INSTANCE;
@@ -98,7 +104,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
 
     @Override
     protected DataSet<ResourceItem, ResourceFile> createSet(String name) {
-        return new ResourceSet(name, null, mLibraryName, true);
+        return new ResourceSet(name, mNamespace, mLibraryName, true);
     }
 
     @Override
@@ -641,6 +647,11 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
         super.appendToXml(setNode, document, consumer, includeTimestamps);
     }
 
+    @NonNull
+    public ResourceNamespace getNamespace() {
+        return mNamespace;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -653,20 +664,28 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
             return false;
         }
         ResourceSet that = (ResourceSet) o;
-        return mIsFromDependency == that.mIsFromDependency &&
-                mShouldParseResourceIds == that.mShouldParseResourceIds &&
-                mDontNormalizeQualifiers == that.mDontNormalizeQualifiers &&
-                mTrackSourcePositions == that.mTrackSourcePositions &&
-                Objects.equals(mLibraryName, that.mLibraryName) &&
-                Objects.equals(mGeneratedSet, that.mGeneratedSet) &&
-                Objects.equals(mPreprocessor, that.mPreprocessor);
+        return mIsFromDependency == that.mIsFromDependency
+                && mShouldParseResourceIds == that.mShouldParseResourceIds
+                && mDontNormalizeQualifiers == that.mDontNormalizeQualifiers
+                && mTrackSourcePositions == that.mTrackSourcePositions
+                && Objects.equals(mNamespace, that.mNamespace)
+                && Objects.equals(mLibraryName, that.mLibraryName)
+                && Objects.equals(mGeneratedSet, that.mGeneratedSet)
+                && Objects.equals(mPreprocessor, that.mPreprocessor);
     }
 
     @Override
     public int hashCode() {
-        return Objects
-                .hash(super.hashCode(), mLibraryName, mGeneratedSet, mPreprocessor,
-                        mIsFromDependency,
-                        mShouldParseResourceIds, mDontNormalizeQualifiers, mTrackSourcePositions);
+        return Objects.hash(
+                super.hashCode(),
+                mLibraryName,
+                mGeneratedSet,
+                mPreprocessor,
+                mIsFromDependency,
+                mNamespace,
+                mShouldParseResourceIds,
+                mDontNormalizeQualifiers,
+                mTrackSourcePositions);
     }
+
 }

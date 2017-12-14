@@ -64,6 +64,7 @@ import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
 import com.android.ide.common.rendering.api.ItemResourceValue;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.repository.GradleVersion;
@@ -1070,7 +1071,7 @@ public class LintUtils {
         List<ResourceValue> result = null;
 
         Queue<ResourceValue> queue = new ArrayDeque<>();
-        queue.add(new ResourceValue(ResourceUrl.create(style.type, style.name, false), null));
+        queue.add(new ResourceValue(ResourceNamespace.RES_AUTO, style.type, style.name, null));
         Set<String> seen = new HashSet<>();
         int count = 0;
         boolean isFrameworkAttribute = ANDROID_URI.equals(namespace);
@@ -1101,8 +1102,9 @@ public class LintUtils {
                                 seen.add(p.name);
                                 queue.add(
                                         new ResourceValue(
-                                                ResourceUrl.create(
-                                                        ResourceType.STYLE, p.name, false),
+                                                ResourceNamespace.RES_AUTO,
+                                                ResourceType.STYLE,
+                                                p.name,
                                                 null));
                             }
                         }
@@ -1114,8 +1116,9 @@ public class LintUtils {
                                 seen.add(parentName);
                                 queue.add(
                                         new ResourceValue(
-                                                ResourceUrl.create(
-                                                        ResourceType.STYLE, parentName, false),
+                                                ResourceNamespace.RES_AUTO,
+                                                ResourceType.STYLE,
+                                                parentName,
                                                 null));
                             }
                         }
@@ -1150,7 +1153,7 @@ public class LintUtils {
         List<StyleResourceValue> result = null;
 
         Queue<ResourceValue> queue = new ArrayDeque<>();
-        queue.add(new ResourceValue(ResourceUrl.create(null, style.type, style.name), null));
+        queue.add(new ResourceValue(ResourceNamespace.RES_AUTO, style.type, style.name, null));
         Set<String> seen = new HashSet<>();
         int count = 0;
         while (count < 30 && !queue.isEmpty()) {
@@ -1175,8 +1178,9 @@ public class LintUtils {
                                 seen.add(p.name);
                                 queue.add(
                                         new ResourceValue(
-                                                ResourceUrl.create(
-                                                        null, ResourceType.STYLE, p.name),
+                                                ResourceNamespace.RES_AUTO,
+                                                ResourceType.STYLE,
+                                                p.name,
                                                 null));
                             }
                         }
@@ -1188,8 +1192,9 @@ public class LintUtils {
                                 seen.add(parentName);
                                 queue.add(
                                         new ResourceValue(
-                                                ResourceUrl.create(
-                                                        null, ResourceType.STYLE, parentName),
+                                                ResourceNamespace.RES_AUTO,
+                                                ResourceType.STYLE,
+                                                parentName,
                                                 null));
                             }
                         }

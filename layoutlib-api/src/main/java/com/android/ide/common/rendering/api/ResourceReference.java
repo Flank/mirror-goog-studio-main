@@ -16,92 +16,101 @@
 
 package com.android.ide.common.rendering.api;
 
+import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
+import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
+import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 
 /**
- * A resource reference. This contains the String ID of the resource and whether this is a framework
- * reference.
+ * A resource reference, contains the namespace, type and name. Can be used to look for resources in
+ * a resource repository.
  *
  * <p>This is an immutable class.
  */
 @Immutable
 public class ResourceReference implements Serializable {
-    private final String mName;
-    private final boolean mIsFramework;
+    @NonNull private final ResourceType mResourceType;
+    @NonNull private final ResourceNamespace mNamespace;
+    @NonNull private final String mName;
 
-    /**
-     * Builds a resource reference.
-     * @param name the name of the resource
-     * @param isFramework whether the reference is to a framework resource.
-     */
-    public ResourceReference(String name, boolean isFramework) {
-        mName = name;
-        mIsFramework = isFramework;
+    public ResourceReference(
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType resourceType,
+            @NonNull String name) {
+        this.mNamespace = namespace;
+        this.mResourceType = resourceType;
+        this.mName = name;
     }
 
-    /**
-     * Builds a non-framework resource reference.
-     * @param name the name of the resource
-     */
-    public ResourceReference(String name) {
-        this(name, false /*platformLayout*/);
+    @Deprecated
+    public ResourceReference(
+            @NonNull ResourceType type, @NonNull String name, boolean isFramework) {
+        this(ResourceNamespace.fromBoolean(isFramework), type, name);
     }
 
-    /**
-     * Returns the name of the resource, as defined in the XML.
-     */
+    /** Returns the name of the resource, as defined in the XML. */
+    @NonNull
     public final String getName() {
         return mName;
+    }
+
+    @NonNull
+    public ResourceType getResourceType() {
+        return mResourceType;
+    }
+
+    @NonNull
+    public ResourceNamespace getNamespace() {
+        return mNamespace;
     }
 
     /**
      * Returns whether the resource is a framework resource (<code>true</code>) or a project
      * resource (<code>false</code>).
+     *
+     * @deprecated all namespaces should be handled not just "android:".
      */
+    @Deprecated
     public final boolean isFramework() {
-        return mIsFramework;
+        return SdkConstants.ANDROID_NS_NAME.equals(mNamespace.getPackageName());
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (mIsFramework ? 1231 : 1237);
-        result = prime * result + ((mName == null) ? 0 : mName.hashCode());
-        return result;
+    @NonNull
+    public ResourceUrl getResourceUrl() {
+        return ResourceUrl.create(mNamespace.getPackageName(), mResourceType, mName);
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        ResourceReference other = (ResourceReference) obj;
-        if (mIsFramework != other.mIsFramework)
-            return false;
-        if (mName == null) {
-            if (other.mName != null)
-                return false;
-        } else if (!mName.equals(other.mName))
-            return false;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ResourceReference reference = (ResourceReference) o;
+
+        if (mResourceType != reference.mResourceType) return false;
+        if (!mNamespace.equals(reference.mNamespace)) return false;
+        if (!mName.equals(reference.mName)) return false;
+
         return true;
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
+    @Override
+    public int hashCode() {
+        int result = mResourceType.hashCode();
+        result = 31 * result + mNamespace.hashCode();
+        result = 31 * result + mName.hashCode();
+        return result;
+    }
+
     @Override
     public String toString() {
-        return "ResourceReference [" + mName + " (framework:" + mIsFramework+ ")]";
+        return MoreObjects.toStringHelper(this)
+                .add("namespace", mNamespace)
+                .add("type", mResourceType)
+                .add("name", mName)
+                .toString();
     }
 }

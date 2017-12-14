@@ -21,6 +21,7 @@ import static com.android.SdkConstants.FD_RES_DRAWABLE;
 import static com.android.SdkConstants.FD_RES_LAYOUT;
 import static com.android.SdkConstants.FD_RES_VALUES;
 
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceValueMap;
 import com.android.ide.common.resources.TestResourceRepository;
@@ -127,7 +128,7 @@ public class ResourceRepositoryTest2 extends TestCase {
         }
 
         mResourceMerger = new ResourceMerger(0);
-        ResourceSet resourceSet = new ResourceSet("main", null, null, true);
+        ResourceSet resourceSet = new ResourceSet("main", ResourceNamespace.RES_AUTO, null, true);
         resourceSet.addSource(mRes);
         resourceSet.loadFromFiles(mLogger = new RecordingLogger());
         mResourceMerger.addDataSet(resourceSet);

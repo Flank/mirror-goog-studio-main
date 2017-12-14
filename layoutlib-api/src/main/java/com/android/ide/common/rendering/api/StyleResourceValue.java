@@ -19,7 +19,6 @@ package com.android.ide.common.rendering.api;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,9 +33,9 @@ public final class StyleResourceValue extends ResourceValue {
     private String mParentStyle = null;
     private final Map<String, ItemResourceValue> mItems = new HashMap<>();
 
-    public StyleResourceValue(ResourceUrl url, String parentStyle, String libraryName) {
-        super(url, null, libraryName);
-        assert url.type == ResourceType.STYLE;
+    public StyleResourceValue(ResourceReference reference, String parentStyle, String libraryName) {
+        super(reference, null, libraryName);
+        assert reference.getResourceType() == ResourceType.STYLE;
         mParentStyle = parentStyle;
     }
 

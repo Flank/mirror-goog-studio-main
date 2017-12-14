@@ -18,6 +18,7 @@ package com.android.ide.common.res2;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.utils.ILogger;
 import java.io.File;
 import org.w3c.dom.Document;
@@ -35,7 +36,7 @@ public class GeneratedResourceSet extends ResourceSet {
     public GeneratedResourceSet(ResourceSet originalSet) {
         super(
                 originalSet.getConfigName() + "$Generated",
-                null,
+                originalSet.getNamespace(),
                 originalSet.getLibraryName(),
                 originalSet.getValidateEnabled());
         for (File source : originalSet.getSourceFiles()) {
@@ -43,13 +44,13 @@ public class GeneratedResourceSet extends ResourceSet {
         }
     }
 
-    public GeneratedResourceSet(String name, String libraryName) {
-        super(name, null, libraryName, true);
+    public GeneratedResourceSet(String name, ResourceNamespace namespace, String libraryName) {
+        super(name, namespace, libraryName, true);
     }
 
     @Override
     protected DataSet<ResourceItem, ResourceFile> createSet(String name) {
-        return new GeneratedResourceSet(name, getLibraryName());
+        return new GeneratedResourceSet(name, ResourceNamespace.TODO, getLibraryName());
     }
 
     @Override

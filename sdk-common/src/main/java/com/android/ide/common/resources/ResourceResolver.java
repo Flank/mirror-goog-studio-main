@@ -167,8 +167,7 @@ public class ResourceResolver extends RenderResources {
 
             if (from != null && to != null) {
                 StyleResourceValue newStyle =
-                        new StyleResourceValue(
-                                from.getResourceUrl(), parentName, from.getLibraryName());
+                        new StyleResourceValue(from, parentName, from.getLibraryName());
                 newStyle.replaceWith(from);
                 mStyleInheritanceMap.put(newStyle, to);
             }
@@ -460,11 +459,20 @@ public class ResourceResolver extends RenderResources {
                 .map(SampleDataResourceValue::getValueAsLines)
                 .map(content -> mSampleDataManager.getSampleDataLine(name, content))
                 .map(
-                        lineContent ->
-                                new ResourceValue(
-                                        ResourceUrl.create(
-                                                url.namespace, ResourceType.SAMPLE_DATA, name),
-                                        lineContent))
+                        lineContent -> {
+                            // TODO: namespaces
+                            ResourceNamespace namespace =
+                                    ResourceNamespace.fromNamespacePrefix(
+                                            url.namespace, ResourceNamespace.TODO, prefix -> null);
+                            if (namespace == null) {
+                                namespace = ResourceNamespace.TODO;
+                            }
+
+                            return new ResourceValue(
+                                    new ResourceReference(
+                                            namespace, ResourceType.SAMPLE_DATA, name),
+                                    lineContent);
+                        })
                 .orElse(null);
     }
 
@@ -508,7 +516,8 @@ public class ResourceResolver extends RenderResources {
                                 : mLibrariesIdProvider.getId(resType, resName) != null;
 
                 if (idExists) {
-                    return new ResourceValue(isFramework ? url.withFramework(true) : url, null);
+                    return new ResourceValue(
+                            new ResourceReference(url.type, url.name, isFramework), null);
                 }
             }
 
@@ -874,8 +883,7 @@ public class ResourceResolver extends RenderResources {
             if (!mLookupChain.isEmpty() && reference != null && reference.startsWith(PREFIX_RESOURCE_REF)) {
                 ResourceValue prev = mLookupChain.get(mLookupChain.size() - 1);
                 if (!reference.equals(prev.getValue())) {
-                    ResourceValue next =
-                            new ResourceValue(prev.getResourceUrl(), null, prev.getLibraryName());
+                    ResourceValue next = new ResourceValue(prev, null, prev.getLibraryName());
                     next.setValue(reference);
                     mLookupChain.add(next);
                 }

@@ -16,20 +16,36 @@
 
 package com.android.ide.common.res2;
 
-import static com.android.SdkConstants.*;
+import static com.android.SdkConstants.ATTR_REF_PREFIX;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
+import static com.android.SdkConstants.RESOURCE_CLZ_ATTR;
 import static com.android.ide.common.resources.ResourceResolver.MAX_RESOURCE_INDIRECTION;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceValueMap;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
-import com.google.common.collect.*;
-import java.util.*;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Wrapper around a {@link ResourceTable} that:
@@ -67,16 +83,16 @@ public abstract class AbstractResourceRepository {
     @Nullable
     @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
     protected abstract ListMultimap<String, ResourceItem> getMap(
-            @Nullable String namespace, @NonNull ResourceType type, boolean create);
+            @NonNull ResourceNamespace namespace, @NonNull ResourceType type, boolean create);
 
     @NonNull
     @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
-    public abstract Set<String> getNamespaces();
+    public abstract Set<ResourceNamespace> getNamespaces();
 
     @NonNull
     @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
     protected final ListMultimap<String, ResourceItem> getMap(
-            @Nullable String namespace, @NonNull ResourceType type) {
+            @NonNull ResourceNamespace namespace, @NonNull ResourceType type) {
         //noinspection ConstantConditions - won't return null if create is false.
         return getMap(namespace, type, true);
     }
@@ -116,7 +132,8 @@ public abstract class AbstractResourceRepository {
     public List<ResourceItem> getResourceItem(
             @NonNull ResourceType resourceType, @NonNull String resourceName) {
         synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> map = getMap(null, resourceType, false);
+            ListMultimap<String, ResourceItem> map =
+                    getMap(ResourceNamespace.TODO, resourceType, false);
 
             if (map != null) {
                 return map.get(resourceName);
@@ -130,7 +147,7 @@ public abstract class AbstractResourceRepository {
     // TODO: namespaces
     public Collection<String> getItemsOfType(@NonNull ResourceType type) {
         synchronized (ITEM_MAP_LOCK) {
-            Multimap<String, ResourceItem> map = getMap(null, type, false);
+            Multimap<String, ResourceItem> map = getMap(ResourceNamespace.TODO, type, false);
             if (map == null) {
                 return Collections.emptyList();
             }
@@ -210,7 +227,8 @@ public abstract class AbstractResourceRepository {
     public boolean hasResourceItem(
             @NonNull ResourceType resourceType, @NonNull String resourceName) {
         synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> map = getMap(null, resourceType, false);
+            ListMultimap<String, ResourceItem> map =
+                    getMap(ResourceNamespace.TODO, resourceType, false);
 
             if (map != null) {
                 List<ResourceItem> itemList = map.get(resourceName);
@@ -230,7 +248,8 @@ public abstract class AbstractResourceRepository {
     // TODO: namespaces
     public boolean hasResourcesOfType(@NonNull ResourceType resourceType) {
         synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> map = getMap(null, resourceType, false);
+            ListMultimap<String, ResourceItem> map =
+                    getMap(ResourceNamespace.TODO, resourceType, false);
             return map != null && !map.isEmpty();
         }
     }
@@ -239,7 +258,7 @@ public abstract class AbstractResourceRepository {
     // TODO: namespaces
     public List<ResourceType> getAvailableResourceTypes() {
         synchronized (ITEM_MAP_LOCK) {
-            return Lists.newArrayList(getFullTable().row(null).keySet());
+            return Lists.newArrayList(getFullTable().row(ResourceNamespace.TODO).keySet());
         }
     }
 
@@ -299,7 +318,8 @@ public abstract class AbstractResourceRepository {
         }
         List<ResourceFile> output;
         synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> typeItems = getMap(null, type, false);
+            ListMultimap<String, ResourceItem> typeItems =
+                    getMap(ResourceNamespace.TODO, type, false);
             if (typeItems == null) {
                 return Collections.emptyList();
             }
@@ -369,7 +389,8 @@ public abstract class AbstractResourceRepository {
             @NonNull ResourceType type, @NonNull FolderConfiguration referenceConfig) {
         synchronized (ITEM_MAP_LOCK) {
             // get the resource item for the given type
-            ListMultimap<String, ResourceItem> items = getFullTable().get(null, type);
+            ListMultimap<String, ResourceItem> items =
+                    getFullTable().get(ResourceNamespace.TODO, type);
             if (items == null) {
                 return ResourceValueMap.create();
             }
@@ -406,7 +427,7 @@ public abstract class AbstractResourceRepository {
             @NonNull FolderConfiguration referenceConfig) {
         synchronized (ITEM_MAP_LOCK) {
             // get the resource item for the given type
-            ListMultimap<String, ResourceItem> items = getMap(null, type, false);
+            ListMultimap<String, ResourceItem> items = getMap(ResourceNamespace.TODO, type, false);
             if (items == null) {
                 return null;
             }

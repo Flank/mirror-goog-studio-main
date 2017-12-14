@@ -19,7 +19,6 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,9 +32,11 @@ public class PluralsResourceValue extends ResourceValue {
     private final List<String> mValues = new ArrayList<>();
 
     public PluralsResourceValue(
-            @NonNull ResourceUrl url, @Nullable String value, @Nullable String libraryName) {
-        super(url, value, libraryName);
-        assert url.type == ResourceType.PLURALS;
+            @NonNull ResourceReference reference,
+            @Nullable String value,
+            @Nullable String libraryName) {
+        super(reference, value, libraryName);
+        assert reference.getResourceType() == ResourceType.PLURALS;
     }
 
     /**

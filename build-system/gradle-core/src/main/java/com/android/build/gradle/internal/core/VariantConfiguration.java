@@ -39,6 +39,7 @@ import com.android.builder.model.ClassField;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.res2.AssetSet;
 import com.android.ide.common.res2.ResourceSet;
 import com.android.sdklib.AndroidVersion;
@@ -1173,7 +1174,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         // the main + generated res folders are in the same ResourceSet
         ResourceSet resourceSet =
-                new ResourceSet(BuilderConstants.MAIN, null, null, validateEnabled);
+                new ResourceSet(
+                        BuilderConstants.MAIN, ResourceNamespace.RES_AUTO, null, validateEnabled);
         resourceSet.addSources(mainResDirs);
         resourceSets.add(resourceSet);
 
@@ -1184,7 +1186,12 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             Collection<File> flavorResDirs = sourceProvider.getResDirectories();
             // we need the same of the flavor config, but it's in a different list.
             // This is fine as both list are parallel collections with the same number of items.
-            resourceSet = new ResourceSet(sourceProvider.getName(), null, null, validateEnabled);
+            resourceSet =
+                    new ResourceSet(
+                            sourceProvider.getName(),
+                            ResourceNamespace.RES_AUTO,
+                            null,
+                            validateEnabled);
             resourceSet.addSources(flavorResDirs);
             resourceSets.add(resourceSet);
         }
@@ -1192,7 +1199,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         // multiflavor specific overrides flavor
         if (mMultiFlavorSourceProvider != null) {
             Collection<File> variantResDirs = mMultiFlavorSourceProvider.getResDirectories();
-            resourceSet = new ResourceSet(getFlavorName(), null, null, validateEnabled);
+            resourceSet =
+                    new ResourceSet(
+                            getFlavorName(), ResourceNamespace.RES_AUTO, null, validateEnabled);
             resourceSet.addSources(variantResDirs);
             resourceSets.add(resourceSet);
         }
@@ -1200,7 +1209,12 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         // build type overrides the flavors
         if (mBuildTypeSourceProvider != null) {
             Collection<File> typeResDirs = mBuildTypeSourceProvider.getResDirectories();
-            resourceSet = new ResourceSet(mBuildType.getName(), null, null, validateEnabled);
+            resourceSet =
+                    new ResourceSet(
+                            mBuildType.getName(),
+                            ResourceNamespace.RES_AUTO,
+                            null,
+                            validateEnabled);
             resourceSet.addSources(typeResDirs);
             resourceSets.add(resourceSet);
         }
@@ -1208,7 +1222,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         // variant specific overrides all
         if (mVariantSourceProvider != null) {
             Collection<File> variantResDirs = mVariantSourceProvider.getResDirectories();
-            resourceSet = new ResourceSet(getFullName(), null, null, validateEnabled);
+            resourceSet =
+                    new ResourceSet(
+                            getFullName(), ResourceNamespace.RES_AUTO, null, validateEnabled);
             resourceSet.addSources(variantResDirs);
             resourceSets.add(resourceSet);
         }

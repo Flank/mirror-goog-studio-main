@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.builder.core.BuilderConstants;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.res2.ResourceSet;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -217,7 +218,7 @@ public class MergeResourcesTest {
     @NonNull
     private static ResourceSet createResourceSet(
             List<ResourceSet> folderSets, String name, File... files) {
-        ResourceSet mainSet = new ResourceSet(name, null, null, false);
+        ResourceSet mainSet = new ResourceSet(name, ResourceNamespace.RES_AUTO, null, false);
         mainSet.addSources(Arrays.asList(files));
         folderSets.add(mainSet);
         return mainSet;
@@ -268,7 +269,7 @@ public class MergeResourcesTest {
             when(artifact.getId()).thenReturn(artifactId);
 
             // create a resource set that must match the one returned by the computation
-            ResourceSet set = new ResourceSet(path, null, null, false);
+            ResourceSet set = new ResourceSet(path, ResourceNamespace.RES_AUTO, null, false);
             set.addSource(file);
             set.setFromDependency(true);
             resourceSets.add(set);
