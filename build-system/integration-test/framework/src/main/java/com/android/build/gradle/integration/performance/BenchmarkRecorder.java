@@ -215,7 +215,8 @@ public final class BenchmarkRecorder {
         validateResults(results);
 
         List<GradleBenchmarkResult> filteredResults = strategy.filter(results);
-        Preconditions.checkArgument(!results.isEmpty(), "UploadStrategy returned no results");
+        Preconditions.checkArgument(
+                !filteredResults.isEmpty(), "UploadStrategy returned no results");
 
         for (ProfileUploader uploader : uploaders) {
             synchronized (BenchmarkRecorder.class) {
