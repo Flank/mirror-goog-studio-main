@@ -38,12 +38,24 @@ import java.util.List;
 public class GoogleStorageProfileUploader implements ProfileUploader {
     private static final Duration UPLOAD_TIMEOUT = Duration.ofMinutes(5);
 
-    public static final ProfileUploader INSTANCE = new GoogleStorageProfileUploader();
+    private static GoogleStorageProfileUploader INSTANCE;
 
     private static final String STORAGE_SCOPE =
             "https://www.googleapis.com/auth/devstorage.read_write";
 
     private static final String STORAGE_BUCKET = "android-gradle-logging-benchmark-results";
+
+    public static GoogleStorageProfileUploader getInstance() {
+        if (INSTANCE == null) {
+            synchronized (GoogleStorageProfileUploader.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new GoogleStorageProfileUploader();
+                }
+            }
+        }
+
+        return INSTANCE;
+    }
 
     private GoogleStorageProfileUploader() {}
 

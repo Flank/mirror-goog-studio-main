@@ -111,20 +111,47 @@ public final class BenchmarkRecorder {
 
     @NonNull private final ProfileCapturer capturer;
 
+    @NonNull
     private static List<ProfileUploader> defaultUploaders() {
-        List<ProfileUploader> uploaders =
-                Arrays.asList(
-                        GoogleStorageProfileUploader.INSTANCE,
-                        ActdProfileUploader.fromEnvironment(),
-                        LocalCSVProfileUploader.fromEnvironment(),
-                        LocalProtoProfileUploader.fromEnvironment());
+        List<ProfileUploader> uploaders = new ArrayList<>();
+
+        try {
+            uploaders.add(GoogleStorageProfileUploader.getInstance());
+        } catch (Exception e) {
+            System.out.println(
+                    "couldn't add GoogleStorageProfileUploader to the list of default uploaders, reason: "
+                            + e);
+        }
+
+        try {
+            uploaders.add(ActdProfileUploader.fromEnvironment());
+        } catch (Exception e) {
+            System.out.println(
+                    "couldn't add ActdProfileUploader to the list of default uploaders, reason: "
+                            + e);
+        }
+
+        try {
+            uploaders.add(LocalCSVProfileUploader.fromEnvironment());
+        } catch (Exception e) {
+            System.out.println(
+                    "couldn't add LocalCSVProfileUploader to the list of default uploaders, reason: "
+                            + e);
+        }
+
+        try {
+            uploaders.add(LocalProtoProfileUploader.fromEnvironment());
+        } catch (Exception e) {
+            System.out.println(
+                    "couldn't add LocalProtoProfileUploader to the list of default uploaders, reason: "
+                            + e);
+        }
 
         return Collections.unmodifiableList(uploaders);
     }
 
     public BenchmarkRecorder(@NonNull ProfileCapturer capturer) {
         this(capturer, defaultUploaders());
-
     }
 
     public BenchmarkRecorder(
