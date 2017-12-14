@@ -30,6 +30,51 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
+/**
+ * This is the main entry point for our continuous, buildbot-run Gradle benchmarks. These tests are
+ * run for every commit submitted to the tools/base subtree.
+ *
+ * <p>Running locally:
+ *
+ * <pre>
+ *   $ cd $SRC/tools
+ *   $ ./gradlew --info :base:build-system:integration-test:application:performanceTest \
+ *      -D:base:build-system:integration-test:application:performanceTest.single=BenchmarkTest
+ * </pre>
+ *
+ * There are also a bunch of environment variables you can use to limit the set of tests run.
+ *
+ * <pre>
+ *   PERF_SHARD_NUM and PERF_SHARD_TOTAL
+ *
+ *      These control the "sharding" of the tests. Each test is a self-contained entity that can be
+ *      run independently. Because of the trait, we're able to split the full set of tests up and
+ *      run subsets, which is useful for running these tests across multiple machines. Shards are
+ *      always deterministic, e.g. if you specify the same PERF_SHARD_NUM and PERF_SHARD_TOTAL,
+ *      you will get the same subset of tests every time.
+ *
+ *   PERF_SCENARIO
+ *
+ *      This controls the ProjectScenario. If you only want to run tests using
+ *      ProjectScenario.NATIVE_MULTIDEX, for example, you can specify PERF_SCENARIO=NATIVE_MULTIDEX.
+ *      See {@code ProjectScenario} for more options.
+ *
+ *   PERF_BENCHMARK
+ *
+ *      This controls the Benchmark. Confusingly named, you can think of a "Benchmark" in this
+ *      context as a project, e.g. AntennaPod or WordPress. See {@code Logging.Benchmark} for the
+ *      options here, but an example would be PERF_BENCHMARK=PERF_ANDROID_MEDIUM.
+ *
+ *   PERF_BENCHMARK_MODE
+ *
+ *      This controls the BenchmarkMode. If you're only interested in how long it takes to build
+ *      from clean, for example, you could set PERF_BENCHMARK_MODE=BUILD__FROM_CLEAN. See
+ *      {@code Logging.BenchmarkMode} for more examples.
+ * </pre>
+ *
+ * You can set all or none of these environment variables to run whatever subset of benchmarks you
+ * want. Setting none of them will default to running the full set of benchmarks.
+ */
 public class BenchmarkTest {
     @Test
     public void run() throws Exception {
