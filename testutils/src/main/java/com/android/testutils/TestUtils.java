@@ -201,7 +201,7 @@ public class TestUtils {
         }
 
         if (!f.exists()) {
-            throw new IllegalArgumentException("File \"" + path + "\" not found.");
+            throw new IllegalArgumentException("File \"" + path + "\" not found at \"" + getWorkspaceRoot() + "\"");
         }
 
         return f;
