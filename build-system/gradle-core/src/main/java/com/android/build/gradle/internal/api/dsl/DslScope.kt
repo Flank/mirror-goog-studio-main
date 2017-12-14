@@ -14,15 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.api.dsl.extensions
+package com.android.build.gradle.internal.api.dsl
 
-import com.android.build.api.dsl.extension.BuildProperties
-import com.android.build.api.dsl.extension.VariantAwareProperties
-import com.android.build.api.dsl.extension.VariantOrExtensionProperties
-import com.android.build.gradle.internal.api.dsl.sealing.Sealable
+import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.builder.errors.EvalIssueReporter
+import org.gradle.api.model.ObjectFactory
 
-/** internal common interface to app, library, feature, test (basically variant-aware building extension) */
-interface BaseExtension2 : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, Sealable {
+/**
+ * Scope of the DSL objects.
+ *
+ * This contains whatever is needed by all the DSL objects:
+ * - the issue reporter
+ * - the deprecation reporter
+ * - the instantiator.
+ */
+interface DslScope {
 
-    val variantExtensionProperties: VariantOrExtensionPropertiesImpl
+    val issueReporter: EvalIssueReporter
+
+    val deprecationReporter: DeprecationReporter
+
+    val objectFactory: ObjectFactory
 }

@@ -38,6 +38,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -98,12 +99,12 @@ public class StableApiTest {
                         .omitEmptyStrings()
                         .split(Resources.toString(INCUBATING_API_URL, Charsets.UTF_8));
 
-        //System.err.println("####################");
-        //Collections.sort(apiElements);
-        //for (String apiElement : apiElements) {
-        //    System.err.println(apiElement);
-        //}
-        //System.err.println("####################");
+        System.err.println("####################");
+        Collections.sort(apiElements);
+        for (String apiElement : apiElements) {
+            System.err.println(apiElement);
+        }
+        System.err.println("####################");
 
         Truth.assertThat(apiElements).containsExactlyElementsIn(expectedApiElements);
     }

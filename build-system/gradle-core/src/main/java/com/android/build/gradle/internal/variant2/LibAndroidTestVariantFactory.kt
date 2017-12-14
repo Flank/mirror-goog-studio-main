@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
 import com.android.build.api.dsl.variant.Variant
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.extensions.AppExtensionImpl
 import com.android.build.gradle.internal.api.dsl.extensions.LibraryExtensionImpl
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
@@ -44,7 +45,7 @@ class LibAndroidTestVariantFactory
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             commonVariantProperties: CommonVariantPropertiesImpl,
             variantDispatcher: VariantDispatcher,
-            issueReporter: EvalIssueReporter)
+            dslScope: DslScope)
             : SealableVariant {
 
         return AndroidTestVariantImpl(
@@ -55,7 +56,7 @@ class LibAndroidTestVariantFactory
                 variantExtensionProperties,
                 commonVariantProperties,
                 variantDispatcher,
-                issueReporter)
+                dslScope)
     }
 
     override fun computeApplicationId(mergedFlavor: ProductFlavorOrVariant, appIdSuffixFromFlavors: String?): String? {

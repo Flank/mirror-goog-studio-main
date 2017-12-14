@@ -18,8 +18,11 @@ package com.android.build.gradle.internal.api.artifact
 
 import com.android.build.api.artifact.BuildArtifactType.JAVAC_CLASSES
 import com.android.build.api.artifact.BuildArtifactType.JAVA_COMPILE_CLASSPATH
+import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.scope.BuildArtifactHolder
+import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.ide.common.util.multimapOf
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
@@ -35,6 +38,11 @@ import kotlin.test.assertFailsWith
 class OutputFileProviderImplTest {
 
     private val project = ProjectBuilder.builder().build()
+
+    private val dslScope = DslScopeImpl(
+            FakeEvalIssueReporter(throwOnError = true),
+            FakeDeprecationReporter(),
+            FakeObjectFactory())
 
     companion object {
         @BeforeClass @JvmStatic
@@ -54,7 +62,7 @@ class OutputFileProviderImplTest {
                         multimapOf(JAVAC_CLASSES to "foo"),
                         listOf(),
                         "task",
-                        FakeEvalIssueReporter(throwOnError = true))
+                        dslScope)
         holder.createFirstArtifactFiles(JAVAC_CLASSES, "bar", "task")
         assertThat(output.file).hasName("foo")
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES).single()).hasName("foo")
@@ -71,7 +79,7 @@ class OutputFileProviderImplTest {
                         multimapOf(JAVAC_CLASSES to "foo"),
                         listOf(),
                         "task",
-                        FakeEvalIssueReporter(throwOnError = true))
+                        dslScope)
         holder.createFirstArtifactFiles(JAVAC_CLASSES, "bar", "task")
         BuildableArtifactImpl.enableResolution()
         assertThat(output.file).hasName("foo")
@@ -92,7 +100,7 @@ class OutputFileProviderImplTest {
                                 JAVA_COMPILE_CLASSPATH to "bar"),
                         listOf(),
                         "task",
-                        FakeEvalIssueReporter(throwOnError = true))
+                        dslScope)
         holder.createFirstArtifactFiles(JAVAC_CLASSES, "javac", "task")
         holder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, "classpath", "task")
         BuildableArtifactImpl.enableResolution()
@@ -113,5 +121,5 @@ class OutputFileProviderImplTest {
                     project.file("root"),
                     "debug",
                     listOf(JAVAC_CLASSES, JAVA_COMPILE_CLASSPATH),
-                    FakeEvalIssueReporter(throwOnError = true))
+                    dslScope)
 }

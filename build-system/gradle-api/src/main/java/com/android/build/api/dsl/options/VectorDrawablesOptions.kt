@@ -23,7 +23,7 @@ import org.gradle.api.Incubating
 @Incubating
 interface VectorDrawablesOptions : Initializable<VectorDrawablesOptions> {
 
-    val generatedDensities: Set<String>?
+    var generatedDensities: MutableSet<String>
 
-    val useSupportLibrary: Boolean?
+    var useSupportLibrary: Boolean
 }

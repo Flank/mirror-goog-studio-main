@@ -24,8 +24,11 @@ import com.android.build.api.artifact.BuildArtifactType.JAVAC_CLASSES
 import com.android.build.api.artifact.BuildArtifactType.JAVA_COMPILE_CLASSPATH
 import com.android.build.api.artifact.InputArtifactProvider
 import com.android.build.api.artifact.OutputFileProvider
+import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.scope.BuildArtifactHolder
+import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.DefaultTask
@@ -44,7 +47,10 @@ class BuildArtifactTransformBuilderImplTest {
     open class TestTask : DefaultTask()
 
     private val project = ProjectBuilder().build()!!
-    private val issueReporter = FakeEvalIssueReporter(throwOnError = true)
+    private val dslScope = DslScopeImpl(
+            FakeEvalIssueReporter(throwOnError = true),
+            FakeDeprecationReporter(),
+            FakeObjectFactory())
     lateinit private var builder : BuildArtifactTransformBuilder<TestTask>
     lateinit private var taskHolder : BuildArtifactHolder
 
@@ -58,13 +64,13 @@ class BuildArtifactTransformBuilderImplTest {
                         project.file("root"),
                         "debug",
                         listOf(JAVAC_CLASSES, JAVA_COMPILE_CLASSPATH),
-                        issueReporter)
+                        dslScope)
         builder = BuildArtifactTransformBuilderImpl(
                 project,
                 taskHolder,
                 "test",
                 TestTask::class.java,
-                issueReporter)
+                dslScope)
     }
 
 

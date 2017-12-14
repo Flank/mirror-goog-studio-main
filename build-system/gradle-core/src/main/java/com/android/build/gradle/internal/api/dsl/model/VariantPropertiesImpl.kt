@@ -23,6 +23,7 @@ import com.android.build.api.dsl.options.JavaCompileOptions
 import com.android.build.api.dsl.options.NdkOptions
 import com.android.build.api.dsl.options.ShaderOptions
 import com.android.build.api.dsl.options.SigningConfig
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.options.ExternalNativeBuildOptionsImpl
 import com.android.build.gradle.internal.api.dsl.options.JavaCompileOptionsImpl
 import com.android.build.gradle.internal.api.dsl.options.NdkOptionsImpl
@@ -32,40 +33,40 @@ import com.android.build.gradle.internal.api.dsl.sealing.OptionalSupplier
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.build.gradle.internal.api.dsl.sealing.SealableMap
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.SyncIssue
 import org.gradle.api.Action
 import java.io.File
 
-class VariantPropertiesImpl(
-            issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter), VariantProperties {
+class VariantPropertiesImpl(dslScope: DslScope)
+        : SealableObject(dslScope), VariantProperties {
 
     // backing properties for lists/sets/maps
-    private val _buildConfigFields: SealableList<TypedValue> = SealableList.new(issueReporter)
-    private val _resValues: SealableList<TypedValue> = SealableList.new(issueReporter)
-    private val _manifestPlaceholders: SealableMap<String, Any> = SealableMap.new(issueReporter)
+    private val _buildConfigFields: SealableList<TypedValue> = SealableList.new(dslScope)
+    private val _resValues: SealableList<TypedValue> = SealableList.new(dslScope)
+    private val _manifestPlaceholders: SealableMap<String, Any> = SealableMap.new(dslScope)
 
-    private val _ndkOptions = OptionalSupplier({ NdkOptionsImpl(issueReporter) })
-    private val _javaCompileOptions = OptionalSupplier({ JavaCompileOptionsImpl(issueReporter) })
-    private val _externalNativeBuildOptions = OptionalSupplier({ ExternalNativeBuildOptionsImpl(
-            issueReporter) })
-    private val _shaders = OptionalSupplier({ ShaderOptionsImpl(issueReporter) })
+    private val _ndkOptions = OptionalSupplier(this, NdkOptionsImpl::class.java, dslScope)
+    private val _javaCompileOptions = OptionalSupplier(
+            this, JavaCompileOptionsImpl::class.java, dslScope)
+    private val _externalNativeBuildOptions = OptionalSupplier(
+            this, ExternalNativeBuildOptionsImpl::class.java, dslScope)
+    private val _shaders = OptionalSupplier(this, ShaderOptionsImpl::class.java, dslScope)
 
     override val ndkOptions: NdkOptions
-        get() = _ndkOptions.get(isSealed())
+        get() = _ndkOptions.get()
     override val javaCompileOptions: JavaCompileOptions
-        get() = _javaCompileOptions.get(isSealed())
+        get() = _javaCompileOptions.get()
     override val externalNativeBuildOptions: ExternalNativeBuildOptions
-        get() = _externalNativeBuildOptions.get(isSealed())
+        get() = _externalNativeBuildOptions.get()
     override val shaders: ShaderOptions
-        get() = _shaders.get(isSealed())
+        get() = _shaders.get()
 
     override var signingConfig: SigningConfig? = null
         set(value) {
             if (checkSeal()) {
                 if (value !is SigningConfigImpl) {
-                    issueReporter.reportError(
+                    dslScope.issueReporter.reportError(
                             EvalIssueReporter.Type.GENERIC,
                             "BuildType.signingConfig set with an object not from android.signingConfigs")
                 }
@@ -123,25 +124,25 @@ class VariantPropertiesImpl(
         }
 
     override fun ndkOptions(action: Action<NdkOptions>) {
-        action.execute(_ndkOptions.get(isSealed()))
+        action.execute(_ndkOptions.get())
     }
 
     override fun javaCompileOptions(action: Action<JavaCompileOptions>) {
-        action.execute(_javaCompileOptions.get(isSealed()))
+        action.execute(_javaCompileOptions.get())
     }
 
     override fun externalNativeBuild(action: Action<ExternalNativeBuildOptions>) {
         // FIXME deduplicate?
-        action.execute(_externalNativeBuildOptions.get(isSealed()))
+        action.execute(_externalNativeBuildOptions.get())
     }
 
     override fun externalNativeBuildOptions(action: Action<ExternalNativeBuildOptions>) {
         // FIXME deduplicate?
-        action.execute(_externalNativeBuildOptions.get(isSealed()))
+        action.execute(_externalNativeBuildOptions.get())
     }
 
     override fun shaderOptions(action: Action<ShaderOptions>) {
-        action.execute(_shaders.get(isSealed()))
+        action.execute(_shaders.get())
     }
 
     fun initWith(that: VariantPropertiesImpl) {
@@ -170,11 +171,32 @@ class VariantPropertiesImpl(
         _resValues.seal()
         _manifestPlaceholders.seal()
 
-        _ndkOptions.instance?.seal()
-        _javaCompileOptions.instance?.seal()
-        _externalNativeBuildOptions.instance?.seal()
-        _shaders.instance?.seal()
+        _ndkOptions.seal()
+        _javaCompileOptions.seal()
+        _externalNativeBuildOptions.seal()
+        _shaders.seal()
         // enforced in the setter.
         (signingConfig as? SigningConfigImpl)?.seal()
+    }
+
+    // DEPRECATED STUFF
+
+    @Suppress("OverridingDeprecatedMember")
+    override val compileOptions: JavaCompileOptions
+        get()  {
+            dslScope.deprecationReporter.reportDeprecatedUsage(
+                    "javaCompilationOptions",
+                    "compilationOptions",
+                    DeprecationReporter.DeprecationTarget.OLD_DSL)
+            return _javaCompileOptions.get()
+        }
+
+    @Suppress("OverridingDeprecatedMember")
+    override fun compileOptions(action: Action<JavaCompileOptions>) {
+        dslScope.deprecationReporter.reportDeprecatedUsage(
+                "javaCompilationOptions",
+                "compilationOptions",
+                DeprecationReporter.DeprecationTarget.OLD_DSL)
+        action.execute(_javaCompileOptions.get())
     }
 }

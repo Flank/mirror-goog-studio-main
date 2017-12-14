@@ -16,28 +16,23 @@
 
 package com.android.build.gradle.internal.api.dsl.model
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.api.model.ObjectFactory
 
-class ProductFlavorFactory(
-            private val objectFactory: ObjectFactory,
-            private val deprecationReporter: DeprecationReporter,
-            private val issueReporter: EvalIssueReporter)
+class ProductFlavorFactory(private val dslScope: DslScope)
         : NamedDomainObjectFactory<ProductFlavorImpl> {
 
     override fun create(name: String): ProductFlavorImpl {
 
-        val baseFlavor= BaseFlavorImpl(deprecationReporter, issueReporter)
+        val baseFlavor= BaseFlavorImpl(dslScope)
 
-        return objectFactory.newInstance(ProductFlavorImpl::class.java,
+        return dslScope.objectFactory.newInstance(ProductFlavorImpl::class.java,
                 name,
-                VariantPropertiesImpl(issueReporter),
-                BuildTypeOrProductFlavorImpl(deprecationReporter, issueReporter, { baseFlavor.postProcessing }),
-                ProductFlavorOrVariantImpl(issueReporter),
-                FallbackStrategyImpl(deprecationReporter, issueReporter),
+                VariantPropertiesImpl(dslScope),
+                BuildTypeOrProductFlavorImpl(dslScope, { baseFlavor.postProcessing }),
+                ProductFlavorOrVariantImpl(dslScope),
+                FallbackStrategyImpl(dslScope),
                 baseFlavor,
-                issueReporter)
+                dslScope)
     }
 }

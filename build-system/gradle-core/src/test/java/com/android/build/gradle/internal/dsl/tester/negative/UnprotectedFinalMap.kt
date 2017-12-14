@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl.tester.negative
 
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.dsl.tester.positive.TopLevelInterface
 import com.android.builder.errors.EvalIssueReporter
@@ -24,7 +25,7 @@ interface UnprotectedFinalMap {
     val unprotectedFinalMapProperty : Map<String, TopLevelInterface>
 }
 
-class UnprotectedFinalMapImpl(issueReporter: EvalIssueReporter)
-    : SealableObject(issueReporter), UnprotectedFinalMap {
+class UnprotectedFinalMapImpl(dslScope: DslScope)
+    : SealableObject(dslScope), UnprotectedFinalMap {
     override val unprotectedFinalMapProperty = HashMap<String, TopLevelInterface>()
 }

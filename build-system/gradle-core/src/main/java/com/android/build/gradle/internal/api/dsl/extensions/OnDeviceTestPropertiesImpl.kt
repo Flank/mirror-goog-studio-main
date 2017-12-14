@@ -17,15 +17,15 @@
 package com.android.build.gradle.internal.api.dsl.extensions
 
 import com.android.build.api.dsl.extension.OnDeviceTestProperties
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.AdbOptions
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
 import org.gradle.api.Action
 
-class OnDeviceTestPropertiesImpl(issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter), OnDeviceTestProperties {
+class OnDeviceTestPropertiesImpl(dslScope: DslScope)
+        : SealableObject(dslScope), OnDeviceTestProperties {
 
     override val adbOptions: AdbOptions
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.

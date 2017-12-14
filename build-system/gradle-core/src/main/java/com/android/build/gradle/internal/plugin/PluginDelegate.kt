@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.plugin
 
 import com.android.build.api.dsl.variant.Variant
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2
 import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.extensions.VariantAwarePropertiesImpl
@@ -33,6 +34,7 @@ import com.android.build.gradle.internal.errors.DeprecationReporterImpl
 import com.android.build.gradle.internal.errors.SyncIssueHandlerImpl
 import com.android.build.gradle.internal.variant2.ContainerFactory
 import com.android.build.gradle.internal.variant2.DslModelDataImpl
+import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.build.gradle.internal.variant2.VariantBuilder
 import com.android.build.gradle.internal.variant2.VariantFactory2
 import com.android.build.gradle.internal.variant2.VariantModelData
@@ -62,8 +64,7 @@ interface TypedPluginDelegate<E: BaseExtension2> {
             buildProperties: BuildPropertiesImpl,
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             variantAwareProperties: VariantAwarePropertiesImpl,
-            deprecationReporter: DeprecationReporter,
-            issueReporter: EvalIssueReporter): E
+            dslScope: DslScope): E
 
     fun createDefaults(extension: E)
 
@@ -75,7 +76,7 @@ interface TypedPluginDelegate<E: BaseExtension2> {
  */
 class PluginDelegate<out E: BaseExtension2>(
         projectPath: String,
-        private val objectFactory: ObjectFactory,
+        objectFactory: ObjectFactory,
         private val extensionContainer: ExtensionContainer,
         private val configurationContainer: ConfigurationContainer,
         private val containerFactory: ContainerFactory,
@@ -88,32 +89,37 @@ class PluginDelegate<out E: BaseExtension2>(
     private lateinit var variantModelData: VariantModelData
     private lateinit var newExtension: E
 
-    private val issueReporter = SyncIssueHandlerImpl(
-            SyncOptions.getModelQueryMode(projectOptions), logger)
-    private val deprecationReporter = DeprecationReporterImpl(issueReporter, projectPath)
+    private val dslScope: DslScope
 
     init {
+        val issueReporter = SyncIssueHandlerImpl(
+                SyncOptions.getModelQueryMode(projectOptions), logger)
+
+        dslScope = DslScopeImpl(
+                issueReporter,
+                DeprecationReporterImpl(issueReporter, projectPath),
+                objectFactory)
+
         if (projectOptions.hasRemovedOptions()) {
             issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC, projectOptions.removedOptionsErrorMessage)
         }
 
         if (projectOptions.hasDeprecatedOptions()) {
-            deprecationReporter.reportDeprecatedOptions(projectOptions.deprecatedOptions)
+            dslScope.deprecationReporter.reportDeprecatedOptions(projectOptions.deprecatedOptions)
         }
     }
 
     fun prepareForEvaluation(): E {
         // create the default config implementation
-        val baseFlavor = BaseFlavorImpl(deprecationReporter, issueReporter)
+        val baseFlavor = BaseFlavorImpl(dslScope)
         val defaultConfig = DefaultConfigImpl(
-                VariantPropertiesImpl(issueReporter),
-                BuildTypeOrProductFlavorImpl(
-                        deprecationReporter, issueReporter) { baseFlavor.postProcessing },
-                ProductFlavorOrVariantImpl(issueReporter),
-                FallbackStrategyImpl(deprecationReporter, issueReporter),
+                VariantPropertiesImpl(dslScope),
+                BuildTypeOrProductFlavorImpl(dslScope) { baseFlavor.postProcessing },
+                ProductFlavorOrVariantImpl(dslScope),
+                FallbackStrategyImpl(dslScope),
                 baseFlavor,
-                issueReporter)
+                dslScope)
 
         dslModelData = DslModelDataImpl(
                 defaultConfig,
@@ -121,24 +127,17 @@ class PluginDelegate<out E: BaseExtension2>(
                 configurationContainer,
                 filesProvider,
                 containerFactory,
-                objectFactory,
-                deprecationReporter,
-                issueReporter,
+                dslScope,
                 logger)
 
-        variantModelData = VariantModelData(issueReporter)
+        variantModelData = VariantModelData(dslScope)
 
         newExtension = typedDelegate.createNewExtension(
                 extensionContainer,
-                BuildPropertiesImpl(dslModelData, issueReporter),
-                VariantOrExtensionPropertiesImpl(issueReporter),
-                VariantAwarePropertiesImpl(
-                        dslModelData,
-                        variantModelData,
-                        deprecationReporter,
-                        issueReporter),
-                deprecationReporter,
-                issueReporter)
+                BuildPropertiesImpl(dslModelData, dslScope),
+                VariantOrExtensionPropertiesImpl(dslScope),
+                VariantAwarePropertiesImpl(dslModelData, variantModelData, dslScope),
+                dslScope)
 
         typedDelegate.createDefaults(newExtension)
 
@@ -158,11 +157,7 @@ class PluginDelegate<out E: BaseExtension2>(
 
         // compute the variants
         dslModelData.afterEvaluateCompute()
-        val builder = VariantBuilder(
-                dslModelData,
-                newExtension,
-                deprecationReporter,
-                issueReporter)
+        val builder = VariantBuilder(dslModelData, newExtension, dslScope)
         builder.generateVariants()
         val variants = builder.variants
         val variantShims = builder.shims

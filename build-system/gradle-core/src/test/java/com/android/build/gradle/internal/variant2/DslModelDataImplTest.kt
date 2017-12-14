@@ -42,6 +42,7 @@ class DslModelDataImplTest {
     private val issueReporter = FakeEvalIssueReporter()
     private val deprecationReporter = FakeDeprecationReporter()
     private val configurationContainer = FakeConfigurationContainer()
+    private val dslScope = DslScopeImpl(issueReporter, deprecationReporter, FakeObjectFactory())
 
 
     @Test
@@ -401,15 +402,14 @@ class DslModelDataImplTest {
     private fun <E: BaseExtension2> createModelData(
             factories: List<VariantFactory2<E>>): DslModelDataImpl<E> {
 
-        val baseFlavor = BaseFlavorImpl(deprecationReporter, issueReporter)
+        val baseFlavor = BaseFlavorImpl(dslScope)
         val defaultConfig = DefaultConfigImpl(
-                VariantPropertiesImpl(issueReporter),
-                BuildTypeOrProductFlavorImpl(
-                        deprecationReporter, issueReporter) { baseFlavor.postProcessing },
-                ProductFlavorOrVariantImpl(issueReporter),
-                FallbackStrategyImpl(deprecationReporter, issueReporter),
+                VariantPropertiesImpl(dslScope),
+                BuildTypeOrProductFlavorImpl(dslScope) { baseFlavor.postProcessing },
+                ProductFlavorOrVariantImpl(dslScope),
+                FallbackStrategyImpl(dslScope),
                 baseFlavor,
-                issueReporter)
+                dslScope)
 
         return DslModelDataImpl(
                 defaultConfig,
@@ -417,9 +417,7 @@ class DslModelDataImplTest {
                 configurationContainer,
                 FakeFilesProvider(),
                 FakeContainerFactory(),
-                FakeObjectFactory(),
-                deprecationReporter,
-                issueReporter,
+                dslScope,
                 FakeLogger())
     }
 

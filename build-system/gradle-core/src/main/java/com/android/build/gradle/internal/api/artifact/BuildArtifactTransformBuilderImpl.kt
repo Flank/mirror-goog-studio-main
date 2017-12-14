@@ -21,6 +21,7 @@ import com.android.build.api.artifact.BuildArtifactTransformBuilder
 import com.android.build.api.artifact.BuildArtifactTransformBuilder.OperationType
 import com.android.build.api.artifact.InputArtifactProvider
 import com.android.build.api.artifact.OutputFileProvider
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.scope.BuildArtifactHolder
 import com.android.builder.errors.EvalIssueReporter
@@ -36,8 +37,8 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
         private val artifactHolder: BuildArtifactHolder,
         private val taskNamePrefix: String,
         private val taskType: Class<T>,
-        issueReporter: EvalIssueReporter)
-    : SealableObject(issueReporter), BuildArtifactTransformBuilder<T> {
+        dslScope: DslScope)
+    : SealableObject(dslScope), BuildArtifactTransformBuilder<T> {
 
     private val inputs = mutableListOf<ArtifactType>()
     private val outputFiles = HashMultimap.create<ArtifactType, String>()
@@ -51,7 +52,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
             return this
         }
         if (replacedOutput.contains(artifactType) || appendedOutput.contains(artifactType)) {
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
                     "Output type '$artifactType' was already specified as an output.")
             return this
@@ -60,7 +61,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
         when (operationType) {
             OperationType.REPLACE -> {
                 if (!spec.replaceable) {
-                    issueReporter.reportError(
+                    dslScope.issueReporter.reportError(
                             EvalIssueReporter.Type.GENERIC,
                             "Replacing ArtifactType '$artifactType' is not allowed.")
                     return this
@@ -69,7 +70,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
             }
             OperationType.APPEND -> {
                 if (!spec.appendable) {
-                    issueReporter.reportError(
+                    dslScope.issueReporter.reportError(
                             EvalIssueReporter.Type.GENERIC,
                             "Append to ArtifactType '$artifactType' is not allowed.")
                     return this
@@ -85,7 +86,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
             return this
         }
         if (inputs.contains(artifactType)) {
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
                     "Output type '$artifactType' was already specified as an input.")
             return this
@@ -100,7 +101,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
             return this
         }
         if (outputFiles.containsValue(filename)) {
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
                     "Output file '$filename' was already created.")
             return this
@@ -113,7 +114,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
 
                 val spec = BuildArtifactSpec.get(consumer)
                 if (spec.singleFile && outputFiles[consumer].size > 1) {
-                    issueReporter.reportError(
+                    dslScope.issueReporter.reportError(
                             EvalIssueReporter.Type.GENERIC,
                             "OutputType '$consumer' does not support multiple output files.")
                 }
@@ -138,7 +139,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
         if (!checkSeal()) {
             return task
         }
-        val inputProvider = InputArtifactProviderImpl(artifactHolder, inputs, issueReporter)
+        val inputProvider = InputArtifactProviderImpl(artifactHolder, inputs, dslScope)
         val outputProvider =
                 OutputFileProviderImpl(
                         artifactHolder,
@@ -147,14 +148,14 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
                         outputFiles,
                         unassociatedFiles,
                         taskName,
-                        issueReporter)
+                        dslScope)
         try {
             when {
                 action != null -> action.accept(task, inputProvider, outputProvider)
                 function != null -> function(task, inputProvider, outputProvider)
             }
         } catch (e : Exception) {
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
                     """Exception thrown while configuring task '$taskName'.
                             |Type: ${e.javaClass.name}

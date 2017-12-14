@@ -98,10 +98,15 @@ interface VariantProperties {
     fun ndkOptions(action: Action<NdkOptions>)
 
     val javaCompileOptions: JavaCompileOptions
+    @Deprecated("Use javaCompilation instead")
+    val compileOptions: JavaCompileOptions
 
     /** Configures the java compile options with the given action.  */
     fun javaCompileOptions(action: Action<JavaCompileOptions>)
 
+    /** Configures the java compile options with the given action.  */
+    @Deprecated("Use javaCompilation instead")
+    fun compileOptions(action: Action<JavaCompileOptions>)
 
     /**
      * Encapsulates per-variant CMake and ndk-build configurations for your external native build.

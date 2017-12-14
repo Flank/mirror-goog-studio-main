@@ -18,10 +18,10 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactTransformBuilder
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.artifact.BuildArtifactType
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.utils.FileUtils
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
@@ -51,11 +51,11 @@ class BuildArtifactHolder(
         private val rootOutputDir : File,
         private val variantDirName : String,
         initialArtifactTypes: List<BuildArtifactType>,
-        private val issueReporter: EvalIssueReporter) {
+        private val dslScope: DslScope) {
 
     private val artifactRecordMap =
             initialArtifactTypes.associate{
-                it to ArtifactRecord(BuildableArtifactImpl(null, issueReporter))
+                it to ArtifactRecord(BuildableArtifactImpl(null, dslScope))
             }
 
     /**
@@ -132,7 +132,7 @@ class BuildArtifactHolder(
             taskName : String)
             : BuildableArtifact {
         val collection = project.files(filenames.map{ createFile(taskName, it)}).builtBy(taskName)
-        val files = BuildableArtifactImpl(collection, issueReporter)
+        val files = BuildableArtifactImpl(collection, dslScope)
         createOutput(artifactType, files)
         return files
     }
@@ -161,7 +161,7 @@ class BuildArtifactHolder(
                         filenames.map{ createFile(taskName, it) },
                         originalOutput)
                         .builtBy(taskName, originalOutput)
-        val files = BuildableArtifactImpl(collection, issueReporter)
+        val files = BuildableArtifactImpl(collection, dslScope)
         createOutput(artifactType, files)
         return files
     }

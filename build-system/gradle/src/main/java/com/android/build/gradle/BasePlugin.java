@@ -69,6 +69,7 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -499,6 +500,13 @@ public abstract class BasePlugin<E extends BaseExtension2>
         final NamedDomainObjectContainer<BaseVariantOutput> buildOutputs =
                 project.container(BaseVariantOutput.class);
 
+        DslScopeImpl dslScope =
+                new DslScopeImpl(
+                        extraModelInfo.getSyncIssueHandler(),
+                        extraModelInfo.getDeprecationReporter(),
+                        objectFactory);
+
+
         project.getExtensions().add("buildOutputs", buildOutputs);
 
         sourceSetManager = createSourceSetManager();
@@ -532,6 +540,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 new GlobalScope(
                         project,
                         projectOptions,
+                        dslScope,
                         androidBuilder,
                         extension,
                         sdkHandler,

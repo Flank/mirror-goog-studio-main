@@ -17,17 +17,18 @@
 package com.android.build.gradle.internal.api.dsl.options
 
 import com.android.build.api.dsl.options.PostProcessingFilesOptions
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealable
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
-import com.android.builder.errors.EvalIssueReporter
+import javax.inject.Inject
 
-class PostProcessingFilesOptionsImpl(issueReporter: EvalIssueReporter)
-        : InitializableSealable<PostProcessingFilesOptions>(issueReporter), PostProcessingFilesOptions {
+open class PostProcessingFilesOptionsImpl @Inject constructor(dslScope: DslScope)
+        : InitializableSealable<PostProcessingFilesOptions>(dslScope), PostProcessingFilesOptions {
 
     // the actual backing data for the exposed properties.
-    private val _proguardFiles: SealableList<Any> = SealableList.new(issueReporter)
-    private val _testProguardFiles: SealableList<Any> = SealableList.new(issueReporter)
-    private val _consumerProguardFiles: SealableList<Any> = SealableList.new(issueReporter)
+    private val _proguardFiles: SealableList<Any> = SealableList.new(dslScope)
+    private val _testProguardFiles: SealableList<Any> = SealableList.new(dslScope)
+    private val _consumerProguardFiles: SealableList<Any> = SealableList.new(dslScope)
 
     override var proguardFiles: MutableList<Any>
         get() = _proguardFiles

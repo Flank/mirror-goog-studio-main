@@ -23,9 +23,9 @@ import com.android.build.api.artifact.InputArtifactProvider
 import com.android.build.api.artifact.OutputFileProvider
 import com.android.build.api.dsl.options.BuildArtifactsOptions
 import com.android.build.gradle.internal.api.artifact.BuildArtifactTransformBuilderImpl
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.NestedSealable
 import com.android.build.gradle.internal.scope.BuildArtifactHolder
-import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Project
 import org.gradle.api.Task
 import java.io.File
@@ -36,8 +36,8 @@ import java.io.File
 class BuildArtifactsOptionsImpl(
         private val project: Project,
         private val artifactHolder: BuildArtifactHolder,
-        issueReporter: EvalIssueReporter)
-    : BuildArtifactsOptions, NestedSealable(issueReporter) {
+        dslScope: DslScope)
+    : BuildArtifactsOptions, NestedSealable(dslScope) {
 
     /**
      * Wrapper to convert a [BuildArtifactTransformBuilder.SimpleConfigurationAction] to a
@@ -87,7 +87,7 @@ class BuildArtifactsOptionsImpl(
                 artifactHolder,
                 taskName,
                 taskType,
-                issueReporter)
+                dslScope)
                 .input(artifactType)
                 .output(artifactType, BuildArtifactTransformBuilder.OperationType.APPEND)
                 .outputFile(artifactType.name(), artifactType) // TODO: create appropriate file name
@@ -124,7 +124,7 @@ class BuildArtifactsOptionsImpl(
                 artifactHolder,
                 taskName,
                 taskType,
-                issueReporter)
+                dslScope)
                 .input(artifactType)
                 .output(artifactType, BuildArtifactTransformBuilder.OperationType.REPLACE)
                 .outputFile(artifactType.name(), artifactType) // TODO: create appropriate file name
@@ -143,5 +143,5 @@ class BuildArtifactsOptionsImpl(
                             artifactHolder,
                             taskName,
                             taskType,
-                            issueReporter))
+                            dslScope))
 }

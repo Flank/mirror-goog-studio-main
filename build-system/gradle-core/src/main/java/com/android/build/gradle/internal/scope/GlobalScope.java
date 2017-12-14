@@ -28,6 +28,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -64,6 +65,8 @@ public class GlobalScope extends TaskOutputHolderImpl
     @NonNull private final ProjectOptions projectOptions;
     @Nullable private final FileCache buildCache;
 
+    @NonNull private final DslScope dslScope;
+
     @NonNull private Configuration lintChecks;
 
     // TODO: Remove mutable state from this class.
@@ -74,6 +77,7 @@ public class GlobalScope extends TaskOutputHolderImpl
     public GlobalScope(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
+            @NonNull DslScope dslScope,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
@@ -83,6 +87,7 @@ public class GlobalScope extends TaskOutputHolderImpl
         // Attention: remember that this code runs early in the build lifecycle, project may not
         // have been fully configured yet (e.g. buildDir can still change).
         this.project = checkNotNull(project);
+        this.dslScope = checkNotNull(dslScope);
         this.androidBuilder = checkNotNull(androidBuilder);
         this.extension = checkNotNull(extension);
         this.sdkHandler = checkNotNull(sdkHandler);
@@ -91,6 +96,7 @@ public class GlobalScope extends TaskOutputHolderImpl
         this.optionalCompilationSteps = checkNotNull(projectOptions.getOptionalCompilationSteps());
         this.projectOptions = checkNotNull(projectOptions);
         this.buildCache = buildCache;
+
     }
 
     @NonNull
@@ -245,6 +251,11 @@ public class GlobalScope extends TaskOutputHolderImpl
     @NonNull
     public SyncIssueHandler getErrorHandler() {
         return (SyncIssueHandler) androidBuilder.getIssueReporter();
+    }
+
+    @NonNull
+    public DslScope getDslScope() {
+        return dslScope;
     }
 
     @NonNull

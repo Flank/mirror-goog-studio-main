@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl.tester
 
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.SealableImplementationTester
 import com.android.build.gradle.internal.dsl.tester.negative.BooleanNotSealed
 import com.android.build.gradle.internal.dsl.tester.negative.BooleanNotSealedImpl
@@ -25,6 +26,9 @@ import com.android.build.gradle.internal.dsl.tester.negative.UnprotectedFinalMap
 import com.android.build.gradle.internal.dsl.tester.negative.UnprotectedFinalMapImpl
 import com.android.build.gradle.internal.dsl.tester.positive.TopLevelInterface
 import com.android.build.gradle.internal.dsl.tester.positive.TopLevelInterfaceImpl
+import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 import com.google.common.truth.Truth
@@ -39,10 +43,15 @@ open class SealableImplementationTesterTest {
 
     @Mock
     lateinit var issueReporter: EvalIssueReporter
+    @Mock
+    lateinit var deprecationReporter: DeprecationReporter
+
+    lateinit var dslScope: DslScope
 
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
+        dslScope = DslScopeImpl(issueReporter, deprecationReporter, FakeObjectFactory())
     }
 
     @Test
@@ -105,11 +114,11 @@ open class SealableImplementationTesterTest {
             Int::class -> return 321
             String::class -> return "String"
 
-            TopLevelInterface::class -> return TopLevelInterfaceImpl(issueReporter)
-            ValueInterfaceOne::class -> return ValueInterfaceOneImpl(issueReporter)
-            UnprotectedFinalList::class -> return UnprotectedFinalListImpl(issueReporter)
-            UnprotectedFinalMap::class -> return UnprotectedFinalMapImpl(issueReporter)
-            BooleanNotSealed::class -> return BooleanNotSealedImpl(issueReporter)
+            TopLevelInterface::class -> return TopLevelInterfaceImpl(dslScope)
+            ValueInterfaceOne::class -> return ValueInterfaceOneImpl(dslScope)
+            UnprotectedFinalList::class -> return UnprotectedFinalListImpl(dslScope)
+            UnprotectedFinalMap::class -> return UnprotectedFinalMapImpl(dslScope)
+            BooleanNotSealed::class -> return BooleanNotSealedImpl(dslScope)
         }
         throw IllegalArgumentException("Do not know how to instantiate $type")
     }

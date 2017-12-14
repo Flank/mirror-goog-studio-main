@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.api.dsl.sealing
 
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.google.common.collect.ImmutableList
 
 /**
@@ -39,27 +39,27 @@ class SealableList<T> private constructor(
             wrappedList: MutableList<T>?,
             instantiator: () -> MutableList<T>,
             cloner: (MutableList<T>) -> MutableList<T>,
-            issueReporter: EvalIssueReporter)
+            dslScope: DslScope)
         : AbstractSealableCollection<T, MutableList<T>>(
                 wrappedList,
                 instantiator,
                 cloner,
-        issueReporter),
+        dslScope),
         MutableList<T>  {
 
     companion object {
-        fun <T> wrap(wrappedList: MutableList<T>, issueReporter: EvalIssueReporter) =
+        fun <T> wrap(wrappedList: MutableList<T>, dslScope: DslScope) =
                 SealableList(
                         wrappedList,
                         { throw RuntimeException("Calling instantiator on a WrappedSealableList") },
                         { collection -> collection },
-                        issueReporter)
+                        dslScope)
 
-        fun <T> new(issueReporter: EvalIssueReporter) = SealableList(
+        fun <T> new(dslScope: DslScope) = SealableList(
                 null,
                 { ArrayList<T>() },
                 { collection -> ArrayList(collection) },
-                issueReporter)
+                dslScope)
     }
 
     override fun get(index: Int) = internalCollection?.get(index) ?: throw ArrayIndexOutOfBoundsException(index)
@@ -88,7 +88,7 @@ class SealableList<T> private constructor(
         val finalCollection = internalCollection ?: return ImmutableList.of<T>().listIterator()
 
         return handleSealableSubItem(
-                SealableMutableListIterator(finalCollection.listIterator(), issueReporter))
+                SealableMutableListIterator(finalCollection.listIterator(), dslScope))
     }
 
     override fun listIterator(index: Int): MutableListIterator<T> {
@@ -97,7 +97,7 @@ class SealableList<T> private constructor(
         val finalCollection = internalCollection ?: return ImmutableList.of<T>().listIterator(index)
 
         return handleSealableSubItem(
-                SealableMutableListIterator(finalCollection.listIterator(index), issueReporter))
+                SealableMutableListIterator(finalCollection.listIterator(index), dslScope))
     }
 
     override fun removeAt(index: Int): T {
@@ -120,7 +120,7 @@ class SealableList<T> private constructor(
 
     override fun subList(fromIndex: Int, toIndex: Int): MutableList<T> {
         if (checkSeal()) {
-            return new<T>(issueReporter)
+            return new<T>(dslScope)
                     .reset(getBackingCollection().subList(fromIndex, toIndex))
         }
 

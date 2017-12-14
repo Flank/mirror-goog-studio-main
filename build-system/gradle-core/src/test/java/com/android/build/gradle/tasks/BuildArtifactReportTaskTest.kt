@@ -19,8 +19,11 @@ package com.android.build.gradle.tasks
 import com.android.build.api.artifact.BuildArtifactType.JAVAC_CLASSES
 import com.android.build.api.artifact.BuildArtifactType.JAVA_COMPILE_CLASSPATH
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
+import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.scope.BuildArtifactHolder
+import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -37,10 +40,12 @@ class BuildArtifactReportTaskTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
     private lateinit var project : Project
-    private val issueReporter = FakeEvalIssueReporter(throwOnError = true)
     private val artifactTypes = listOf(JAVAC_CLASSES, JAVA_COMPILE_CLASSPATH)
     private lateinit var artifactHolder : BuildArtifactHolder
-
+    private val dslScope = DslScopeImpl(
+            FakeEvalIssueReporter(throwOnError = true),
+            FakeDeprecationReporter(),
+            FakeObjectFactory())
     @Before
     fun setUp() {
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()
@@ -51,7 +56,7 @@ class BuildArtifactReportTaskTest {
                 project.file("root"),
                 "debug",
                 artifactTypes,
-                issueReporter)
+                dslScope)
         project.tasks.create("task0")
         project.tasks.create("task1")
         artifactHolder.createFirstArtifactFiles(JAVAC_CLASSES, "javac_classes", "task0")

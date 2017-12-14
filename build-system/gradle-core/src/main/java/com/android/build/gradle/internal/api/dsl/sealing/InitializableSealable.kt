@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.api.sourcesets
+package com.android.build.gradle.internal.api.dsl.sealing
 
+import com.android.build.api.dsl.Initializable
 import com.android.build.gradle.internal.api.dsl.DslScope
-import org.gradle.api.NamedDomainObjectFactory
 
-class AndroidSourceSetFactory(
-            private val filesProvider: FilesProvider,
-            private val publishPackage: Boolean,
-            private val dslScope: DslScope)
-        : NamedDomainObjectFactory<DefaultAndroidSourceSet> {
-
-    override fun create(name: String): DefaultAndroidSourceSet {
-        return dslScope.objectFactory.newInstance(DefaultAndroidSourceSet::class.java,
-                name, filesProvider, publishPackage, dslScope)
-    }
-}
+abstract class InitializableSealable<in T: Initializable<T>>(dslScope: DslScope):
+        SealableObject(dslScope), Initializable<T>

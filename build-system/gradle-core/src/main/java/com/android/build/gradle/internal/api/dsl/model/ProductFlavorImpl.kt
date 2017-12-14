@@ -22,8 +22,8 @@ import com.android.build.api.dsl.model.FallbackStrategy
 import com.android.build.api.dsl.model.ProductFlavor
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
 import com.android.build.api.dsl.model.VariantProperties
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.EvalIssueReporter
 
 class ProductFlavorImpl(
             private val named: String,
@@ -32,8 +32,8 @@ class ProductFlavorImpl(
             private val productFlavorOrVariant: ProductFlavorOrVariantImpl,
             private val fallbackStrategy: FallbackStrategyImpl,
             private val baseFlavor: BaseFlavorImpl,
-            issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter),
+            dslScope: DslScope)
+        : SealableObject(dslScope),
         ProductFlavor,
         VariantProperties by variantProperties,
         BuildTypeOrProductFlavor by buildTypeOrProductFlavor,

@@ -17,17 +17,15 @@
 package com.android.build.gradle.internal.api.dsl.model
 
 import com.android.build.api.dsl.model.FallbackStrategy
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.builder.errors.EvalIssueReporter
 
-class FallbackStrategyImpl(
-            private val deprecationReporter: DeprecationReporter,
-            issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter), FallbackStrategy {
+class FallbackStrategyImpl(dslScope: DslScope)
+        : SealableObject(dslScope), FallbackStrategy {
 
-    private val _matchingFallbacks: SealableList<String> = SealableList.new(issueReporter)
+    private val _matchingFallbacks: SealableList<String> = SealableList.new(dslScope)
 
     override var matchingFallbacks: MutableList<String>
         get() = _matchingFallbacks
@@ -36,7 +34,7 @@ class FallbackStrategyImpl(
         }
 
     internal fun setMatchingFallbacksAsArray(fallbacks: Array<out String>) {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "BuildType.matchingFallbacks",
                 "BuildType.setMatchingFallbacks",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -50,7 +48,7 @@ class FallbackStrategyImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun setMatchingFallbacks(fallback: String) {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "BuildType.matchingFallbacks",
                 "BuildType.setMatchingFallbacks",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)

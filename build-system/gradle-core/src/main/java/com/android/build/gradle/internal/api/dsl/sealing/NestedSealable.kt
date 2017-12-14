@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.api.dsl.sealing
 
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 import java.lang.ref.WeakReference
 
 /**
@@ -25,7 +25,7 @@ import java.lang.ref.WeakReference
  *
  * This keeps tracks of these objects and seals them when the main class is sealed.
  */
-open class NestedSealable(issueReporter: EvalIssueReporter) : SealableObject(issueReporter) {
+open class NestedSealable(dslScope: DslScope) : SealableObject(dslScope) {
 
     private var toBeSealed: MutableList<WeakReference<SealableObject>>? = null
 

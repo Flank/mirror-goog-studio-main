@@ -16,16 +16,16 @@
 
 package com.android.build.gradle.internal.api.dsl.sealing
 
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.SyncIssue
 import org.gradle.api.Named
 
 abstract class SealableObject(
-            protected val issueReporter: EvalIssueReporter,
+            internal val dslScope: DslScope,
             private val name: String?)
         : Sealable {
 
-    constructor(issueReporter: EvalIssueReporter): this(issueReporter, null)
+    constructor(dslScope: DslScope): this(dslScope, null)
 
     private var sealed: Boolean = false
 
@@ -34,7 +34,7 @@ abstract class SealableObject(
             // get the name of the class
             val className = this.javaClass.name
             val itemNameStr = computeName()
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
                     "Attempting to seal object$itemNameStr of type $className after it's been sealed.")
         }
@@ -50,7 +50,7 @@ abstract class SealableObject(
             val className = this.javaClass.name
             val itemNameStr = computeName()
             // FIXME better error message and custom TYPE.
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
                     "Attempting to modify object$itemNameStr of type $className after it's been sealed.",
                     className)

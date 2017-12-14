@@ -19,16 +19,22 @@ package com.android.build.gradle.internal.api.dsl.extensions
 import com.android.build.api.dsl.extension.ApkProperties
 import com.android.build.api.dsl.options.PackagingOptions
 import com.android.build.api.dsl.options.Splits
+import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.api.dsl.options.PackagingOptionsImpl
+import com.android.build.gradle.internal.api.dsl.sealing.OptionalSupplier
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 
-class ApkPropertiesImpl(issueReporter: EvalIssueReporter): SealableObject(issueReporter), ApkProperties {
+class ApkPropertiesImpl(dslScope: DslScope): SealableObject(dslScope), ApkProperties {
+
+    private val _packagingOptions = OptionalSupplier(
+            this, PackagingOptionsImpl::class.java, dslScope)
+
     override val packagingOptions: PackagingOptions
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = _packagingOptions.get()
 
     override fun packagingOptions(action: Action<PackagingOptions>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        action.execute(_packagingOptions.get())
     }
 
     override val splits: Splits
@@ -41,4 +47,10 @@ class ApkPropertiesImpl(issueReporter: EvalIssueReporter): SealableObject(issueR
     override var generatePureSplits: Boolean
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
         set(value) {}
+
+    override fun seal() {
+        super.seal()
+        _packagingOptions.seal()
+    }
+
 }

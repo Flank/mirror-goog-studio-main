@@ -18,15 +18,12 @@ package com.android.build.gradle.internal.api.dsl.model
 
 import com.android.build.api.dsl.model.BaseFlavor
 import com.android.build.api.dsl.options.PostProcessingFilesOptions
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 
-class BaseFlavorImpl(
-            private val deprecationReporter: DeprecationReporter,
-            issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter), BaseFlavor {
+class BaseFlavorImpl(dslScope: DslScope)
+        : SealableObject(dslScope), BaseFlavor {
 
     override var wearAppUnbundled: Boolean? = null
         set(value) {

@@ -16,8 +16,9 @@
 
 package com.android.build.gradle.internal.api.artifact
 
-import com.android.build.api.artifact.OutputFileProvider
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.OutputFileProvider
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.BuildArtifactHolder
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.Multimap
@@ -41,7 +42,7 @@ class OutputFileProviderImpl(
         filenamesMap : Multimap<ArtifactType, String>,
         unassociatedFilenames : Collection<String>,
         taskName : String,
-        val issueReporter : EvalIssueReporter) : OutputFileProvider {
+        private val dslScope: DslScope) : OutputFileProvider {
 
     // map from filename to actual File.
     private val fileMap =
@@ -54,7 +55,7 @@ class OutputFileProviderImpl(
             val files = filenamesMap.get(artifactType)
             if (spec.singleFile) {
                 if (files.isEmpty()) {
-                    issueReporter.reportError(
+                    dslScope.issueReporter.reportError(
                             EvalIssueReporter.Type.GENERIC,
                             "An output file must be created for OutputType '$artifactType'.")
                 }
@@ -70,14 +71,14 @@ class OutputFileProviderImpl(
     override val file : File
         get() = when {
             fileMap.values.isEmpty() -> {
-                issueReporter.reportError(
+                dslScope.issueReporter.reportError(
                         EvalIssueReporter.Type.GENERIC,
                         "No output file was defined.")
                 File("")
 
             }
             fileMap.values.size > 1 -> {
-                issueReporter.reportError(
+                dslScope.issueReporter.reportError(
                         EvalIssueReporter.Type.GENERIC,
                         "Multiple output files was defined.")
                 File("")
@@ -88,7 +89,7 @@ class OutputFileProviderImpl(
     override fun getFile(filename: String): File {
         val file = fileMap[filename]
         if (file == null) {
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
                     "Multiple output files was defined.")
             return File("")

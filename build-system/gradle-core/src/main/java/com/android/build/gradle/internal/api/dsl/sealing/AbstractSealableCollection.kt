@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.api.dsl.sealing
 
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.google.common.collect.ImmutableList
 
 /**
@@ -35,8 +35,8 @@ abstract class AbstractSealableCollection<T, C: MutableCollection<T>> protected 
             originCollection: C?,
             private val instantiator: () -> C,
             private val cloner: (C) -> C,
-            issueReporter: EvalIssueReporter)
-        : NestedSealable(issueReporter), MutableCollection<T> {
+            dslScope: DslScope)
+        : NestedSealable(dslScope), MutableCollection<T> {
 
     // Use the cloner to clone the original collection into the internal version.
     // Behavior of the cloner will depend on the expected behavior of the sealable wrapper:
@@ -108,7 +108,7 @@ abstract class AbstractSealableCollection<T, C: MutableCollection<T>> protected 
         val finalCollection = internalCollection ?: return ImmutableList.of<T>().iterator()
 
         return handleSealableSubItem(
-                SealableMutableIterator(finalCollection.iterator(), issueReporter))
+                SealableMutableIterator(finalCollection.iterator(), dslScope))
     }
 
     /**

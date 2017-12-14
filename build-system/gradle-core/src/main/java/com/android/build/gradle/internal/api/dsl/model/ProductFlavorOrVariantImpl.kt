@@ -20,20 +20,22 @@ import com.android.build.api.dsl.ApiVersion
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
 import com.android.build.api.dsl.options.InstrumentationOptions
 import com.android.build.api.dsl.options.VectorDrawablesOptions
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.options.InstrumentationOptionsImpl
-import com.android.build.gradle.internal.api.dsl.options.NdkOptionsImpl
+import com.android.build.gradle.internal.api.dsl.options.VectorDrawableOptionsImpl
 import com.android.build.gradle.internal.api.dsl.sealing.OptionalSupplier
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 
-class ProductFlavorOrVariantImpl(
-            issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter), ProductFlavorOrVariant {
+class ProductFlavorOrVariantImpl(dslScope: DslScope)
+        : SealableObject(dslScope), ProductFlavorOrVariant {
 
-    private val _resConfigs: SealableList<String> = SealableList.new(issueReporter)
-    private val _instrumentationOptions = OptionalSupplier({ InstrumentationOptionsImpl(issueReporter) })
+    private val _resConfigs: SealableList<String> = SealableList.new(dslScope)
+    private val _instrumentationOptions = OptionalSupplier(
+            this, InstrumentationOptionsImpl::class.java, dslScope)
+    private val _vectorDrawableOptions = OptionalSupplier(
+            this, VectorDrawableOptionsImpl::class.java, dslScope)
 
     override var applicationId: String? = null
         set(value) {
@@ -145,22 +147,29 @@ class ProductFlavorOrVariantImpl(
         }
 
     override val vectorDrawables: VectorDrawablesOptions
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = _vectorDrawableOptions.get()
 
     override fun vectorDrawables(action: Action<VectorDrawablesOptions>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        action.execute(_vectorDrawableOptions.get())
     }
 
     override val instrumentationOptions: InstrumentationOptions
-        get() = _instrumentationOptions.get(isSealed())
+        get() = _instrumentationOptions.get()
 
     override fun instrumentationOptions(action: Action<InstrumentationOptions>) {
-        action.execute(_instrumentationOptions.get(isSealed()))
+        action.execute(_instrumentationOptions.get())
     }
 
     internal fun initWith(that: ProductFlavorOrVariantImpl) {
         if (checkSeal()) {
             _instrumentationOptions.copyFrom(that._instrumentationOptions)
+            _vectorDrawableOptions.copyFrom(that._vectorDrawableOptions)
         }
+    }
+
+    override fun seal() {
+        super.seal()
+        _instrumentationOptions.seal()
+        _vectorDrawableOptions.seal()
     }
 }

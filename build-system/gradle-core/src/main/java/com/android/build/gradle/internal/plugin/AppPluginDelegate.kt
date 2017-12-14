@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.plugin
 
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.extensions.ApkPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.extensions.AppExtensionImpl
 import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl
@@ -27,6 +28,7 @@ import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.variant2.AppAndroidTestVariantFactory
 import com.android.build.gradle.internal.variant2.AppUnitTestVariantFactory
 import com.android.build.gradle.internal.variant2.AppVariantFactory
+import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.builder.core.BuilderConstants
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.plugins.ExtensionContainer
@@ -43,8 +45,7 @@ class AppPluginDelegate: TypedPluginDelegate<AppExtensionImpl> {
             buildProperties: BuildPropertiesImpl,
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             variantAwareProperties: VariantAwarePropertiesImpl,
-            deprecationReporter: DeprecationReporter,
-            issueReporter: EvalIssueReporter): AppExtensionImpl {
+            dslScope: DslScope): AppExtensionImpl {
         return extensionContainer
                 .create(
                         "android",
@@ -52,10 +53,10 @@ class AppPluginDelegate: TypedPluginDelegate<AppExtensionImpl> {
                         buildProperties,
                         variantExtensionProperties,
                         variantAwareProperties,
-                        ApkPropertiesImpl(issueReporter),
-                        EmbeddedTestPropertiesImpl(issueReporter),
-                        OnDeviceTestPropertiesImpl(issueReporter),
-                        issueReporter)
+                        ApkPropertiesImpl(dslScope),
+                        EmbeddedTestPropertiesImpl(dslScope),
+                        OnDeviceTestPropertiesImpl(dslScope),
+                        dslScope)
     }
 
     override fun createDefaults(extension: AppExtensionImpl) {

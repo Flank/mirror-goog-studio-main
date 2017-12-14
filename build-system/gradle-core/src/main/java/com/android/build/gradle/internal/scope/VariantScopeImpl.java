@@ -236,7 +236,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         intermediate("artifact_transform"),
                         getVariantConfiguration().getDirName(),
                         ImmutableList.of(),
-                        globalScope.getErrorHandler());
+                        globalScope.getDslScope());
 
         validatePostprocessingOptions();
     }

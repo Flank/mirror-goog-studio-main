@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.variant.VariantFilter
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
@@ -24,7 +25,7 @@ import com.android.builder.errors.EvalIssueReporter
 class VariantFilterImpl(
         override val buildType:String,
         override val flavors: List<String>,
-        issueReporter: EvalIssueReporter): SealableObject(issueReporter), VariantFilter {
+        dslScope: DslScope): SealableObject(dslScope), VariantFilter {
     private var _ignoresProd = false
     private var _ignoresAndroidTest = false
     private var _ignoresUnitTest = false

@@ -62,7 +62,7 @@ interface DexOptions : Initializable<DexOptions> {
     var javaMaxHeapSize: String?
 
     /** List of additional parameters to be passed to `dx`.  */
-    var additionalParameters: List<String>
+    var additionalParameters: MutableList<String>
 
     /**
      * Returns the maximum number of concurrent processes that can be used to dex. Defaults to 4.

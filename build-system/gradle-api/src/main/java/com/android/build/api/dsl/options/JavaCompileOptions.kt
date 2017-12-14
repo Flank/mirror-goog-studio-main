@@ -19,10 +19,46 @@ package com.android.build.api.dsl.options
 import com.android.build.api.dsl.Initializable
 import org.gradle.api.Action
 import org.gradle.api.Incubating
+import org.gradle.api.JavaVersion
 
 /** Options for configuring Java compilation.  */
 @Incubating
 interface JavaCompileOptions : Initializable<JavaCompileOptions> {
+
+    /**
+     * Language level of the java source code.
+     */
+    var sourceCompatibility: JavaVersion
+
+    /**
+     * Sets the source Compatibility using a String ("1.6"), or a Number (1.7)
+     */
+    fun setSourceCompatibility(value: Any)
+
+    /**
+     * Version of the generated Java bytecode.
+     */
+    var targetCompatibility: JavaVersion
+
+    /**
+     * Sets the target Compatibility using a String ("1.6"), or a Number (1.7)
+     */
+    fun setTargetCompatibility(value: Any)
+
+    /**
+     * Java source files encoding.
+     */
+    var encoding: String
+
+    /**
+     * Whether java compilation should use Gradle's new incremental model.
+     *
+     * This may cause issues in projects that rely on annotation processing etc.
+     *
+     * A null value lets the Android plugin choose what to do.
+     */
+    var incremental: Boolean?
+
     /** Returns the [AnnotationProcessorOptions] for configuring Java annotation processor.  */
     val annotationProcessorOptions: AnnotationProcessorOptions
 

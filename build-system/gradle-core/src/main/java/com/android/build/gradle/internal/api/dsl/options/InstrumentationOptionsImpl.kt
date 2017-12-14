@@ -17,14 +17,15 @@
 package com.android.build.gradle.internal.api.dsl.options
 
 import com.android.build.api.dsl.options.InstrumentationOptions
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealable
 import com.android.build.gradle.internal.api.dsl.sealing.SealableMap
-import com.android.builder.errors.EvalIssueReporter
+import javax.inject.Inject
 
-class InstrumentationOptionsImpl(issueReporter: EvalIssueReporter)
-    : InitializableSealable<InstrumentationOptions>(issueReporter), InstrumentationOptions {
+open class InstrumentationOptionsImpl @Inject constructor(dslScope: DslScope)
+    : InitializableSealable<InstrumentationOptions>(dslScope), InstrumentationOptions {
 
-    private val _instrumentationRunnerArguments: SealableMap<String, String> = SealableMap.new(issueReporter)
+    private val _instrumentationRunnerArguments: SealableMap<String, String> = SealableMap.new(dslScope)
 
     override var applicationId: String? = null
         set(value) {

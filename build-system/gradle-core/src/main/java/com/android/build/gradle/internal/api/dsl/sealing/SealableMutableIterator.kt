@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.internal.api.dsl.sealing
 
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 
 class SealableMutableIterator<out T>(
             private val iterator: MutableIterator<T>,
-            issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter), MutableIterator<T> {
+            dslScope: DslScope)
+        : SealableObject(dslScope), MutableIterator<T> {
 
     override fun remove() {
         if (checkSeal()) {

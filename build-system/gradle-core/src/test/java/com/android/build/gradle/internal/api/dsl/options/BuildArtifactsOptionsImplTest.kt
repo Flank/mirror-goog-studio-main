@@ -23,8 +23,11 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.dsl.options.BuildArtifactsOptions
 import com.android.build.gradle.internal.api.artifact.BuildArtifactTransformBuilderImpl
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
+import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.scope.BuildArtifactHolder
+import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.DefaultTask
@@ -51,6 +54,7 @@ class BuildArtifactsOptionsImplTest {
     }
 
     private val issueReporter = FakeEvalIssueReporter(throwOnError = true)
+    private val dslScope = DslScopeImpl(issueReporter, FakeDeprecationReporter(), FakeObjectFactory())
     lateinit private var project : Project
     lateinit private var taskHolder : BuildArtifactHolder
     lateinit private var options : BuildArtifactsOptions
@@ -67,8 +71,8 @@ class BuildArtifactsOptionsImplTest {
                         project.file("root"),
                         "debug",
                         listOf(JAVAC_CLASSES, JAVA_COMPILE_CLASSPATH),
-                        issueReporter)
-        options = BuildArtifactsOptionsImpl(project, taskHolder, issueReporter)
+                        dslScope)
+        options = BuildArtifactsOptionsImpl(project, taskHolder, dslScope)
         task0 = project.tasks.create("task0")
     }
 

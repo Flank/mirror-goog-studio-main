@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.truth.Truth
+import org.gradle.api.JavaVersion
 import org.junit.Assert
 import org.mockito.Mockito
 import java.io.File
@@ -163,7 +165,8 @@ open class SealableImplementationTester(
         }
         // basic and immutable types are fine
         if (propertyValue is Boolean || propertyValue is Double || propertyValue is Int ||
-                propertyValue is String || propertyValue is Float || propertyValue is File) {
+                propertyValue is String || propertyValue is Float || propertyValue is File ||
+                propertyValue is JavaVersion) {
             return
         }
         // anything else is suspicious, throw a test failure.

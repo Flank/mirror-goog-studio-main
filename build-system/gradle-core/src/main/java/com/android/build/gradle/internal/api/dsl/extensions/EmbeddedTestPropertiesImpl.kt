@@ -19,17 +19,14 @@ package com.android.build.gradle.internal.api.dsl.extensions
 import com.android.build.api.dsl.extension.EmbeddedTestProperties
 import com.android.build.api.dsl.variant.TestVariant
 import com.android.build.api.dsl.variant.UnitTestVariant
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.AdbOptions
 import com.android.builder.model.TestOptions
-import com.android.builder.testing.api.DeviceProvider
-import com.android.builder.testing.api.TestServer
 import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 
-class EmbeddedTestPropertiesImpl(issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter), EmbeddedTestProperties {
+class EmbeddedTestPropertiesImpl(dslScope: DslScope)
+        : SealableObject(dslScope), EmbeddedTestProperties {
 
     override var testBuildType: String? = "debug"
         set(value) {

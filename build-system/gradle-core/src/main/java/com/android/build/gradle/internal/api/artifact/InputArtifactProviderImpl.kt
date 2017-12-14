@@ -20,6 +20,7 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactType
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.artifact.InputArtifactProvider
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.BuildArtifactHolder
 import com.android.builder.errors.EvalIssueReporter
 
@@ -29,22 +30,22 @@ import com.android.builder.errors.EvalIssueReporter
 class InputArtifactProviderImpl(
         private var artifactHolder: BuildArtifactHolder,
         private var inputTypes : Collection<ArtifactType>,
-        private val issueReporter : EvalIssueReporter) : InputArtifactProvider {
+        private val dslScope: DslScope) : InputArtifactProvider {
     private val collections = inputTypes.map { artifactHolder.getArtifactFiles(it) }
 
     override val artifact: BuildableArtifact
         get() = when {
             collections.isEmpty() -> {
-                issueReporter.reportError(
+                dslScope.issueReporter.reportError(
                         EvalIssueReporter.Type.GENERIC,
                         "No artifacts was defined for input.")
-                BuildableArtifactImpl(null, issueReporter)
+                BuildableArtifactImpl(null, dslScope)
             }
             collections.size > 1 -> {
-                issueReporter.reportError(
+                dslScope.issueReporter.reportError(
                         EvalIssueReporter.Type.GENERIC,
                         "Multiple inputs types was defined.")
-                BuildableArtifactImpl(null, issueReporter)
+                BuildableArtifactImpl(null, dslScope)
             }
             else -> collections.single()
         }
@@ -52,10 +53,10 @@ class InputArtifactProviderImpl(
     override fun getArtifact(type : BuildArtifactType): BuildableArtifact {
         val index = inputTypes.indexOf(type)
         if (index == -1) {
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
                     "Artifact was not defined for input of type: $type.")
-            return BuildableArtifactImpl(null, issueReporter)
+            return BuildableArtifactImpl(null, dslScope)
         }
         return collections[inputTypes.indexOf(type)]
     }

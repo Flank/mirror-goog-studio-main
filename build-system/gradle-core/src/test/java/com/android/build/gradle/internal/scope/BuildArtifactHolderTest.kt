@@ -19,7 +19,10 @@ package com.android.build.gradle.internal.scope
 import com.android.build.api.artifact.BuildArtifactType.JAVAC_CLASSES
 import com.android.build.api.artifact.BuildArtifactType.JAVA_COMPILE_CLASSPATH
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
+import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
@@ -38,7 +41,10 @@ class BuildArtifactHolderTest {
     private val variantDir = "debug"
     lateinit private var project : Project
     lateinit var root : File
-    private val issueReporter = FakeEvalIssueReporter(throwOnError = true)
+    private val dslScope = DslScopeImpl(
+            FakeEvalIssueReporter(throwOnError = true),
+            FakeDeprecationReporter(),
+            FakeObjectFactory())
     lateinit private var holder : BuildArtifactHolder
     lateinit private var task0 : Task
     lateinit private var task1 : Task
@@ -55,7 +61,7 @@ class BuildArtifactHolderTest {
                 root,
                 variantDir,
                 listOf(JAVAC_CLASSES),
-                issueReporter)
+                dslScope)
         task0 = project.tasks.create("task0")
         task1 = project.tasks.create("task1")
         task2 = project.tasks.create("task2")

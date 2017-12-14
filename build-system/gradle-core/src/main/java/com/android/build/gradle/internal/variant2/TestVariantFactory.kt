@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.extensions.TestExtensionImpl
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrVariantImpl
@@ -25,7 +26,6 @@ import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
 import com.android.builder.core.VariantType
-import com.android.builder.errors.EvalIssueReporter
 
 class TestVariantFactory : VariantFactory2<TestExtensionImpl> {
 
@@ -41,7 +41,7 @@ class TestVariantFactory : VariantFactory2<TestExtensionImpl> {
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             commonVariantProperties: CommonVariantPropertiesImpl,
             variantDispatcher: VariantDispatcher,
-            issueReporter: EvalIssueReporter)
+            dslScope: DslScope)
             : SealableVariant {
 
         // FIXME
@@ -53,7 +53,7 @@ class TestVariantFactory : VariantFactory2<TestExtensionImpl> {
                 variantExtensionProperties,
                 commonVariantProperties,
                 variantDispatcher,
-                issueReporter)
+                dslScope)
     }
 
     override fun computeApplicationId(

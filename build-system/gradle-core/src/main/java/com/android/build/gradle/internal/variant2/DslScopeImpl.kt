@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.api.sourcesets
+package com.android.build.gradle.internal.variant2
 
 import com.android.build.gradle.internal.api.dsl.DslScope
-import org.gradle.api.NamedDomainObjectFactory
+import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.builder.errors.EvalIssueReporter
+import org.gradle.api.model.ObjectFactory
 
-class AndroidSourceSetFactory(
-            private val filesProvider: FilesProvider,
-            private val publishPackage: Boolean,
-            private val dslScope: DslScope)
-        : NamedDomainObjectFactory<DefaultAndroidSourceSet> {
-
-    override fun create(name: String): DefaultAndroidSourceSet {
-        return dslScope.objectFactory.newInstance(DefaultAndroidSourceSet::class.java,
-                name, filesProvider, publishPackage, dslScope)
-    }
-}
+class DslScopeImpl(
+        override val issueReporter: EvalIssueReporter,
+        override val deprecationReporter: DeprecationReporter,
+        override val objectFactory: ObjectFactory) : DslScope
