@@ -105,50 +105,61 @@ public final class BenchmarkRecorder {
     @NonNull
     private static final List<Future<?>> OUTSTANDING_UPLOADS = new ArrayList<>(WORK_QUEUE_SIZE);
 
+    private static List<ProfileUploader> UPLOADERS;
+
+    @NonNull
+    private static List<ProfileUploader> defaultUploaders() {
+        if (UPLOADERS == null) {
+            synchronized (BenchmarkRecorder.class) {
+                if (UPLOADERS == null) {
+                    List<ProfileUploader> uploaders = new ArrayList<>();
+
+                    try {
+                        uploaders.add(GoogleStorageProfileUploader.getInstance());
+                    } catch (Exception e) {
+                        System.out.println(
+                                "couldn't add GoogleStorageProfileUploader to the list of default uploaders, reason: "
+                                        + e);
+                    }
+
+                    try {
+                        uploaders.add(DanaProfileUploader.fromEnvironment());
+                    } catch (Exception e) {
+                        System.out.println(
+                                "couldn't add ActdProfileUploader to the list of default uploaders, reason: "
+                                        + e);
+                    }
+
+                    try {
+                        uploaders.add(LocalCSVProfileUploader.fromEnvironment());
+                    } catch (Exception e) {
+                        System.out.println(
+                                "couldn't add LocalCSVProfileUploader to the list of default uploaders, reason: "
+                                        + e);
+                    }
+
+                    try {
+                        uploaders.add(LocalProtoProfileUploader.fromEnvironment());
+                    } catch (Exception e) {
+                        System.out.println(
+                                "couldn't add LocalProtoProfileUploader to the list of default uploaders, reason: "
+                                        + e);
+                    }
+
+                    UPLOADERS = Collections.unmodifiableList(uploaders);
+                }
+            }
+        }
+
+        return UPLOADERS;
+    }
+
     @NonNull private final List<ProfileUploader> uploaders;
 
     @NonNull private final List<GradleBenchmarkResult.Builder> benchmarkResults = new ArrayList<>();
 
     @NonNull private final ProfileCapturer capturer;
 
-    @NonNull
-    private static List<ProfileUploader> defaultUploaders() {
-        List<ProfileUploader> uploaders = new ArrayList<>();
-
-        try {
-            uploaders.add(GoogleStorageProfileUploader.getInstance());
-        } catch (Exception e) {
-            System.out.println(
-                    "couldn't add GoogleStorageProfileUploader to the list of default uploaders, reason: "
-                            + e);
-        }
-
-        try {
-            uploaders.add(DanaProfileUploader.fromEnvironment());
-        } catch (Exception e) {
-            System.out.println(
-                    "couldn't add ActdProfileUploader to the list of default uploaders, reason: "
-                            + e);
-        }
-
-        try {
-            uploaders.add(LocalCSVProfileUploader.fromEnvironment());
-        } catch (Exception e) {
-            System.out.println(
-                    "couldn't add LocalCSVProfileUploader to the list of default uploaders, reason: "
-                            + e);
-        }
-
-        try {
-            uploaders.add(LocalProtoProfileUploader.fromEnvironment());
-        } catch (Exception e) {
-            System.out.println(
-                    "couldn't add LocalProtoProfileUploader to the list of default uploaders, reason: "
-                            + e);
-        }
-
-        return Collections.unmodifiableList(uploaders);
-    }
 
     public BenchmarkRecorder(@NonNull ProfileCapturer capturer) {
         this(capturer, defaultUploaders());
