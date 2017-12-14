@@ -14,7 +14,7 @@ def _gen_proto_impl(ctx):
   inputs += ctx.files.srcs + ctx.files.include
   args = [
       "--proto_path=" + gen_dir,
-      "--proto_path=" + workspace_path("prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0/include"),
+      "--proto_path=" + workspace_path("prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/" + ctx.attr.proto_include_version + "/include"),
   ]
   for dep in ctx.attr.deps:
     args += ["--proto_path=" + workspace_path(dep.proto_package)]
@@ -88,6 +88,7 @@ _gen_proto_rule = rule(
       "include": attr.label(
           allow_files = FileType([".proto"]),
       ),
+      "proto_include_version": attr.string(),
       "protoc": attr.label(
           cfg = "host",
           executable = True,
@@ -107,16 +108,17 @@ _gen_proto_rule = rule(
 )
 
 def java_proto_library(
-    name, srcs=None, proto_deps=[], java_deps=[], pom=None, visibility=None, grpc_support=False):
+    name, srcs=None, proto_deps=[], java_deps=[], pom=None, visibility=None, grpc_support=False, protoc_version="3.4.0"):
   srcs_name = name + "_srcs"
   outs = [srcs_name + ".srcjar"]
   _gen_proto_rule(
       name = srcs_name,
       srcs = srcs,
       deps = proto_deps,
-      include = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0/include",
+      include = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/" + protoc_version + "/include",
       outs = outs,
-      protoc = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/3.0.0:exe",
+      proto_include_version = protoc_version,
+      protoc = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/" + protoc_version + ":exe",
       grpc_plugin =
           "//prebuilts/tools/common/m2/repository/io/grpc/protoc-gen-grpc-java/1.0.3:exe"
               if grpc_support else None,
@@ -148,6 +150,7 @@ def cc_grpc_proto_library(name, srcs=[], deps=[], includes=[], visibility=None, 
       srcs = srcs,
       deps = deps,
       outs = outs,
+      proto_include_version = "3.0.0",
       protoc = "//external:protoc",
       grpc_plugin = "//external:grpc_cpp_plugin" if grpc_support else None,
       target_language = proto_languages.CPP

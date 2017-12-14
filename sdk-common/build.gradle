@@ -32,7 +32,7 @@ dependencies {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.0.0"
+        artifact = libs.proto_compiler
     }
 }
 
