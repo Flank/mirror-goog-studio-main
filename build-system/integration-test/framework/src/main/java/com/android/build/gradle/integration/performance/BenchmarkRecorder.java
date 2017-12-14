@@ -124,7 +124,7 @@ public final class BenchmarkRecorder {
         }
 
         try {
-            uploaders.add(ActdProfileUploader.fromEnvironment());
+            uploaders.add(DanaProfileUploader.fromEnvironment());
         } catch (Exception e) {
             System.out.println(
                     "couldn't add ActdProfileUploader to the list of default uploaders, reason: "

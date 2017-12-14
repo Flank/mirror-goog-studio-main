@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.common.fixture;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.performance.ActdProfileUploader;
+import com.android.build.gradle.integration.performance.DanaProfileUploader;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.common.collect.Lists;
@@ -162,8 +162,8 @@ public final class RandomGradleBenchmark {
         // To make sure samples aren't filtered out, we add the lower threshold if our value is
         // below it. This is something of an implementation detail, but if the implementation is
         // ever removed, this code should fail to compile. I'm okay with that.
-        if (value < ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD_MILLIS) {
-            value += ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD_MILLIS;
+        if (value < DanaProfileUploader.BENCHMARK_VALUE_THRESHOLD_MILLIS) {
+            value += DanaProfileUploader.BENCHMARK_VALUE_THRESHOLD_MILLIS;
         }
 
         return value;

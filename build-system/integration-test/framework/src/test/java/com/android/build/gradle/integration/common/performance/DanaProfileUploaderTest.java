@@ -22,11 +22,11 @@ import static org.mockito.Mockito.*;
 
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.RandomGradleBenchmark;
-import com.android.build.gradle.integration.performance.ActdProfileUploader;
-import com.android.build.gradle.integration.performance.ActdProfileUploader.BuildbotResponse;
-import com.android.build.gradle.integration.performance.ActdProfileUploader.Infos;
-import com.android.build.gradle.integration.performance.ActdProfileUploader.SampleRequest;
-import com.android.build.gradle.integration.performance.ActdProfileUploader.SerieRequest;
+import com.android.build.gradle.integration.performance.DanaProfileUploader;
+import com.android.build.gradle.integration.performance.DanaProfileUploader.BuildbotResponse;
+import com.android.build.gradle.integration.performance.DanaProfileUploader.Infos;
+import com.android.build.gradle.integration.performance.DanaProfileUploader.SampleRequest;
+import com.android.build.gradle.integration.performance.DanaProfileUploader.SerieRequest;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.io.IOException;
@@ -39,19 +39,19 @@ import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ActdProfileUploaderTest {
-    private final String actdBaseUrl = "http://example.com";
-    private final String actdProjectId = "test";
+public class DanaProfileUploaderTest {
+    private final String danaBaseUrl = "http://example.com";
+    private final String danaProjectId = "test";
     private final String buildbotMasterUrl = "http://example.com";
     private final String buildbotBuilderName = "fred";
 
-    private ActdProfileUploader uploader;
+    private DanaProfileUploader uploader;
 
     @Before
     public void setUp() throws IOException {
         BuildbotResponse buildInfo = new BuildbotResponse();
         buildInfo.sourceStamp.changes =
-                new ActdProfileUploader.Change[] {new ActdProfileUploader.Change()};
+                new DanaProfileUploader.Change[] {new DanaProfileUploader.Change()};
         buildInfo.sourceStamp.changes[0].comments = "comments";
         buildInfo.sourceStamp.changes[0].rev = "00000000000000000000000000000000000000";
         buildInfo.sourceStamp.changes[0].revlink = "http://example.com";
@@ -59,15 +59,15 @@ public class ActdProfileUploaderTest {
 
         uploader =
                 spy(
-                        ActdProfileUploader.create(
-                                actdBaseUrl,
-                                actdProjectId,
+                        DanaProfileUploader.create(
+                                danaBaseUrl,
+                                danaProjectId,
                                 buildbotMasterUrl,
                                 buildbotBuilderName,
-                                ActdProfileUploader.Mode.NORMAL));
+                                DanaProfileUploader.Mode.NORMAL));
 
         doReturn(buildInfo).when(uploader).jsonGet(anyString(), eq(BuildbotResponse.class));
-        ActdProfileUploader.clearCache();
+        DanaProfileUploader.clearCache();
     }
 
     private static void assertValidInfos(@Nullable Infos infos) {
@@ -138,7 +138,7 @@ public class ActdProfileUploaderTest {
         GradleBenchmarkResult gbr = RandomGradleBenchmark.randomBenchmarkResult();
 
         // Make sure that we get the same result for the same object passed in multiple times.
-        assertThat(ActdProfileUploader.flags(gbr)).isEqualTo(ActdProfileUploader.flags(gbr));
+        assertThat(DanaProfileUploader.flags(gbr)).isEqualTo(DanaProfileUploader.flags(gbr));
     }
 
     @Test
@@ -164,7 +164,7 @@ public class ActdProfileUploaderTest {
         assertThat(gbr.getProfile().getSpanList()).isNotEmpty();
 
         for (GradleBuildProfileSpan span : gbr.getProfile().getSpanList()) {
-            assertThat(ActdProfileUploader.description(gbr, span)).isNotNull();
+            assertThat(DanaProfileUploader.description(gbr, span)).isNotNull();
         }
     }
 
@@ -174,11 +174,11 @@ public class ActdProfileUploaderTest {
                 uploader.sampleRequests(RandomGradleBenchmark.randomBenchmarkResults());
         assertThat(reqs).isNotEmpty();
 
-        for (ActdProfileUploader.SampleRequest req : reqs) {
+        for (DanaProfileUploader.SampleRequest req : reqs) {
             // make sure the various IDs make sense
             assertThat(req.projectId).isNotEmpty();
 
-            for (ActdProfileUploader.Sample sample : req.samples) {
+            for (DanaProfileUploader.Sample sample : req.samples) {
                 // act-d baulks on 0 values, so we should not return them from sampleRequests()
                 assertThat(sample.value).isGreaterThan(0L);
 
@@ -196,7 +196,7 @@ public class ActdProfileUploaderTest {
 
     @Test
     public void buildRequest() throws ExecutionException {
-        ActdProfileUploader.BuildRequest buildRequest = uploader.buildRequest(1);
+        DanaProfileUploader.BuildRequest buildRequest = uploader.buildRequest(1);
 
         assertThat(buildRequest.build).isNotNull();
         assertThat(buildRequest.build.buildId).isGreaterThan(0L);
@@ -206,7 +206,7 @@ public class ActdProfileUploaderTest {
     }
 
     @Test
-    public void serieRequests() throws IOException {
+    public void serieRequests() {
         Collection<SampleRequest> sampleRequests =
                 uploader.sampleRequests(RandomGradleBenchmark.randomBenchmarkResults());
         assertThat(sampleRequests).isNotEmpty();

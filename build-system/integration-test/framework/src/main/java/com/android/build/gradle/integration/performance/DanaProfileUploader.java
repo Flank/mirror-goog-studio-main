@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Uploader that pushes profile results to act-d. */
-public class ActdProfileUploader implements ProfileUploader {
+public class DanaProfileUploader implements ProfileUploader {
     public enum Mode {
         NORMAL,
         BACKFILL
@@ -83,10 +83,10 @@ public class ActdProfileUploader implements ProfileUploader {
     private static final Cache<String, BuildbotResponse> BUILD_CACHE =
             CacheBuilder.newBuilder().initialCapacity(16).maximumSize(16).build();
 
-    @NonNull private static final String ACTD_PROJECT_ID = "SamProjectTest3";
-    @NonNull private static final String ACTD_ADD_BUILD_URL = "/apis/addBuild";
-    @NonNull private static final String ACTD_ADD_SERIE_URL = "/apis/addSerie";
-    @NonNull private static final String ACTD_ADD_SAMPLE_URL = "/apis/addSample";
+    @NonNull private static final String DANA_PROJECT_ID = "SamProjectTest3";
+    @NonNull private static final String DANA_ADD_BUILD_URL = "/apis/addBuild";
+    @NonNull private static final String DANA_ADD_SERIE_URL = "/apis/addSerie";
+    @NonNull private static final String DANA_ADD_SAMPLE_URL = "/apis/addSample";
 
     /**
      * This main method is for doing data backfill.
@@ -103,7 +103,7 @@ public class ActdProfileUploader implements ProfileUploader {
      * recommend one month's worth of data at a time.
      */
     public static void main(String... args) throws IOException {
-        ActdProfileUploader uploader = ActdProfileUploader.fromEnvironment();
+        DanaProfileUploader uploader = DanaProfileUploader.fromEnvironment();
 
         if (args.length == 0) {
             System.err.println("you must supply directories to read protos from as arguments");
@@ -122,39 +122,39 @@ public class ActdProfileUploader implements ProfileUploader {
         }
     }
 
-    @NonNull private final String actdBaseUrl;
-    @NonNull private final String actdProjectId;
+    @NonNull private final String danaBaseUrl;
+    @NonNull private final String danaProjectId;
     @NonNull private final String buildbotMasterUrl;
     @NonNull private final String buildbotBuilderName;
     private final Mode mode;
 
-    private ActdProfileUploader(
-            @NonNull String actdBaseUrl,
-            @NonNull String actdProjectId,
+    private DanaProfileUploader(
+            @NonNull String danaBaseUrl,
+            @NonNull String danaProjectId,
             @NonNull String buildbotMasterUrl,
             @NonNull String buildbotBuilderName,
             @NonNull Mode mode) {
-        this.actdBaseUrl = actdBaseUrl;
-        this.actdProjectId = actdProjectId;
+        this.danaBaseUrl = danaBaseUrl;
+        this.danaProjectId = danaProjectId;
         this.buildbotMasterUrl = buildbotMasterUrl;
         this.buildbotBuilderName = buildbotBuilderName;
         this.mode = mode;
     }
 
     /**
-     * Creates an ActdProfileUploader object. If you're looking to use the act-d uploader, use
+     * Creates an DanaProfileUploader object. If you're looking to use the act-d uploader, use
      * {@code fromEnvironment()} instead and set the relevant environment variables.
      */
     @VisibleForTesting
     @NonNull
-    public static ActdProfileUploader create(
-            @NonNull String actdBaseUrl,
-            @NonNull String actdProjectId,
+    public static DanaProfileUploader create(
+            @NonNull String danaBaseUrl,
+            @NonNull String danaProjectId,
             @NonNull String buildbotMasterUrl,
             @NonNull String buildbotBuilderName,
             @NonNull Mode mode) {
-        return new ActdProfileUploader(
-                actdBaseUrl, actdProjectId, buildbotMasterUrl, buildbotBuilderName, mode);
+        return new DanaProfileUploader(
+                danaBaseUrl, danaProjectId, buildbotMasterUrl, buildbotBuilderName, mode);
     }
 
     /**
@@ -174,7 +174,7 @@ public class ActdProfileUploader implements ProfileUploader {
     }
 
     /**
-     * Constructs an ActdProfileUploader from environment variables.
+     * Constructs an DanaProfileUploader from environment variables.
      *
      * <p>Note that environment variables get filtered before being passed to the process that runs
      * this code. Check tools/base/build-system/integration-test/build.gradle for what environment
@@ -183,17 +183,17 @@ public class ActdProfileUploader implements ProfileUploader {
      * @throws IllegalStateException if any required environment variables have not been set
      */
     @NonNull
-    public static ActdProfileUploader fromEnvironment() {
-        String actdProjectId = System.getenv("ACTD_PROJECT_ID");
-        if (actdProjectId == null || actdProjectId.isEmpty()) {
-            actdProjectId = ACTD_PROJECT_ID;
+    public static DanaProfileUploader fromEnvironment() {
+        String danaProjectId = System.getenv("DANA_PROJECT_ID");
+        if (danaProjectId == null || danaProjectId.isEmpty()) {
+            danaProjectId = DANA_PROJECT_ID;
         }
 
-        return new ActdProfileUploader(
-                envRequired("ACTD_BASE_URL"),
-                actdProjectId,
-                envRequired("ACTD_BUILDBOT_MASTER_URL"),
-                envRequired("ACTD_BUILDBOT_BUILDER_NAME"),
+        return new DanaProfileUploader(
+                envRequired("DANA_BASE_URL"),
+                danaProjectId,
+                envRequired("DANA_BUILDBOT_MASTER_URL"),
+                envRequired("DANA_BUILDBOT_BUILDER_NAME"),
                 Mode.NORMAL);
     }
 
@@ -431,7 +431,7 @@ public class ActdProfileUploader implements ProfileUploader {
      *     response.
      */
     private void addBuild(@NonNull BuildRequest req) throws IOException {
-        checkActdResonse(jsonPost(actdBaseUrl + ACTD_ADD_BUILD_URL, req));
+        checkDanaResonse(jsonPost(danaBaseUrl + DANA_ADD_BUILD_URL, req));
     }
 
     /**
@@ -444,7 +444,7 @@ public class ActdProfileUploader implements ProfileUploader {
      *     response.
      */
     private void addSerie(@NonNull SerieRequest req) throws IOException {
-        checkActdResonse(jsonPost(actdBaseUrl + ACTD_ADD_SERIE_URL, req));
+        checkDanaResonse(jsonPost(danaBaseUrl + DANA_ADD_SERIE_URL, req));
     }
 
     /**
@@ -457,14 +457,14 @@ public class ActdProfileUploader implements ProfileUploader {
      *     response.
      */
     private void addSample(@NonNull SampleRequest req) throws IOException {
-        checkActdResonse(jsonPost(actdBaseUrl + ACTD_ADD_SAMPLE_URL, req));
+        checkDanaResonse(jsonPost(danaBaseUrl + DANA_ADD_SAMPLE_URL, req));
     }
 
     /**
      * act-d doesn't always return a non-200 response for failures, but there are ways of checking
      * for success in the response itself. Make sure you wrap act-d HTTP calls in this method.
      */
-    private void checkActdResonse(String response) throws IOException {
+    private void checkDanaResonse(String response) throws IOException {
         if (!response.contains("success")) {
             throw new IOException("unsuccessful act-d response:" + response);
         }
@@ -532,7 +532,7 @@ public class ActdProfileUploader implements ProfileUploader {
                                             .collect(Collectors.toList());
 
                             SampleRequest req = new SampleRequest();
-                            req.projectId = actdProjectId;
+                            req.projectId = danaProjectId;
                             req.serieId = entry.getKey();
                             req.samples = samples;
 
@@ -588,7 +588,7 @@ public class ActdProfileUploader implements ProfileUploader {
     @NonNull
     public BuildRequest buildRequest(long buildId) throws ExecutionException {
         BuildRequest buildReq = new BuildRequest();
-        buildReq.projectId = actdProjectId;
+        buildReq.projectId = danaProjectId;
         buildReq.build.infos = infos(buildId);
         buildReq.build.buildId = buildId;
 
@@ -618,7 +618,7 @@ public class ActdProfileUploader implements ProfileUploader {
                 .map(
                         serieId -> {
                             SerieRequest serieReq = new SerieRequest();
-                            serieReq.projectId = actdProjectId;
+                            serieReq.projectId = danaProjectId;
                             serieReq.serieId = serieId;
                             return serieReq;
                         })
