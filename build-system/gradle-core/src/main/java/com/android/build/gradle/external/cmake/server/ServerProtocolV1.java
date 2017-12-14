@@ -150,7 +150,8 @@ public class ServerProtocolV1 implements Server {
         }
         List<ProtocolVersion> result = new ArrayList<>();
         for (ProtocolVersion protocolVersion : helloResult.supportedProtocolVersions) {
-            if (protocolVersion.major == 1 && protocolVersion.minor == 0) {
+            // We support 1.0+ (i.e., we support major version 1 and all minor versions).
+            if (protocolVersion.major == 1) {
                 result.add(protocolVersion);
                 break;
             }
