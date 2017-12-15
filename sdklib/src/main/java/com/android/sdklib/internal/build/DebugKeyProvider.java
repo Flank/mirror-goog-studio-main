@@ -18,7 +18,6 @@ package com.android.sdklib.internal.build;
 
 import com.android.prefs.AndroidLocation;
 import com.android.prefs.AndroidLocation.AndroidLocationException;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -33,9 +32,10 @@ import java.security.cert.CertificateException;
 
 /**
  * A provider of a dummy key to sign Android application for debugging purpose.
+ *
  * <p>This provider uses a custom keystore to create and store a key with a known password.
  *
- * @deprecated Use Android-Builder instead
+ * @deprecated This class is obsolete and will be deleted EOY2018
  */
 @Deprecated
 public class DebugKeyProvider {
@@ -99,6 +99,8 @@ public class DebugKeyProvider {
     public DebugKeyProvider(String osKeyStorePath, String storeType, IKeyGenOutput output)
             throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
             UnrecoverableEntryException, IOException, KeytoolException, AndroidLocationException {
+        System.err.println(
+                "DebugKeyProvider is deprecated and will be removed from sdklib at the end of 2018");
 
         if (osKeyStorePath == null) {
             osKeyStorePath = getDefaultKeyStoreOsPath();

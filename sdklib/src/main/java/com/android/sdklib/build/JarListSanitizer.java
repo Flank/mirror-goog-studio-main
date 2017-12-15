@@ -17,7 +17,6 @@
 package com.android.sdklib.build;
 
 import com.android.SdkConstants;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,13 +41,14 @@ import java.util.regex.Pattern;
 /**
  * A Class to handle a list of jar files, finding and removing duplicates.
  *
- * Right now duplicates are based on:
- * - same filename
- * - same length
- * - same content: using sha1 comparison.
+ * <p>Right now duplicates are based on: - same filename - same length - same content: using sha1
+ * comparison.
  *
- * The length/sha1 are kept in a cache and only updated if the library is changed.
+ * <p>The length/sha1 are kept in a cache and only updated if the library is changed.
+ *
+ * @deprecated This class is obsolete and will be deleted EOY2018
  */
+@Deprecated
 public class JarListSanitizer {
 
     private static final byte[] sBuffer = new byte[4096];
@@ -176,11 +176,12 @@ public class JarListSanitizer {
      * @param out the project output where the cache is to be stored.
      */
     public JarListSanitizer(File out) {
-        mOut = out;
-        mOutStream = System.out;
+        this(out, System.out);
     }
 
     public JarListSanitizer(File out, PrintStream outStream) {
+        System.err.println(
+                "JarListSanitizer is deprecated and will be removed from sdklib at the end of 2018");
         mOut = out;
         mOutStream = outStream;
     }

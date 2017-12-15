@@ -22,22 +22,23 @@ import static com.android.SdkConstants.EXT_RSH;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
 /**
- * Checks whether Renderscript compilation is needed. This is entirely based
- * on using dependency files and manually looking up the list of current inputs, and old
- * outputs timestamp.
+ * Checks whether Renderscript compilation is needed. This is entirely based on using dependency
+ * files and manually looking up the list of current inputs, and old outputs timestamp.
  *
- * TODO: add checks on input/output checksum to detect true changes.
- * TODO: (better) delete Ant and use Gradle.
+ * <p>TODO: add checks on input/output checksum to detect true changes. TODO: (better) delete Ant
+ * and use Gradle.
  *
- * This should be only needed in Ant.
+ * <p>This should be only needed in Ant.
+ *
+ * @deprecated This class is obsolete and will be deleted EOY2018
  */
+@Deprecated
 public class ManualRenderScriptChecker extends RenderScriptChecker {
 
     @NonNull

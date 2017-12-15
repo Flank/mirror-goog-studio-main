@@ -18,14 +18,16 @@ package com.android.sdklib.build;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 /**
  * Source Searcher processor, gathering a list of all the files found by the SourceSearcher.
+ *
+ * @deprecated This class is obsolete and will be deleted EOY2018
  */
+@Deprecated
 public class FileGatherer implements SourceSearcher.SourceFileProcessor {
     @NonNull
     private final List<File> mFiles = Lists.newArrayList();

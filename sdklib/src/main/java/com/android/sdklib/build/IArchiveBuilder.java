@@ -18,6 +18,8 @@ package com.android.sdklib.build;
 
 import java.io.File;
 
+/** @deprecated This class is obsolete and will be deleted EOY2018 */
+@Deprecated
 public interface IArchiveBuilder {
 
     /**
