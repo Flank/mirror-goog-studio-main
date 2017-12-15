@@ -37,10 +37,6 @@ dependencies {
 
     testCompile libs.mockito_core
 
-    // Jacoco version should be the version bundled with Gradle.  Not the default version used by
-    // the plugin.
-    testCompile 'org.jacoco:org.jacoco.agent:0.7.5.201505241946'
-
     // Add dependency on plugin code.  Exclude transitive dependencies to avoid conflict due to
     // Groovy versions.
     testCompile(project(':base:gradle-core')) {
