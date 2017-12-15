@@ -167,29 +167,42 @@ public final class PerformanceTestUtil {
         return shard;
     }
 
-    public static void addMethodToActivity(File file) throws IOException {
+    public static void addMethodToActivity(File activity) throws IOException {
+        addMethodToJavaFileAndCallIt(activity, "onCreate");
+    }
+
+    public static void addMethodToJavaFileAndCallIt(File file, String callingMethod)
+            throws IOException {
         String newMethodName =
                 "newMethod" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
         TestFileUtils.searchAndReplace(
                 file,
-                "void onCreate\\((.*?)\\) \\{",
-                "void onCreate($1) { " + newMethodName + "(); }");
+                "void " + callingMethod + "\\((.*?)\\) \\{",
+                "void " + callingMethod + "($1) {\n        " + newMethodName + "();");
 
         TestFileUtils.addMethod(
                 file,
                 "public void "
                         + newMethodName
-                        + "() { android.util.Log.d(\"perftests\", \""
+                        + "() { System.out.println(\""
                         + newMethodName
                         + " called\"); }");
     }
 
-    public static void changeActivity(File file) throws IOException {
+    public static void changeActivity(File activity) throws IOException {
+        changeJavaMethod(activity, "onCreate");
+    }
+
+    public static void changeJavaMethod(File file, String method) throws IOException {
         String rand = "rand" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
         TestFileUtils.searchAndReplace(
                 file,
-                "void onCreate\\((.*?)\\) \\{",
-                "void onCreate($1) { android.util.Log.d(\"perftests\", \"onCreate called "
+                "void " + method + "\\((.*?)\\) \\{",
+                "void "
+                        + method
+                        + "($1) { System.out.println(\""
+                        + method
+                        + " called "
                         + rand
                         + "\");");
     }
