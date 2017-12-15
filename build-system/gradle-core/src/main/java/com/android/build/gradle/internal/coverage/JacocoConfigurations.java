@@ -23,35 +23,13 @@ import org.gradle.api.artifacts.Configuration;
 /** Class to keep track of Jacoco-specific configurations. */
 public final class JacocoConfigurations {
     public static final String ANT_CONFIGURATION_NAME = "androidJacocoAnt";
-    public static final String AGENT_CONFIGURATION_NAME = "androidJacocoAgent";
+
+    /** Version of Jacoco to be used with DX, see https://issuetracker.google.com/37116789. */
+    public static final String VERSION_FOR_DX = "0.7.4.201502262128";
 
     @NonNull
     public static String getAgentRuntimeDependency(@NonNull String jacocoVersion) {
         return "org.jacoco:org.jacoco.agent:" + jacocoVersion + ":runtime";
-    }
-
-    /**
-     * Create or retrieve configuration that contains jars that need to be deployed to the device.
-     */
-    @NonNull
-    public static Configuration getJacocoRuntimeConfiguration(
-            @NonNull Project project, @NonNull String jacocoVersion) {
-        Configuration configuration =
-                project.getConfigurations().findByName(AGENT_CONFIGURATION_NAME);
-        if (configuration != null) {
-            return configuration;
-        }
-
-        configuration = project.getConfigurations().create(AGENT_CONFIGURATION_NAME);
-
-        configuration.setVisible(false);
-        configuration.setTransitive(true);
-        configuration.setCanBeConsumed(false);
-        configuration.setDescription("The Jacoco agent to use to get coverage data.");
-
-        project.getDependencies()
-                .add(AGENT_CONFIGURATION_NAME, getAgentRuntimeDependency(jacocoVersion));
-        return configuration;
     }
 
     /**

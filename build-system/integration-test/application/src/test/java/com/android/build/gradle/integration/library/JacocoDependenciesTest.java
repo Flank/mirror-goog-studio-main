@@ -24,12 +24,16 @@ import static com.android.testutils.truth.MoreTruth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelBuilder;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
+import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.sdklib.AndroidVersion;
@@ -100,7 +104,8 @@ public class JacocoDependenciesTest {
                 "\n"
                         + "apply plugin: 'com.android.library'\n"
                         + "dependencies {\n"
-                        + "  implementation 'org.jacoco:org.jacoco.agent:0.7.8:runtime'\n"
+                        + "  implementation "
+                        + "'org.jacoco:org.jacoco.agent:0.7.4.201502262128:runtime'\n"
                         + "}\n");
         assertAgentMavenCoordinates(
                 "org.jacoco:org.jacoco.agent:" + JacocoOptions.DEFAULT_VERSION + ":runtime@jar");
@@ -110,8 +115,8 @@ public class JacocoDependenciesTest {
     public void checkAgentRuntimeVersionWhenOverridden() throws IOException {
         TestFileUtils.appendToFile(
                 project.getSubproject("library").getBuildFile(),
-                "\n" + "android.jacoco.version '0.7.8'\n");
-        assertAgentMavenCoordinates("org.jacoco:org.jacoco.agent:0.7.8:runtime@jar");
+                "\n" + "android.jacoco.version '0.7.4.201502262128'\n");
+        assertAgentMavenCoordinates("org.jacoco:org.jacoco.agent:0.7.4.201502262128:runtime@jar");
     }
 
     @Test
@@ -129,9 +134,25 @@ public class JacocoDependenciesTest {
                 .forEach(f -> assertThat(f.getName().toLowerCase()).doesNotContain("jacocodata"));
     }
 
-    private void assertAgentMavenCoordinates(@NonNull String expected) throws IOException {
-        ModelContainer<AndroidProject> container =
+    @Test
+    public void checkVersionWithDx() throws IOException {
+        assertAgentMavenCoordinates(
                 project.model()
+                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                        .with(BooleanOption.ENABLE_D8, false),
+                "org.jacoco:org.jacoco.agent:"
+                        + JacocoConfigurations.VERSION_FOR_DX
+                        + ":runtime@jar");
+    }
+
+    private void assertAgentMavenCoordinates(@NonNull String expected) throws IOException {
+        assertAgentMavenCoordinates(project.model(), expected);
+    }
+
+    private void assertAgentMavenCoordinates(
+            @NonNull ModelBuilder modelBuilder, @NonNull String expected) throws IOException {
+        ModelContainer<AndroidProject> container =
+                modelBuilder
                         .level(AndroidProject.MODEL_LEVEL_LATEST)
                         .withFullDependencies()
                         .getMulti();

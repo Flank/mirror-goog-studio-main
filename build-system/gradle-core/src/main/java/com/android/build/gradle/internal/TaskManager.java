@@ -205,6 +205,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DesugarProcessBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.DataBindingOptions;
@@ -2154,7 +2155,7 @@ public abstract class TaskManager {
 
             Configuration jacocoAntConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
-                            project, extension.getJacoco().getVersion());
+                            project, getJacocoVersion(variantScope));
             JacocoReportTask reportTask =
                     taskFactory.create(
                             new JacocoReportTask.ConfigAction(
@@ -2724,18 +2725,27 @@ public abstract class TaskManager {
                                         && config.getTestedConfig().getType()
                                                 == VariantType.LIBRARY));
         if (isTestCoverageEnabled) {
-            final Configuration agentConfiguration =
-                    JacocoConfigurations.getJacocoRuntimeConfiguration(
-                            project, extension.getJacoco().getVersion());
-
-            variantScope
-                    .getVariantDependencies()
-                    .getRuntimeClasspath()
-                    .extendsFrom(agentConfiguration);
+            if (variantScope.getDexer() == DexerTool.DX) {
+                androidBuilder
+                        .getIssueReporter()
+                        .reportWarning(
+                                Type.GENERIC,
+                                String.format(
+                                        "Jacoco version is downgraded to %s because dx is used. "
+                                                + "This is due to -P%s=false flag. See "
+                                                + "https://issuetracker.google.com/37116789 for "
+                                                + "more details.",
+                                        JacocoConfigurations.VERSION_FOR_DX,
+                                        BooleanOption.ENABLE_D8.getPropertyName()));
+            }
 
             String jacocoAgentRuntimeDependency =
-                    JacocoConfigurations.getAgentRuntimeDependency(
-                            extension.getJacoco().getVersion());
+                    JacocoConfigurations.getAgentRuntimeDependency(getJacocoVersion(variantScope));
+            project.getDependencies()
+                    .add(
+                            variantScope.getVariantDependencies().getRuntimeClasspath().getName(),
+                            jacocoAgentRuntimeDependency);
+
             // we need to force the same version of Jacoco we use for instrumentation
             variantScope
                     .getVariantDependencies()
@@ -2744,12 +2754,21 @@ public abstract class TaskManager {
         }
     }
 
+    @NonNull
+    public String getJacocoVersion(@NonNull VariantScope scope) {
+        if (scope.getDexer() == DexerTool.DX) {
+            return JacocoConfigurations.VERSION_FOR_DX;
+        } else {
+            return extension.getJacoco().getVersion();
+        }
+    }
+
     public void createJacocoTransform(
             @NonNull final VariantScope variantScope) {
         JacocoTransform jacocoTransform =
                 new JacocoTransform(
                         JacocoConfigurations.getJacocoAntTaskConfiguration(
-                                project, extension.getJacoco().getVersion()));
+                                project, getJacocoVersion(variantScope)));
 
         variantScope.getTransformManager().addTransform(taskFactory, variantScope, jacocoTransform);
     }
