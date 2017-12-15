@@ -101,9 +101,7 @@ import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -1342,8 +1340,7 @@ public abstract class TaskManager {
      * the FULL_APK build output directory.
      */
     @NonNull
-    public PackageSplitRes createSplitResourcesTasks(
-            @NonNull VariantScope scope, @NonNull PackagingScope packagingScope) {
+    public PackageSplitRes createSplitResourcesTasks(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
 
         checkState(
@@ -1360,16 +1357,15 @@ public abstract class TaskManager {
                 densityOrLanguagesPackages,
                 packageSplitRes.getName());
 
-        if (packagingScope.getSigningConfig() != null) {
-            packageSplitRes.dependsOn(getValidateSigningTask(packagingScope));
+        if (scope.getVariantConfiguration().getSigningConfig() != null) {
+            packageSplitRes.dependsOn(getValidateSigningTask(scope));
         }
 
         return packageSplitRes;
     }
 
     @Nullable
-    public PackageSplitAbi createSplitAbiTasks(
-            @NonNull VariantScope scope, @NonNull PackagingScope packagingScope) {
+    public PackageSplitAbi createSplitAbiTasks(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
 
         checkState(
@@ -1420,8 +1416,8 @@ public abstract class TaskManager {
 
         packageSplitAbiTask.dependsOn(scope.getNdkBuildable());
 
-        if (packagingScope.getSigningConfig() != null) {
-            packageSplitAbiTask.dependsOn(getValidateSigningTask(packagingScope));
+        if (variantData.getVariantConfiguration().getSigningConfig() != null) {
+            packageSplitAbiTask.dependsOn(getValidateSigningTask(variantData.getScope()));
         }
 
         if (scope.getExternalNativeBuildTask() != null) {
@@ -1432,10 +1428,8 @@ public abstract class TaskManager {
     }
 
     public void createSplitTasks(@NonNull VariantScope variantScope) {
-        PackagingScope packagingScope = new DefaultGradlePackagingScope(variantScope);
-
-        createSplitResourcesTasks(variantScope, packagingScope);
-        createSplitAbiTasks(variantScope, packagingScope);
+        createSplitResourcesTasks(variantScope);
+        createSplitAbiTasks(variantScope);
     }
 
     /**
@@ -3005,8 +2999,6 @@ public abstract class TaskManager {
          * forcing a cold swap is triggered, the main FULL_APK must be rebuilt (even if the
          * resources were changed in a previous build).
          */
-        DefaultGradlePackagingScope packagingScope = new DefaultGradlePackagingScope(variantScope);
-
         VariantScope.TaskOutputType manifestType =
                 variantScope.getInstantRunBuildContext().isInInstantRunMode()
                         ? INSTANT_RUN_MERGED_MANIFESTS
@@ -3041,7 +3033,7 @@ public abstract class TaskManager {
         PackageApplication packageApp =
                 taskFactory.create(
                         new PackageApplication.StandardConfigAction(
-                                packagingScope,
+                                variantScope,
                                 outputDirectory,
                                 useSeparateApkForResources
                                         ? INSTANT_RUN_MAIN_APK_RESOURCES
@@ -3062,15 +3054,15 @@ public abstract class TaskManager {
                                 new InstantRunResourcesApkBuilder.ConfigAction(
                                         resourceFilesInputType,
                                         variantScope.getOutput(resourceFilesInputType),
-                                        packagingScope));
-                packageInstantRunResources.dependsOn(getValidateSigningTask(packagingScope));
+                                        variantScope));
+                packageInstantRunResources.dependsOn(getValidateSigningTask(variantScope));
             } else {
                 // in instantRunMode, there is no user configured splits, only  one apk.
                 packageInstantRunResources =
                         taskFactory.create(
                                 new PackageApplication.InstantRunResourcesConfigAction(
                                         variantScope.getInstantRunResourcesFile(),
-                                        packagingScope,
+                                        variantScope,
                                         resourceFilesInputType,
                                         manifests,
                                         INSTANT_RUN_MERGED_MANIFESTS,
@@ -3096,11 +3088,11 @@ public abstract class TaskManager {
             configureResourcesAndAssetsDependencies.accept(packageInstantRunResources);
         }
 
-        CoreSigningConfig signingConfig = packagingScope.getSigningConfig();
+        CoreSigningConfig signingConfig = variantScope.getVariantConfiguration().getSigningConfig();
 
         //noinspection VariableNotUsedInsideIf - we use the whole packaging scope below.
         if (signingConfig != null) {
-            packageApp.dependsOn(getValidateSigningTask(packagingScope));
+            packageApp.dependsOn(getValidateSigningTask(variantScope));
         }
 
         if (variantScope.getJavacTask() != null) {
@@ -3137,9 +3129,7 @@ public abstract class TaskManager {
 
             CopyOutputs copyOutputsTask =
                     taskFactory.create(
-                            new CopyOutputs.ConfigAction(
-                                    new DefaultGradlePackagingScope(variantScope),
-                                    finalApkLocation));
+                            new CopyOutputs.ConfigAction(variantScope, finalApkLocation));
             variantScope.addTaskOutput(
                     TaskOutputHolder.TaskOutputType.APK,
                     finalApkLocation,
@@ -3166,10 +3156,10 @@ public abstract class TaskManager {
                 UNINSTALL_ALL, uninstallAll -> uninstallAll.dependsOn(uninstallTask.getName()));
     }
 
-    protected Task getValidateSigningTask(@NonNull PackagingScope packagingScope) {
+    protected Task getValidateSigningTask(@NonNull VariantScope variantScope) {
         File defaultDebugKeystoreLocation = GradleKeystoreHelper.getDefaultDebugKeystoreLocation();
         ValidateSigningTask.ConfigAction configAction =
-                new ValidateSigningTask.ConfigAction(packagingScope, defaultDebugKeystoreLocation);
+                new ValidateSigningTask.ConfigAction(variantScope, defaultDebugKeystoreLocation);
 
         Task validateSigningTask = taskFactory.findByName(configAction.getName());
         if (validateSigningTask == null) {

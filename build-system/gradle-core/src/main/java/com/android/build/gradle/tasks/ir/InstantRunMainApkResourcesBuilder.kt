@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.I
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS
 import com.android.build.gradle.internal.scope.BuildOutputs
 import com.android.build.gradle.internal.scope.OutputScope
-import com.android.build.gradle.internal.scope.PackagingScope
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.VariantScope

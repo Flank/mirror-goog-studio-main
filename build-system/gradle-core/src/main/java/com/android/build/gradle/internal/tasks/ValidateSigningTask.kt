@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
-import com.android.build.gradle.internal.scope.PackagingScope
 import com.android.build.gradle.internal.scope.TaskConfigAction
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.SigningConfig
 import com.android.builder.signing.DefaultSigningConfig
@@ -124,23 +124,23 @@ open class ValidateSigningTask : AndroidVariantTask() {
     fun forceRerun() = signingConfig.storeFile?.isFile != true
 
     class ConfigAction(
-            private val packagingScope: PackagingScope,
+            private val variantScope: VariantScope,
             private val defaultDebugKeystoreLocation: File) :
             TaskConfigAction<ValidateSigningTask> {
 
-        override fun getName() = packagingScope.getTaskName("validateSigning")
+        override fun getName() = variantScope.getTaskName("validateSigning")
 
         override fun getType() = ValidateSigningTask::class.java
 
         override fun execute(task: ValidateSigningTask) {
-            task.variantName = packagingScope.fullVariantName
+            task.variantName = variantScope.fullVariantName
             task.signingConfig =
-                    packagingScope.signingConfig ?:
+                    variantScope.variantConfiguration.signingConfig ?:
                             throw IllegalStateException(
                                     "No signing config configured for variant " +
-                                            packagingScope.fullVariantName)
+                                            variantScope.fullVariantName)
             task.defaultDebugKeystoreLocation = defaultDebugKeystoreLocation
-            task.dummyOutputDirectory = packagingScope.getIncrementalDir(name)
+            task.dummyOutputDirectory = variantScope.getIncrementalDir(name)
             task.outputs.upToDateWhen { !task.forceRerun() }
         }
     }

@@ -19,13 +19,14 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.OutputScope;
-import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
+import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -98,18 +99,18 @@ public class CopyOutputs extends AndroidVariantTask {
 
     public static class ConfigAction implements TaskConfigAction<CopyOutputs> {
 
-        private final PackagingScope packagingScope;
+        private final VariantScope variantScope;
         private final File outputDirectory;
 
-        public ConfigAction(PackagingScope packagingScope, File outputDirectory) {
-            this.packagingScope = packagingScope;
+        public ConfigAction(VariantScope variantScope, File outputDirectory) {
+            this.variantScope = variantScope;
             this.outputDirectory = outputDirectory;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return packagingScope.getTaskName("copyOutputs");
+            return variantScope.getTaskName("copyOutputs");
         }
 
         @NonNull
@@ -120,18 +121,19 @@ public class CopyOutputs extends AndroidVariantTask {
 
         @Override
         public void execute(@NonNull CopyOutputs task) {
-            task.setVariantName(packagingScope.getFullVariantName());
-            task.outputScope = packagingScope.getOutputScope();
-            task.fullApks = packagingScope.getOutput(TaskOutputType.FULL_APK);
+            task.setVariantName(variantScope.getFullVariantName());
+            task.outputScope = variantScope.getOutputScope();
+            task.fullApks = variantScope.getOutput(TaskOutputType.FULL_APK);
+            Project project = variantScope.getGlobalScope().getProject();
             task.abiSplits =
-                    packagingScope.hasOutput(TaskOutputType.ABI_PACKAGED_SPLIT)
-                            ? packagingScope.getOutput(TaskOutputType.ABI_PACKAGED_SPLIT)
-                            : packagingScope.getProject().files();
+                    variantScope.hasOutput(TaskOutputType.ABI_PACKAGED_SPLIT)
+                            ? variantScope.getOutput(TaskOutputType.ABI_PACKAGED_SPLIT)
+                            : project.files();
             task.resourcesSplits =
-                    packagingScope.hasOutput(TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT)
-                            ? packagingScope.getOutput(
+                    variantScope.hasOutput(TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT)
+                            ? variantScope.getOutput(
                                     TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT)
-                            : packagingScope.getProject().files();
+                            : project.files();
             task.destinationDir = outputDirectory;
         }
     }

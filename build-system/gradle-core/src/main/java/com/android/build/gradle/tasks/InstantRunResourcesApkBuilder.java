@@ -26,9 +26,9 @@ import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.OutputScope;
-import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.PackagerException;
@@ -141,23 +141,23 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
 
     public static class ConfigAction implements TaskConfigAction<InstantRunResourcesApkBuilder> {
 
-        protected final PackagingScope packagingScope;
+        protected final VariantScope variantScope;
         private final FileCollection resources;
         private final TaskOutputHolder.TaskOutputType resInputType;
 
         public ConfigAction(
                 @NonNull TaskOutputHolder.TaskOutputType resInputType,
                 @NonNull FileCollection resources,
-                @NonNull PackagingScope scope) {
+                @NonNull VariantScope scope) {
             this.resInputType = resInputType;
             this.resources = resources;
-            this.packagingScope = scope;
+            this.variantScope = scope;
         }
 
         @NonNull
         @Override
         public String getName() {
-            return packagingScope.getTaskName("processInstantRun", "ResourcesApk");
+            return variantScope.getTaskName("processInstantRun", "ResourcesApk");
         }
 
         @NonNull
@@ -168,15 +168,16 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
 
         @Override
         public void execute(@NonNull InstantRunResourcesApkBuilder resourcesApkBuilder) {
-            resourcesApkBuilder.setVariantName(packagingScope.getFullVariantName());
+            resourcesApkBuilder.setVariantName(variantScope.getFullVariantName());
             resourcesApkBuilder.resInputType = resInputType;
-            resourcesApkBuilder.outputScope = packagingScope.getOutputScope();
-            resourcesApkBuilder.supportDirectory = packagingScope.getIncrementalDir(getName());
-            resourcesApkBuilder.androidBuilder = packagingScope.getAndroidBuilder();
-            resourcesApkBuilder.signingConf = packagingScope.getSigningConfig();
-            resourcesApkBuilder.instantRunBuildContext = packagingScope.getInstantRunBuildContext();
+            resourcesApkBuilder.outputScope = variantScope.getOutputScope();
+            resourcesApkBuilder.supportDirectory = variantScope.getIncrementalDir(getName());
+            resourcesApkBuilder.androidBuilder = variantScope.getGlobalScope().getAndroidBuilder();
+            resourcesApkBuilder.signingConf =
+                    variantScope.getVariantConfiguration().getSigningConfig();
+            resourcesApkBuilder.instantRunBuildContext = variantScope.getInstantRunBuildContext();
             resourcesApkBuilder.resources = resources;
-            resourcesApkBuilder.outputDirectory = packagingScope.getInstantRunResourceApkFolder();
+            resourcesApkBuilder.outputDirectory = variantScope.getInstantRunResourceApkFolder();
         }
     }
 }
