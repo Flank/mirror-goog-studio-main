@@ -30,6 +30,7 @@ cc_library(
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
     ],
+    tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/profiler/native/perfd:perfd_internal_headers",
@@ -54,6 +55,7 @@ cc_test(
         "//tools/base/profiler/native/testdata:perfd/cpu",
     ],
     linkstatic = 1,
+    tags = ["no_windows"],
     deps = [
         ":profiler_cpu",
         "//external:gmock_main",

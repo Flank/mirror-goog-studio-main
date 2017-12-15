@@ -138,7 +138,7 @@ def java_proto_library(
       visibility = visibility,
   )
 
-def cc_grpc_proto_library(name, srcs=[], deps=[], includes=[], visibility=None, grpc_support=False):
+def cc_grpc_proto_library(name, srcs=[], deps=[], includes=[], visibility=None, grpc_support=False, tags=None):
   outs = []
   for src in srcs:
     # .proto suffix should not be present in the output files
@@ -153,7 +153,8 @@ def cc_grpc_proto_library(name, srcs=[], deps=[], includes=[], visibility=None, 
       proto_include_version = "3.0.0",
       protoc = "//external:protoc",
       grpc_plugin = "//external:grpc_cpp_plugin" if grpc_support else None,
-      target_language = proto_languages.CPP
+      target_language = proto_languages.CPP,
+      tags = tags,
   )
 
   native.cc_library(
@@ -162,5 +163,6 @@ def cc_grpc_proto_library(name, srcs=[], deps=[], includes=[], visibility=None, 
     deps = deps + ["//external:grpc++_unsecure"],
     includes = includes,
     visibility = visibility,
+    tags = tags,
   )
 

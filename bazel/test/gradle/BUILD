@@ -18,5 +18,6 @@ gradle_build(
         "//tools/base/build-system:gradle_plugin_repo.zip",
         "//tools/adt/idea/android:test_deps.zip",
     ],
+    tags = ["no_windows"],  # There is a bug in aapt2 that breaks with bazel paths (>260 chars)
     tasks = ["build"],
 )

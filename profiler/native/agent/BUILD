@@ -6,6 +6,7 @@ cc_binary(
     copts = ANDROID_COPTS,
     linkopts = ANDROID_LINKOPTS,
     linkshared = 1,
+    tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
         ":agent",
@@ -35,6 +36,7 @@ cc_library(
         "-I$(GENDIR)/tools/base/profiler",
     ],
     linkstatic = 1,
+    tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
@@ -45,6 +47,10 @@ cc_library(
 
 jni_library(
     name = "supportjni",
+    tags = ["no_windows"],
     visibility = ["//visibility:public"],
-    deps = [":libsupportjni.so.stripped"],
+    deps = select({
+        "//tools/base/bazel:windows": [],
+        "//conditions:default": [":libsupportjni.so.stripped"],
+    }),
 )

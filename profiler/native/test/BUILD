@@ -8,5 +8,6 @@ cc_library(
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
     ],
+    tags = ["no_windows"],
     visibility = ["//visibility:public"],
 )
