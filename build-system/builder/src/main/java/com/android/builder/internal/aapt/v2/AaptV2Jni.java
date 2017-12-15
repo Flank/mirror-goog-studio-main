@@ -110,8 +110,8 @@ public class AaptV2Jni extends AbstractAapt {
 
                     if (aapt2Result.getReturnCode() == 0) {
                         return new File(
-                                request.getOutput(),
-                                Aapt2RenamingConventions.compilationRename(request.getInput()));
+                                request.getOutputDirectory(),
+                                Aapt2RenamingConventions.compilationRename(request.getInputFile()));
                     } else {
                         throw buildException("compile", args, aapt2Result);
                     }
@@ -127,8 +127,8 @@ public class AaptV2Jni extends AbstractAapt {
     @NonNull
     public File compileOutputFor(@NonNull CompileResourceRequest request) {
         return new File(
-                request.getOutput(),
-                Aapt2RenamingConventions.compilationRename(request.getInput()));
+                request.getOutputDirectory(),
+                Aapt2RenamingConventions.compilationRename(request.getInputFile()));
     }
 
     @VisibleForTesting

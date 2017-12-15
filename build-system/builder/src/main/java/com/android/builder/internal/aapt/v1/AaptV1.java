@@ -363,7 +363,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         /*
          * Do not compile raw resources.
          */
-        if (ResourceFolderType.getFolderType(request.getInput().getParentFile().getName())
+        if (ResourceFolderType.getFolderType(request.getInputFile().getParentFile().getName())
                 == ResourceFolderType.RAW) {
             return copyFile(request);
         }
@@ -377,17 +377,17 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
 
         // TODO (imorlowska): move verification to CompileResourceRequest.
         Preconditions.checkArgument(
-                request.getInput().isFile(),
+                request.getInputFile().isFile(),
                 "Input file needs to be a normal file.\nInput file: %s",
-                request.getInput().getAbsolutePath());
+                request.getInputFile().getAbsolutePath());
         Preconditions.checkArgument(
-                request.getOutput().isDirectory(),
+                request.getOutputDirectory().isDirectory(),
                 "Output for resource compilation needs to be a directory.\nOutput: %s",
-                request.getOutput().getAbsolutePath());
+                request.getOutputDirectory().getAbsolutePath());
 
         SettableFuture<File> actualResult = SettableFuture.create();
 
-        if (!processMode.shouldProcess(request.getInput())) {
+        if (!processMode.shouldProcess(request.getInputFile())) {
             return copyFile(request);
         }
 
@@ -398,7 +398,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
             throw new AaptException(
                     String.format(
                             "Failed to crunch file '%s' into '%s'",
-                            request.getInput().getAbsolutePath(),
+                            request.getInputFile().getAbsolutePath(),
                             compileOutputFor(request).getAbsolutePath()),
                     e);
         }
@@ -425,14 +425,14 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
                      *
                      * Return a new future after this verification is done.
                      */
-                    if (request.getInput().getName().endsWith(SdkConstants.DOT_9PNG)) {
+                    if (request.getInputFile().getName().endsWith(SdkConstants.DOT_9PNG)) {
                         actualResult.set(result);
                         return;
                     }
 
-                    if (result != null && request.getInput().length() < result.length()) {
+                    if (result != null && request.getInputFile().length() < result.length()) {
                         try {
-                            Files.copy(request.getInput(), result);
+                            Files.copy(request.getInputFile(), result);
                         } catch (IOException e) {
                             actualResult.setException(e);
                             return;
@@ -447,13 +447,14 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
 
     private ListenableFuture<File> copyFile(@NonNull CompileResourceRequest request)
             throws AaptException {
-        Preconditions.checkArgument(request.getInput().isFile(), "!file.isFile()");
-        Preconditions.checkArgument(request.getOutput().isDirectory(), "!output.isDirectory()");
+        Preconditions.checkArgument(request.getInputFile().isFile(), "!file.isFile()");
+        Preconditions.checkArgument(
+                request.getOutputDirectory().isDirectory(), "!output.isDirectory()");
 
         File outFile = compileOutputFor(request);
         FileUtils.mkdirs(outFile.getParentFile());
         try {
-            FileUtils.copyFile(request.getInput(), outFile);
+            FileUtils.copyFile(request.getInputFile(), outFile);
         } catch (IOException e) {
             throw new AaptException("Could not copy file", e);
         }
@@ -464,14 +465,15 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
     @Override
     protected CompileInvocation makeCompileProcessBuilder(@NonNull CompileResourceRequest request)
             throws AaptException {
-        Preconditions.checkArgument(request.getInput().isFile(), "!file.isFile()");
-        Preconditions.checkArgument(request.getOutput().isDirectory(), "!directory.isDirectory()");
+        Preconditions.checkArgument(request.getInputFile().isFile(), "!file.isFile()");
+        Preconditions.checkArgument(
+                request.getOutputDirectory().isDirectory(), "!directory.isDirectory()");
 
-        if (!request.getInput().getName().endsWith(SdkConstants.DOT_PNG)) {
+        if (!request.getInputFile().getName().endsWith(SdkConstants.DOT_PNG)) {
             return null;
         }
 
-        if (!processMode.shouldProcess(request.getInput())) {
+        if (!processMode.shouldProcess(request.getInputFile())) {
             return null;
         }
 
@@ -481,7 +483,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
         builder.setExecutable(getAaptExecutablePath());
         builder.addArgs("singleCrunch");
-        builder.addArgs("-i", request.getInput().getAbsolutePath());
+        builder.addArgs("-i", request.getInputFile().getAbsolutePath());
         builder.addArgs("-o", outputFile.getAbsolutePath());
         return new CompileInvocation(builder, outputFile);
     }
@@ -495,8 +497,8 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
     @NonNull
     @Override
     public File compileOutputFor(@NonNull CompileResourceRequest request) {
-        File parentDir = new File(request.getOutput(), request.getFolderName());
-        return new File(parentDir, request.getInput().getName());
+        File parentDir = new File(request.getOutputDirectory(), request.getInputDirectoryName());
+        return new File(parentDir, request.getInputFile().getName());
     }
 
     /**

@@ -125,13 +125,13 @@ public class QueueableAapt2 extends AbstractAapt {
     public Future<File> compile(@NonNull CompileResourceRequest request) throws Exception {
         // TODO(imorlowska): move verification to CompileResourceRequest.
         Preconditions.checkArgument(
-                request.getInput().isFile(),
+                request.getInputFile().isFile(),
                 "Input file needs to be a normal file.\nInput file: %s",
-                request.getInput().getAbsolutePath());
+                request.getInputFile().getAbsolutePath());
         Preconditions.checkArgument(
-                request.getOutput().isDirectory(),
+                request.getOutputDirectory().isDirectory(),
                 "Output for resource compilation needs to be a directory.\nOutput: %s",
-                request.getOutput().getAbsolutePath());
+                request.getOutputDirectory().getAbsolutePath());
 
         SettableFuture<File> actualResult = SettableFuture.create();
         ListenableFuture<File> futureResult;
@@ -140,7 +140,7 @@ public class QueueableAapt2 extends AbstractAapt {
             futureResult = aapt.compile(requestKey, request, processOutputHandler);
         } catch (ResourceCompilationException e) {
             throw new Aapt2Exception(
-                    String.format("Failed to compile file %s", request.getInput()), e);
+                    String.format("Failed to compile file %s", request.getInputFile()), e);
         }
 
         futureResult.addListener(
@@ -194,8 +194,8 @@ public class QueueableAapt2 extends AbstractAapt {
     @NonNull
     public File compileOutputFor(@NonNull CompileResourceRequest request) {
         return new File(
-                request.getOutput(),
-                Aapt2RenamingConventions.compilationRename(request.getInput()));
+                request.getOutputDirectory(),
+                Aapt2RenamingConventions.compilationRename(request.getInputFile()));
     }
 
     private static String getAapt2ExecutablePath(BuildToolInfo buildToolInfo) {

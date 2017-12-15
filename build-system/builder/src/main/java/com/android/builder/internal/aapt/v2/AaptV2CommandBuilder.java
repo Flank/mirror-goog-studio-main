@@ -66,7 +66,7 @@ public final class AaptV2CommandBuilder {
 
         if (!request.isPngCrunching()) {
             // Only pass --no-crunch for png files and not for 9-patch files as that breaks them.
-            String lowerName = request.getInput().getPath().toLowerCase(Locale.US);
+            String lowerName = request.getInputFile().getPath().toLowerCase(Locale.US);
             if (lowerName.endsWith(SdkConstants.DOT_PNG)
                     && !lowerName.endsWith(SdkConstants.DOT_9PNG)) {
                 parameters.add("--no-crunch");
@@ -74,8 +74,8 @@ public final class AaptV2CommandBuilder {
         }
 
         parameters.add("--legacy");
-        parameters.add("-o", request.getOutput().getAbsolutePath());
-        parameters.add(request.getInput().getAbsolutePath());
+        parameters.add("-o", request.getOutputDirectory().getAbsolutePath());
+        parameters.add(request.getInputFile().getAbsolutePath());
 
         return parameters.build();
     }

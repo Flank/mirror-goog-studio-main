@@ -142,7 +142,7 @@ public class AaptProcess {
         processCount++;
         mLogger.verbose(
                 "AAPT2 processed(%1$d) %2$s job:%3$s",
-                hashCode(), request.getInput().getName(), job.toString());
+                hashCode(), request.getInputFile().getName(), job.toString());
     }
 
     /**

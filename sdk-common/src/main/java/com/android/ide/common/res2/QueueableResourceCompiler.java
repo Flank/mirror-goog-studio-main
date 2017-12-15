@@ -45,15 +45,16 @@ public interface QueueableResourceCompiler extends ResourceCompiler, Closeable {
                     // Copy file instead of compiling.
                     File out = compileOutputFor(request);
                     FileUtils.mkdirs(out.getParentFile());
-                    FileUtils.copyFile(request.getInput(), out);
+                    FileUtils.copyFile(request.getInputFile(), out);
                     return Futures.immediateFuture(out);
                 }
 
                 @NonNull
                 @Override
                 public File compileOutputFor(@NonNull CompileResourceRequest request) {
-                    File parentDir = new File(request.getOutput(), request.getFolderName());
-                    return new File(parentDir, request.getInput().getName());
+                    File parentDir =
+                            new File(request.getOutputDirectory(), request.getInputDirectoryName());
+                    return new File(parentDir, request.getInputFile().getName());
                 }
             };
 
