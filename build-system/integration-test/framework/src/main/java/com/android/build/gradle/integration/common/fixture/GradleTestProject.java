@@ -578,13 +578,15 @@ public final class GradleTestProject implements TestRule {
                                 + "    }\n"
                                 + "}\n"
                                 + "allprojects {\n"
-                                +  "    " + generateLocalRepoScript() + "\n"
+                                + "    "
+                                + generateLocalRepoScript()
+                                + "\n"
                                 + "}\n"
                                 + "",
                         DEFAULT_BUILD_TOOL_VERSION,
                         DEFAULT_COMPILE_SDK_VERSION,
                         false,
-                        TestUtils.KOTLIN_VERSION_FOR_TESTS);
+                        TestUtils.getKotlinVersionForTests());
 
         if (withDependencyChecker) {
             result =

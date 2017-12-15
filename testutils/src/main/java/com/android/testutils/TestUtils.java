@@ -22,6 +22,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
+import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -34,35 +35,40 @@ import junit.framework.TestCase;
  * Utility methods to deal with loading the test data.
  */
 public class TestUtils {
+    /** Default timeout for the {@link #eventually(Runnable)} check. */
+    private static final Duration DEFAULT_EVENTUALLY_TIMEOUT = Duration.ofSeconds(10);
+
+    /** Time to wait between checks to obtain the value of an eventually supplier. */
+    private static final long EVENTUALLY_CHECK_CYCLE_TIME_MS = 10;
 
     /**
-     * Kotlin version that is used in new project templates and integration tests.
+     * Returns Kotlin version that is used in new project templates and integration tests.
      *
-     * <p>This version needs to be present in prebuilts for tests to pass.
-     *
-     * <p>This version should be checked into prebuilts (see tools/base/bazel/README.md) and in sync
-     * with the version in:
+     * <p>This version is determined based on the checked-in kotlin-plugin prebuilt, and should be
+     * in sync with the version in:
      *
      * <ul>
      *   <li>buildSrc/base/dependencies.properties
      *   <li>tools/base/third_party/BUILD (this is generated from dependencies.properties)
-     *   <li>tools/base/build-system/integration-test/BUILD
+     *   <li>tools/base/build-system/integration-test/application/BUILD
+     *   <li>tools/base/build-system/integration-test/databinding/BUILD.bazel
      *   <li>tools/adt/idea/android/BUILD
      *   <li>tools/base/.idea/libraries definition for kotlin-stdlib-jre8
      *   <li>tools/idea/.idea/libraries definition for kotlin-stdlib-jre8
      * </ul>
      */
-    public static final String KOTLIN_VERSION_FOR_TESTS = "1.1.51";
-
-    /**
-     * Default timeout for the {@link #eventually(Runnable)} check.
-     */
-    private static final Duration DEFAULT_EVENTUALLY_TIMEOUT = Duration.ofSeconds(10);
-
-    /**
-     * Time to wait between checks to obtain the value of an eventually supplier.
-     */
-    private static final long EVENTUALLY_CHECK_CYCLE_TIME_MS = 10;
+    @NonNull
+    public static String getKotlinVersionForTests() {
+        try {
+            return Files.readLines(
+                            getWorkspaceFile(
+                                    "prebuilts/tools/common/kotlin-plugin/Kotlin/kotlinc/build.txt"),
+                            Charsets.UTF_8)
+                    .get(0);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Could not determine Kotlin plugin version", ex);
+        }
+    }
 
     /**
      * Returns a File for the subfolder of the test resource data.
@@ -497,4 +503,6 @@ public class TestUtils {
                 "Timed out waiting for runnable not to throw; last error was:",
                 lastError);
     }
+
+
 }

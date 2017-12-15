@@ -309,7 +309,7 @@ public class PerformanceTestProjects {
                 "\ndependencies \\{\n",
                 "dependencies {\n"
                         + "    compile 'org.jetbrains.kotlin:kotlin-stdlib:"
-                        + TestUtils.KOTLIN_VERSION_FOR_TESTS
+                        + TestUtils.getKotlinVersionForTests()
                         + "'\n"
                         + "    compile 'com.android.support:support-v4:"
                         + GradleTestProject.SUPPORT_LIB_VERSION

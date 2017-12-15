@@ -96,7 +96,8 @@ public class BenchmarkRecorderTest {
         // Check that the variant info is populated
         GradleBuildProject aProject = benchmarkResults.get(0).getProfile().getProject(0);
         assertThat(aProject.getCompileSdk()).isEqualTo(GradleTestProject.getCompileSdkHash());
-        assertThat(aProject.getKotlinPluginVersion()).isEqualTo(TestUtils.KOTLIN_VERSION_FOR_TESTS);
+        assertThat(aProject.getKotlinPluginVersion())
+                .isEqualTo(TestUtils.getKotlinVersionForTests());
         GradleBuildVariant aVariant = aProject.getVariant(0);
         assertThat(aVariant.getMinSdkVersion().getApiLevel()).isEqualTo(3);
         assertThat(aVariant.hasTargetSdkVersion()).named("has target sdk version").isFalse();
