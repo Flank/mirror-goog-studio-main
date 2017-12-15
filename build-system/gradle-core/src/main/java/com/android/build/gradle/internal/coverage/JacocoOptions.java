@@ -25,7 +25,7 @@ import javax.inject.Inject;
 public class JacocoOptions {
 
     /** Default JaCoCo version. */
-    public static final String DEFAULT_VERSION = "0.7.4.201502262128";
+    public static final String DEFAULT_VERSION = "0.7.9";
 
     @Inject
     public JacocoOptions() {}

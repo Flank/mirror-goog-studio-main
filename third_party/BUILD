@@ -792,21 +792,21 @@ maven_java_library(
 
 maven_java_library(
     name = "org.jacoco_org.jacoco.agent",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.agent/0.7.4.201502262128:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.agent/0.7.9:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
 
 maven_java_library(
     name = "org.jacoco_org.jacoco.core",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.4.201502262128:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.9:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
 
 maven_java_library(
     name = "org.jacoco_org.jacoco.report",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.4.201502262128:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.9:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jacoco_org.jacoco.core"],
 )
