@@ -124,24 +124,45 @@ public class BenchmarkTest {
          */
         String scenario = System.getenv("PERF_SCENARIO");
         if (!Strings.isNullOrEmpty(scenario)) {
-            System.out.println("filtering by ProjectScenario=" + scenario);
+            int before = shard.size();
             shard = filterByScenario(shard, scenario);
+            int after = shard.size();
+            System.out.println(
+                    "Filtered by ProjectScenario="
+                            + scenario
+                            + ", excluded "
+                            + (before - after)
+                            + " benchmarks");
         }
 
         String benchmark = System.getenv("PERF_BENCHMARK");
         if (!Strings.isNullOrEmpty(benchmark)) {
-            System.out.println("filtering by Benchmark=" + benchmark);
+            int before = shard.size();
             shard = filterByBenchmark(shard, benchmark);
+            int after = shard.size();
+            System.out.println(
+                    "Filtered by Benchmark="
+                            + benchmark
+                            + ", excluded "
+                            + (before - after)
+                            + " benchmarks");
         }
 
         String benchmarkMode = System.getenv("PERF_BENCHMARK_MODE");
         if (!Strings.isNullOrEmpty(benchmarkMode)) {
-            System.out.println("filtering by BenchmarkMode=" + benchmarkMode);
+            int before = shard.size();
             shard = filterByBenchmarkMode(shard, benchmarkMode);
+            int after = shard.size();
+            System.out.println(
+                    "Filtered by BenchmarkMode="
+                            + benchmarkMode
+                            + ", excluded "
+                            + (before - after)
+                            + " benchmarks");
         }
 
         if (shard.isEmpty()) {
-            System.out.println("found no benchmarks to run, exiting");
+            System.out.println("Found no benchmarks to run, exiting");
             return;
         }
 
@@ -154,10 +175,15 @@ public class BenchmarkTest {
          * the benchmarks were run in by setting the PERF_SHUFFLE_SEED environment variable.
          */
         Long shuffleSeed = shuffleSeed();
-        System.out.println("shuffling benchmarks with seed: " + shuffleSeed);
+        System.out.println(
+                "Shuffling benchmarks with seed: "
+                        + shuffleSeed
+                        + ", specify PERF_SHUFFLE_SEED="
+                        + shuffleSeed
+                        + " when re-running locally if you need to ensure that the benchmarks run in the same order");
         Collections.shuffle(shard, new Random(shuffleSeed));
 
-        System.out.println("running " + shard.size() + " benchmarks");
+        System.out.println("Running " + shard.size() + " benchmarks");
         Duration benchmarkDuration = Duration.ofNanos(0);
         Duration recordedDuration = Duration.ofNanos(0);
 
@@ -166,6 +192,7 @@ public class BenchmarkTest {
          */
         int i = 0;
         System.out.println();
+        List<BenchmarkResult> failed = new ArrayList<>();
         for (Benchmark b : shard) {
             i++;
             BenchmarkResult result = b.run();
@@ -176,6 +203,10 @@ public class BenchmarkTest {
             System.out.println(i + "/" + shard.size());
             System.out.println(result);
             System.out.println();
+
+            if (result.getException() != null) {
+                failed.add(result);
+            }
         }
 
         BenchmarkRecorder.awaitUploads(15, TimeUnit.MINUTES);
@@ -184,6 +215,23 @@ public class BenchmarkTest {
         System.out.println("Total recorded duration: " + recordedDuration);
         System.out.println("Total benchmark duration: " + benchmarkDuration);
         System.out.println("Overall duration: " + totalDuration);
+
+        if (!failed.isEmpty()) {
+            System.out.println();
+            System.out.println("Some benchmarks did not complete successfully: ");
+            System.out.println();
+
+            for (BenchmarkResult result : failed) {
+                System.out.println(result);
+                System.out.println();
+                System.out.println("full stack trace:");
+                result.getException().printStackTrace();
+                System.out.println();
+                System.out.println("Command to re-run locally: " + result.getBenchmark().command());
+            }
+
+            throw new AssertionError(failed.size() + " benchmarks failed");
+        }
     }
 
     public static List<Benchmark> filterByScenario(List<Benchmark> benchmarks, String scenarioStr) {

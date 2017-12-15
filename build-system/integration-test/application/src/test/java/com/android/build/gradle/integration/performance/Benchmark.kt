@@ -102,12 +102,18 @@ data class Benchmark(
                     }
                 }
 
-        project.apply(statement, testDescription()).evaluate()
+        var exception: Exception? = null
+        try {
+            project.apply(statement, testDescription()).evaluate()
+        } catch (e: Exception) {
+            exception = e
+        }
 
         return BenchmarkResult(
                 benchmark = this,
                 recordedDuration = Duration.ofNanos(recordEnd - recordStart),
-                totalDuration = Duration.ofNanos(System.nanoTime() - totalStart)
+                totalDuration = Duration.ofNanos(System.nanoTime() - totalStart),
+                exception = exception
         )
     }
 
@@ -117,5 +123,18 @@ data class Benchmark(
                 "benchmarkMode=${benchmarkMode.name}}"
 
         return Description.createTestDescription(this.javaClass, desc)
+    }
+
+    /**
+     * Returns a command you can run locally to reproduce this individual test.
+     */
+    fun command(): String {
+        val task = ":base:build-system:integration-test:application:performanceTest"
+        val command = "./gradlew --info $task -D$task.single=${BenchmarkTest::class.simpleName}"
+
+        return "PERF_SCENARIO=${scenario.name} " +
+                "PERF_BENCHMARK=${benchmark.name} " +
+                "PERF_BENCHMARK_MODE=${benchmarkMode.name} " +
+                command
     }
 }

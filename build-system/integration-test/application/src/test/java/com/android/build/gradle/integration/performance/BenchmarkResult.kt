@@ -21,7 +21,8 @@ import java.time.Duration
 data class BenchmarkResult(
         val benchmark: Benchmark,
         val totalDuration: Duration,
-        val recordedDuration: Duration
+        val recordedDuration: Duration,
+        val exception: Exception?
 ) {
     override fun toString(): String {
         return """
@@ -30,6 +31,7 @@ data class BenchmarkResult(
             benchmarkMode: ${benchmark.benchmarkMode.name}
             recordedDuration: $recordedDuration
             totalDuration: $totalDuration
+            exception: ${if (exception != null) exception.message else "none" }
         """.trimIndent()
     }
 }
