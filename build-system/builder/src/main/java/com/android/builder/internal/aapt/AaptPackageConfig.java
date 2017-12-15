@@ -458,6 +458,14 @@ public class AaptPackageConfig implements Cloneable {
         }
 
         /**
+         * Builder initialized with existing config values.
+         *
+         * @param config existing config to clone values from.
+         */
+        public Builder(@NonNull AaptPackageConfig config) {
+            mConfig = config.clone();
+        }
+        /**
          * Creates a new {@link AaptPackageConfig} from the data already placed in the builder.
          *
          * @return the new config

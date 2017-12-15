@@ -78,6 +78,7 @@ kotlin_test(
     name = "tests",
     srcs = ["src/test/java"],
     data = [
+        "//prebuilts/studio/sdk:build-tools/future",
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platforms/latest",
     ],
@@ -108,6 +109,7 @@ kotlin_test(
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jre8",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
         "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/third_party:org.ow2.asm_asm",
     ],
