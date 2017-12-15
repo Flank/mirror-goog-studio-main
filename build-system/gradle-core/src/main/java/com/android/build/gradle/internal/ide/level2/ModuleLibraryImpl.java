@@ -18,11 +18,8 @@ package com.android.build.gradle.internal.ide.level2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.dependency.level2.Dependency;
-import com.android.builder.dependency.level2.ExtractedDependency;
 import com.android.builder.model.level2.Library;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
@@ -35,16 +32,18 @@ public final class ModuleLibraryImpl implements Library, Serializable {
 
     @NonNull
     private final String address;
-    @Nullable
-    private final String projectPath;
+    @NonNull private final String buildId;
+    @NonNull private final String projectPath;
     @Nullable
     private final String variant;
 
     public ModuleLibraryImpl(
             @NonNull String address,
-            @Nullable String projectPath,
+            @NonNull String buildId,
+            @NonNull String projectPath,
             @Nullable String variant) {
         this.address = address;
+        this.buildId = buildId;
         this.projectPath = projectPath;
         this.variant = variant;
     }
@@ -67,7 +66,13 @@ public final class ModuleLibraryImpl implements Library, Serializable {
                 "getArtifact() cannot be called when getType() returns LIBRARY_MODULE");
     }
 
-    @Nullable
+    @NonNull
+    @Override
+    public String getBuildId() {
+        return buildId;
+    }
+
+    @NonNull
     @Override
     public String getProjectPath() {
         return projectPath;
@@ -186,20 +191,22 @@ public final class ModuleLibraryImpl implements Library, Serializable {
             return false;
         }
         ModuleLibraryImpl that = (ModuleLibraryImpl) o;
-        return Objects.equals(address, that.address) &&
-                Objects.equals(projectPath, that.projectPath) &&
-                Objects.equals(variant, that.variant);
+        return Objects.equals(address, that.address)
+                && Objects.equals(buildId, that.buildId)
+                && Objects.equals(projectPath, that.projectPath)
+                && Objects.equals(variant, that.variant);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(address, projectPath, variant);
+        return Objects.hash(address, buildId, projectPath, variant);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("address", address)
+                .add("buildId", buildId)
                 .add("projectPath", projectPath)
                 .add("variant", variant)
                 .toString();

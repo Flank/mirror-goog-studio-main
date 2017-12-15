@@ -109,14 +109,19 @@ import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.initialization.IncludedBuild;
+import org.gradle.api.invocation.Gradle;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 
 /**
  * Builder for the custom Android model.
  */
 public class ModelBuilder implements ToolingModelBuilder {
+
+    public static final String ROOT_BUILD_NAME = "__root_build_name__";
 
     @NonNull
     static final DependenciesImpl EMPTY_DEPENDENCIES_IMPL =
@@ -136,6 +141,11 @@ public class ModelBuilder implements ToolingModelBuilder {
     private final int generation;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
     private boolean modelWithFullDependency = false;
+    /**
+     * a map that goes from build name ({@link BuildIdentifier#getName()} to the root dir of the
+     * build. For the root build, there is no name so {@link #ROOT_BUILD_NAME} is used.
+     */
+    @NonNull private final ImmutableMap<String, String> buildMapping;
 
     private Set<SyncIssue> syncIssues = Sets.newLinkedHashSet();
 
@@ -160,6 +170,10 @@ public class ModelBuilder implements ToolingModelBuilder {
         this.nativeLibFactory = nativeLibraryFactory;
         this.projectType = projectType;
         this.generation = generation;
+        // build a map from included build name to rootDir (as rootDir is the only thing
+        // that we have access to on the tooling API side).
+        this.buildMapping = getBuildMapping(globalScope.getProject().getGradle());
+
     }
 
     public static void clearCaches() {
@@ -487,7 +501,12 @@ public class ModelBuilder implements ToolingModelBuilder {
         final VariantScope scope = variantData.getScope();
         Pair<Dependencies, DependencyGraphs> result =
                 getDependencies(
-                        scope, extraModelInfo, syncIssues, modelLevel, modelWithFullDependency);
+                        scope,
+                        buildMapping,
+                        extraModelInfo,
+                        syncIssues,
+                        modelLevel,
+                        modelWithFullDependency);
 
         Set<File> additionalTestClasses = new HashSet<>();
         additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
@@ -529,6 +548,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     @NonNull
     public static Pair<Dependencies, DependencyGraphs> getDependencies(
             @NonNull VariantScope variantScope,
+            @NonNull ImmutableMap<String, String> buildMapping,
             @NonNull ExtraModelInfo extraModelInfo,
             @NonNull Set<SyncIssue> syncIssues,
             int modelLevel,
@@ -560,12 +580,16 @@ public class ModelBuilder implements ToolingModelBuilder {
                                         variantScope,
                                         modelWithFullDependency,
                                         downloadSources,
+                                        buildMapping,
                                         syncIssues::add));
             } else {
                 result =
                         Pair.of(
                                 graph.createDependencies(
-                                        variantScope, downloadSources, syncIssues::add),
+                                        variantScope,
+                                        downloadSources,
+                                        buildMapping,
+                                        syncIssues::add),
                                 EMPTY_DEPENDENCY_GRAPH);
             }
         }
@@ -640,7 +664,12 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         Pair<Dependencies, DependencyGraphs> dependencies =
                 getDependencies(
-                        scope, extraModelInfo, syncIssues, modelLevel, modelWithFullDependency);
+                        scope,
+                        buildMapping,
+                        extraModelInfo,
+                        syncIssues,
+                        modelLevel,
+                        modelWithFullDependency);
 
         Set<File> additionalTestClasses = new HashSet<>();
         additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
@@ -963,5 +992,25 @@ public class ModelBuilder implements ToolingModelBuilder {
             this.variantSourceProvider = variantSourceProvider;
             this.multiFlavorSourceProvider = multiFlavorSourceProvider;
         }
+    }
+
+    @NonNull
+    public static ImmutableMap<String, String> getBuildMapping(@NonNull Gradle gradle) {
+        // first, ensure we are starting from the root Gradle object.
+        //noinspection ConstantConditions
+        while (gradle.getParent() != null) {
+            gradle = gradle.getParent();
+        }
+
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+
+        // get the roo dir for the top project
+        builder.put(ROOT_BUILD_NAME, gradle.getRootProject().getProjectDir().getAbsolutePath());
+
+        for (IncludedBuild includedBuild : gradle.getIncludedBuilds()) {
+            builder.put(includedBuild.getName(), includedBuild.getProjectDir().getAbsolutePath());
+        }
+
+        return builder.build();
     }
 }

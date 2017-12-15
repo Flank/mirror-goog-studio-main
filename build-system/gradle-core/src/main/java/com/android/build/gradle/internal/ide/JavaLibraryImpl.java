@@ -40,13 +40,14 @@ public final class JavaLibraryImpl extends LibraryImpl implements JavaLibrary, S
 
     public JavaLibraryImpl(
             @NonNull File jarFile,
+            @Nullable String buildId,
             @Nullable String project,
             @NonNull List<JavaLibrary> dependencies,
             @Nullable MavenCoordinates requestedCoordinates,
             @NonNull MavenCoordinates resolvedCoordinates,
             boolean isSkipped,
             boolean isProvided) {
-        super(project, requestedCoordinates, resolvedCoordinates, isSkipped, isProvided);
+        super(buildId, project, requestedCoordinates, resolvedCoordinates, isSkipped, isProvided);
         this.jarFile = jarFile;
         this.dependencies = ImmutableList.copyOf(dependencies);
     }

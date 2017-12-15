@@ -111,7 +111,7 @@ public class SeparateTestWithAarDependencyTest {
         // dependency list.
         TruthHelper.assertThat(helper.on(compileGraph).mapTo(COORDINATES))
                 .containsAllOf(
-                        ":app::debug",
+                        project.getTestDir().getAbsolutePath() + "@@:app::debug",
                         "com.android.support:support-core-ui:"
                                 + GradleTestProject.SUPPORT_LIB_VERSION
                                 + "@aar",
@@ -160,7 +160,7 @@ public class SeparateTestWithAarDependencyTest {
         // make sure the package does not contain the app or its dependencies
         TruthHelper.assertThat(packageItems.mapTo(COORDINATES))
                 .containsNoneOf(
-                        ":app::debug",
+                        project.getTestDir().getAbsolutePath() + "@@:app::debug",
                         "com.android.support:support-core-ui:"
                                 + GradleTestProject.SUPPORT_LIB_VERSION
                                 + "@aar",

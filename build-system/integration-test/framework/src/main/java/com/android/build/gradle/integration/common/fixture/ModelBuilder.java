@@ -19,19 +19,23 @@ package com.android.build.gradle.integration.common.fixture;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.SyncIssue;
+import com.android.utils.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.gradle.tooling.BuildAction;
 import org.gradle.tooling.BuildActionExecuter;
@@ -60,6 +64,21 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
                 project.getHeapSize());
     }
 
+    public ModelBuilder(
+            @NonNull ProjectConnection projectConnection,
+            @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
+            @NonNull Path projectDirectory,
+            @Nullable Path buildDotGradleFile,
+            @Nullable String heapSize) {
+        super(
+                projectConnection,
+                lastBuildResultConsumer,
+                projectDirectory,
+                buildDotGradleFile,
+                null /*profileDirectory*/,
+                heapSize);
+    }
+
     /**
      * Do not fail if there are sync issues.
      *
@@ -76,6 +95,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
      * <p>The severity argument is one of {@code SyncIssue.SEVERITY_ERROR} or {@code
      * SyncIssue.SEVERITY_WARNING}.
      */
+    @NonNull
     public ModelBuilder ignoreSyncIssues(int severity) {
         Preconditions.checkState(
                 modelLevel != AndroidProject.MODEL_LEVEL_0_ORIGINAL,
@@ -93,11 +113,13 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
      *
      * <p>See {@code AndroidProject.MODEL_LEVEL_*}.
      */
+    @NonNull
     public ModelBuilder level(int modelLevel) {
         this.modelLevel = modelLevel;
         return this;
     }
 
+    @NonNull
     public ModelBuilder withFullDependencies() {
         with(BooleanOption.IDE_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES, true);
         return this;
@@ -108,6 +130,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
      *
      * <p>This will fail if the project is a multi-project setup.
      */
+    @NonNull
     public ModelContainer<AndroidProject> getSingle() throws IOException {
         return assertNoSyncIssues(getSingleModel(AndroidProject.class));
     }
@@ -117,6 +140,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
      *
      * <p>This will fail if the project is a multi-project setup.
      */
+    @NonNull
     public <T> T getSingle(@NonNull Class<T> modelClass) throws IOException {
         Preconditions.checkArgument(
                 modelClass != AndroidProject.class, "please use getSingle() instead");
@@ -128,35 +152,45 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
      *
      * <p>This will fail if the project is a multi-project setup.
      */
+    @NonNull
     private <T> ModelContainer<T> getSingleModel(@NonNull Class<T> modelClass) throws IOException {
         ModelContainer<T> container =
                 buildModel(new GetAndroidModelAction<>(modelClass), modelLevel);
 
         // ensure there was only one project
         Preconditions.checkState(
-                container.getModelMap().size() == 1,
+                container.getModelMaps().size() == 1,
                 "attempted to getSingleModel() with multi-project settings");
 
         return container;
     }
 
-
     /** Returns a project model for each sub-project. */
+    @NonNull
     public ModelContainer<AndroidProject> getMulti() throws IOException {
         return assertNoSyncIssues(getMultiContainer(AndroidProject.class));
     }
 
     /** Returns a project model for each sub-project. */
+    @NonNull
     public <T> Map<String, T> getMulti(@NonNull Class<T> modelClass) throws IOException {
         Preconditions.checkArgument(
                 modelClass != AndroidProject.class, "please use getMulti() instead");
-        return getMultiContainer(modelClass).getModelMap();
+
+        final ModelContainer<T> modelContainer = getMultiContainer(modelClass);
+
+        if (modelContainer.getModelMaps().size() > 1) {
+            throw new RuntimeException("Can't call getMulti(Class) with included builds");
+        }
+
+        return modelContainer.getRootBuildModelMap();
     }
 
+    @NonNull
     private <T> ModelContainer<T> getMultiContainer(@NonNull Class<T> modelClass)
             throws IOException {
         // TODO: Make buildModel multithreaded all the time.
-        // Getting multiple NativeAndroidProject results in duplicated class implemented error
+        // Getting multigetMultiContainerple NativeAndroidProject results in duplicated class implemented error
         // in a multithreaded environment.  This is due to issues in Gradle relating to the
         // automatic generation of the implementation class of NativeSourceSet.  Make this
         // multithreaded when the issue is resolved.
@@ -239,30 +273,42 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
 
     private ModelContainer<AndroidProject> assertNoSyncIssues(
             @NonNull ModelContainer<AndroidProject> container) {
-        assertNoSyncIssues(container.getModelMap());
+        container
+                .getModelMaps()
+                .entrySet()
+                .stream()
+                .flatMap(
+                        entry ->
+                                entry.getValue()
+                                        .entrySet()
+                                        .stream()
+                                        .map(
+                                                entry2 ->
+                                                        Pair.of(
+                                                                entry.getKey().getRootDir()
+                                                                        + "@@"
+                                                                        + entry2.getKey(),
+                                                                entry2.getValue())))
+                .forEach(this::assertNoSyncIssues);
         return container;
     }
 
-    private Map<String, AndroidProject> assertNoSyncIssues(
-            @NonNull Map<String, AndroidProject> projectMap) {
-        projectMap.forEach(this::assertNoSyncIssues);
-        return projectMap;
-    }
-
-    private AndroidProject assertNoSyncIssues(
-            @NonNull String name, @NonNull AndroidProject project) {
+    private void assertNoSyncIssues(@NonNull Pair<String, AndroidProject> projectPair) {
         List<SyncIssue> issues =
-                project.getSyncIssues()
+                projectPair
+                        .getSecond()
+                        .getSyncIssues()
                         .stream()
                         .filter(syncIssue -> syncIssue.getSeverity() > maxSyncIssueSeverityLevel)
                         .filter(syncIssue -> syncIssue.getType() != SyncIssue.TYPE_DEPRECATED_DSL)
                         .collect(Collectors.toList());
 
-        if (issues.isEmpty()) {
-            return project;
+        if (!issues.isEmpty()) {
+            fail(
+                    "project "
+                            + projectPair.getFirst()
+                            + " had sync issues: "
+                            + Joiner.on("\n").join(issues));
         }
-
-        fail("project " + name + " had sync issues: " + Joiner.on("\n").join(issues));
-        return null;
     }
 }

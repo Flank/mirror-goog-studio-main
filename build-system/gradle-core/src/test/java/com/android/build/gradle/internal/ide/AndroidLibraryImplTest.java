@@ -33,6 +33,7 @@ public class AndroidLibraryImplTest {
                         "computeHashCode",
                         new AndroidLibraryImpl(
                                 new MavenCoordinatesImpl("g", "a", "unspecified"),
+                                null,
                                 "",
                                 new File("bundle"),
                                 new File("folder"),

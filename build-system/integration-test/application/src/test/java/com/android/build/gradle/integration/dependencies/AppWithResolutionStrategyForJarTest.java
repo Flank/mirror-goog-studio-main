@@ -127,7 +127,7 @@ public class AppWithResolutionStrategyForJarTest {
         assertThat(items.mapTo(COORDINATES))
                 .named("Direct modules of " + variantName)
                 .containsExactly(
-                        ":library::" + variantName,
+                        project.getTestDir().getAbsolutePath() + "@@:library::" + variantName,
                         "com.google.guava:guava:" + jarVersion + "@jar");
     }
 }

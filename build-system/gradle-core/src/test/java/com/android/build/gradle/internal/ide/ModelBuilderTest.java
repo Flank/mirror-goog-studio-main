@@ -55,7 +55,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.invocation.Gradle;
 import org.gradle.internal.impldep.com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Rule;
@@ -72,6 +74,8 @@ public class ModelBuilderTest {
     private static final String PROJECT = "project";
 
     @Mock GlobalScope globalScope;
+    @Mock Project project;
+    @Mock Gradle gradle;
     @Mock AndroidBuilder androidBuilder;
     @Mock VariantManager variantManager;
     @Mock TaskManager taskManager;
@@ -89,6 +93,16 @@ public class ModelBuilderTest {
     public void setUp() throws IOException {
 
         MockitoAnnotations.initMocks(this);
+
+        when(globalScope.getProject()).thenReturn(project);
+
+        when(project.getGradle()).thenReturn(gradle);
+        when(project.getProjectDir()).thenReturn(new File(""));
+
+        when(gradle.getRootProject()).thenReturn(project);
+        when(gradle.getParent()).thenReturn(null);
+        when(gradle.getIncludedBuilds()).thenReturn(ImmutableList.of());
+
         apkLocation = temporaryFolder.newFolder("apk");
 
         modelBuilder =

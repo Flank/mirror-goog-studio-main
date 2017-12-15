@@ -58,6 +58,17 @@ public interface Library {
     File getArtifact();
 
     /**
+     * Returns the build id.
+     *
+     * <p>This is only valid if the {@link #getProjectPath()} is not null. However this can still be
+     * null if this is the root project.
+     *
+     * @return the build id or null.
+     */
+    @Nullable
+    String getBuildId();
+
+    /**
      * Returns the gradle path.
      *
      * Only valid for Android Library where {@link #getType()} is {@link #LIBRARY_MODULE}

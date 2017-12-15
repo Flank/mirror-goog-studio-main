@@ -81,7 +81,7 @@ public class LocalAarTest {
 
         Dependencies deps = debugVariant.getMainArtifact().getDependencies();
 
-        assertThat(deps.getProjects()).isEmpty();
+        assertThat(deps.getJavaModules()).isEmpty();
         assertThat(deps.getJavaLibraries()).isEmpty();
         assertThat(deps.getLibraries()).hasSize(1);
         AndroidLibrary lib = Iterables.getOnlyElement(deps.getLibraries());

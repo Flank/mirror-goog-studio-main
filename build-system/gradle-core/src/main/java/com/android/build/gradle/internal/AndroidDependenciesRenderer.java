@@ -25,9 +25,11 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Info;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.ide.ArtifactDependencyGraph;
 import com.android.build.gradle.internal.ide.ArtifactDependencyGraph.HashableResolvedArtifactResult;
+import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -71,9 +73,15 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
     }
 
     public void render(@NonNull VariantScope variant) {
+        ImmutableMap<String, String> buildMapping =
+                ModelBuilder.getBuildMapping(variant.getGlobalScope().getProject().getGradle());
+
         Set<HashableResolvedArtifactResult> compileArtifacts =
                 ArtifactDependencyGraph.getAllArtifacts(
-                        variant, AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH, null);
+                        variant,
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        null,
+                        buildMapping);
 
         getTextOutput()
                 .withStyle(Identifier)
@@ -86,7 +94,10 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
 
         Set<HashableResolvedArtifactResult> runtimeArtifacts =
                 ArtifactDependencyGraph.getAllArtifacts(
-                        variant, AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH, null);
+                        variant,
+                        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                        null,
+                        buildMapping);
 
         getTextOutput().println();
         getTextOutput()

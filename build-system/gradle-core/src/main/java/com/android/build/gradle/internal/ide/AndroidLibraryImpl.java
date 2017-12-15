@@ -67,6 +67,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
 
     AndroidLibraryImpl(
             @NonNull MavenCoordinates coordinates,
+            @Nullable String buildId,
             @Nullable String projectPath,
             @NonNull File bundle,
             @NonNull File extractedFolder,
@@ -76,7 +77,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
             @NonNull List<AndroidLibrary> androidLibraries,
             @NonNull Collection<JavaLibrary> javaLibraries,
             @NonNull Collection<File> localJavaLibraries) {
-        super(projectPath, null, coordinates, isSkipped, isProvided);
+        super(buildId, projectPath, null, coordinates, isSkipped, isProvided);
         this.androidLibraries = ImmutableList.copyOf(androidLibraries);
         this.javaLibraries = ImmutableList.copyOf(javaLibraries);
         this.localJars = ImmutableList.copyOf(localJavaLibraries);

@@ -31,6 +31,7 @@ import java.io.Serializable;
 @Immutable
 abstract class LibraryImpl implements Library, Serializable {
 
+    @Nullable private final String buildId;
     @Nullable
     private final String project;
     @Nullable
@@ -45,12 +46,14 @@ abstract class LibraryImpl implements Library, Serializable {
     private final boolean isProvided;
 
     LibraryImpl(
+            @Nullable String buildId,
             @Nullable String project,
             @Nullable MavenCoordinates requestedCoordinates,
             @NonNull MavenCoordinates resolvedCoordinates,
             boolean isSkipped,
             boolean isProvided) {
         this.name = resolvedCoordinates.toString();
+        this.buildId = buildId;
         this.project = project;
         this.requestedCoordinates = requestedCoordinates;
         this.resolvedCoordinates = resolvedCoordinates;
@@ -60,11 +63,18 @@ abstract class LibraryImpl implements Library, Serializable {
 
     protected LibraryImpl(@NonNull Library clonedLibrary, boolean isSkipped) {
         name = clonedLibrary.getName();
+        buildId = clonedLibrary.getBuildId();
         project = clonedLibrary.getProject();
         requestedCoordinates = clonedLibrary.getRequestedCoordinates();
         resolvedCoordinates = clonedLibrary.getResolvedCoordinates();
         this.isSkipped = isSkipped;
         isProvided = clonedLibrary.isProvided();
+    }
+
+    @Nullable
+    @Override
+    public String getBuildId() {
+        return buildId;
     }
 
     @Override
@@ -110,17 +120,24 @@ abstract class LibraryImpl implements Library, Serializable {
             return false;
         }
         LibraryImpl library = (LibraryImpl) o;
-        return isSkipped == library.isSkipped &&
-                isProvided == library.isProvided &&
-                Objects.equal(project, library.project) &&
-                Objects.equal(name, library.name) &&
-                Objects.equal(requestedCoordinates, library.requestedCoordinates) &&
-                Objects.equal(resolvedCoordinates, library.resolvedCoordinates);
+        return isSkipped == library.isSkipped
+                && isProvided == library.isProvided
+                && Objects.equal(buildId, library.buildId)
+                && Objects.equal(project, library.project)
+                && Objects.equal(name, library.name)
+                && Objects.equal(requestedCoordinates, library.requestedCoordinates)
+                && Objects.equal(resolvedCoordinates, library.resolvedCoordinates);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(project, name, requestedCoordinates, resolvedCoordinates, isSkipped,
+        return Objects.hashCode(
+                buildId,
+                project,
+                name,
+                requestedCoordinates,
+                resolvedCoordinates,
+                isSkipped,
                 isProvided);
     }
 
@@ -128,6 +145,8 @@ abstract class LibraryImpl implements Library, Serializable {
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("name", name)
+                .add("buildId", buildId)
+                .add("project", project)
                 .add("requestedCoordinates", requestedCoordinates)
                 .add("resolvedCoordinates", resolvedCoordinates)
                 .add("isSkipped", isSkipped)

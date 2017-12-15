@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.ide.level2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.dependency.level2.JavaDependency;
 import com.android.builder.model.level2.Library;
 import java.io.File;
 import java.io.Serializable;
@@ -62,6 +61,13 @@ public final class JavaLibraryImpl implements Library, Serializable {
     public String getVariant() {
         throw new UnsupportedOperationException(
                 "getVariant() cannot be called when getType() returns LIBRARY_JAVA");
+    }
+
+    @Nullable
+    @Override
+    public String getBuildId() {
+        throw new UnsupportedOperationException(
+                "getBuildId() cannot be called when getType() returns LIBRARY_JAVA");
     }
 
     @NonNull

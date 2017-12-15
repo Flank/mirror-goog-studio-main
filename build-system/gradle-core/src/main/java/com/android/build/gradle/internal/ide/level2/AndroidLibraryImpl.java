@@ -171,6 +171,13 @@ public final class AndroidLibraryImpl implements Library, Serializable {
                 "getVariant() cannot be called when getType() returns ANDROID_LIBRARY");
     }
 
+    @Nullable
+    @Override
+    public String getBuildId() {
+        throw new UnsupportedOperationException(
+                "getBuildId() cannot be called when getType() returns ANDROID_LIBRARY");
+    }
+
     @NonNull
     @Override
     public String getProjectPath() {

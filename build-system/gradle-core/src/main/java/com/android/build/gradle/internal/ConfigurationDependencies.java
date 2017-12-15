@@ -62,15 +62,19 @@ public class ConfigurationDependencies implements Dependencies {
         Set<JavaLibrary> javaLibraries = Sets.newHashSet();
         int index = 1;
         for (File file : files) {
-            javaLibraries.add(new JavaLibraryImpl(
-                    file,
-                    null /*projectPath*/,
-                    ImmutableList.<JavaLibrary>of(),
-                    null /*requestedCoordinate*/,
-                    new MavenCoordinatesImpl(
-                            "unknown-" + configuration.getName(), "unknown" + (index++), "unspecified"),
-                    false /*isSkipped*/,
-                    false /*isProvided*/));
+            javaLibraries.add(
+                    new JavaLibraryImpl(
+                            file,
+                            null, /* buildId */
+                            null /*projectPath*/,
+                            ImmutableList.<JavaLibrary>of(),
+                            null /*requestedCoordinate*/,
+                            new MavenCoordinatesImpl(
+                                    "unknown-" + configuration.getName(),
+                                    "unknown" + (index++),
+                                    "unspecified"),
+                            false /*isSkipped*/,
+                            false /*isProvided*/));
         }
         return javaLibraries;
     }
@@ -78,6 +82,12 @@ public class ConfigurationDependencies implements Dependencies {
     @NonNull
     @Override
     public Collection<String> getProjects() {
+        return Collections.emptyList();
+    }
+
+    @NonNull
+    @Override
+    public Collection<ProjectIdentifier> getJavaModules() {
         return Collections.emptyList();
     }
 }

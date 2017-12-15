@@ -29,11 +29,12 @@ import java.util.function.Consumer;
 /** Creates a deep copy of a {@link Dependencies}. */
 public final class IdeDependenciesImpl extends IdeModel implements IdeDependencies {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NonNull private final Collection<AndroidLibrary> myLibraries;
     @NonNull private final Collection<JavaLibrary> myJavaLibraries;
     @NonNull private final Collection<String> myProjects;
+    @NonNull private final Collection<ProjectIdentifier> myJavaModules;
     private final int myHashCode;
 
     public IdeDependenciesImpl(
@@ -54,6 +55,11 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
                         library -> new IdeJavaLibrary(library, modelCache));
 
         myProjects = ImmutableList.copyOf(dependencies.getProjects());
+        myJavaModules =
+                copy(
+                        dependencies::getJavaModules,
+                        modelCache,
+                        projectId -> new IdeProjectIdentifierImpl(projectId, modelCache));
 
         myHashCode = calculateHashCode();
     }
@@ -74,6 +80,12 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
     @NonNull
     public Collection<String> getProjects() {
         return myProjects;
+    }
+
+    @NonNull
+    @Override
+    public Collection<ProjectIdentifier> getJavaModules() {
+        return myJavaModules;
     }
 
     @Override
@@ -101,7 +113,8 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
         IdeDependenciesImpl that = (IdeDependenciesImpl) o;
         return Objects.equals(myLibraries, that.myLibraries)
                 && Objects.equals(myJavaLibraries, that.myJavaLibraries)
-                && Objects.equals(myProjects, that.myProjects);
+                && Objects.equals(myProjects, that.myProjects)
+                && Objects.equals(myJavaModules, that.myJavaModules);
     }
 
     @Override
@@ -110,7 +123,7 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myLibraries, myJavaLibraries, myProjects);
+        return Objects.hash(myLibraries, myJavaLibraries, myProjects, myJavaModules);
     }
 
     @Override
@@ -122,6 +135,8 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
                 + myJavaLibraries
                 + ", myProjects="
                 + myProjects
+                + ", myJavaModules="
+                + myJavaModules
                 + '}';
     }
 }

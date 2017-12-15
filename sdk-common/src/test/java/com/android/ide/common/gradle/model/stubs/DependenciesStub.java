@@ -27,21 +27,25 @@ public final class DependenciesStub extends BaseStub implements Dependencies {
     @NonNull private final Collection<AndroidLibrary> myLibraries;
     @NonNull private final Collection<JavaLibrary> myJavaLibraries;
     @NonNull private final Collection<String> myProjects;
+    @NonNull private final Collection<ProjectIdentifier> myJavaModules;
 
     public DependenciesStub() {
         this(
                 Lists.newArrayList(),
                 Lists.newArrayList(new JavaLibraryStub()),
-                Lists.newArrayList("project1", "project2"));
+                Lists.newArrayList("project1", "project2"),
+                Lists.newArrayList());
     }
 
     public DependenciesStub(
             @NonNull Collection<AndroidLibrary> libraries,
             @NonNull Collection<JavaLibrary> javaLibraries,
-            @NonNull Collection<String> projects) {
+            @NonNull Collection<String> projects,
+            @NonNull Collection<ProjectIdentifier> javaModules) {
         myLibraries = libraries;
         myJavaLibraries = javaLibraries;
         myProjects = projects;
+        myJavaModules = javaModules;
     }
 
     @Override
@@ -62,6 +66,12 @@ public final class DependenciesStub extends BaseStub implements Dependencies {
         return myProjects;
     }
 
+    @NonNull
+    @Override
+    public Collection<ProjectIdentifier> getJavaModules() {
+        return myJavaModules;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -73,7 +83,8 @@ public final class DependenciesStub extends BaseStub implements Dependencies {
         Dependencies stub = (Dependencies) o;
         return Objects.equals(getLibraries(), stub.getLibraries())
                 && Objects.equals(getJavaLibraries(), stub.getJavaLibraries())
-                && Objects.equals(getProjects(), stub.getProjects());
+                && Objects.equals(getProjects(), stub.getProjects())
+                && Objects.equals(getJavaModules(), stub.getJavaModules());
     }
 
     @Override
@@ -90,6 +101,8 @@ public final class DependenciesStub extends BaseStub implements Dependencies {
                 + myJavaLibraries
                 + ", myProjects="
                 + myProjects
+                + ", myJavaModules="
+                + myJavaModules
                 + "}";
     }
 }

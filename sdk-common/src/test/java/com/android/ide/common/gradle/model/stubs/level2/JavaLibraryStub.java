@@ -64,6 +64,13 @@ public class JavaLibraryStub extends BaseStub implements Library {
                 "getVariant() cannot be called when getType() returns LIBRARY_JAVA");
     }
 
+    @Nullable
+    @Override
+    public String getBuildId() {
+        throw new UnsupportedOperationException(
+                "getBuildId() cannot be called when getType() returns LIBRARY_JAVA");
+    }
+
     @Override
     @NonNull
     public String getProjectPath() {

@@ -27,25 +27,64 @@ import java.util.Objects;
 /** Creates a deep copy of {@link Library} of type LIBRARY_MODULE. */
 public final class IdeModuleLibrary extends IdeModel implements Library {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     @NonNull private final String myArtifactAddress;
+    @Nullable private final String myBuildId;
     @Nullable private final String myProjectPath;
     @Nullable private final String myVariant;
     private final int myType;
     private final int myHashCode;
 
     IdeModuleLibrary(
-            @NonNull Object source,
+            @NonNull Library library,
             @NonNull String artifactAddress,
-            @NonNull ModelCache modelCache,
-            @Nullable String projectPath,
-            @Nullable String variant) {
-        super(source, modelCache);
+            @NonNull ModelCache modelCache) {
+        super(library, modelCache);
         myType = LIBRARY_MODULE;
         myArtifactAddress = artifactAddress;
+        myBuildId = copyNewProperty(library::getBuildId, null);
+        myProjectPath = copyNewProperty(library::getProjectPath, null);
+        myVariant = copyNewProperty(library::getVariant, null);
+        myHashCode = calculateHashCode();
+    }
+
+    IdeModuleLibrary(
+            @NonNull com.android.builder.model.AndroidLibrary library,
+            @NonNull String artifactAddress,
+            @NonNull ModelCache modelCache) {
+        super(library, modelCache);
+        myType = LIBRARY_MODULE;
+        myArtifactAddress = artifactAddress;
+        myBuildId = copyNewProperty(library::getBuildId, null);
+        myProjectPath = copyNewProperty(library::getProject, null);
+        myVariant = copyNewProperty(library::getProjectVariant, null);
+        myHashCode = calculateHashCode();
+    }
+
+    IdeModuleLibrary(
+            @NonNull com.android.builder.model.JavaLibrary library,
+            @NonNull String artifactAddress,
+            @NonNull ModelCache modelCache) {
+        super(library, modelCache);
+        myType = LIBRARY_MODULE;
+        myArtifactAddress = artifactAddress;
+        myBuildId = copyNewProperty(library::getBuildId, null);
+        myProjectPath = copyNewProperty(library::getProject, null);
+        myVariant = null;
+        myHashCode = calculateHashCode();
+    }
+
+    IdeModuleLibrary(
+            @NonNull String projectPath,
+            @NonNull String artifactAddress,
+            @NonNull ModelCache modelCache) {
+        super(projectPath, modelCache);
+        myType = LIBRARY_MODULE;
+        myArtifactAddress = artifactAddress;
+        myBuildId = null;
         myProjectPath = projectPath;
-        myVariant = variant;
+        myVariant = null;
         myHashCode = calculateHashCode();
     }
 
@@ -64,6 +103,12 @@ public final class IdeModuleLibrary extends IdeModel implements Library {
     @NonNull
     public File getArtifact() {
         throw unsupportedMethodForModuleLibrary("getArtifact()");
+    }
+
+    @Nullable
+    @Override
+    public String getBuildId() {
+        return myBuildId;
     }
 
     @Override
@@ -181,6 +226,7 @@ public final class IdeModuleLibrary extends IdeModel implements Library {
         return myType == that.myType
                 && Objects.equals(myArtifactAddress, that.myArtifactAddress)
                 && Objects.equals(myProjectPath, that.myProjectPath)
+                && Objects.equals(myBuildId, that.myBuildId)
                 && Objects.equals(myVariant, that.myVariant);
     }
 
@@ -190,7 +236,7 @@ public final class IdeModuleLibrary extends IdeModel implements Library {
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myType, myArtifactAddress, myProjectPath, myVariant);
+        return Objects.hash(myType, myArtifactAddress, myBuildId, myProjectPath, myVariant);
     }
 
     @Override
@@ -200,6 +246,9 @@ public final class IdeModuleLibrary extends IdeModel implements Library {
                 + myType
                 + ", myArtifactAddress='"
                 + myArtifactAddress
+                + '\''
+                + ", myBuildId='"
+                + myBuildId
                 + '\''
                 + ", myProjectPath='"
                 + myProjectPath

@@ -56,6 +56,7 @@ import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.build.ApkInfo;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -234,10 +235,14 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
     @NonNull
     private VariantImpl createVariant(@NonNull BaseVariantData variantData) {
         VariantScope variantScope = variantData.getScope();
+        ImmutableMap<String, String> buildMapping =
+                ModelBuilder.getBuildMapping(
+                        variantScope.getGlobalScope().getProject().getGradle());
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
         Pair<Dependencies, DependencyGraphs> dependencies =
                 ModelBuilder.getDependencies(
                         variantScope,
+                        buildMapping,
                         extraModelInfo,
                         syncIssues,
                         modelLevel,
