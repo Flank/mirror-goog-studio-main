@@ -765,6 +765,8 @@ public final class SdkConstants {
     public static final String CLASS_TOOLBAR_V7 = "android.support.v7.widget.Toolbar"; //$NON-NLS-1$
     public static final String CLASS_RECYCLER_VIEW =
             "android.support.v7.widget.RecyclerView"; //$NON-NLS-1$
+    public static final String CLASS_RECYCLER_VIEW_LAYOUT_MANAGER =
+            "android.support.v7.widget.RecyclerView.LayoutManager"; //$NON-NLS-1$
     public static final String CLASS_CARD_VIEW = "android.support.v7.widget.CardView"; //$NON-NLS-1$
     public static final String CLASS_ACTION_MENU_VIEW =
             "android.support.v7.widget.ActionMenuView"; //$NON-NLS-1$
@@ -1612,6 +1614,7 @@ public final class SdkConstants {
     public static final String ATTR_TAB_INDICATOR_COLOR = "tabIndicatorColor"; //$NON-NLS-1$
     public static final String ATTR_TAB_SELECTED_TEXT_COLOR = "tabSelectedTextColor"; //$NON-NLS-1$
     public static final String ATTR_TAB_TEXT_APPEARANCE = "tabTextAppearance"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_MANAGER = "layoutManager"; //$NON-NLS-1$
 
     // Values: Manifest
     public static final String VALUE_SPLIT_ACTION_BAR_WHEN_NARROW =
