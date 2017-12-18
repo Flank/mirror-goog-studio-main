@@ -59,6 +59,7 @@ cc_test(
     deps = [
         ":profiler_cpu",
         "//external:gmock_main",
+        "//tools/base/profiler/native/perfd/sessions:profiler_sessions",
         "//tools/base/profiler/native/test:testutils",
     ],
 )

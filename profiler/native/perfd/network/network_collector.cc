@@ -32,8 +32,8 @@ namespace profiler {
 
 NetworkCollector::NetworkCollector(int sample_ms)
     : sample_us_(sample_ms * 1000) {
-  samplers_.emplace_back(new ConnectivitySampler(
-      NetworkConstants::GetRadioStatusCommand()));
+  samplers_.emplace_back(
+      new ConnectivitySampler(NetworkConstants::GetRadioStatusCommand()));
   samplers_.emplace_back(
       new SpeedSampler(NetworkConstants::GetTrafficBytesFilePath()));
   samplers_.emplace_back(
@@ -78,7 +78,7 @@ void NetworkCollector::StoreDataToBuffer() {
     auto &buffer = it->second;
     for (auto &sampler : samplers_) {
       auto response = sampler->Sample(uid);
-      response.mutable_basic_info()->set_process_id(buffer->pid());
+      response.mutable_basic_info()->set_process_id(buffer->id());
       response.mutable_basic_info()->set_end_timestamp(time);
       buffer->Add(response, time);
     }
@@ -96,7 +96,7 @@ void NetworkCollector::Start(int32_t pid, NetworkProfilerBuffer *buffer) {
 void NetworkCollector::Stop(int32_t pid) {
   std::lock_guard<std::mutex> lock(buffer_mutex_);
   for (auto it = uid_to_buffers_.begin(); it != uid_to_buffers_.end(); it++) {
-    if (pid == it->second->pid()) {
+    if (pid == it->second->id()) {
       uid_to_buffers_.erase(it);
       return;
     }

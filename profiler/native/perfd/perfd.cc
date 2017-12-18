@@ -44,8 +44,9 @@ int main(int argc, char** argv) {
   const char* config_path = profiler::kConfigFileDefaultPath;
   bool is_testing_profiler = false;
   for (int i = 1; i < argc; i++) {
-    if (i + 1 < argc && strncmp(argv[i], profiler::kConnectCmdLineArg,
-                                strlen(profiler::kConnectCmdLineArg)) == 0) {
+    if (i + 1 < argc &&
+        strncmp(argv[i], profiler::kConnectCmdLineArg,
+                strlen(profiler::kConnectCmdLineArg)) == 0) {
       if (profiler::ConnectAndSendDataToPerfa(argv[i], argv[i + 1])) {
         return 0;
       } else {
