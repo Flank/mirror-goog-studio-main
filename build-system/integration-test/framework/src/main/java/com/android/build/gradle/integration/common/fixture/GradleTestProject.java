@@ -108,7 +108,7 @@ public final class GradleTestProject implements TestRule {
     public static final String DEVICE_PROVIDER_NAME =
             REMOTE_TEST_PROVIDER != null ? REMOTE_TEST_PROVIDER : BuilderConstants.CONNECTED;
 
-    private static final boolean USE_LATEST_NIGHTLY_GRADLE_VERSION =
+    public static final boolean USE_LATEST_NIGHTLY_GRADLE_VERSION =
             Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"));
     public static final String GRADLE_TEST_VERSION;
 

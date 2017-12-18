@@ -132,7 +132,10 @@ data class Benchmark(
         val task = ":base:build-system:integration-test:application:performanceTest"
         val command = "./gradlew --info $task -D$task.single=${BenchmarkTest::class.simpleName}"
 
-        return "PERF_SCENARIO=${scenario.name} " +
+        val gradleNightly = if (GradleTestProject.USE_LATEST_NIGHTLY_GRADLE_VERSION) "true" else "false"
+
+        return  "USE_GRADLE_NIGHTLY=$gradleNightly " +
+                "PERF_SCENARIO=${scenario.name} " +
                 "PERF_BENCHMARK=${benchmark.name} " +
                 "PERF_BENCHMARK_MODE=${benchmarkMode.name} " +
                 command
