@@ -97,3 +97,16 @@ perf_test(
         "//tools/idea/.idea/libraries:truth",
     ],
 )
+
+perf_test(
+    name = "EventTest",
+    srcs = [
+        "testSrcs/com/android/tools/profiler/EventProfilerTest.java",
+    ],
+    native_lib = "//tools/base/profiler/tests/test-app:libnativetest.so",
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
+    deps = [
+        ":tests",
+        "//tools/idea/.idea/libraries:truth",
+    ],
+)

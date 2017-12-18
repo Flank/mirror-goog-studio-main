@@ -17,16 +17,29 @@
 package android.view.inputmethod;
 
 import android.mock.MockInputConnectionWrapper;
+import com.google.common.annotations.VisibleForTesting;
 
 /** Empty class to act as a test mock */
 public class InputMethodManager {
+    private static final InputMethodManager sInstance = new InputMethodManager();
     private InputConnectionWrapper mServedInputConnectionWrapper = new MockInputConnectionWrapper();
+    private boolean mIsAcceptingText;
 
     public boolean isAcceptingText() {
-        return true;
+        return mIsAcceptingText;
     }
 
     public static InputMethodManager getInstance() {
-        return new InputMethodManager();
+        return sInstance;
+    }
+
+    @VisibleForTesting
+    public InputConnectionWrapper getConnectionWrapper() {
+        return mServedInputConnectionWrapper;
+    }
+
+    @VisibleForTesting
+    public void setIsAcceptingText(boolean accepting) {
+        mIsAcceptingText = accepting;
     }
 }

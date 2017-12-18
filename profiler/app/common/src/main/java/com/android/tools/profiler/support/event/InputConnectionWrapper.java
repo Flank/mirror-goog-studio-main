@@ -16,7 +16,6 @@
 
 package com.android.tools.profiler.support.event;
 
-import android.view.inputmethod.InputConnection;
 
 /**
  * Wrapper class for InputConnect. This class accepts the currently set InputConnection and fowards
@@ -27,8 +26,10 @@ public class InputConnectionWrapper extends android.view.inputmethod.InputConnec
 
     private native void sendKeyboardEvent(String keycode);
 
-    public InputConnectionWrapper(InputConnection ic) {
-        super(ic, false);
+    public InputConnectionWrapper() {
+        // Setting mutable to true so the EventProfiler can reset / null out the InputConnection
+        // when input is no longer active. This prevents an InputConnection object leak.
+        super(null, true);
     }
 
     @Override

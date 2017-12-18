@@ -248,7 +248,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                 Method instance = clazz.getMethod("getInstance");
                 instance.setAccessible(true);
                 InputMethodManager imm = (InputMethodManager) instance.invoke(null);
-                InputConnectionWrapper inputConnectionWrapper = null;
+                InputConnectionWrapper inputConnectionWrapper = new InputConnectionWrapper();
                 while (true) {
                     Thread.sleep(SLEEP_TIME);
                     // If we are accepting text that means we have an input connection
@@ -283,21 +283,21 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                                     // this prevents the wrapper from getting cleaned while still
                                     // potentially in use. This thread does not get terminated until
                                     // the application is terminated.
-                                    inputConnectionWrapper =
-                                            new InputConnectionWrapper(inputConnection);
+                                    inputConnectionWrapper.setTarget(inputConnection);
                                     ic.set(
                                             connection,
                                             new WeakReference<InputConnection>(
                                                     inputConnectionWrapper));
                                 } else {
-                                    inputConnectionWrapper =
-                                            new InputConnectionWrapper((InputConnection) input);
+                                    inputConnectionWrapper.setTarget((InputConnection) input);
                                     ic.set(connection, inputConnectionWrapper);
                                 }
                             }
                             //Clean up and set state so we don't do this more than once.
                             ic.setAccessible(false);
                         }
+                    } else {
+                        inputConnectionWrapper.setTarget(null);
                     }
                 }
             } catch (InterruptedException ex) {
