@@ -23,9 +23,11 @@ import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.options.BooleanOption
+import com.google.common.collect.Iterables
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
+import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
@@ -52,6 +54,7 @@ data class Benchmark(
          * you'll have to supply a postApplyProject function and do it in there.
          */
         var project = projectFactory(GradleTestProject.builder())
+        var profileLocation: Path? = null
 
         val statement =
                 object : Statement() {
@@ -74,7 +77,8 @@ data class Benchmark(
                                 .with(BooleanOption.ENABLE_D8, scenario.useD8())
                                 .withUseDexArchive(scenario.useDexArchive())
 
-                        val recorder = BenchmarkRecorder(ProfileCapturer(project.profileDirectory))
+                        val capturer = ProfileCapturer(project.profileDirectory)
+                        val recorder = BenchmarkRecorder(capturer)
                         val recordCalled = AtomicBoolean(false)
                         val record = { r: () -> Unit ->
                             recordStart = System.nanoTime()
@@ -88,6 +92,8 @@ data class Benchmark(
                                 if (numProfiles != 1) {
                                     throw IllegalStateException("record lambda generated more than one profile, this is not allowed")
                                 }
+
+                                profileLocation = Iterables.getOnlyElement(capturer.lastPoll)
                             } finally {
                                 recordEnd = System.nanoTime()
                             }
@@ -113,6 +119,7 @@ data class Benchmark(
                 benchmark = this,
                 recordedDuration = Duration.ofNanos(recordEnd - recordStart),
                 totalDuration = Duration.ofNanos(System.nanoTime() - totalStart),
+                profileLocation = profileLocation,
                 exception = exception
         )
     }

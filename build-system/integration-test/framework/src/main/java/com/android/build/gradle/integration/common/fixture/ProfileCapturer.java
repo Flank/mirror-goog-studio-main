@@ -19,18 +19,15 @@ package com.android.build.gradle.integration.common.fixture;
 
 import com.android.annotations.NonNull;
 import com.android.builder.utils.ExceptionRunnable;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import javax.annotation.concurrent.NotThreadSafe;
 
 /**
  * A helper class for finding and parsing GradleBuildProfile protos.
@@ -43,60 +40,53 @@ import java.util.stream.Collectors;
  *
  * <pre>
  *     ProfileCapturer pc = new ProfileCapturer(Path.get("foo"));
- *     pc.getNewProfiles() // empty, because we haven't invoked Gradle at all
+ *     pc.findNewProfiles() // empty, because we haven't invoked Gradle at all
  *     // do some stuff here with the Gradle plugin, telling it to output to Path.get("foo")
- *     pc.getNewProfiles() // a list containing newly generated profiles
+ *     pc.findNewProfiles() // a list containing newly generated profiles
+ *
+ *     // alternately, with a runnable
+ *     List<GradleBuildProfile> profiles = pc.capture(() -> do stuff in here);
  * </pre>
  *
- * In tests, a new profile should be generated every time you use the {@code RunGradleTasks} class
- * with a benchmark recorder set.
+ * In tests, a new profile should be generated every time you use the {@code GradleTaskExecutor}
+ * class with a benchmark recorder set.
  */
+@NotThreadSafe
 public final class ProfileCapturer {
-    @NonNull private static final String PROFILE_SUFFIX = ".rawproto";
-
-    @NonNull private Set<Path> knownProfiles = new HashSet<>();
-    @NonNull private final Path profileDirectory;
+    @NonNull private final DirectoryPoller poller;
+    @NonNull private Collection<Path> lastPoll = Collections.emptySet();
 
     public ProfileCapturer(@NonNull Path profileDirectory) throws IOException {
-        this.profileDirectory = profileDirectory;
-        updateKnownProfiles();
+        this.poller = new DirectoryPoller(profileDirectory, ".rawproto");
     }
 
-    public List<GradleBuildProfile> capture(ExceptionRunnable r) throws Exception {
-        updateKnownProfiles();
+    public Collection<GradleBuildProfile> capture(ExceptionRunnable r) throws Exception {
+        poller.poll();
         r.run();
         return findNewProfiles();
     }
 
     @NonNull
-    public List<GradleBuildProfile> findNewProfiles() throws IOException {
-        Set<Path> newProfiles = ImmutableSet.copyOf(Sets.difference(findProfiles(), knownProfiles));
-        knownProfiles.addAll(newProfiles);
+    public Collection<GradleBuildProfile> findNewProfiles() throws IOException {
+        lastPoll = poller.poll();
 
-        if (newProfiles.isEmpty()) {
+        if (lastPoll.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<GradleBuildProfile> results = new ArrayList<>(newProfiles.size());
-        for (Path path : newProfiles) {
+        List<GradleBuildProfile> results = new ArrayList<>(lastPoll.size());
+        for (Path path : lastPoll) {
             results.add(GradleBuildProfile.parseFrom(Files.readAllBytes(path)));
         }
         return results;
     }
 
+    /**
+     * Returns a collection containing the Paths found the last time that the underlying directory
+     * was polled.
+     */
     @NonNull
-    private Set<Path> findProfiles() throws IOException {
-        if (!Files.exists(profileDirectory)) {
-            return Collections.emptySet();
-        }
-
-        return Files.walk(profileDirectory)
-                .filter(Files::isRegularFile)
-                .filter(file -> file.getFileName().toString().endsWith(PROFILE_SUFFIX))
-                .collect(Collectors.toSet());
-    }
-
-    private void updateKnownProfiles() throws IOException {
-        knownProfiles.addAll(findProfiles());
+    public Collection<Path> getLastPoll() {
+        return lastPoll;
     }
 }

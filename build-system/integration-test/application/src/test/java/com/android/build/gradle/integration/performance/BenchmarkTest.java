@@ -236,10 +236,11 @@ public class BenchmarkTest {
             for (BenchmarkResult result : failed) {
                 System.out.println(result);
                 System.out.println();
+                System.out.println("Command to re-run locally: " + result.getBenchmark().command());
+                System.out.println();
                 System.out.println("full stack trace:");
                 result.getException().printStackTrace();
                 System.out.println();
-                System.out.println("Command to re-run locally: " + result.getBenchmark().command());
             }
 
             throw new AssertionError(failed.size() + " benchmarks failed");

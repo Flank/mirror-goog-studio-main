@@ -16,12 +16,14 @@
 
 package com.android.build.gradle.integration.performance
 
+import java.nio.file.Path
 import java.time.Duration
 
 data class BenchmarkResult(
         val benchmark: Benchmark,
         val totalDuration: Duration,
         val recordedDuration: Duration,
+        val profileLocation: Path?,
         val exception: Exception?
 ) {
     override fun toString(): String {
@@ -31,7 +33,8 @@ data class BenchmarkResult(
             benchmarkMode: ${benchmark.benchmarkMode.name}
             recordedDuration: $recordedDuration
             totalDuration: $totalDuration
-            exception: ${if (exception != null) exception.message else "none" }
+            profileLocation: ${profileLocation ?: "none"}
+            exception: ${exception ?: "none"}
         """.trimIndent()
     }
 }

@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
-import java.util.List;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,7 +65,7 @@ public class ProfileCapturerTest {
 
     @Test
     public void captureLambdaSingleWorksAsExpected() throws Throwable {
-        List<GradleBuildProfile> profiles = capturer.capture(() -> project.execute("tasks"));
+        Collection<GradleBuildProfile> profiles = capturer.capture(() -> project.execute("tasks"));
 
         assertThat(profiles).hasSize(1);
         for (GradleBuildProfile profile : profiles) {
@@ -76,7 +76,7 @@ public class ProfileCapturerTest {
 
     @Test
     public void captureLambdaMultipleWorksAsExpected() throws Throwable {
-        List<GradleBuildProfile> profiles =
+        Collection<GradleBuildProfile> profiles =
                 capturer.capture(
                         () -> {
                             project.execute("tasks");

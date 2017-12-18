@@ -37,6 +37,7 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -189,7 +190,7 @@ public final class BenchmarkRecorder {
             @NonNull ExceptionRunnable r)
             throws Exception {
 
-        List<GradleBuildProfile> profiles = capturer.capture(r);
+        Collection<GradleBuildProfile> profiles = capturer.capture(r);
 
         for (GradleBuildProfile profile : profiles) {
             GradleBenchmarkResult.Builder result =
