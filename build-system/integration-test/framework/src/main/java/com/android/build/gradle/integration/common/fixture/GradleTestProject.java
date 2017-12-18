@@ -78,7 +78,6 @@ import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.gradle.util.GradleVersion;
-import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -420,14 +419,6 @@ public final class GradleTestProject implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                if (USE_LATEST_NIGHTLY_GRADLE_VERSION
-                        && GRADLE_TEST_VERSION.equals(BasePlugin.GRADLE_MIN_VERSION.toString())) {
-                    String errorMessage =
-                            "Running tests with gradle nightly skipped as the minimum plugin version is equal to the latest nightly version. "
-                                    + description;
-                    System.err.println(errorMessage);
-                    throw new AssumptionViolatedException(errorMessage);
-                }
                 createTestDirectory(description.getTestClass(), description.getMethodName());
                 boolean testFailed = false;
                 try {

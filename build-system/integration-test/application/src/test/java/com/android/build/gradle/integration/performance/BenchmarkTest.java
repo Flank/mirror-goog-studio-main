@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.performance;
 
+import com.android.build.gradle.BasePlugin;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.google.common.base.Strings;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import java.time.Duration;
@@ -27,6 +29,7 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -80,6 +83,15 @@ import org.junit.runners.JUnit4;
 public class BenchmarkTest {
     @Test
     public void run() throws Exception {
+        if (GradleTestProject.USE_LATEST_NIGHTLY_GRADLE_VERSION
+                && GradleTestProject.GRADLE_TEST_VERSION.equals(
+                        BasePlugin.GRADLE_MIN_VERSION.toString())) {
+            String msg =
+                    "Running tests with gradle nightly skipped as the minimum plugin version is equal to the latest nightly version.";
+            System.err.println(msg);
+            throw new AssumptionViolatedException(msg);
+        }
+
         long start = System.nanoTime();
         List<Benchmark> benchmarks = new ArrayList<>();
 
