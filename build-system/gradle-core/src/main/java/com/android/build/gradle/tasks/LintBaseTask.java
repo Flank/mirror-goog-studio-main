@@ -30,8 +30,9 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.LintOptions;
+import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -42,10 +43,8 @@ import com.android.builder.model.Version;
 import com.android.builder.utils.FileCache;
 import com.android.sdklib.BuildToolInfo;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import java.io.File;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -232,10 +231,9 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
                 return file;
             }
 
-            Collection<BuildOutput> manifests =
-                    BuildOutputs.load(
-                            ImmutableList.of(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS),
-                            file);
+            BuildElements manifests =
+                    ExistingBuildElements.from(
+                            TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, file);
 
             if (manifests.isEmpty()) {
                 throw new RuntimeException("Can't find any manifest in folder: " + file);

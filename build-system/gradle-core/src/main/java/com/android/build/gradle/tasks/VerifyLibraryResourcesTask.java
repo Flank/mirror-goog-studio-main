@@ -25,8 +25,8 @@ import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
-import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -58,7 +58,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -130,7 +129,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                                 getILogger()),
                         mergingLogRewriter);
 
-        Collection<BuildOutput> manifestsOutputs = BuildOutputs.load(taskInputType, manifestFiles);
+        BuildElements manifestsOutputs = ExistingBuildElements.from(taskInputType, manifestFiles);
         File manifestFile = Iterables.getOnlyElement(manifestsOutputs).getOutputFile();
 
         try (Aapt aapt =

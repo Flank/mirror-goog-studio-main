@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.FilterData;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.api.ApkVariantOutput;
 import com.android.build.gradle.internal.variant.TaskContainer;
@@ -92,7 +93,8 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
 
     @Override
     public String getFilter(VariantOutput.FilterType filterType) {
-        return apkData.getFilter(filterType);
+        FilterData filterData = apkData.getFilter(filterType);
+        return filterData != null ? filterData.getIdentifier() : null;
     }
 
     @Override

@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import java.util.Collection;
@@ -30,7 +29,7 @@ public class DefaultVariantBuildOutput extends DefaultBaseBuildOutput
 
     public DefaultVariantBuildOutput(
             @NonNull String name,
-            @NonNull Collection<BuildOutput> buildOutputSupplier,
+            @NonNull Collection<EarlySyncBuildOutput> buildOutputSupplier,
             @NonNull Collection<TestVariantBuildOutput> testVariants) {
         super(name, buildOutputSupplier);
         this.testVariants = testVariants;

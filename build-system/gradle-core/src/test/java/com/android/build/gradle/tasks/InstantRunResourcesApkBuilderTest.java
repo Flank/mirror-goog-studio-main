@@ -19,7 +19,6 @@ package com.android.build.gradle.tasks;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -31,36 +30,34 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.scope.BuildElementActionScheduler;
+import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.build.ApkData;
+import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.signing.KeytoolException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import kotlin.jvm.functions.Function2;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
-import org.gradle.internal.impldep.com.google.common.base.Charsets;
 import org.gradle.testfixtures.ProjectBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -76,13 +73,27 @@ public class InstantRunResourcesApkBuilderTest {
     File testDir;
 
     @Mock FileCollection fileCollection;
+    @Mock FileTree fileTree;
     @Mock VariantScope variantScope;
     @Mock GradleVariantConfiguration variantConfiguration;
     @Mock GlobalScope globalScope;
     @Mock AndroidBuilder androidBuilder;
-    @Mock OutputScope outputScope;
     @Mock CoreSigningConfig signingConfig;
     @Mock InstantRunBuildContext buildContext;
+
+    public static class InstantRunResourcesApkBuilderForTest extends InstantRunResourcesApkBuilder {
+        @Override
+        protected BuildElements getResInputBuildArtifacts() {
+            return new BuildElements(super.getResInputBuildArtifacts().getElements()) {
+                @NotNull
+                @Override
+                public BuildElementActionScheduler transform(
+                        @NotNull Function2<? super ApkInfo, ? super File, ? extends File> action) {
+                    return new BuildElementActionScheduler.Synchronous(this, action);
+                }
+            };
+        }
+    }
 
     @Before
     public void setUp() throws IOException {
@@ -90,9 +101,8 @@ public class InstantRunResourcesApkBuilderTest {
         testDir = temporaryFolder.newFolder();
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
 
-        task = project.getTasks().create("test", InstantRunResourcesApkBuilder.class);
+        task = project.getTasks().create("test", InstantRunResourcesApkBuilderForTest.class);
 
-        when(variantScope.getOutputScope()).thenReturn(outputScope);
         when(variantScope.getFullVariantName()).thenReturn("testVariant");
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
         when(variantScope.getVariantConfiguration()).thenReturn(variantConfiguration);
@@ -105,16 +115,17 @@ public class InstantRunResourcesApkBuilderTest {
         when(variantScope.getIncrementalDir(eq(task.getName()))).thenReturn(incrementalDir);
         outputFolder = temporaryFolder.newFolder("test-output-folder");
         when(variantScope.getInstantRunResourceApkFolder()).thenReturn(outputFolder);
+        when(fileCollection.getAsFileTree()).thenReturn(fileTree);
     }
 
     @After
-    public void tearDown() throws IOException {
+    public void tearDown() {
         task = null;
         project = null;
     }
 
     @Test
-    public void testConfigAction() throws IOException {
+    public void testConfigAction() {
 
         InstantRunResourcesApkBuilder.ConfigAction configAction =
                 new InstantRunResourcesApkBuilder.ConfigAction(
@@ -133,7 +144,7 @@ public class InstantRunResourcesApkBuilderTest {
     }
 
     @Test
-    public void testNoSplitExecution() throws IOException, PackagerException, KeytoolException {
+    public void testNoSplitExecution() {
 
         InstantRunResourcesApkBuilder.ConfigAction configAction =
                 new InstantRunResourcesApkBuilder.ConfigAction(
@@ -146,22 +157,6 @@ public class InstantRunResourcesApkBuilderTest {
         FileTree fileTree = Mockito.mock(FileTree.class);
         when(fileTree.getFiles()).thenReturn(ImmutableSet.of());
         when(fileCollection.getAsFileTree()).thenReturn(fileTree);
-
-        ArgumentCaptor<OutputScope.SplitOutputAction> splitActionCaptor =
-                ArgumentCaptor.forClass(OutputScope.SplitOutputAction.class);
-
-        // invoke per split action with null values.
-        doAnswer(
-                        invocation -> {
-                            splitActionCaptor.getValue().processSplit(null, null);
-                            return null;
-                        })
-                .when(outputScope)
-                .parallelForEachOutput(
-                        eq(ImmutableList.of()),
-                        eq(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
-                        eq(TaskOutputHolder.TaskOutputType.INSTANT_RUN_PACKAGED_RESOURCES),
-                        splitActionCaptor.capture());
 
         task.doFullTaskAction();
 
@@ -192,11 +187,9 @@ public class InstantRunResourcesApkBuilderTest {
 
         configAction.execute(task);
 
-        FileTree fileTree = Mockito.mock(FileTree.class);
         List<ApkData> apkDatas = new ArrayList<>();
         List<File> resourcesFiles = new ArrayList<>();
-        ImmutableSetMultimap.Builder<VariantScope.OutputType, BuildOutput> resources =
-                ImmutableSetMultimap.builder();
+        ImmutableList.Builder<BuildOutput> resources = ImmutableList.builder();
 
         for (int i = 0; i < splitNumber; i++) {
             // invoke per split action with one split.
@@ -206,45 +199,17 @@ public class InstantRunResourcesApkBuilderTest {
             when(apkData.getType()).thenReturn(VariantOutput.OutputType.SPLIT);
 
             File resourcesFile = temporaryFolder.newFile("fake-resources-" + i + ".apk");
-            when(fileCollection.getAsFileTree()).thenReturn(fileTree);
 
             resourcesFiles.add(resourcesFile);
-            resources.put(
-                    TaskOutputHolder.TaskOutputType.PROCESSED_RES,
+            resources.add(
                     new BuildOutput(
                             TaskOutputHolder.TaskOutputType.PROCESSED_RES, apkData, resourcesFile));
         }
+        new BuildElements(resources.build()).save(temporaryFolder.getRoot());
 
         File[] inputFiles = temporaryFolder.getRoot().listFiles();
         assertThat(inputFiles).isNotNull();
         when(fileTree.getFiles()).thenReturn(ImmutableSet.copyOf(inputFiles));
-
-        Files.write(
-                BuildOutputs.persist(
-                        testDir.toPath(),
-                        ImmutableList.of(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
-                        resources.build()),
-                BuildOutputs.getMetadataFile(temporaryFolder.getRoot()),
-                Charsets.UTF_8);
-
-        ArgumentCaptor<OutputScope.SplitOutputAction> splitActionCaptor =
-                ArgumentCaptor.forClass(OutputScope.SplitOutputAction.class);
-
-        doAnswer(
-                        invocation -> {
-                            for (int i = 0; i < splitNumber; i++) {
-                                splitActionCaptor
-                                        .getValue()
-                                        .processSplit(apkDatas.get(i), resourcesFiles.get(i));
-                            }
-                            return null;
-                        })
-                .when(outputScope)
-                .parallelForEachOutput(
-                        any(Collection.class),
-                        eq(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
-                        eq(TaskOutputHolder.TaskOutputType.INSTANT_RUN_PACKAGED_RESOURCES),
-                        splitActionCaptor.capture());
 
         task.doFullTaskAction();
 

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.res
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-import com.android.build.gradle.internal.scope.BuildOutputs
+import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.VariantScope
@@ -95,8 +95,8 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
     @Throws(IOException::class)
     override fun doFullTaskAction() {
-        val manifest = Iterables.getOnlyElement(BuildOutputs.load(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                manifestFiles))
+        val manifest = Iterables.getOnlyElement(
+                ExistingBuildElements.from(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, manifestFiles))
                 .outputFile
 
         val androidAttrSymbol = getAndroidAttrSymbols(platformAttrRTxt.singleFile)
@@ -185,7 +185,6 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
             task.manifestFiles = variantScope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS)
 
             task.inputResourcesDir = variantScope.getOutput(TaskOutputHolder.TaskOutputType.PACKAGED_RES)
-
         }
     }
 }

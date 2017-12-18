@@ -33,8 +33,9 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -59,7 +60,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -105,8 +105,8 @@ public class MergeManifests extends ManifestProcessorTask {
     @Override
     protected void doFullTaskAction() throws IOException {
         // read the output of the compatible screen manifest.
-        Collection<BuildOutput> compatibleScreenManifests =
-                BuildOutputs.load(
+        BuildElements compatibleScreenManifests =
+                ExistingBuildElements.from(
                         VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST,
                         compatibleScreensManifest);
 
@@ -120,14 +120,14 @@ public class MergeManifests extends ManifestProcessorTask {
 
         @Nullable BuildOutput compatibleScreenManifestForSplit;
 
+        ImmutableList.Builder<BuildOutput> mergedManifestOutputs = ImmutableList.builder();
+        ImmutableList.Builder<BuildOutput> irMergedManifestOutputs = ImmutableList.builder();
+
         // FIX ME : multi threading.
+        // TODO : LOAD the APK_LIST FILE .....
         for (ApkData apkData : outputScope.getApkDatas()) {
 
-            compatibleScreenManifestForSplit =
-                    OutputScope.getOutput(
-                            compatibleScreenManifests,
-                            VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST,
-                            apkData);
+            compatibleScreenManifestForSplit = compatibleScreenManifests.element(apkData);
             File manifestOutputFile =
                     FileUtils.join(
                             getManifestOutputDirectory(),
@@ -175,23 +175,22 @@ public class MergeManifests extends ManifestProcessorTask {
                                     mergedXmlDocument.getMinSdkVersion())
                             : ImmutableMap.of();
 
-            outputScope.addOutputForSplit(
-                    VariantScope.TaskOutputType.MERGED_MANIFESTS,
-                    apkData,
-                    manifestOutputFile,
-                    properties);
-            outputScope.addOutputForSplit(
-                    VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
-                    apkData,
-                    instantRunManifestOutputFile,
-                    properties);
+            mergedManifestOutputs.add(
+                    new BuildOutput(
+                            VariantScope.TaskOutputType.MERGED_MANIFESTS,
+                            apkData,
+                            manifestOutputFile,
+                            properties));
+            irMergedManifestOutputs.add(
+                    new BuildOutput(
+                            VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                            apkData,
+                            instantRunManifestOutputFile,
+                            properties));
         }
-        outputScope.save(
-                ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
-                getManifestOutputDirectory());
-        outputScope.save(
-                ImmutableList.of(VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS),
-                getInstantRunManifestOutputDirectory());
+        new BuildElements(mergedManifestOutputs.build()).save(getManifestOutputDirectory());
+        new BuildElements(irMergedManifestOutputs.build())
+                .save(getInstantRunManifestOutputDirectory());
     }
 
     @Nullable
@@ -293,8 +292,9 @@ public class MergeManifests extends ManifestProcessorTask {
             for (ResolvedArtifactResult artifact : featureArtifacts) {
                 File directory = artifact.getFile();
 
-                Collection<BuildOutput> splitOutputs =
-                        BuildOutputs.load(VariantScope.TaskOutputType.MERGED_MANIFESTS, directory);
+                BuildElements splitOutputs =
+                        ExistingBuildElements.from(
+                                VariantScope.TaskOutputType.MERGED_MANIFESTS, directory);
                 if (splitOutputs.isEmpty()) {
                     throw new GradleException("Could not load manifest from " + directory);
                 }

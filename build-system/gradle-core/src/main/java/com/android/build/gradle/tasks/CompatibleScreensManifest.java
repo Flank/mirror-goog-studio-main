@@ -19,7 +19,10 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.FilterData;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -30,18 +33,20 @@ import com.android.ide.common.build.ApkData;
 import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.tooling.BuildException;
 
 /**
  * Task to generate a manifest snippet that just contains a compatible-screens node with the given
@@ -90,19 +95,32 @@ public class CompatibleScreensManifest extends AndroidVariantTask {
 
     @TaskAction
     public void generateAll() throws IOException {
-        // process all outputs.
-        outputScope.parallelForEach(
-                VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST, this::generate);
-        // now write the metadata file.
-        outputScope.save(
-                ImmutableList.of(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST),
-                outputFolder);
+
+        new BuildElements(
+                        outputScope
+                                .getApkDatas()
+                                .stream()
+                                .map(
+                                        apkInfo -> {
+                                            File generatedManifest = generate(apkInfo);
+                                            return generatedManifest != null
+                                                    ? new BuildOutput(
+                                                            VariantScope.TaskOutputType
+                                                                    .COMPATIBLE_SCREEN_MANIFEST,
+                                                            apkInfo,
+                                                            generatedManifest)
+                                                    : null;
+                                        })
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList()))
+                .save(outputFolder);
     }
 
     @Nullable
-    public File generate(ApkData apkData) throws IOException {
-        String density = apkData.getFilter(com.android.build.OutputFile.FilterType.DENSITY);
-        if (density == null) {
+    public File generate(ApkData apkData) {
+        FilterData densityFilter =
+                apkData.getFilter(com.android.build.OutputFile.FilterType.DENSITY);
+        if (densityFilter == null) {
             return null;
         }
 
@@ -119,7 +137,7 @@ public class CompatibleScreensManifest extends AndroidVariantTask {
         content.append("    <compatible-screens>\n");
 
         // convert unsupported values to numbers.
-        density = convert(density, Density.XXHIGH, Density.XXXHIGH);
+        String density = convert(densityFilter.getIdentifier(), Density.XXHIGH, Density.XXXHIGH);
 
         for (String size : getScreenSizes()) {
             content.append(
@@ -136,7 +154,11 @@ public class CompatibleScreensManifest extends AndroidVariantTask {
         FileUtils.mkdirs(splitFolder);
         File manifestFile = new File(splitFolder, SdkConstants.ANDROID_MANIFEST_XML);
 
-        Files.write(content.toString(), manifestFile, Charsets.UTF_8);
+        try {
+            Files.write(content.toString(), manifestFile, Charsets.UTF_8);
+        } catch (IOException e) {
+            throw new BuildException(e.getMessage(), e);
+        }
         return manifestFile;
     }
 

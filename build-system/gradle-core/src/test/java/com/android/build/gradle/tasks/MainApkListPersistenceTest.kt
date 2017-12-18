@@ -18,11 +18,10 @@ package com.android.build.gradle.tasks
 
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
-import com.android.build.gradle.internal.scope.BuildOutputs
+import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
@@ -92,7 +91,7 @@ open class MainApkListPersistenceTest {
         task.fullTaskAction()
 
         // assert persistence.
-        val apkList = BuildOutputs.loadApkList(task.outputFile)
+        val apkList = ExistingBuildElements.loadApkList(task.outputFile)
         assertThat(apkList).hasSize(2)
         assertThat(apkList.asSequence()
                 .filter { apkData -> apkData.type == VariantOutput.OutputType.FULL_SPLIT}
@@ -119,7 +118,7 @@ open class MainApkListPersistenceTest {
         task.fullTaskAction()
 
         // assert persistence.
-        val apkList = BuildOutputs.loadApkList(task.outputFile)
+        val apkList = ExistingBuildElements.loadApkList(task.outputFile)
         assertThat(apkList).hasSize(1)
         assertThat(apkList.asSequence()
                 .filter { apkData -> apkData.type == VariantOutput.OutputType.FULL_SPLIT}

@@ -45,7 +45,6 @@ import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
-import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -168,7 +167,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     @Override
-    public boolean canBuild(String modelName) {
+    public boolean canBuild(@NonNull String modelName) {
         // The default name for a model is the name of the Java interface.
         return modelName.equals(AndroidProject.class.getName())
                 || modelName.equals(GlobalLibraryMap.class.getName())
@@ -176,7 +175,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     @Override
-    public Object buildAll(String modelName, Project project) {
+    public Object buildAll(@NonNull String modelName, @NonNull Project project) {
         if (modelName.equals(AndroidProject.class.getName())) {
             return buildAndroidProject(project);
         }
@@ -608,9 +607,9 @@ public class ModelBuilder implements ToolingModelBuilder {
         SourceProviders sourceProviders = determineSourceProviders(variantData);
 
         // get the outputs
-        BuildOutputSupplier<Collection<BuildOutput>> splitOutputsProxy =
+        BuildOutputSupplier<Collection<EarlySyncBuildOutput>> splitOutputsProxy =
                 getBuildOutputSupplier(variantData);
-        BuildOutputSupplier<Collection<BuildOutput>> manifestsProxy =
+        BuildOutputSupplier<Collection<EarlySyncBuildOutput>> manifestsProxy =
                 getManifestsSupplier(variantData);
 
         CoreNdkOptions ndkConfig = variantData.getVariantConfiguration().getNdkConfig();
@@ -719,7 +718,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 scope.getConnectedTask() == null ? null : scope.getConnectedTask().getName());
     }
 
-    private static BuildOutputSupplier<Collection<BuildOutput>> getBuildOutputSupplier(
+    private static BuildOutputSupplier<Collection<EarlySyncBuildOutput>> getBuildOutputSupplier(
             BaseVariantData variantData) {
         final VariantScope variantScope = variantData.getScope();
 
@@ -737,9 +736,11 @@ public class ModelBuilder implements ToolingModelBuilder {
                         ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
                 return BuildOutputSupplier.of(
                         ImmutableList.of(
-                                new BuildOutput(
+                                new EarlySyncBuildOutput(
                                         VariantScope.TaskOutputType.AAR,
-                                        mainApkInfo,
+                                        mainApkInfo.getType(),
+                                        mainApkInfo.getFilters(),
+                                        mainApkInfo.getVersionCode(),
                                         variantScope
                                                 .getOutput(TaskOutputHolder.TaskOutputType.AAR)
                                                 .getSingleFile())));
@@ -748,7 +749,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                         ImmutableList.of(VariantScope.TaskOutputType.APK),
                         ImmutableList.of(variantScope.getApkLocation()));
             case UNIT_TEST:
-                return (BuildOutputSupplier<Collection<BuildOutput>>)
+                return (BuildOutputSupplier<Collection<EarlySyncBuildOutput>>)
                         () -> {
                             final BaseVariantData testedVariantData =
                                     variantScope.getTestedVariantData();
@@ -771,14 +772,11 @@ public class ModelBuilder implements ToolingModelBuilder {
                                     taskOutputSpec.getOutputType();
 
                             return ImmutableList.of(
-                                    new BuildOutput(
+                                    new EarlySyncBuildOutput(
                                             JAVAC,
-                                            ApkInfo.of(
-                                                    VariantOutput.OutputType.MAIN,
-                                                    ImmutableList.of(),
-                                                    variantData
-                                                            .getVariantConfiguration()
-                                                            .getVersionCode()),
+                                            VariantOutput.OutputType.MAIN,
+                                            ImmutableList.of(),
+                                            variantData.getVariantConfiguration().getVersionCode(),
                                             variantScope
                                                     .getOutput(testedOutputType)
                                                     // We used to call .getSingleFile() but Kotlin projects
@@ -794,7 +792,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         }
     }
 
-    private static BuildOutputSupplier<Collection<BuildOutput>> getManifestsSupplier(
+    private static BuildOutputSupplier<Collection<EarlySyncBuildOutput>> getManifestsSupplier(
             BaseVariantData variantData) {
 
         switch (variantData.getType()) {
@@ -809,9 +807,11 @@ public class ModelBuilder implements ToolingModelBuilder {
                         ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
                 return BuildOutputSupplier.of(
                         ImmutableList.of(
-                                new BuildOutput(
+                                new EarlySyncBuildOutput(
                                         VariantScope.TaskOutputType.MERGED_MANIFESTS,
-                                        mainApkInfo,
+                                        mainApkInfo.getType(),
+                                        mainApkInfo.getFilters(),
+                                        mainApkInfo.getVersionCode(),
                                         new File(
                                                 variantData.getScope().getManifestOutputDirectory(),
                                                 SdkConstants.ANDROID_MANIFEST_XML))));

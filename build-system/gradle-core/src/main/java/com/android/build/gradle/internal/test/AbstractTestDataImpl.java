@@ -21,8 +21,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.VariantConfiguration;
-import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.testing.TestData;
 import com.android.sdklib.AndroidVersion;
@@ -30,7 +30,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import java.io.File;
-import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import org.gradle.api.file.FileCollection;
@@ -137,8 +136,10 @@ public abstract class AbstractTestDataImpl implements TestData {
     @NonNull
     @Override
     public File getTestApk() {
-        Collection<BuildOutput> testApkOutputs =
-                BuildOutputs.load(VariantScope.TaskOutputType.APK, testApkDir);
+
+
+        BuildElements testApkOutputs =
+                ExistingBuildElements.from(VariantScope.TaskOutputType.APK, testApkDir);
         if (testApkOutputs.size() != 1) {
             throw new RuntimeException(
                     "Unexpected number of main APKs, expected 1, got  "

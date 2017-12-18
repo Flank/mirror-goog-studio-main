@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
@@ -87,14 +87,7 @@ public class InstantRunSplitApkBuilderTest {
     File instantRunFolder;
     File aaptTempFolder;
 
-    final ApkInfo apkInfo =
-            ApkInfo.of(
-                    VariantOutput.OutputType.MAIN,
-                    ImmutableList.of(),
-                    12345,
-                    "test_version_name",
-                    true,
-                    null);
+    final ApkInfo apkInfo = ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 12345);
 
     @Before
     public void setup() throws IOException {
@@ -104,7 +97,8 @@ public class InstantRunSplitApkBuilderTest {
         when(mainResources.getAsFileTree()).thenReturn(mainResourcesApkFileTree);
 
         File apkListFile = apkListDirectory.newFile("apk-list.json");
-        FileUtils.write(apkListFile, BuildOutputs.persistApkList(ImmutableList.of(apkInfo)));
+        FileUtils.write(
+                apkListFile, ExistingBuildElements.persistApkList(ImmutableList.of(apkInfo)));
         when(apkList.getSingleFile()).thenReturn(apkListFile);
 
         instantRunFolder = supportDirectory.newFolder("instant-run");
@@ -163,7 +157,6 @@ public class InstantRunSplitApkBuilderTest {
         String androidManifest = Files.toString(folderFiles[0], Charsets.UTF_8);
         assertThat(androidManifest).contains("package=\"com.foo.test\"");
         assertThat(androidManifest).contains("android:versionCode=\"12345\"");
-        assertThat(androidManifest).contains("android:versionName=\"test_version_name\"");
         assertThat(androidManifest).contains("split=\"lib_folderName_apk\"");
     }
 
@@ -229,10 +222,9 @@ public class InstantRunSplitApkBuilderTest {
     public void testNoVersionGeneration() throws Exception {
 
         File apkListFile = apkListDirectory.newFile("apk-list2.json");
-        ApkInfo apkInfo =
-                ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), -1, "-1", true, null);
+        ApkInfo apkInfo = ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), -1);
 
-        FileUtils.write(apkListFile, BuildOutputs.persistApkList(ImmutableList.of()));
+        FileUtils.write(apkListFile, ExistingBuildElements.persistApkList(ImmutableList.of()));
         when(apkList.getSingleFile()).thenReturn(apkListFile);
 
         InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder =

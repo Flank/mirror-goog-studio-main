@@ -99,8 +99,8 @@ import com.android.build.gradle.internal.res.GenerateLibraryRFileTask;
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
-import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -199,7 +199,6 @@ import com.android.build.gradle.tasks.SplitsDiscovery;
 import com.android.build.gradle.tasks.factory.AndroidUnitTest;
 import com.android.build.gradle.tasks.factory.JavaCompileConfigAction;
 import com.android.build.gradle.tasks.factory.ProcessJavaResConfigAction;
-import com.android.build.gradle.tasks.factory.TestServerTaskConfigAction;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DesugarProcessArgs;
@@ -777,7 +776,7 @@ public abstract class TaskManager {
 
         variantScope.addTaskOutput(
                 TaskOutputHolder.TaskOutputType.MANIFEST_METADATA,
-                BuildOutputs.getMetadataFile(variantScope.getManifestOutputDirectory()),
+                ExistingBuildElements.getMetadataFile(variantScope.getManifestOutputDirectory()),
                 processManifestTask.getName());
 
         // TODO: use FileCollection
@@ -2200,7 +2199,9 @@ public abstract class TaskManager {
         List<TestServer> servers = extension.getTestServers();
         for (final TestServer testServer : servers) {
             final TestServerTask serverTask =
-                    taskFactory.create(new TestServerTaskConfigAction(variantScope, testServer));
+                    taskFactory.create(
+                            new TestServerTask.TestServerTaskConfigAction(
+                                    variantScope, testServer));
             serverTask.dependsOn(variantScope.getAssembleTask());
 
             taskFactory.configure(

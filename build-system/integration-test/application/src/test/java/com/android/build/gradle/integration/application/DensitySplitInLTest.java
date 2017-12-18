@@ -1,6 +1,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertWithMessage;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
@@ -98,7 +99,8 @@ public class DensitySplitInLTest {
                             String key = output.getOutputType() + filter;
                             Long initialApkModifiedTime = lastModifiedTimePerDensity.get(key);
                             assertThat(initialApkModifiedTime).isNotNull();
-                            assertThat(initialApkModifiedTime)
+                            assertWithMessage("output has changed " + output.getOutputFile())
+                                    .that(initialApkModifiedTime)
                                     .isEqualTo(output.getOutputFile().lastModified());
                         }
                     }

@@ -22,7 +22,7 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.VariantConfiguration;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -110,7 +110,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
         // FIX ME : there has to be a better way...
         Collection<OutputFile> splitOutputs =
                 ImmutableList.copyOf(
-                        BuildOutputs.load(
+                        ExistingBuildElements.from(
                                 VariantScope.TaskOutputType.APK,
                                 testedVariantData
                                         .getScope()

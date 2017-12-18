@@ -20,18 +20,17 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.ide.common.build.ApkInfo;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /** Supplier of {@link BuildOutput} for built artifacts. */
-public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<BuildOutput>> {
+public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<EarlySyncBuildOutput>> {
 
     @NonNull private final List<File> outputFolders;
     @NonNull private final List<VariantScope.OutputType> outputTypes;
@@ -44,14 +43,21 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Buil
 
     @Override
     @NonNull
-    public Collection<BuildOutput> get() {
-        ImmutableList.Builder<BuildOutput> outputs = ImmutableList.builder();
+    public Collection<EarlySyncBuildOutput> get() {
+        ImmutableList.Builder<EarlySyncBuildOutput> outputs = ImmutableList.builder();
         outputFolders.forEach(
                 outputFolder -> {
                     if (!outputFolder.exists()) {
                         return;
                     }
-                    Collection<BuildOutput> previous = BuildOutputs.load(outputTypes, outputFolder);
+                    Collection<EarlySyncBuildOutput> previous =
+                            EarlySyncBuildOutput.load(outputFolder)
+                                    .stream()
+                                    .filter(
+                                            buildOutput ->
+                                                    outputTypes.contains(buildOutput.getType()))
+                                    .collect(Collectors.toList());
+
                     if (previous.isEmpty()) {
                         outputTypes.forEach(
                                 taskOutputType -> {
@@ -80,21 +86,17 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Buil
     }
 
     private static void processFile(
-            VariantScope.OutputType taskOutputType,
+            TaskOutputHolder.OutputType taskOutputType,
             File file,
-            ImmutableList.Builder<BuildOutput> outputs) {
+            ImmutableList.Builder<EarlySyncBuildOutput> outputs) {
         if (taskOutputType == TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS) {
             if (file.getName().equals(SdkConstants.ANDROID_MANIFEST_XML)) {
                 outputs.add(
-                        new BuildOutput(
+                        new EarlySyncBuildOutput(
                                 taskOutputType,
-                                ApkInfo.of(
-                                        VariantOutput.OutputType.MAIN,
-                                        ImmutableList.of(),
-                                        0,
-                                        null,
-                                        true,
-                                        null),
+                                VariantOutput.OutputType.MAIN,
+                                ImmutableList.of(),
+                                0,
                                 file));
             }
         } else {
@@ -104,10 +106,8 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Buil
                             ? VariantOutput.OutputType.MAIN
                             : VariantOutput.OutputType.SPLIT;
             outputs.add(
-                    new BuildOutput(
-                            taskOutputType,
-                            ApkInfo.of(fileOutputType, ImmutableList.of(), 0, null, true, null),
-                            file));
+                    new EarlySyncBuildOutput(
+                            taskOutputType, fileOutputType, ImmutableList.of(), 0, file));
         }
     }
 

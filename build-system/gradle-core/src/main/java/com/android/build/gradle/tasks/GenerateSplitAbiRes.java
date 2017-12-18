@@ -32,6 +32,8 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
+import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -49,6 +51,7 @@ import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
+import com.google.common.collect.ImmutableList;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -152,7 +155,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     @TaskAction
     protected void doFullTaskAction() throws IOException, InterruptedException, ProcessException {
 
-        outputScope.deleteAllEntries(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES);
+        ImmutableList.Builder<BuildOutput> buildOutputs = ImmutableList.builder();
         for (String split : getSplits()) {
             File resPackageFile = getOutputFileForSplit(split);
 
@@ -199,13 +202,14 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                 getBuilder().processResources(aapt, aaptConfig);
             }
 
-            outputScope.addOutputForSplit(
-                    VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES,
-                    abiApkData,
-                    resPackageFile);
+            buildOutputs.add(
+                    new BuildOutput(
+                            VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES,
+                            abiApkData,
+                            resPackageFile));
         }
 
-        outputScope.save(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, outputDirectory);
+        new BuildElements(buildOutputs.build()).save(outputDirectory);
     }
 
     @VisibleForTesting

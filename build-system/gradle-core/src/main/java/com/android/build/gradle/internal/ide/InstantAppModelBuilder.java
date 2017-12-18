@@ -94,14 +94,14 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
     }
 
     @Override
-    public boolean canBuild(String modelName) {
+    public boolean canBuild(@NonNull String modelName) {
         // FIXME: We should not return an AndroidProject here.
         return modelName.equals(AndroidProject.class.getName())
                 || modelName.equals(InstantAppProjectBuildOutput.class.getName());
     }
 
     @Override
-    public Object buildAll(String modelName, Project project) {
+    public Object buildAll(@NonNull String modelName, @NonNull Project project) {
         if (modelName.equals(AndroidProject.class.getName())) {
             return buildAndroidProject(project);
         }
@@ -278,16 +278,15 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                         new InstantRunImpl(
                                 BuildInfoWriterTask.ConfigAction.getBuildInfoFile(variantScope),
                                 variantConfiguration.getInstantRunSupportStatus()),
-                        (BuildOutputSupplier<Collection<BuildOutput>>)
+                        (BuildOutputSupplier<Collection<EarlySyncBuildOutput>>)
                                 () ->
                                         ImmutableList.of(
-                                                new BuildOutput(
+                                                new EarlySyncBuildOutput(
                                                         TaskOutputHolder.TaskOutputType
                                                                 .INSTANTAPP_BUNDLE,
-                                                        ApkInfo.of(
-                                                                OutputFile.OutputType.MAIN,
-                                                                ImmutableList.of(),
-                                                                -1),
+                                                        OutputFile.OutputType.MAIN,
+                                                        ImmutableList.of(),
+                                                        -1,
                                                         new File(
                                                                 outputLocation,
                                                                 baseName + SdkConstants.DOT_ZIP))),

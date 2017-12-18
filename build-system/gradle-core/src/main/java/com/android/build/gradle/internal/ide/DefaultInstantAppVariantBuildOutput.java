@@ -21,8 +21,8 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.builder.model.InstantAppVariantBuildOutput;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 /** Default implementation of the {@link InstantAppVariantBuildOutput}. */
 public class DefaultInstantAppVariantBuildOutput
@@ -31,13 +31,13 @@ public class DefaultInstantAppVariantBuildOutput
     @NonNull private final String name;
     @NonNull private final String applicationId;
     @NonNull private final BuildOutput buildOutput;
-    @NonNull private final Collection<BuildOutput> featureOutputs;
+    @NonNull private final Collection<EarlySyncBuildOutput> featureOutputs;
 
     public DefaultInstantAppVariantBuildOutput(
             @NonNull String name,
             @NonNull String applicationId,
             @NonNull BuildOutput buildOutputSupplier,
-            @NonNull Collection<BuildOutput> featureOutputsSupplier) {
+            @NonNull Collection<EarlySyncBuildOutput> featureOutputsSupplier) {
         this.name = name;
         this.applicationId = applicationId;
         this.buildOutput = buildOutputSupplier;
@@ -65,6 +65,6 @@ public class DefaultInstantAppVariantBuildOutput
     @NonNull
     @Override
     public Collection<OutputFile> getFeatureOutputs() {
-        return featureOutputs.stream().collect(Collectors.toList());
+        return new ArrayList<>(featureOutputs);
     }
 }

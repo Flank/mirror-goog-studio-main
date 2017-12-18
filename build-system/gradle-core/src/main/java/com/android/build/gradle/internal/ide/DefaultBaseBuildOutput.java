@@ -18,20 +18,19 @@ package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
-import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.builder.model.BaseBuildOutput;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 /** Default implementation of the variant output minimal model. */
 public abstract class DefaultBaseBuildOutput implements BaseBuildOutput, Serializable {
 
     @NonNull private final String name;
-    @NonNull private final Collection<BuildOutput> buildOutputs;
+    @NonNull private final Collection<EarlySyncBuildOutput> buildOutputs;
 
     public DefaultBaseBuildOutput(
-            @NonNull String name, @NonNull Collection<BuildOutput> buildOutputSupplier) {
+            @NonNull String name, @NonNull Collection<EarlySyncBuildOutput> buildOutputSupplier) {
         this.name = name;
         this.buildOutputs = buildOutputSupplier;
     }
@@ -45,6 +44,6 @@ public abstract class DefaultBaseBuildOutput implements BaseBuildOutput, Seriali
     @NonNull
     @Override
     public Collection<OutputFile> getOutputs() {
-        return buildOutputs.stream().collect(Collectors.toList());
+        return new ArrayList<>(buildOutputs);
     }
 }
