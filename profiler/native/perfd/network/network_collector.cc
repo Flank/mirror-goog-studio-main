@@ -78,8 +78,7 @@ void NetworkCollector::StoreDataToBuffer() {
     auto &buffer = it->second;
     for (auto &sampler : samplers_) {
       auto response = sampler->Sample(uid);
-      response.mutable_basic_info()->set_process_id(buffer->id());
-      response.mutable_basic_info()->set_end_timestamp(time);
+      response.set_end_timestamp(time);
       buffer->Add(response, time);
     }
   }

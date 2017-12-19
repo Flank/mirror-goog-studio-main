@@ -21,12 +21,13 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.tools.profiler.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
+
+import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpConnectionData;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsResponse;
-import com.android.tools.profiler.proto.Profiler;
-import com.android.tools.profiler.proto.Profiler.BytesRequest;
+import com.android.tools.profiler.proto.Profiler.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,6 +51,7 @@ public class OkHttpTest {
     private PerfDriver myPerfDriver;
     private FakeAndroidDriver myAndroidDriver;
     private GrpcUtils myGrpc;
+    private Session mySession;
 
     public OkHttpTest(boolean isOPlusDevice) {
         myIsOPlusDevice = isOPlusDevice;
@@ -61,6 +63,16 @@ public class OkHttpTest {
         myPerfDriver.start(ACTIVITY_CLASS);
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();
+
+        // Invoke beginSession to establish a session we can use to query data
+        BeginSessionResponse response =
+                myGrpc.getProfilerStub()
+                        .beginSession(
+                                BeginSessionRequest.newBuilder()
+                                        .setDeviceId(1234)
+                                        .setProcessId(myGrpc.getProcessId())
+                                        .build());
+        mySession = response.getSession();
     }
 
     @Test
@@ -71,7 +83,7 @@ public class OkHttpTest {
 
         final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(myGrpc.getProcessId());
+                stubWrapper.getAllHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -85,7 +97,7 @@ public class OkHttpTest {
 
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
-        Profiler.BytesResponse bytesResponse =
+        BytesResponse bytesResponse =
                 myGrpc.getProfilerStub()
                         .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
         assertThat(bytesResponse.getContents().toStringUtf8().contains(okHttp3Get)).isTrue();
@@ -99,7 +111,7 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(myGrpc.getProcessId());
+                stubWrapper.getAllHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -109,7 +121,7 @@ public class OkHttpTest {
 
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
-        Profiler.BytesResponse bytesResponse =
+        BytesResponse bytesResponse =
                 myGrpc.getProfilerStub()
                         .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
         assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("OkHttp3 request body");
@@ -123,7 +135,7 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(myGrpc.getProcessId());
+                stubWrapper.getAllHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -137,7 +149,7 @@ public class OkHttpTest {
 
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
-        Profiler.BytesResponse bytesResponse =
+        BytesResponse bytesResponse =
                 myGrpc.getProfilerStub()
                         .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
         assertThat(bytesResponse.getContents().toStringUtf8().contains(okHttp2Get)).isTrue();
@@ -151,7 +163,7 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(myGrpc.getProcessId());
+                stubWrapper.getAllHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -161,7 +173,7 @@ public class OkHttpTest {
 
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
-        Profiler.BytesResponse bytesResponse =
+        BytesResponse bytesResponse =
                 myGrpc.getProfilerStub()
                         .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
         assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("OkHttp2 request body");
@@ -175,7 +187,7 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(myGrpc.getProcessId());
+                stubWrapper.getAllHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(2);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -197,7 +209,7 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(myGrpc.getProcessId());
+                stubWrapper.getAllHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(2);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -236,12 +248,12 @@ public class OkHttpTest {
         stubWrapper.waitFor(
                 () -> {
                     List<HttpConnectionData> list =
-                            stubWrapper.getAllHttpRange(myGrpc.getProcessId()).getDataList();
+                            stubWrapper.getAllHttpRange(mySession).getDataList();
                     return list.size() == 2
                             && list.stream().allMatch(item -> (item.getEndTimestamp() > 0));
                 });
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(myGrpc.getProcessId());
+                stubWrapper.getAllHttpRange(mySession);
 
         // The first request should have no response fields after being aborted
         HttpConnectionData connectionAborted = httpRangeResponse.getDataList().get(0);

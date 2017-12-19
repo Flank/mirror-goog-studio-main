@@ -66,7 +66,7 @@ class NetworkCollector final {
   // when profiling for an app starts, and the buffer is removed when
   // its profiling stops. A buffer holds all of data including traffic bytes,
   // open connections, and device-wide radio power status.
-  std::unordered_map<uint32_t, NetworkProfilerBuffer*> uid_to_buffers_;
+  std::unordered_map<uint32_t, NetworkProfilerBuffer *> uid_to_buffers_;
   mutable std::mutex buffer_mutex_;
 };
 
