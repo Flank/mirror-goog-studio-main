@@ -18,9 +18,8 @@ import java.awt.Color
 /**
  * Represents override information for VectorDrawable's XML file content.
  */
-class VdOverrideInfo(var width: Int, var height: Int,
-        @Suppress("MemberVisibilityCanPrivate") var tint: Color?,
-        var alpha: Float, var autoMirrored: Boolean) {
+class VdOverrideInfo(var width: Int, var height: Int, var tint: Color?, var alpha: Float,
+        var autoMirrored: Boolean) {
     /** Checks if the width needs to be overridden. */
     fun needsOverrideWidth(): Boolean {
         return width > 0
