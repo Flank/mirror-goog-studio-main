@@ -17,6 +17,7 @@
 package com.android.ddmlib.logcat;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ddmlib.Log.LogLevel;
 
 /**
@@ -79,6 +80,36 @@ public final class LogCatHeader {
     @NonNull
     public LogCatTimestamp getTimestamp() {
         return mTimestamp;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object object) {
+        if (!(object instanceof LogCatHeader)) {
+            return false;
+        }
+
+        LogCatHeader header = (LogCatHeader) object;
+
+        return mLogLevel.equals(header.mLogLevel)
+                && mPid == header.mPid
+                && mTid == header.mTid
+                && mAppName.equals(header.mAppName)
+                && mTag.equals(header.mTag)
+                && mTimestamp.equals(header.mTimestamp);
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 17;
+
+        hashCode = 31 * hashCode + mLogLevel.hashCode();
+        hashCode = 31 * hashCode + mPid;
+        hashCode = 31 * hashCode + mTid;
+        hashCode = 31 * hashCode + mAppName.hashCode();
+        hashCode = 31 * hashCode + mTag.hashCode();
+        hashCode = 31 * hashCode + mTimestamp.hashCode();
+
+        return hashCode;
     }
 
     @Override
