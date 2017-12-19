@@ -1541,8 +1541,15 @@ public abstract class TaskManager {
         // TODO do we support non compiled shaders in aars?
         //mergeShadersTask.dependsOn( scope.getVariantData().prepareDependenciesTask);
 
+        File outputDir = scope.getGeneratedAssetsDir("shaders");
+
         // compile the shaders
-        ShaderCompile shaderCompileTask = taskFactory.create(new ShaderCompile.ConfigAction(scope));
+        ShaderCompile shaderCompileTask =
+                taskFactory.create(new ShaderCompile.ConfigAction(scope, outputDir));
+        scope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.SHADER_ASSETS,
+                outputDir,
+                shaderCompileTask.getName());
         shaderCompileTask.dependsOn(mergeShadersTask);
 
         scope.getAssetGenTask().dependsOn(shaderCompileTask);
@@ -1897,6 +1904,9 @@ public abstract class TaskManager {
         // Add a task to merge the resource folders
         createMergeResourcesTask(variantScope, true);
 
+        // Add tasks to compile shader
+        createShaderTask(variantScope);
+
         // Add a task to merge the assets folders
         createMergeAssetsTask(variantScope);
 
@@ -1910,8 +1920,6 @@ public abstract class TaskManager {
         createProcessJavaResTask(variantScope);
 
         createAidlTask(variantScope);
-
-        createShaderTask(variantScope);
 
         // Add NDK tasks
         if (!isComponentModelPlugin()) {

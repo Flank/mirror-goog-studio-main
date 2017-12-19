@@ -231,6 +231,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getBuildConfigSourceOutputDir();
 
     @NonNull
+    File getGeneratedAssetsDir(@NonNull String name);
+
+    @NonNull
     File getGeneratedResOutputDir();
 
     @NonNull
@@ -253,9 +256,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getAidlSourceOutputDir();
-
-    @NonNull
-    File getShadersOutputDir();
 
     @NonNull
     File getPackagedAidlDir();

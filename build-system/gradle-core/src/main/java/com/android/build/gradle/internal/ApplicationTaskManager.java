@@ -141,6 +141,14 @@ public class ApplicationTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 (Recorder.VoidBlock) () -> createMergeResourcesTask(variantScope, true));
 
+        // Add tasks to compile shader
+        recorder.record(
+                ExecutionType.APP_TASK_MANAGER_CREATE_SHADER_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
+                () -> createShaderTask(variantScope));
+
+
         // Add a task to merge the asset folders
         recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
@@ -174,12 +182,6 @@ public class ApplicationTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> createAidlTask(variantScope));
-
-        recorder.record(
-                ExecutionType.APP_TASK_MANAGER_CREATE_SHADER_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createShaderTask(variantScope));
 
         // Add NDK tasks
         if (!isComponentModelPlugin()) {

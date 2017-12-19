@@ -174,6 +174,11 @@ public class ShaderProcessor implements DirectoryWalker.FileAction {
 
         if (mExecutor != null) {
             mExecutor.execute(c);
+            try {
+                mExecutor.waitForAllTasks();
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
         } else {
             try {
                 c.call();

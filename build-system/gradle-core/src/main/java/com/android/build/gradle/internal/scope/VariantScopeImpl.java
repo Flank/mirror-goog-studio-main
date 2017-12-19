@@ -1339,7 +1339,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @NonNull
-    private File getGeneratedAssetsDir(String name) {
+    @Override
+    public File getGeneratedAssetsDir(@NonNull String name) {
         return FileUtils.join(
                 globalScope.getGeneratedDir(),
                 StringHelper.toStrings(
@@ -1375,12 +1376,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         "rs",
                         getDirectorySegments(),
                         "obj"));
-    }
-
-    @NonNull
-    @Override
-    public File getShadersOutputDir() {
-        return getGeneratedAssetsDir("shaders");
     }
 
     @Override
