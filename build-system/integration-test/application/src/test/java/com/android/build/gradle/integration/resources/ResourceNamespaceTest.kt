@@ -20,7 +20,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.apk.Dex
 import org.junit.Rule
 import org.junit.Test
@@ -42,8 +41,18 @@ import org.objectweb.asm.Opcodes
  */
 class ResourceNamespaceTest {
 
+    /**
+     * This test depends on AAPT2 features that are not released yet.
+     * There is a version of the build tools checked in from the build server,
+     * with the version in package.xml set to the build number it was taken from.
+     */
+    private val buildScriptContent = """
+        android.aaptOptions.namespaced = true
+        android.buildToolsVersion = '4509860'
+    """
+
     private val lib = MinimalSubProject.lib("com.example.lib")
-            .appendToBuild("android.aaptOptions.namespaced = true")
+            .appendToBuild(buildScriptContent)
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources><string name="libString">Lib1 string</string></resources>""")
@@ -66,11 +75,7 @@ class ResourceNamespaceTest {
                     </vector>""")
 
     private val baseFeature = MinimalSubProject.feature("com.example.baseFeature")
-            .appendToBuild(
-                    """android {
-                        aaptOptions.namespaced = true
-                        baseFeature true
-                    }""")
+            .appendToBuild(buildScriptContent + "\nandroid.baseFeature true")
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources>
@@ -87,7 +92,7 @@ class ResourceNamespaceTest {
                     """)
 
     private val feature2 = MinimalSubProject.feature("com.example.otherFeature")
-            .appendToBuild("android.aaptOptions.namespaced = true")
+            .appendToBuild(buildScriptContent)
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources>
@@ -104,7 +109,7 @@ class ResourceNamespaceTest {
                     """)
 
     val app = MinimalSubProject.app("com.example.app")
-            .appendToBuild("android.aaptOptions.namespaced = true")
+            .appendToBuild(buildScriptContent)
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources>
@@ -174,8 +179,6 @@ class ResourceNamespaceTest {
     @Test
     fun smokeTest() {
         project.executor()
-                .with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true)
-                .with(BooleanOption.ENABLE_DAEMON_MODE_AAPT2, false)
                 .run(
                     ":lib:assembleDebug",
                     ":lib:assembleDebugAndroidTest",

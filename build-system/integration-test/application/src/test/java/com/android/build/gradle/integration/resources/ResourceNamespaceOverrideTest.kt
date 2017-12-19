@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.resources
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import com.android.build.gradle.options.BooleanOption
 import org.junit.Rule
 import org.junit.Test
 
@@ -75,8 +74,6 @@ class ResourceNamespaceOverrideTest {
     @Test
     fun smokeTest() {
         project.executor()
-                .with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true)
-                .with(BooleanOption.ENABLE_DAEMON_MODE_AAPT2, false)
                 .run(":assembleFreePlayDebug")
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG, "free", "play")
         assertThat(apk).exists()

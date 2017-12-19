@@ -5,15 +5,6 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 fileset(
     name = "resources",
     srcs = glob(["src/main/resources/**"]) + [
-        # TODO: figure out how to include all resources from aaptjlib automatically.
-        "//prebuilts/tools/common/aapt/jni:linux64/libaapt2_jni.so",
-        "//prebuilts/tools/common/aapt/jni:linux64/libc++.so",
-        "//prebuilts/tools/common/aapt/jni:mac64/libaapt2_jni.dylib",
-        "//prebuilts/tools/common/aapt/jni:mac64/libc++.dylib",
-        "//prebuilts/tools/common/aapt/jni:win32/libaapt2_jni.dll",
-        "//prebuilts/tools/common/aapt/jni:win64/libaapt2_jni.dll",
-        "//prebuilts/tools/common/aapt/jni:win32/libwinpthread-1.dll",
-        "//prebuilts/tools/common/aapt/jni:win64/libwinpthread-1.dll",
         "//tools/external/desugar:desugar_deploy.jar",
         "//tools/external/desugar/java/com/google/devtools/build/android/desugar/runtime:libthrowable_extension.jar",
     ],
@@ -32,7 +23,6 @@ kotlin_library(
     bundled_deps = [
         "//tools/base/apkzlib",
         "//tools/base/build-system/profile",
-        "//tools/base/aaptjlib",
         "//tools/dx/dalvik/dx",
         "//prebuilts/r8:d8-master",
     ],

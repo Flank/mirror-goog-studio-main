@@ -39,6 +39,7 @@ TEST_DEPS = [
 TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects",
     "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
+    "//prebuilts/studio/sdk:build-tools/future",
     "//prebuilts/studio/sdk:build-tools/latest",
     "//prebuilts/studio/sdk:cmake",
     "//prebuilts/studio/sdk:constraint-layout_latest",

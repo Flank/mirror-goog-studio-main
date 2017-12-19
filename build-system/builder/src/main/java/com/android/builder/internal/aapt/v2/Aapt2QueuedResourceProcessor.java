@@ -29,7 +29,6 @@ import com.android.ide.common.internal.ResourceCompilationException;
 import com.android.ide.common.internal.ResourceProcessor;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
-import com.android.tools.aapt2.Aapt2RenamingConventions;
 import com.android.utils.ILogger;
 import com.google.common.base.MoreObjects;
 import com.google.common.util.concurrent.ListenableFuture;

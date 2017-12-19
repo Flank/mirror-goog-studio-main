@@ -126,7 +126,7 @@ open class CompileSourceSetResources
     private fun willCompile(file: File) = !file.name.startsWith(".") && !file.isDirectory
 
     private fun makeAapt(): Aapt = AaptGradleFactory.make(
-            AaptGeneration.AAPT_V2_JNI,
+            AaptGeneration.AAPT_V2_DAEMON_MODE,
             builder,
             null,
             null,

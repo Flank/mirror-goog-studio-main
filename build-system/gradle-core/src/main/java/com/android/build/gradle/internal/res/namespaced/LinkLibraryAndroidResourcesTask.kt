@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildOutputs
 import com.android.build.gradle.internal.scope.TaskConfigAction
@@ -25,9 +26,7 @@ import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.builder.internal.aapt.v2.AaptV2Jni
-import com.android.builder.utils.FileCache
-import com.android.ide.common.internal.WaitableExecutor
+import com.android.builder.internal.aapt.v2.QueueableAapt2
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.utils.FileUtils
 import com.google.common.base.Suppliers
@@ -67,16 +66,17 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
     @get:OutputFile lateinit var rDotTxt: File private set
     @get:OutputFile lateinit var staticLibApk: File private set
 
-    @get:Internal var fileCache: FileCache? = null; private set
-
     @TaskAction
     fun taskAction() {
 
-        val aapt = AaptV2Jni(
-                aaptIntermediateDir,
-                WaitableExecutor.useDirectExecutor(),
-                LoggedProcessOutputHandler(iLogger),
-                fileCache)
+        val aapt =
+                QueueableAapt2(
+                        LoggedProcessOutputHandler(iLogger),
+                        builder.targetInfo!!.buildTools,
+                        aaptIntermediateDir,
+                        AaptGradleFactory.FilteringLogger(builder.logger),
+                        0 /* use default */)
+
 
         val imports = ImmutableList.builder<File>()
         // Link against library dependencies
@@ -163,7 +163,6 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
             task.rClassSource = rClassSource
             task.staticLibApk = staticLibApk
             task.setAndroidBuilder(scope.globalScope.androidBuilder)
-            task.fileCache = scope.globalScope.buildCache
             task.packageForRSupplier = Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
             task.rDotTxt = rDotTxt
         }
