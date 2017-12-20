@@ -48,7 +48,7 @@ Status SendSystemEvent(InternalEventService::Stub& stub, ClientContext& ctx,
                        long jdownTime) {
   event->set_start_timestamp(timestamp);
   event->set_end_timestamp(0);
-  event->set_process_id(pid);
+  event->set_pid(pid);
   event->set_event_id(jdownTime);
 
   EmptyEventResponse response;
@@ -76,7 +76,7 @@ void EnqueueActivityDataEvent(JNIEnv* env, const jstring& name,
   int32_t pid = getpid();
   ActivityData activity;
   activity.set_name(activity_name.get());
-  activity.set_process_id(pid);
+  activity.set_pid(pid);
   activity.set_hash(hash ^ pid);
   if (fragment != nullptr) {
     activity.mutable_fragment_data()->set_activity_context_hash(
