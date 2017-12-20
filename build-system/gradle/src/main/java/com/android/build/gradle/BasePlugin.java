@@ -349,6 +349,18 @@ public abstract class BasePlugin<E extends BaseExtension2>
         dataBindingBuilder.setPrintMachineReadableOutput(
                 SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
+        // b/67675308
+        if (!projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
+            androidBuilder
+                    .getIssueReporter()
+                    .reportWarning(
+                            Type.GENERIC,
+                            String.format(
+                                    "AAPT is deprecated and support for it will be soon removed. "
+                                            + "Remove the '%s=false' flag to enable AAPT2.",
+                                    BooleanOption.ENABLE_AAPT2.getPropertyName()));
+        }
+
         // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);
 
