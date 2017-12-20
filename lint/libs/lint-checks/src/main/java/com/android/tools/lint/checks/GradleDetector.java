@@ -1378,7 +1378,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 return null;
             }
         } catch (IOException e) {
-            client.log(e, "Could not connect to maven central to look up the latest " +
+            client.log(null, "Could not connect to maven central to look up the latest " +
                     "available version for %1$s", dependency);
             return null;
         }
