@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public class BaseConfigStub extends BaseStub implements BaseConfig {
@@ -40,16 +41,11 @@ public class BaseConfigStub extends BaseStub implements BaseConfig {
     @Nullable private final File myMultiDexKeepProguard;
 
     public BaseConfigStub() {
-        this("name");
-    }
-
-    public BaseConfigStub(@NonNull String name) {
         this(
-                name,
-                ImmutableMap.of(
-                        "buildConfigField",
-                        new ClassFieldStub("buildConfigField", "type", "value")),
-                ImmutableMap.of("resValue", new ClassFieldStub("resValue", "type", "value")),
+                "name",
+                ImmutableMap.of("buildConfigField", new ClassFieldStub()),
+                ImmutableMap.of("resValue", new ClassFieldStub()),
+                ImmutableMap.of("flavorSelection", "value"),
                 Lists.newArrayList(new File("proguardFile")),
                 Lists.newArrayList(new File("consumerProguardFile")),
                 Lists.newArrayList(new File("testProguardFile")),
@@ -65,6 +61,7 @@ public class BaseConfigStub extends BaseStub implements BaseConfig {
             @NonNull String name,
             @NonNull Map<String, ClassField> buildConfigFields,
             @NonNull Map<String, ClassField> resValues,
+            @NonNull Map<String, String> flavorSelections,
             @NonNull Collection<File> proguardFiles,
             @NonNull Collection<File> consumerProguardFiles,
             @NonNull Collection<File> testProguardFiles,

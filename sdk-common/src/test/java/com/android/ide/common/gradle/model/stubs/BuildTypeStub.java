@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.gradle.model.stubs;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.SigningConfig;
@@ -31,22 +30,16 @@ public final class BuildTypeStub extends BaseConfigStub implements BuildType {
     private final boolean myZipAlignEnabled;
 
     public BuildTypeStub() {
-        this("name");
-    }
-
-    public BuildTypeStub(@NonNull String name) {
-        this(name, true, true, true, 1, true, true);
+        this(true, true, true, 1, true, true);
     }
 
     public BuildTypeStub(
-            @NonNull String name,
             boolean debuggable,
             boolean jniDebuggable,
             boolean renderscriptDebuggable,
             int level,
             boolean minifyEnabled,
             boolean zipAlignEnabled) {
-        super(name);
         myDebuggable = debuggable;
         myJniDebuggable = jniDebuggable;
         myRenderscriptDebuggable = renderscriptDebuggable;

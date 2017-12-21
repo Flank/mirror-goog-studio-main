@@ -20,7 +20,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidBundle;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.MavenCoordinates;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
@@ -38,19 +37,19 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
     @Nullable private final String myProjectVariant;
 
     public AndroidBundleStub() {
-        myBundle = new File("bundle");
-        myFolder = new File("folder");
-        myLibraryDependencies = Lists.newArrayList();
-        myJavaDependencies = Lists.newArrayList(new JavaLibraryStub());
-        myManifest = new File("manifest");
-        myJarFile = new File("jarFile");
-        myResFolder = new File("resFolder");
-        myAssetsFolder = new File("assetsFolder");
-        myProjectVariant = "variant";
+        this(
+                new File("bundle"),
+                new File("folder"),
+                Lists.newArrayList(),
+                Lists.newArrayList(new JavaLibraryStub()),
+                new File("manifest"),
+                new File("jarFile"),
+                new File("resFolder"),
+                new File("assetsFolder"),
+                "variant");
     }
 
     public AndroidBundleStub(
-            @NonNull MavenCoordinates coordinates,
             @NonNull File bundle,
             @NonNull File folder,
             @NonNull List<AndroidLibrary> dependencies,
@@ -59,11 +58,7 @@ public class AndroidBundleStub extends LibraryStub implements AndroidBundle {
             @NonNull File jarFile,
             @NonNull File resFolder,
             @NonNull File assetsFolder,
-            @Nullable String project,
-            @Nullable String name,
-            @Nullable String variant,
-            boolean provided) {
-        super(coordinates, project, name, provided);
+            @Nullable String variant) {
         myBundle = bundle;
         myFolder = folder;
         myLibraryDependencies = dependencies;

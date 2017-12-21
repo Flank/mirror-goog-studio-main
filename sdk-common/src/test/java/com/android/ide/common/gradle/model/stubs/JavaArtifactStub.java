@@ -15,19 +15,13 @@
  */
 package com.android.ide.common.gradle.model.stubs;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaArtifact;
-import com.android.builder.model.SourceProvider;
-import com.android.builder.model.level2.DependencyGraphs;
 import java.io.File;
-import java.util.Collection;
 import java.util.Objects;
-import java.util.Set;
 
-public class JavaArtifactStub extends BaseArtifactStub implements JavaArtifact {
-    @Nullable private File myMockablePlatformJar;
+public final class JavaArtifactStub extends BaseArtifactStub implements JavaArtifact {
+    @Nullable private final File myMockablePlatformJar;
 
     public JavaArtifactStub() {
         this(new File("jar"));
@@ -37,46 +31,10 @@ public class JavaArtifactStub extends BaseArtifactStub implements JavaArtifact {
         myMockablePlatformJar = mockablePlatformJar;
     }
 
-    public JavaArtifactStub(
-            @NonNull String name,
-            @NonNull String compileTaskName,
-            @NonNull String assembleTaskName,
-            @NonNull File classesFolder,
-            @NonNull Set<File> classesFolders,
-            @NonNull File javaResourcesFolder,
-            @NonNull Dependencies dependencies,
-            @NonNull Dependencies compileDependencies,
-            @NonNull DependencyGraphs graphs,
-            @NonNull Set<String> ideSetupTaskNames,
-            @NonNull Collection<File> generatedSourceFolders,
-            @Nullable SourceProvider variantSourceProvider,
-            @Nullable SourceProvider multiFlavorSourceProvider,
-            @Nullable File mockablePlatformJar) {
-        super(
-                name,
-                compileTaskName,
-                assembleTaskName,
-                classesFolder,
-                classesFolders,
-                javaResourcesFolder,
-                dependencies,
-                compileDependencies,
-                graphs,
-                ideSetupTaskNames,
-                generatedSourceFolders,
-                variantSourceProvider,
-                multiFlavorSourceProvider);
-        myMockablePlatformJar = mockablePlatformJar;
-    }
-
     @Override
     @Nullable
     public File getMockablePlatformJar() {
         return myMockablePlatformJar;
-    }
-
-    public void setMockablePlatformJar(@Nullable File mockablePlatformJar) {
-        myMockablePlatformJar = mockablePlatformJar;
     }
 
     @Override
