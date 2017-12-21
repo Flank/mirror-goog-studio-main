@@ -269,7 +269,7 @@ class DefaultAndroidSourceSet(
             deprecationReporter.reportDeprecatedUsage(
                     "AndroidSourceSet.implementationConfigurationName",
                     "AndroidSourceSet.compileConfigurationName",
-                    DeprecationReporter.DeprecationTarget.EOY2018)
+                    DeprecationReporter.DeprecationTarget.OLD_DSL)
             return _compileConfigurationName
         }
 
@@ -286,7 +286,7 @@ class DefaultAndroidSourceSet(
             deprecationReporter.reportDeprecatedUsage(
                     "AndroidSourceSet.runtimeOnlyConfigurationName",
                     "AndroidSourceSet.packageConfigurationName",
-                    DeprecationReporter.DeprecationTarget.EOY2018)
+                    DeprecationReporter.DeprecationTarget.OLD_DSL)
             return _packageConfigurationName
         }
 
@@ -313,7 +313,7 @@ class DefaultAndroidSourceSet(
             deprecationReporter.reportDeprecatedUsage(
                     "AndroidSourceSet.compileOnlyConfigurationName",
                     "AndroidSourceSet.providedConfigurationName",
-                    DeprecationReporter.DeprecationTarget.EOY2018)
+                    DeprecationReporter.DeprecationTarget.OLD_DSL)
             return _providedConfigurationName
         }
 
@@ -328,7 +328,7 @@ class DefaultAndroidSourceSet(
     override val jackPluginConfigurationName: String
         get() {
             deprecationReporter.reportObsoleteUsage("AndroidSourceSet.getJackPluginConfigurationName()",
-                    DeprecationReporter.DeprecationTarget.EOY2018)
+                    DeprecationReporter.DeprecationTarget.OLD_DSL)
             return ""
         }
 }

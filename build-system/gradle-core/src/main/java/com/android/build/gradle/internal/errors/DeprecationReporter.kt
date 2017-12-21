@@ -27,8 +27,12 @@ interface DeprecationReporter {
 
     /** Enum for deprecated element removal target.  */
     enum class DeprecationTarget  constructor(val removalTime: String) {
-        // Object will be removed EOY2018
-        EOY2018("at the end of 2018")
+        // deprecation of compile in favor of api/implementation
+        CONFIG_NAME("at the end of 2018"),
+        // deprecation due to the move to the new DSL.
+        OLD_DSL("at the end of 2018"),
+        // Obsolete Dex Options
+        DEX_OPTIONS("at the end of 2018")
     }
 
     /**
