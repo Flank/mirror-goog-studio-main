@@ -54,8 +54,8 @@ public class CmakeStlMatrixTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").build())
-                    .addFile(HelloWorldJniApp.cmakeLists("."))
+                    .fromTestApp(
+                            HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
                     .create();
 
     @Parameterized.Parameters(name = "stl = {0}")

@@ -48,8 +48,8 @@ public class CmakeVanillaBasicProjectTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").build())
-                    .addFile(HelloWorldJniApp.cmakeLists("."))
+                    .fromTestApp(
+                            HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
                     // Set the cmake version and set the local properties with the path to the cmake
                     // binary.
                     .setCmakeVersion(VANILLA_CMAKE_VERSION)

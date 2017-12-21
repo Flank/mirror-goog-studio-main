@@ -46,8 +46,8 @@ public class CmakeBasicProjectTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").build())
-                    .addFile(HelloWorldJniApp.cmakeLists("."))
+                    .fromTestApp(
+                            HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
                     .create();
 
     @Before

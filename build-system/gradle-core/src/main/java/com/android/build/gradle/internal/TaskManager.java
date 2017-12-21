@@ -1784,7 +1784,8 @@ public abstract class TaskManager {
                         new ExternalNativeBuildTask.ConfigAction(
                                 targetAbi, generator, scope, androidBuilder));
 
-        buildTask.dependsOn(generateTask);
+        buildTask.dependsOn(
+                generateTask, scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI));
         scope.setExternalNativeBuildTask(buildTask);
         scope.getCompileTask().dependsOn(buildTask);
 
