@@ -24,7 +24,6 @@ import java.util.Objects;
 
 public class SourceProviderStub extends BaseStub implements SourceProvider {
     @NonNull private final String myName;
-    @NonNull private final File myManifestFile;
     @NonNull private final Collection<File> myJavaDirectories;
     @NonNull private final Collection<File> myResourcesDirectories;
     @NonNull private final Collection<File> myAidlDirectories;
@@ -35,6 +34,8 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
     @NonNull private final Collection<File> myAssetsDirectories;
     @NonNull private final Collection<File> myJniLibsDirectories;
     @NonNull private final Collection<File> myShadersDirectories;
+
+    @NonNull private File myManifestFile;
 
     public SourceProviderStub() {
         this(
@@ -79,6 +80,21 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
         myShadersDirectories = Lists.newArrayList(shadersDirectory);
     }
 
+    public SourceProviderStub(@NonNull String name, @NonNull File manifestFile) {
+        myName = name;
+        myManifestFile = manifestFile;
+        myJavaDirectories = Lists.newArrayList();
+        myResourcesDirectories = Lists.newArrayList();
+        myAidlDirectories = Lists.newArrayList();
+        myRenderscriptDirectories = Lists.newArrayList();
+        myCDirectories = Lists.newArrayList();
+        myCppDirectories = Lists.newArrayList();
+        myResDirectories = Lists.newArrayList();
+        myAssetsDirectories = Lists.newArrayList();
+        myJniLibsDirectories = Lists.newArrayList();
+        myShadersDirectories = Lists.newArrayList();
+    }
+
     @Override
     @NonNull
     public String getName() {
@@ -89,6 +105,10 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
     @NonNull
     public File getManifestFile() {
         return myManifestFile;
+    }
+
+    public void setManifestFile(@NonNull File manifestFile) {
+        myManifestFile = manifestFile;
     }
 
     @Override

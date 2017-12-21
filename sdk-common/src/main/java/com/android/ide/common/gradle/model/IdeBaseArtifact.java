@@ -25,9 +25,4 @@ public interface IdeBaseArtifact extends Serializable, BaseArtifact {
 
     @NonNull
     IdeDependencies getLevel2Dependencies();
-
-    @Override
-    @Deprecated
-    @NonNull
-    com.android.ide.common.gradle.model.IdeDependencies getDependencies();
 }

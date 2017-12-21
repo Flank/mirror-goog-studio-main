@@ -37,12 +37,12 @@ public class ProductFlavorContainerStub extends BaseStub implements ProductFlavo
     }
 
     public ProductFlavorContainerStub(
-            @NonNull ProductFlavor flavor,
-            @NonNull SourceProvider provider,
-            @NonNull Collection<SourceProviderContainer> providers) {
-        myProductFlavor = flavor;
-        mySourceProvider = provider;
-        myExtraSourceProviders = providers;
+            @NonNull ProductFlavor productFlavor,
+            @NonNull SourceProvider sourceProvider,
+            @NonNull Collection<SourceProviderContainer> extraSourceProviders) {
+        myProductFlavor = productFlavor;
+        mySourceProvider = sourceProvider;
+        myExtraSourceProviders = extraSourceProviders;
     }
 
     @Override

@@ -15,25 +15,33 @@
  */
 package com.android.ide.common.gradle.model.stubs;
 
+import static com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.*;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeVariant;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.android.ide.common.repository.GradleVersion;
+import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
-public class AndroidProjectStub extends BaseStub implements AndroidProject {
-    @NonNull private final String myModelVersion;
+public class AndroidProjectStub extends BaseStub implements IdeAndroidProject {
+    protected static final String DEFAULT_MODEL_VERSION =
+            GRADLE_PLUGIN_MINIMUM_VERSION + "-SNAPSHOT";
+
     @NonNull private final String myName;
     @NonNull private final ProductFlavorContainer myDefaultConfig;
-    @NonNull private final Collection<BuildTypeContainer> myBuildTypes;
-    @NonNull private final Collection<ProductFlavorContainer> myProductFlavors;
+    @NonNull private final Map<String, BuildTypeContainer> myBuildTypes;
+    @NonNull private final Map<String, ProductFlavorContainer> myProductFlavors;
     @NonNull private final String myBuildToolsVersion;
     @NonNull private final Collection<SyncIssue> mySyncIssues;
-    @NonNull private final Collection<Variant> myVariants;
+    @NonNull private final Map<String, Variant> myVariants;
     @NonNull private final Collection<String> myFlavorDimensions;
     @NonNull private final String myCompileTarget;
     @NonNull private final Collection<String> myBootClasspath;
@@ -45,37 +53,11 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull private final File myBuildFolder;
     @Nullable private final String myResourcePrefix;
     private final int myApiVersion;
-    private final boolean myLibrary;
-    private final int myProjectType;
     private final int myPluginGeneration;
     private final boolean myBaseSplit;
 
-    public AndroidProjectStub(@NonNull String modelVersion) {
-        this(
-                modelVersion,
-                "name",
-                new ProductFlavorContainerStub(),
-                Lists.newArrayList(new BuildTypeContainerStub()),
-                Lists.newArrayList(new ProductFlavorContainerStub()),
-                "buildToolsVersion",
-                Lists.newArrayList(new SyncIssueStub()),
-                Lists.newArrayList(new VariantStub()),
-                Lists.newArrayList("flavorDimension"),
-                "compileTarget",
-                Lists.newArrayList("bootClasspath"),
-                Lists.newArrayList(new NativeToolchainStub()),
-                Lists.newArrayList(new SigningConfigStub()),
-                new LintOptionsStub(),
-                Sets.newHashSet("unresolvedDependency"),
-                new JavaCompileOptionsStub(),
-                new File("buildFolder"),
-                "resourcePrefix",
-                1,
-                true,
-                2,
-                3,
-                true);
-    }
+    @NonNull private String myModelVersion = DEFAULT_MODEL_VERSION;
+    private int myProjectType = PROJECT_TYPE_APP;
 
     public AndroidProjectStub(
             @NonNull String modelVersion,
@@ -97,18 +79,17 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             @NonNull File buildFolder,
             @Nullable String resourcePrefix,
             int apiVersion,
-            boolean library,
             int projectType,
             int pluginGeneration,
             boolean baseSplit) {
         myModelVersion = modelVersion;
         myName = name;
         myDefaultConfig = defaultConfig;
-        myBuildTypes = buildTypes;
-        myProductFlavors = productFlavors;
+        myBuildTypes = indexBuildTypesByName(buildTypes);
+        myProductFlavors = indexProductFlavorsByName(productFlavors);
         myBuildToolsVersion = buildToolsVersion;
         mySyncIssues = syncIssues;
-        myVariants = variants;
+        myVariants = indexVariantByName(variants);
         myFlavorDimensions = flavorDimensions;
         myCompileTarget = compileTarget;
         myBootClasspath = bootClasspath;
@@ -120,16 +101,48 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         myBuildFolder = buildFolder;
         myResourcePrefix = resourcePrefix;
         myApiVersion = apiVersion;
-        myLibrary = library;
         myProjectType = projectType;
         myPluginGeneration = pluginGeneration;
         myBaseSplit = baseSplit;
+    }
+
+    @NonNull
+    private static Map<String, BuildTypeContainer> indexBuildTypesByName(
+            @NonNull Collection<BuildTypeContainer> buildTypes) {
+        Map<String, BuildTypeContainer> buildTypesByName = Maps.newLinkedHashMap();
+        for (BuildTypeContainer buildType : buildTypes) {
+            buildTypesByName.put(buildType.getBuildType().getName(), buildType);
+        }
+        return buildTypesByName;
+    }
+
+    @NonNull
+    private static Map<String, ProductFlavorContainer> indexProductFlavorsByName(
+            @NonNull Collection<ProductFlavorContainer> productFlavors) {
+        Map<String, ProductFlavorContainer> productFlavorsByName = Maps.newLinkedHashMap();
+        for (ProductFlavorContainer productFlavor : productFlavors) {
+            productFlavorsByName.put(productFlavor.getProductFlavor().getName(), productFlavor);
+        }
+        return productFlavorsByName;
+    }
+
+    @NonNull
+    private static Map<String, Variant> indexVariantByName(Collection<Variant> variants) {
+        Map<String, Variant> variantsByName = Maps.newLinkedHashMap();
+        for (Variant variant : variants) {
+            variantsByName.put(variant.getName(), variant);
+        }
+        return variantsByName;
     }
 
     @Override
     @NonNull
     public String getModelVersion() {
         return myModelVersion;
+    }
+
+    public void setModelVersion(@NonNull String modelVersion) {
+        myModelVersion = modelVersion;
     }
 
     @Override
@@ -147,13 +160,13 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @Override
     @NonNull
     public Collection<BuildTypeContainer> getBuildTypes() {
-        return myBuildTypes;
+        return myBuildTypes.values();
     }
 
     @Override
     @NonNull
     public Collection<ProductFlavorContainer> getProductFlavors() {
-        return myProductFlavors;
+        return myProductFlavors.values();
     }
 
     @Override
@@ -171,7 +184,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @Override
     @NonNull
     public Collection<Variant> getVariants() {
-        return myVariants;
+        return myVariants.values();
     }
 
     @Override
@@ -260,12 +273,16 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @Deprecated
     @Override
     public boolean isLibrary() {
-        return myLibrary;
+        return myProjectType == PROJECT_TYPE_LIBRARY;
     }
 
     @Override
     public int getProjectType() {
         return myProjectType;
+    }
+
+    public void setProjectType(int projectType) {
+        myProjectType = projectType;
     }
 
     @Override
@@ -344,56 +361,99 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     public String toString() {
         return "AndroidProjectStub{"
                 + "myModelVersion='"
-                + myModelVersion
+                + getModelVersion()
                 + '\''
                 + ", myName='"
-                + myName
+                + getName()
                 + '\''
                 + ", myDefaultConfig="
-                + myDefaultConfig
+                + getDefaultConfig()
                 + ", myBuildTypes="
-                + myBuildTypes
+                + getBuildTypes()
                 + ", myProductFlavors="
-                + myProductFlavors
+                + getProductFlavors()
                 + ", myBuildToolsVersion='"
-                + myBuildToolsVersion
+                + getBuildToolsVersion()
                 + '\''
                 + ", mySyncIssues="
-                + mySyncIssues
+                + getSyncIssues()
                 + ", myVariants="
-                + myVariants
+                + getVariants()
                 + ", myFlavorDimensions="
-                + myFlavorDimensions
+                + getFlavorDimensions()
                 + ", myCompileTarget='"
-                + myCompileTarget
+                + getCompileTarget()
                 + '\''
                 + ", myBootClasspath="
-                + myBootClasspath
+                + getBootClasspath()
                 + ", myNativeToolchains="
-                + myNativeToolchains
+                + getNativeToolchains()
                 + ", mySigningConfigs="
-                + mySigningConfigs
+                + getSigningConfigs()
                 + ", myLintOptions="
-                + myLintOptions
+                + getLintOptions()
                 + ", myUnresolvedDependencies="
-                + myUnresolvedDependencies
+                + getUnresolvedDependencies()
                 + ", myJavaCompileOptions="
-                + myJavaCompileOptions
+                + getJavaCompileOptions()
                 + ", myBuildFolder="
-                + myBuildFolder
+                + getBuildFolder()
                 + ", myResourcePrefix='"
-                + myResourcePrefix
+                + getResourcePrefix()
                 + '\''
                 + ", myApiVersion="
-                + myApiVersion
+                + getApiVersion()
                 + ", myLibrary="
-                + myLibrary
+                + isLibrary()
                 + ", myProjectType="
-                + myProjectType
+                + getProjectType()
                 + ", myPluginGeneration="
-                + myPluginGeneration
+                + getPluginGeneration()
                 + ", myBaseSplit="
-                + myBaseSplit
+                + isBaseSplit()
                 + "}";
+    }
+
+    @Nullable
+    @Override
+    public GradleVersion getParsedModelVersion() {
+        return GradleVersion.tryParse(myModelVersion);
+    }
+
+    @Override
+    public void forEachVariant(@NonNull Consumer<IdeVariant> action) {
+        for (Variant variant : getVariants()) {
+            action.accept((IdeVariant) variant);
+        }
+    }
+
+    protected void addBuildType(@NonNull BuildTypeContainer buildType) {
+        String name = buildType.getBuildType().getName();
+        myBuildTypes.put(name, buildType);
+    }
+
+    @Nullable
+    public BuildTypeContainer findBuildType(@NonNull String name) {
+        return myBuildTypes.get(name);
+    }
+
+    public void addProductFlavor(@NonNull ProductFlavorContainer productFlavor) {
+        String name = productFlavor.getProductFlavor().getName();
+        myProductFlavors.put(name, productFlavor);
+    }
+
+    public void addFlavorDimension(@NonNull String dimension) {
+        if (!myFlavorDimensions.contains(dimension)) {
+            myFlavorDimensions.add(dimension);
+        }
+    }
+
+    @Nullable
+    public ProductFlavorContainer findProductFlavor(@NonNull String name) {
+        return myProductFlavors.get(name);
+    }
+
+    public void addVariant(@NonNull Variant variant) {
+        myVariants.put(variant.getName(), variant);
     }
 }
