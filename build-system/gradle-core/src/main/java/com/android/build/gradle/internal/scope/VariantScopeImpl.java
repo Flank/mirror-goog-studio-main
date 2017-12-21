@@ -37,7 +37,6 @@ import static com.android.build.gradle.internal.scope.CodeShrinker.ANDROID_GRADL
 import static com.android.build.gradle.internal.scope.CodeShrinker.PROGUARD;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
-import static com.android.sdklib.BuildToolInfo.SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -100,10 +99,8 @@ import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
-import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.BaseConfig;
-import com.android.repository.Revision;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -684,40 +681,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public DexingType getDexingType() {
-        DexingType dexingType = variantData.getVariantConfiguration().getDexingType();
-
-        if (variantData.getType().isForTesting()
-                && getTestedVariantData() != null
-                && getTestedVariantData().getType() != VariantType.LIBRARY
-                && dexingType == DexingType.LEGACY_MULTIDEX) {
-            Revision buildToolsVersion =
-                    getGlobalScope().getAndroidBuilder().getBuildToolInfo().getRevision();
-            if (buildToolsVersion.compareTo(SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS) >= 0) {
-                return DexingType.LEGACY_MULTIDEX;
-            } else {
-                String message =
-                        String.format(
-                                "Test APK for %1$s will be built with multidex disabled. "
-                                        + "Legacy "
-                                        + "multidex tests require build tools %2$s. Please "
-                                        + "update \"buildToolsVersion\" in build.gradle "
-                                        + "file. Version currently being used is %3$s.",
-                                variantData.getName(),
-                                SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS.toString(),
-                                buildToolsVersion.toString());
-                globalScope
-                        .getErrorHandler()
-                        .reportWarning(
-                                EvalIssueReporter.Type.BUILD_TOOLS_TOO_LOW,
-                                message,
-                                SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS.toString());
-                return DexingType.MONO_DEX;
-            }
-        } else if (getInstantRunBuildContext().isInInstantRunMode()) {
+        if (getInstantRunBuildContext().isInInstantRunMode()) {
             return DexingType.NATIVE_MULTIDEX;
+        } else {
+            return variantData.getVariantConfiguration().getDexingType();
         }
-
-        return dexingType;
     }
 
     @NonNull

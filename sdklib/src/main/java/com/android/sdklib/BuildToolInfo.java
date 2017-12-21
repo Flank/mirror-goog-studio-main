@@ -94,13 +94,6 @@ public class BuildToolInfo {
      */
     public static final int SDK_LEVEL_FOR_MULTIDEX_NATIVE_SUPPORT = 21;
 
-    /**
-     * First version of the build tools that contains updated shrinked android.jar necessary for the
-     * legacy multidex test APKs.
-     */
-    public static final Revision SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS =
-            new Revision(27, 0, 1);
-
     public enum PathId {
         /** OS Path to the target's version of the aapt tool. */
         AAPT("1.0.0"),

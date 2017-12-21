@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.sdklib.BuildToolInfo.SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -235,11 +234,6 @@ public class MultiDexTest {
     @Test
     public void checkLegacyMultiDexAndroidTest()
             throws IOException, InterruptedException, ProcessException {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                String.format(
-                        "\nandroid.buildToolsVersion \'%s\'",
-                        SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS.toString()));
         executor().run("assembleIcsDebugAndroidTest");
 
         Apk testApk = project.getTestApk("ics");
