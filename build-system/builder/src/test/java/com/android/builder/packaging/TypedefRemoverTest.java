@@ -25,6 +25,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import org.junit.Rule;
@@ -134,7 +135,9 @@ public class TypedefRemoverTest {
         Files.write(OUTER_CLASS, outerClass);
         Files.write(new byte[0], unrelated);
 
-        remover.remove(testFolder.getRoot(),
+        // Put a random temp file in there to make sure finding class file among multiple
+        // folders work
+        remover.remove(Arrays.asList(Files.createTempDir(), testFolder.getRoot()),
                 Collections.singletonList("test/pkg/OuterClass$InnerClass"));
 
         assertThat(unrelated.isFile()).isTrue();

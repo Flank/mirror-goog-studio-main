@@ -89,7 +89,7 @@ public class ExtractAnnotationsDriver {
         List<File> sources = Lists.newArrayList();
         List<File> mergePaths = Lists.newArrayList();
         List<File> apiFilters = null;
-        File rmTypeDefs = null;
+        List<File> rmTypeDefs = null;
         boolean verbose = true;
         boolean allowMissingTypes = false;
         boolean allowErrors = false;
@@ -188,10 +188,14 @@ public class ExtractAnnotationsDriver {
                     }
                     break;
                 case "--rmtypedefs":
-                    rmTypeDefs = new File(value);
-                    if (!rmTypeDefs.isDirectory()) {
-                        abort(rmTypeDefs + " is not a directory");
+                    File classDir = new File(value);
+                    if (!classDir.isDirectory()) {
+                        abort(classDir + " is not a directory");
                     }
+                    if (rmTypeDefs == null) {
+                        rmTypeDefs = new ArrayList<>();
+                    }
+                    rmTypeDefs.add(classDir);
                     break;
                 default:
                     System.err

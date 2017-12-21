@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -144,11 +145,15 @@ public class TypedefRemover implements JarMerger.Transformer {
     }
 
     public void removeFromTypedefFile(@NonNull File classDir, @NonNull File file) {
-        setTypedefFile(file);
-        remove(classDir, Collections.emptyList());
+        removeFromTypedefFile(Collections.singletonList(classDir), file);
     }
 
-    public void remove(@NonNull File classDir, @NonNull List<String> owners) {
+    public void removeFromTypedefFile(@NonNull Collection<File> classDirs, @NonNull File file) {
+        setTypedefFile(file);
+        remove(classDirs, Collections.emptyList());
+    }
+
+    public void remove(@NonNull Collection<File> classDir, @NonNull List<String> owners) {
         if (!mQuiet) {
             info("Deleting @IntDef and @StringDef annotation class files");
         }
@@ -186,29 +191,36 @@ public class TypedefRemover implements JarMerger.Transformer {
      * Rewrites the outer classes containing the typedefs such that they no longer refer to
      * the (now removed) typedef annotation inner classes
      */
-    private void rewriteOuterClasses(@NonNull File classDir) {
+    private void rewriteOuterClasses(@NonNull Collection<File> classDirs) {
         for (String relative : mAnnotationOuterClassFiles) {
-            File file = new File(classDir, relative.replace('/', File.separatorChar));
-            if (!file.isFile()) {
-                warning("Could not find outer class " + file + " for typedef");
-                continue;
-            }
-            byte[] bytes;
-            try {
-                bytes = Files.toByteArray(file);
-            } catch (IOException e) {
-                error("Could not read " + file + ": " + e.getLocalizedMessage());
-                continue;
-            }
+            boolean found = false;
+            for (File classDir : classDirs) {
+                File file = new File(classDir, relative.replace('/', File.separatorChar));
+                if (file.isFile()) {
+                    found = true;
+                } else {
+                    continue;
+                }
+                byte[] bytes;
+                try {
+                    bytes = Files.toByteArray(file);
+                } catch (IOException e) {
+                    error("Could not read " + file + ": " + e.getLocalizedMessage());
+                    continue;
+                }
 
-            ClassReader reader = new ClassReader(bytes);
-            byte[] rewritten = rewriteOuterClass(reader);
-            try {
-                Files.write(rewritten, file);
-            } catch (IOException e) {
-                error("Could not write " + file + ": " + e.getLocalizedMessage());
-                //noinspection UnnecessaryContinue
-                continue;
+                ClassReader reader = new ClassReader(bytes);
+                byte[] rewritten = rewriteOuterClass(reader);
+                try {
+                    Files.write(rewritten, file);
+                } catch (IOException e) {
+                    error("Could not write " + file + ": " + e.getLocalizedMessage());
+                    //noinspection UnnecessaryContinue
+                    continue;
+                }
+            }
+            if (!found) {
+                warning("Could not find outer class file for " + relative);
             }
         }
     }
@@ -232,25 +244,32 @@ public class TypedefRemover implements JarMerger.Transformer {
      * Performs the actual deletion (or display, if in dry-run mode) of the typedef annotation
      * files
      */
-    private void deleteAnnotationClasses(@NonNull File classDir) {
+    private void deleteAnnotationClasses(@NonNull Collection<File> classDirs) {
         for (String relative : mAnnotationClassFiles) {
-            File file = new File(classDir, relative.replace('/', File.separatorChar));
-            if (!file.isFile()) {
-                warning("Could not find class file " + file + " for typedef");
-                continue;
-            }
-            if (mVerbose) {
-                if (mDryRun) {
-                    info("Would delete " + file);
+            boolean found = false;
+            for (File classDir : classDirs) {
+                File file = new File(classDir, relative.replace('/', File.separatorChar));
+                if (file.isFile()) {
+                    found = true;
                 } else {
-                    info("Deleting " + file);
+                    continue;
+                }
+                if (mVerbose) {
+                    if (mDryRun) {
+                        info("Would delete " + file);
+                    } else {
+                        info("Deleting " + file);
+                    }
+                }
+                if (!mDryRun) {
+                    boolean deleted = file.delete();
+                    if (!deleted) {
+                        warning("Could not delete " + file);
+                    }
                 }
             }
-            if (!mDryRun) {
-                boolean deleted = file.delete();
-                if (!deleted) {
-                    warning("Could not delete " + file);
-                }
+            if (!found) {
+                warning("Could not find class file for typedef " + relative);
             }
         }
     }

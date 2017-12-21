@@ -88,6 +88,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -204,7 +205,7 @@ public class Extractor {
 
     @NonNull private final Set<String> irrelevantAnnotations = new HashSet<>();
 
-    private final File classDir;
+    private final Collection<File> classDir;
 
     /** Map from package to map from class to items */
     @NonNull private final Map<String, Map<String, List<Item>>> itemMap = new HashMap<>();
@@ -275,7 +276,8 @@ public class Extractor {
         return sources;
     }
 
-    public Extractor(@Nullable ApiDatabase apiFilter, @Nullable File classDir, boolean displayInfo,
+    public Extractor(@Nullable ApiDatabase apiFilter, @Nullable Collection<File> classDir,
+            boolean displayInfo,
             boolean includeClassRetentionAnnotations, boolean sortAnnotations) {
         this.apiFilter = apiFilter;
         this.listIgnored = apiFilter != null;
@@ -308,7 +310,10 @@ public class Extractor {
     }
 
     public void removeTypedefClasses() {
-        if (classDir != null && typedefsToRemove != null && !typedefsToRemove.isEmpty()) {
+        if (classDir != null &&
+                !classDir.isEmpty() &&
+                typedefsToRemove != null &&
+                !typedefsToRemove.isEmpty()) {
             // Perform immediately
             boolean quiet = false;
             boolean verbose = false;
@@ -337,14 +342,14 @@ public class Extractor {
         Files.write(desc, file, Charsets.UTF_8);
     }
 
-    public static void removeTypedefClasses(@NonNull File classDir, @NonNull File typedefFile) {
+    public static void removeTypedefClasses(@NonNull Collection<File> classDirs, @NonNull File typedefFile) {
         // Perform immediately
         boolean quiet = false;
         boolean verbose = false;
         boolean dryRun = false;
         //noinspection ConstantConditions
         TypedefRemover remover = new TypedefRemover(quiet, verbose, dryRun);
-        remover.removeFromTypedefFile(classDir, typedefFile);
+        remover.removeFromTypedefFile(classDirs, typedefFile);
     }
 
     public void export(@Nullable File annotationsZip, @Nullable File proguardCfg)
