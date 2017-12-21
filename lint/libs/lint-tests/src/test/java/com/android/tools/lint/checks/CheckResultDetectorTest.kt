@@ -201,17 +201,66 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
         // Regression test for
         // 69534608: False positive for "The result of <method_name> is not used"
         lint().files(
-                kotlin("" +
-                        "package test.pkg\n" +
-                        "\n" +
-                        "import android.support.annotation.CheckResult\n" +
-                        "\n" +
-                        "fun something(list: List<String>) {\n" +
-                        "    list.map { fromNullable(it) }\n" +
-                        "}\n" +
-                        "\n" +
-                        "@CheckResult\n" +
-                        "fun fromNullable(a: Any?): Any? = a"),
+                kotlin("""
+                    package test.pkg
+
+                    import android.support.annotation.CheckResult
+
+                    fun something(list: List<String>) {
+                        list.map { fromNullable(it) }
+                    }
+
+                    @CheckResult
+                    fun fromNullable(a: Any?): Any? = a""").indented(),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+                .run()
+                .expectClean()
+    }
+
+    fun testNotIgnoredInBlock2() {
+        // Regression test for
+        // 69534608: False positive for "The result of <method_name> is not used"
+        lint().files(
+                kotlin("""
+                    package test.pkg
+
+                    import android.support.annotation.CheckResult
+                    fun test() {
+                        val list = listOf(1, 2, 3)
+
+                        val x1 = list.map {
+                            label(it)
+                        }
+                        val x2 = list.map {
+                            SomeClass.label(it)
+                        }
+                        val x3 = list.map {
+                            SomeClass.create().label(it)
+                        }
+                        val x4: List<Any?> = list.map {
+                            assert(it < 5)
+                            SomeClass.label(it)
+                        }
+                    }
+
+                    class SomeClass {
+                        @CheckResult
+                        fun label(a: Any): String = "value: ${"$"}a"
+
+                        companion object {
+                            @CheckResult
+                            fun label(a: Any): String = "value: ${"$"}a"
+
+                            fun create(): SomeClass {
+                                return SomeClass()
+                            }
+                        }
+                    }
+
+                    @CheckResult
+                    fun label(a: Any?): Any? = a""").indented(),
                 SUPPORT_ANNOTATIONS_CLASS_PATH,
                 SUPPORT_ANNOTATIONS_JAR)
                 .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)

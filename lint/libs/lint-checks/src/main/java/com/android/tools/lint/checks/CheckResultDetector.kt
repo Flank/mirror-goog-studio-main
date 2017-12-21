@@ -36,6 +36,8 @@ import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
+import org.jetbrains.uast.UQualifiedReferenceExpression
+import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getQualifiedParentOrThis
 
@@ -86,11 +88,16 @@ class CheckResultDetector : AbstractAnnotationDetector(), Detector.UastScanner {
                 UExpression::class.java, false) ?: return
 
         val parent = expression.uastParent
-        if (parent is UBlockExpression) {
-            val blockParent = parent.uastParent
-            if (blockParent is ULambdaExpression) {
+
+        var curr: UElement? = parent
+        while (curr != null) {
+            if (curr is ULambdaExpression) {
                 // Used in lambda
                 return
+            } else if (curr is UQualifiedReferenceExpression || curr is UBlockExpression) {
+                curr = curr.uastParent
+            } else {
+                break
             }
         }
 
