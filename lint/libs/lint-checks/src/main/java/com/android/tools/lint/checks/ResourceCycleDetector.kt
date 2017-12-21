@@ -37,6 +37,7 @@ import com.android.SdkConstants.TAG_COLOR
 import com.android.SdkConstants.TAG_FONT
 import com.android.SdkConstants.TAG_ITEM
 import com.android.SdkConstants.TAG_STYLE
+import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VIEW_INCLUDE
 import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
@@ -440,6 +441,12 @@ class ResourceCycleDetector : ResourceXmlDetector() {
         // Ensure that we're referring to the same resource type here; e.g. we're not complaining
         // that @layout/foo references @drawable/foo
         if (!types.contains(url.type)) {
+            return
+        }
+
+        if (TOOLS_URI == attribute.namespaceURI) {
+            // tools attribute references to resources aren't real resource references,
+            // and sometimes are intentionally cyclic, such as tools:showIn
             return
         }
 

@@ -497,6 +497,34 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testNoCycleWithToolsAttributes() {
+        // Ensure that we don't consider tools:showIn as a real resource since it's not
+        // a regular resource reference and is used to clue in the layout editor for what
+        // layout to surround a layout with
+
+        //noinspection all // Sample code
+        lint().files(
+                xml("res/layout/a.xml", "" +
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
+                        "\n" +
+                        "    <include\n" +
+                        "        layout=\"@layout/b\"\n" +
+                        "        android:layout_width=\"@dimen/lb_search_orb_size\"\n" +
+                        "        android:layout_height=\"@dimen/lb_search_orb_size\" />\n" +
+                        "\n" +
+                        "</LinearLayout>"),
+                xml("res/layout/b.xml", "" +
+                        "<merge xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\"\n" +
+                        "    tools:showIn=\"@layout/a\">\n" +
+                        "\n" +
+                        "</merge>"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mAliases2 = xml("res/values/aliases2.xml", ""
             + "<resources>\n"
