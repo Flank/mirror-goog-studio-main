@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.google.common.collect.Iterables;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -78,6 +79,10 @@ public class AaptOptions {
 
     public void setNoCompress(String noCompress) {
         setNoCompress(new String[] { noCompress });
+    }
+
+    public void setNoCompress(Iterable<String> noCompress) {
+        setNoCompress(Iterables.toArray(noCompress, String.class));
     }
 
     public void setNoCompress(String... noCompress) {
