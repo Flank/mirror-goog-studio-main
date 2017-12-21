@@ -19,6 +19,7 @@ cc_binary(
     ],
     linkopts = ANDROID_LINKOPTS,
     linkshared = 1,
+    tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
         "//external:slicer",
@@ -36,7 +37,11 @@ android_cc_binary(
         "armeabi-v7a",
         "arm64-v8a",
     ],
-    binary = ":libperfa.so.stripped",
+    binary = select({
+        "//tools/base/bazel:windows": ":libperfa.so",
+        "//conditions:default": ":libperfa.so.stripped",
+    }),
     filename = "libperfa.so",
+    tags = ["no_windows"],
     visibility = ["//visibility:public"],
 )

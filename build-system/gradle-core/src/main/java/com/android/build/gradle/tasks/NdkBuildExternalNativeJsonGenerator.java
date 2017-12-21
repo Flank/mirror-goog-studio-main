@@ -287,12 +287,16 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
         result.add("NDK_LIBS_OUT=" + getSoFolder().getAbsolutePath());
 
+        // Related to issuetracker.google.com/69110338. Semantics of APP_CFLAGS and APP_CPPFLAGS
+        // is that the flag(s) are unquoted. User may place quotes if it is appropriate for the
+        // target compiler. User in this case is build.gradle author of
+        // externalNativeBuild.ndkBuild.cppFlags or the author of Android.mk.
         for (String flag : getcFlags()) {
-            result.add(String.format("APP_CFLAGS+=\"%s\"", flag));
+            result.add(String.format("APP_CFLAGS+=%s", flag));
         }
 
         for (String flag : getCppFlags()) {
-            result.add(String.format("APP_CPPFLAGS+=\"%s\"", flag));
+            result.add(String.format("APP_CPPFLAGS+=%s", flag));
         }
 
         boolean skipNextArgument = false;

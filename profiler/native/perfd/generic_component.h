@@ -22,6 +22,7 @@
 #include "perfd/daemon.h"
 #include "perfd/profiler_component.h"
 #include "perfd/profiler_service.h"
+#include "perfd/sessions/sessions_manager.h"
 
 namespace profiler {
 
@@ -32,8 +33,8 @@ class GenericComponent final : public ProfilerComponent {
  public:
   static constexpr int64_t kHeartbeatThresholdNs = Clock::ms_to_ns(500);
 
-  // TODO: Fix this so we don't have to pass in a non-const Daemon
-  explicit GenericComponent(Daemon::Utilities* utilities);
+  explicit GenericComponent(Daemon::Utilities* utilities,
+                            SessionsManager* sessions);
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override {

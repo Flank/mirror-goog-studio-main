@@ -22,7 +22,6 @@ import com.android.builder.utils.ExceptionRunnable;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Longs;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
@@ -35,8 +34,11 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -87,19 +89,10 @@ public final class BenchmarkRecorder {
         public abstract List<GradleBenchmarkResult> filter(List<GradleBenchmarkResult> results);
     }
 
-    @NonNull
-    private static final List<ProfileUploader> DEFAULT_UPLOADERS =
-            ImmutableList.of(
-                    GoogleStorageProfileUploader.INSTANCE
-
-                    // TODO(samwho): disabled this to check if it's the cause of http://b/69351230
-                    // ActdProfileUploader.fromEnvironment()
-                    );
-
     /** Variables for asynchronously uploading profiles. */
     private static final int WORK_QUEUE_SIZE = 64;
 
-    private static final int NUM_THREADS = 1;
+    private static final int NUM_THREADS = 3;
 
     @NonNull
     private static final ExecutorService EXECUTOR =
@@ -113,18 +106,64 @@ public final class BenchmarkRecorder {
     @NonNull
     private static final List<Future<?>> OUTSTANDING_UPLOADS = new ArrayList<>(WORK_QUEUE_SIZE);
 
+    private static List<ProfileUploader> UPLOADERS;
+
+    @NonNull
+    private static List<ProfileUploader> defaultUploaders() {
+        if (UPLOADERS == null) {
+            synchronized (BenchmarkRecorder.class) {
+                if (UPLOADERS == null) {
+                    List<ProfileUploader> uploaders = new ArrayList<>();
+
+                    try {
+                        uploaders.add(GoogleStorageProfileUploader.getInstance());
+                    } catch (Exception e) {
+                        System.out.println(
+                                "couldn't add GoogleStorageProfileUploader to the list of default uploaders, reason: "
+                                        + e);
+                    }
+
+                    try {
+                        uploaders.add(DanaProfileUploader.fromEnvironment());
+                    } catch (Exception e) {
+                        System.out.println(
+                                "couldn't add ActdProfileUploader to the list of default uploaders, reason: "
+                                        + e);
+                    }
+
+                    try {
+                        uploaders.add(LocalCSVProfileUploader.fromEnvironment());
+                    } catch (Exception e) {
+                        System.out.println(
+                                "couldn't add LocalCSVProfileUploader to the list of default uploaders, reason: "
+                                        + e);
+                    }
+
+                    try {
+                        uploaders.add(LocalProtoProfileUploader.fromEnvironment());
+                    } catch (Exception e) {
+                        System.out.println(
+                                "couldn't add LocalProtoProfileUploader to the list of default uploaders, reason: "
+                                        + e);
+                    }
+
+                    UPLOADERS = Collections.unmodifiableList(uploaders);
+                }
+            }
+        }
+
+        return UPLOADERS;
+    }
+
     @NonNull private final List<ProfileUploader> uploaders;
 
     @NonNull private final List<GradleBenchmarkResult.Builder> benchmarkResults = new ArrayList<>();
 
     @NonNull private final ProfileCapturer capturer;
 
-    public BenchmarkRecorder(@NonNull ProfileCapturer capturer) {
-        this(capturer, DEFAULT_UPLOADERS);
 
-        if (LocalUploader.INSTANCE.getOutputFolder() != null) {
-            this.uploaders.add(LocalUploader.INSTANCE);
-        }
+    public BenchmarkRecorder(@NonNull ProfileCapturer capturer) {
+        this(capturer, defaultUploaders());
     }
 
     public BenchmarkRecorder(
@@ -133,14 +172,27 @@ public final class BenchmarkRecorder {
         this.capturer = capturer;
     }
 
-    public void record(
+    /**
+     * Records any captured benchmarks in the given runnable inside this class's state, ready to be
+     * uploaded at a later time.
+     *
+     * @param scenario the ProjectScenario to use in the resulting benchmark result
+     * @param benchmark the Benchmark to use in the resulting benchmark result
+     * @param benchmarkMode the BenchmarkMode to use in the resulting benchmark result
+     * @param r the runnable to capture profiles inside
+     * @return the number of profiles captured
+     * @throws Exception if an exception is thrown in the runnable, it gets rethrown
+     */
+    public int record(
             @NonNull ProjectScenario scenario,
             @NonNull Benchmark benchmark,
             @NonNull BenchmarkMode benchmarkMode,
             @NonNull ExceptionRunnable r)
             throws Exception {
 
-        for (GradleBuildProfile profile : capturer.capture(r)) {
+        Collection<GradleBuildProfile> profiles = capturer.capture(r);
+
+        for (GradleBuildProfile profile : profiles) {
             GradleBenchmarkResult.Builder result =
                     GradleBenchmarkResult.newBuilder()
                             .setProfile(profile)
@@ -190,6 +242,8 @@ public final class BenchmarkRecorder {
 
             benchmarkResults.add(result);
         }
+
+        return profiles.size();
     }
 
     public void uploadAsync() {
@@ -203,7 +257,7 @@ public final class BenchmarkRecorder {
             return;
         }
 
-        Timestamp timestamp = Timestamps.fromNanos(System.nanoTime());
+        Timestamp timestamp = Timestamps.fromMillis(System.currentTimeMillis());
         List<GradleBenchmarkResult> results =
                 benchmarkResults
                         .stream()
@@ -215,7 +269,8 @@ public final class BenchmarkRecorder {
         validateResults(results);
 
         List<GradleBenchmarkResult> filteredResults = strategy.filter(results);
-        Preconditions.checkArgument(!results.isEmpty(), "UploadStrategy returned no results");
+        Preconditions.checkArgument(
+                !filteredResults.isEmpty(), "UploadStrategy returned no results");
 
         for (ProfileUploader uploader : uploaders) {
             synchronized (BenchmarkRecorder.class) {
@@ -235,10 +290,13 @@ public final class BenchmarkRecorder {
     public static void awaitUploads(long timeout, @NonNull TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
         synchronized (BenchmarkRecorder.class) {
+            long start = System.nanoTime();
             for (Future<?> future : OUTSTANDING_UPLOADS) {
                 future.get(timeout, unit);
             }
             OUTSTANDING_UPLOADS.clear();
+            Duration elapsed = Duration.ofNanos(System.nanoTime() - start);
+            System.out.println("[BenchmarkRecorder]: spent " + elapsed + " waiting for uploads");
         }
     }
 

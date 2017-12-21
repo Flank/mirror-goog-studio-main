@@ -12,4 +12,5 @@ cc_grpc_proto_library(
     name = "profiler_cc_proto",
     srcs = glob(["*.proto"]),
     grpc_support = 1,
+    tags = ["no_windows"],
 )

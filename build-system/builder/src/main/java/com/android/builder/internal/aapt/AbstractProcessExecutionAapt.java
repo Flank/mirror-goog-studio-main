@@ -108,8 +108,9 @@ public abstract class AbstractProcessExecutionAapt extends AbstractAapt {
     @Override
     public ListenableFuture<File> compile(@NonNull CompileResourceRequest request)
             throws AaptException {
-        Preconditions.checkArgument(request.getInput().isFile(), "!file.isFile()");
-        Preconditions.checkArgument(request.getOutput().isDirectory(), "!output.isDirectory()");
+        Preconditions.checkArgument(request.getInputFile().isFile(), "!file.isFile()");
+        Preconditions.checkArgument(
+                request.getOutputDirectory().isDirectory(), "!output.isDirectory()");
 
         SettableFuture<File> result = SettableFuture.create();
 

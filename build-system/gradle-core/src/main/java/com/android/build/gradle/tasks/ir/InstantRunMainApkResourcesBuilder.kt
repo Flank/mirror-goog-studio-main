@@ -121,8 +121,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
 
     class ConfigAction(
             val variantScope: VariantScope,
-            val packagingScope: PackagingScope,
-            val taskInputType: TaskOutputHolder.OutputType) :
+            private val taskInputType: TaskOutputHolder.OutputType) :
             TaskConfigAction<InstantRunMainApkResourcesBuilder> {
 
         override fun getName() = variantScope.getTaskName("instantRunMainApkResources")
@@ -130,15 +129,16 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
         override fun getType() = InstantRunMainApkResourcesBuilder::class.java
 
         override fun execute(task: InstantRunMainApkResourcesBuilder) {
-            task.variantName = packagingScope.fullVariantName
-            task.setAndroidBuilder(packagingScope.androidBuilder)
+            task.variantName = variantScope.fullVariantName
+            task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
 
             task.resourceFiles = variantScope.getOutput(taskInputType)
             task.manifestFiles = variantScope.getOutput(INSTANT_RUN_MERGED_MANIFESTS)
             task.outputDirectory = variantScope.instantRunMainApkResourcesDir
-            task.aaptGeneration = AaptGeneration.fromProjectOptions(packagingScope.projectOptions)
+            task.aaptGeneration = AaptGeneration.fromProjectOptions(
+                    variantScope.globalScope.projectOptions)
             task.fileCache = variantScope.globalScope.buildCache!!
-            task.aaptIntermediateFolder = File(packagingScope.getIncrementalDir(name), "aapt-temp")
+            task.aaptIntermediateFolder = File(variantScope.getIncrementalDir(name), "aapt-temp")
             task.outputScope = variantScope.outputScope
 
             variantScope.addTaskOutput(INSTANT_RUN_MAIN_APK_RESOURCES, task.outputDirectory, name)

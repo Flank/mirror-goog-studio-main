@@ -56,7 +56,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import java.io.File;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -108,7 +107,8 @@ public class DefaultSdkLoader implements SdkLoader {
             @NonNull String targetHash,
             @NonNull Revision buildToolRevision,
             @NonNull ILogger logger,
-            @NonNull SdkLibData sdkLibData) {
+            @NonNull SdkLibData sdkLibData)
+            throws LicenceNotAcceptedException, InstallFailedException {
         init(logger);
 
         // One progress is used for the auto-download feature,
@@ -411,7 +411,8 @@ public class DefaultSdkLoader implements SdkLoader {
     public List<File> updateRepositories(
             @NonNull List<String> repositoryPaths,
             @NonNull SdkLibData sdkLibData,
-            @NonNull ILogger logger) {
+            @NonNull ILogger logger)
+            throws LicenceNotAcceptedException, InstallFailedException {
 
         ImmutableList.Builder<File> repositoriesBuilder = ImmutableList.builder();
         Map<RemotePackage, InstallResultType> installResults = new HashMap<>();
@@ -536,7 +537,8 @@ public class DefaultSdkLoader implements SdkLoader {
 
     @Override
     @Nullable
-    public File installSdkTool(@NonNull SdkLibData sdkLibData, @NonNull String packageId) {
+    public File installSdkTool(@NonNull SdkLibData sdkLibData, @NonNull String packageId)
+            throws LicenceNotAcceptedException, InstallFailedException {
         ProgressIndicator progress =
                 new LoggerProgressIndicatorWrapper(new StdLogger(StdLogger.Level.WARNING));
         RepoManager repoManager = mSdkHandler.getSdkManager(progress);
@@ -585,47 +587,25 @@ public class DefaultSdkLoader implements SdkLoader {
      *
      * @throws RuntimeException if some packages could not be installed.
      */
-    private void checkResults(Map<RemotePackage, InstallResultType> installResults) {
-        Function<InstallResultType, List<String>> find =
+    private void checkResults(Map<RemotePackage, InstallResultType> installResults)
+            throws LicenceNotAcceptedException, InstallFailedException {
+        Function<InstallResultType, List<RemotePackage>> find =
                 resultType ->
                         installResults
                                 .entrySet()
                                 .stream()
                                 .filter(p -> p.getValue() == resultType)
-                                .map(p -> p.getKey().getDisplayName())
+                                .map(Map.Entry::getKey)
                                 .collect(Collectors.toList());
 
-        List<String> unlicensedPackages = find.apply(InstallResultType.LICENSE_FAIL);
+        List<RemotePackage> unlicensedPackages = find.apply(InstallResultType.LICENSE_FAIL);
         if (!unlicensedPackages.isEmpty()) {
-            throw new RuntimeException(
-                    "You have not accepted the license agreements of the following SDK components:\n"
-                            + unlicensedPackages.toString()
-                            + ".\nBefore building your project, you need to accept the license agreements "
-                            + "and complete the installation of the missing components using the Android Studio SDK Manager.\n"
-                            + "Alternatively, to learn how to transfer the license agreements from one "
-                            + "workstation to another, go to http://d.android.com/r/studio-ui/export-licenses.html");
+            throw new LicenceNotAcceptedException(mSdkLocation.toPath(), unlicensedPackages);
         }
 
-        List<String> failedPackages = find.apply(InstallResultType.INSTALL_FAIL);
+        List<RemotePackage> failedPackages = find.apply(InstallResultType.INSTALL_FAIL);
         if (!failedPackages.isEmpty()) {
-            String message =
-                    String.format(
-                            "Failed to install the following SDK components:%n%s%n",
-                            failedPackages);
-
-            // Use NIO to check permissions, which seems to work across platform better.
-            if (!Files.isWritable(mSdkLocation.toPath())) {
-                message +=
-                        String.format(
-                                "The SDK directory (%s) is not writeable,%n"
-                                        + "please update the directory permissions.",
-                                mSdkLocation.getAbsolutePath());
-            } else {
-                message +=
-                        "Please install the missing components using the SDK manager in Android Studio.";
-            }
-
-            throw new RuntimeException(message);
+            throw new InstallFailedException(mSdkLocation.toPath(), failedPackages);
         }
     }
 

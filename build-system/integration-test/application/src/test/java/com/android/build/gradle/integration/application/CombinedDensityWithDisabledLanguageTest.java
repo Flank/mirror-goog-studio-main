@@ -11,8 +11,11 @@ import com.android.build.gradle.integration.common.utils.ApkHelper;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.VariantBuildOutput;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Collection;
@@ -90,5 +93,15 @@ public class CombinedDensityWithDisabledLanguageTest {
                         "application-label-fr:'LanguageSplitInFr'",
                         "application-label-fr-CA:'LanguageSplitInFr'",
                         "application-label-fr-BE:'LanguageSplitInFr'");
+
+        AndroidProject model =
+                project.model()
+                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                        .getSingle()
+                        .getOnlyModel();
+        assertThat(model.getSyncIssues()).named("Sync Issues").hasSize(1);
+        assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
+                .contains(
+                        "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.");
     }
 }

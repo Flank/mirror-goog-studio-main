@@ -68,85 +68,106 @@ public class CommandLineParserTest {
 
     @Test
     public void simpleCommand() throws FileNotFoundException {
-        assertThatAllShellResultsEquals("ls",
-                new CommandLine("ls", EMPTY_ARGS));
+        assertThatAllShellResultsEquals("ls", new CommandLine("ls", EMPTY_ARGS, EMPTY_ARGS));
     }
 
     @Test
     public void conjunction1() throws FileNotFoundException {
-        assertThatAllShellResultsEquals("ls && ls",
-                new CommandLine("ls", EMPTY_ARGS),
-                new CommandLine("ls", EMPTY_ARGS));
+        assertThatAllShellResultsEquals(
+                "ls && ls",
+                new CommandLine("ls", EMPTY_ARGS, EMPTY_ARGS),
+                new CommandLine("ls", EMPTY_ARGS, EMPTY_ARGS));
     }
 
     @Test
     public void conjunction2() throws FileNotFoundException {
-        assertThatEachShellResultEquals("ls & ls",
-                new CommandLine("ls", EMPTY_ARGS),
-                new CommandLine("ls", Lists.newArrayList("&", "ls")));
+        assertThatEachShellResultEquals(
+                "ls & ls",
+                new CommandLine("ls", EMPTY_ARGS, EMPTY_ARGS),
+                new CommandLine(
+                        "ls", Lists.newArrayList("&", "ls"), Lists.newArrayList("&", "ls")));
     }
 
     @Test
     public void conjunction3() throws FileNotFoundException {
-        assertThatAllShellResultsEquals("ls&&ls",
-                new CommandLine("ls", EMPTY_ARGS),
-                new CommandLine("ls", EMPTY_ARGS));
+        assertThatAllShellResultsEquals(
+                "ls&&ls",
+                new CommandLine("ls", EMPTY_ARGS, EMPTY_ARGS),
+                new CommandLine("ls", EMPTY_ARGS, EMPTY_ARGS));
     }
 
     @Test
     public void simpleCommandWithParameter() throws FileNotFoundException {
-        assertThatAllShellResultsEquals("ls -rf",
-                new CommandLine("ls", Lists.newArrayList("-rf")));
+        assertThatAllShellResultsEquals(
+                "ls -rf",
+                new CommandLine("ls", Lists.newArrayList("-rf"), Lists.newArrayList("-rf")));
     }
 
     @Test
     public void twoCommands() throws FileNotFoundException {
-        assertThatAllShellResultsEquals("ls\nmkdir",
-                new CommandLine("ls", EMPTY_ARGS),
-                new CommandLine("mkdir", EMPTY_ARGS));
+        assertThatAllShellResultsEquals(
+                "ls\nmkdir",
+                new CommandLine("ls", EMPTY_ARGS, EMPTY_ARGS),
+                new CommandLine("mkdir", EMPTY_ARGS, EMPTY_ARGS));
     }
 
     @Test
     public void quote1() throws FileNotFoundException {
-        assertThatAllShellResultsEquals("\"a\"",
-                new CommandLine("a", EMPTY_ARGS));
+        assertThatAllShellResultsEquals("\"a\"", new CommandLine("a", EMPTY_ARGS, EMPTY_ARGS));
     }
 
     @Test
     public void quote2() throws FileNotFoundException {
-        assertThatAllShellResultsEquals("\\\"a\\\"",
-                new CommandLine("\"a\"", EMPTY_ARGS));
+        assertThatAllShellResultsEquals(
+                "\\\"a\\\"", new CommandLine("\"a\"", EMPTY_ARGS, EMPTY_ARGS));
     }
 
     // Test from msvcrt example at https://msdn.microsoft.com/en-us/library/a1y7w461.aspx
     @Test
     public void msvcr1() throws FileNotFoundException {
-        assertThatAllShellResultsEquals("\"a b c\" d e",
-                new CommandLine("a b c", Lists.newArrayList("d", "e")));
+        assertThatAllShellResultsEquals(
+                "\"a b c\" d e",
+                new CommandLine(
+                        "a b c", Lists.newArrayList("d", "e"), Lists.newArrayList("d", "e")));
     }
 
     @Test
     public void msvcrt2() throws FileNotFoundException {
-        assertThatAllShellResultsEquals("\"ab\\\"c\" \"\\\\\" d",
-                new CommandLine("ab\"c", Lists.newArrayList("\\", "d")));
+        assertThatAllShellResultsEquals(
+                "\"ab\\\"c\" \"\\\\\" d",
+                new CommandLine(
+                        "ab\"c",
+                        Lists.newArrayList("\\", "d"),
+                        Lists.newArrayList("\"\\\\\"", "d")));
     }
 
     @Test
     public void msvcrt3() throws FileNotFoundException {
-        assertThatEachShellResultEquals("a\\\\\\b d\"e f\"g h",
-                new CommandLine("a\\\\\\b", Lists.newArrayList("de fg", "h")),
-                new CommandLine("a\\b", Lists.newArrayList("de fg", "h")));
+        assertThatEachShellResultEquals(
+                "a\\\\\\b d\"e f\"g h",
+                new CommandLine(
+                        "a\\\\\\b",
+                        Lists.newArrayList("de fg", "h"),
+                        Lists.newArrayList("d\"e f\"g", "h")),
+                new CommandLine(
+                        "a\\b",
+                        Lists.newArrayList("de fg", "h"),
+                        Lists.newArrayList("d\"e f\"g", "h")));
     }
 
     @Test
     public void msvcrt4() throws FileNotFoundException {
-        assertThatAllShellResultsEquals("a\\\\\\\"b c d",
-                new CommandLine("a\\\"b", Lists.newArrayList("c", "d")));
+        assertThatAllShellResultsEquals(
+                "a\\\\\\\"b c d",
+                new CommandLine(
+                        "a\\\"b", Lists.newArrayList("c", "d"), Lists.newArrayList("c", "d")));
     }
 
     @Test
     public void msvcrt5() throws FileNotFoundException {
-        assertThatAllShellResultsEquals("a\\\\\\\\\"b c\" d e",
-                new CommandLine("a\\\\b c", Lists.newArrayList("d", "e")));
+        assertThatAllShellResultsEquals(
+                "a\\\\\\\\\"b c\" d e",
+                new CommandLine(
+                        "a\\\\b c", Lists.newArrayList("d", "e"), Lists.newArrayList("d", "e")));
     }
 }

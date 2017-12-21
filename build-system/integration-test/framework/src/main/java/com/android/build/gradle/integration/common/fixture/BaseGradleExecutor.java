@@ -19,12 +19,10 @@ package com.android.build.gradle.integration.common.fixture;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
-import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -32,27 +30,40 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
 
 /**
- * Common flags shared by {@link BuildModel} and {@link RunGradleTasks}.
+ * Common flags shared by {@link ModelBuilder} and {@link GradleTaskExecutor}.
  *
  * @param <T> The concrete implementing class.
  */
 @SuppressWarnings("unchecked") // Returning this as <T> in most methods.
 public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
+
+    private static Path jvmLogDir;
+
+    static {
+        try {
+            jvmLogDir = Files.createTempDirectory("GRADLE_JVM_LOGS");
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
     /** Number of times we repeat Tooling API operations that are expected to succeed. */
-    public static final int RETRY_COUNT = 5;
+    public static final int RETRY_COUNT = 0;
 
     private static final boolean VERBOSE =
             !Strings.isNullOrEmpty(System.getenv().get("CUSTOM_TEST_VERBOSE"));
@@ -80,6 +91,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
             @NonNull Path projectDirectory,
             @NonNull Path buildDotGradleFile,
+            @Nullable Path profileDirectory,
             @Nullable String heapSize) {
         this(
                 projectConnection,
@@ -87,6 +99,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                 projectDirectory,
                 buildDotGradleFile,
                 heapSize,
+                profileDirectory,
                 false);
     }
 
@@ -96,6 +109,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull Path projectDirectory,
             @NonNull Path buildDotGradleFile,
             @Nullable String heapSize,
+            @Nullable Path profileDirectory,
             boolean disableRetryLogic) {
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
@@ -105,16 +119,16 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
         this.heapSize = heapSize;
         with(StringOption.BUILD_CACHE_DIR, getBuildCacheDir().getAbsolutePath());
+
+        if (profileDirectory != null) {
+            with(StringOption.PROFILE_OUTPUT_DIR, profileDirectory.toString());
+        }
         this.disableRetryLogic = disableRetryLogic;
     }
 
     /** Return the default build cache location for a project. */
     public final File getBuildCacheDir() {
         return new File(projectDirectory.toFile(), ".buildCache");
-    }
-
-    final Path getJvmLogDir() {
-        return projectDirectory.resolve("jvmLogs");
     }
 
     public final T with(@NonNull BooleanOption option, boolean value) {
@@ -180,6 +194,10 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
+    public final T withSdkAutoDownload() {
+        return with(BooleanOption.ENABLE_SDK_DOWNLOAD, true);
+    }
+
     protected final List<String> getArguments() throws IOException {
         List<String> arguments = new ArrayList<>();
         arguments.addAll(this.arguments);
@@ -235,13 +253,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             jvmArguments.add(JacocoAgent.getJvmArg());
         }
 
+        jvmArguments.add("-XX:ErrorFile=" + jvmLogDir.resolve("java_error.log").toString());
         if (CAPTURE_JVM_LOGS) {
-            Files.createDirectories(getJvmLogDir());
             jvmArguments.add("-XX:+UnlockDiagnosticVMOptions");
             jvmArguments.add("-XX:+LogVMOutput");
-            jvmArguments.add("-XX:LogFile=" + getJvmLogDir().resolve("java_log.log").toString());
-            jvmArguments.add(
-                    "-XX:ErrorFile=" + getJvmLogDir().resolve("java_error.log").toString());
+            jvmArguments.add("-XX:LogFile=" + jvmLogDir.resolve("java_log.log").toString());
         }
 
         launcher.setJvmArguments(Iterables.toArray(jvmArguments, String.class));
@@ -265,16 +281,24 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
     }
 
-    private void printJvmLogs() throws IOException {
+    private static void printJvmLogs() throws IOException {
+        List<Path> files;
+        try (Stream<Path> walk = Files.walk(jvmLogDir)) {
+            files = walk.filter(Files::isRegularFile).collect(Collectors.toList());
+        }
+        if (files.isEmpty()) {
+            return;
+        }
         System.err.println("----------- JVM Log start -----------");
-        for (Path path : Files.list(getJvmLogDir()).collect(Collectors.toList())) {
+        for (Path path : files) {
             System.err.print("---- Log file: ");
             System.err.print(path);
             System.err.println("----");
-            System.err.println();
             for (String line : Files.readAllLines(path)) {
                 System.err.println(line);
             }
+            System.err.println("----");
+            System.err.println();
         }
         System.err.println("------------ JVM Log end ------------");
     }
@@ -296,7 +320,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             if (cause.getClass()
                     .getName()
                     .equals("org.gradle.launcher.daemon.client.DaemonDisappearedException")) {
-                if (CAPTURE_JVM_LOGS && failedAttempts == 0) {
+                if (failedAttempts == 0) {
                     printJvmLogs();
                 }
                 if (failedAttempts++ < RETRY_COUNT) {

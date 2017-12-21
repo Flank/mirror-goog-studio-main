@@ -16,6 +16,8 @@
 
 package com.android.builder.utils;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -25,7 +27,6 @@ import com.android.utils.concurrency.ReadWriteThreadLock;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.base.Verify;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -105,7 +106,7 @@ public final class SynchronizedFile {
         EXCLUSIVE
     }
 
-    @NonNull private static final String LOCK_FILE_EXTENSION = ".lock";
+    @NonNull public static final String LOCK_FILE_EXTENSION = ".lock";
 
     /** The file whose access will be synchronized. */
     @NonNull private final File fileToSynchronize;
@@ -250,8 +251,8 @@ public final class SynchronizedFile {
             throws ExecutionException {
         ReadWriteProcessLock.Lock lock =
                 lockingType == LockingType.SHARED
-                        ? Verify.verifyNotNull(readWriteProcessLock).readLock()
-                        : Verify.verifyNotNull(readWriteProcessLock).writeLock();
+                        ? checkNotNull(readWriteProcessLock).readLock()
+                        : checkNotNull(readWriteProcessLock).writeLock();
         try {
             lock.lock();
         } catch (IOException e) {
@@ -277,8 +278,8 @@ public final class SynchronizedFile {
             throws ExecutionException {
         ReadWriteThreadLock.Lock lock =
                 lockingType == LockingType.SHARED
-                        ? Verify.verifyNotNull(readWriteThreadLock).readLock()
-                        : Verify.verifyNotNull(readWriteThreadLock).writeLock();
+                        ? checkNotNull(readWriteThreadLock).readLock()
+                        : checkNotNull(readWriteThreadLock).writeLock();
         lock.lock();
         try {
             return action.accept(fileToSynchronize);

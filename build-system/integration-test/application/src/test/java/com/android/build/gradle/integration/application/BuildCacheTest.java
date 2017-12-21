@@ -17,9 +17,10 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.google.common.base.Verify.verifyNotNull;
 
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -58,7 +59,7 @@ public class BuildCacheTest {
         File buildCacheDir = new File(project.getTestDir(), "build-cache");
         FileUtils.deletePath(buildCacheDir);
 
-        RunGradleTasks executor =
+        GradleTaskExecutor executor =
                 project.executor()
                         .withUseDexArchive(false)
                         .with(BooleanOption.ENABLE_BUILD_CACHE, true)
@@ -70,7 +71,7 @@ public class BuildCacheTest {
         TransformOutputContent preDexContent = new TransformOutputContent(preDexDir);
 
         List<File> cachedEntryDirs =
-                Arrays.stream(buildCacheDir.listFiles())
+                Arrays.stream(verifyNotNull(buildCacheDir.listFiles()))
                         .filter(File::isDirectory) // Remove the lock files
                         .filter(f -> !containsAapt(f)) // Remove aapt2 cache
                         .collect(Collectors.toList());
@@ -103,7 +104,7 @@ public class BuildCacheTest {
         executor.run("clean", "assembleDebug");
 
         cachedEntryDirs =
-                Arrays.stream(buildCacheDir.listFiles())
+                Arrays.stream(verifyNotNull(buildCacheDir.listFiles()))
                         .filter(File::isDirectory) // Remove the lock files
                         .filter(f -> !containsAapt(f)) // Remove aapt2 cache
                         .collect(Collectors.toList());
@@ -141,10 +142,10 @@ public class BuildCacheTest {
         assertThat(buildCacheDir).doesNotExist();
     }
 
-    private boolean containsAapt(File dir) {
+    private static boolean containsAapt(File dir) {
         if (dir.isFile()) {
             return dir.getName().contains("libaapt2_jni");
         }
-        return Arrays.stream(dir.listFiles()).anyMatch(f -> containsAapt(f));
+        return Arrays.stream(verifyNotNull(dir.listFiles())).anyMatch(BuildCacheTest::containsAapt);
     }
 }

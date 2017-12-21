@@ -16,20 +16,17 @@
 
 package com.android.build.gradle.integration.performance
 
-import com.android.build.gradle.integration.common.fixture.BuildModel
+import com.android.build.gradle.integration.common.fixture.ModelBuilder
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
-import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.instant.InstantRunTestUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
-import java.io.File
 import java.nio.file.Paths
-import java.util.concurrent.ThreadLocalRandom
 import java.util.function.Supplier
 
 object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
@@ -39,8 +36,6 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
             ProjectScenario.D8_MONODEX_J8)
 
     private const val ACTIVITY_PATH = "app/src/main/java/de/danoeh/antennapod/activity/MainActivity.java"
-
-    private val INSTANT_RUN_TARGET_DEVICE_VERSION = AndroidVersion(24, null)
 
     override fun get(): List<Benchmark> {
         var benchmarks: List<Benchmark> = mutableListOf()
@@ -76,7 +71,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE,
                             action = { record, project, executor, _ ->
                                 executor.run(":app:assembleDebug")
-                                addMethodToActivity(project.file(ACTIVITY_PATH))
+                                PerformanceTestUtil.addMethodToActivity(project.file(ACTIVITY_PATH))
                                 record { executor.run(":app:assembleDebug") }
                             }
                     ),
@@ -86,7 +81,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
                             action = { record, project, executor, _ ->
                                 executor.run(":app:assembleDebug")
-                                changeActivity(project.file(ACTIVITY_PATH))
+                                PerformanceTestUtil.changeActivity(project.file(ACTIVITY_PATH))
                                 record { executor.run(":app:assembleDebug") }
                             }
                     ),
@@ -104,7 +99,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__API_CHANGE,
                             action = { record, project, executor, _ ->
                                 executor.run(":app:assembleDebug")
-                                addMethodToActivity(project.file(ACTIVITY_PATH))
+                                PerformanceTestUtil.addMethodToActivity(project.file(ACTIVITY_PATH))
                                 record { executor.run(":app:assembleDebug") }
                             }
                     ),
@@ -114,7 +109,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
                             action = { record, project, executor, _ ->
                                 executor.run(":app:assembleDebug")
-                                changeActivity(project.file(ACTIVITY_PATH))
+                                PerformanceTestUtil.changeActivity(project.file(ACTIVITY_PATH))
                                 record { executor.run(":app:assembleDebug") }
                             }
                     ),
@@ -157,7 +152,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
     fun benchmark(
             scenario: ProjectScenario,
             benchmarkMode: Logging.BenchmarkMode,
-            action: ((() -> Unit) -> Unit, GradleTestProject, RunGradleTasks, BuildModel) -> Unit): Benchmark {
+            action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, ModelBuilder) -> Unit): Benchmark {
         return Benchmark(
                 scenario = scenario,
                 benchmark = Logging.Benchmark.ANTENNA_POD,
@@ -169,7 +164,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                 projectFactory = { projectBuilder ->
                     projectBuilder
                         .fromExternalProject("AntennaPod")
-                        .withRelativeProfileDirectory(
+                        .enableProfileOutputInDirectory(
                                 Paths.get("AntennaPod", "build", "android-profile"))
                         .withHeap("1536M")
                         .create()
@@ -185,47 +180,18 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
     private fun instantRunBenchmark(
             scenario: ProjectScenario,
             benchmarkMode: Logging.BenchmarkMode,
-            action: ((() -> Unit) -> Unit, GradleTestProject, RunGradleTasks, BuildModel) -> Unit): Benchmark {
+            action: BenchmarkAction,
+            instantRunTargetDeviceVersion: AndroidVersion = AndroidVersion(24, null)): Benchmark {
         return benchmark(
                 scenario = scenario,
                 benchmarkMode = benchmarkMode,
                 action = { record, project, executor, model ->
-                    action(record, project, executor.withInstantRun(INSTANT_RUN_TARGET_DEVICE_VERSION), model)
+                    action(record, project, executor.withInstantRun(instantRunTargetDeviceVersion), model)
                     assertInstantRunInvoked(model)
                 })
     }
 
-    private fun addMethodToActivity(file: File) {
-        val newMethodName = "newMethod" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE)
-        TestFileUtils.searchAndReplace(
-                file,
-                "public void onStart\\(\\) \\{",
-                """
-                    public void onStart() {
-                       $newMethodName();
-                """.trimIndent())
-
-        TestFileUtils.addMethod(
-                file,
-                """
-                    private void $newMethodName () {
-                        Log.d(TAG, "$newMethodName called");
-                    }
-                """.trimIndent())
-    }
-
-    private fun changeActivity(file: File) {
-        val rand = "rand" + ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE)
-        TestFileUtils.searchAndReplace(
-                file,
-                "public void onStart\\(\\) \\{",
-                """
-                    public void onStart() {
-                       Log.d(TAG, "onStart called $rand");
-                """.trimIndent())
-    }
-
-    private fun assertInstantRunInvoked(model: BuildModel) {
+    private fun assertInstantRunInvoked(model: ModelBuilder) {
         /*
          * The following lines of code verify that an instant run happened
          * by asserting that we can parse an InstantRunBuildInfo. If we

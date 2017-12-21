@@ -163,7 +163,7 @@ public class NativeBuildConfigValueBuilderTest {
                         + "          \"src\": {\n"
                         + "            \"path\": \"/projects/MyProject/jni/a.c\"\n"
                         + "          },\n"
-                        + "          \"flags\": \"\\\"-Isome-include-path\\\"\"\n"
+                        + "          \"flags\": \"-Isome-include-path\"\n"
                         + "        }\n"
                         + "      ],\n"
                         + "      \"output\": {\n"

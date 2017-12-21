@@ -70,6 +70,7 @@ public class FeatureExtension extends LibraryExtension {
                 signingConfigs,
                 buildOutputs,
                 extraModelInfo);
+        setGeneratePureSplits(true);
     }
 
     /**

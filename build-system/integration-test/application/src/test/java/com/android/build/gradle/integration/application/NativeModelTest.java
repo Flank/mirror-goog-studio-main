@@ -792,7 +792,7 @@ public class NativeModelTest {
         Set<String> flags = Sets.newHashSet();
         for (NativeLibraryValue library : config.libraries.values()) {
             for (NativeSourceFileValue file : library.files) {
-                flags.addAll(StringHelper.tokenizeString(file.flags));
+                flags.addAll(StringHelper.tokenizeCommandLineToRaw(file.flags));
             }
         }
         return flags;

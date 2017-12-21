@@ -23,6 +23,8 @@ namespace profiler {
 
 using grpc::ServerContext;
 using grpc::Status;
+using grpc::StatusCode;
+using proto::Session;
 
 grpc::Status InternalMemoryServiceImpl::RegisterMemoryAgent(
     grpc::ServerContext *context,
@@ -62,14 +64,14 @@ grpc::Status InternalMemoryServiceImpl::RegisterMemoryAgent(
 Status InternalMemoryServiceImpl::RecordAllocStats(
     ServerContext *context, const proto::AllocStatsRequest *request,
     proto::EmptyMemoryReply *reply) {
-  auto result = collectors_.find(request->process_id());
-  if (result == collectors_.end()) {
-    return ::grpc::Status(
-        ::grpc::StatusCode::NOT_FOUND,
-        "The memory collector for the specified pid has not been started yet.");
+  MemoryCollector *collector = nullptr;
+  if (!FindCollector(request->pid(), &collector)) {
+    return Status(StatusCode::NOT_FOUND,
+                  "The memory collector for the specified pid has not "
+                  "been started yet.");
   }
 
-  result->second.memory_cache()->SaveAllocStatsSample(
+  collector->memory_cache()->SaveAllocStatsSample(
       request->alloc_stats_sample());
 
   return Status::OK;
@@ -78,14 +80,14 @@ Status InternalMemoryServiceImpl::RecordAllocStats(
 Status InternalMemoryServiceImpl::RecordGcStats(
     ServerContext *context, const proto::GcStatsRequest *request,
     proto::EmptyMemoryReply *reply) {
-  auto result = collectors_.find(request->process_id());
-  if (result == collectors_.end()) {
-    return ::grpc::Status(
-        ::grpc::StatusCode::NOT_FOUND,
-        "The memory collector for the specified pid has not been started yet.");
+  MemoryCollector *collector = nullptr;
+  if (!FindCollector(request->pid(), &collector)) {
+    return Status(StatusCode::NOT_FOUND,
+                  "The memory collector for the specified pid has not "
+                  "been started yet.");
   }
 
-  result->second.memory_cache()->SaveGcStatsSample(request->gc_stats_sample());
+  collector->memory_cache()->SaveGcStatsSample(request->gc_stats_sample());
 
   return Status::OK;
 }
@@ -93,28 +95,28 @@ Status InternalMemoryServiceImpl::RecordGcStats(
 grpc::Status InternalMemoryServiceImpl::RecordAllocationEvents(
     grpc::ServerContext *context, const proto::BatchAllocationSample *request,
     proto::EmptyMemoryReply *reply) {
-  auto result = collectors_.find(request->process_id());
-  if (result == collectors_.end()) {
-    return ::grpc::Status(
-        ::grpc::StatusCode::NOT_FOUND,
-        "The memory collector for the specified pid has not been started yet.");
+  MemoryCollector *collector = nullptr;
+  if (!FindCollector(request->pid(), &collector)) {
+    return Status(StatusCode::NOT_FOUND,
+                  "The memory collector for the specified pid has not "
+                  "been started yet.");
   }
 
-  result->second.memory_cache()->SaveAllocationEvents(request);
+  collector->memory_cache()->SaveAllocationEvents(request);
   return Status::OK;
 }
 
 grpc::Status InternalMemoryServiceImpl::RecordJNIRefEvents(
     grpc::ServerContext *context, const proto::BatchJNIGlobalRefEvent *request,
     proto::EmptyMemoryReply *reply) {
-  auto result = collectors_.find(request->process_id());
-  if (result == collectors_.end()) {
-    return ::grpc::Status(
-        ::grpc::StatusCode::NOT_FOUND,
-        "The memory collector for the specified pid has not been started yet.");
+  MemoryCollector *collector = nullptr;
+  if (!FindCollector(request->pid(), &collector)) {
+    return Status(StatusCode::NOT_FOUND,
+                  "The memory collector for the specified pid has not "
+                  "been started yet.");
   }
 
-  result->second.memory_cache()->SaveJNIRefEvents(request);
+  collector->memory_cache()->SaveJNIRefEvents(request);
   return Status::OK;
 }
 
@@ -148,6 +150,27 @@ bool InternalMemoryServiceImpl::SendRequestToAgent(
     }
   }
 
+  return true;
+}
+
+bool InternalMemoryServiceImpl::FindSession(int32_t pid,
+                                            proto::Session *session) {
+  return sessions_.GetActiveSessionByPid(pid, session);
+}
+
+bool InternalMemoryServiceImpl::FindCollector(int32_t pid,
+                                              MemoryCollector **collector) {
+  Session session;
+  if (!FindSession(pid, &session)) {
+    return false;
+  }
+
+  auto result = collectors_.find(session.session_id());
+  if (result == collectors_.end()) {
+    return false;
+  }
+
+  *collector = &(result->second);
   return true;
 }
 

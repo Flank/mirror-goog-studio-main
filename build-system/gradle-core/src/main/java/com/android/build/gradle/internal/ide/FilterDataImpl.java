@@ -84,7 +84,7 @@ public final class FilterDataImpl implements FilterData, Serializable {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
+        return MoreObjects.toStringHelper(FilterData.class)
                 .add("type", filterType)
                 .add("value", identifier)
                 .toString();

@@ -18,6 +18,7 @@ dependencies {
     compile libs.bouncycastle_pkix
     compile libs.bouncycastle_prov
     compile libs.kotlin_stdlib
+    compile libs.kotlin_reflect
     compile libs.protobuf
 
     testCompile libs.junit
@@ -31,7 +32,7 @@ dependencies {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.0.0"
+        artifact = libs.proto_compiler
     }
 }
 

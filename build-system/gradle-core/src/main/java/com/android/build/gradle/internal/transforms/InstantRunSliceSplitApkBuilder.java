@@ -30,10 +30,10 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
-import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.utils.FileCache;
+import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 
 /**
@@ -63,27 +64,35 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             @NonNull InstantRunBuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCache fileCache,
-            @NonNull PackagingScope packagingScope,
+            @NonNull String applicationId,
             @Nullable CoreSigningConfig signingConf,
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
             @NonNull File aaptIntermediateDirectory,
-            @Nullable Boolean runAapt2Serially) {
+            @Nullable Boolean runAapt2Serially,
+            @NonNull FileCollection resources,
+            @NonNull FileCollection resourcesWithMainManifest,
+            @NonNull FileCollection apkList,
+            @NonNull ApkInfo mainApk) {
         super(
                 logger,
                 project,
                 buildContext,
                 androidBuilder,
                 fileCache,
-                packagingScope,
+                applicationId,
                 signingConf,
                 aaptGeneration,
                 aaptOptions,
                 outputDirectory,
                 supportDirectory,
-                aaptIntermediateDirectory);
+                aaptIntermediateDirectory,
+                resources,
+                resourcesWithMainManifest,
+                apkList,
+                mainApk);
         runSerially = runAapt2Serially == null
                 ? SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
                 : runAapt2Serially;
@@ -191,17 +200,18 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
         logger.debug("Invoking aapt2 serially : {} ", runSerially);
 
         // now build the APKs in parallel
-        splitsToBuild.forEach(split -> {
-            try {
-                if (runSerially) {
-                    generateSplitApk(split);
-                } else {
-                    executor.execute(() -> generateSplitApk(split));
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+        splitsToBuild.forEach(
+                split -> {
+                    try {
+                        if (runSerially) {
+                            generateSplitApk(mainApk, split);
+                        } else {
+                            executor.execute(() -> generateSplitApk(mainApk, split));
+                        }
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
         if (!runSerially) {
             executor.waitForTasksWithQuickFail(true /* cancelRemaining */);
         }

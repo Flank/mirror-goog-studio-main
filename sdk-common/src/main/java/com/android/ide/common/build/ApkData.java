@@ -77,13 +77,13 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
         return true;
     }
 
-    @Nullable
-    public abstract String getFilterName();
+
 
     public abstract String getBaseName();
 
     public abstract String getFullName();
 
+    @NonNull
     @Override
     public abstract OutputType getType();
 
@@ -113,11 +113,14 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
         return versionCode;
     }
 
+    @Nullable
+    @Override
     public String getVersionName() {
         return versionName;
     }
 
-    @NonNull
+    @Nullable
+    @Override
     public String getOutputFileName() {
         return outputFileName;
     }
@@ -171,6 +174,7 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
         enabled.set(false);
     }
 
+    @Override
     public boolean isEnabled() {
         return enabled.get();
     }

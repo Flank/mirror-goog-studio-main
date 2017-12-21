@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AndroidProject;
@@ -147,7 +146,7 @@ public class ModelBuilderTest {
 
         when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
 
-        OutputScope outputScope = new OutputScope(MultiOutputPolicy.SPLITS);
+        OutputScope outputScope = new OutputScope();
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");
         Files.createParentDirs(apkOutput);
@@ -194,7 +193,7 @@ public class ModelBuilderTest {
         createVariantData(variantScope, variantConfiguration);
 
         when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
-        OutputScope outputScope = new OutputScope(MultiOutputPolicy.SPLITS);
+        OutputScope outputScope = new OutputScope();
         OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
@@ -268,7 +267,7 @@ public class ModelBuilderTest {
             expectedVariantNames.add(variantName);
             createVariantData(variantScope, variantConfiguration);
 
-            OutputScope outputScope = new OutputScope(MultiOutputPolicy.SPLITS);
+            OutputScope outputScope = new OutputScope();
             File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name" + i));
             File apkOutput = new File(variantOutputFolder, "main.apk");
             Files.createParentDirs(apkOutput);
@@ -346,7 +345,7 @@ public class ModelBuilderTest {
         when(variantManager.getVariantScopes())
                 .thenReturn(ImmutableList.of(variantScope, testVariantScope));
 
-        OutputScope outputScope = new OutputScope(MultiOutputPolicy.SPLITS);
+        OutputScope outputScope = new OutputScope();
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");
         Files.createParentDirs(apkOutput);

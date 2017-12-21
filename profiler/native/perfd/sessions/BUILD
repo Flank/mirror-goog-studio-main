@@ -15,6 +15,7 @@ cc_library(
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
     ],
+    tags = ["no_windows"],
     deps = [
         "//tools/base/profiler/native/utils:profiler_utils",
     ],
@@ -32,6 +33,7 @@ cc_test(
     data = [
     ],
     linkstatic = 1,
+    tags = ["no_windows"],
     deps = [
         ":profiler_sessions",
         "//external:gmock_main",

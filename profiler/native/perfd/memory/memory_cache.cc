@@ -229,8 +229,9 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
   response->set_end_timestamp(end_timestamp);
 }
 
-void MemoryCache::LoadMemoryJvmtiData(int64_t start_time_exl, int64_t end_time_inc,
-                                 MemoryData* response) {
+void MemoryCache::LoadMemoryJvmtiData(int64_t start_time_exl,
+                                      int64_t end_time_inc,
+                                      MemoryData* response) {
   std::lock_guard<std::mutex> alloc_lock(allocations_samples_mutex_);
   std::lock_guard<std::mutex> jni_lock(jni_ref_batches_mutex_);
 

@@ -54,9 +54,10 @@ public class StringHelper {
     /**
      * Returns a list of Strings containing the objects passed in argument.
      *
-     * If the objects are strings, they are directly added to the list.
-     * If the objects are collections of strings, the strings are added.
-     * For other objects, the result of their toString() is added.
+     * <p>If the objects are strings, they are directly added to the list. If the objects are
+     * collections of strings, the strings are added. For other objects, the result of their
+     * toString() is added.
+     *
      * @param objects the objects to add
      * @return the list of objects.
      */
@@ -93,30 +94,20 @@ public class StringHelper {
         }
     }
 
-    /**
-     * Quote and join a list of tokens with platform specific rules.
-     *
-     * @param tokens the token to be quoted and joined
-     * @return the string
-     */
-    @NonNull
-    public static String quoteAndJoinTokens(@NonNull List<String> tokens) {
-        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
-            return StringHelperWindows.quoteAndJoinTokens(tokens);
-        else return StringHelperPOSIX.quoteAndJoinTokens(tokens);
+    public static List<String> tokenizeCommandLineToEscaped(@NonNull String commandLine) {
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            return StringHelperWindows.tokenizeCommandLineToEscaped(commandLine);
+        } else {
+            return StringHelperPOSIX.tokenizeCommandLineToEscaped(commandLine);
+        }
     }
 
-    /**
-     * Tokenize a string with platform specific rules.
-     *
-     * @param string the string to be tokenized
-     * @return the list of tokens
-     */
-    @NonNull
-    public static List<String> tokenizeString(@NonNull String string) {
-        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
-            return StringHelperWindows.tokenizeString(string);
-        else return StringHelperPOSIX.tokenizeString(string);
+    public static List<String> tokenizeCommandLineToRaw(@NonNull String commandLine) {
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            return StringHelperWindows.tokenizeCommandLineToRaw(commandLine);
+        } else {
+            return StringHelperPOSIX.tokenizeCommandLineToRaw(commandLine);
+        }
     }
 
     public static String toSystemLineSeparator(@NonNull String input) {

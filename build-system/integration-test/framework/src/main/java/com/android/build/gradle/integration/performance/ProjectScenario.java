@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.performance;
 
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.options.BooleanOption;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult.Flags;
 import java.util.function.Consumer;
@@ -103,7 +103,7 @@ public enum ProjectScenario {
         return flags.getCompiler() == Flags.Compiler.D8;
     }
 
-    public RunGradleTasks configureExecutor(RunGradleTasks executor) {
+    public GradleTaskExecutor configureExecutor(GradleTaskExecutor executor) {
         return executor.withEnableInfoLogging(false)
                 .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
                 .with(BooleanOption.ENABLE_D8, useD8())

@@ -29,7 +29,6 @@ import com.android.ide.common.internal.ResourceCompilationException;
 import com.android.ide.common.internal.ResourceProcessor;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
-import com.android.tools.aapt2.Aapt2RenamingConventions;
 import com.android.utils.ILogger;
 import com.google.common.base.MoreObjects;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -104,7 +103,7 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
             final Job<AaptProcess> aaptProcessJob =
                     new AaptQueueThreadContext.QueuedJob(
                             key,
-                            "Compiling " + request.getInput().getName(),
+                            "Compiling " + request.getInputFile().getName(),
                             new Task<AaptProcess>() {
                                 @Override
                                 public void run(
@@ -126,9 +125,9 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
                                 public void finished() {
                                     result.set(
                                             new File(
-                                                    request.getOutput(),
+                                                    request.getOutputDirectory(),
                                                     Aapt2RenamingConventions.compilationRename(
-                                                            request.getInput())));
+                                                            request.getInputFile())));
                                 }
 
                                 @Override
@@ -139,8 +138,10 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
                                 @Override
                                 public String toString() {
                                     return MoreObjects.toStringHelper(this)
-                                            .add("from", request.getInput().getAbsolutePath())
-                                            .add("to", request.getOutput().getAbsolutePath())
+                                            .add("from", request.getInputFile().getAbsolutePath())
+                                            .add(
+                                                    "to",
+                                                    request.getOutputDirectory().getAbsolutePath())
                                             .toString();
                                 }
                             },

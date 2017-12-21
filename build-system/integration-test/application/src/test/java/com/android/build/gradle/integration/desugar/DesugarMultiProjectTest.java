@@ -19,8 +19,8 @@ package com.android.build.gradle.integration.desugar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
@@ -243,7 +243,7 @@ public class DesugarMultiProjectTest {
     }
 
     @NonNull
-    private RunGradleTasks executor() {
+    private GradleTaskExecutor executor() {
         return project.executor().with(BooleanOption.ENABLE_D8_DESUGARING, useD8Desugaring);
     }
 }

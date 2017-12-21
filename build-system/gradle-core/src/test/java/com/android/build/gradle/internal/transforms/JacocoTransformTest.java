@@ -17,20 +17,24 @@
 package com.android.build.gradle.internal.transforms;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
+import static org.mockito.Mockito.when;
 
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.fixtures.DirectWorkerExecutor;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.gradle.api.artifacts.Configuration;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mockito;
 
 /** Testing {@link JacocoTransform}. */
 public class JacocoTransformTest {
@@ -46,8 +50,7 @@ public class JacocoTransformTest {
     }
 
     @Test
-    public void testCopyFiles()
-            throws IOException, TransformException, InterruptedException, ClassNotFoundException {
+    public void testCopyFiles() throws IOException, TransformException, InterruptedException {
 
         File inputDir = tmp.newFolder("in");
         Path inputDirPath = inputDir.toPath();
@@ -65,9 +68,12 @@ public class JacocoTransformTest {
                 TransformTestHelper.invocationBuilder()
                         .setInputs(ImmutableSet.of(directoryInput))
                         .setTransformOutputProvider(outputProvider)
+                        .setGradleWorkerExecutor(new DirectWorkerExecutor())
                         .build();
 
-        JacocoTransform transform = new JacocoTransform();
+        Configuration configuration = Mockito.mock(Configuration.class);
+        when(configuration.getFiles()).thenReturn(ImmutableSet.of());
+        JacocoTransform transform = new JacocoTransform(configuration);
         transform.transform(invocation);
 
         // "in" is added by the output provider based on the name of the input.

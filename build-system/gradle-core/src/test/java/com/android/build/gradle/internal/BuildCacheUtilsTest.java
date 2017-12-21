@@ -23,9 +23,11 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.utils.FileCache;
+import com.android.testutils.TestUtils;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -81,6 +83,68 @@ public class BuildCacheUtilsTest {
                 BuildCacheUtils.createBuildCacheIfEnabled(BuildCacheUtilsTest::file, options);
 
         assertThat(buildCache).isNull();
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    public void testDeleteOldCacheEntries() throws Exception {
+        File cacheDir = testDir.newFolder();
+        FileCache fileCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir);
+        FileCache.Inputs inputs1 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putString("input", "foo1")
+                        .build();
+        FileCache.Inputs inputs2 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putString("input", "foo2")
+                        .build();
+        FileCache.Inputs inputs3 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putString("input", "foo3")
+                        .build();
+
+        // Make the first cache entry look as if it was created 60 days ago
+        fileCache.createFileInCacheIfAbsent(inputs1, (outputFile) -> {});
+        File cacheEntryDir1 = fileCache.getFileInCache(inputs1).getParentFile();
+        cacheEntryDir1.setLastModified(System.currentTimeMillis() - Duration.ofDays(60).toMillis());
+
+        // Make the second cache entry look as if it was created 30 days ago
+        fileCache.createFileInCacheIfAbsent(inputs2, (outputFile) -> {});
+        File cacheEntryDir2 = fileCache.getFileInCache(inputs2).getParentFile();
+        cacheEntryDir2.setLastModified(System.currentTimeMillis() - Duration.ofDays(30).toMillis());
+
+        // Make the third cache entry without modifying its timestamp
+        fileCache.createFileInCacheIfAbsent(inputs3, (outputFile) -> {});
+
+        // Delete all the cache entries that are older than or as old as 31 days
+        BuildCacheUtils.deleteOldCacheEntries(
+                fileCache, Duration.ofDays(31), Duration.ofMinutes(1));
+
+        // Check that only the first cache entry is deleted
+        assertThat(cacheEntryDir1).doesNotExist();
+        assertThat(fileCache.cacheEntryExists(inputs2)).isTrue();
+        assertThat(fileCache.cacheEntryExists(inputs3)).isTrue();
+
+        // Delete all the cache entries that are older than or as old as 30 days. However, this
+        // cache eviction will not run because the cache eviction interval is set to 1 minute, and
+        // it has not been 1 minute since the last run.
+        BuildCacheUtils.deleteOldCacheEntries(
+                fileCache, Duration.ofDays(30), Duration.ofMinutes(1));
+
+        // Check that the results are still the same as before
+        assertThat(cacheEntryDir1).doesNotExist();
+        assertThat(fileCache.cacheEntryExists(inputs2)).isTrue();
+        assertThat(fileCache.cacheEntryExists(inputs3)).isTrue();
+
+        // Delete all the cache entries that are older than or as old as 30 days, this time with a
+        // cache eviction interval of 1 millisecond, so this should run after the file system tick.
+        TestUtils.waitForFileSystemTick();
+        BuildCacheUtils.deleteOldCacheEntries(fileCache, Duration.ofDays(30), Duration.ofMillis(1));
+
+        // Check that only the third cache entry is kept
+        assertThat(cacheEntryDir1).doesNotExist();
+        assertThat(cacheEntryDir2).doesNotExist();
+        assertThat(fileCache.cacheEntryExists(inputs3)).isTrue();
     }
 
     private static File file(Object object) {

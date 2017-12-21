@@ -26,6 +26,7 @@ iml_module(
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/base/fakeadbserver:studio.fakeadbserver[module, test]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )
 

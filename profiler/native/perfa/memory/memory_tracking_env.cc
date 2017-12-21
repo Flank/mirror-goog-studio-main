@@ -73,7 +73,7 @@ static IterateThroughHeapExt g_iterate_heap_ext_func = nullptr;
 // call. We simply presumme everything allocated after the app starts
 // belongs to the app heap.
 constexpr int32_t kAppHeapId = 3;
-}
+}  // namespace
 
 namespace profiler {
 
@@ -110,8 +110,8 @@ MemoryTrackingEnv* MemoryTrackingEnv::Instance(JavaVM* vm,
     // with other profilers' agents.
     g_vm = vm;
     jvmtiEnv* jvmti = CreateJvmtiEnv(g_vm);
-    g_env = new MemoryTrackingEnv(jvmti, log_live_alloc_count,
-                                  max_stack_depth, track_global_jni_refs);
+    g_env = new MemoryTrackingEnv(jvmti, log_live_alloc_count, max_stack_depth,
+                                  track_global_jni_refs);
     g_env->Initialize();
   }
 
@@ -119,7 +119,8 @@ MemoryTrackingEnv* MemoryTrackingEnv::Instance(JavaVM* vm,
 }
 
 MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count,
-                              int max_stack_depth, bool track_global_jni_refs)
+                                     int max_stack_depth,
+                                     bool track_global_jni_refs)
     : jvmti_(jvmti),
       log_live_alloc_count_(log_live_alloc_count),
       track_global_jni_refs_(track_global_jni_refs),
@@ -727,8 +728,8 @@ void MemoryTrackingEnv::DrainAllocationEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
   // Gather all the data currently in the queue and push to perfd.
   // TODO: investigate whether we need to set time cap for large queue.
   std::deque<AllocationEvent> queued_data = allocation_event_queue_.Drain();
-  sample.mutable_events()->Reserve(std::min(queued_data.size(),
-                                   static_cast<size_t>(kDataBatchSize)));
+  sample.mutable_events()->Reserve(
+      std::min(queued_data.size(), static_cast<size_t>(kDataBatchSize)));
   while (!queued_data.empty()) {
     AllocationEvent* event = sample.add_events();
     event->CopyFrom(queued_data.front());
@@ -820,14 +821,14 @@ void MemoryTrackingEnv::DrainJNIRefEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
 
   BatchJNIGlobalRefEvent batch;
   auto queued_data(jni_ref_event_queue_.Drain());
-  batch.mutable_events()->Reserve(std::min(queued_data.size(),
-                                  static_cast<size_t>(kDataBatchSize)));
+  batch.mutable_events()->Reserve(
+      std::min(queued_data.size(), static_cast<size_t>(kDataBatchSize)));
   while (!queued_data.empty()) {
     JNIGlobalReferenceEvent* event = batch.add_events();
     event->CopyFrom(queued_data.front());
     queued_data.pop_front();
 
-    //TODO: populate thread ID here.
+    // TODO: populate thread ID here.
 
     if (batch.events_size() >= kDataBatchSize) {
       profiler::EnqueueJNIGlobalRefEvents(batch);

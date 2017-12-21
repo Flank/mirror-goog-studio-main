@@ -553,6 +553,15 @@ def _iml_project_impl(ctx):
     content = text
   )
 
+  artifacts = ""
+  for dep in ctx.attr.artifacts:
+    artifacts += dep.label.name + ": " + dep.artifact.path + "\n"
+  artifact_info = ctx.new_file(ctx.label.name + ".artifact_info")
+  ctx.file_action(
+    output = artifact_info,
+    content = artifacts
+  )
+
   outs = [ctx.outputs.win, ctx.outputs.win32, ctx.outputs.mac, ctx.outputs.linux, ctx.outputs.output]
 
   args = ["--win", ctx.outputs.win.path,
@@ -564,11 +573,12 @@ def _iml_project_impl(ctx):
           "--build", ctx.file.build.path,
           "--tmp", module_info.path + ".tmp",
           "--out", ctx.outputs.output.path,
-          "--module_info", module_info.path]
+          "--module_info", module_info.path,
+          "--artifact_info", artifact_info.path]
 
   ctx.action(
     mnemonic = "Ant",
-    inputs = [ctx.file.build, module_info] + ctx.files.data + list(transitive_data),
+    inputs = [ctx.file.build, module_info, artifact_info] + ctx.files.data + ctx.files.artifacts + list(transitive_data),
     outputs = outs,
     executable = ctx.executable.ant,
     arguments = args,
@@ -578,6 +588,8 @@ _iml_project = rule(
     attrs = {
         "modules": attr.label_list(
             non_empty = True,
+        ),
+        "artifacts": attr.label_list(
         ),
         "data": attr.label_list(
           allow_files = True,
@@ -615,5 +627,75 @@ def iml_project(name,modules=[], **kwargs):
   _iml_project(
     name = name,
     modules = [n + "_runtime" for n in normalized_modules],
+    **kwargs
+  )
+
+def _iml_artifact_impl(ctx):
+  jars = []
+
+  if ctx.files.files:
+    files_jar = ctx.actions.declare_file(ctx.label.name + ".files.jar")
+
+    zipper_args = ["c", files_jar.path]
+    zipper_files = "".join([d + "/" + f.basename + "=" + f.path + "\n" for d,f in zip(ctx.attr.dirs, ctx.files.files)])
+    zipper_list = create_option_file(ctx, ctx.label.name + ".files.lst", zipper_files)
+    zipper_args += ["@" + zipper_list.path]
+    ctx.action(
+      inputs = ctx.files.files + [zipper_list],
+      outputs = [files_jar],
+      executable = ctx.executable._zipper,
+      arguments = zipper_args,
+      progress_message = "Creating files artifact jar...",
+      mnemonic = "zipper",
+    )
+    jars += [files_jar]
+  for module in ctx.attr.modules:
+    if java_common.provider in module:
+      jars += list(module[java_common.provider].compile_jars)
+
+  ctx.action(
+      inputs = jars,
+      outputs = [ctx.outputs.artifact],
+      mnemonic = "artifact",
+      arguments = [ctx.outputs.artifact.path] + [jar.path for jar in jars],
+      executable = ctx.executable._singlejar
+  )
+  return struct(artifact = ctx.outputs.artifact)
+
+
+_iml_artifact = rule(
+    attrs = {
+        "dirs": attr.string_list(),
+        "files": attr.label_list(allow_files = True),
+        "modules": attr.label_list(),
+        "_zipper": attr.label(default = Label("@bazel_tools//tools/zip:zipper"), cfg = "host", executable=True),
+        "_singlejar": attr.label(default = Label("//tools/base/bazel:singlejar"), cfg = "host", executable=True),
+    },
+    outputs = {
+        "artifact": "%{name}.jar",
+    },
+    implementation = _iml_artifact_impl,
+)
+
+def iml_artifact(name, dirs={}, modules=[], **kwargs):
+
+  # Reverse the map so we can use a label to string dict
+  files = dict()
+  for d, fs in dirs.items():
+    for f in fs:
+      files[f] = d
+
+  dir_list = []
+  file_list = []
+  for d, fs in dirs.items():
+    for f in fs:
+      dir_list += [d]
+      file_list += [f]
+
+  _iml_artifact(
+    name = name,
+    dirs = dir_list,
+    files = file_list,
+    modules = modules,
     **kwargs
   )

@@ -22,9 +22,9 @@ import static com.android.sdklib.BuildToolInfo.SHRINKED_ANDROID_FOR_LEGACY_MULTI
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
@@ -193,7 +193,7 @@ public class MultiDexTest {
                 project.getBuildFile(),
                 "\nandroid.dexOptions.additionalParameters = ['--minimal-main-dex']\n");
 
-        RunGradleTasks executor = executor().withUseDexArchive(false);
+        GradleTaskExecutor executor = executor().withUseDexArchive(false);
         executor.run("assembleIcsDebug", "assembleIcsDebugAndroidTest");
 
         assertThat(
@@ -300,7 +300,7 @@ public class MultiDexTest {
     }
 
     @NonNull
-    private RunGradleTasks executor() {
+    private GradleTaskExecutor executor() {
         return project.executor()
                 .with(BooleanOption.ENABLE_D8_MAIN_DEX_LIST, tool == MainDexListTool.D8);
     }

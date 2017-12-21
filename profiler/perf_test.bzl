@@ -1,6 +1,6 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
 
-def perf_test(name, srcs, test_app, native_lib="", deps = []):
+def perf_test(name, srcs, test_app, native_lib="", deps = [], tags = None):
     native.genrule(
       name = name + "_transform-app_java",
       srcs = [test_app + "_java_deploy.jar"],
@@ -17,6 +17,7 @@ def perf_test(name, srcs, test_app, native_lib="", deps = []):
           "//conditions:default": [
                "//tools/base/profiler/tests/perf-test:profilers-transform-main",
           ],}),
+      tags = tags,
     )
     native.genrule(
       name = name + "_transform-app",
@@ -24,6 +25,7 @@ def perf_test(name, srcs, test_app, native_lib="", deps = []):
       outs = [name + "_transform.jar"],
       cmd = "$(location //prebuilts/studio/sdk:dx-preview) --dex --output=./$@ ./$<",
       tools = ["//prebuilts/studio/sdk:dx-preview"],
+      tags = tags,
     )
 
     native.java_test(
@@ -80,4 +82,5 @@ def perf_test(name, srcs, test_app, native_lib="", deps = []):
         "//tools/base/bazel:darwin": ["//tools/base/bazel/test:NoOpTest.java"],
         "//tools/base/bazel:windows": ["//tools/base/bazel/test:NoOpTest.java"],
         "//conditions:default": srcs}),
+      tags = ["no_windows", "no_mac"],
     )

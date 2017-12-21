@@ -45,6 +45,10 @@ class SessionsManager final {
   // Return true if a matching session is found, false otherwise.
   bool GetSession(int64_t session_id, proto::Session *session) const;
 
+  // Find the currently active session associated with a |pid|.
+  // Return true if an active session is found, false otherwise.
+  bool GetActiveSessionByPid(int32_t pid, proto::Session *session) const;
+
   // Return all sessions between two timestamps. Default values are provided so
   // if you exclude a timestamp, then the search will not be bounded by it.
   // |start_timestamp| should always be <= |end_timestamp|, or else this
@@ -58,12 +62,16 @@ class SessionsManager final {
   void DeleteSession(int64_t session_id);
 
  private:
-  // Returns the iterator pointing at the session in |sessions_|, or
-  // |sessions_.end()| if not found. For internal use only, and expects that
-  // the mutex is already locked.
-  std::list<proto::Session>::iterator GetSessionIter(int64_t session_id);
+  // Returns the iterator pointing at the first session in |sessions_| that is
+  // accepted by |match_func|, or |sessions_.end()| if not found. For internal
+  // use only, and expects that the mutex is already locked.
+  std::list<proto::Session>::iterator GetSessionIter(
+      const std::function<bool(const proto::Session &s)> &match_func);
+  // Returns the const iterator pointing at the first session in |sessions_|
+  // that is accepted by |match_func|, or |sessions_.end()| if not found. For
+  // internal use only, and expects that the mutex is already locked.
   std::list<proto::Session>::const_iterator GetSessionIter(
-      int64_t session_id) const;
+      const std::function<bool(const proto::Session &s)> &match_func) const;
 
   // Internally handle ending a session. For internal use only, and expects
   // that the mutex is already locked.

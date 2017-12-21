@@ -47,6 +47,9 @@ public enum DeprecatedOptions implements Option<String> {
     DISABLE_RES_MERGE_IN_LIBRARY(
             "android.disable.res.merge",
             "Resources from dependencies are never merged in libraries."),
+    ENABLE_IN_PROCESS_AAPT2("android.enableAapt2jni", "AAPT2 JNI has been removed."),
+    ENABLE_DAEMON_MODE_AAPT2(
+            "android.enableAapt2DaemonMode", "AAPT2 daemon mode is now always enabled."),
     ;
 
     @NonNull private final String propertyName;

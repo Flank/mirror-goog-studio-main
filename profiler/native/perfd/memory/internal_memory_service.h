@@ -23,6 +23,7 @@
 #include <unordered_map>
 
 #include "memory_collector.h"
+#include "perfd/sessions/sessions_manager.h"
 #include "proto/internal_memory.grpc.pb.h"
 
 namespace profiler {
@@ -31,8 +32,9 @@ class InternalMemoryServiceImpl final
     : public proto::InternalMemoryService::Service {
  public:
   explicit InternalMemoryServiceImpl(
-      std::unordered_map<int32_t, MemoryCollector> *collectors)
-      : collectors_(*collectors) {}
+      const SessionsManager &sessions,
+      std::unordered_map<int64_t, MemoryCollector> *collectors)
+      : sessions_(sessions), collectors_(*collectors) {}
   virtual ~InternalMemoryServiceImpl() = default;
 
   grpc::Status RegisterMemoryAgent(
@@ -65,12 +67,23 @@ class InternalMemoryServiceImpl final
   bool SendRequestToAgent(const proto::MemoryControlRequest &request);
 
  private:
+  // Finds the currently active session based on |pid|. Returns true if
+  // a session is found, false otherwise.
+  bool FindSession(int32_t pid, proto::Session *session);
+  // Finds the MemoryCollector associated with the currently active session
+  // based on |pid|. Returns true if found, false otherwise.
+  bool FindCollector(int32_t pid, MemoryCollector **collector);
+
   std::mutex status_mutex_;
   std::mutex control_mutex_;
   std::condition_variable control_cv_;
 
-  std::unordered_map<int32_t, MemoryCollector>
-      &collectors_;  // maps pid to MemoryCollector
+  // Used for converting pid's received from perfa to session id's which
+  // are what used to identify profiling sessions in perfd and studio.
+  const SessionsManager &sessions_;
+
+  // Maps session id to MemoryCollector
+  std::unordered_map<int64_t, MemoryCollector> &collectors_;
 
   // Per-app flag which indicates whether a perfd->perfa grpc streaming
   // call (RegisterMemoryAgent) has been established. Value is true if a stream

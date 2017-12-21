@@ -39,13 +39,13 @@ public class DexOptions extends DefaultDexOptions {
     @Deprecated
     public boolean getIncremental() {
         deprecationReporter.reportObsoleteUsage(
-                "DexOptions.incremental", DeprecationTarget.EOY2018);
+                "DexOptions.incremental", DeprecationTarget.DEX_OPTIONS);
         return false;
     }
 
     public void setIncremental(boolean ignored) {
         deprecationReporter.reportObsoleteUsage(
-                "DexOptions.incremental", DeprecationTarget.EOY2018);
+                "DexOptions.incremental", DeprecationTarget.DEX_OPTIONS);
     }
 
     public void additionalParameters(String... parameters) {
@@ -57,6 +57,7 @@ public class DexOptions extends DefaultDexOptions {
      */
     @Deprecated
     public void setOptimize(@SuppressWarnings("UnusedParameters") Boolean optimize) {
-        deprecationReporter.reportObsoleteUsage("DexOptions.optimize", DeprecationTarget.EOY2018);
+        deprecationReporter.reportObsoleteUsage(
+                "DexOptions.optimize", DeprecationTarget.DEX_OPTIONS);
     }
 }

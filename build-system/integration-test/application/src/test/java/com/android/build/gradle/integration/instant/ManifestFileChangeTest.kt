@@ -26,6 +26,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.OptionalCompilationStep
 import com.android.sdklib.AndroidVersion
 import com.android.tools.ir.client.InstantRunArtifactType
+import com.google.common.collect.Iterators
 import com.google.common.truth.Truth.*
 import org.junit.Rule
 import org.junit.Test
@@ -66,6 +67,9 @@ class ManifestFileChangeTest(val separateResourcesApk: Boolean) {
                 .with(BooleanOption.ENABLE_SEPARATE_APK_RESOURCES, separateResourcesApk)
                 .run("assembleDebug")
 
+        val originalBuildInfo = InstantRunTestUtils.loadContext(instantRunModel)
+        val artifactsNumber = originalBuildInfo.artifacts.size
+
         // now modify the manifest file.
         TemporaryProjectModification.doTest(mProject) { modifiedProject ->
             modifiedProject.replaceInFile(
@@ -84,13 +88,19 @@ class ManifestFileChangeTest(val separateResourcesApk: Boolean) {
             val modifiedBuildInfo = InstantRunTestUtils.loadContext(instantRunModel)
             assertThat(modifiedBuildInfo.verifierStatus).isEqualTo("MANIFEST_FILE_CHANGE")
 
-            assertThat(modifiedBuildInfo.artifacts).hasSize(1)
-            val mainApk = modifiedBuildInfo.artifacts[0]
+            // the resources apk is not rebuilt when only manifest content is changed (unless
+            // a referenced resource would be changed, covered in another test).
+            assertThat(modifiedBuildInfo.artifacts).hasSize(
+                    if (separateResourcesApk) (artifactsNumber-1) else artifactsNumber)
+
+            val apks = InstantRunTestUtils.getArtifactsOfType(modifiedBuildInfo,
+                    InstantRunArtifactType.SPLIT_MAIN)
+            assertThat(apks).hasSize(1)
+            val mainApk = apks[0]
             assertThat(mainApk.type).isEqualTo(InstantRunArtifactType.SPLIT_MAIN)
 
             TruthHelper.assertThatApk(mainApk.file).hasManifestContent(
                     Pattern.compile(".*ManifestFileChangeTest.*"))
         }
     }
-
 }

@@ -523,7 +523,7 @@ internal class DeprecatedConfigurationAction(
         private val replacement: String,
         private val oldName: String,
         private val deprecationReporter: DeprecationReporter,
-        private val deprecationTarget: DeprecationReporter.DeprecationTarget = DeprecationReporter.DeprecationTarget.EOY2018) : Action<Dependency> {
+        private val deprecationTarget: DeprecationReporter.DeprecationTarget = DeprecationReporter.DeprecationTarget.CONFIG_NAME) : Action<Dependency> {
     private var warningPrintedAlready = false
 
     override fun execute(dependency: Dependency) {

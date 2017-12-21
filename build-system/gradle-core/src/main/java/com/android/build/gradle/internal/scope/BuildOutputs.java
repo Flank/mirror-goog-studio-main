@@ -32,6 +32,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -79,6 +80,22 @@ public class BuildOutputs {
                                                 buildOutput.getProperties()))
                         .collect(Collectors.toList());
         return gson.toJson(buildOutputs);
+    }
+
+    public static String persistApkList(Collection<? extends ApkInfo> apkInfos) {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeHierarchyAdapter(ApkInfo.class, new BuildOutputs.ApkInfoAdapter());
+        Gson gson = gsonBuilder.create();
+        return gson.toJson(apkInfos);
+    }
+
+    public static Collection<ApkInfo> loadApkList(@NonNull File file) throws FileNotFoundException {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(ApkInfo.class, new ApkInfoAdapter());
+        gsonBuilder.registerTypeAdapter(VariantScope.OutputType.class, new OutputTypeTypeAdapter());
+        Gson gson = gsonBuilder.create();
+        Type recordType = new TypeToken<List<ApkInfo>>() {}.getType();
+        return gson.fromJson(new FileReader(file), recordType);
     }
 
     /**
@@ -264,6 +281,13 @@ public class BuildOutputs {
             }
             out.endArray();
             out.name("versionCode").value(value.getVersionCode());
+            if (value.getVersionName() != null) {
+                out.name("versionName").value(value.getVersionName());
+            }
+            out.name("enabled").value(value.isEnabled());
+            if (value.getOutputFileName() != null) {
+                out.name("outputFile").value(value.getOutputFileName());
+            }
             out.endObject();
         }
 
@@ -273,6 +297,9 @@ public class BuildOutputs {
             String outputType = null;
             ImmutableList.Builder<FilterData> filters = ImmutableList.builder();
             int versionCode = 0;
+            String versionName = null;
+            boolean enabled = true;
+            String outputFile = null;
 
             while (in.hasNext()) {
                 switch (in.nextName()) {
@@ -285,12 +312,25 @@ public class BuildOutputs {
                     case "versionCode":
                         versionCode = in.nextInt();
                         break;
+                    case "versionName":
+                        versionName = in.nextString();
+                        break;
+                    case "enabled":
+                        enabled = in.nextBoolean();
+                        break;
+                    case "outputFile":
+                        outputFile = in.nextString();
                 }
             }
             in.endObject();
 
             return ApkInfo.of(
-                    OutputFile.OutputType.valueOf(outputType), filters.build(), versionCode);
+                    OutputFile.OutputType.valueOf(outputType),
+                    filters.build(),
+                    versionCode,
+                    versionName,
+                    enabled,
+                    outputFile);
         }
 
         private static void readFilters(JsonReader in, ImmutableList.Builder<FilterData> filters)

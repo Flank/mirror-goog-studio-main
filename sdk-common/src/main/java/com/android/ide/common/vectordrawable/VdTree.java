@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
+
 import com.android.ide.common.util.AssetUtil;
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -47,24 +49,25 @@ class VdTree {
     private float mPortWidth = 1;
     private float mPortHeight = 1;
     private float mRootAlpha = 1;
+    private int mRootTint;
 
     private static final boolean DBG_PRINT_TREE = false;
 
     private static final String INDENT = "  ";
 
-    /*package*/ float getBaseWidth(){
+    float getBaseWidth(){
         return mBaseWidth;
     }
 
-    /*package*/ float getBaseHeight(){
+    float getBaseHeight(){
         return mBaseHeight;
     }
 
-    /*package*/ float getPortWidth(){
+    float getPortWidth(){
         return mPortWidth;
     }
 
-    /*package*/ float getPortHeight(){
+    float getPortHeight(){
         return mPortHeight;
     }
 
@@ -78,10 +81,9 @@ class VdTree {
     }
 
     /**
-     * Draw the VdTree into an image.
-     * If the root alpha is less than 1.0, then draw into a temporary image,
-     * then draw into the result image applying alpha blending.
+     * Draws the VdTree into an image.
      */
+    @SuppressWarnings("UseJBColor") // No need to use JBColor here.
     public void drawIntoImage(BufferedImage image) {
         Graphics2D gFinal = (Graphics2D) image.getGraphics();
         int width = image.getWidth();
@@ -89,17 +91,29 @@ class VdTree {
         gFinal.setColor(new Color(255, 255, 255, 0));
         gFinal.fillRect(0, 0, width, height);
 
-        float rootAlpha = mRootAlpha;
-        if (rootAlpha < 1.0) {
+        if (mRootAlpha < 1.0) {
+            // Draw into a temporary image, then draw into the result image applying alpha blending.
             BufferedImage alphaImage = AssetUtil.newArgbBufferedImage(width, height);
             Graphics2D gTemp = (Graphics2D)alphaImage.getGraphics();
             drawTree(gTemp, width, height);
-            gFinal.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, rootAlpha));
+            gFinal.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, mRootAlpha));
             gFinal.drawImage(alphaImage, 0, 0, null);
             gTemp.dispose();
         } else {
             drawTree(gFinal, width, height);
         }
+
+        if (mRootTint != 0) {
+            // Apply tint.
+            BufferedImage tintImage = AssetUtil.newArgbBufferedImage(width, height);
+            Graphics2D gTemp = (Graphics2D)tintImage.getGraphics();
+            gTemp.setPaint(new Color(mRootTint));
+            gTemp.fillRect(0, 0, width, height);
+            gFinal.setComposite(AlphaComposite.SrcIn);
+            gFinal.drawImage(tintImage, 0, 0, null);
+            gTemp.dispose();
+        }
+
         gFinal.dispose();
     }
 
@@ -119,7 +133,7 @@ class VdTree {
     private static void parseTree(Node currentNode, VdGroup currentGroup) {
         NodeList childrenNodes = currentNode.getChildNodes();
         int length = childrenNodes.getLength();
-        for (int i = 0; i < length; i ++) {
+        for (int i = 0; i < length; i++) {
             Node child = childrenNodes.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 if (SHAPE_GROUP.equals(child.getNodeName())) {
@@ -145,12 +159,12 @@ class VdTree {
             return;
         }
         StringBuilder prefixBuilder = new StringBuilder();
-        for (int i = 0; i < level; i ++) {
+        for (int i = 0; i < level; i++) {
             prefixBuilder.append(INDENT);
         }
         String prefix = prefixBuilder.toString();
         ArrayList<VdElement> children = mRootGroup.getChildren();
-        for (int i = 0; i < len; i ++) {
+        for (int i = 0; i < len; i++) {
             VdElement child = children.get(i);
             System.out.println(prefix  + child.toString());
             if (child.isGroup()) {
@@ -188,6 +202,8 @@ class VdTree {
                 mPortHeight = Float.parseFloat(value);
             } else if ("android:alpha".equals(name)) {
                 mRootAlpha = Float.parseFloat(value);
+            } else if ("android:tint".equals(name)) {
+                mRootTint = parseColorValue(value);
             }
         }
     }

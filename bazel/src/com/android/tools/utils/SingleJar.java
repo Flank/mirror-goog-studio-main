@@ -20,8 +20,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -90,15 +88,15 @@ public class SingleJar {
         try (ZipInputStream zis = new ZipInputStream(new FileInputStream(jar))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
-                Path path = Paths.get(entry.getName());
                 ArrayDeque<String> files = new ArrayDeque<>();
                 files.add(entry.getName());
-                path = path.getParent();
-                while (path != null) {
-                    if (!path.toString().equals("/")) {
-                        files.addFirst(path.toString() + "/");
-                        path = path.getParent();
-                    }
+
+                String path = entry.getName();
+                String[] items = path.split("/");
+                String parent = "";
+                for (int i = 0; i < items.length - 1; i++) {
+                    parent += items[i] + "/";
+                    files.add(parent);
                 }
                 for (String file : files) {
                     if (!dups.add(file)) {

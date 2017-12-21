@@ -16,6 +16,8 @@
 
 package com.android.sdklib.repository.legacy;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.SdkConstants;
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
@@ -35,15 +37,13 @@ import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.meta.SdkCommonFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import junit.framework.TestCase;
 
 /**
  * Tests parsing and rewriting legacy local packages.
@@ -93,23 +93,8 @@ public class LegacyLocalRepoTest extends TestCase {
                         "Archive.Arch=ANY\n" +
                         "Pkg.SourceUrl=https\\://example.com/repository-8.xml");
 
-        FakeProgressIndicator progress = new FakeProgressIndicator();
-        File root = new File("/sdk");
-        RepoManager mgr =
-                new AndroidSdkHandler(root, null, mockFop).getSdkManager(progress);
+        LocalPackage local = loadLocalPackage(mockFop, "/sdk", "tools/package.xml");
 
-        progress.assertNoErrorsOrWarnings();
-
-        Collection<SchemaModule<?>> extensions = ImmutableList
-                .of(RepoManager.getCommonModule(), RepoManager.getGenericModule());
-
-        // Now read the new package
-        Repository repo = (Repository) SchemaModuleUtil.unmarshal(
-                mockFop.newFileInputStream(new File("/sdk/tools/package.xml")),
-                extensions, mgr.getResourceResolver(progress), true, progress);
-        progress.assertNoErrorsOrWarnings();
-        LocalPackage local = repo.getLocalPackage();
-        local.setInstalledPath(mgr.getLocalPath());
         assertTrue(local.getPath().startsWith(SdkConstants.FD_TOOLS));
         assertEquals("Terms and Conditions", local.getLicense().getValue());
         int[] revision = local.getVersion().toIntArray(false);
@@ -123,25 +108,9 @@ public class LegacyLocalRepoTest extends TestCase {
         MockFileOp mockFop = new MockFileOp();
         recordLegacyGoogleApis23(mockFop);
 
-        FakeProgressIndicator progress = new FakeProgressIndicator();
-        File root = new File("/sdk");
-        AndroidSdkHandler sdkHandler = new AndroidSdkHandler(root, null, mockFop);
+        LocalPackage local = loadLocalPackage(mockFop, "/sdk", "add-ons/addon-google_apis-google-23/package.xml");
         SdkCommonFactory factory = AndroidSdkHandler.getCommonModule().createLatestFactory();
-        RepoManager mgr = sdkHandler.getSdkManager(progress);
 
-        progress.assertNoErrorsOrWarnings();
-
-        Collection<SchemaModule<?>> extensions = ImmutableList
-                .of(RepoManager.getCommonModule(), AndroidSdkHandler.getAddonModule());
-
-        // Now read the new package
-        Repository repo = (Repository) SchemaModuleUtil.unmarshal(
-                mockFop.newFileInputStream(
-                        new File("/sdk/add-ons/addon-google_apis-google-23/package.xml")),
-                extensions, mgr.getResourceResolver(progress), true, progress);
-        progress.assertNoErrorsOrWarnings();
-        LocalPackage local = repo.getLocalPackage();
-        local.setInstalledPath(mgr.getLocalPath());
         assertTrue(local.getPath().startsWith(SdkConstants.FD_ADDONS));
         assertEquals(new Revision(1, 0, 0), local.getVersion());
         TypeDetails typeDetails = local.getTypeDetails();
@@ -170,6 +139,61 @@ public class LegacyLocalRepoTest extends TestCase {
                 details.getLibraries().getLibrary());
         assertEquals(desired, libraries);
 
+    }
+
+    public void testRewriteLegacyAddonWithMinimalSourceProperties() throws Exception {
+        MockFileOp mockFop = new MockFileOp();
+        mockFop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/source.properties",
+                                   "AndroidVersion.ApiLevel=23\n"
+                                   + "Pkg.Desc=Android + Google APIs\n"
+                                   + "Pkg.Revision=1\n");
+        mockFop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/manifest.ini",
+                                   "name=Google APIs Test\n"
+                                   + "name-id=google_apis\n"
+                                   + "vendor=Google Inc.\n"
+                                   + "vendor-id=google\n"
+                                   + "description=Android + Google APIs\n");
+
+        LocalPackage local = loadLocalPackage(mockFop, "/sdk", "add-ons/addon-google_apis-google-23/package.xml");
+
+        assertTrue(local.getPath().startsWith(SdkConstants.FD_ADDONS));
+        assertThat(local.getDisplayName()).startsWith("Google APIs Test,");
+    }
+
+    public void testRewriteLegacyAddonGetNameFromManifest() throws Exception {
+        MockFileOp mockFop = new MockFileOp();
+        mockFop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/source.properties",
+                                   "AndroidVersion.ApiLevel=23\n"
+                                   + "Pkg.Desc=Android + Google APIs\n"
+                                   + "Pkg.Revision=1\n");
+        mockFop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/manifest.ini",
+                                   "name=Google Apis\n"
+                                   + "vendor=Google Inc.\n"
+                                   + "vendor-id=google\n"
+                                   + "description=Android + Google APIs\n");
+
+        LocalPackage local = loadLocalPackage(mockFop, "/sdk", "add-ons/addon-google_apis-google-23/package.xml");
+
+        assertTrue(local.getPath().startsWith(SdkConstants.FD_ADDONS));
+        assertThat(local.getDisplayName()).startsWith("Google Apis,");
+    }
+
+    public void testRewriteLegacyAddonGetNameIdFromManifest() throws Exception {
+        MockFileOp mockFop = new MockFileOp();
+        mockFop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/source.properties",
+                                   "AndroidVersion.ApiLevel=23\n"
+                                   + "Pkg.Desc=Android + Google APIs\n"
+                                   + "Pkg.Revision=1\n");
+        mockFop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/manifest.ini",
+                                   "name-id=google_apis\n"
+                                   + "vendor=Google Inc.\n"
+                                   + "vendor-id=google\n"
+                                   + "description=Android + Google APIs\n");
+
+        LocalPackage local = loadLocalPackage(mockFop, "/sdk", "add-ons/addon-google_apis-google-23/package.xml");
+
+        assertTrue(local.getPath().startsWith(SdkConstants.FD_ADDONS));
+        assertThat(local.getDisplayName()).startsWith("Google Apis,");
     }
 
     private static void recordLegacyGoogleApis23(MockFileOp fop) {
@@ -207,5 +231,26 @@ public class LegacyLocalRepoTest extends TestCase {
         fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/libs/effects.jar");
         fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/libs/maps.jar");
         fop.recordExistingFile("/sdk/add-ons/addon-google_apis-google-23/libs/usb.jar");
+    }
+
+    private static LocalPackage loadLocalPackage(MockFileOp mockFop, String rootPath, String packagePath) throws Exception {
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        File root = new File(rootPath);
+        RepoManager mgr = new AndroidSdkHandler(root, null, mockFop).getSdkManager(progress);
+
+        progress.assertNoErrorsOrWarnings();
+
+        Collection<SchemaModule<?>> extensions = ImmutableList
+          .of(RepoManager.getCommonModule(), RepoManager.getGenericModule(), AndroidSdkHandler.getAddonModule());
+
+        // Now read the new package
+        Repository repo = (Repository) SchemaModuleUtil.unmarshal(
+          mockFop.newFileInputStream(new File(rootPath, packagePath)),
+          extensions, mgr.getResourceResolver(progress), true, progress);
+        progress.assertNoErrorsOrWarnings();
+        LocalPackage local = repo.getLocalPackage();
+        local.setInstalledPath(mgr.getLocalPath());
+
+        return local;
     }
 }

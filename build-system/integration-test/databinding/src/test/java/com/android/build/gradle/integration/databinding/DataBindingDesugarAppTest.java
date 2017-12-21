@@ -17,8 +17,8 @@
 package com.android.build.gradle.integration.databinding;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
@@ -72,7 +72,7 @@ public class DataBindingDesugarAppTest {
         getProjectExecutor().run("assembleDebug");
     }
 
-    private RunGradleTasks getProjectExecutor() {
+    private GradleTaskExecutor getProjectExecutor() {
         return project.executor().with(BooleanOption.ENABLE_GRADLE_WORKERS, enableGradleWorkers);
     }
 }

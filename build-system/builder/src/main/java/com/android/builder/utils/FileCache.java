@@ -25,23 +25,22 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A cache for already-created files/directories.
@@ -616,12 +615,52 @@ public class FileCache {
     }
 
     /**
+     * Deletes all the cache entries that were last modified before or at the given timestamp.
+     *
+     * <p>This method may block if the cache is being accessed by another thread/process.
+     *
+     * @param lastTimestamp the timestamp to determine whether a cache entry will be kept or deleted
+     */
+    public void deleteOldCacheEntries(long lastTimestamp) {
+        // Check the parent directory of the cache directory, similarly to FileCache.delete()
+        if (lockingScope == LockingScope.MULTI_PROCESS) {
+            if (!FileUtils.parentDirExists(cacheDirectory)) {
+                return;
+            }
+        }
+
+        try {
+            getSynchronizedFile(cacheDirectory).write(sameCacheDirectory -> {
+                if (!cacheDirectory.exists()) {
+                    return null;
+                }
+                for (File fileInDir : Verify.verifyNotNull(cacheDirectory.listFiles())) {
+                    if (fileInDir.isDirectory() && getInputsFile(fileInDir).isFile()) {
+                        //noinspection UnnecessaryLocalVariable - Use it for clarity
+                        File cacheEntryDir = fileInDir;
+
+                        if (cacheEntryDir.lastModified() <= lastTimestamp) {
+                            FileUtils.deletePath(cacheEntryDir);
+                            // Also delete the lock file if it exists
+                            FileUtils.deleteIfExists(
+                                    new File(
+                                            cacheEntryDir.getParentFile(),
+                                            cacheEntryDir.getName()
+                                                    + SynchronizedFile.LOCK_FILE_EXTENSION));
+                        }
+                    }
+                }
+                return null;
+            });
+        } catch (ExecutionException exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+
+    /**
      * Deletes the cache directory and its contents.
      *
-     * <p>If the cache is being used by another thread of any process in the case of {@code
-     * MULTI_PROCESS} locking scope, or by another thread of the current process in the case of
-     * {@code SINGLE_PROCESS} locking scope, then this method will block until that operation
-     * completes.
+     * <p>This method may block if the cache is being accessed by another thread/process.
      */
     public void delete() throws IOException {
         // The underlying facility for multi-process locking (SynchronizedFile) requires that the
@@ -743,16 +782,15 @@ public class FileCache {
      * cache. If the client uses a different file creator, or changes the file creator's
      * implementation, then it needs to provide a new unique command. For input files/directories,
      * it is important to select a combination of properties that uniquely identifies an input
-     * file/directory depending on the specific use case (common properties of a file/directory
-     * include its path, name, hash, size, and timestamp; it is usually good practice to use both
-     * the path and hash to identify an input file/directory).
+     * file/directory with consideration of their impact on correctness and performance (see {@link
+     * FileProperties} and {@link DirectoryProperties}).
      *
      * <p>When constructing the {@link Inputs} object, the client is required to provide the command
      * (via the {@link Inputs.Builder} constructor) and at least one other input parameter.
      *
      * <p>The input parameters have the order in which they were added to this {@code Inputs}
-     * object. If a parameter with the same name exists, the parameter's value is overwritten
-     * (retaining its previous order).
+     * object. They are not allowed to have the same name (an exception will be thrown if a
+     * parameter with the same name already exists).
      *
      * <p>Note that if some inputs are missing, the cache may return a cached file/directory that is
      * incorrect. On the other hand, if some irrelevant inputs are included, the cache may create a
@@ -774,6 +812,8 @@ public class FileCache {
 
             @NonNull private final Command command;
 
+            @NonNull private final CacheSession session;
+
             @NonNull
             private final LinkedHashMap<String, String> parameters = Maps.newLinkedHashMap();
 
@@ -784,41 +824,76 @@ public class FileCache {
              *     usually corresponds to a Gradle task)
              */
             public Builder(@NonNull Command command) {
-                this.command = command;
+                this(
+                        command,
+                        new CacheSession() {
+
+                            @Override
+                            @NonNull
+                            String getDirectoryHash(@NonNull File directory) {
+                                return Builder.getDirectoryHash(directory);
+                            }
+
+                            @Override
+                            @NonNull
+                            String getRegularFileHash(@NonNull File regularFile) {
+                                return Builder.getFileHash(regularFile);
+                            }
+                        });
             }
 
             /**
-             * Adds an input parameter with a String value. If a parameter with the same name
-             * exists, the parameter's value is overwritten.
+             * Creates a {@link Builder} instance to construct an {@link Inputs} object.
+             *
+             * @param command the command that identifies a file creator callback function (which
+             *     usually corresponds to a Gradle task)
+             * @param session The session the newly created Builder will belong to.
              */
+            public Builder(@NonNull Command command, @NonNull CacheSession session) {
+                this.command = command;
+                this.session = session;
+            }
+
+            /**
+             * Adds an input parameter with a String value.
+             *
+             * @throws IllegalStateException if a parameter with the same name already exists
+             */
+            @NonNull
             public Builder putString(@NonNull String name, @NonNull String value) {
+                Preconditions.checkState(
+                        !parameters.containsKey(name), "Input parameter %s already exists", name);
                 parameters.put(name, value);
                 return this;
             }
 
             /**
-             * Adds an input parameter with a Boolean value. If a parameter with the same name
-             * exists, the parameter's value is overwritten.
+             * Adds an input parameter with a Boolean value.
+             *
+             * @throws IllegalStateException if a parameter with the same name already exists
              */
+            @NonNull
             public Builder putBoolean(@NonNull String name, boolean value) {
-                parameters.put(name, String.valueOf(value));
-                return this;
+                return putString(name, String.valueOf(value));
             }
 
             /**
-             * Adds an input parameter with a Long value. If a parameter with the same name exists,
-             * the parameter's value is overwritten.
+             * Adds an input parameter with a Long value.
+             *
+             * @throws IllegalStateException if a parameter with the same name already exists
              */
+            @NonNull
             public Builder putLong(@NonNull String name, long value) {
-                parameters.put(name, String.valueOf(value));
-                return this;
+                return putString(name, String.valueOf(value));
             }
 
             /**
-             * Adds one or multiple input parameters containing one or multiple properties of a
-             * regular file (not a directory). If a parameter with the same name exists, the
-             * parameter's value is overwritten.
+             * Adds an input parameter to identify a regular file (not a directory) using the given
+             * properties.
+             *
+             * @throws IllegalStateException if a parameter with the same name already exists
              */
+            @NonNull
             public Builder putFile(
                     @NonNull String name,
                     @NonNull File file,
@@ -826,11 +901,11 @@ public class FileCache {
                 Preconditions.checkArgument(file.isFile(), file + " is not a file.");
                 switch (fileProperties) {
                     case HASH:
-                        putString(name, getFileHash(file));
+                        putString(name, session.getRegularFileHash(file));
                         break;
                     case PATH_HASH:
                         putString(name + ".path", file.getPath());
-                        putString(name + ".hash", getFileHash(file));
+                        putString(name + ".hash", session.getRegularFileHash(file));
                         break;
                     case PATH_SIZE_TIMESTAMP:
                         putString(name + ".path", file.getPath());
@@ -838,77 +913,99 @@ public class FileCache {
                         putLong(name + ".timestamp", file.lastModified());
                         break;
                     default:
-                        throw new RuntimeException("switch statement misses cases");
+                        throw new RuntimeException("Unknown enum " + fileProperties);
                 }
                 return this;
             }
 
             /**
-             * Adds one or multiple input parameters containing one or multiple properties of a list
-             * of files (file or directory). If a parameter with the same name exists, the
-             * parameter's value is overwritten.
+             * Adds an input parameter to identify a directory using the given properties.
+             *
+             * @throws IllegalStateException if a parameter with the same name already exists
              */
+            @SuppressWarnings("UnusedReturnValue")
             @NonNull
-            public Builder putFiles(@NonNull String name, @NonNull List<File> files) {
-                for (File file : files) {
-                    Preconditions.checkArgument(file.exists(), file + " does not exist.");
-                    putString(name + ".path", file.toString());
-                    putString(name + ".hash", getHash(file));
+            public Builder putDirectory(
+                    @NonNull String name,
+                    @NonNull File directory,
+                    @NonNull DirectoryProperties directoryProperties) {
+                Preconditions.checkArgument(
+                        directory.isDirectory(), directory + " is not a directory.");
+                switch (directoryProperties) {
+                    case HASH:
+                        putString(name, session.getDirectoryHash(directory));
+                        break;
+                    case PATH_HASH:
+                        putString(name + ".path", directory.getPath());
+                        putString(name + ".hash", session.getDirectoryHash(directory));
+                        break;
+                    default:
+                        throw new RuntimeException("Unknown enum " + directoryProperties);
                 }
                 return this;
             }
 
             /**
-             * Returns the hash of the file's contents or the accumulated hash of all files in the
-             * directory tree.
+             * Returns the hash of the contents of the given regular file (not a directory).
+             *
+             * <p>Note that the hash computation does not consider the path or name of the given
+             * file.
              */
             @NonNull
-            private static String getHash(@NonNull File file) {
-                if (file.isFile()) {
-                    return getFileHash(file);
-                } else {
-                    Hasher hasher = Hashing.sha256().newHasher();
-                    byte[] buffer = new byte[10 * 1024]; // should be enough for most class files
-                    try {
-                        hash(hasher, file, buffer);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                    return hasher.hash().toString();
-                }
-            }
-
-            private static void hash(
-                    @NonNull Hasher hasher, @NonNull File directory, @NonNull byte[] buffer)
-                    throws IOException {
-                for (File file :
-                        Arrays.stream(directory.listFiles())
-                                .sorted()
-                                .collect(Collectors.toList())) {
-                    if (file.isDirectory()) {
-                        hash(hasher, file, buffer);
-                    } else {
-                        try (InputStream in = new FileInputStream(file)) {
-                            while (true) {
-                                int read = in.read(buffer);
-                                if (read == -1) {
-                                    break;
-                                }
-                                hasher.putBytes(buffer, 0, read);
-                            }
-                        }
-                    }
-                }
-            }
-
-            /** Returns the hash of the file's contents. */
-            @NonNull
-            private static String getFileHash(@NonNull File file) {
+            @VisibleForTesting
+            static String getFileHash(@NonNull File file) {
                 try {
-                    return Files.asByteSource(file).hash(Hashing.sha256()).toString();
+                    return Hashing.sha256()
+                            .hashBytes(java.nio.file.Files.readAllBytes(file.toPath()))
+                            .toString();
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
+            }
+
+            /**
+             * Returns the hash of the contents of the given directory.
+             *
+             * <p>The directory's hash is computed from the following:
+             *
+             * <ol>
+             *   <li>The relative paths, in lexical order, of all the regular files and directories
+             *       at all depths below the given directory (symbolic links are not followed)
+             *   <li>The contents of all the regular files in the sorted list above
+             * </ol>
+             *
+             * <p>Note that the hash computation does not consider the path or name of the given
+             * directory.
+             */
+            @NonNull
+            @VisibleForTesting
+            static String getDirectoryHash(@NonNull File directory) {
+                Hasher hasher = Hashing.sha256().newHasher();
+                try (Stream<Path> entries = java.nio.file.Files.walk(directory.toPath())) {
+                    // Filter out the root directory and sort the entries (as Files.walk() does not
+                    // guarantee that the returned entries has deterministic order)
+                    Stream<Path> sortedEntries =
+                            entries.filter(e -> !FileUtils.isSameFile(e.toFile(), directory))
+                                    .sorted();
+                    sortedEntries.forEach(
+                            entry -> {
+                                hasher.putUnencodedChars("$$$DIRECTORY_ENTRY_RELATIVE_PATH$$$");
+                                hasher.putUnencodedChars(
+                                        directory.toPath().relativize(entry).toString());
+
+                                if (java.nio.file.Files.isRegularFile(entry)) {
+                                    hasher.putUnencodedChars("$$$DIRECTORY_ENTRY_FILE_CONTENTS$$$");
+                                    try {
+                                        hasher.putBytes(java.nio.file.Files.readAllBytes(entry));
+                                    } catch (IOException e) {
+                                        throw new UncheckedIOException(e);
+                                    }
+                                }
+                            });
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+                return hasher.hash().toString();
             }
 
             /**
@@ -916,6 +1013,7 @@ public class FileCache {
              *
              * @throws IllegalStateException if the inputs are empty
              */
+            @NonNull
             public Inputs build() {
                 Preconditions.checkState(!parameters.isEmpty(), "Inputs must not be empty.");
                 return new Inputs(this);
@@ -935,14 +1033,15 @@ public class FileCache {
         }
 
         /**
-         * Returns a key representing this list of input parameters. The input parameters have the
-         * order in which they were added to this {@code Inputs} object. Two lists of input
-         * parameters are considered different if the input parameters are different in size, order,
-         * or values. This method guarantees to return different keys for different lists of inputs.
+         * Returns a key representing this list of input parameters.
+         *
+         * <p>Two lists of input parameters are considered different if the input parameters are
+         * different in size, names, order, or values. This method is guaranteed to return different
+         * keys for different lists of inputs.
          */
         @NonNull
         public String getKey() {
-            return Hashing.sha256().hashString(toString(), StandardCharsets.UTF_8).toString();
+            return Hashing.sha256().hashUnencodedChars(this.toString()).toString();
         }
     }
 
@@ -984,25 +1083,28 @@ public class FileCache {
     public enum FileProperties {
 
         /**
-         * The properties include the hash of a regular file (not a directory).
+         * The properties include the hash of the given regular file (not a directory).
          *
-         * <p>This is the recommended way of constructing the cache inputs for a file. Clients can
-         * consider using {@link #PATH_HASH} to also add a path to the cache inputs (typically for
-         * debugging purposes).
+         * <p>This is the recommended way of constructing the cache inputs for a regular file. Note
+         * that the properties do not include the path or name of the given file. Clients can
+         * consider using {@link #PATH_HASH} to also include the file's path in the cache inputs
+         * (typically for debugging purposes).
          */
         HASH,
 
         /**
-         * The properties include the path and hash of a regular file (not a directory).
+         * The properties include the (not-yet-normalized) path and hash of the given regular file
+         * (not a directory).
          *
-         * <p>This option is similar to {@link #HASH} except that a path is added to the cache
-         * inputs, typically for debugging purposes (e.g., to find out what file a cache entry is
-         * created from).
+         * <p>This option is similar to {@link #HASH} except that the file's path is also included
+         * in the cache inputs, typically for debugging purposes (e.g., to find out what file a
+         * cache entry is created from).
          */
         PATH_HASH,
 
         /**
-         * The properties include the path, size, and timestamp of a regular file (not a directory).
+         * The properties include the (not-yet-normalized) path, size, and timestamp of a regular
+         * file (not a directory).
          *
          * <p>WARNING: Although this option is faster than using {@link #HASH}, it is not as safe.
          * The main reason is that, due to the granularity of filesystem timestamps, timestamps may
@@ -1011,6 +1113,39 @@ public class FileCache {
          * of its limitations. Otherwise, {@link #HASH} should be used instead.
          */
         PATH_SIZE_TIMESTAMP,
+    }
+
+    /** Properties of a directory to be used when constructing the cache inputs. */
+    public enum DirectoryProperties {
+
+        /**
+         * The properties include the hash of the given directory.
+         *
+         * <p>The directory's hash is computed from the following:
+         *
+         * <ol>
+         *   <li>The relative paths, in lexical order, of all the regular files and directories at
+         *       all depths below the given directory (symbolic links are not followed)
+         *   <li>The contents of all the regular files in the sorted list above
+         * </ol>
+         *
+         * <p>This is the recommended way of constructing the cache inputs for a directory. Note
+         * that the properties do not include the path or name of the given directory. Clients can
+         * consider using {@link #PATH_HASH} to also include the directory's path in the cache
+         * inputs (typically for debugging purposes).
+         */
+        HASH,
+
+        /**
+         * The properties include the (not-yet-normalized) path and hash of the given directory.
+         *
+         * <p>The directory's hash is defined as in {@link #HASH}.
+         *
+         * <p>This option is similar to {@link #HASH} except that the directory's path is also
+         * included in the cache inputs, typically for debugging purposes (e.g., to find out what
+         * directory a cache entry is created from).
+         */
+        PATH_HASH,
     }
 
     /**
@@ -1049,11 +1184,11 @@ public class FileCache {
             this.cachedFile = cachedFile;
         }
 
-        QueryResult(@NonNull QueryEvent queryEvent, @NonNull Throwable causeOfCorruption) {
+        private QueryResult(@NonNull QueryEvent queryEvent, @NonNull Throwable causeOfCorruption) {
             this(queryEvent, causeOfCorruption, null);
         }
 
-        QueryResult(@NonNull QueryEvent queryEvent) {
+        private QueryResult(@NonNull QueryEvent queryEvent) {
             this(queryEvent, null, null);
         }
 
@@ -1095,5 +1230,43 @@ public class FileCache {
 
         /** The cache entry exists and is corrupted. */
         CORRUPTED,
+    }
+
+    /**
+     * A common point between different cache operations occurring during one single task, the cache
+     * session allows to factorize some operations, For example file hash are computed only once per
+     * session. Files used as input of the cache operations are supposed to stay unchanged during
+     * the usage of one {@link CacheSession} instance.
+     */
+    public abstract static class CacheSession {
+        private CacheSession() {}
+
+        @NonNull
+        abstract String getDirectoryHash(@NonNull File directory);
+
+        @NonNull
+        abstract String getRegularFileHash(@NonNull File regularFile);
+    }
+
+    /** Create a new {@link CacheSession}. */
+    public static CacheSession newSession() {
+        return new CacheSession() {
+            @NonNull
+            private final ConcurrentHashMap<File, String> pathHashes = new ConcurrentHashMap<>();
+
+            @Override
+            @NonNull
+            String getDirectoryHash(@NonNull File directory) {
+                return pathHashes.computeIfAbsent(
+                        directory, dir -> Inputs.Builder.getDirectoryHash(dir));
+            }
+
+            @Override
+            @NonNull
+            String getRegularFileHash(@NonNull File regularFile) {
+                return pathHashes.computeIfAbsent(
+                        regularFile, file -> Inputs.Builder.getFileHash(file));
+            }
+        };
     }
 }

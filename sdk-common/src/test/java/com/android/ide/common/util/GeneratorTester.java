@@ -158,7 +158,7 @@ public class GeneratorTester {
       }
       ImageIO.write(deltaImage, "PNG", output);
       String message =
-        String.format("Images differ (by %.1f%%) - see details in %s", percentDifference, output);
+        String.format("Images differ (by %.3g%%) - see details in %s", percentDifference, output);
       System.out.println(message);
       fail(message);
     }

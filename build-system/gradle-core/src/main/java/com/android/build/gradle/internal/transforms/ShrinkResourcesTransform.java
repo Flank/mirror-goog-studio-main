@@ -129,7 +129,7 @@ public class ShrinkResourcesTransform extends Transform {
         this.aaptOptions = globalScope.getExtension().getAaptOptions();
         this.variantType = variantData.getType();
         this.isDebuggableBuildType = variantConfig.getBuildType().isDebuggable();
-        this.multiOutputPolicy = variantData.getOutputScope().getMultiOutputPolicy();
+        this.multiOutputPolicy = variantData.getMultiOutputPolicy();
 
         this.compressedResources = compressedResources;
     }

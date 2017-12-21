@@ -70,14 +70,12 @@ import com.android.builder.core.DefaultProductFlavor.DimensionRequest;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.EvalIssueReporter;
-import com.android.builder.model.InstantRun;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -319,8 +317,6 @@ public class VariantManager implements VariantModel {
 
     /**
      * Variant/Task creation entry point.
-     *
-     * Not used by gradle-experimental.
      */
     public void createAndroidTasks() {
         variantFactory.validateModel(this);
@@ -340,6 +336,8 @@ public class VariantManager implements VariantModel {
                 project.getPath(),
                 null /*variantName*/,
                 () -> taskManager.createTopLevelTestTasks(!productFlavors.isEmpty()));
+
+
 
         for (final VariantScope variantScope : variantScopes) {
             recorder.record(
@@ -840,24 +838,10 @@ public class VariantManager implements VariantModel {
         }
     }
 
-    public Collection<BaseVariantData> createVariantData(
-            @NonNull com.android.builder.model.BuildType buildType,
-            @NonNull List<? extends ProductFlavor> productFlavorList,
-            boolean componentPluginUsed) {
-        ImmutableList.Builder<BaseVariantData> variantDataBuilder = new ImmutableList.Builder<>();
-        for (VariantType variantType : variantFactory.getVariantConfigurationTypes()) {
-            variantDataBuilder.add(
-                    createVariantDataForVariantType(
-                            buildType, productFlavorList, variantType, componentPluginUsed));
-        }
-        return variantDataBuilder.build();
-    }
-
     private BaseVariantData createVariantDataForVariantType(
             @NonNull com.android.builder.model.BuildType buildType,
             @NonNull List<? extends ProductFlavor> productFlavorList,
-            @NonNull VariantType variantType,
-            boolean componentPluginUsed) {
+            @NonNull VariantType variantType) {
         BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
 
         final DefaultAndroidSourceSet sourceSet = defaultConfigData.getSourceSet();
@@ -872,11 +856,6 @@ public class VariantManager implements VariantModel {
                                 buildTypeData.getSourceSet(),
                                 variantType,
                                 signingOverride);
-
-        if (componentPluginUsed) {
-            variantConfig.setInstantRunSupportStatusOverride(
-                    InstantRun.STATUS_NOT_SUPPORTED_FOR_EXPERIMENTAL_PLUGIN);
-        }
 
         // sourceSetContainer in case we are creating variant specific sourceSets.
         NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer = extension
@@ -1154,10 +1133,7 @@ public class VariantManager implements VariantModel {
             if (!ignore) {
                 BaseVariantData variantData =
                         createVariantDataForVariantType(
-                                buildTypeData.getBuildType(),
-                                productFlavorList,
-                                variantType,
-                                false);
+                                buildTypeData.getBuildType(), productFlavorList, variantType);
                 addVariant(variantData);
 
                 GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();

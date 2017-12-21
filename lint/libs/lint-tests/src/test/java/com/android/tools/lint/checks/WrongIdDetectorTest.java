@@ -198,6 +198,43 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                             + "</RelativeLayout>\n")));
     }
 
+    public void testSiblingsInConstraintLayout() throws Exception {
+        assertEquals(""
+                        + "res/layout/constraint.xml:12: Error: @+id/button5 is not a sibling in the same ConstraintLayout [NotSibling]\n" +
+                        "        app:layout_constraintRight_toRightOf=\"@+id/button5\"\n" +
+                        "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "1 errors, 0 warnings\n",
+                lintProject(xml("res/layout/constraint.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<android.support.constraint.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                        + "    android:layout_width=\"800dp\" android:layout_height=\"1143dp\"\n"
+                        + "    android:id=\"@+id/com.google.tnt.sherpa.ConstraintLayout\">\n"
+                        + "\n"
+                        + "\n"
+                        + "    <Button\n"
+                        + "        android:text=\"Button\"\n"
+                        + "        android:layout_width=\"wrap_content\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        app:layout_constraintRight_toRightOf=\"@+id/button5\"\n"
+                        + "        android:id=\"@+id/button1\" />\n"
+                        + "\n"
+                        + "    <LinearLayout\n"
+                        + "        android:id=\"@+id/linearLayout1\"\n"
+                        + "        android:layout_width=\"wrap_content\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:orientation=\"vertical\" >\n"
+                        + "\n"
+                        + "        <Button\n"
+                        + "            android:id=\"@+id/button5\"\n"
+                        + "            android:layout_width=\"wrap_content\"\n"
+                        + "            android:layout_height=\"wrap_content\"\n"
+                        + "            android:text=\"Button\" />\n"
+                        + "    </LinearLayout>\n"
+                        + "\n"
+                        + "</android.support.constraint.ConstraintLayout>")));
+    }
+
     public void testInvalidIds1() throws Exception {
         // See https://code.google.com/p/android/issues/detail?id=56029
         //noinspection all // Sample code

@@ -11,8 +11,12 @@ public class InputConnectionWrapper implements InputConnection {
         mInputConnection = new MockInputConnection();
     }
 
-    public InputConnectionWrapper(InputConnection ic, boolean owner) {
+    public InputConnectionWrapper(InputConnection ic, boolean mutable) {
         mInputConnection = ic;
+    }
+
+    public void setTarget(InputConnection connection) {
+        mInputConnection = connection;
     }
 
     public boolean setComposingText(CharSequence charSequence, int i) {
@@ -21,5 +25,10 @@ public class InputConnectionWrapper implements InputConnection {
 
     public boolean commitText(CharSequence charSequence, int i) {
         return false;
+    }
+
+    // Function to expose underlaying InputConnection used only by test
+    public InputConnection getConnection() {
+        return mInputConnection;
     }
 }

@@ -41,7 +41,7 @@ class NamespaceRemover : QueueableResourceCompiler {
 
     @Throws(Exception::class)
     override fun compile(request: CompileResourceRequest): Future<File> {
-        val input = request.input
+        val input = request.inputFile
         val output = compileOutputFor(request)
         FileUtils.mkdirs(output.parentFile)
 
@@ -57,8 +57,8 @@ class NamespaceRemover : QueueableResourceCompiler {
     }
 
     override fun compileOutputFor(request: CompileResourceRequest): File {
-        val parentDir = File(request.output, request.folderName)
-        return File(parentDir, request.input.name)
+        val parentDir = File(request.outputDirectory, request.inputDirectoryName)
+        return File(parentDir, request.inputFile.name)
     }
 
     @Throws(IOException::class)

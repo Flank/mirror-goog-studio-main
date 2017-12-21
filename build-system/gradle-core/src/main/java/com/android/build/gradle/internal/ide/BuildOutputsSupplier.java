@@ -88,7 +88,13 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Buil
                 outputs.add(
                         new BuildOutput(
                                 taskOutputType,
-                                ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0),
+                                ApkInfo.of(
+                                        VariantOutput.OutputType.MAIN,
+                                        ImmutableList.of(),
+                                        0,
+                                        null,
+                                        true,
+                                        null),
                                 file));
             }
         } else {
@@ -100,7 +106,7 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Buil
             outputs.add(
                     new BuildOutput(
                             taskOutputType,
-                            ApkInfo.of(fileOutputType, ImmutableList.of(), 0),
+                            ApkInfo.of(fileOutputType, ImmutableList.of(), 0, null, true, null),
                             file));
         }
     }

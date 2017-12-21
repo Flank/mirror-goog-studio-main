@@ -7,17 +7,19 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ProcessRunner {
 
     public static final int NO_TIMEOUT = Integer.MAX_VALUE;
     private static final int DEFAULT_INPUT_TIMEOUT = 5000;
-    private String[] myProcessArgs;
+    private final String[] myProcessArgs;
+    private final List<String> myInput = new ArrayList<>();
+    private final List<String> myError = new ArrayList<>();
     private Process myProcess;
     private Thread myErrorListener;
     private Thread myInputListener;
-    private List<String> myInput = new ArrayList<>();
-    private List<String> myError = new ArrayList<>();
 
 
     protected ProcessRunner(String... processArgs) {
@@ -53,7 +55,7 @@ public class ProcessRunner {
         return myProcess != null && myProcess.isAlive();
     }
 
-    public void listen(String streamName, InputStream stream, List<String> storage) {
+    private void listen(String streamName, InputStream stream, List<String> storage) {
         try {
             InputStreamReader isr = new InputStreamReader(stream);
             BufferedReader br = new BufferedReader(isr);
@@ -81,18 +83,35 @@ public class ProcessRunner {
      * default timeout and will return false if a string is not found in thst time.
      */
     public boolean waitForInput(String statement) {
-        return findStatement(myInput, statement, DEFAULT_INPUT_TIMEOUT);
+        return containsStatement(myInput, statement, DEFAULT_INPUT_TIMEOUT);
     }
 
     public boolean waitForInput(String statement, int timeout) {
-        return findStatement(myInput, statement, timeout);
+        return containsStatement(myInput, statement, timeout);
     }
 
     public boolean waitForError(String statement, int timeout) {
-        return findStatement(myError, statement, timeout);
+        return containsStatement(myError, statement, timeout);
     }
 
-    private boolean findStatement(List<String> storage, String statement, int timeout) {
+    /**
+     * @param statement that defines a pattern to match in the output. The pattern should define a
+     *     group named [result] as the returned element from the input. Example Line: [art-input]
+     *     profiler.service.address=127.0.0.1:34801 Pattern:
+     *     (.*)(profiler.service.address=)(?<result>.*) Return: 127.0.0.1:34801
+     * @return The value found in the result named group, or null if no value found.
+     */
+    public String waitForInput(Pattern statement) {
+        return containsStatement(myInput, statement, DEFAULT_INPUT_TIMEOUT);
+    }
+
+    private boolean containsStatement(List<String> storage, String statement, int timeout) {
+        return containsStatement(
+                        storage, Pattern.compile("(.*)(?<result>" + statement + ")(.*)"), timeout)
+                != null;
+    }
+
+    private String containsStatement(List<String> storage, Pattern statement, int timeout) {
         boolean notFound = true;
         final long SLEEP_TIME_MS = 100;
         long time = System.currentTimeMillis();
@@ -100,8 +119,9 @@ public class ProcessRunner {
             while (notFound) {
                 synchronized (storage) {
                     for (int i = storage.size() - 1; i >= 0; i--) {
-                        if (storage.get(i).contains(statement)) {
-                            return true;
+                        Matcher matcher = statement.matcher(storage.get(i));
+                        if (matcher.matches()) {
+                            return matcher.group("result");
                         }
                     }
                 }
@@ -114,7 +134,7 @@ public class ProcessRunner {
         } catch (InterruptedException ex) {
         }
         System.out.println("Wait Time: " + (System.currentTimeMillis() - time));
-        return false;
+        return null;
     }
 
     public void stop() {

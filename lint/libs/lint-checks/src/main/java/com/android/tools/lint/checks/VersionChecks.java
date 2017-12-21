@@ -304,7 +304,7 @@ public class VersionChecks {
                 UIfExpression ifStatement = (UIfExpression) current;
                 UExpression condition = ifStatement.getCondition();
                 if (prev != condition) {
-                    boolean fromThen = prev == ifStatement.getThenExpression();
+                    boolean fromThen = prev.equals(ifStatement.getThenExpression());
                     Boolean ok = isVersionCheckConditional(api, condition, fromThen, prev, null);
                     if (ok != null) {
                         return ok;
@@ -733,7 +733,7 @@ public class VersionChecks {
             UPolyadicExpression ppe = (UPolyadicExpression) element;
             if (ppe.getOperator() == UastBinaryOperator.LOGICAL_OR) {
                 for (UExpression operand : ppe.getOperands()) {
-                    if (operand == before) {
+                    if (operand.equals(before)) {
                         break;
                     } else if (isOredWithConditional(operand, api, before)) {
                         return true;
@@ -770,7 +770,7 @@ public class VersionChecks {
             UPolyadicExpression ppe = (UPolyadicExpression) element;
             if (ppe.getOperator() == UastBinaryOperator.LOGICAL_AND) {
                 for (UExpression operand : ppe.getOperands()) {
-                    if (operand == before) {
+                    if (operand.equals(before)) {
                         break;
                     } else if (isAndedWithConditional(operand, api, before)) {
                         return true;

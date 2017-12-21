@@ -86,8 +86,7 @@ public class ServerProtocolV1Test {
         HandshakeRequest handshakeRequest = new HandshakeRequest();
         handshakeRequest.cookie = "zimtstern";
         handshakeRequest.protocolVersion = new ProtocolVersion();
-        handshakeRequest.protocolVersion.minor = 1;
-        handshakeRequest.protocolVersion.minor = 0;
+        handshakeRequest.protocolVersion.major = 1;
         handshakeRequest.sourceDirectory = "/home/code/cmake";
         handshakeRequest.buildDirectory = "/tmp/testbuild";
         handshakeRequest.generator = "Ninja";
@@ -115,8 +114,7 @@ public class ServerProtocolV1Test {
         HandshakeRequest handshakeRequest = new HandshakeRequest();
         handshakeRequest.cookie = "zimtstern";
         handshakeRequest.protocolVersion = new ProtocolVersion();
-        handshakeRequest.protocolVersion.minor = 1;
-        handshakeRequest.protocolVersion.minor = 0;
+        handshakeRequest.protocolVersion.major = 1;
         handshakeRequest.sourceDirectory = "/home/code/cmake";
         handshakeRequest.buildDirectory = "/tmp/testbuild";
         handshakeRequest.generator = "Ninja";

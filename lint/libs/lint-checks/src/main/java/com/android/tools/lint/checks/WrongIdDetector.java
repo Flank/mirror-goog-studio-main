@@ -126,9 +126,9 @@ public class WrongIdDetector extends LayoutDetector {
     /** Reference to an id that is not a sibling */
     public static final Issue NOT_SIBLING = Issue.create(
             "NotSibling",
-            "RelativeLayout Invalid Constraints",
-            "Layout constraints in a given `RelativeLayout` should reference other views " +
-            "within the same relative layout (but not itself!)",
+            "Invalid Constraints",
+            "Layout constraints in a given `ConstraintLayout` or `RelativeLayout` should " +
+            "reference other views within the same relative layout (but not itself!)",
             Category.CORRECTNESS,
             6,
             Severity.FATAL,
@@ -310,8 +310,9 @@ public class WrongIdDetector extends LayoutDetector {
             if (context.isEnabled(NOT_SIBLING)) {
                 XmlContext xmlContext = (XmlContext) context;
                 String message = String.format(
-                        "`%1$s` is not a sibling in the same `RelativeLayout`",
-                        id);
+                        "`%1$s` is not a sibling in the same `%2$s`",
+                        id,
+                        isConstraintLayout ? "ConstraintLayout" : "RelativeLayout");
                 Location location = xmlContext.getLocation(attr);
                 xmlContext.report(NOT_SIBLING, attr, location, message);
             }

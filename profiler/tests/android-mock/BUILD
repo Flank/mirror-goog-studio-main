@@ -6,6 +6,9 @@ java_library(
     name = "android-mock",
     srcs = glob(["**/*.java"]),
     neverlink = 1,
+    deps = [
+        "//tools/idea/.idea/libraries:Guava",
+    ],
 )
 
 dex_library(

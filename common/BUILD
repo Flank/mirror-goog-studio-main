@@ -19,6 +19,7 @@ iml_module(
     deps = [
         "//tools/idea/.idea/libraries:Guava",
         "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )
 
@@ -73,5 +74,6 @@ iml_module(
         "//tools/base/annotations:studio.android-annotations[module]",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/base/common:studio.common[module]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )

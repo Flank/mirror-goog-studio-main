@@ -19,6 +19,7 @@ gradle_integration_test(
         ],
     ),
     data = [
+        "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
         "//tools/base/build-system:gradle-distrib",
     ],
     maven_repos = [

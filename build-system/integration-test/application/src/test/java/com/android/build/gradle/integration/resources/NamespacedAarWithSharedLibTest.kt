@@ -27,8 +27,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.builder.internal.aapt.v2.AaptV2Jni
-import com.android.ide.common.internal.WaitableExecutor
+import com.android.builder.internal.aapt.v2.QueueableAapt2
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.repository.testframework.FakeProgressIndicator
 import com.android.sdklib.repository.AndroidSdkHandler
@@ -42,6 +41,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.util.concurrent.TimeUnit
 
 /**
  * Sanity tests for the new namespaced resource pipeline with publication and consumption of an aar.
@@ -51,8 +51,17 @@ import java.nio.file.Files
  */
 class NamespacedAarWithSharedLibTest {
 
+    /**
+     * This test depends on AAPT2 features that are not released yet.
+     * There is a version of the build tools checked in from the build server,
+     * with the version in package.xml set to the build number it was taken from.
+     */
+    private val buildScriptContent = """
+        android.aaptOptions.namespaced = true
+        android.buildToolsVersion = '4509860'
+    """
     private val publishedLib = MinimalSubProject.lib("com.example.publishedLib")
-            .appendToBuild("android.aaptOptions.namespaced = true")
+            .appendToBuild(buildScriptContent)
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources><string name="foo">publishedLib</string></resources>""")
@@ -67,7 +76,7 @@ class NamespacedAarWithSharedLibTest {
 
     private val lib = MinimalSubProject.lib("com.example.lib")
             .appendToBuild(
-                    """android.aaptOptions.namespaced = true
+                    """$buildScriptContent
                     repositories { flatDir { dirs rootProject.file('myFlatDir') } }
                     dependencies { implementation name: 'sharedLib', ext:'aar' }""")
             .withFile(
@@ -87,7 +96,7 @@ class NamespacedAarWithSharedLibTest {
 
     private val app = MinimalSubProject.app("com.example.app")
             .appendToBuild(
-                    """android.aaptOptions.namespaced = true
+                    """$buildScriptContent
                     repositories { flatDir { dirs rootProject.file('myFlatDir') } }
                     dependencies { implementation name: 'sharedLib', ext:'aar' }""")
             .withFile(
@@ -152,7 +161,7 @@ class NamespacedAarWithSharedLibTest {
 
         val progress = FakeProgressIndicator()
         val sdk = AndroidSdkHandler.getInstance(TestUtils.getSdk())
-        val buildToolInfo = sdk.getLatestBuildTool(progress, false)
+        val buildToolInfo = sdk.getLatestBuildTool(progress, false)!!
         val androidTarget =
                 sdk.getAndroidTargetManager(progress)
                         .getTargetFromHashString(GradleTestProject.getCompileSdkHash(), progress)!!
@@ -181,12 +190,13 @@ class NamespacedAarWithSharedLibTest {
                     .setVariantType(VariantType.DEFAULT)
                     .setLogger(StdLogger(StdLogger.Level.INFO))
                     .build()
-            AaptV2Jni(
-                    tempFolder.newFolder(),
-                    WaitableExecutor.useDirectExecutor(),
+            QueueableAapt2(
                     LoggedProcessOutputHandler(StdLogger(StdLogger.Level.INFO)),
-                    null)
-                    .use{ it.link(config) }
+                    buildToolInfo,
+                    tempFolder.newFolder(),
+                    StdLogger(StdLogger.Level.VERBOSE),
+                    0)
+                    .use { it.link(config).get(2, TimeUnit.MINUTES) }
 
             // TODO: signing, make usable for running.
 //            val sharedLib = File(unsignedSharedLib.parentFile, "shared.apk")

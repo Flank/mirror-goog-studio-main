@@ -6,4 +6,5 @@ iml_module(
     iml_files = ["chunkio.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
+    deps = ["//tools/idea/.idea/libraries:KotlinJavaRuntime"],
 )

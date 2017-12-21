@@ -33,6 +33,8 @@ import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.Version;
 import com.android.builder.sdk.DefaultSdkLoader;
+import com.android.builder.sdk.InstallFailedException;
+import com.android.builder.sdk.LicenceNotAcceptedException;
 import com.android.builder.sdk.PlatformLoader;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.SdkLibData;
@@ -42,6 +44,7 @@ import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
+import com.android.repository.api.RepoPackage;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
@@ -59,6 +62,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 
@@ -116,7 +120,13 @@ public class SdkHandler {
         return sdkLoader.getSdkInfo(logger);
     }
 
-    public void initTarget(
+    /**
+     * Initialize the SDK target, build tools and library requests.
+     *
+     * @return true on success, false on failure after reporting errors via the issue reporter,
+     *     which throws exceptions when not in sync mode.
+     */
+    public boolean initTarget(
             @NonNull String targetHash,
             @NonNull Revision buildToolRevision,
             @NonNull Collection<LibraryRequest> usedLibraries,
@@ -168,20 +178,48 @@ public class SdkHandler {
         SdkInfo sdkInfo = sdkLoader.getSdkInfo(logger);
 
         TargetInfo targetInfo;
-        targetInfo = sdkLoader.getTargetInfo(
-                targetHash,
-                buildToolRevision,
-                logger,
-                sdkLibData);
+        try {
+            targetInfo = sdkLoader.getTargetInfo(targetHash, buildToolRevision, logger, sdkLibData);
+        } catch (LicenceNotAcceptedException e) {
+            androidBuilder
+                    .getIssueReporter()
+                    .reportError(
+                            EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
+                            e.getMessage(),
+                            e.getAffectedPackages()
+                                    .stream()
+                                    .map(RepoPackage::getPath)
+                                    .collect(Collectors.joining(" ")));
+            return false;
+        } catch (InstallFailedException e) {
+            androidBuilder
+                    .getIssueReporter()
+                    .reportError(
+                            EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
+                            e.getMessage(),
+                            e.getAffectedPackages()
+                                    .stream()
+                                    .map(RepoPackage::getPath)
+                                    .collect(Collectors.joining(" ")));
+            return false;
+        }
 
         androidBuilder.setSdkInfo(sdkInfo);
         androidBuilder.setTargetInfo(targetInfo);
         androidBuilder.setLibraryRequests(usedLibraries);
 
         logger.verbose("SDK initialized in %1$d ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
+        return true;
     }
 
-    public void ensurePlatformToolsIsInstalled(@NonNull EvalIssueReporter issueReporter) {
+    /**
+     * Try and make sure the platform tools are present.
+     *
+     * <p>Reports an evaluation warning if the platform tools package is not present and could not
+     * be automatically downloaded and installed.
+     */
+    public void ensurePlatformToolsIsInstalledWarnOnFailure(
+            @NonNull EvalIssueReporter issueReporter) {
         // Check if platform-tools are installed. We check here because realistically, all projects
         // should have platform-tools in order to build.
         ProgressIndicator progress = new ConsoleProgressIndicator();
@@ -191,7 +229,21 @@ public class SdkHandler {
                         SdkConstants.FD_PLATFORM_TOOLS, null, true, progress);
         if (platformToolsPackage == null) {
             if (sdkLibData.useSdkDownload()) {
-                sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);
+                try {
+                    sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);
+                } catch (LicenceNotAcceptedException e) {
+                    issueReporter.reportWarning(
+                            EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
+                            SdkConstants.FD_PLATFORM_TOOLS
+                                    + " package is not installed. Please accept the installation licence to continue",
+                            SdkConstants.FD_PLATFORM_TOOLS);
+                } catch (InstallFailedException e) {
+                    issueReporter.reportWarning(
+                            EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
+                            SdkConstants.FD_PLATFORM_TOOLS
+                                    + " package is not installed, and automatic installation failed.",
+                            SdkConstants.FD_PLATFORM_TOOLS);
+                }
             } else {
                 issueReporter.reportWarning(
                         Type.MISSING_SDK_PACKAGE,
@@ -368,7 +420,11 @@ public class SdkHandler {
      * Installs CMake.
      */
     public void installCMake() {
-        sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_CMAKE);
+        try {
+            sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_CMAKE);
+        } catch (LicenceNotAcceptedException | InstallFailedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void addLocalRepositories(Project project) {

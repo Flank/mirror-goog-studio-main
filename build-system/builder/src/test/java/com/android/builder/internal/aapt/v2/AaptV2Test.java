@@ -24,8 +24,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptTestUtils;
-import com.android.builder.utils.FileCache;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.repository.Revision;
@@ -39,32 +37,12 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.concurrent.Future;
 import org.junit.Assume;
-import org.junit.AssumptionViolatedException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Tests for {@code aapt2}. */
-@RunWith(Parameterized.class)
 public class AaptV2Test {
-
-    private enum AaptGeneration {
-        AAPT_V2_JNI,
-        AAPT_V2_DAEMON
-    }
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Object[] getParams() {
-        return AaptGeneration.values();
-    }
-
-    @NonNull private final AaptGeneration generation;
-
-    public AaptV2Test(@NonNull AaptGeneration generation) {
-        this.generation = generation;
-    }
 
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
@@ -78,19 +56,6 @@ public class AaptV2Test {
     @NonNull
     private Aapt makeAapt() throws Exception {
         ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
-        if (generation == AaptGeneration.AAPT_V2_DAEMON) {
-            throw new AssumptionViolatedException("Deamon mode not in SDK version of AAPT2 yet");
-        }
-
-        switch (generation) {
-            case AAPT_V2_JNI:
-                return new AaptV2Jni(
-                        mTemporaryFolder.newFolder(),
-                        WaitableExecutor.useDirectExecutor(),
-                        new LoggedProcessOutputHandler(logger),
-                        FileCache.getInstanceWithSingleProcessLocking(
-                                mTemporaryFolder.newFolder()));
-            case AAPT_V2_DAEMON:
                 Revision daemonRevision = BuildToolInfo.PathId.DAEMON_AAPT2.getMinRevision();
 
                 FakeProgressIndicator daemonProgress = new FakeProgressIndicator();
@@ -109,9 +74,6 @@ public class AaptV2Test {
                         mTemporaryFolder.newFolder(),
                         logger,
                         5);
-            default:
-                throw new IllegalArgumentException();
-        }
     }
 
     @Test

@@ -18,9 +18,6 @@ package com.android.ide.common.vectordrawable;
 
 import com.android.SdkConstants;
 import com.google.common.io.Files;
-
-import org.w3c.dom.Document;
-
 import java.awt.Component;
 import java.awt.Dimension;
 import java.io.ByteArrayOutputStream;
@@ -29,7 +26,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
-
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.Icon;
 import javax.swing.JComponent;
@@ -40,6 +36,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
+import org.w3c.dom.Document;
 
 /**
  * Support a command line tool to convert SVG files to VectorDrawables and display them.
@@ -242,8 +239,8 @@ public class VdCommandLineTool {
 
                     if (vdDocument != null) {
                         VdOverrideInfo info = new VdOverrideInfo(options.getForceWidth(),
-                                options.getForceHeight(),
-                                -1 /* opacity */, false /*auto mirrored*/);
+                                options.getForceHeight(), null, 1,
+                                false /*auto mirrored*/);
                         vectorXmlContent = VdPreview.overrideXmlContent(vdDocument, info, null);
                     }
                 }

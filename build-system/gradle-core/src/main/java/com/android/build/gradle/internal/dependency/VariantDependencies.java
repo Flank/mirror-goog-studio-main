@@ -29,6 +29,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.errors.EvalIssueReporter;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.Collection;
@@ -38,6 +39,7 @@ import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ResolutionStrategy;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
@@ -86,6 +88,7 @@ public class VariantDependencies {
 
     @NonNull private final Configuration compileClasspath;
     @NonNull private final Configuration runtimeClasspath;
+    @NonNull private final Collection<Configuration> sourceSetRuntimeConfigurations;
 
     @Nullable private final Configuration apiElements;
     @Nullable private final Configuration runtimeElements;
@@ -159,7 +162,8 @@ public class VariantDependencies {
             return this;
         }
 
-        public Builder setTestedVariantDependencies(VariantDependencies testedVariantDependencies) {
+        public Builder setTestedVariantDependencies(
+                @NonNull VariantDependencies testedVariantDependencies) {
             this.testedVariantDependencies = testedVariantDependencies;
             return this;
         }
@@ -380,6 +384,7 @@ public class VariantDependencies {
                     variantName,
                     compileClasspath,
                     runtimeClasspath,
+                    runtimeClasspaths,
                     apiElements,
                     runtimeElements,
                     annotationProcessor,
@@ -463,6 +468,7 @@ public class VariantDependencies {
             @NonNull String variantName,
             @NonNull Configuration compileClasspath,
             @NonNull Configuration runtimeClasspath,
+            @NonNull Collection<Configuration> sourceSetRuntimeConfigurations,
             @Nullable Configuration apiElements,
             @Nullable Configuration runtimeElements,
             @NonNull Configuration annotationProcessorConfiguration,
@@ -473,6 +479,7 @@ public class VariantDependencies {
         this.variantName = variantName;
         this.compileClasspath = compileClasspath;
         this.runtimeClasspath = runtimeClasspath;
+        this.sourceSetRuntimeConfigurations = sourceSetRuntimeConfigurations;
         this.apiElements = apiElements;
         this.runtimeElements = runtimeElements;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
@@ -494,6 +501,15 @@ public class VariantDependencies {
     @NonNull
     public Configuration getRuntimeClasspath() {
         return runtimeClasspath;
+    }
+
+    @NonNull
+    public Collection<Dependency> getIncomingRuntimeDependencies() {
+        ImmutableList.Builder<Dependency> builder = ImmutableList.builder();
+        for (Configuration classpath : sourceSetRuntimeConfigurations) {
+            builder.addAll(classpath.getIncoming().getDependencies());
+        }
+        return builder.build();
     }
 
     @Nullable

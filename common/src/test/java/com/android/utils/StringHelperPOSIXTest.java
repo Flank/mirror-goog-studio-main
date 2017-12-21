@@ -62,149 +62,212 @@ public class StringHelperPOSIXTest {
 
     @Test
     public void checkOneCommandWithQuotedSemicolon() throws Exception {
-        checkCommandLineSplitting("foo bar\";\" baz qux", Collections.singletonList("foo bar\";\" baz qux"));
+        checkCommandLineSplitting(
+                "foo bar\";\" baz qux", Collections.singletonList("foo bar\";\" baz qux"));
     }
 
     @Test
     public void checkOneCommandWithQuotedDoubleAmpersands() throws Exception {
-        checkCommandLineSplitting("foo bar\"&&\" baz qux", Collections.singletonList("foo bar\"&&\" baz qux"));
+        checkCommandLineSplitting(
+                "foo bar\"&&\" baz qux", Collections.singletonList("foo bar\"&&\" baz qux"));
     }
 
     @Test
     public void checkOneCommandWithEscapedSemicolon() throws Exception {
-        checkCommandLineSplitting("foo bar\\; baz qux", Collections.singletonList("foo bar\\; baz qux"));
+        checkCommandLineSplitting(
+                "foo bar\\; baz qux", Collections.singletonList("foo bar\\; baz qux"));
     }
 
     @Test
     public void checkOneCommandWithEscapedDoubleAmpersands() throws Exception {
-        checkCommandLineSplitting("foo bar\\&\\& baz qux", Collections.singletonList("foo bar\\&\\& baz qux"));
+        checkCommandLineSplitting(
+                "foo bar\\&\\& baz qux", Collections.singletonList("foo bar\\&\\& baz qux"));
     }
 
-    // Tokenization and stringization tests.
+    // Tokenization.
+    private static void checkTokenizationToCompilerFlags(
+            String originalString, List<String> escapedExpected, List<String> rawExpected)
+            throws Exception {
+        List<String> tokenizedRaw = StringHelperPOSIX.tokenizeCommandLineToRaw(originalString);
+        List<String> tokenizedEscaped =
+                StringHelperPOSIX.tokenizeCommandLineToEscaped(originalString);
+        assertThat(tokenizedRaw).containsExactlyElementsIn(rawExpected);
+        assertThat(tokenizedEscaped).containsExactlyElementsIn(escapedExpected);
+    }
 
-    private static void checkTokenizationAndQuotingAndJoining(
-            String originalString, List<String> tokenizedString, String quotedAndJoinedTokens) throws Exception {
-        assertThat(StringHelperPOSIX.tokenizeString(originalString)).isEqualTo(tokenizedString);
-        assertThat(StringHelperPOSIX.quoteAndJoinTokens(tokenizedString)).isEqualTo(quotedAndJoinedTokens);
-        assertThat(StringHelperPOSIX.tokenizeString(quotedAndJoinedTokens)).isEqualTo(tokenizedString);
+    private static void checkTokenization(String originalString, List<String> expected)
+            throws Exception {
+        checkTokenizationToCompilerFlags(originalString, expected, expected);
     }
 
     @Test
     public void checkZeroTokens() throws Exception {
-        checkTokenizationAndQuotingAndJoining("", Collections.<String>emptyList(), "");
+        checkTokenization("", Collections.<String>emptyList());
     }
 
     @Test
     public void checkSingleToken() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a", Collections.singletonList("a"), "\"a\"");
+        checkTokenization("a", Collections.singletonList("a"));
     }
 
     @Test
     public void checkMultipleTokens() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a b\tc", Arrays.asList("a", "b", "c"), "\"a\" \"b\" \"c\"");
+        checkTokenization("a b\tc", Arrays.asList("a", "b", "c"));
     }
 
     @Test
     public void checkDoubleQuote() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a \"b  c\" d", Arrays.asList("a", "b  c", "d"), "\"a\" \"b  c\" \"d\"");
+        checkTokenizationToCompilerFlags(
+                "a \"b  c\" d",
+                Arrays.asList("a", "b  c", "d"),
+                Arrays.asList("a", "\"b  c\"", "d"));
     }
 
     @Test
     public void checkNormalSlashes() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a\\\\\\b c", Arrays.asList("a\\b", "c"), "\"a\\\\b\" \"c\"");
+        checkTokenizationToCompilerFlags(
+                "a\\\\\\b c", Arrays.asList("a\\b", "c"), Arrays.asList("a\\\\\\b", "c"));
     }
 
     @Test
     public void checkOddSlashesBeforeQuote() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a\\\\\\\"b c", Arrays.asList("a\\\"b", "c"), "\"a\\\\\\\"b\" \"c\"");
+        checkTokenizationToCompilerFlags(
+                "a\\\\\\\"b c", Arrays.asList("a\\\"b", "c"), Arrays.asList("a\\\\\\\"b", ("c")));
     }
 
     @Test
     public void checkEvenSlashesBeforeQuote() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a\\\\\\\\\"b\" c", Arrays.asList("a\\\\b", "c"), "\"a\\\\\\\\b\" \"c\"");
+        checkTokenizationToCompilerFlags(
+                "a\\\\\\\\\"b\" c",
+                Arrays.asList("a\\\\b", "c"),
+                Arrays.asList("a\\\\\\\\\"b\"", "c"));
     }
 
     @Test
     public void checkSingleQuote() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a 'b  c'", Arrays.asList("a", "b  c"), "\"a\" \"b  c\"");
+        checkTokenizationToCompilerFlags(
+                "a 'b  c'", Arrays.asList("a", "b  c"), Arrays.asList("a", "'b  c'"));
     }
 
     @Test
     public void checkSingleQuoteWithinDoubleQuotes() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a \"b's  c\"", Arrays.asList("a", "b's  c"), "\"a\" \"b's  c\"");
+        checkTokenizationToCompilerFlags(
+                "a \"b's  c\"", Arrays.asList("a", "b's  c"), Arrays.asList("a", "\"b's  c\""));
     }
 
     @Test
     public void checkDoubleQuoteWithinSingleQuotes() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a 'b\"s\"  c'", Arrays.asList("a", "b\"s\"  c"), "\"a\" \"b\\\"s\\\"  c\"");
+        checkTokenizationToCompilerFlags(
+                "a 'b\"s\"  c'",
+                Arrays.asList("a", "b\"s\"  c"),
+                Arrays.asList("a", "'b\"s\"  c'"));
     }
 
     @Test
     public void checkEscapedSpace() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a b\\ c d", Arrays.asList("a", "b c", "d"), "\"a\" \"b c\" \"d\"");
+        checkTokenizationToCompilerFlags(
+                "a b\\ c d", Arrays.asList("a", "b c", "d"), Arrays.asList("a", "b\\c", "d"));
     }
 
     @Test
     public void checkEscapedQuoteWithinDoubleQuotes() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a \"b\\\"c\" d", Arrays.asList("a", "b\"c", "d"), "\"a\" \"b\\\"c\" \"d\"");
+        checkTokenizationToCompilerFlags(
+                "a \"b\\\"c\" d",
+                Arrays.asList("a", "b\"c", "d"),
+                Arrays.asList("a", "\"b\\\"c\"", "d"));
     }
 
     @Test
     public void checkSlashWithinSingleQuotes() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a 'b\\c' d", Arrays.asList("a", "b\\c", "d"), "\"a\" \"b\\\\c\" \"d\"");
+        checkTokenizationToCompilerFlags(
+                "a 'b\\c' d", Arrays.asList("a", "b\\c", "d"), Arrays.asList("a", "'b\\c'", "d"));
     }
 
     @Test
     public void checkAlternatingQuotes() throws Exception {
-       checkTokenizationAndQuotingAndJoining("a 'b\\'\"c d\"", Arrays.asList("a", "b\\c d"), "\"a\" \"b\\\\c d\"");
+        checkTokenizationToCompilerFlags(
+                "a 'b\\'\"c d\"", Arrays.asList("a", "b\\c d"), Arrays.asList("a", "'b\\'\"c d\""));
     }
 
     @Test
     public void checkDoubleQuotesTwice() throws Exception {
-        checkTokenizationAndQuotingAndJoining("\"a \"b\" c\" d", Arrays.asList("a b c", "d"), "\"a b c\" \"d\"");
+        checkTokenizationToCompilerFlags(
+                "\"a \"b\" c\" d",
+                Arrays.asList("a b c", "d"),
+                Arrays.asList("\"a \"b\" c\"", "d"));
     }
 
     @Test
     public void checkSingleQuotesTwice() throws Exception {
-        checkTokenizationAndQuotingAndJoining("'a 'b' c' d", Arrays.asList("a b c", "d"), "\"a b c\" \"d\"");
+        checkTokenizationToCompilerFlags(
+                "'a 'b' c' d", Arrays.asList("a b c", "d"), Arrays.asList("'a 'b' c'", "d"));
     }
 
     @Test
     public void checkDoubleQuotedNewline() throws Exception {
-        checkTokenizationAndQuotingAndJoining("\"a\nb\"", Collections.singletonList("a\nb"), "\"a\nb\"");
+        checkTokenizationToCompilerFlags(
+                "\"a\nb\"",
+                Collections.singletonList("a\nb"),
+                Collections.singletonList("\"a\nb\""));
     }
 
     // Slash escaping tests.
 
     @Test
     public void checkSlashEscapedSlash() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a\\\\b", Collections.singletonList("a\\b"), "\"a\\\\b\"");
+        checkTokenizationToCompilerFlags(
+                "a\\\\b", Collections.singletonList("a\\b"), Collections.singletonList("a\\\\b"));
     }
 
     @Test
     public void checkSlashEscapedNewline() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a\\\nb", Collections.singletonList("ab"), "\"ab\"");
+        checkTokenizationToCompilerFlags(
+                "a\\\nb", Collections.singletonList("ab"), Collections.singletonList("a\\b"));
     }
 
     @Test
     public void checkDoubleQuotedSlashEscapedNewline() throws Exception {
-        checkTokenizationAndQuotingAndJoining("\"a\\\nb\"", Collections.singletonList("ab"), "\"ab\"");
+        checkTokenizationToCompilerFlags(
+                "\"a\\\nb\"",
+                Collections.singletonList("ab"),
+                Collections.singletonList("\"a\\\nb\""));
     }
 
     // Caret escaping tests.
 
     @Test
     public void checkCaretEscapedCaret() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a^^b", Collections.singletonList("a^^b"), "\"a^^b\"");
+        checkTokenization("a^^b", Collections.singletonList("a^^b"));
     }
 
     @Test
     public void checkCaretEscapedNewline() throws Exception {
-        checkTokenizationAndQuotingAndJoining("a^\nb", Arrays.asList("a^", "b"), "\"a^\" \"b\"");
+        checkTokenization("a^\nb", Arrays.asList("a^", "b"));
     }
 
     @Test
     public void checkDoubleQuotedCaretEscapedNewline() throws Exception {
-        checkTokenizationAndQuotingAndJoining("\"a^\nb\"", Collections.singletonList("a^\nb"), "\"a^\nb\"");
+        checkTokenizationToCompilerFlags(
+                "\"a^\nb\"",
+                Collections.singletonList("a^\nb"),
+                Collections.singletonList("\"a^\nb\""));
+    }
+
+    // See issuetracker.google.com/69110338
+    @Test
+    public void checkPreserveTicks() throws Exception {
+        checkTokenizationToCompilerFlags(
+                "-DX='Y Z'",
+                Collections.singletonList("-DX=Y Z"),
+                Collections.singletonList("-DX='Y Z'"));
+    }
+
+    // See issuetracker.google.com/69110338
+    @Test
+    public void checkDoesNotPreserveQuotes() throws Exception {
+        checkTokenizationToCompilerFlags(
+                "-DX=\"Y Z\"",
+                Collections.singletonList("-DX=Y Z"),
+                Collections.singletonList("-DX=\"Y Z\""));
     }
 }

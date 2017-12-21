@@ -8,9 +8,10 @@ java_library(
         "supportlib/src/main/**/*.java",
         "common/src/main/**/*.java",
     ]),
-    resource_jars = [
-        "//tools/base/profiler/native/agent:supportjni",
-    ],
+    resource_jars = select({
+        "//tools/base/bazel:windows": [],
+        "//conditions:default": ["//tools/base/profiler/native/agent:supportjni"],
+    }),
     deps = [
         "//prebuilts/studio/sdk:platforms/latest_jar",
     ],

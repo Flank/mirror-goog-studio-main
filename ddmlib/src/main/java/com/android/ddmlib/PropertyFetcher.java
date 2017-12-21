@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -102,6 +101,16 @@ class PropertyFetcher {
     }
 
     /**
+     * Ideally we should not cache mutable system properties. But removing cache will result in more
+     * blocking calls. Thus we keep the option to enable it here.
+     */
+    private static boolean sEnableCachingMutableProps = true;
+
+    public static void enableCachingMutableProps(boolean enabled) {
+        sEnableCachingMutableProps = enabled;
+    }
+
+    /**
      * Make a possibly asynchronous request for a system property value.
      *
      * @param name the property name to retrieve
@@ -112,7 +121,8 @@ class PropertyFetcher {
         SettableFuture<String> result;
         if (mCacheState.equals(CacheState.FETCHING)) {
             result = addPendingRequest(name);
-        } else if (mDevice.isOnline() && mCacheState.equals(CacheState.UNPOPULATED) || !isRoProp(name)) {
+        } else if (mDevice.isOnline() && mCacheState.equals(CacheState.UNPOPULATED)
+                || !isImmutableProperty(name)) {
             // cache is empty, or this is a volatile prop that requires a query
             result = addPendingRequest(name);
             mCacheState = CacheState.FETCHING;
@@ -156,10 +166,22 @@ class PropertyFetcher {
     private synchronized void populateCache(@NonNull Map<String, String> props) {
         mCacheState = props.isEmpty() ? CacheState.UNPOPULATED : CacheState.POPULATED;
         if (!props.isEmpty()) {
-            mProperties.putAll(props);
+            if (sEnableCachingMutableProps) {
+                mProperties.putAll(props);
+            } else {
+                for (Map.Entry<String, String> entry : props.entrySet()) {
+                    if (isImmutableProperty(entry.getKey())) {
+                        mProperties.put(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
         }
         for (Map.Entry<String, SettableFuture<String>> entry : mPendingRequests.entrySet()) {
-            entry.getValue().set(mProperties.get(entry.getKey()));
+            if (sEnableCachingMutableProps || isImmutableProperty(entry.getKey())) {
+                entry.getValue().set(mProperties.get(entry.getKey()));
+            } else {
+                entry.getValue().set(props.get(entry.getKey()));
+            }
         }
         mPendingRequests.clear();
     }
@@ -186,7 +208,7 @@ class PropertyFetcher {
         return CacheState.POPULATED.equals(mCacheState);
     }
 
-    private static boolean isRoProp(@NonNull String propName) {
+    private static boolean isImmutableProperty(@NonNull String propName) {
         return propName.startsWith("ro.") || propName.equals(IDevice.PROP_DEVICE_EMULATOR_DENSITY);
     }
 }

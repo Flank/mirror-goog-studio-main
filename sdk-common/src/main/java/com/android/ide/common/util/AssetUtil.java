@@ -41,45 +41,6 @@ public class AssetUtil {
     public static final Effect[] NO_EFFECTS = {};
 
     /**
-     * Scales the given rectangle by the given scale factor.
-     *
-     * @param rect        The rectangle to scale.
-     * @param scaleFactor The factor to scale by.
-     * @return The scaled rectangle.
-     */
-    public static Rectangle scaleRectangle(Rectangle rect, float scaleFactor) {
-        return new Rectangle(
-                Math.round(rect.x * scaleFactor),
-                Math.round(rect.y * scaleFactor),
-                Math.round(rect.width * scaleFactor),
-                Math.round(rect.height * scaleFactor));
-    }
-
-    /**
-     * Returns the scaling factor to apply to the <code>source</code> rectangle so that its width or
-     * height is equal to the width or height of <code>destination</code> rectangle, while remaining
-     * contained within <code>destination</code>.
-     */
-    public static float getRectangleInsideScale(
-            @NonNull Rectangle source, @NonNull Rectangle destination) {
-        float scaleWidth = (float) destination.width / (float) source.width;
-        float scaleHeight = (float) destination.height / (float) source.height;
-        return Math.min(scaleWidth, scaleHeight);
-    }
-
-    /**
-     * Return the scaling factor to apply to the <code>source</code> rectangle so that its width or
-     * height is equal to the width or height of <code>destination</code> rectangle so that
-     * destination is fully contained insde <code>source</code>.
-     */
-    public static float getRectangleOutsideScale(
-            @NonNull Rectangle source, @NonNull Rectangle destination) {
-        float scaleWidth = (float) destination.width / (float) source.width;
-        float scaleHeight = (float) destination.height / (float) source.height;
-        return Math.max(scaleWidth, scaleHeight);
-    }
-
-    /**
      * Creates a new ARGB {@link BufferedImage} of the given width and height.
      *
      * @param width The width of the new image.

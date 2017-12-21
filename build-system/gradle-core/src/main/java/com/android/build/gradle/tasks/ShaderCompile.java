@@ -137,9 +137,11 @@ public class ShaderCompile extends AndroidBuilderTask {
 
         @NonNull
         VariantScope scope;
+        @NonNull File outputDir;
 
-        public ConfigAction(@NonNull VariantScope scope) {
+        public ConfigAction(@NonNull VariantScope scope, @NonNull File outputDir) {
             this.scope = scope;
+            this.outputDir = outputDir;
         }
 
         @Override
@@ -166,7 +168,7 @@ public class ShaderCompile extends AndroidBuilderTask {
             compileTask.ndkLocation = scope.getGlobalScope().getNdkHandler().getNdkDirectory();
 
             compileTask.setSourceDir(scope.getMergeShadersOutputDir());
-            compileTask.setOutputDir(scope.getShadersOutputDir());
+            compileTask.setOutputDir(outputDir);
             compileTask.setDefaultArgs(variantConfiguration.getDefautGlslcArgs());
             compileTask.setScopedArgs(variantConfiguration.getScopedGlslcArgs());
         }

@@ -16,7 +16,6 @@
 
 package com.android.builder.internal.aapt;
 
-import java.text.MessageFormat;
 
 /**
  * Exception thrown when there is a problem using {@code aapt}.
@@ -26,23 +25,19 @@ public class AaptException extends Exception {
     /**
      * Creates a new exception.
      *
-     * @param format an optional format for the message (in notation of {@code MessageFormat},
-     * using numbers between curly braces for indexes
-     * @param params to put in format
+     * @param message the exception's message
      */
-    public AaptException(String format, Object... params) {
-        super(MessageFormat.format(format, params));
+    public AaptException(String message) {
+        super(message);
     }
 
     /**
      * Creates a new exception.
      *
+     * @param message the exception's message
      * @param cause the cause of this exception
-     * @param format an optional format for the message (in notation of {@code MessageFormat},
-     * using numbers between curly braces for indexes
-     * @param params to put in format
      */
-    public AaptException(Throwable cause, String format, Object... params) {
-        super(MessageFormat.format(format, params), cause);
+    public AaptException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

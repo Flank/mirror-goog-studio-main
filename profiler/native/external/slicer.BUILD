@@ -43,4 +43,9 @@ cc_library(
         "tryblocks_encoder.h",
         "writer.h",
     ],
+    tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@zlib_repo//:zlib",
+    ],
 )

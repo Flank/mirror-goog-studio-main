@@ -8,8 +8,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.apkzlib.utils.IOExceptionFunction;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
@@ -110,7 +110,7 @@ public class UnitTestingAndroidResourcesTest {
     @Test
     public void runUnitTests() throws Exception {
 
-        RunGradleTasks runGradleTasks =
+        GradleTaskExecutor runGradleTasks =
                 project.executor()
                         .with(
                                 BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION,

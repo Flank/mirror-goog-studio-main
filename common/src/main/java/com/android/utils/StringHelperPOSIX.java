@@ -23,14 +23,16 @@ import java.util.List;
 /**
  * POSIX specific StringHelper that applies the following tokenization rules:
  *
- * http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html
- * - A backslash that is not quoted shall preserve the literal value of the
- *   following character
- * - Enclosing characters in single-quotes ( '' ) shall preserve the literal value
- *   of each character within the single-quotes.
- * - Enclosing characters in double-quotes ( "" ) shall preserve the literal value
- *   of all characters within the double-quotes, with the exception of the
- *   characters dollar sign, backquote, and backslash
+ * <p>http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html
+ *
+ * <ul>
+ *   <li>A backslash that is not quoted shall preserve the literal value of the following character
+ *   <li>Enclosing characters in single-quotes ( '' ) shall preserve the literal value of each
+ *       character within the single-quotes.
+ *   <li>Enclosing characters in double-quotes ( "" ) shall preserve the literal value of all
+ *       characters within the double-quotes, with the exception of the characters dollar sign,
+ *       backquote, and backslash
+ * </ul>
  */
 public class StringHelperPOSIX extends StringHelper {
 
@@ -86,57 +88,70 @@ public class StringHelperPOSIX extends StringHelper {
             }
         }
 
-        if (commandStart < commandLine.length())
+        if (commandStart < commandLine.length()) {
             commands.add(commandLine.substring(commandStart));
+        }
 
         return commands;
     }
 
-    /**
-     * Quote and join a list of tokens with POSIX rules.
-     *
-     * @param tokens the token to be quoted and joined
-     * @return the string
-     */
-    @NonNull
-    public static String quoteAndJoinTokens(@NonNull List<String> tokens) {
-        StringBuilder sb = new StringBuilder();
-        for (String token : tokens) {
-            token = token.replace("\\", "\\\\");
-            token = token.replace("\"", "\\\"");
-            sb.append("\"").append(token).append("\" ");
-        }
-        if (sb.length() > 0)
-            sb.setLength(sb.length() - 1);
-        return sb.toString();
+    public static List<String> tokenizeCommandLineToEscaped(@NonNull String commandLine) {
+        return tokenizeCommandLine(commandLine, true);
+    }
+
+    public static List<String> tokenizeCommandLineToRaw(@NonNull String commandLine) {
+        return tokenizeCommandLine(commandLine, false);
     }
 
     /**
-     * Tokenize a string with POSIX rules.
+     * Tokenize a string with POSIX rules. This function should operate in the same manner as the
+     * bash command-line.
      *
-     * @param string the string to be tokenized
+     * <p>For escaped tokens, this can be validated with a script like this:
+     *
+     * <p>echo 1=[$1]
+     *
+     * <p>echo 2=[$2]
+     *
+     * <p>echo 3=[$3]
+     *
+     * @param commandLine the string to be tokenized
+     * @param returnEscaped if true then return escaped, otherwise return original
      * @return the list of tokens
      */
     @NonNull
-    public static List<String> tokenizeString(@NonNull String string) {
+    private static List<String> tokenizeCommandLine(
+            @NonNull String commandLine, boolean returnEscaped) {
         List<String> tokens = Lists.newArrayList();
-        StringBuilder currentToken = new StringBuilder();
+        StringBuilder token = new StringBuilder();
         boolean quoting = false;
         char quote = '\0';
         boolean escaping = false;
         boolean skipping = true;
-        for (final char c : string.toCharArray()) {
+        for (int i = 0; i < commandLine.length(); ++i) {
+            char c = commandLine.charAt(i);
+
             if (skipping) {
-                if (Character.isWhitespace(c))
+                if (Character.isWhitespace(c)) {
                     continue;
-                else
+                } else {
                     skipping = false;
+                }
+            }
+
+            if (quoting || !Character.isWhitespace(c)) {
+                if (!returnEscaped) {
+                    token.append(c);
+                }
             }
 
             if (escaping) {
                 escaping = false;
-                if (c != '\n')
-                    currentToken.append(c);
+                if (c != '\n') {
+                    if (returnEscaped) {
+                        token.append(c);
+                    }
+                }
                 continue;
             } else if (c == '\\' && (!quoting || quote == '\"')) {
                 escaping = true;
@@ -153,17 +168,21 @@ public class StringHelperPOSIX extends StringHelper {
 
             if (!quoting && Character.isWhitespace(c)) {
                 skipping = true;
-                if (currentToken.length() > 0)
-                    tokens.add(currentToken.toString());
-                currentToken.setLength(0);
+                if (token.length() > 0) {
+                    tokens.add(token.toString());
+                }
+                token.setLength(0);
                 continue;
             }
 
-            currentToken.append(c);
+            if (returnEscaped) {
+                token.append(c);
+            }
         }
 
-        if (currentToken.length() > 0)
-            tokens.add(currentToken.toString());
+        if (token.length() > 0) {
+            tokens.add(token.toString());
+        }
 
         return tokens;
     }

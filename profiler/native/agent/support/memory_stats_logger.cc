@@ -48,7 +48,7 @@ void EnqueueAllocStats(int32_t alloc_count, int32_t free_count) {
       {[alloc_count, free_count, pid, timestamp](
           InternalMemoryService::Stub& stub, ClientContext& ctx) {
         AllocStatsRequest alloc_stats_request;
-        alloc_stats_request.set_process_id(pid);
+        alloc_stats_request.set_pid(pid);
         MemoryData::AllocStatsSample* stats =
             alloc_stats_request.mutable_alloc_stats_sample();
         stats->set_timestamp(timestamp);
@@ -66,7 +66,7 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
       {[start_time, end_time, pid](InternalMemoryService::Stub& stub,
                                    ClientContext& ctx) {
         GcStatsRequest gc_stats_request;
-        gc_stats_request.set_process_id(pid);
+        gc_stats_request.set_pid(pid);
         MemoryData::GcStatsSample* stats =
             gc_stats_request.mutable_gc_stats_sample();
         stats->set_start_time(start_time);
@@ -78,7 +78,7 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
 }
 
 void EnqueueAllocationEvents(proto::BatchAllocationSample& request) {
-  request.set_process_id(getpid());
+  request.set_pid(getpid());
 
   Agent::Instance().memory_component().SubmitMemoryTasks(
       {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
@@ -88,7 +88,7 @@ void EnqueueAllocationEvents(proto::BatchAllocationSample& request) {
 }
 
 void EnqueueJNIGlobalRefEvents(proto::BatchJNIGlobalRefEvent& request) {
-  request.set_process_id(getpid());
+  request.set_pid(getpid());
 
   Agent::Instance().memory_component().SubmitMemoryTasks(
       {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {

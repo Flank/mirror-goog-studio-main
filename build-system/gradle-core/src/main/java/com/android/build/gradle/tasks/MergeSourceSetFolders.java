@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -407,7 +408,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
                     TaskInputHelper.bypassFileSupplier(
                             () -> variantConfig.getSourceFiles(assetDirFunction));
 
-            mergeAssetsTask.shadersOutputDir = project.files(scope.getShadersOutputDir());
+            mergeAssetsTask.shadersOutputDir =
+                    scope.getOutput(TaskOutputHolder.TaskOutputType.SHADER_ASSETS);
             if (variantData.copyApkTask != null) {
                 mergeAssetsTask.copyApk = project.files(variantData.copyApkTask.getDestinationDir());
             }

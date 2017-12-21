@@ -103,14 +103,6 @@ dependencies {
         transitive = false
     }
 
-    provided(project(':base:aaptjlib')) {
-        transitive = false
-    }
-
-    sourcesProvided(project(path:':base:aaptjlib', configuration:'sourcesOnly')) {
-        transitive = false
-    }
-
     provided(project(':dx')) {
         transitive = false
     }

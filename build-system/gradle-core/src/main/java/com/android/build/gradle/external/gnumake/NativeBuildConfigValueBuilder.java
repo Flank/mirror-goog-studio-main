@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.utils.NativeSourceFileExtensions;
 import com.android.utils.NdkUtils;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -288,8 +289,8 @@ public class NativeBuildConfigValueBuilder {
                     file.src = fileConventions.toFile(executionRootPath, input.getOnlyInput());
                 }
                 List<String> flags = new ArrayList<>();
-                for (int i = 0; i < input.getCommand().args.size(); ++i) {
-                    String arg = input.getCommand().args.get(i);
+                for (int i = 0; i < input.getCommand().escapedFlags.size(); ++i) {
+                    String arg = input.getCommand().escapedFlags.get(i);
                     if (STRIP_FLAGS_WITH_ARG.contains(arg)) {
                         ++i; // skip the next argument.
                         continue;
@@ -300,9 +301,9 @@ public class NativeBuildConfigValueBuilder {
                     if (STRIP_FLAGS_WITHOUT_ARG.contains(arg)) {
                         continue;
                     }
-                    flags.add(arg);
+                    flags.add(input.getCommand().rawFlags.get(i));
                 }
-                file.flags = fileConventions.quoteAndJoinTokens(flags);
+                file.flags = Joiner.on(" ").join(flags);
             }
         }
 

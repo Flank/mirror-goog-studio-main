@@ -25,6 +25,7 @@
 
 #include "utils/bash_command.h"
 #include "utils/clock.h"
+#include "utils/log.h"
 
 using std::strcmp;
 using std::strcpy;
@@ -68,6 +69,8 @@ void Simpleperf::Record(int pid, const string& pkg_name,
   string record_command =
       GetRecordCommand(pid, pkg_name, trace_path, sampling_interval_us);
 
+  Log::D("Simpleperf record command: %s", record_command.c_str());
+
   // Converts the record command to a C string.
   char command_buffer[record_command.length() + 1];
   strcpy(command_buffer, record_command.c_str());
@@ -91,6 +94,8 @@ bool Simpleperf::ReportSample(const string& input_path,
   parameters << " ";
   parameters << "-o ";
   parameters << output_path;
+  Log::D("Simpleperf report-sample command: %s %s",
+         simpleperf_binary_abspath.c_str(), parameters.str().c_str());
 
   return simpleperf_report.Run(parameters.str(), output);
 }

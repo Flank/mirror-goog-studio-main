@@ -41,23 +41,27 @@ abstract class AbstractOsFileConventions implements OsFileConventions {
         return new File(file).isAbsolute();
     }
 
+    @NonNull
     @Override
-    public String getFileParent(String filename) {
+    public String getFileParent(@NonNull String filename) {
         return new File(filename).getParent();
     }
 
+    @NonNull
     @Override
-    public String getFileName(String filename) {
+    public String getFileName(@NonNull String filename) {
         return new File(filename).getName();
     }
 
+    @NonNull
     @Override
-    public File toFile(String filename) {
+    public File toFile(@NonNull String filename) {
         return new File(filename);
     }
 
+    @NonNull
     @Override
-    public File toFile(File parent, String child) {
+    public File toFile(@NonNull File parent, @NonNull String child) {
         return new File(parent, child);
     }
 }

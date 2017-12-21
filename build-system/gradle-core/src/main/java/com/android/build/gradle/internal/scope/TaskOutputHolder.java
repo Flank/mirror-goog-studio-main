@@ -124,6 +124,9 @@ public interface TaskOutputHolder {
         // packaged JNI for AAR publishing
         LIBRARY_AND_LOCAL_JARS_JNI,
 
+        // Assets created by compiling shader
+        SHADER_ASSETS,
+
         LIBRARY_ASSETS,
         MERGED_ASSETS,
         MOCKABLE_JAR,
@@ -179,6 +182,7 @@ public interface TaskOutputHolder {
         AAR,
         INSTANTAPP_BUNDLE,
         SPLIT_LIST,
+        APK_LIST,
 
         FEATURE_IDS_DECLARATION,
         FEATURE_APPLICATION_ID_DECLARATION,

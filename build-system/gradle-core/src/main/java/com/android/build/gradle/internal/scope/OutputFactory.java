@@ -133,6 +133,7 @@ public class OutputFactory {
         return addConfigurationSplit(filtersList, fileName);
     }
 
+    @NonNull
     public static String getFilterNameForSplits(Collection<FilterData> filters) {
         return Joiner.on("-")
                 .join(filters.stream().map(FilterData::getIdentifier).collect(Collectors.toList()));
@@ -141,8 +142,7 @@ public class OutputFactory {
     private ApkData addConfigurationSplit(ImmutableList<FilterData> filtersList, String fileName) {
         String filterName = getFilterNameForSplits(filtersList);
         ApkData apkData =
-                new DefaultApkData(
-                        VariantOutput.OutputType.SPLIT,
+                new ConfigurationSplitApkData(
                         filterName,
                         variantConfiguration.computeBaseNameWithSplits(filterName),
                         variantConfiguration.getFullName(),
@@ -164,11 +164,13 @@ public class OutputFactory {
             setOutputFileName(fileName);
         }
 
+        @NonNull
         @Override
         public OutputFile.OutputType getType() {
             return OutputFile.OutputType.MAIN;
         }
 
+        @Nullable
         @Override
         public String getFilterName() {
             return null;
@@ -222,11 +224,13 @@ public class OutputFactory {
             setOutputFileName(fileName);
         }
 
+        @NonNull
         @Override
         public OutputFile.OutputType getType() {
             return OutputType.FULL_SPLIT;
         }
 
+        @Nullable
         @Override
         public String getFilterName() {
             return UNIVERSAL;
@@ -309,6 +313,7 @@ public class OutputFactory {
             return sb.toString();
         }
 
+        @NonNull
         @Override
         public OutputFile.OutputType getType() {
             return OutputFile.OutputType.FULL_SPLIT;
@@ -320,6 +325,7 @@ public class OutputFactory {
             return filters;
         }
 
+        @Nullable
         @Override
         public String getFilterName() {
             return filterName;
@@ -357,21 +363,18 @@ public class OutputFactory {
         }
     }
 
-    public static class DefaultApkData extends ApkData {
+    public static class ConfigurationSplitApkData extends ApkData {
 
-        private final String filterName, baseName, fullName, dirName;
+        @NonNull private final String filterName, baseName, fullName, dirName;
         private final ImmutableList<FilterData> filters;
-        private final OutputType outputType;
 
-        public DefaultApkData(
-                OutputType outputType,
-                String filterName,
-                String baseName,
-                String fullName,
-                String dirName,
+        public ConfigurationSplitApkData(
+                @NonNull String filterName,
+                @NonNull String baseName,
+                @NonNull String fullName,
+                @NonNull String dirName,
                 String fileName,
                 ImmutableList<FilterData> filters) {
-            this.outputType = outputType;
             this.filters = filters;
             this.filterName = filterName;
             this.baseName = baseName;
@@ -380,9 +383,10 @@ public class OutputFactory {
             setOutputFileName(fileName);
         }
 
+        @NonNull
         @Override
         public OutputFile.OutputType getType() {
-            return outputType;
+            return OutputType.SPLIT;
         }
 
         @Override
@@ -390,6 +394,7 @@ public class OutputFactory {
             return false;
         }
 
+        @Nullable
         @Override
         public String getFilterName() {
             return filterName;
@@ -401,11 +406,13 @@ public class OutputFactory {
             return filters;
         }
 
+        @NonNull
         @Override
         public String getBaseName() {
             return baseName;
         }
 
+        @NonNull
         @Override
         public String getFullName() {
             return fullName;
@@ -428,9 +435,8 @@ public class OutputFactory {
             if (!super.equals(o)) {
                 return false;
             }
-            DefaultApkData that = (DefaultApkData) o;
-            return outputType == that.outputType
-                    && Objects.equals(baseName, that.baseName)
+            ConfigurationSplitApkData that = (ConfigurationSplitApkData) o;
+            return Objects.equals(baseName, that.baseName)
                     && Objects.equals(fullName, that.fullName)
                     && Objects.equals(dirName, that.dirName)
                     // faster to compare the filterName than filters.
@@ -439,20 +445,7 @@ public class OutputFactory {
 
         @Override
         public int hashCode() {
-            return Objects.hash(
-                    super.hashCode(), outputType, baseName, fullName, dirName, filterName);
+            return Objects.hash(super.hashCode(), baseName, fullName, dirName, filterName);
         }
-    }
-
-    // FIX-ME: we can have more than one value, especially for languages...
-    // so far, we will return things like "fr,fr-rCA" for a single value.
-    @Nullable
-    static String _getFilter(Collection<FilterData> filters, OutputFile.FilterType filterType) {
-        for (FilterData filter : filters) {
-            if (FilterDataImpl.getType(filter) == filterType) {
-                return filter.getIdentifier();
-            }
-        }
-        return null;
     }
 }

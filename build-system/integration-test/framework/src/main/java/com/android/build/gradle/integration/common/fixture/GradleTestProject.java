@@ -78,7 +78,6 @@ import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.gradle.util.GradleVersion;
-import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -108,7 +107,7 @@ public final class GradleTestProject implements TestRule {
     public static final String DEVICE_PROVIDER_NAME =
             REMOTE_TEST_PROVIDER != null ? REMOTE_TEST_PROVIDER : BuilderConstants.CONNECTED;
 
-    private static final boolean USE_LATEST_NIGHTLY_GRADLE_VERSION =
+    public static final boolean USE_LATEST_NIGHTLY_GRADLE_VERSION =
             Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"));
     public static final String GRADLE_TEST_VERSION;
 
@@ -246,7 +245,7 @@ public final class GradleTestProject implements TestRule {
 
     @Nullable private final String buildToolsVersion;
 
-    @NonNull private final Path relativeProfileDirectory;
+    @Nullable private final Path profileDirectory;
 
     @Nullable private String heapSize;
 
@@ -266,7 +265,7 @@ public final class GradleTestProject implements TestRule {
             @NonNull Collection<String> gradleProperties,
             @Nullable String heapSize,
             @Nullable String buildToolsVersion,
-            @NonNull Path relativeProfileDirectory,
+            @Nullable Path profileDirectory,
             @NonNull String cmakeVersion,
             boolean withCmake,
             boolean withDeviceProvider,
@@ -287,7 +286,7 @@ public final class GradleTestProject implements TestRule {
         this.buildToolsVersion = buildToolsVersion;
         this.openConnections = Lists.newArrayList();
         this.rootProject = this;
-        this.relativeProfileDirectory = relativeProfileDirectory;
+        this.profileDirectory = profileDirectory;
         this.cmakeVersion = cmakeVersion;
         this.withCmakeDirInLocalProp = withCmake;
     }
@@ -314,7 +313,7 @@ public final class GradleTestProject implements TestRule {
         openConnections = null;
         buildToolsVersion = null;
         this.rootProject = rootProject;
-        this.relativeProfileDirectory = rootProject.relativeProfileDirectory;
+        this.profileDirectory = rootProject.profileDirectory;
         this.cmakeVersion = rootProject.cmakeVersion;
         this.withDeviceProvider = rootProject.withDeviceProvider;
         this.withSdk = rootProject.withSdk;
@@ -420,14 +419,6 @@ public final class GradleTestProject implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                if (USE_LATEST_NIGHTLY_GRADLE_VERSION
-                        && GRADLE_TEST_VERSION.equals(BasePlugin.GRADLE_MIN_VERSION.toString())) {
-                    String errorMessage =
-                            "Running tests with gradle nightly skipped as the minimum plugin version is equal to the latest nightly version. "
-                                    + description;
-                    System.err.println(errorMessage);
-                    throw new AssumptionViolatedException(errorMessage);
-                }
                 createTestDirectory(description.getTestClass(), description.getMethodName());
                 boolean testFailed = false;
                 try {
@@ -468,10 +459,14 @@ public final class GradleTestProject implements TestRule {
 
     private void createTestDirectory(Class<?> testClass, String methodName)
             throws IOException, StreamException {
-        // On windows, move the temporary copy as close to root to avoid running into path too
-        // long exceptions.
+        // On Windows machines, make sure the test directory's path is short enough to avoid running
+        // into path too long exceptions. Typically, on local Windows machines, OUT_DIR's path is
+        // long, whereas on Windows build bots, OUT_DIR's path is already short (see
+        // https://issuetracker.google.com/69271554). In the first case, let's move the test
+        // directory close to root (user home), and in the second case, let's use OUT_DIR directly.
         testDir =
                 SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
+                                && System.getenv("BUILDBOT_BUILDERNAME") == null
                         ? new File(new File(System.getProperty("user.home")), "android-tests")
                         : OUT_DIR;
 
@@ -574,13 +569,15 @@ public final class GradleTestProject implements TestRule {
                                 + "    }\n"
                                 + "}\n"
                                 + "allprojects {\n"
-                                +  "    " + generateLocalRepoScript() + "\n"
+                                + "    "
+                                + generateLocalRepoScript()
+                                + "\n"
                                 + "}\n"
                                 + "",
                         DEFAULT_BUILD_TOOL_VERSION,
                         DEFAULT_COMPILE_SDK_VERSION,
                         false,
-                        TestUtils.KOTLIN_VERSION_FOR_TESTS);
+                        TestUtils.getKotlinVersionForTests());
 
         if (withDependencyChecker) {
             result =
@@ -840,10 +837,19 @@ public final class GradleTestProject implements TestRule {
         return FileUtils.join(getTestDir(), "build", AndroidProject.FD_GENERATED);
     }
 
-    /** Returns the directory to look for profiles in. Defaults to build/profile/ */
-    @NonNull
+    /**
+     * Returns the directory in which profiles will be generated. A null value indicates that
+     * profiles may not be generated, though setting {@link
+     * com.android.build.gradle.options.StringOption#PROFILE_OUTPUT_DIR} in gradle.properties will
+     * induce profile generation without affecting this return value
+     */
+    @Nullable
     public Path getProfileDirectory() {
-        return rootProject.getTestDir().toPath().resolve(relativeProfileDirectory);
+        if (profileDirectory == null || profileDirectory.isAbsolute()) {
+            return profileDirectory;
+        } else {
+            return rootProject.getTestDir().toPath().resolve(profileDirectory);
+        }
     }
 
     /**
@@ -1150,18 +1156,18 @@ public final class GradleTestProject implements TestRule {
     }
 
     /** Fluent method to run a build. */
-    public RunGradleTasks executor() {
-        return new RunGradleTasks(this, getProjectConnection(), false);
+    public GradleTaskExecutor executor() {
+        return new GradleTaskExecutor(this, getProjectConnection(), false);
     }
 
-    public RunGradleTasks nonRetryingExecutor() {
-        return new RunGradleTasks(this, getProjectConnection(), true);
+    public GradleTaskExecutor nonRetryingExecutor() {
+        return new GradleTaskExecutor(this, getProjectConnection(), true);
     }
 
     /** Fluent method to get the model. */
     @NonNull
-    public BuildModel model() {
-        return new BuildModel(this, getProjectConnection());
+    public ModelBuilder model() {
+        return new ModelBuilder(this, getProjectConnection());
     }
 
     /**

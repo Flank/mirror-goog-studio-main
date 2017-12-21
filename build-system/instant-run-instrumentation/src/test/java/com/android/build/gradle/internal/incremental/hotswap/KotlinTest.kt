@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.incremental.hotswap
 
 import com.android.build.gradle.internal.incremental.fixture.ClassEnhancement
 import com.google.common.truth.Truth.assertThat
+import com.kotlin.JvmOverloadsTest
 import com.kotlin.UserClass
 import org.junit.Rule
 import org.junit.Test
@@ -44,5 +45,22 @@ class KotlinTest {
         harness.applyPatch("kotlin")
         assertThat(userClass.dontDoMuch()).isEqualTo("my_name with happy Kotlin ")
 
+    }
+
+    @Test
+    @Throws(ClassNotFoundException::class,
+            IOException::class,
+            NoSuchFieldException::class,
+            InstantiationException::class,
+            IllegalAccessException::class)
+    fun jvmOverloadsTest() {
+        harness.reset()
+
+        val jvmOverloadsTest = JvmOverloadsTest()
+        assertThat(jvmOverloadsTest.doSomething()).isEqualTo("foo")
+
+        harness.applyPatch("kotlin")
+        val newValue = JvmOverloadsTest()
+        assertThat(newValue.doSomething()).isEqualTo("bar")
     }
 }

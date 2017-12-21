@@ -26,32 +26,38 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.Preconditions;
 import com.google.api.services.storage.Storage;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
-import com.google.protobuf.util.Timestamps;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
 /** Uploads profiling data to Google Storage from the gradle performance tests. */
 public class GoogleStorageProfileUploader implements ProfileUploader {
-
     private static final Duration UPLOAD_TIMEOUT = Duration.ofMinutes(5);
 
-    public static final ProfileUploader INSTANCE = new GoogleStorageProfileUploader();
-
-    private GoogleStorageProfileUploader() {}
+    private static GoogleStorageProfileUploader INSTANCE;
 
     private static final String STORAGE_SCOPE =
             "https://www.googleapis.com/auth/devstorage.read_write";
 
     private static final String STORAGE_BUCKET = "android-gradle-logging-benchmark-results";
+
+    public static GoogleStorageProfileUploader getInstance() {
+        if (INSTANCE == null) {
+            synchronized (GoogleStorageProfileUploader.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new GoogleStorageProfileUploader();
+                }
+            }
+        }
+
+        return INSTANCE;
+    }
+
+    private GoogleStorageProfileUploader() {}
 
     @Override
     public void uploadData(@NonNull List<Logging.GradleBenchmarkResult> benchmarkResults)
@@ -98,21 +104,15 @@ public class GoogleStorageProfileUploader implements ProfileUploader {
                                 })
                         .build();
 
-        for (Logging.GradleBenchmarkResult benchmarkResult : benchmarkResults) {
-
-            byte[] bytes = benchmarkResult.toByteArray();
-
+        for (Logging.GradleBenchmarkResult result : benchmarkResults) {
             InputStreamContent content =
                     new InputStreamContent(
-                            "application/octet-stream", new ByteArrayInputStream(bytes));
-
-            Instant timestamp =
-                    Instant.ofEpochMilli(Timestamps.toMillis(benchmarkResult.getTimestamp()));
-            HashCode sha1 = Hashing.sha1().hashBytes(bytes);
-
-            String name = DateTimeFormatter.ISO_INSTANT.format(timestamp) + "_" + sha1.toString();
-
-            storage.objects().insert(STORAGE_BUCKET, null, content).setName(name).execute();
+                            "application/octet-stream",
+                            new ByteArrayInputStream(result.toByteArray()));
+            storage.objects()
+                    .insert(STORAGE_BUCKET, null, content)
+                    .setName(ProfileUtils.filename(result))
+                    .execute();
         }
     }
 }

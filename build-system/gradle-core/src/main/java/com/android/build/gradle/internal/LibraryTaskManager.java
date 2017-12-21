@@ -142,6 +142,13 @@ public class LibraryTaskManager extends TaskManager {
                 variantName,
                 () -> createMergeResourcesTask(variantScope));
 
+        // Add tasks to compile shader
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_SHADER_TASK,
+                projectPath,
+                variantName,
+                () -> createShaderTask(variantScope));
+
         // Add a task to merge the assets folders
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
@@ -203,12 +210,6 @@ public class LibraryTaskManager extends TaskManager {
                 projectPath,
                 variantName,
                 () -> createAidlTask(variantScope));
-
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_SHADER_TASK,
-                projectPath,
-                variantName,
-                () -> createShaderTask(variantScope));
 
         // Add a compile task
         recorder.record(

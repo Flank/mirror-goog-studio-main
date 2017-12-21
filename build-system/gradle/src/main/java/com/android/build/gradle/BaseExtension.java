@@ -1060,7 +1060,10 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     public List<File> getBootClasspath() {
-        ensureTargetSetup();
+        if (!ensureTargetSetup()) {
+            // In sync mode where the SDK could not be installed.
+            return ImmutableList.of();
+        }
         return androidBuilder.getBootClasspath(false);
     }
 
@@ -1101,12 +1104,6 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     public void setGeneratePureSplits(boolean flag) {
-        if (flag) {
-            logger.warn(
-                    "Pure splits is currently supported only when publishing"
-                            + " Android Instant Apps. For more information, go to"
-                            + " https://d.android.com/instant-apps.");
-        }
         this.generatePureSplits = flag;
     }
 
@@ -1171,17 +1168,18 @@ public abstract class BaseExtension implements AndroidConfig {
         return testOptions;
     }
 
-    private void ensureTargetSetup() {
+    private boolean ensureTargetSetup() {
         // check if the target has been set.
         TargetInfo targetInfo = androidBuilder.getTargetInfo();
         if (targetInfo == null) {
-            sdkHandler.initTarget(
+            return sdkHandler.initTarget(
                     getCompileSdkVersion(),
                     buildToolsRevision,
                     libraryRequests,
                     androidBuilder,
                     SdkHandler.useCachedSdk(projectOptions));
         }
+        return true;
     }
 
     // For compatibility with LibraryExtension.

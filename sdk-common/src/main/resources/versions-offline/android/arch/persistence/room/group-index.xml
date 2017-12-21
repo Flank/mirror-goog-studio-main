@@ -1,12 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <android.arch.persistence.room>
-  <compiler versions="1.0.0-alpha9"/>
+  <compiler versions="1.0.0"/>
   <support-db-impl versions="1.0.0-alpha9"/>
-  <runtime versions="1.0.0-alpha9"/>
+  <runtime versions="1.0.0"/>
   <support-db versions="1.0.0-alpha9"/>
-  <migration versions="1.0.0-alpha9"/>
-  <rxjava2 versions="1.0.0-alpha9"/>
-  <testing versions="1.0.0-alpha9"/>
-  <common versions="1.0.0-alpha9"/>
+  <migration versions="1.0.0"/>
+  <rxjava2 versions="1.0.0"/>
+  <testing versions="1.0.0"/>
+  <common versions="1.0.0"/>
+  <db versions="1.0.0-alpha9-1"/>
+  <db-impl versions="1.0.0-alpha9-1"/>
 </android.arch.persistence.room>
 

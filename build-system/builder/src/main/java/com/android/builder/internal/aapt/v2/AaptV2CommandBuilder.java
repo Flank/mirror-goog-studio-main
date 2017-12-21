@@ -66,7 +66,7 @@ public final class AaptV2CommandBuilder {
 
         if (!request.isPngCrunching()) {
             // Only pass --no-crunch for png files and not for 9-patch files as that breaks them.
-            String lowerName = request.getInput().getPath().toLowerCase(Locale.US);
+            String lowerName = request.getInputFile().getPath().toLowerCase(Locale.US);
             if (lowerName.endsWith(SdkConstants.DOT_PNG)
                     && !lowerName.endsWith(SdkConstants.DOT_9PNG)) {
                 parameters.add("--no-crunch");
@@ -74,8 +74,8 @@ public final class AaptV2CommandBuilder {
         }
 
         parameters.add("--legacy");
-        parameters.add("-o", request.getOutput().getAbsolutePath());
-        parameters.add(request.getInput().getAbsolutePath());
+        parameters.add("-o", request.getOutputDirectory().getAbsolutePath());
+        parameters.add(request.getInputFile().getAbsolutePath());
 
         return parameters.build();
     }
@@ -131,7 +131,7 @@ public final class AaptV2CommandBuilder {
         }
         builder.add("-o", resourceOutputApk.getAbsolutePath());
 
-        if (config.getResourceDir() != null) {
+        if (config.getResourceDirs() != null) {
             try {
                 if (config.isListResourceFiles()) {
                     // AAPT2 only accepts individual files passed to the -R flag. In order to not
@@ -144,21 +144,28 @@ public final class AaptV2CommandBuilder {
 
                     // Resources list could have changed since last run.
                     FileUtils.deleteIfExists(file);
-                    try (FileOutputStream fos = new FileOutputStream(file);
-                         PrintWriter pw = new PrintWriter(fos)) {
+                    for (File dir : config.getResourceDirs()) {
+                        try (FileOutputStream fos = new FileOutputStream(file);
+                                PrintWriter pw = new PrintWriter(fos)) {
 
-                        Files.walk(config.getResourceDir().toPath())
-                                .filter(Files::isRegularFile)
-                                .forEach((p) -> pw.print(p.toString() + " "));
+                            Files.walk(dir.toPath())
+                                    .filter(Files::isRegularFile)
+                                    .forEach((p) -> pw.print(p.toString() + " "));
+                        }
                     }
                     builder.add("-R", "@" + file.getAbsolutePath());
                 } else {
-                    Files.walk(config.getResourceDir().toPath())
-                            .filter(Files::isRegularFile)
-                            .forEach((p) -> builder.add("-R", p.toString()));
+                    for (File dir : config.getResourceDirs()) {
+                        Files.walk(dir.toPath())
+                                .filter(Files::isRegularFile)
+                                .forEach((p) -> builder.add("-R", p.toString()));
+                    }
                 }
             } catch (IOException e) {
-                throw new AaptException("Failed to walk path " + config.getResourceDir());
+                throw new AaptException(
+                        "Failed to walk paths "
+                                + Joiner.on(File.pathSeparatorChar).join(config.getResourceDirs()),
+                        e);
             }
         }
 

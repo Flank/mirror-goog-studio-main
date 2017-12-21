@@ -29,9 +29,18 @@ import org.junit.Test
  * </pre>
  */
 class NamespacedAarTest {
+    /**
+     * This test depends on AAPT2 features that are not released yet.
+     * There is a version of the build tools checked in from the build server,
+     * with the version in package.xml set to the build number it was taken from.
+     */
+    private val buildScriptContent = """
+        android.aaptOptions.namespaced = true
+        android.buildToolsVersion = '4509860'
+    """
 
     val publishedLib = MinimalSubProject.lib("com.example.publishedLib")
-            .appendToBuild("android.aaptOptions.namespaced = true")
+            .appendToBuild(buildScriptContent)
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources><string name="foo">publishedLib</string></resources>""")
@@ -45,7 +54,7 @@ class NamespacedAarTest {
 
     val lib = MinimalSubProject.lib("com.example.lib")
             .appendToBuild(
-                    """android.aaptOptions.namespaced = true
+                    """$buildScriptContent
                     repositories { flatDir { dirs rootProject.file('publishedLib/build/outputs/aar/') } }
                     dependencies { implementation name: 'publishedLib-release', ext:'aar' }""")
             .withFile(
@@ -65,7 +74,7 @@ class NamespacedAarTest {
 
     val app = MinimalSubProject.app("com.example.app")
             .appendToBuild(
-                    """android.aaptOptions.namespaced = true
+                    """$buildScriptContent
                     repositories { flatDir { dirs rootProject.file('publishedLib/build/outputs/aar/') } }
                     dependencies { implementation name: 'publishedLib-release', ext:'aar' }""")
             .withFile(

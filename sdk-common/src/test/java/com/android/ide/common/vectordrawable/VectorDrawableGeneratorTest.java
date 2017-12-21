@@ -33,6 +33,7 @@ import org.junit.Assert;
 /** Tests for {@link Svg2Vector} and {@link VdPreview} classes. */
 public class VectorDrawableGeneratorTest extends TestCase {
     private static final int IMAGE_SIZE = 64;
+    /** Due to rendering differences between AWT implementations on different operating systems. */
     private static final float DIFF_THRESHOLD_PERCENT = 1.25f;
 
     private static final GeneratorTester GENERATOR_TESTER =
@@ -119,6 +120,7 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkVectorConversion(filename, FileType.SVG, false, errorLog);
     }
 
+    @SuppressWarnings("unused") // Method intended for debugging.
     private void checkSvgConversionDebug(String fileName) throws Exception {
         checkVectorConversion(fileName, FileType.SVG, true, null);
     }
@@ -849,6 +851,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
     // XML files start here.
     public void testXmlIconSizeOpacity() throws Exception {
         checkXmlConversion("ic_size_opacity");
+    }
+
+    public void testXmlTintAndOpacity() throws Exception {
+        checkXmlConversion("test_tint_and_opacity");
     }
 
     public void testXmlColorFormats() throws Exception {

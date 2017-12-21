@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeManifests;
 import com.android.builder.core.AndroidBuilder;
@@ -141,6 +142,8 @@ public class FeatureTaskManager extends TaskManager {
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(variantScope);
 
+        taskFactory.create(new MainApkListPersistence.ConfigAction(variantScope));
+
         if (variantScope.isBaseFeature()) {
             // Base feature specific tasks.
             recorder.record(
@@ -190,6 +193,14 @@ public class FeatureTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> createMergeResourcesTask(variantScope, true));
 
+        // Add tasks to compile shader
+        recorder.record(
+                ExecutionType.FEATURE_TASK_MANAGER_CREATE_SHADER_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
+                () -> createShaderTask(variantScope));
+
+
         // Add a task to merge the asset folders
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
@@ -233,12 +244,6 @@ public class FeatureTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> createAidlTask(variantScope));
-
-        recorder.record(
-                ExecutionType.FEATURE_TASK_MANAGER_CREATE_SHADER_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createShaderTask(variantScope));
 
         // Add NDK tasks
         if (!isComponentModelPlugin()) {
@@ -289,7 +294,7 @@ public class FeatureTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> createStripNativeLibraryTask(taskFactory, variantScope));
 
-        if (variantScope.getOutputScope().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
+        if (variantScope.getVariantData().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
             if (extension.getBuildToolsRevision().getMajor() < 21) {
                 throw new RuntimeException(
                         "Pure splits can only be used with buildtools 21 and later");

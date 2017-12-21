@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.SigningConfigFactory;
+import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
@@ -75,6 +76,7 @@ import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Version;
@@ -328,8 +330,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         sdkHandler = new SdkHandler(project, getLogger());
         if (!gradle.getStartParameter().isOffline()
-                && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD)
-                && !projectOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE)) {
+                && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD)) {
             SdkLibData sdkLibData = SdkLibData.download(getDownloader(), getSettingsController());
             sdkHandler.setSdkLibData(sdkLibData);
         }
@@ -347,6 +348,18 @@ public abstract class BasePlugin<E extends BaseExtension2>
         dataBindingBuilder = new DataBindingBuilder();
         dataBindingBuilder.setPrintMachineReadableOutput(
                 SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
+
+        // b/67675308
+        if (!projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
+            androidBuilder
+                    .getIssueReporter()
+                    .reportWarning(
+                            Type.GENERIC,
+                            String.format(
+                                    "AAPT is deprecated and support for it will be soon removed. "
+                                            + "Remove the '%s=false' flag to enable AAPT2.",
+                                    BooleanOption.ENABLE_AAPT2.getPropertyName()));
+        }
 
         // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);
@@ -657,7 +670,16 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     "The 'java' plugin has been applied, but it is not compatible with the Android plugins.");
         }
 
-        ensureTargetSetup();
+        boolean targetSetupSuccess = ensureTargetSetup();
+        sdkHandler.ensurePlatformToolsIsInstalledWarnOnFailure(
+                extraModelInfo.getSyncIssueHandler());
+        // Stop trying to configure the project if the SDK is not ready.
+        // Sync issues will already have been collected at this point in sync.
+        if (!targetSetupSuccess) {
+            project.getLogger()
+                    .warn("Aborting configuration as SDK is missing components in sync mode.");
+            return;
+        }
 
         // don't do anything if the project was not initialized.
         // Unless TEST_SDK_DIR is set in which case this is unit tests and we don't return.
@@ -739,6 +761,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         boolean forceRegeneration =
                 projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL);
 
+        checkSplitConfiguration();
         if (ExternalNativeBuildTaskUtils.shouldRegenerateOutOfDateJsons(projectOptions)) {
             threadRecorder.record(
                     ExecutionType.VARIANT_MANAGER_EXTERNAL_NATIVE_CONFIG_VALUES,
@@ -759,27 +782,71 @@ public abstract class BasePlugin<E extends BaseExtension2>
         }
     }
 
+    private void checkSplitConfiguration() {
+        String configApkUrl = "https://d.android.com/topic/instant-apps/guides/config-splits.html";
+
+        boolean isFeatureModule = project.getPlugins().hasPlugin(FeaturePlugin.class);
+        boolean generatePureSplits = extension.getGeneratePureSplits();
+        Splits splits = extension.getSplits();
+        boolean splitsEnabled =
+                splits.getDensity().isEnable()
+                        || splits.getAbi().isEnable()
+                        || splits.getLanguage().isEnable();
+
+        // The Play Store doesn't allow Pure splits
+        if (!isFeatureModule && generatePureSplits) {
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportWarning(
+                            Type.GENERIC,
+                            "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false. For more information, go to "
+                                    + configApkUrl);
+        }
+
+        if (!isFeatureModule && !generatePureSplits && splits.getLanguage().isEnable()) {
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportWarning(
+                            Type.GENERIC,
+                            "Per-language APKs are supported only when building Android Instant Apps. For more information, go to "
+                                    + configApkUrl);
+        }
+
+        if (isFeatureModule && !generatePureSplits && splitsEnabled) {
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportWarning(
+                            Type.GENERIC,
+                            "Configuration APKs targeting different device configurations are "
+                                    + "automatically built when splits are enabled for a feature module.\n"
+                                    + "To suppress this warning, remove \"generatePureSplits false\" "
+                                    + "from your build.gradle file.\n"
+                                    + "To learn more, see "
+                                    + configApkUrl);
+        }
+    }
+
     private boolean isVerbose() {
         return project.getLogger().isEnabled(LogLevel.INFO);
     }
 
-    private void ensureTargetSetup() {
+    private boolean ensureTargetSetup() {
         // check if the target has been set.
         TargetInfo targetInfo = androidBuilder.getTargetInfo();
-        if (targetInfo == null) {
-            if (extension.getCompileOptions() == null) {
-                throw new GradleException("Calling getBootClasspath before compileSdkVersion");
-            }
-
-            sdkHandler.initTarget(
-                    extension.getCompileSdkVersion(),
-                    extension.getBuildToolsRevision(),
-                    extension.getLibraryRequests(),
-                    androidBuilder,
-                    SdkHandler.useCachedSdk(projectOptions));
-
-            sdkHandler.ensurePlatformToolsIsInstalled(extraModelInfo.getSyncIssueHandler());
+        // noinspection VariableNotUsedInsideIf Directly checking if initialized.
+        if (targetInfo != null) {
+            return true;
         }
+        if (extension.getCompileOptions() == null) {
+            throw new GradleException("Calling getBootClasspath before compileSdkVersion");
+        }
+
+        return sdkHandler.initTarget(
+                extension.getCompileSdkVersion(),
+                extension.getBuildToolsRevision(),
+                extension.getLibraryRequests(),
+                androidBuilder,
+                SdkHandler.useCachedSdk(projectOptions));
     }
 
     /**

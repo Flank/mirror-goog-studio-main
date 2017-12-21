@@ -22,7 +22,10 @@ import static org.junit.Assert.assertEquals;
 import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidProject;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
-import com.android.ide.common.gradle.model.stubs.AndroidProjectStub;
+import com.android.ide.common.gradle.model.stubs.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import java.io.File;
 import java.io.Serializable;
 import java.util.Objects;
 import org.junit.Before;
@@ -48,7 +51,7 @@ public class IdeAndroidProjectImplTest {
     public void serialization() throws Exception {
         IdeAndroidProject androidProject =
                 new IdeAndroidProjectImpl(
-                        new AndroidProjectStub("2.4.0"), myModelCache, myDependenciesFactory);
+                        new TestAndroidProject("2.4.0"), myModelCache, myDependenciesFactory);
         assertEquals("2.4.0", androidProject.getParsedModelVersion().toString());
         byte[] bytes = Serialization.serialize(androidProject);
         Object o = Serialization.deserialize(bytes);
@@ -59,7 +62,7 @@ public class IdeAndroidProjectImplTest {
     @Test
     public void model1_dot_5() {
         AndroidProjectStub original =
-                new AndroidProjectStub("1.5.0") {
+                new TestAndroidProject("1.5.0") {
                     @Override
                     @NonNull
                     public String getBuildToolsVersion() {
@@ -107,7 +110,7 @@ public class IdeAndroidProjectImplTest {
 
     @Test
     public void constructor() throws Throwable {
-        AndroidProject original = new AndroidProjectStub("2.4.0");
+        AndroidProject original = new TestAndroidProject("2.4.0");
         IdeAndroidProjectImpl copy =
                 new IdeAndroidProjectImpl(original, myModelCache, myDependenciesFactory);
         assertEqualsOrSimilar(original, copy);
@@ -118,4 +121,33 @@ public class IdeAndroidProjectImplTest {
     public void equalsAndHashCode() {
         createEqualsVerifier(IdeAndroidProjectImpl.class).verify();
     }
+
+    public static class TestAndroidProject extends AndroidProjectStub {
+        TestAndroidProject(@NonNull String modelVersion) {
+            super(
+                    modelVersion,
+                    "name",
+                    new ProductFlavorContainerStub(),
+                    Lists.newArrayList(new BuildTypeContainerStub()),
+                    Lists.newArrayList(new ProductFlavorContainerStub()),
+                    "buildToolsVersion",
+                    Lists.newArrayList(new SyncIssueStub()),
+                    Lists.newArrayList(new VariantStub()),
+                    Lists.newArrayList("flavorDimension"),
+                    "compileTarget",
+                    Lists.newArrayList("bootClasspath"),
+                    Lists.newArrayList(new NativeToolchainStub()),
+                    Lists.newArrayList(new SigningConfigStub()),
+                    new LintOptionsStub(),
+                    Sets.newHashSet("unresolvedDependency"),
+                    new JavaCompileOptionsStub(),
+                    new File("buildFolder"),
+                    "resourcePrefix",
+                    1,
+                    2,
+                    3,
+                    true);
+        }
+    }
+
 }

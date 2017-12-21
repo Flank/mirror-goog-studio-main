@@ -94,6 +94,7 @@ public final class SdkConstants {
 
     /** list of splits for a variant */
     public static final String FN_SPLIT_LIST = "split-list.gson";                     //$NON-NLS-1$
+    public static final String FN_APK_LIST = "apk-list.gson"; //$NON-NLS-1$
 
     /** An SDK Project's build.xml file */
     public static final String FN_BUILD_XML = "build.xml"; //$NON-NLS-1$
@@ -765,6 +766,8 @@ public final class SdkConstants {
     public static final String CLASS_TOOLBAR_V7 = "android.support.v7.widget.Toolbar"; //$NON-NLS-1$
     public static final String CLASS_RECYCLER_VIEW =
             "android.support.v7.widget.RecyclerView"; //$NON-NLS-1$
+    public static final String CLASS_RECYCLER_VIEW_LAYOUT_MANAGER =
+            "android.support.v7.widget.RecyclerView.LayoutManager"; //$NON-NLS-1$
     public static final String CLASS_CARD_VIEW = "android.support.v7.widget.CardView"; //$NON-NLS-1$
     public static final String CLASS_ACTION_MENU_VIEW =
             "android.support.v7.widget.ActionMenuView"; //$NON-NLS-1$
@@ -1612,6 +1615,7 @@ public final class SdkConstants {
     public static final String ATTR_TAB_INDICATOR_COLOR = "tabIndicatorColor"; //$NON-NLS-1$
     public static final String ATTR_TAB_SELECTED_TEXT_COLOR = "tabSelectedTextColor"; //$NON-NLS-1$
     public static final String ATTR_TAB_TEXT_APPEARANCE = "tabTextAppearance"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_MANAGER = "layoutManager"; //$NON-NLS-1$
 
     // Values: Manifest
     public static final String VALUE_SPLIT_ACTION_BAR_WHEN_NARROW =
@@ -2224,7 +2228,7 @@ public final class SdkConstants {
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
     public static final String GRADLE_EXPERIMENTAL_PLUGIN_NAME =
             "com.android.tools.build:gradle-experimental:";
-    public static final String GRADLE_MINIMUM_VERSION = "4.4-rc-3";
+    public static final String GRADLE_MINIMUM_VERSION = "4.4";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.0.0";

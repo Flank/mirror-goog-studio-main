@@ -372,7 +372,8 @@ public class InstantRunVerifier {
         }
 
         // finally check if this is a generated constructor as we don't support hotswapping those.
-        if ((updatedMethod.access & Opcodes.ACC_SYNTHETIC) != 0) {
+        if ((updatedMethod.access & Opcodes.ACC_SYNTHETIC) != 0
+                || ByteCodeUtils.isAnnotatedWith(methodNode, "Lkotlin/jvm/JvmOverloads;")) {
             return SYNTHETIC_CONSTRUCTOR_CHANGE;
         }
 
@@ -437,12 +438,16 @@ public class InstantRunVerifier {
             first.accept(new TraceMethodVisitor(firstMethodTextifier));
             second.accept(new TraceMethodVisitor(secondMethodTextifier));
 
-            StringWriter firstText = new StringWriter();
-            StringWriter secondText = new StringWriter();
-            firstMethodTextifier.print(new PrintWriter(firstText));
-            secondMethodTextifier.print(new PrintWriter(secondText));
+            try (StringWriter firstText = new StringWriter();
+                    StringWriter secondText = new StringWriter()) {
 
-            return firstText.toString().equals(secondText.toString());
+                firstMethodTextifier.print(new PrintWriter(firstText));
+                secondMethodTextifier.print(new PrintWriter(secondText));
+
+                return firstText.toString().equals(secondText.toString());
+            } catch (IOException e) {
+                throw new RuntimeException("Error while comparing method code", e);
+            }
         }
     }
 

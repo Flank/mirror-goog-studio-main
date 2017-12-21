@@ -96,7 +96,7 @@ public class QueuedCruncher extends QueuedResourceProcessor {
             final Job<AaptProcess> aaptProcessJob =
                     new AaptQueueThreadContext.QueuedJob(
                             key,
-                            "Crunching " + request.getInput().getName(),
+                            "Crunching " + request.getInputFile().getName(),
                             new Task<AaptProcess>() {
                                 @Override
                                 public void run(
@@ -111,7 +111,7 @@ public class QueuedCruncher extends QueuedResourceProcessor {
                                                 Thread.currentThread().getName());
                                         return;
                                     }
-                                    aapt.crunch(request.getInput(), outputFile, job);
+                                    aapt.crunch(request.getInputFile(), outputFile, job);
                                 }
 
                                 @Override
@@ -127,7 +127,7 @@ public class QueuedCruncher extends QueuedResourceProcessor {
                                 @Override
                                 public String toString() {
                                     return MoreObjects.toStringHelper(this)
-                                            .add("from", request.getInput().getAbsolutePath())
+                                            .add("from", request.getInputFile().getAbsolutePath())
                                             .add("to", outputFile.getAbsolutePath())
                                             .toString();
                                 }
@@ -150,12 +150,13 @@ public class QueuedCruncher extends QueuedResourceProcessor {
     private static File compileOutputFor(@NonNull CompileResourceRequest request) {
         // AAPT1 requires explicitly passing the output file instead of an output directory. If we
         // were passed a directory instead of a file, calculate the output.
-        if (request.getOutput().isDirectory()) {
-            File parentDir = new File(request.getOutput(), request.getFolderName());
+        if (request.getOutputDirectory().isDirectory()) {
+            File parentDir =
+                    new File(request.getOutputDirectory(), request.getInputDirectoryName());
             FileUtils.mkdirs(parentDir);
-            return new File(parentDir, request.getInput().getName());
+            return new File(parentDir, request.getInputFile().getName());
         }
-        return request.getOutput();
+        return request.getOutputDirectory();
     }
 
     public static Builder builder() {

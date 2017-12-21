@@ -38,10 +38,12 @@ class CommandLineParser {
         for (String line : lines) {
             List<String> commandList = policy.splitCommandLine(line);
             for (String commandString : commandList) {
-                List<String> split = policy.tokenizeString(commandString);
-                String command = split.get(0);
-                split.remove(0);
-                commandLines.add(new CommandLine(command, split));
+                List<String> escapedFlags = policy.tokenizeCommandLineToEscaped(commandString);
+                List<String> rawFlags = policy.tokenizeCommandLineToRaw(commandString);
+                String command = escapedFlags.get(0);
+                escapedFlags.remove(0);
+                rawFlags.remove(0);
+                commandLines.add(new CommandLine(command, escapedFlags, rawFlags));
             }
         }
         return commandLines;

@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="protobuf">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0/protobuf-java-3.0.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.0.0/protobuf-java-util-3.0.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0/protobuf-java-3.4.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.4.0/protobuf-java-util-3.4.0.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

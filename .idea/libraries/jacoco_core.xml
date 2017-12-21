@@ -1,13 +1,13 @@
 <component name="libraryTable">
   <library name="jacoco-core">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.4.201502262128/org.jacoco.core-0.7.4.201502262128.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.4.201502262128/org.jacoco.report-0.7.4.201502262128.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.9/org.jacoco.core-0.7.9.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.9/org.jacoco.report-0.7.9.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.4.201502262128/org.jacoco.core-0.7.4.201502262128-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.4.201502262128/org.jacoco.report-0.7.4.201502262128-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.9/org.jacoco.report-0.7.9-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.9/org.jacoco.core-0.7.9-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

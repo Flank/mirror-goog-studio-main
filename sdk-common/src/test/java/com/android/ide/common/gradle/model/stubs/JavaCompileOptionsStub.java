@@ -20,9 +20,9 @@ import com.android.builder.model.JavaCompileOptions;
 import java.util.Objects;
 
 public final class JavaCompileOptionsStub extends BaseStub implements JavaCompileOptions {
-    @NonNull private final String myEncoding;
     @NonNull private final String mySourceCompatibility;
     @NonNull private final String myTargetCompatibility;
+    @NonNull private String myEncoding;
 
     public JavaCompileOptionsStub() {
         this("encoding", "sourceCompatibility", "targetCompatibility");
@@ -41,6 +41,10 @@ public final class JavaCompileOptionsStub extends BaseStub implements JavaCompil
     @NonNull
     public String getEncoding() {
         return myEncoding;
+    }
+
+    public void setEncoding(@NonNull String encoding) {
+        myEncoding = encoding;
     }
 
     @Override

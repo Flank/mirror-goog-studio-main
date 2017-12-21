@@ -267,8 +267,13 @@ public class ModelBuilder implements ToolingModelBuilder {
                 projectOptions.get(BooleanOption.IDE_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES);
 
         // Get the boot classpath. This will ensure the target is configured.
-        List<String> bootClasspath = androidBuilder.getBootClasspathAsStrings(false);
-
+        List<String> bootClasspath;
+        if (androidBuilder.getTargetInfo() != null) {
+            bootClasspath = androidBuilder.getBootClasspathAsStrings(false);
+        } else {
+            // SDK not set up, error will be reported as a sync issue.
+            bootClasspath = Collections.emptyList();
+        }
         List<File> frameworkSource = Collections.emptyList();
 
         // List of extra artifacts, with all test variants added.
@@ -329,7 +334,9 @@ public class ModelBuilder implements ToolingModelBuilder {
                 buildTypes,
                 productFlavors,
                 variants,
-                androidBuilder.getTarget() != null ? androidBuilder.getTarget().hashString() : "",
+                androidBuilder.getTargetInfo() != null
+                        ? androidBuilder.getTarget().hashString()
+                        : "",
                 bootClasspath,
                 frameworkSource,
                 cloneSigningConfigs(config.getSigningConfigs()),

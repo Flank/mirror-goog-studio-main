@@ -28,16 +28,17 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
-import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.utils.FileCache;
+import com.android.ide.common.build.ApkInfo;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 
 /**
@@ -57,26 +58,34 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
             @NonNull InstantRunBuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCache fileCache,
-            @NonNull PackagingScope packagingScope,
+            @NonNull String applicationId,
             @Nullable CoreSigningConfig signingConf,
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
-            @NonNull File aaptIntermediateDirectory) {
+            @NonNull File aaptIntermediateDirectory,
+            @NonNull FileCollection resources,
+            @NonNull FileCollection resourcesWithMainManifest,
+            @NonNull FileCollection apkList,
+            @NonNull ApkInfo mainApk) {
         super(
                 logger,
                 project,
                 buildContext,
                 androidBuilder,
                 fileCache,
-                packagingScope,
+                applicationId,
                 signingConf,
                 aaptGeneration,
                 aaptOptions,
                 outputDirectory,
                 supportDirectory,
-                aaptIntermediateDirectory);
+                aaptIntermediateDirectory,
+                resources,
+                resourcesWithMainManifest,
+                apkList,
+                mainApk);
     }
 
     @NonNull
@@ -138,8 +147,9 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
         if (listOfDexes.isEmpty()) {
             return;
         }
+
         try {
-            generateSplitApk(new DexFiles(listOfDexes, APK_FILE_NAME));
+            generateSplitApk(mainApk, new DexFiles(listOfDexes, APK_FILE_NAME));
         } catch (Exception e) {
             logger.error("Error while generating dependencies split APK", e);
             throw new TransformException(e);

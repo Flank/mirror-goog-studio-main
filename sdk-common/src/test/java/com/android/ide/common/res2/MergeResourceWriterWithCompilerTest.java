@@ -78,7 +78,7 @@ public class MergeResourceWriterWithCompilerTest {
                     public ListenableFuture<File> compile(@NonNull CompileResourceRequest request)
                             throws Exception {
                         File outputPath = compileOutputFor(request);
-                        Files.copy(request.getInput(), outputPath);
+                        Files.copy(request.getInputFile(), outputPath);
                         return Futures.immediateFuture(outputPath);
                     }
 
@@ -87,7 +87,9 @@ public class MergeResourceWriterWithCompilerTest {
 
                     @Override
                     public File compileOutputFor(@NonNull CompileResourceRequest request) {
-                        return new File(request.getOutput(), request.getInput().getName() + "-c");
+                        return new File(
+                                request.getOutputDirectory(),
+                                request.getInputFile().getName() + "-c");
                     }
                 };
 

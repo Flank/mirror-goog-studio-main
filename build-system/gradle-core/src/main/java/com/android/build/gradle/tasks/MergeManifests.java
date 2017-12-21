@@ -24,7 +24,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -34,20 +33,18 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ApplicationId;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
-import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.ApiVersion;
 import com.android.ide.common.build.ApkData;
@@ -99,12 +96,10 @@ public class MergeManifests extends ManifestProcessorTask {
     private FileCollection microApkManifest;
     private FileCollection compatibleScreensManifest;
     private FileCollection packageManifest;
+    private FileCollection apkList;
     private List<Feature> optionalFeatures;
     private OutputScope outputScope;
 
-    private Set<String> supportedAbis;
-    private String buildTargetAbi;
-    private String buildTargetDensity;
     private String featureName;
 
     @Override
@@ -125,12 +120,9 @@ public class MergeManifests extends ManifestProcessorTask {
 
         @Nullable BuildOutput compatibleScreenManifestForSplit;
 
-        List<ApkData> splitsToGenerate =
-                LinkApplicationAndroidResourcesTask.getApksToGenerate(
-                        outputScope, supportedAbis, buildTargetAbi, buildTargetDensity);
-
         // FIX ME : multi threading.
-        for (ApkData apkData : splitsToGenerate) {
+        for (ApkData apkData : outputScope.getApkDatas()) {
+
             compatibleScreenManifestForSplit =
                     OutputScope.getOutput(
                             compatibleScreenManifests,
@@ -425,26 +417,14 @@ public class MergeManifests extends ManifestProcessorTask {
 
     @Input
     @Optional
-    public Set<String> getSupportedAbis() {
-        return supportedAbis;
-    }
-
-    @Input
-    @Optional
-    public String getBuildTargetAbi() {
-        return buildTargetAbi;
-    }
-
-    @Input
-    @Optional
-    public String getBuildTargetDensity() {
-        return buildTargetDensity;
-    }
-
-    @Input
-    @Optional
     public String getFeatureName() {
         return featureName;
+    }
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public FileCollection getApkList() {
+        return apkList;
     }
 
     public static class ConfigAction implements TaskConfigAction<MergeManifests> {
@@ -480,7 +460,6 @@ public class MergeManifests extends ManifestProcessorTask {
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
             GlobalScope globalScope = variantScope.getGlobalScope();
             AndroidBuilder androidBuilder = globalScope.getAndroidBuilder();
-            ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
 
             processManifestTask.setAndroidBuilder(androidBuilder);
             processManifestTask.setVariantName(config.getFullName());
@@ -530,20 +509,8 @@ public class MergeManifests extends ManifestProcessorTask {
             processManifestTask.setReportFile(reportFile);
             processManifestTask.optionalFeatures = optionalFeatures;
 
-            processManifestTask.supportedAbis =
-                    variantData.getVariantConfiguration().getSupportedAbis();
-            processManifestTask.buildTargetAbi =
-                    projectOptions.get(BUILD_ONLY_TARGET_ABI)
-                                    || variantScope
-                                            .getGlobalScope()
-                                            .getExtension()
-                                            .getSplits()
-                                            .getAbi()
-                                            .isEnable()
-                            ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
-                            : null;
-            processManifestTask.buildTargetDensity =
-                    projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY);
+            processManifestTask.apkList =
+                    variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST);
 
             variantScope
                     .getVariantData()

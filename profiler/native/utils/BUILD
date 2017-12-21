@@ -92,6 +92,7 @@ cc_library(
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
     ],
+    tags = ["no_windows"],
     deps = [
         "//tools/base/profiler/proto:profiler_cc_proto",
     ],
@@ -125,6 +126,7 @@ cc_test(
         "//tools/base/profiler/native/testdata:utils",
     ],
     linkstatic = 1,
+    tags = ["no_windows"],
     deps = [
         ":profiler_utils",
         "//external:gmock_main",

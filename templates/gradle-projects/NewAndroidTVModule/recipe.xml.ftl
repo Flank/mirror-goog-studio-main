@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <recipe>
-    <dependency mavenUrl="com.android.support:leanback-v17:${targetApi}.+" />
+    <dependency mavenUrl="com.android.support:leanback-v17:${buildApi}.+" />
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
 
     <mkdir at="${escapeXmlAttribute(projectOut)}/libs" />

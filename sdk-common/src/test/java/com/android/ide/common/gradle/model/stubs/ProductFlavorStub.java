@@ -50,13 +50,18 @@ public class ProductFlavorStub extends BaseConfigStub implements ProductFlavor {
     @Nullable private final Boolean myWearAppUnbundled;
 
     public ProductFlavorStub() {
+        this("name", "dimension");
+    }
+
+    public ProductFlavorStub(@NonNull String name, @Nullable String dimension) {
         this(
+                name,
                 ImmutableMap.of(
                         "testInstrumentationRunnerArgumentsKey",
                         "testInstrumentationRunnerArgumentsValue"),
                 Lists.newArrayList("resourceConfiguration"),
                 new VectorDrawablesOptionsStub(),
-                "dimension",
+                dimension,
                 "applicationId",
                 1,
                 "versionName",
@@ -76,6 +81,7 @@ public class ProductFlavorStub extends BaseConfigStub implements ProductFlavor {
     }
 
     public ProductFlavorStub(
+            @NonNull String name,
             @NonNull Map<String, String> testInstrumentationRunnerArguments,
             @NonNull Collection<String> resourceConfigurations,
             @NonNull VectorDrawablesOptions vectorDrawables,
@@ -96,6 +102,7 @@ public class ProductFlavorStub extends BaseConfigStub implements ProductFlavor {
             @Nullable Boolean testFunctionalTest,
             @Nullable SigningConfig signingConfig,
             @Nullable Boolean wearAppUnbundled) {
+        super(name);
         myTestInstrumentationRunnerArguments = testInstrumentationRunnerArguments;
         myResourceConfigurations = resourceConfigurations;
         myVectorDrawables = vectorDrawables;

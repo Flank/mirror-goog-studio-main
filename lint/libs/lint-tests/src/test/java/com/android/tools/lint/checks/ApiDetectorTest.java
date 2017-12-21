@@ -4992,6 +4992,30 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         "1 errors, 1 warnings\n");
     }
 
+    public void test70784223() {
+        // Regression test for 70784223: Linter doesn't detect API level check correctly using Kotlin
+        //noinspection all // Sample code
+        lint().files(
+           kotlin("" +
+                   "package test.pkg\n" +
+                   "\n" +
+                   "import android.app.NotificationChannel\n" +
+                   "import android.app.NotificationManager\n" +
+                   "import android.content.Context\n" +
+                   "import android.os.Build\n" +
+                   "\n" +
+                   "fun test(context: Context) {\n" +
+                   "    val channelName = context.getString(R.string.app_name)\n" +
+                   "\n" +
+                   "    if (Build.VERSION.SDK_INT > 26) {\n" +
+                   "        val name = \"Something\"\n" +
+                   "        val channel = NotificationChannel(channelName, name, NotificationManager.IMPORTANCE_HIGH)\n" +
+                   "    }\n" +
+                   "}"))
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected void checkReportedError(
             @NonNull Context context,

@@ -121,6 +121,7 @@ public class InstantRunBuildContext {
 
         private final long buildId;
         @NonNull private InstantRunVerifierStatus verifierStatus;
+        @NonNull private List<InstantRunVerifierStatus> allStatuses = new ArrayList<>();
         @Nullable private InstantRunVerifierStatus eligibilityStatus;
         private InstantRunBuildMode buildMode;
         private final List<Artifact> artifacts = new ArrayList<>();
@@ -379,6 +380,10 @@ public class InstantRunBuildContext {
                 currentBuild.buildMode.combine(
                         verifierStatus.getInstantRunBuildModeForPatchingPolicy(patchingPolicy));
 
+        // save the verifier status, even if it does not end up being used as the main status,
+        // this can be useful to check later on that certain condition were not met.
+        currentBuild.allStatuses.add(verifierStatus);
+
         // if our current status is not set, or the new build mode is higher, reset everything.
         if (currentBuild.getVerifierStatus() == InstantRunVerifierStatus.NO_CHANGES
                 || currentBuild.getVerifierStatus() == InstantRunVerifierStatus.COMPATIBLE
@@ -413,6 +418,16 @@ public class InstantRunBuildContext {
     }
 
     /**
+     * Returns true if the passed status has been set during this build execution.
+     *
+     * @param status a verifier status to test.
+     * @return true or false whether or not that status was set so far.
+     */
+    public boolean hasVerifierStatusBeenSet(InstantRunVerifierStatus status) {
+        return currentBuild.allStatuses.contains(status);
+    }
+
+    /**
      * Returns true if the verifier did not find any incompatible changes for InstantRun or was not
      * run due to no code changes.
      *
@@ -435,6 +450,12 @@ public class InstantRunBuildContext {
     @NonNull
     public InstantRunPatchingPolicy getPatchingPolicy() {
         return patchingPolicy;
+    }
+
+    /** Returns true if the application's resources should be packaged in a separate split APK. */
+    public boolean useSeparateApkForResources() {
+        return isInInstantRunMode()
+                && (getPatchingPolicy() == InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES);
     }
 
     @NonNull

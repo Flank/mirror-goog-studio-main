@@ -72,13 +72,15 @@ int main(int argc, char** argv) {
                                            ? getenv("TEST_TMPDIR")
                                            : profiler::CurrentProcess::dir());
 
-  profiler::GenericComponent generic_component{&daemon.utilities()};
+  profiler::GenericComponent generic_component{&daemon.utilities(),
+                                               &daemon.sessions()};
   daemon.RegisterComponent(&generic_component);
 
   profiler::CpuProfilerComponent cpu_component{&daemon.utilities()};
   daemon.RegisterComponent(&cpu_component);
 
-  profiler::MemoryProfilerComponent memory_component{&daemon.utilities()};
+  profiler::MemoryProfilerComponent memory_component{daemon.sessions(),
+                                                     &daemon.utilities()};
   daemon.RegisterComponent(&memory_component);
 
   profiler::EventProfilerComponent event_component{daemon.utilities()};
@@ -113,5 +115,6 @@ int main(int argc, char** argv) {
     // For legacy devices (Nougat or older), use an internet address.
     daemon.RunServer(agent_config.service_address());
   }
+
   return 0;
 }

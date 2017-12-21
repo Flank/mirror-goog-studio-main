@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ProcessProfileWriterFactory;
 import java.nio.file.Path;
@@ -74,23 +75,40 @@ public final class ProfilerInitializer {
             project.getGradle().addListener(recordingBuildListener);
         }
 
-        project.getGradle().addListener(new ProfileShutdownListener(project.getGradle()));
+        project.getGradle()
+                .addListener(
+                        new ProfileShutdownListener(
+                                project.getGradle(),
+                                projectOptions.get(StringOption.PROFILE_OUTPUT_DIR),
+                                projectOptions.get(BooleanOption.ENABLE_PROFILE_JSON)));
     }
 
     private static final class ProfileShutdownListener extends BuildAdapter
             implements BuildCompletionListener {
 
         private final Gradle gradle;
+        @Nullable private String profileDirProperty;
         @Nullable private Path profileDir = null;
+        private boolean enableProfileJson;
 
-        ProfileShutdownListener(@NonNull Gradle gradle) {
+        ProfileShutdownListener(
+                @NonNull Gradle gradle,
+                @Nullable String profileDirProperty,
+                boolean enableProfileJson) {
             this.gradle = gradle;
+            this.profileDirProperty = profileDirProperty;
+            this.enableProfileJson = enableProfileJson;
         }
 
         @Override
         public void projectsEvaluated(Gradle gradle) {
-            this.profileDir =
-                    gradle.getRootProject().getBuildDir().toPath().resolve(PROFILE_DIRECTORY);
+            if (profileDirProperty != null) {
+                this.profileDir = gradle.getRootProject().file(profileDirProperty).toPath();
+            } else if (enableProfileJson) {
+                // If profile json is enabled but no directory is given for the profile outputs, default to build/android-profile
+                this.profileDir =
+                        gradle.getRootProject().getBuildDir().toPath().resolve(PROFILE_DIRECTORY);
+            }
         }
 
         @Override

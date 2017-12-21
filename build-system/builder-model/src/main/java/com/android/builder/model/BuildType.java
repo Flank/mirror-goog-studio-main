@@ -83,13 +83,23 @@ public interface BuildType extends BaseConfig {
     int getRenderscriptOptimLevel();
 
     /**
-     * Returns whether minification is enabled for this build type.
+     * Specifies whether to enable code shrinking for this build type.
      *
-     * <p>Remember that this flag means that some "ProGuard-like" tool has run, it does not say if
-     * the tool was used to obfuscate and/or minify. In build system code this information is
-     * available elsewhere and should be used instead of this method.
+     * <p>By default, when you enable code shrinking by setting this property to <code>true</code>,
+     * the Android plugin uses ProGuard. However while deploying your app using Android Studio's <a
+     * href="https://d.android.com/studio/run/index.html#instant-run">Instant Run</a> feature, which
+     * doesn't support ProGuard, the plugin switches to using a custom experimental code shrinker.
      *
-     * @return true if minification is enabled.
+     * <p>If you experience issues using the experimental code shrinker, you can disable code
+     * shrinking while using Instant Run by setting <a
+     * href="http://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.BuildType.html#com.android.build.gradle.internal.dsl.BuildType:useProguard">
+     * <code>useProguard</code></a> to <code>true</code>.
+     *
+     * <p>To learn more, read <a
+     * href="https://developer.android.com/studio/build/shrink-code.html">Shrink Your Code and
+     * Resources</a>.
+     *
+     * @return true if code shrinking is enabled.
      */
     boolean isMinifyEnabled();
 

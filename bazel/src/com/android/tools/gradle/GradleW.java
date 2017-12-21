@@ -8,6 +8,8 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -79,6 +81,11 @@ class GradleW {
         env.put("BUILD_DIR", buildDir.getAbsolutePath());
         env.put("ANDROID_SDK_HOME", androidDir.getAbsolutePath());
 
+        // On windows it is needed to set a few more environment variables
+        env.put("SystemRoot", System.getenv("SystemRoot"));
+        env.put("TEMP", System.getenv("TEMP"));
+        env.put("TMP", System.getenv("TMP"));
+
         ProjectConnection projectConnection =
                 getProjectConnection(homeDir, gradleFile.getParentFile(), gradleVersion);
         BuildLauncher launcher =
@@ -97,6 +104,10 @@ class GradleW {
         launcher.run();
         File source = new File(buildDir, outPath);
         Files.copy(source.toPath(), outFile.toPath());
+        Files.walk(outDir.toPath())
+                .map(Path::toFile)
+                .sorted((o1, o2) -> -o1.compareTo(o2))
+                .forEach(File::delete);
     }
 
     private static void createInitScript(File initScript, File repoDir) throws IOException {
@@ -105,18 +116,17 @@ class GradleW {
                         + "  buildscript {\n"
                         + "    repositories {\n"
                         + "       maven { url '"
-                        + repoDir.getAbsolutePath()
+                        + repoDir.toURI().toString()
                         + "'}\n"
                         + "    }\n"
                         + "  }\n"
                         + "  repositories {\n"
                         + "       maven { url '"
-                        + repoDir.getAbsolutePath()
+                        + repoDir.toURI().toString()
                         + "'}\n"
                         + "  }\n"
                         + "}\n";
 
-        System.err.println("> " + initScript.getAbsolutePath());
         try (FileWriter writer = new FileWriter(initScript)) {
             writer.write(content);
         }

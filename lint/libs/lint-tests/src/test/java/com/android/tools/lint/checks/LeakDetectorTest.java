@@ -344,4 +344,34 @@ public class LeakDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void testClassesInStaticMethods() {
+        // Regression test for https://issuetracker.google.com/70496601
+        //noinspection all // Sample code
+        lint().files(
+                java("package test.pkg;\n" +
+                        "\n" +
+                        "import android.os.AsyncTask;\n" +
+                        "\n" +
+                        "class C {\n" +
+                        "    public static void f(String param) {\n" +
+                        "        class CustomInternalTask extends AsyncTask<Void, Void, Void> {\n" +
+                        "            @Override\n" +
+                        "            protected Void doInBackground(Void... params) {\n" +
+                        "                return null;\n" +
+                        "            }\n" +
+                        "        }\n" +
+                        "        new CustomInternalTask().execute();\n" +
+                        "\n" +
+                        "        new AsyncTask<Void, Void, Void>() {\n" +
+                        "            @Override\n" +
+                        "            protected Void doInBackground(Void... params) {\n" +
+                        "                return null;\n" +
+                        "            }\n" +
+                        "        }.execute();\n" +
+                        "    }\n" +
+                        "}"))
+                .run()
+                .expectClean();
+    }
 }

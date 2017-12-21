@@ -22,6 +22,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.options.StringOption;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -122,9 +124,13 @@ public class InjectedAbiAndDensitySplitTest {
 
     @Test
     public void checkError() throws Exception {
-        sProject.executor()
-                .with(StringOption.IDE_BUILD_TARGET_ABI, "mips")
-                .expectFailure()
-                .run("assembleDebug");
+        AndroidProject model =
+                sProject.model()
+                        .with(StringOption.IDE_BUILD_TARGET_ABI, "mips")
+                        .ignoreSyncIssues()
+                        .getSingle()
+                        .getOnlyModel();
+
+        assertThat(model).hasIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_GENERIC);
     }
 }

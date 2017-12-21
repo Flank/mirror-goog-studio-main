@@ -22,9 +22,12 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
+import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
@@ -129,7 +132,17 @@ public class NdkBuildSplitTest {
 
     @Test
     public void checkModel() throws IOException {
-        project.model().getSingle(); // Make sure we can get the AndroidProject
+        // Make sure we can get the AndroidProject
+        AndroidProject nonNativeModel =
+                project.model()
+                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                        .getSingle()
+                        .getOnlyModel();
+        assertThat(nonNativeModel.getSyncIssues()).hasSize(1);
+        assertThat(Iterables.getOnlyElement(nonNativeModel.getSyncIssues()).getMessage())
+                .contains(
+                        "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.");
+
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
         assertThat(model.getBuildFiles()).hasSize(1);
 

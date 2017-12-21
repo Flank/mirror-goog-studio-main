@@ -250,33 +250,35 @@ public class MergedResourceWriter
                 CompileResourceRequest request = mCompileResourceRequests.poll();
                 try {
                     Future<File> result;
-                    File fileToCompile = request.getInput();
+                    File fileToCompile = request.getInputFile();
 
                     if (mMergingLog != null) {
                         mMergingLog.logCopy(
-                                request.getInput(), mResourceCompiler.compileOutputFor(request));
+                                request.getInputFile(),
+                                mResourceCompiler.compileOutputFor(request));
                     }
 
                     if (dataBindingExpressionRemover != null
-                            && request.getFolderName().startsWith("layout")
-                            && request.getInput().getName().endsWith(".xml")) {
+                            && request.getInputDirectoryName().startsWith("layout")
+                            && request.getInputFile().getName().endsWith(".xml")) {
 
                         // Try to strip the layout. If stripping modified the file (there was data
                         // binding in the layout), compile the stripped layout into merged resources
                         // folder. Otherwise, compile into merged resources folder normally.
 
-                        File strippedLayoutFolder = new File(tmpDir, request.getFolderName());
+                        File strippedLayoutFolder =
+                                new File(tmpDir, request.getInputDirectoryName());
                         File strippedLayout =
-                                new File(strippedLayoutFolder, request.getInput().getName());
+                                new File(strippedLayoutFolder, request.getInputFile().getName());
 
                         boolean removedDataBinding =
                                 dataBindingExpressionRemover.processSingleFile(
-                                        request.getInput(), strippedLayout);
+                                        request.getInputFile(), strippedLayout);
 
                         if (removedDataBinding) {
                             // Remember in case AAPT compile or link fails.
                             if (mMergingLog != null) {
-                                mMergingLog.logCopy(request.getInput(), strippedLayout);
+                                mMergingLog.logCopy(request.getInputFile(), strippedLayout);
                             }
                             fileToCompile = strippedLayout;
                         }
@@ -286,7 +288,9 @@ public class MergedResourceWriter
                     // the final merged, but uncompiled file.
                     if (notCompiledOutputDirectory != null) {
                         File typeDir =
-                                new File(notCompiledOutputDirectory, request.getFolderName());
+                                new File(
+                                        notCompiledOutputDirectory,
+                                        request.getInputDirectoryName());
                         FileUtils.mkdirs(typeDir);
                         FileUtils.copyFileToDirectory(fileToCompile, typeDir);
                     }
@@ -295,19 +299,21 @@ public class MergedResourceWriter
                             mResourceCompiler.compile(
                                     new CompileResourceRequest(
                                             fileToCompile,
-                                            request.getOutput(),
-                                            request.getFolderName(),
+                                            request.getOutputDirectory(),
+                                            request.getInputDirectoryName(),
                                             pseudoLocalesEnabled,
                                             crunchPng));
 
-                    outstandingRequests.put(result, request.getInput().getAbsolutePath());
+                    outstandingRequests.put(result, request.getInputFile().getAbsolutePath());
 
                     // adding to the mCompiling seems unnecessary at this point, the end() call will
                     // take care of waiting for all requests to be processed.
                     mCompiling.add(result);
 
                 } catch (ResourceCompilationException | IOException e) {
-                    throw MergingException.wrapException(e).withFile(request.getInput()).build();
+                    throw MergingException.wrapException(e)
+                            .withFile(request.getInputFile())
+                            .build();
                 }
             }
         } catch (Exception e) {
