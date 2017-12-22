@@ -141,7 +141,6 @@ class NamespacedAarWithSharedLibTest {
 
     @Test
     fun checkBuildsAsBundledStaticLib() {
-        AssumeUtil.assumeNotWindowsBot() // https://issuetracker.google.com/70931936
         project.executor().with(BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES, false).run(":lib:assembleDebug", ":app:assembleDebug")
         val out = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
         assertThatApk(out).containsClass("Lcom/example/publishedLib/Example;")
@@ -150,7 +149,6 @@ class NamespacedAarWithSharedLibTest {
 
     @Test
     fun checkBuildsAsProvidedSharedLib() {
-        AssumeUtil.assumeNotWindowsBot() // https://issuetracker.google.com/70931936
         project.executor().with(BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES, true).run(":lib:assembleDebug", ":app:assembleDebug")
         val out = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
         assertThatApk(out).doesNotContainClass("Lcom/example/publishedLib/Example;")
@@ -160,6 +158,7 @@ class NamespacedAarWithSharedLibTest {
 
     @Before
     fun buildStaticLibAsApk() {
+        AssumeUtil.assumeNotWindowsBot() // https://issuetracker.google.com/70931936
         project.executor().run(":publishedLib:assembleRelease")
 
         val progress = FakeProgressIndicator()
