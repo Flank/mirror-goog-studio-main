@@ -16,10 +16,14 @@
 
 package com.android.build.gradle.integration.performance;
 
+import com.android.SdkConstants;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.util.Timestamps;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 
@@ -28,6 +32,13 @@ public class ProfileUtils {
         Instant timestamp = Instant.ofEpochMilli(Timestamps.toMillis(result.getTimestamp()));
         HashCode sha1 = Hashing.sha1().hashBytes(result.toByteArray());
 
-        return DateTimeFormatter.ISO_INSTANT.format(timestamp) + "_" + sha1.toString();
+        String defaultFileName = DateTimeFormatter.ISO_INSTANT.format(timestamp) + "_" + sha1.toString();
+        try {
+            return SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS
+                    ? URLEncoder.encode(defaultFileName, SdkConstants.UTF_8)
+                    : defaultFileName;
+        } catch (UnsupportedEncodingException e) {
+            return defaultFileName.replaceAll("\\W+", "_");
+        }
     }
 }

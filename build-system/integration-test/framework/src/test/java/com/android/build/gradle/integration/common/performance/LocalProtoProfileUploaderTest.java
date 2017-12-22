@@ -48,14 +48,12 @@ public class LocalProtoProfileUploaderTest {
 
     @Test
     public void singleFile() throws IOException {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         uploader.uploadData(Arrays.asList(RandomGradleBenchmark.randomBenchmarkResult()));
         assertThat(Files.walk(dir).filter(Files::isRegularFile).count()).isEqualTo(1);
     }
 
     @Test
     public void multipleFiles() throws IOException {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         uploader.uploadData(
                 Arrays.asList(
                         RandomGradleBenchmark.randomBenchmarkResult(),
@@ -67,7 +65,6 @@ public class LocalProtoProfileUploaderTest {
 
     @Test
     public void filesAreParseableProtos() throws IOException {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         List<GradleBenchmarkResult> in =
                 Arrays.asList(
                         RandomGradleBenchmark.randomBenchmarkResult(),
