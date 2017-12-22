@@ -319,4 +319,5 @@ java_test(
         ":iml_to_build",
         ":utils",
     ],
+    tags = ["no_test_windows"],
 )
