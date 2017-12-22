@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
@@ -46,6 +47,7 @@ public class NdkSanAngelesTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         outputModel =
                 project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
     }

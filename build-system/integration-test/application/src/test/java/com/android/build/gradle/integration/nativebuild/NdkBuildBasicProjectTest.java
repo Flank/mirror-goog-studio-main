@@ -22,6 +22,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.build.gradle.options.StringOption;
@@ -96,6 +97,7 @@ public class NdkBuildBasicProjectTest {
 
     @Test
     public void checkApkContent() throws IOException, InterruptedException {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug");
         Apk apk = project.getApk("debug");
         assertThatApk(apk).hasVersionCode(1);
@@ -115,6 +117,7 @@ public class NdkBuildBasicProjectTest {
 
     @Test
     public void chekApkContentWithInjectedAbi() throws IOException, InterruptedException {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         // Pass invalid-abi, x86 and armeabi. The first (invalid-abi) should be ignored because
         // it is not valid for the build . The second (x86) should be the one chosen to build.
         // Finally, armeabi is valid but it will be ignored because x86 is "preferred".
@@ -164,6 +167,7 @@ public class NdkBuildBasicProjectTest {
 
     @Test
     public void checkClean() throws IOException, InterruptedException {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
         assertThat(model).hasBuildOutputCountEqualTo(6);
@@ -178,6 +182,7 @@ public class NdkBuildBasicProjectTest {
 
     @Test
     public void checkCleanAfterAbiSubset() throws IOException, InterruptedException {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
         assertThat(model).hasBuildOutputCountEqualTo(6);

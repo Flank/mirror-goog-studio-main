@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.common.performance;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.RandomGradleBenchmark;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.performance.LocalProtoProfileUploader;
 import com.android.build.gradle.integration.performance.ProfileUploader;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
@@ -47,12 +48,14 @@ public class LocalProtoProfileUploaderTest {
 
     @Test
     public void singleFile() throws IOException {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         uploader.uploadData(Arrays.asList(RandomGradleBenchmark.randomBenchmarkResult()));
         assertThat(Files.walk(dir).filter(Files::isRegularFile).count()).isEqualTo(1);
     }
 
     @Test
     public void multipleFiles() throws IOException {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         uploader.uploadData(
                 Arrays.asList(
                         RandomGradleBenchmark.randomBenchmarkResult(),
@@ -64,6 +67,7 @@ public class LocalProtoProfileUploaderTest {
 
     @Test
     public void filesAreParseableProtos() throws IOException {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         List<GradleBenchmarkResult> in =
                 Arrays.asList(
                         RandomGradleBenchmark.randomBenchmarkResult(),

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -61,6 +62,7 @@ public class NdkBuildJniPureSplitLibTest {
 
     @Test
     public void checkVersionCodeAndSo() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         checkVersionCode();
         checkSo();
     }

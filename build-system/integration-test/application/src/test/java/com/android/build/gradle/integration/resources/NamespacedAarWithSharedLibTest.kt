@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
@@ -140,6 +141,7 @@ class NamespacedAarWithSharedLibTest {
 
     @Test
     fun checkBuildsAsBundledStaticLib() {
+        AssumeUtil.assumeNotWindowsBot() // https://issuetracker.google.com/70931936
         project.executor().with(BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES, false).run(":lib:assembleDebug", ":app:assembleDebug")
         val out = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
         assertThatApk(out).containsClass("Lcom/example/publishedLib/Example;")
@@ -148,6 +150,7 @@ class NamespacedAarWithSharedLibTest {
 
     @Test
     fun checkBuildsAsProvidedSharedLib() {
+        AssumeUtil.assumeNotWindowsBot() // https://issuetracker.google.com/70931936
         project.executor().with(BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES, true).run(":lib:assembleDebug", ":app:assembleDebug")
         val out = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
         assertThatApk(out).doesNotContainClass("Lcom/example/publishedLib/Example;")

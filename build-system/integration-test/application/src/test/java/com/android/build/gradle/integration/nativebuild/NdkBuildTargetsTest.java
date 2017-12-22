@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.NativeAndroidProject;
@@ -81,6 +82,7 @@ public class NdkBuildTargetsTest {
 
     @Test
     public void checkSingleTarget() throws IOException, InterruptedException {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"
@@ -114,6 +116,7 @@ public class NdkBuildTargetsTest {
 
     @Test
     public void checkMultiTargets() throws IOException, InterruptedException {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.executor().run("clean", "assembleDebug");
 
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);

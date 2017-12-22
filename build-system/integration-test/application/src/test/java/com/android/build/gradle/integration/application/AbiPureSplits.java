@@ -46,6 +46,7 @@ public class AbiPureSplits {
 
     @Test
     public void testAbiPureSplits() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         ProjectBuildOutput outputModel = assembleAndGetModel();
 
         // build a set of expected outputs
