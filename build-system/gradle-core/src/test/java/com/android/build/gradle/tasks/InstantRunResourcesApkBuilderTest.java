@@ -27,13 +27,14 @@ import static org.mockito.Mockito.when;
 import com.android.SdkConstants;
 import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.build.VariantOutput;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.OutputScope;
-import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.AndroidBuilder;
@@ -75,7 +76,9 @@ public class InstantRunResourcesApkBuilderTest {
     File testDir;
 
     @Mock FileCollection fileCollection;
-    @Mock PackagingScope packagingScope;
+    @Mock VariantScope variantScope;
+    @Mock GradleVariantConfiguration variantConfiguration;
+    @Mock GlobalScope globalScope;
     @Mock AndroidBuilder androidBuilder;
     @Mock OutputScope outputScope;
     @Mock CoreSigningConfig signingConfig;
@@ -89,17 +92,19 @@ public class InstantRunResourcesApkBuilderTest {
 
         task = project.getTasks().create("test", InstantRunResourcesApkBuilder.class);
 
-        when(packagingScope.getOutputScope()).thenReturn(outputScope);
-        when(packagingScope.getFullVariantName()).thenReturn("testVariant");
-        when(packagingScope.getSigningConfig()).thenReturn(signingConfig);
-        when(packagingScope.getAndroidBuilder()).thenReturn(androidBuilder);
-        when(packagingScope.getInstantRunBuildContext()).thenReturn(buildContext);
+        when(variantScope.getOutputScope()).thenReturn(outputScope);
+        when(variantScope.getFullVariantName()).thenReturn("testVariant");
+        when(variantScope.getGlobalScope()).thenReturn(globalScope);
+        when(variantScope.getVariantConfiguration()).thenReturn(variantConfiguration);
+        when(variantConfiguration.getSigningConfig()).thenReturn(signingConfig);
+        when(globalScope.getAndroidBuilder()).thenReturn(androidBuilder);
+        when(variantScope.getInstantRunBuildContext()).thenReturn(buildContext);
 
         File incrementalDir = temporaryFolder.newFolder("test-incremental");
 
-        when(packagingScope.getIncrementalDir(eq(task.getName()))).thenReturn(incrementalDir);
+        when(variantScope.getIncrementalDir(eq(task.getName()))).thenReturn(incrementalDir);
         outputFolder = temporaryFolder.newFolder("test-output-folder");
-        when(packagingScope.getInstantRunResourceApkFolder()).thenReturn(outputFolder);
+        when(variantScope.getInstantRunResourceApkFolder()).thenReturn(outputFolder);
     }
 
     @After
@@ -115,7 +120,7 @@ public class InstantRunResourcesApkBuilderTest {
                 new InstantRunResourcesApkBuilder.ConfigAction(
                         TaskOutputHolder.TaskOutputType.PROCESSED_RES,
                         fileCollection,
-                        packagingScope);
+                        variantScope);
 
         configAction.execute(task);
 
@@ -134,7 +139,7 @@ public class InstantRunResourcesApkBuilderTest {
                 new InstantRunResourcesApkBuilder.ConfigAction(
                         TaskOutputHolder.TaskOutputType.PROCESSED_RES,
                         fileCollection,
-                        packagingScope);
+                        variantScope);
 
         configAction.execute(task);
 
@@ -183,7 +188,7 @@ public class InstantRunResourcesApkBuilderTest {
                 new InstantRunResourcesApkBuilder.ConfigAction(
                         TaskOutputHolder.TaskOutputType.PROCESSED_RES,
                         fileCollection,
-                        packagingScope);
+                        variantScope);
 
         configAction.execute(task);
 

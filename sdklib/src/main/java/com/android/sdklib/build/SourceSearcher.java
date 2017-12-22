@@ -17,14 +17,16 @@
 package com.android.sdklib.build;
 
 import com.android.annotations.NonNull;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 /**
  * Class to search for source files (by extension) in a set of source folders.
+ *
+ * @deprecated This class is obsolete and will be deleted EOY2018
  */
+@Deprecated
 public class SourceSearcher {
 
     @NonNull
@@ -38,6 +40,8 @@ public class SourceSearcher {
     }
 
     public SourceSearcher(@NonNull List<File> sourceFolders, @NonNull String... extensions) {
+        System.err.println(
+                "SourceSearcher is deprecated and will be removed from sdklib at the end of 2018");
         mSourceFolders = sourceFolders;
         mExtensions = extensions;
     }

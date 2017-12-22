@@ -25,7 +25,10 @@ import java.util.regex.Pattern;
 
 /**
  * Command line APK builder with signing support.
+ *
+ * @deprecated This class is obsolete and will be deleted EOY2018
  */
+@Deprecated
 public final class ApkBuilderMain {
 
     private static final Pattern PATTERN_JAR_EXT = Pattern.compile("^.+\\.jar$",

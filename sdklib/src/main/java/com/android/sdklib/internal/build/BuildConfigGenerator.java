@@ -17,7 +17,6 @@
 package com.android.sdklib.internal.build;
 
 import com.android.SdkConstants;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -30,10 +29,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * Class able to generate a BuildConfig class in Android project.
- * The BuildConfig class contains constants related to the build target.
- * 
- * @deprecated Use Android-Builder instead
+ * Class able to generate a BuildConfig class in Android project. The BuildConfig class contains
+ * constants related to the build target.
+ *
+ * @deprecated This class is obsolete and will be deleted EOY2018
  */
 @Deprecated
 public class BuildConfigGenerator {
@@ -54,6 +53,8 @@ public class BuildConfigGenerator {
      * @param debug whether it's a debug build
      */
     public BuildConfigGenerator(String genFolder, String appPackage, boolean debug) {
+        System.err.println(
+                "BuildConfigGenerator is deprecated and will be removed from sdklib at the end of 2018");
         mGenFolder = genFolder;
         mAppPackage = appPackage;
         mDebug = debug;

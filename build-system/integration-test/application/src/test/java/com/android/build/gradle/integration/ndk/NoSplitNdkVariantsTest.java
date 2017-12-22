@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
 import java.io.File;
@@ -102,6 +103,7 @@ public class NoSplitNdkVariantsTest {
 
     @Test
     public void assembleX86Release() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("assembleX86Release");
 
         // Verify .so are built for all platform.
@@ -114,6 +116,7 @@ public class NoSplitNdkVariantsTest {
 
     @Test
     public void assembleArmRelease() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("assembleArmRelease");
 
         // Verify .so are built for all platform.
@@ -127,6 +130,7 @@ public class NoSplitNdkVariantsTest {
 
     @Test
     public void assembleMipsRelease() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("assembleMipsRelease");
 
         // Verify .so are built for all platform.

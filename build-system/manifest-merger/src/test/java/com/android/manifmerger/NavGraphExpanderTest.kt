@@ -22,8 +22,12 @@ import com.android.manifmerger.NavGraphExpander.expandNavGraphs
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mock
 import org.mockito.Mockito
+import org.mockito.Mockito.atLeast
+import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 
 /** Tests for [NavGraphExpander]  */
@@ -128,6 +132,45 @@ class NavGraphExpanderTest {
                 TestUtils.xmlDocumentFromString(UNKNOWN, expectedOutputManifestString)
 
         assertThat(expandedXmlDocument.compareTo(expectedXmlDocument)).isAbsent()
+
+        // test that actions are recorded with final NodeKeys.
+        // first make lists of the intent-filters' final NodeKeys (including descendant nodes).
+        val elementNodeKeys = mutableListOf<XmlNode.NodeKey>()
+        val attributeNodeKeys = mutableListOf<XmlNode.NodeKey>()
+        val intentFilterXmlElements =
+                expandedXmlDocument
+                        .rootNode
+                        .getAllNodesByType(ManifestModel.NodeTypes.APPLICATION)
+                        .flatMap { applicationXmlElement ->
+                            applicationXmlElement
+                                    .getAllNodesByType(ManifestModel.NodeTypes.ACTIVITY)
+                        }
+                        .flatMap { activityXmlElement ->
+                            activityXmlElement
+                                    .getAllNodesByType(ManifestModel.NodeTypes.INTENT_FILTER)
+                        }
+        for (intentFilterXmlElement in intentFilterXmlElements) {
+            elementNodeKeys.add(intentFilterXmlElement.id)
+            for (intentFilterXmlAttribute in intentFilterXmlElement.attributes) {
+                attributeNodeKeys.add(intentFilterXmlAttribute.id)
+            }
+            for (childXmlElement in intentFilterXmlElement.mergeableElements) {
+                elementNodeKeys.add(childXmlElement.id)
+                for (childXmlAttribute in childXmlElement.attributes) {
+                    attributeNodeKeys.add(childXmlAttribute.id)
+                }
+            }
+        }
+        // then check that the recorded NodeKeys match the final NodeKeys.
+        val nodeRecordCaptor = ArgumentCaptor.forClass(Actions.NodeRecord::class.java)
+        val attributeRecordCaptor = ArgumentCaptor.forClass(Actions.AttributeRecord::class.java)
+        verify(actionRecorder, atLeast(1)).recordNodeAction(any(), nodeRecordCaptor.capture())
+        verify(actionRecorder, atLeast(1))
+                .recordAttributeAction(any(), attributeRecordCaptor.capture())
+        assertThat(elementNodeKeys)
+                .containsExactlyElementsIn(nodeRecordCaptor.allValues.map {it.targetId})
+        assertThat(attributeNodeKeys)
+                .containsExactlyElementsIn(attributeRecordCaptor.allValues.map {it.targetId})
     }
 
     @Test

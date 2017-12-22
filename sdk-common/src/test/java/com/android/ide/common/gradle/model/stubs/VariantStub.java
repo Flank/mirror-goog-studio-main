@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model.stubs;
 import com.android.annotations.NonNull;
 import com.android.builder.model.*;
 import com.google.common.collect.Lists;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -35,22 +34,14 @@ public class VariantStub extends BaseStub implements Variant {
     @NonNull private final Collection<TestedTargetVariant> myTestedTargetVariants;
 
     public VariantStub() {
-        this("name", "buildType", new AndroidArtifactStub(), Lists.newArrayList());
-    }
-
-    public VariantStub(
-            @NonNull String name,
-            @NonNull String buildType,
-            @NonNull AndroidArtifact mainArtifact,
-            @NonNull List<String> productFlavors) {
         this(
-                name,
+                "name",
                 "displayName",
-                mainArtifact,
+                new AndroidArtifactStub(),
                 Lists.newArrayList(new AndroidArtifactStub()),
                 Lists.newArrayList(new JavaArtifactStub()),
-                buildType,
-                productFlavors,
+                "buildType",
+                Lists.newArrayList("flavor"),
                 new ProductFlavorStub(),
                 Lists.newArrayList(new TestedTargetVariantStub()));
     }
@@ -128,10 +119,6 @@ public class VariantStub extends BaseStub implements Variant {
     @NonNull
     public Collection<TestedTargetVariant> getTestedTargetVariants() {
         return myTestedTargetVariants;
-    }
-
-    public void addProductFlavors(@NonNull String... flavorNames) {
-        myProductFlavors.addAll(Arrays.asList(flavorNames));
     }
 
     @Override

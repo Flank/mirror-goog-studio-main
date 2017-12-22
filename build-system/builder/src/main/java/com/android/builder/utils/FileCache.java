@@ -641,12 +641,11 @@ public class FileCache {
 
                         if (cacheEntryDir.lastModified() <= lastTimestamp) {
                             FileUtils.deletePath(cacheEntryDir);
-                            // Also delete the lock file if it exists
-                            FileUtils.deleteIfExists(
-                                    new File(
-                                            cacheEntryDir.getParentFile(),
-                                            cacheEntryDir.getName()
-                                                    + SynchronizedFile.LOCK_FILE_EXTENSION));
+                            // Also delete the lock file in the case of MULTI_PROCESS locking
+                            if (lockingScope == LockingScope.MULTI_PROCESS) {
+                                FileUtils.deleteIfExists(
+                                        SynchronizedFile.getLockFile(cacheEntryDir));
+                            }
                         }
                     }
                 }

@@ -18,14 +18,6 @@ package com.android.sdklib.internal.build;
 
 import com.android.SdkConstants;
 import com.android.sdklib.internal.build.SignedJarBuilder.IZipEntryFilter.ZipAbortException;
-
-import sun.misc.BASE64Encoder;
-import sun.security.pkcs.ContentInfo;
-import sun.security.pkcs.PKCS7;
-import sun.security.pkcs.SignerInfo;
-import sun.security.x509.AlgorithmId;
-import sun.security.x509.X500Name;
-
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -51,11 +43,17 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import sun.misc.BASE64Encoder;
+import sun.security.pkcs.ContentInfo;
+import sun.security.pkcs.PKCS7;
+import sun.security.pkcs.SignerInfo;
+import sun.security.x509.AlgorithmId;
+import sun.security.x509.X500Name;
 
 /**
  * A Jar file builder with signature support.
- * 
- * @deprecated Use Android-Builder instead
+ *
+ * @deprecated This class is obsolete and will be deleted EOY2018
  */
 @Deprecated
 public class SignedJarBuilder {
@@ -163,6 +161,8 @@ public class SignedJarBuilder {
      */
     public SignedJarBuilder(OutputStream out, PrivateKey key, X509Certificate certificate)
             throws IOException, NoSuchAlgorithmException {
+        System.err.println(
+                "SignedJarBuilder is deprecated and will be removed from sdklib at the end of 2018");
         mOutputJar = new JarOutputStream(new BufferedOutputStream(out));
         mOutputJar.setLevel(9);
         mKey = key;

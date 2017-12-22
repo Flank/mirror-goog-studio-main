@@ -16,9 +16,10 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
-import com.android.build.gradle.internal.scope.PackagingScope
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.testutils.truth.MoreTruth.assertThat
 import com.android.utils.StringHelper
 import com.google.common.hash.Hashing
@@ -67,7 +68,9 @@ class ValidateSigningTaskTest {
     var mockitoJUnit = MockitoJUnit.rule()!!
 
     @Mock
-    lateinit var packagingScope: PackagingScope
+    lateinit var variantScope: VariantScope
+    @Mock
+    lateinit var variantConfiguration : GradleVariantConfiguration
 
     private lateinit var defaultDebugKeystore: File
 
@@ -77,18 +80,19 @@ class ValidateSigningTaskTest {
     }
 
     fun initPackagingScope(variantName: String) {
-        `when`(packagingScope.fullVariantName).thenReturn(variantName)
-        `when`(packagingScope.getTaskName("validateSigning"))
+        `when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
+        `when`(variantScope.fullVariantName).thenReturn(variantName)
+        `when`(variantScope.getTaskName("validateSigning"))
                 .thenReturn("validateSigning" + StringHelper.capitalize(variantName))
-        `when`(packagingScope.getIncrementalDir(anyString())).thenReturn(temporaryFolder.newFolder())
+        `when`(variantScope.getIncrementalDir(anyString())).thenReturn(temporaryFolder.newFolder())
     }
 
     @Test
     fun testErrorIfNoKeystoreFileSet() {
         initPackagingScope(variantName = "blueRelease")
-        `when`(packagingScope.signingConfig).thenReturn(SigningConfig("release"))
+        `when`(variantConfiguration.signingConfig).thenReturn(SigningConfig("release"))
         val configAction =
-                ValidateSigningTask.ConfigAction(packagingScope, defaultDebugKeystore)
+                ValidateSigningTask.ConfigAction(variantScope, defaultDebugKeystore)
         val task = project!!.tasks
                 .create(configAction.name, configAction.type, configAction)
         assertThat(task.forceRerun()).named("forceRerun").isTrue()
@@ -112,9 +116,9 @@ class ValidateSigningTaskTest {
         dslSigningConfig.keyAlias = "key alias"
         dslSigningConfig.keyPassword = "key password"
         assertThat(dslSigningConfig.isSigningReady).named("signing is ready").isTrue()
-        `when`(packagingScope.signingConfig).thenReturn(dslSigningConfig)
+        `when`(variantConfiguration.signingConfig).thenReturn(dslSigningConfig)
         val configAction =
-                ValidateSigningTask.ConfigAction(packagingScope, defaultDebugKeystore)
+                ValidateSigningTask.ConfigAction(variantScope, defaultDebugKeystore)
         val task = project!!.tasks
                 .create(configAction.name, configAction.type, configAction)
         assertThat(task.forceRerun()).named("forceRerun").isTrue()
@@ -134,9 +138,9 @@ class ValidateSigningTaskTest {
         initPackagingScope(variantName = "redDebug")
         val dslSigningConfig =
                 SigningConfigFactory(project!!.objects, defaultDebugKeystore).create("debug")
-        `when`(packagingScope.signingConfig).thenReturn(dslSigningConfig)
+        `when`(variantConfiguration.signingConfig).thenReturn(dslSigningConfig)
         val configAction =
-                ValidateSigningTask.ConfigAction(packagingScope, defaultDebugKeystore)
+                ValidateSigningTask.ConfigAction(variantScope, defaultDebugKeystore)
         val task = project!!.tasks
                 .create(configAction.name, configAction.type, configAction)
 

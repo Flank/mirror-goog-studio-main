@@ -22,10 +22,15 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.android.builder.core.DesugarProcessArgs;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import org.gradle.api.Action;
 import org.gradle.process.JavaForkOptions;
 import org.gradle.workers.IsolationMode;
@@ -57,17 +62,17 @@ public class DesugarWorkerItemTest {
     }
 
     @Test
-    public void testWorkerConfiguration() {
-        DesugarWorkerItem workerItem =
-                new DesugarWorkerItem(
-                        java8SupportJar,
-                        temporaryFolder.getRoot().toPath(),
+    public void testWorkerConfiguration() throws IOException {
+        DesugarProcessArgs args =
+                new DesugarProcessArgs(
+                        ImmutableMap.of("/dev/null", "/dev/null"),
+                        ImmutableList.of(),
+                        ImmutableList.of(),
+                        temporaryFolder.newFolder().toString(),
                         true,
-                        Paths.get("/dev/null"),
-                        Paths.get("/dev/null"),
-                        ImmutableList.of(),
-                        ImmutableList.of(),
                         21);
+        DesugarWorkerItem workerItem =
+                new DesugarWorkerItem(java8SupportJar, args, temporaryFolder.getRoot().toPath());
 
         when(workerConfiguration.getForkOptions()).thenReturn(options);
         doAnswer(
@@ -91,29 +96,34 @@ public class DesugarWorkerItemTest {
         forOptionsCaptor.getValue().execute(options);
         verify(workerConfiguration).setIsolationMode(IsolationMode.PROCESS);
 
-        verify(workerConfiguration)
-                .setParams(
-                        Paths.get("/dev/null").toString(),
-                        Paths.get("/dev/null").toString(),
-                        ImmutableList.of(),
-                        ImmutableList.of(),
-                        21,
-                        true);
+        List<String> params =
+                Arrays.asList(
+                        "--verbose",
+                        "--input",
+                        "/dev/null",
+                        "--output",
+                        "/dev/null",
+                        "--min_sdk_version",
+                        "21",
+                        "--nodesugar_try_with_resources_if_needed",
+                        "--desugar_try_with_resources_omit_runtime_classes",
+                        "--legacy_jacoco_fix");
+        verify(workerConfiguration).setParams(params);
     }
 
     @Test
-    public void testClasspath() {
+    public void testClasspath() throws IOException {
+        DesugarProcessArgs args =
+                new DesugarProcessArgs(
+                        ImmutableMap.of("/dev/null", "/dev/null"),
+                        ImmutableList.of("path/to/1.jar", "path/to/2.jar"),
+                        ImmutableList.of(),
+                        temporaryFolder.newFolder().toString(),
+                        true,
+                        21);
 
         DesugarWorkerItem workerItem =
-                new DesugarWorkerItem(
-                        java8SupportJar,
-                        temporaryFolder.getRoot().toPath(),
-                        true,
-                        Paths.get("/dev/null"),
-                        Paths.get("/dev/null"),
-                        ImmutableList.of(Paths.get("path/to/1.jar"), Paths.get("path/to/2.jar")),
-                        ImmutableList.of(),
-                        21);
+                new DesugarWorkerItem(java8SupportJar, args, temporaryFolder.getRoot().toPath());
 
         doNothing().when(workerConfiguration).classpath(classpathCaptor.capture());
         workerItem.configure(workerConfiguration);
@@ -122,26 +132,31 @@ public class DesugarWorkerItemTest {
     }
 
     @Test
-    public void testParameters() {
-        DesugarWorkerItem workerItem =
-                new DesugarWorkerItem(
-                        java8SupportJar,
-                        temporaryFolder.getRoot().toPath(),
+    public void testParameters() throws IOException {
+        DesugarProcessArgs args =
+                new DesugarProcessArgs(
+                        ImmutableMap.of("/dev/null", "/dev/null"),
+                        ImmutableList.of(),
+                        ImmutableList.of(),
+                        temporaryFolder.newFolder().toString(),
                         false,
-                        Paths.get("/dev/null"),
-                        Paths.get("/dev/null"),
-                        ImmutableList.of(),
-                        ImmutableList.of(),
                         23);
+
+        DesugarWorkerItem workerItem =
+                new DesugarWorkerItem(java8SupportJar, args, temporaryFolder.getRoot().toPath());
         workerItem.configure(workerConfiguration);
 
-        verify(workerConfiguration)
-                .setParams(
-                        Paths.get("/dev/null").toString(),
-                        Paths.get("/dev/null").toString(),
-                        ImmutableList.of(),
-                        ImmutableList.of(),
-                        23,
-                        false);
+        List<String> params =
+                Arrays.asList(
+                        "--input",
+                        "/dev/null",
+                        "--output",
+                        "/dev/null",
+                        "--min_sdk_version",
+                        "23",
+                        "--nodesugar_try_with_resources_if_needed",
+                        "--desugar_try_with_resources_omit_runtime_classes",
+                        "--legacy_jacoco_fix");
+        verify(workerConfiguration).setParams(params);
     }
 }

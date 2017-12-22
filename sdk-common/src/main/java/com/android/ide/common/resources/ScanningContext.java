@@ -17,7 +17,6 @@ package com.android.ide.common.resources;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,25 +26,15 @@ import java.util.List;
  * so on.
  */
 public class ScanningContext {
-    protected final ResourceRepository mRepository;
     private boolean mNeedsFullAapt;
-    private List<String> mErrors = null;
+    private List<String> mErrors;
 
-    /**
-     * Constructs a new {@link ScanningContext}
-     *
-     * @param repository the associated resource repository
-     */
-    public ScanningContext(@NonNull ResourceRepository repository) {
+    /** Constructs a new {@link ScanningContext} */
+    public ScanningContext() {
         super();
-        mRepository = repository;
     }
 
-    /**
-     * Returns a list of errors encountered during scanning
-     *
-     * @return a list of errors encountered during scanning (or null)
-     */
+    /** Returns a list of errors encountered during scanning, or null if there were no errors. */
     @Nullable
     public List<String> getErrors() {
         return mErrors;
@@ -61,19 +50,9 @@ public class ScanningContext {
      */
     public void addError(@NonNull String error) {
         if (mErrors == null) {
-            mErrors = new ArrayList<String>();
+            mErrors = new ArrayList<>();
         }
         mErrors.add(error);
-    }
-
-    /**
-     * Returns the repository associated with this scanning context
-     *
-     * @return the associated repository, never null
-     */
-    @NonNull
-    public ResourceRepository getRepository() {
-        return mRepository;
     }
 
     /**

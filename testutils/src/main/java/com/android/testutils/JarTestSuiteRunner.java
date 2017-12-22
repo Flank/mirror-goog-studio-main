@@ -19,19 +19,24 @@ package com.android.testutils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -82,15 +87,46 @@ public class JarTestSuiteRunner extends Suite {
         if (name != null) {
             final ClassLoader loader = JarTestSuite.class.getClassLoader();
             if (loader instanceof URLClassLoader) {
-                for (URL url : ((URLClassLoader) loader).getURLs()) {
+                Queue<URL> urls = new ArrayDeque<>();
+                urls.addAll(Arrays.asList(((URLClassLoader)loader).getURLs()));
+                while (!urls.isEmpty()) {
+                    URL url = urls.remove();
                     if (url.getPath().endsWith(name)) {
                         testClasses.addAll(getTestClasses(url, loader));
                     }
+                    addManifestClassPath(url, urls);
                 }
             }
             excludeClassNames.addAll(classNamesToExclude(suiteClass, testClasses));
         }
         return testClasses.stream().filter(c -> !excludeClassNames.contains(c.getCanonicalName())).toArray(Class<?>[]::new);
+    }
+
+    private static void addManifestClassPath(URL jarUrl, Queue<URL> urls) throws IOException {
+        if (jarUrl.getPath().endsWith(".jar")) {
+            File file = new File(jarUrl.getFile());
+            try (ZipFile zipFile = new ZipFile(file)) {
+                ZipEntry entry = zipFile.getEntry("META-INF/MANIFEST.MF");
+                if (entry != null) {
+                    try (InputStream is = zipFile.getInputStream(entry)) {
+                        Manifest manifest = new Manifest(is);
+                        Attributes attributes = manifest.getMainAttributes();
+                        String cp = attributes.getValue("Class-Path");
+                        if (cp != null) {
+                            String[] paths = cp.split(" ");
+                            for (String path : paths) {
+                                try {
+                                    URL url = new URL(path);
+                                    urls.add(url);
+                                } catch (MalformedURLException e) {
+                                    // We ignore relative paths
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /** Putatively temporary mechanism to avoid running certain classes. */

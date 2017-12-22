@@ -62,7 +62,6 @@ import java.util.TreeSet;
  *
  */
 public abstract class ResourceRepository {
-
     private final IAbstractFolder mResourceFolder;
 
     protected Map<ResourceFolderType, List<ResourceFolder>> mFolderMap =
@@ -117,7 +116,7 @@ public abstract class ResourceRepository {
      */
     public synchronized boolean ensureInitialized() {
         if (mCleared && !mInitializing) {
-            ScanningContext context = new ScanningContext(this);
+            ScanningContext context = new ScanningContext();
             mInitializing = true;
 
             IAbstractResource[] resources = mResourceFolder.listMembers();

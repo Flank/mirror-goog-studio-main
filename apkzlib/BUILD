@@ -7,7 +7,7 @@ java_library(
     ]),
     visibility = ["//tools/base/build-system/builder:__pkg__"],
     deps = [
-        "//tools/base/build-system:tools.apksig",
+        "//tools/apksig",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",

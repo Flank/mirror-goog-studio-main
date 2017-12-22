@@ -18,7 +18,6 @@ package com.android.ide.common.gradle.model.stubs;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.*;
-import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -27,6 +26,7 @@ import java.util.*;
 
 public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArtifact {
     @NonNull private final Collection<AndroidArtifactOutput> myOutputs;
+    @NonNull private final String myApplicationId;
     @NonNull private final String mySourceGenTaskName;
     @NonNull private final Collection<File> myGeneratedResourceFolders = new ArrayList<>();
     @NonNull private final Collection<File> myAdditionalRuntimeApks;
@@ -38,78 +38,49 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @Nullable private final Set<String> myAbiFilters;
     @Nullable private final Collection<NativeLibrary> myNativeLibraries;
     @Nullable private final String myInstrumentedTestTaskName;
-
     private final boolean mySigned;
 
-    @NonNull private String myApplicationId;
-
     public AndroidArtifactStub() {
-        myOutputs = Lists.newArrayList(new AndroidArtifactOutputStub());
-        myApplicationId = "applicationId";
-        mySourceGenTaskName = "sourceGenTaskName";
-        myBuildConfigFields = ImmutableMap.of("buildConfigField", new ClassFieldStub());
-        myResValues = ImmutableMap.of("resValue", new ClassFieldStub());
-        myInstantRun = new InstantRunStub();
-        mySigningConfigName = "signingConfigName";
-        myAbiFilters = Sets.newHashSet("filter");
-        myNativeLibraries = Lists.newArrayList(new NativeLibraryStub());
-        myAdditionalRuntimeApks = Collections.emptyList();
-        myTestOptions = new TestOptionsStub();
-        myInstrumentedTestTaskName = "instrumentedTestsTaskName";
-        mySigned = true;
+        this(
+                Lists.newArrayList(new AndroidArtifactOutputStub()),
+                "applicationId",
+                "sourceGenTaskName",
+                ImmutableMap.of("buildConfigField", new ClassFieldStub()),
+                ImmutableMap.of("resValue", new ClassFieldStub()),
+                new InstantRunStub(),
+                "signingConfigName",
+                Sets.newHashSet("filter"),
+                Lists.newArrayList(new NativeLibraryStub()),
+                Collections.emptyList(),
+                new TestOptionsStub(),
+                "instrumentedTestsTaskName",
+                true);
     }
 
     public AndroidArtifactStub(
-            @NonNull String name,
-            @NonNull String compileTaskName,
-            @NonNull String assembleTaskName,
-            @NonNull File classesFolder,
-            @NonNull Set<File> classesFolders,
-            @NonNull File javaResourcesFolder,
-            @NonNull Dependencies dependencies,
-            @NonNull Dependencies compileDependencies,
-            @NonNull DependencyGraphs graphs,
-            @NonNull Set<String> ideSetupTaskNames,
-            @NonNull Collection<File> generatedSourceFolders,
             @NonNull Collection<AndroidArtifactOutput> outputs,
             @NonNull String applicationId,
             @NonNull String sourceGenTaskName,
             @NonNull Map<String, ClassField> buildConfigFields,
             @NonNull Map<String, ClassField> resValues,
-            @NonNull InstantRun instantRun,
-            @NonNull Collection<File> additionalRuntimeApks,
-            @Nullable SourceProvider variantSourceProvider,
-            @Nullable SourceProvider multiFlavorSourceProvider,
+            @NonNull InstantRun run,
             @Nullable String signingConfigName,
             @Nullable Set<String> filters,
             @Nullable Collection<NativeLibrary> libraries,
+            @NonNull Collection<File> apks,
             @Nullable TestOptions testOptions,
             @Nullable String instrumentedTestTaskName,
             boolean signed) {
-        super(
-                name,
-                compileTaskName,
-                assembleTaskName,
-                classesFolder,
-                classesFolders,
-                javaResourcesFolder,
-                dependencies,
-                compileDependencies,
-                graphs,
-                ideSetupTaskNames,
-                generatedSourceFolders,
-                variantSourceProvider,
-                multiFlavorSourceProvider);
         myOutputs = outputs;
         myApplicationId = applicationId;
         mySourceGenTaskName = sourceGenTaskName;
         myBuildConfigFields = buildConfigFields;
         myResValues = resValues;
-        myInstantRun = instantRun;
+        myInstantRun = run;
         mySigningConfigName = signingConfigName;
         myAbiFilters = filters;
         myNativeLibraries = libraries;
-        myAdditionalRuntimeApks = additionalRuntimeApks;
+        myAdditionalRuntimeApks = apks;
         myTestOptions = testOptions;
         myInstrumentedTestTaskName = instrumentedTestTaskName;
         mySigned = signed;
@@ -125,10 +96,6 @@ public class AndroidArtifactStub extends BaseArtifactStub implements AndroidArti
     @NonNull
     public String getApplicationId() {
         return myApplicationId;
-    }
-
-    public void setApplicationId(@NonNull String applicationId) {
-        myApplicationId = applicationId;
     }
 
     @Override

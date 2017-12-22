@@ -27,7 +27,6 @@ import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.utils.SdkUtils;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,15 +34,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Resource Folder class. Contains list of {@link ResourceFile}s,
+ * Represents a resource folder. Contains list of {@link ResourceFile}s,
  * the {@link FolderConfiguration}, and a link to the {@link IAbstractFolder} object.
  */
 public final class ResourceFolder implements Configurable {
     final ResourceFolderType mType;
     final FolderConfiguration mConfiguration;
     IAbstractFolder mFolder;
-    List<ResourceFile> mFiles = null;
-    Map<String, ResourceFile> mNames = null;
+    List<ResourceFile> mFiles;
+    Map<String, ResourceFile> mNames;
     private final ResourceRepository mRepository;
 
     /**
@@ -309,7 +308,7 @@ public final class ResourceFolder implements Configurable {
         IAbstractFile file = mFolder.getFile(filename);
         if (file != null && file.exists()) {
             ResourceFile resFile = createResourceFile(file);
-            resFile.load(new ScanningContext(mRepository));
+            resFile.load(new ScanningContext());
             addFile(resFile);
             return resFile;
         }

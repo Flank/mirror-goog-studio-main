@@ -28,12 +28,11 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
-import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -309,8 +308,6 @@ public class ApplicationTaskManager extends TaskManager {
         variantScope.getInstantRunTaskManager()
                         .configureBuildInfoWriterTask(buildInfoGeneratorTask);
 
-        PackagingScope packagingScope = new DefaultGradlePackagingScope(variantScope);
-
         TaskOutputHolder.TaskOutputType resourcesWithMainManifest =
                 variantScope.getInstantRunBuildContext().useSeparateApkForResources()
                         ? TaskOutputHolder.TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES
@@ -325,12 +322,12 @@ public class ApplicationTaskManager extends TaskManager {
                         variantScope.getGlobalScope().getAndroidBuilder(),
                         variantScope.getGlobalScope().getBuildCache(),
                         variantScope.getVariantConfiguration().getApplicationId(),
-                        packagingScope.getSigningConfig(),
+                        variantScope.getVariantConfiguration().getSigningConfig(),
                         AaptGeneration.fromProjectOptions(projectOptions),
-                        packagingScope.getAaptOptions(),
-                        new File(packagingScope.getInstantRunSplitApkOutputFolder(), "dep"),
+                        DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions()),
+                        new File(variantScope.getInstantRunSplitApkOutputFolder(), "dep"),
                         new File(
-                                packagingScope.getIncrementalDir("ir_dep"),
+                                variantScope.getIncrementalDir("ir_dep"),
                                 variantScope.getDirName()),
                         new File(
                                 getIncrementalFolder(
@@ -347,7 +344,7 @@ public class ApplicationTaskManager extends TaskManager {
                         .addTransform(taskFactory, variantScope, dependenciesApkBuilder);
 
         dependenciesApkBuilderTask.ifPresent(
-                task -> task.dependsOn(getValidateSigningTask(packagingScope)));
+                task -> task.dependsOn(getValidateSigningTask(variantScope)));
 
         // and now the transform that will create a split FULL_APK for each slice.
         InstantRunSliceSplitApkBuilder slicesApkBuilder =
@@ -358,10 +355,10 @@ public class ApplicationTaskManager extends TaskManager {
                         variantScope.getGlobalScope().getAndroidBuilder(),
                         variantScope.getGlobalScope().getBuildCache(),
                         variantScope.getVariantConfiguration().getApplicationId(),
-                        packagingScope.getSigningConfig(),
+                        variantScope.getVariantConfiguration().getSigningConfig(),
                         AaptGeneration.fromProjectOptions(projectOptions),
-                        packagingScope.getAaptOptions(),
-                        new File(packagingScope.getInstantRunSplitApkOutputFolder(), "slices"),
+                        DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions()),
+                        new File(variantScope.getInstantRunSplitApkOutputFolder(), "slices"),
                         getIncrementalFolder(variantScope, "ir_slices"),
                         new File(
                                 getIncrementalFolder(
@@ -380,7 +377,7 @@ public class ApplicationTaskManager extends TaskManager {
 
         if (transformTaskAndroidTask.isPresent()) {
             TransformTask splitApk = transformTaskAndroidTask.get();
-            splitApk.dependsOn(getValidateSigningTask(packagingScope));
+            splitApk.dependsOn(getValidateSigningTask(variantScope));
             variantScope.getAssembleTask().dependsOn(splitApk);
             buildInfoGeneratorTask.mustRunAfter(splitApk.getName());
         }

@@ -822,22 +822,19 @@ public class FileCacheTest {
         // Make the first cache entry look as if it was created 60 days ago
         fileCache.createFileInCacheIfAbsent(inputs1, (outputFile) -> {});
         File cacheEntryDir1 = fileCache.getFileInCache(inputs1).getParentFile();
-        File lockFile1 =
-                new File(cacheDir, cacheEntryDir1.getName() + SynchronizedFile.LOCK_FILE_EXTENSION);
+        File lockFile1 = SynchronizedFile.getLockFile(cacheEntryDir1);
         cacheEntryDir1.setLastModified(System.currentTimeMillis() - Duration.ofDays(60).toMillis());
 
         // Make the second cache entry look as if it was created 30 days ago
         fileCache.createFileInCacheIfAbsent(inputs2, (outputFile) -> {});
         File cacheEntryDir2 = fileCache.getFileInCache(inputs2).getParentFile();
-        File lockFile2 =
-                new File(cacheDir, cacheEntryDir2.getName() + SynchronizedFile.LOCK_FILE_EXTENSION);
+        File lockFile2 = SynchronizedFile.getLockFile(cacheEntryDir2);
         cacheEntryDir2.setLastModified(System.currentTimeMillis() - Duration.ofDays(30).toMillis());
 
         // Make the third cache entry without modifying its timestamp
         fileCache.createFileInCacheIfAbsent(inputs3, (outputFile) -> {});
         File cacheEntryDir3 = fileCache.getFileInCache(inputs3).getParentFile();
-        File lockFile3 =
-                new File(cacheDir, cacheEntryDir3.getName() + SynchronizedFile.LOCK_FILE_EXTENSION);
+        File lockFile3 = SynchronizedFile.getLockFile(cacheEntryDir3);
 
         // Create some random directory inside the cache directory and make sure it won't be deleted
         File notDeletedDir = new File(fileCache.getCacheDirectory(), "foo");

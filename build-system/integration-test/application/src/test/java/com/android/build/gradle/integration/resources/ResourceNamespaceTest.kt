@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.testutils.apk.Dex
 import org.junit.Rule
 import org.junit.Test
@@ -178,6 +179,7 @@ class ResourceNamespaceTest {
 
     @Test
     fun smokeTest() {
+        AssumeUtil.assumeNotWindowsBot() // https://issuetracker.google.com/70931936
         project.executor()
                 .run(
                     ":lib:assembleDebug",

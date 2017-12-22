@@ -22,7 +22,6 @@ import com.android.sdklib.internal.build.DebugKeyProvider.IKeyGenOutput;
 import com.android.sdklib.internal.build.DebugKeyProvider.KeytoolException;
 import com.android.sdklib.internal.build.SignedJarBuilder;
 import com.android.sdklib.internal.build.SignedJarBuilder.IZipEntryFilter;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -39,14 +38,13 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Class making the final apk packaging.
- * The inputs are:
- * - packaged resources (output of aapt)
- * - code file (output of dx)
- * - Java resources coming from the project, its libraries, and its jar files
- * - Native libraries from the project or its library.
+ * Class making the final apk packaging. The inputs are: - packaged resources (output of aapt) -
+ * code file (output of dx) - Java resources coming from the project, its libraries, and its jar
+ * files - Native libraries from the project or its library.
  *
+ * @deprecated This class is obsolete and will be deleted EOY2018
  */
+@Deprecated
 public final class ApkBuilder implements IArchiveBuilder {
 
     private static final Pattern PATTERN_NATIVELIB_EXT = Pattern.compile("^.+\\.so$",
@@ -240,6 +238,8 @@ public final class ApkBuilder implements IArchiveBuilder {
      */
     public static SigningInfo getDebugKey(String storeOsPath, final PrintStream verboseStream)
             throws ApkCreationException {
+        System.err.println(
+                "ApkBuilder is deprecated and will be removed from sdklib at the end of 2018");
         try {
             if (storeOsPath != null) {
                 File storeFile = new File(storeOsPath);
@@ -432,6 +432,8 @@ public final class ApkBuilder implements IArchiveBuilder {
      */
     private void init(File apkFile, File resFile, File dexFile, PrivateKey key,
             X509Certificate certificate, PrintStream verboseStream) throws ApkCreationException {
+        System.err.println(
+                "ApkBuilder is deprecated and will be removed from sdklib at the end of 2018");
 
         try {
             checkOutputFile(mApkFile = apkFile);
@@ -614,6 +616,8 @@ public final class ApkBuilder implements IArchiveBuilder {
      */
     public static void addSourceFolder(IArchiveBuilder builder, File sourceFolder)
             throws ApkCreationException, DuplicateFileException {
+        System.err.println(
+                "ApkBuilder is deprecated and will be removed from sdklib at the end of 2018");
         if (sourceFolder.isDirectory()) {
             try {
                 // file is a directory, process its content.
@@ -733,6 +737,8 @@ public final class ApkBuilder implements IArchiveBuilder {
 
     public static List<FileEntry> getNativeFiles(File nativeFolder, boolean debugMode)
             throws ApkCreationException  {
+        System.err.println(
+                "ApkBuilder is deprecated and will be removed from sdklib at the end of 2018");
 
         if (!nativeFolder.isDirectory()) {
             // not a directory? check if it's a file or doesn't exist
@@ -940,6 +946,8 @@ public final class ApkBuilder implements IArchiveBuilder {
     }
 
     public static String getDebugKeystore() throws ApkCreationException {
+        System.err.println(
+                "ApkBuilder is deprecated and will be removed from sdklib at the end of 2018");
         try {
             return DebugKeyProvider.getDefaultKeyStoreOsPath();
         } catch (Exception e) {
@@ -953,6 +961,8 @@ public final class ApkBuilder implements IArchiveBuilder {
      * @param folderName the name of the folder.
      */
     public static boolean checkFolderForPackaging(String folderName) {
+        System.err.println(
+                "ApkBuilder is deprecated and will be removed from sdklib at the end of 2018");
         return !folderName.equalsIgnoreCase("CVS") &&
                 !folderName.equalsIgnoreCase(".svn") &&
                 !folderName.equalsIgnoreCase("SCCS") &&
@@ -966,6 +976,8 @@ public final class ApkBuilder implements IArchiveBuilder {
      * @return true if the file should be packaged as standard java resources.
      */
     public static boolean checkFileForPackaging(String fileName) {
+        System.err.println(
+                "ApkBuilder is deprecated and will be removed from sdklib at the end of 2018");
         String[] fileSegments = fileName.split("\\.");
         String fileExt = "";
         if (fileSegments.length > 1) {

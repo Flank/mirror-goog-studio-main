@@ -26,7 +26,6 @@ import com.android.annotations.Nullable;
 import com.android.sdklib.BuildToolInfo;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,7 +36,10 @@ import java.util.Map;
 
 /**
  * Compiles Renderscript files.
+ *
+ * @deprecated This class is obsolete and will be deleted EOY2018
  */
+@Deprecated
 public class RenderScriptProcessor {
 
     private static final String LIBCLCORE_BC = "libclcore.bc";
@@ -134,6 +136,8 @@ public class RenderScriptProcessor {
             boolean debugBuild,
             int optimLevel,
             boolean supportMode) {
+        System.err.println(
+                "RenderScriptProcessor is deprecated and will be removed from sdklib at the end of 2018");
         mInputs = inputs;
         mImportFolders = importFolders;
         mBuildFolder = buildFolder;

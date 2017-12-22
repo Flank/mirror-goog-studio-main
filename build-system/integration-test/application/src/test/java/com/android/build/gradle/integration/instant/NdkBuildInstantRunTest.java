@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.options.StringOption;
@@ -71,6 +72,7 @@ public class NdkBuildInstantRunTest {
 
     @Test
     public void checkHotSwapBuild() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null))
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
@@ -101,6 +103,7 @@ public class NdkBuildInstantRunTest {
 
     @Test
     public void checkFullBuildIsTriggered() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null))
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")

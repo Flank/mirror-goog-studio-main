@@ -106,7 +106,7 @@ public final class SynchronizedFile {
         EXCLUSIVE
     }
 
-    @NonNull public static final String LOCK_FILE_EXTENSION = ".lock";
+    @NonNull private static final String LOCK_FILE_EXTENSION = ".lock";
 
     /** The file whose access will be synchronized. */
     @NonNull private final File fileToSynchronize;
@@ -138,11 +138,9 @@ public final class SynchronizedFile {
         this.lockingScope = lockingScope;
 
         if (lockingScope == LockingScope.MULTI_PROCESS) {
-            // Use a lock file that is unique to the file being synchronized
-            File lockFile =
-                    new File(
-                            fileToSynchronize.getParent(),
-                            fileToSynchronize.getName() + LOCK_FILE_EXTENSION);
+            // Since the file's path has been normalized, there is a 1-1 correspondence between the
+            // file being synchronized and the lock file
+            File lockFile = getLockFile(fileToSynchronize);
 
             this.readWriteProcessLock = new ReadWriteProcessLock(lockFile.toPath());
             this.readWriteThreadLock = null;
@@ -209,6 +207,19 @@ public final class SynchronizedFile {
     public static SynchronizedFile getInstanceWithSingleProcessLocking(
             @NonNull File fileToSynchronize) {
         return new SynchronizedFile(fileToSynchronize, LockingScope.SINGLE_PROCESS);
+    }
+
+    /**
+     * Returns the path to the lock file that has been or will be created next to the file being
+     * synchronized under the same parent directory.
+     *
+     * @param fileToSynchronize the file whose access is synchronized, which may not yet exist
+     * @return the lock file, which may not yet exist
+     */
+    @NonNull
+    public static File getLockFile(@NonNull File fileToSynchronize) {
+        return new File(
+                fileToSynchronize.getParent(), fileToSynchronize.getName() + LOCK_FILE_EXTENSION);
     }
 
     /**

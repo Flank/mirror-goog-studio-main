@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilder;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantAppProjectBuildOutput;
@@ -55,6 +56,7 @@ public class FeatureAndAbiPureSplitsTest {
 
     @Test
     public void buildAndCheckModel() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         // Build all the things.
         sProject.executor().withEnabledAapt2(true).run("clean", "assembleDebug");
 
@@ -151,6 +153,7 @@ public class FeatureAndAbiPureSplitsTest {
 
     @Test
     public void buildSigned() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         // Add signing configuration to the release variant.
         String signingConfig =
                 "\n"
@@ -231,6 +234,7 @@ public class FeatureAndAbiPureSplitsTest {
 
     @Test
     public void testSplitConfigurationWarning() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         TestFileUtils.searchAndReplace(
                 sProject.getSubproject(":feature_a").getBuildFile(),
                 "generatePureSplits true",

@@ -156,7 +156,8 @@ public final class ReadWriteProcessLock {
      * lock file only when the locking mechanism is no longer in use.
      *
      * <p>This constructor will normalize the lock file's path first to detect same physical files
-     * via equals(), so the client does not need to normalize the file's path in advance.
+     * via equals(). However, it is still recommended that the client normalize the file's path in
+     * advance before calling this constructor.
      *
      * @param lockFile the lock file, used solely for synchronization purposes; it may not yet
      *     exist, but its parent directory must exist

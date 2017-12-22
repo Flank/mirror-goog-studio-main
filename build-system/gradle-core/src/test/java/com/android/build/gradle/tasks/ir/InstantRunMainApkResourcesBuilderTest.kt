@@ -22,10 +22,8 @@ import com.android.build.gradle.internal.scope.BuildOutputs
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
-import com.android.build.gradle.internal.scope.PackagingScope
 import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.utils.FileCache
 import com.android.ide.common.build.ApkData

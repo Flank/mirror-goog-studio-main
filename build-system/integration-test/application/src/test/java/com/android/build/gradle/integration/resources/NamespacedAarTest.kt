@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.resources
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.utils.AssumeUtil
 import org.junit.Rule
 import org.junit.Test
 
@@ -107,6 +108,7 @@ class NamespacedAarTest {
 
     @Test
     fun checkBuilds() {
+        AssumeUtil.assumeNotWindowsBot() // https://issuetracker.google.com/70931936
         project.executor().run(":publishedLib:assembleRelease")
         project.executor().run(":lib:assembleDebug", ":app:assembleDebug")
 

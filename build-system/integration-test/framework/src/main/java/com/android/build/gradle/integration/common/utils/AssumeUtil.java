@@ -57,6 +57,12 @@ public class AssumeUtil {
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
     }
 
+    public static void assumeNotWindowsBot() {
+        Assume.assumeFalse(
+                SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS
+                        && System.getenv("BUILDBOT_BUILDERNAME") != null);
+    }
+
     public static void assumeIsLinux() {
         Assume.assumeTrue(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_LINUX);
     }

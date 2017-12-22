@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.NativeAndroidProject;
@@ -57,6 +58,7 @@ public class NdkBuildJniLibTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         new File(project.getTestDir(), "lib/src/main/jni")
                 .renameTo(new File(project.getTestDir(), "lib/src/main/cxx"));
         GradleTestProject lib = project.getSubproject("lib");

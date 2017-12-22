@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -28,7 +27,10 @@ import java.util.List;
 
 /**
  * Parse a dependency file.
+ *
+ * @deprecated This class is obsolete and will be deleted EOY2018
  */
+@Deprecated
 public class DependencyFile {
 
     @NonNull

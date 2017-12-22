@@ -70,8 +70,8 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
             @NonNull Dependencies dependencies,
             @NonNull Dependencies compileDependencies,
             @NonNull DependencyGraphs graphs,
-            @NonNull Set<String> ideSetupTaskNames,
-            @NonNull Collection<File> generatedSourceFolders,
+            @NonNull Set<String> names,
+            @NonNull Collection<File> folders,
             @Nullable SourceProvider variantSourceProvider,
             @Nullable SourceProvider multiFlavorSourceProvider) {
         myName = name;
@@ -83,8 +83,8 @@ public class BaseArtifactStub extends BaseStub implements BaseArtifact {
         myDependencies = dependencies;
         myCompileDependencies = compileDependencies;
         myDependencyGraphs = graphs;
-        myIdeSetupTaskNames = ideSetupTaskNames;
-        myGeneratedSourceFolders = generatedSourceFolders;
+        myIdeSetupTaskNames = names;
+        myGeneratedSourceFolders = folders;
         myVariantSourceProvider = variantSourceProvider;
         myMultiFlavorSourceProvider = multiFlavorSourceProvider;
     }

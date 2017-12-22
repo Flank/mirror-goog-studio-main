@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.ndk;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -34,6 +35,7 @@ public class NdkJniLibTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug");
     }
 

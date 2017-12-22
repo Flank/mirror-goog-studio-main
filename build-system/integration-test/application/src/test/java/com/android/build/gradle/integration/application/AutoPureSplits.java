@@ -16,10 +16,13 @@ import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
@@ -152,18 +155,24 @@ public class AutoPureSplits {
         VariantBuildOutput debugVariantOutput =
                 ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
 
-        // build a set of expected outputs
-        Set<String> expected = Sets.newHashSetWithExpectedSize(5);
-        expected.add("mdpi");
-        expected.add("hdpi");
-        expected.add("xhdpi");
-        expected.add("xxhdpi");
-        expected.add("en");
-        expected.add("fr,fr-rBE,fr-rCA");
+        // build a map from expected file names to filters
+        Map<String, String> expected = Maps.newHashMapWithExpectedSize(7);
+        final String apkPrefix = "combinedDensityAndLanguagePureSplits";
+        final String apkSuffix = "-debug.apk";
+
+        expected.put(apkPrefix + apkSuffix, null);
+        expected.put(apkPrefix + "-mdpi" + apkSuffix, "mdpi");
+        expected.put(apkPrefix + "-hdpi" + apkSuffix, "hdpi");
+        expected.put(apkPrefix + "-xhdpi" + apkSuffix, "xhdpi");
+        expected.put(apkPrefix + "-xxhdpi" + apkSuffix, "xxhdpi");
+        expected.put(apkPrefix + "-en" + apkSuffix, "en");
+        expected.put(apkPrefix + "-fr" + apkSuffix, "fr,fr-rBE,fr-rCA");
 
         assertThat(debugVariantOutput.getOutputs()).hasSize(7);
-        Set<String> actual = new HashSet<>();
+        Map<String, String> actual = new HashMap<>();
         for (OutputFile outputFile : debugVariantOutput.getOutputs()) {
+            String fileName = outputFile.getOutputFile().getName();
+
             String filter = ModelHelper.getFilter(outputFile, OutputFile.DENSITY);
             if (filter == null) {
                 filter = ModelHelper.getFilter(outputFile, OutputFile.LANGUAGE);
@@ -175,13 +184,11 @@ public class AutoPureSplits {
 
             // with pure splits, all split have the same version code.
             assertEquals(12, outputFile.getVersionCode());
-            if (filter != null) {
-                actual.add(filter);
-            }
+            actual.put(fileName, filter);
 
         }
 
         // this checks we didn't miss any expected output.
-        assertThat(actual).containsExactlyElementsIn(expected);
+        assertThat(actual).isEqualTo(expected);
     }
 }

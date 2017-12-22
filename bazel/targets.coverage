@@ -1,7 +1,6 @@
 //tools/analytics-library/shared:tools.analytics-shared_tests
 //tools/analytics-library/testing:tools.analytics-testing_tests
 //tools/analytics-library/tracker:tools.analytics-tracker_tests
-//tools/base/aaptjlib:aaptjlib_tests
 //tools/base/apkparser/analyzer:tools.tests
 //tools/base/apkparser/cli:tools.tests
 //tools/base/apkparser:tools.tests

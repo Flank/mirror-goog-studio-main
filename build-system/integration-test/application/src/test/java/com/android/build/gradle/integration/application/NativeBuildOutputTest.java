@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
@@ -81,6 +82,7 @@ public class NativeBuildOutputTest {
 
     @Test
     public void checkNdkBuildErrorInSourceCode() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.externalNativeBuild.ndkBuild.path 'src/main/cpp/Android.mk'");
@@ -131,6 +133,7 @@ public class NativeBuildOutputTest {
     // Make sure that the STDOUT of ndk-build -n doesn't appear for the user.
     @Test
     public void checkNdkBuildNoDashNOutput() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.externalNativeBuild.ndkBuild.path 'src/main/cpp/Android.mk'\n");
@@ -224,6 +227,7 @@ public class NativeBuildOutputTest {
     // Only "x86" should be built
     @Test
     public void checkNdkIntersectNativeBuild() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"

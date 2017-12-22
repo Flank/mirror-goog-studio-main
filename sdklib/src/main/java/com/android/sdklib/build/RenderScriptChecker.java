@@ -24,7 +24,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -33,7 +32,10 @@ import java.util.Set;
 
 /**
  * Loads dependencies for Renderscript.
+ *
+ * @deprecated This class is obsolete and will be deleted EOY2018
  */
+@Deprecated
 public class RenderScriptChecker {
 
     @NonNull
@@ -48,6 +50,8 @@ public class RenderScriptChecker {
     public RenderScriptChecker(
             @NonNull List<File> sourceFolders,
             @NonNull File binFolder) {
+        System.err.println(
+                "RenderScriptChecker is deprecated and will be removed from sdklib at the end of 2018");
         mSourceFolders = sourceFolders;
         mBinFolder = binFolder;
     }

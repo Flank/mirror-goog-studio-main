@@ -145,7 +145,7 @@ public class SplitsDiscovery extends AndroidBuilderTask {
                 getFilters(mergedResourcesFolderFiles, DiscoverableFilterType.LANGUAGE),
                 // no need to pass the source folders, we don't support Auto for ABI splits so far.
                 getFilters(ImmutableList.of(), DiscoverableFilterType.ABI),
-                resConfigs);
+                resConfigs.stream().map(SplitList.Filter::new).collect(Collectors.toList()));
     }
 
     /**
@@ -157,7 +157,7 @@ public class SplitsDiscovery extends AndroidBuilderTask {
      * @return a possibly empty list of filter value for this filter type.
      */
     @NonNull
-    private Set<String> getFilters(
+    private List<SplitList.Filter> getFilters(
             @Nullable Iterable<File> resourceFolders, @NonNull DiscoverableFilterType filterType) {
 
         Set<String> filtersList = new HashSet<>();
@@ -167,12 +167,12 @@ public class SplitsDiscovery extends AndroidBuilderTask {
                     "Merged resources must be supplied to perform automatic discovery of splits.");
             filtersList.addAll(getAllFilters(resourceFolders, filterType.folderPrefix));
             if (filterType == DiscoverableFilterType.LANGUAGE && isAapt2Enabled()) {
-                filtersList = mergeFiltersByRootLanguage(filtersList);
+                return mergeFiltersByRootLanguage(filtersList);
             }
         } else {
             filtersList.addAll(filterType.getConfiguredFilters(this));
         }
-        return filtersList;
+        return filtersList.stream().map(SplitList.Filter::new).collect(Collectors.toList());
     }
 
     @NonNull
@@ -217,20 +217,22 @@ public class SplitsDiscovery extends AndroidBuilderTask {
 
 
     @NonNull
-    private static Set<String> mergeFiltersByRootLanguage(@NonNull Collection<String> filters) {
+    private static List<SplitList.Filter> mergeFiltersByRootLanguage(
+            @NonNull Collection<String> filters) {
         // Group the filters by root language, then sort the resulting groups with TreeSets.
         // Then, join the resulting sets of strings with commas to get the merged filters
-        Collection<String> combinedFilters =
-                filters.stream()
-                        .collect(
-                                Collectors.groupingBy(
-                                        SplitsDiscovery::getRootLanguage,
-                                        Collectors.collectingAndThen(
-                                                Collectors.toCollection(TreeSet::new),
-                                                sortedStrings -> String.join(",", sortedStrings))))
-                        .values();
 
-        return new HashSet<>(combinedFilters);
+        return filters.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                SplitsDiscovery::getRootLanguage,
+                                Collectors.collectingAndThen(
+                                        Collectors.toCollection(TreeSet::new),
+                                        sortedStrings -> String.join(",", sortedStrings))))
+                .entrySet()
+                .stream()
+                .map(entry -> new SplitList.Filter(entry.getValue(), entry.getKey()))
+                .collect(Collectors.toList());
     }
 
     @NonNull

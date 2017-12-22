@@ -24,7 +24,7 @@ import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.Objects;
 
-public class BuildTypeContainerStub extends BaseStub implements BuildTypeContainer {
+public final class BuildTypeContainerStub extends BaseStub implements BuildTypeContainer {
     @NonNull private final BuildType myBuildType;
     @NonNull private final SourceProvider mySourceProvider;
     @NonNull private final Collection<SourceProviderContainer> myExtraSourceProviders;

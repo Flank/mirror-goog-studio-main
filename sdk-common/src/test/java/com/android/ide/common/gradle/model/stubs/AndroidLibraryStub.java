@@ -16,15 +16,11 @@
 package com.android.ide.common.gradle.model.stubs;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.MavenCoordinates;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 public class AndroidLibraryStub extends AndroidBundleStub implements AndroidLibrary {
@@ -34,44 +30,18 @@ public class AndroidLibraryStub extends AndroidBundleStub implements AndroidLibr
     @NonNull private final File myPublicResources;
 
     public AndroidLibraryStub() {
-        myLocalJars = Lists.newArrayList(new File("jar"));
-        myProguardRules = new File("proguardRules");
-        myLintJar = new File("lintJar");
-        myPublicResources = new File("publicResources");
+        this(
+                Lists.newArrayList(new File("jar")),
+                new File("proguardRules"),
+                new File("lintJar"),
+                new File("publicResources"));
     }
 
     public AndroidLibraryStub(
             @NonNull Collection<File> jars,
             @NonNull File proguardRules,
             @NonNull File lintJar,
-            @NonNull File publicResources,
-            @NonNull MavenCoordinates coordinates,
-            @NonNull File bundle,
-            @NonNull File folder,
-            @NonNull List<AndroidLibrary> dependencies,
-            @NonNull Collection<JavaLibrary> javaDependencies,
-            @NonNull File manifest,
-            @NonNull File jarFile,
-            @NonNull File resFolder,
-            @NonNull File assetsFolder,
-            @Nullable String project,
-            @Nullable String name,
-            @Nullable String variant,
-            boolean provided) {
-        super(
-                coordinates,
-                bundle,
-                folder,
-                dependencies,
-                javaDependencies,
-                manifest,
-                jarFile,
-                resFolder,
-                assetsFolder,
-                project,
-                name,
-                variant,
-                provided);
+            @NonNull File publicResources) {
         myLocalJars = jars;
         myProguardRules = proguardRules;
         myLintJar = lintJar;
