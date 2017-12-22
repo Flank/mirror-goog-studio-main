@@ -349,6 +349,12 @@ public abstract class BasePlugin<E extends BaseExtension2>
         dataBindingBuilder.setPrintMachineReadableOutput(
                 SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
+        if (projectOptions.hasDeprecatedOptions()) {
+            androidBuilder
+                    .getIssueReporter()
+                    .reportWarning(Type.GENERIC, projectOptions.getDeprecatedOptionsErrorMessage());
+        }
+
         // b/67675308
         if (!projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
             androidBuilder
