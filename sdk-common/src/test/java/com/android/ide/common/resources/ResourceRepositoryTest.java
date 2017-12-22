@@ -31,14 +31,12 @@ import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
+import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
 public class ResourceRepositoryTest extends TestCase {
@@ -249,8 +247,7 @@ public class ResourceRepositoryTest extends TestCase {
 
         ResourceFolder layoutResFolder = mRepository.getResourceFolder(layoutFolder);
         assertNotNull(layoutResFolder);
-        layoutResFolder.processFile(layoutFile,
-                ResourceDeltaKind.REMOVED, new ScanningContext(mRepository));
+        layoutResFolder.processFile(layoutFile, ResourceDeltaKind.REMOVED, new ScanningContext());
 
         mRepository.removeFile(ResourceType.LAYOUT, resourceFile);
 
@@ -272,8 +269,8 @@ public class ResourceRepositoryTest extends TestCase {
         strings = strings.replace("name=\"dummy\"", "name=\"myDummy\"");
         Files.write(strings, stringFile, Charsets.UTF_8);
 
-        folder.processFile(stringResFile.getFile(), ResourceDeltaKind.CHANGED,
-                new ScanningContext(mRepository));
+        folder.processFile(
+                stringResFile.getFile(), ResourceDeltaKind.CHANGED, new ScanningContext());
         assertTrue(mRepository.hasResourceItem("@string/myDummy"));
         assertFalse(mRepository.hasResourceItem("@string/dummy"));
 
@@ -294,8 +291,7 @@ public class ResourceRepositoryTest extends TestCase {
         assertTrue(created);
         IAbstractFile new2 = layoutResFolder.getFolder().getFile("layout6.xml");
         assertNotNull(new2);
-        layoutResFolder.processFile(new2, ResourceDeltaKind.ADDED,
-                new ScanningContext(mRepository));
+        layoutResFolder.processFile(new2, ResourceDeltaKind.ADDED, new ScanningContext());
         assertTrue(mRepository.hasResourceItem("@layout/layout6"));
     }
 
