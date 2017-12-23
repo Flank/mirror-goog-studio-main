@@ -39,6 +39,7 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
@@ -230,11 +231,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -251,6 +254,7 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -3549,7 +3553,8 @@ public abstract class TaskManager {
         return logger;
     }
 
-    public void addDataBindingDependenciesIfNecessary(DataBindingOptions options) {
+    public void addDataBindingDependenciesIfNecessary(
+            DataBindingOptions options, List<VariantScope> variantScopes) {
         if (!options.isEnabled()) {
             return;
         }
@@ -3586,6 +3591,92 @@ public abstract class TaskManager {
                             SdkConstants.DATA_BINDING_ADAPTER_LIB_ARTIFACT
                                     + ":"
                                     + dataBindingBuilder.getBaseAdaptersVersion(version));
+        }
+        project.getPluginManager()
+                .withPlugin(
+                        "org.jetbrains.kotlin.kapt",
+                        appliedPlugin -> {
+                            configureKotlinKaptTasksForDataBinding(project, variantScopes, version);
+                        });
+    }
+
+    private void configureKotlinKaptTasksForDataBinding(
+            Project project, List<VariantScope> variantScopes, String version) {
+        project.getDependencies()
+                .add(
+                        "kapt",
+                        SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" + version);
+        Class<? extends Task> kaptTaskClass = null;
+        try {
+            //noinspection unchecked
+            kaptTaskClass =
+                    (Class<? extends Task>)
+                            Class.forName("org.jetbrains.kotlin.gradle.internal.KaptTask");
+        } catch (ClassNotFoundException e) {
+            logger.error(
+                    "Kotlin plugin is applied to the project "
+                            + project.getPath()
+                            + " but we cannot find the KaptTask. Make sure you apply the"
+                            + " kotlin-kapt plugin because it is necessary to use kotlin"
+                            + " with data binding.");
+        }
+        if (kaptTaskClass == null) {
+            return;
+        }
+        // create a map from kapt task name to variant scope
+        Map<String, VariantScope> kaptTaskLookup =
+                variantScopes
+                        .stream()
+                        .collect(
+                                Collectors.toMap(
+                                        variantScope ->
+                                                variantScope
+                                                        .getVariantData()
+                                                        .getTaskName("kapt", "Kotlin"),
+                                        variantScope -> variantScope));
+        project.getTasks()
+                .withType(
+                        kaptTaskClass,
+                        (Action<Task>)
+                                kaptTask -> {
+                                    // find matching scope.
+                                    VariantScope matchingScope =
+                                            kaptTaskLookup.get(kaptTask.getName());
+                                    if (matchingScope != null) {
+                                        configureKaptTaskInScope(matchingScope, kaptTask);
+                                    }
+                                });
+    }
+
+    private static void configureKaptTaskInScope(VariantScope scope, Task kaptTask) {
+        if (scope.hasOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
+            // if data binding is enabled and this variant has merged dependency artifacts, then
+            // make the compilation task depend on them. (test variants don't do the merge so they
+            // could not have the artifacts)
+            kaptTask.getInputs()
+                    .files(scope.getOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS))
+                    .withPathSensitivity(PathSensitivity.RELATIVE)
+                    .withPropertyName("dataBindingDependencyArtifacts");
+        }
+        if (scope.hasOutput(TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)) {
+            kaptTask.getInputs()
+                    .files(
+                            scope.getOutput(
+                                    TaskOutputHolder.TaskOutputType
+                                            .DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
+                    .withPathSensitivity(PathSensitivity.RELATIVE)
+                    .withPropertyName("dataBindingClassLogDir");
+        }
+        // the data binding artifact is created by the annotation processor, so we register this
+        // task output (which also publishes it) with javac as the generating task.
+        kaptTask.getOutputs()
+                .files(scope.getBundleArtifactFolderForDataBinding())
+                .withPropertyName("dataBindingArtifactOutputDir");
+        if (!scope.hasOutput(TaskOutputHolder.TaskOutputType.DATA_BINDING_ARTIFACT)) {
+            scope.addTaskOutput(
+                    TaskOutputHolder.TaskOutputType.DATA_BINDING_ARTIFACT,
+                    scope.getBundleArtifactFolderForDataBinding(),
+                    kaptTask.getName());
         }
     }
 

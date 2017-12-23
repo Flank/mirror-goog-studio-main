@@ -720,7 +720,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
         // setup SDK repositories.
         sdkHandler.addLocalRepositories(project);
 
-        taskManager.addDataBindingDependenciesIfNecessary(extension.getDataBinding());
         threadRecorder.record(
                 ExecutionType.VARIANT_MANAGER_CREATE_ANDROID_TASKS,
                 project.getPath(),
@@ -737,6 +736,10 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         BaseVariantData variantData = variantScope.getVariantData();
                         apiObjectFactory.create(variantData);
                     }
+                    // must run this after scopes are created so that we can configure kotlin
+                    // kapt tasks
+                    taskManager.addDataBindingDependenciesIfNecessary(
+                            extension.getDataBinding(), variantManager.getVariantScopes());
                 });
 
         // create the global lint task that depends on all the variants
