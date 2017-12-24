@@ -160,7 +160,7 @@ public class BuildCacheUtilsTest {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
-    public void testDeleteOldCacheDirectory() throws Exception {
+    public void testDeleteOldCacheDirectories() throws Exception {
         File sharedCacheDir = testDir.newFolder();
 
         // Make the first cache directory look as if it was created 60 days ago, and not used at all

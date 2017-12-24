@@ -21,9 +21,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -494,6 +494,30 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
         @Override
         public String toString() {
             return mText;
+        }
+    }
+
+    /**
+     * Parses the given string into a {@link GradleVersion} instance if it represents a valid
+     * Android Gradle plugin version, or returns {@code null} otherwise.
+     *
+     * <p>This method is similar to {@link #tryParse(String)} but has stricter constraints on what
+     * will be accepted as a valid Android Gradle plugin version. For example, this method does not
+     * accept "3.1.0.0" as a valid plugin version, but the other method does.
+     *
+     * @param value the string to parse
+     * @return the created {@link GradleVersion} instance, or {@code null} if the given string does
+     *     not represent a valid Android Gradle plugin version.
+     * @see #tryParse(String)
+     */
+    @Nullable
+    public static GradleVersion tryParseAndroidGradlePluginVersion(@NonNull String value) {
+        if (value.matches("\\d+\\.\\d+\\.\\d+(-(((alpha|beta|rc)\\d+)|dev))?")) {
+            // Any string that matches the above pattern is a valid Android Gradle plugin version
+            // and should be parsable by tryParse()
+            return Verify.verifyNotNull(tryParse(value));
+        } else {
+            return null;
         }
     }
 }

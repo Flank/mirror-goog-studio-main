@@ -237,7 +237,7 @@ public class FileCache {
         // If the cache is hit, copy the cached file to the output file. The cached file should have
         // been guarded with a READ or WRITE lock when this callable is invoked (see method
         // queryCacheEntry). Note that as stated in the contract of this method, we don't guard the
-        // output file with an WRITE lock.
+        // output file with a WRITE lock.
         Callable<Void> actionIfCacheHit =
                 () -> {
                     // Delete the output file and create its parent directory according to the
@@ -253,8 +253,8 @@ public class FileCache {
                 };
 
         // If the cache is missed or corrupted, create the output file and copy it to the cached
-        // file. The cached file should have been guarded with an WRITE lock when this callable
-        // is invoked (see method queryCacheEntry). We again don't guard the output file with an
+        // file. The cached file should have been guarded with a WRITE lock when this callable
+        // is invoked (see method queryCacheEntry). We again don't guard the output file with a
         // WRITE lock.
         Callable<Void> actionIfCacheMissedOrCorrupted =
                 () -> {
@@ -330,7 +330,7 @@ public class FileCache {
         File cachedFile = getCachedFile(cacheEntryDir);
 
         // If the cache is hit, do nothing. If the cache is missed or corrupted, create the cached
-        // output file. The cached file should have been guarded with an WRITE lock when this
+        // output file. The cached file should have been guarded with a WRITE lock when this
         // callable is invoked (see method queryCacheEntry).
         Callable<Void> actionIfCacheMissedOrCorrupted =
                 () -> {
@@ -416,8 +416,8 @@ public class FileCache {
                     return queryResult;
                 }
 
-                // Guard the cache entry directory with an WRITE lock so that only one
-                // thread/process can write to it
+                // Guard the cache entry directory with a WRITE lock so that only one thread/process
+                // can write to it
                 return getSynchronizedFile(cacheEntryDir).write(sameCacheEntryDir -> {
                     // Check the cache entry again as it might have been changed by another
                     // thread/process since the last time we checked it.
@@ -1256,15 +1256,13 @@ public class FileCache {
             @Override
             @NonNull
             String getDirectoryHash(@NonNull File directory) {
-                return pathHashes.computeIfAbsent(
-                        directory, dir -> Inputs.Builder.getDirectoryHash(dir));
+                return pathHashes.computeIfAbsent(directory, Inputs.Builder::getDirectoryHash);
             }
 
             @Override
             @NonNull
             String getRegularFileHash(@NonNull File regularFile) {
-                return pathHashes.computeIfAbsent(
-                        regularFile, file -> Inputs.Builder.getFileHash(file));
+                return pathHashes.computeIfAbsent(regularFile, Inputs.Builder::getFileHash);
             }
         };
     }
