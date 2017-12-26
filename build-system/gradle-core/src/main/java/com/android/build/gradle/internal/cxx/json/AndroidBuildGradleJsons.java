@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.cxx.json;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -26,6 +28,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 
 /** Methods for dealing with files and streams of type android_build_gradle.json. */
@@ -56,9 +59,23 @@ public class AndroidBuildGradleJsons {
      * @return the mini config
      * @throws IOException if there was an IO problem reading the Json.
      */
-    public static NativeBuildConfigValueMini getNativeBuildMiniConfig(File json)
+    @NonNull
+    public static NativeBuildConfigValueMini getNativeBuildMiniConfig(@NonNull File json)
             throws IOException {
-        return parseToMiniConfig(new JsonReader(new FileReader(json)));
+        File persistedMiniConfig = ExternalNativeBuildTaskUtils.getJsonMiniConfigFile(json);
+        if (ExternalNativeBuildTaskUtils.fileIsUpToDate(json, persistedMiniConfig)) {
+            // The mini json has already been created for us. Just read it instead of parsing
+            // again.
+            try (JsonReader reader = new JsonReader(new FileReader(persistedMiniConfig))) {
+                return parseToMiniConfig(reader);
+            }
+        }
+        NativeBuildConfigValueMini result;
+        try (JsonReader reader = new JsonReader(new FileReader(json))) {
+            result = parseToMiniConfig(reader);
+        }
+        writeNativeBuildMiniConfigValueToJsonFile(persistedMiniConfig, result);
+        return result;
     }
 
     /**
@@ -90,9 +107,26 @@ public class AndroidBuildGradleJsons {
                         .setPrettyPrinting()
                         .create();
 
-        FileWriter jsonWriter = new FileWriter(outputJson);
-        gson.toJson(nativeBuildConfigValue, jsonWriter);
-        jsonWriter.close();
+        try (FileWriter jsonWriter = new FileWriter(outputJson)) {
+            gson.toJson(nativeBuildConfigValue, jsonWriter);
+        }
+    }
+
+    /**
+     * Writes the given object as JSON to the given json file.
+     *
+     * @throws IOException I/O failure
+     */
+    private static void writeNativeBuildMiniConfigValueToJsonFile(
+            @NonNull File outputJson, @NonNull NativeBuildConfigValueMini miniConfig)
+            throws IOException {
+        String actualResult =
+                new GsonBuilder()
+                        .registerTypeAdapter(File.class, new PlainFileGsonTypeAdaptor())
+                        .setPrettyPrinting()
+                        .create()
+                        .toJson(miniConfig);
+        Files.write(outputJson.toPath(), actualResult.getBytes(Charsets.UTF_8));
     }
 
     /**

@@ -144,6 +144,18 @@ public class FileSubject extends Subject<FileSubject, File> {
         isNewerThan(other.lastModified());
     }
 
+    public void isNewerThanOrSameAs(long otherTimestamp) {
+        long thisTimestamp = getSubject().lastModified();
+        if (getSubject().lastModified() < otherTimestamp) {
+            failWithBadResults(
+                    "is newer than or same as", otherTimestamp, "was modified at", thisTimestamp);
+        }
+    }
+
+    public void isNewerThanOrSameAs(File other) {
+        isNewerThanOrSameAs(other.lastModified());
+    }
+
     public void contentWithUnixLineSeparatorsIsExactly(String expected) throws IOException {
         String actual = FileUtils.loadFileWithUnixLineSeparators(getSubject());
         new StringSubject(failureStrategy, actual).isEqualTo(expected);

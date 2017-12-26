@@ -462,9 +462,17 @@ public class NativeModelTest {
         public final int expectedBuildOutputs;
         public String nativeBuildOutputPath;
 
-        Config(String buildGradle, List<TestSourceFile> extraFiles, boolean isCpp, int targetCount,
-                int variantCount, int abiCount, Compiler compiler,
-                NativeBuildSystem buildSystem, int expectedBuildOutputs, String nativeBuildOutputPath) {
+        Config(
+                String buildGradle,
+                List<TestSourceFile> extraFiles,
+                boolean isCpp,
+                int targetCount,
+                int variantCount,
+                int abiCount,
+                Compiler compiler,
+                NativeBuildSystem buildSystem,
+                int expectedBuildOutputs,
+                String nativeBuildOutputPath) {
             this.buildGradle = buildGradle;
             this.extraFiles = extraFiles;
             this.isCpp = isCpp;
@@ -599,7 +607,7 @@ public class NativeModelTest {
         for (NativeArtifact artifact : model.getArtifacts()) {
             File parent = artifact.getOutputFile().getParentFile();
             List<String> parents = Lists.newArrayList();
-            while(parent != null) {
+            while (parent != null) {
                 parents.add(parent.getName());
                 parent = parent.getParentFile();
             }
@@ -651,43 +659,68 @@ public class NativeModelTest {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         assumeNotCMakeOnWindows();
         File jsonFile = getJsonFile("debug", "x86_64");
+        File miniConfigFile = ExternalNativeBuildTaskUtils.getJsonMiniConfigFile(jsonFile);
 
-        // Initially, JSON file doesn't exist
+        // Build should be incremental where it is possible. CMake in particular is supposed to
+        // be able to regenerate the ninja build system in-place. Use this file to check whether
+        // the build system has deleted the build directory or not.
+        // This is related to https://issuetracker.google.com/69408798.
+        File incrementalBuildSentinelFile = new File(jsonFile.getParent(), "test_sentinel.txt");
+
+        // Initially, JSON and sentinel files don't exist
         assertThat(jsonFile).doesNotExist();
+        assertThat(miniConfigFile).doesNotExist();
+        assertThat(incrementalBuildSentinelFile).doesNotExist();
 
-        // Syncing once, causes the JSON to exist
-        project.model().getSingle(NativeAndroidProject.class);
+        // Syncing once causes the JSON to exist
+        NativeAndroidProject nativeProject = project.model().getSingle(NativeAndroidProject.class);
         assertThat(jsonFile).exists();
         long originalTimeStamp = getHighestResolutionTimeStamp(jsonFile);
+        assertThat(incrementalBuildSentinelFile).doesNotExist();
+        Files.createFile(incrementalBuildSentinelFile.toPath());
+        assertThat(miniConfigFile).exists();
 
         // Syncing again, leaves the JSON unchanged
-        NativeAndroidProject nativeProject = project.model().getSingle(NativeAndroidProject.class);
+        nativeProject = project.model().getSingle(NativeAndroidProject.class);
         assertThat(originalTimeStamp).isEqualTo(
                 getHighestResolutionTimeStamp(jsonFile));
+        assertThat(incrementalBuildSentinelFile).exists();
+        assertThat(miniConfigFile)
+                .isNewerThanOrSameAs(jsonFile); // miniconfig created to read paths of build files
 
-        // Touch each buildFile and check that JSON is regenerated in response
+        // Touch a native build file (like CMakeLists.txt) and check that JSON is regenerated in
+        // response
         assertThat(nativeProject.getBuildFiles()).isNotEmpty();
-        for (File buildFile : nativeProject.getBuildFiles()) {
-            assertThat(buildFile).exists();
-            // Build files could have more than just CMakeLists.txt which might be read-only (e.g.
-            // android.toolchain.cmake) which cannot be edited. So only update CMakeLists.txt
-            // file(s).
-            if (!buildFile.getName().equals("CMakeLists.txt")) {
-                continue;
-            }
-            spinTouch(buildFile, originalTimeStamp);
-            project.model().getSingle(NativeAndroidProject.class);
-            long newTimeStamp = getHighestResolutionTimeStamp(jsonFile);
-            assertThat(newTimeStamp).isGreaterThan(originalTimeStamp);
-            originalTimeStamp = newTimeStamp;
-        }
+        File buildFile = getNativeBuildFile(nativeProject);
+        assertThat(buildFile).exists();
+        spinTouch(buildFile, originalTimeStamp);
+        nativeProject = project.model().getSingle(NativeAndroidProject.class);
+        long newTimeStamp = getHighestResolutionTimeStamp(jsonFile);
+        assertThat(newTimeStamp).isGreaterThan(originalTimeStamp);
+        assertThat(ExternalNativeBuildTaskUtils.fileIsUpToDate(jsonFile, miniConfigFile)).isTrue();
+        assertThat(miniConfigFile).isNewerThanOrSameAs(jsonFile);
 
+        // No build outputs should exist because we haven't built anything yet.
+        assertThat(nativeProject).noBuildOutputsExist();
+
+        // Touching a build file should not cause the incremental build sentinel file to
+        // disappear (if would disappear if the folder had been incorrectly deleted)
+        assertThat(incrementalBuildSentinelFile).exists();
+
+        // Replace flags in the build file (build.gradle) and check that JSON is regenerated
         String originalFileHash = FileUtils.sha1(jsonFile);
-
-        // Replace flags in the build file and check that JSON is regenerated
         TestFileUtils.searchAndReplace(project.getBuildFile(), "-DTEST_", "-DTEST_CHANGED_");
         nativeProject = project.model().getSingle(NativeAndroidProject.class);
         assertThat(FileUtils.sha1(jsonFile)).isNotEqualTo(originalFileHash);
+        assertThat(miniConfigFile).exists();
+
+        // Replacing CMake.exe or ndk-build.cmd call flags should delete the directory and hence
+        // the sentinel file.
+        assertThat(incrementalBuildSentinelFile).doesNotExist();
+
+        // Recreate the sentinel file.
+        assertThat(incrementalBuildSentinelFile).doesNotExist();
+        Files.createFile(incrementalBuildSentinelFile.toPath());
 
         // Check that the newly written flags are there.
         if (config.isCpp) {
@@ -702,19 +735,86 @@ public class NativeModelTest {
         nativeProject = project.model().getSingle(NativeAndroidProject.class);
         assertThat(originalTimeStamp).isEqualTo(getHighestResolutionTimeStamp(jsonFile));
         assertThat(nativeProject).noBuildOutputsExist();
+        assertThat(incrementalBuildSentinelFile).exists();
+        assertThat(miniConfigFile).isNewerThanOrSameAs(jsonFile);
 
         // If there are expected build outputs then build them and check results
         if (config.expectedBuildOutputs > 0) {
             project.execute("assemble");
             assertThat(nativeProject).hasBuildOutputCountEqualTo(config.expectedBuildOutputs);
             assertThat(nativeProject).allBuildOutputsExist();
+            assertThat(incrementalBuildSentinelFile).exists();
+            assertThat(miniConfigFile).isNewerThanOrSameAs(jsonFile);
+
+            // Simulate a project that has created extra so files aside from the normal ones
+            // created by building.
+            List<File> additionalSoFiles = createAdditionalSoFiles(nativeProject);
+            assertThatFilesExist(additionalSoFiles);
+
+            // Now touch the CMakeLists.txt (or Android.mk). This should trigger a soft-regenerate.
+            // In this case, .so files should remain but additional so files should be deleted (in
+            // case they are obsoleted by the change to CMakeLists.txt).
+            spinTouch(buildFile, originalTimeStamp);
+            nativeProject = project.model().getSingle(NativeAndroidProject.class);
+            assertThat(nativeProject).allBuildOutputsExist();
+            assertThat(miniConfigFile).isNewerThanOrSameAs(jsonFile);
+            assertThatFilesDontExist(additionalSoFiles);
 
             // Make sure clean removes the known build outputs.
+            originalTimeStamp = getHighestResolutionTimeStamp(jsonFile);
             project.execute("clean");
             assertThat(nativeProject).noBuildOutputsExist();
+            assertThat(incrementalBuildSentinelFile).exists();
+            assertThatFilesDontExist(additionalSoFiles);
+            assertThat(miniConfigFile).isNewerThanOrSameAs(jsonFile);
 
             // But clean shouldn't change the JSON because it is outside of the build/ folder.
             assertThat(originalTimeStamp).isEqualTo(getHighestResolutionTimeStamp(jsonFile));
+        }
+    }
+
+    private File getNativeBuildFile(NativeAndroidProject nativeProject) {
+        for (File buildFile : nativeProject.getBuildFiles()) {
+            // Build files could have more than just CMakeLists.txt which might be read-only (e.g.
+            // android.toolchain.cmake) which cannot be edited. So only update CMakeLists.txt
+            // file(s).
+            if (this.config.buildSystem == NativeBuildSystem.CMAKE
+                    && !buildFile.getName().equals("CMakeLists.txt")) {
+                continue;
+            }
+            return buildFile;
+        }
+
+        throw new RuntimeException(
+                "Expected at least one native build file: " + nativeProject.getBuildFiles());
+    }
+
+    private List<File> createAdditionalSoFiles(NativeAndroidProject nativeProject)
+            throws IOException {
+        List<File> result = Lists.newArrayList();
+        for (NativeArtifact artifact : nativeProject.getArtifacts()) {
+            result.add(
+                    new File(
+                            artifact.getOutputFile().getParentFile(),
+                            "lib_additional_for_test.so"));
+        }
+        List<File> additionalSoFiles = result;
+        for (File additionalSoFile : additionalSoFiles) {
+            additionalSoFile.getParentFile().mkdirs();
+            Files.createFile(additionalSoFile.toPath());
+        }
+        return additionalSoFiles;
+    }
+
+    private void assertThatFilesDontExist(List<File> additionalSoFiles) {
+        for (File additionalSoFile : additionalSoFiles) {
+            assertThat(additionalSoFile).doesNotExist();
+        }
+    }
+
+    private void assertThatFilesExist(List<File> additionalSoFiles) {
+        for (File additionalSoFile : additionalSoFiles) {
+            assertThat(additionalSoFile).exists();
         }
     }
 
@@ -777,17 +877,13 @@ public class NativeModelTest {
         Set<String> releaseOnlyFlags = Sets.newHashSet(releaseFlags);
         releaseOnlyFlags.removeAll(debugFlags);
         assertThat(releaseOnlyFlags)
-                // TODO Put '.named' back when this test source file is translated from groovy to java
-                //.named("release only build flags")
+                .named("release only build flags")
                 .containsAllOf("-DNDEBUG", "-O2");
 
         // Look at flags that are only in debug build. Should at least contain -O0
         Set<String> debugOnlyFlags = Sets.newHashSet(debugFlags);
         debugOnlyFlags.removeAll(releaseFlags);
-        assertThat(debugOnlyFlags)
-        // TODO Put '.named' back when this test source file is translated from groovy to java
-                //.named("debug only build flags")
-                .contains("-O0");
+        assertThat(debugOnlyFlags).named("debug only build flags").contains("-O0");
     }
 
     private static Set<String> uniqueFlags(NativeBuildConfigValue config) {
@@ -815,10 +911,6 @@ public class NativeModelTest {
     private static long getHighestResolutionTimeStamp(File file) throws IOException {
         return Files.getLastModifiedTime(
                 file.toPath()).toMillis();
-    }
-
-    private File getExternalNativeBuildRootOutputFolder() {
-        return new File(FileUtils.join(project.getBuildFile().getParent(), ".externalNativeBuild"));
     }
 
     private File getJsonFile(String variantName, String abi) {
