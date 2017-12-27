@@ -1424,9 +1424,14 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 int start = response.indexOf('"', index) + 1;
                 int end = response.indexOf('"', start + 1);
                 if (end > start && start >= 0) {
-                    GradleVersion revision = GradleVersion.tryParse(response.substring(start, end));
+                    String substring = response.substring(start, end);
+                    GradleVersion revision = GradleVersion.tryParse(substring);
                     if (revision != null) {
-                        if ((allowPreview || !revision.isPreview())
+                        // Guava unfortunately put "-jre" and "-android" in the version number
+                        // instead of using a different artifact name; this turns off maven
+                        // semantic versioning. Special case this.
+                        boolean preview = revision.isPreview() && !substring.endsWith("-android");
+                        if ((allowPreview || !preview)
                                 && (filter == null || filter.test(revision))) {
                             return revision;
                         }
