@@ -232,6 +232,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -244,6 +245,8 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationVariant;
+import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.DependencySet;
 import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
@@ -3602,6 +3605,23 @@ public abstract class TaskManager {
 
     private void configureKotlinKaptTasksForDataBinding(
             Project project, List<VariantScope> variantScopes, String version) {
+        DependencySet kaptDeps = project.getConfigurations().getByName("kapt").getAllDependencies();
+        kaptDeps.forEach((Dependency dependency) -> {
+            // if it is a data binding compiler dependency w/ a different version, report error
+            if (Objects.equals(dependency.getGroup() + ":" + dependency.getName(),
+                    SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT)
+                    && !Objects.equals(dependency.getVersion(), version)) {
+                String depString = dependency.getGroup()
+                        + ":" + dependency.getName()
+                        + ":" + dependency.getVersion();
+                androidBuilder.getIssueReporter().reportError(Type.GENERIC,
+                        "Data Binding annotation processor version needs to match the" +
+                                " Android Gradle Plugin version. You can remove the kapt" +
+                                " dependency " + depString +
+                                " and Android Gradle Plugin will inject" +
+                                " the right version.");
+            }
+        });
         project.getDependencies()
                 .add(
                         "kapt",

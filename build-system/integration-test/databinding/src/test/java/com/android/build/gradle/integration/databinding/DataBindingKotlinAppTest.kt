@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.integration.databinding;
 
+import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import org.junit.Rule
 import org.junit.Test
@@ -63,5 +65,18 @@ class DataBindingKotlinAppTest(private val useV2 : Boolean) {
                     libBindingClass.replace(";", "Impl;")
             )
         }
+    }
+
+    @Test
+    fun showErrorOnManualVersionMismatch() {
+        val kapt = """
+            dependencies {
+                kapt "${SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT}:3.0.0"
+            }
+            """
+        TestFileUtils.appendToFile(project.getSubproject(":app").buildFile, kapt)
+        val result = project.executor().expectFailure().run("app:assembleDebug")
+        assertThat(result.stderr)
+                .contains("Data Binding annotation processor version needs to match the")
     }
 }
