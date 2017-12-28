@@ -50,7 +50,7 @@ fun main(args: Array<String>) {
     // Delete older copies to ensure we clean up obsolete packages
     dir.deleteRecursively()
     dir.mkdir()
-    val master = readUrlDataAsString("https://maven.google.com/master-index.xml")
+    val master = readUrlDataAsString("${GMAVEN_BASE_URL}master-index.xml")
     val masterFile = File(dir, "master-index.xml")
     Files.asCharSink(masterFile, Charsets.UTF_8).write(master)
     println("Wrote $masterFile")
@@ -60,7 +60,7 @@ fun main(args: Array<String>) {
         val group = current.tagName
         val relative = group.replace('.', '/')
         val groupIndex = readUrlDataAsString(
-                "https://maven.google.com/$relative/group-index.xml")
+                "${GMAVEN_BASE_URL}$relative/group-index.xml")
 
         // Keep all but the last stable and unstable version
         val sb = StringBuilder()
