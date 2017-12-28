@@ -236,7 +236,7 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
     private VariantImpl createVariant(@NonNull BaseVariantData variantData) {
         VariantScope variantScope = variantData.getScope();
         ImmutableMap<String, String> buildMapping =
-                ModelBuilder.getBuildMapping(
+                ModelBuilder.computeBuildMapping(
                         variantScope.getGlobalScope().getProject().getGradle());
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
         Pair<Dependencies, DependencyGraphs> dependencies =

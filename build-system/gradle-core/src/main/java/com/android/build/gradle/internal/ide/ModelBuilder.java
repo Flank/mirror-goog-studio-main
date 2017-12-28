@@ -145,7 +145,7 @@ public class ModelBuilder implements ToolingModelBuilder {
      * a map that goes from build name ({@link BuildIdentifier#getName()} to the root dir of the
      * build. For the root build, there is no name so {@link #ROOT_BUILD_NAME} is used.
      */
-    @NonNull private final ImmutableMap<String, String> buildMapping;
+    private ImmutableMap<String, String> buildMapping = null;
 
     private Set<SyncIssue> syncIssues = Sets.newLinkedHashSet();
 
@@ -170,9 +170,6 @@ public class ModelBuilder implements ToolingModelBuilder {
         this.nativeLibFactory = nativeLibraryFactory;
         this.projectType = projectType;
         this.generation = generation;
-        // build a map from included build name to rootDir (as rootDir is the only thing
-        // that we have access to on the tooling API side).
-        this.buildMapping = getBuildMapping(globalScope.getProject().getGradle());
 
     }
 
@@ -190,6 +187,10 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     @Override
     public Object buildAll(@NonNull String modelName, @NonNull Project project) {
+        // build a map from included build name to rootDir (as rootDir is the only thing
+        // that we have access to on the tooling API side).
+        initBuildMapping(project);
+
         if (modelName.equals(AndroidProject.class.getName())) {
             return buildAndroidProject(project);
         }
@@ -994,8 +995,14 @@ public class ModelBuilder implements ToolingModelBuilder {
         }
     }
 
+    private void initBuildMapping(@NonNull Project project) {
+        if (buildMapping == null) {
+            buildMapping = computeBuildMapping(project.getGradle());
+        }
+    }
+
     @NonNull
-    public static ImmutableMap<String, String> getBuildMapping(@NonNull Gradle gradle) {
+    public static ImmutableMap<String, String> computeBuildMapping(@NonNull Gradle gradle) {
         // first, ensure we are starting from the root Gradle object.
         //noinspection ConstantConditions
         while (gradle.getParent() != null) {

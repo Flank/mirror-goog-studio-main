@@ -53,6 +53,14 @@ fun main(args : Array<String>) {
                 .multi
 
         // TODO print the model
+        models.modelMaps.keys.forEach {
+            println("buildId: $it")
+
+            val projects = models.modelMaps[it]!!
+            projects.keys.forEach {
+                println("  project: $it")
+            }
+        }
 
     } catch (t: Throwable) {
         t.printStackTrace()

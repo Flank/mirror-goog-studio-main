@@ -74,7 +74,7 @@ public class AndroidDependenciesRenderer extends TextReportRenderer {
 
     public void render(@NonNull VariantScope variant) {
         ImmutableMap<String, String> buildMapping =
-                ModelBuilder.getBuildMapping(variant.getGlobalScope().getProject().getGradle());
+                ModelBuilder.computeBuildMapping(variant.getGlobalScope().getProject().getGradle());
 
         Set<HashableResolvedArtifactResult> compileArtifacts =
                 ArtifactDependencyGraph.getAllArtifacts(
