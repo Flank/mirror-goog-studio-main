@@ -17,13 +17,18 @@
 package com.android.builder.dexing.r8;
 
 import com.android.builder.dexing.DexArchiveTestUtil;
+import com.android.testutils.TestUtils;
 import com.android.tools.r8.ClassFileResourceProvider;
 import com.android.tools.r8.Resource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
@@ -83,7 +88,7 @@ public class ClassFileProviderFactoryTest {
             public void run() {
                 try {
                     for (int i = 0; i < nbJars; i++) {
-                        // Note: keep the provider to prevent GC. If we don't GC, may collect the
+                        // Note: keep the provider to prevent GC. If we don't, GC may collect the
                         // factory and no unicity of resource can be asserted.
                         providers[i] = handler.getProvider(classpathEntries[i]);
                         for (int j = 0; j < descriptors.size(); j++) {
@@ -119,6 +124,71 @@ public class ClassFileProviderFactoryTest {
                 for (int k = 0; k < descriptors.size(); k++) {
                     Assert.assertSame(runners[0].resources[j][k], runners[i].resources[j][k]);
                 }
+            }
+        }
+    }
+
+
+    @Test
+    public void testInterProcessSerialization() throws IOException, ClassNotFoundException {
+        // Create serialization files in a separate process to force their ids.
+        TestUtils.launchProcess(
+                InterProcessSerializationSerializerMain.class,
+                temporaryFolder.getRoot().getAbsolutePath());
+        // Test deserialization in a separate process to emulate workers in dedicated process
+        TestUtils.launchProcess(
+                InterProcessSerializationDeserializerMain.class,
+                temporaryFolder.getRoot().getAbsolutePath());
+    }
+
+    public static class InterProcessSerializationSerializerMain {
+        public static void main(String[] args) throws IOException {
+            File workDir = new File(args[0]);
+            ClassFileProviderFactory factory1 = new ClassFileProviderFactory();
+            ClassFileProviderFactory factory2 = new ClassFileProviderFactory();
+            serialize(factory1, new File(workDir, "factory1.ser"));
+            serialize(factory2, new File(workDir, "factory2.ser"));
+        }
+
+        private static void serialize(Serializable object, File file) throws IOException {
+            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file))) {
+                out.writeObject(object);
+            }
+        }
+    }
+
+    public static class InterProcessSerializationDeserializerMain {
+        public static void main(String[] args) throws IOException, ClassNotFoundException {
+            File workDir = new File(args[0]);
+            ClassFileProviderFactory createdFactory1 = new ClassFileProviderFactory();
+            ClassFileProviderFactory deserializedFactory1 =
+                    deserialize(new File(workDir, "factory1.ser"));
+
+            // Deserializing a factory #1 when a #1 already exists in the current JVM should return
+            // the existing instance.
+            Assert.assertSame(createdFactory1, deserializedFactory1);
+
+            ClassFileProviderFactory deserializedFactory2 =
+                    deserialize(new File(workDir, "factory2.ser"));
+            ClassFileProviderFactory deserializedFactory2Bis =
+                    deserialize(new File(workDir, "factory2.ser"));
+            // Deserializing twice the same file should return the same instance.
+            Assert.assertSame(deserializedFactory2, deserializedFactory2Bis);
+
+            // Creating a new factory should allocate to #3 and should not evict
+            // deserializedFactory2.
+            new ClassFileProviderFactory();
+
+            // Deserializing a third time factory2.ser should return the same instance as before.
+            ClassFileProviderFactory deserializedFactory2Ter =
+                    deserialize(new File(workDir, "factory2.ser"));
+            Assert.assertSame(deserializedFactory2, deserializedFactory2Ter);
+        }
+
+        private static ClassFileProviderFactory deserialize(File file)
+                throws IOException, ClassNotFoundException {
+            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
+                return (ClassFileProviderFactory) in.readObject();
             }
         }
     }

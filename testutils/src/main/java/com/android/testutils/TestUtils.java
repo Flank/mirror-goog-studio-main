@@ -29,6 +29,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import junit.framework.TestCase;
 
 /**
@@ -504,5 +507,43 @@ public class TestUtils {
                 lastError);
     }
 
+    /**
+     * Launches a new process to execute the class {@code toRun} main() method and blocks until the
+     * process exits.
+     *
+     * @param toRun the class whose main() method will be executed in a new process.
+     * @param args the arguments for the class {@code toRun} main() method
+     * @throws RuntimeException if any (checked or runtime) exception occurs or the process returns
+     *     an exit value other than 0
+     */
+    public static void launchProcess(@NonNull Class toRun, String... args) {
+        List<String> commandAndArgs = new LinkedList<>();
+        commandAndArgs.add(FileUtils.join(System.getProperty("java.home"), "bin", "java"));
+        commandAndArgs.add("-cp");
+        commandAndArgs.add(System.getProperty("java.class.path"));
+        commandAndArgs.add(toRun.getName());
+        commandAndArgs.addAll(Arrays.asList(args));
+
+        ProcessBuilder processBuilder = new ProcessBuilder(commandAndArgs);
+        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+        Process process;
+        try {
+            process = processBuilder.start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            process.waitFor();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (process.exitValue() != 0) {
+            throw new RuntimeException(
+                    "Process returned non-zero exit value: " + process.exitValue());
+        }
+    }
 
 }

@@ -17,6 +17,7 @@
 package com.android.builder.dexing.r8;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.tools.r8.ClassFileResourceProvider;
 import com.android.tools.r8.utils.DirectoryClassFileProvider;
 import java.io.Closeable;
@@ -66,12 +67,10 @@ public class ClassFileProviderFactory implements Serializable {
 
     private final long id;
 
-    // Visible for testing.
-    @NonNull
-    final transient Map<Path, ClassFileResourceProvider> providers =
-            // We can allow usage of WeakHashMap because ArchiveClassFileProvider is closing in its
-            // finalizer.
-            new WeakHashMap<>();
+    // transient because ClassFileResourceProvider are not Serializable, thus the map can not be
+    // serialized.
+    @VisibleForTesting @NonNull
+    transient Map<Path, ClassFileResourceProvider> providers = createProviders();
 
     private transient int openedHandlers = 0;
 
@@ -134,9 +133,21 @@ public class ClassFileProviderFactory implements Serializable {
             if (existing != null) {
                 return existing;
             } else {
+                // Reallocate providers that was not deserialized since it is transient.
+                providers = createProviders();
+                // Lets be safe in case it ever happens that we deserialize instances created in a
+                // separate VM/ClassLoader and there could be new instances created in the current
+                // VM/ClassLoader.
+                nextId.set(Math.max(nextId.get(), id + 1));
                 liveInstances.put(key, this);
                 return this;
             }
         }
+    }
+
+    private static final Map<Path, ClassFileResourceProvider> createProviders() {
+        // We can allow usage of WeakHashMap because ArchiveClassFileProvider is closing in its
+        // finalizer.
+        return new WeakHashMap<>();
     }
 }
