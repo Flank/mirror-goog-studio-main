@@ -19,7 +19,6 @@ package com.android.utils;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.io.PrintStream;
 import java.util.Formatter;
 
@@ -182,10 +181,11 @@ public class StdLogger implements ILogger {
             msg = msg.substring(0, msg.length() - 1);
         }
 
-        stream.print(msg);
-
-        if (!msg.endsWith("\n")) {
-            stream.println();
+        // Don't duplicate the new line, but do it in one method call to avoid interleaving.
+        if (msg.endsWith("\n")) {
+            stream.print(msg);
+        } else {
+            stream.println(msg);
         }
     }
 
