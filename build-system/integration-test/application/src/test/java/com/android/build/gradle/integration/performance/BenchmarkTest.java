@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.build.gradle.BasePlugin;
+import com.android.build.gradle.integration.common.category.PerformanceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.google.common.base.Strings;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
@@ -31,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.junit.AssumptionViolatedException;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -82,6 +84,7 @@ import org.junit.runners.JUnit4;
  */
 public class BenchmarkTest {
     @Test
+    @Category(PerformanceTests.class)
     public void run() throws Exception {
         if (GradleTestProject.USE_LATEST_NIGHTLY_GRADLE_VERSION
                 && GradleTestProject.GRADLE_TEST_VERSION.equals(
