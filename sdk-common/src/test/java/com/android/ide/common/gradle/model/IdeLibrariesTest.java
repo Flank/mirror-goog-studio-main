@@ -69,6 +69,31 @@ public class IdeLibrariesTest {
     }
 
     @Test
+    public void computeMavenAddressWithModuleLibraryWithBuildId() {
+        Library library =
+                new AndroidLibraryStub() {
+                    @Override
+                    @Nullable
+                    public String getProject() {
+                        return ":androidLib";
+                    }
+
+                    @Override
+                    @Nullable
+                    public String getBuildId() {
+                        return "/project/root";
+                    }
+
+                    @Override
+                    @Nullable
+                    public String getProjectVariant() {
+                        return "release";
+                    }
+                };
+        assertThat(computeAddress(library)).isEqualTo("/project/root:androidLib::release");
+    }
+
+    @Test
     public void computeMavenAddressWithNestedModuleLibrary() {
         Library library =
                 new LibraryStub() {

@@ -77,7 +77,7 @@ public class IdeLibraryFactoryTest {
 
     @Test
     public void createFromString() {
-        assertThat(IdeLibraryFactory.create("lib", myModelCache))
+        assertThat(IdeLibraryFactory.create("lib", ":lib@@:", myModelCache, "/rootDir/lib"))
                 .isInstanceOf(IdeModuleLibrary.class);
     }
 }
