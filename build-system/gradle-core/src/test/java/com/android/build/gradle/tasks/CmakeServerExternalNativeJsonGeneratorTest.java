@@ -43,6 +43,7 @@ import com.android.utils.ILogger;
 import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -73,6 +74,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
     List<String> cFlags;
     List<String> cppFlags;
     List<File> nativeBuildConfigurationsJsons;
+    GradleBuildVariant.Builder stats;
 
     @Before
     public void setUp() throws Exception {
@@ -91,6 +93,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
 
         jsonFolder = getTestJsonFolder(); //Mockito.mock(File.class);
         makeFile = Mockito.mock(File.class);
+        stats = GradleBuildVariant.newBuilder();
         AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkDirectory);
         LocalPackage cmakePackage =
                 sdk.getLatestLocalPackageForPrefix(
@@ -397,7 +400,8 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                 buildArguments,
                 cFlags,
                 cppFlags,
-                nativeBuildConfigurationsJsons);
+                nativeBuildConfigurationsJsons,
+                stats);
     }
 
     /**

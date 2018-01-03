@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -33,6 +34,34 @@ import java.util.List;
 
 /** Methods for dealing with files and streams of type android_build_gradle.json. */
 public class AndroidBuildGradleJsons {
+    /**
+     * Given a JsonReader that represents an android_build_gradle structure produce a small random
+     * access structure called {@link NativeBuildConfigValueMini}
+     *
+     * @param reader the Json reader
+     * @param stats the stats to update
+     * @return the mini config
+     * @throws IOException if there was an IO problem reading the Json.
+     */
+    @NonNull
+    public static NativeBuildConfigValueMini parseToMiniConfigAndGatherStatistics(
+            @NonNull JsonReader reader, @NonNull GradleBuildVariant.Builder stats)
+            throws IOException {
+        GradleBuildVariant.NativeBuildConfigInfo.Builder config =
+                GradleBuildVariant.NativeBuildConfigInfo.newBuilder();
+        AndroidBuildGradleJsonStatsBuildingVisitor statsVisitor =
+                new AndroidBuildGradleJsonStatsBuildingVisitor(config);
+        MiniConfigBuildingVisitor miniConfigVisitor = new MiniConfigBuildingVisitor();
+        AndroidBuildGradleJsonCompositeVisitor composite =
+                new AndroidBuildGradleJsonCompositeVisitor(statsVisitor, miniConfigVisitor);
+
+        try (AndroidBuildGradleJsonStreamingParser parser =
+                new AndroidBuildGradleJsonStreamingParser(reader, composite)) {
+            parser.parse();
+            stats.addNativeBuildConfig(config);
+            return miniConfigVisitor.miniConfig;
+        }
+    }
 
     /**
      * Given a JsonReader that represents an android_build_gradle structure produce a small random
@@ -43,12 +72,30 @@ public class AndroidBuildGradleJsons {
      * @throws IOException if there was an IO problem reading the Json.
      */
     @NonNull
-    public static NativeBuildConfigValueMini parseToMiniConfig(@NonNull JsonReader reader)
+    private static NativeBuildConfigValueMini parseToMiniConfig(@NonNull JsonReader reader)
             throws IOException {
-        try (MiniConfigBuildingParser parser = new MiniConfigBuildingParser(reader)) {
+        MiniConfigBuildingVisitor miniConfigVisitor = new MiniConfigBuildingVisitor();
+        try (AndroidBuildGradleJsonStreamingParser parser =
+                new AndroidBuildGradleJsonStreamingParser(reader, miniConfigVisitor)) {
             parser.parse();
-            return parser.miniConfig;
+            return miniConfigVisitor.miniConfig;
         }
+    }
+
+    /**
+     * Given a list of Json files and the current variant name produce a list of
+     * NativeBuildConfigValueMini. Json parsing is done in a streaming manner so that the entire
+     * Json file is not read into memory at once.
+     */
+    public static List<NativeBuildConfigValueMini> getNativeBuildMiniConfigs(
+            @NonNull List<File> jsons, @Nullable GradleBuildVariant.Builder stats)
+            throws IOException {
+        List<NativeBuildConfigValueMini> miniConfigs = Lists.newArrayList();
+
+        for (File json : jsons) {
+            miniConfigs.add(getNativeBuildMiniConfig(json, stats));
+        }
+        return miniConfigs;
     }
 
     /**
@@ -56,12 +103,13 @@ public class AndroidBuildGradleJsons {
      * structure called {@link NativeBuildConfigValueMini}
      *
      * @param json the Json reader
+     * @param stats the stats to update
      * @return the mini config
      * @throws IOException if there was an IO problem reading the Json.
      */
     @NonNull
-    public static NativeBuildConfigValueMini getNativeBuildMiniConfig(@NonNull File json)
-            throws IOException {
+    public static NativeBuildConfigValueMini getNativeBuildMiniConfig(
+            @NonNull File json, @Nullable GradleBuildVariant.Builder stats) throws IOException {
         File persistedMiniConfig = ExternalNativeBuildTaskUtils.getJsonMiniConfigFile(json);
         if (ExternalNativeBuildTaskUtils.fileIsUpToDate(json, persistedMiniConfig)) {
             // The mini json has already been created for us. Just read it instead of parsing
@@ -72,24 +120,13 @@ public class AndroidBuildGradleJsons {
         }
         NativeBuildConfigValueMini result;
         try (JsonReader reader = new JsonReader(new FileReader(json))) {
-            result = parseToMiniConfig(reader);
+            result =
+                    stats == null
+                            ? parseToMiniConfig(reader)
+                            : parseToMiniConfigAndGatherStatistics(reader, stats);
         }
         writeNativeBuildMiniConfigValueToJsonFile(persistedMiniConfig, result);
         return result;
-    }
-
-    /**
-     * Given a list of Json files and the current variant name produce a list of
-     * NativeBuildConfigValueMini. Json parsing is done in a streaming manner so that the entire
-     * Json file is not read into memory at once.
-     */
-    public static List<NativeBuildConfigValueMini> getNativeBuildMiniConfigs(List<File> jsons)
-            throws IOException {
-        List<NativeBuildConfigValueMini> miniConfigs = Lists.newArrayList();
-        for (File json : jsons) {
-            miniConfigs.add(getNativeBuildMiniConfig(json));
-        }
-        return miniConfigs;
     }
 
     /**
@@ -133,49 +170,55 @@ public class AndroidBuildGradleJsons {
      * Streams over android_build_gradle.json and produces a random-access but small structure
      * called a NativeBuildConfigValueMini.
      */
-    private static class MiniConfigBuildingParser extends AndroidBuildGradleJsonStreamingParser {
+    private static class MiniConfigBuildingVisitor extends AndroidBuildGradleJsonStreamingVisitor {
         @NonNull private final NativeBuildConfigValueMini miniConfig;
         @Nullable private String libraryName;
 
-        MiniConfigBuildingParser(JsonReader reader) {
-            super(reader);
+        MiniConfigBuildingVisitor() {
             this.miniConfig = new NativeBuildConfigValueMini();
             libraryName = null;
         }
 
         @Override
         protected void beginLibrary(@NonNull String libraryName) {
+            super.beginLibrary(libraryName);
             this.libraryName = libraryName;
             miniConfig.libraries.put(libraryName, new NativeLibraryValueMini());
         }
 
         @Override
         protected void visitLibraryAbi(@NonNull String abi) {
+            super.visitLibraryAbi(abi);
             miniConfig.libraries.get(libraryName).abi = abi;
         }
 
         @Override
         protected void visitLibraryArtifactName(@NonNull String artifactName) {
+            super.visitLibraryArtifactName(artifactName);
             miniConfig.libraries.get(libraryName).artifactName = artifactName;
         }
 
         @Override
         protected void visitLibraryBuildCommand(@NonNull String buildCommand) {
+            super.visitLibraryBuildCommand(buildCommand);
             miniConfig.libraries.get(libraryName).buildCommand = buildCommand;
         }
 
         @Override
         protected void visitCleanCommands(@NonNull String cleanCommand) {
+            super.visitCleanCommands(cleanCommand);
             miniConfig.cleanCommands.add(cleanCommand);
         }
 
         @Override
         protected void visitLibraryOutput(@NonNull String output) {
+            super.visitLibraryOutput(output);
             miniConfig.libraries.get(libraryName).output = new File(output);
         }
 
         @Override
         protected void visitBuildFile(@NonNull String buildFile) {
+            super.visitBuildFile(buildFile);
             miniConfig.buildFiles.add(new File(buildFile));
         }
     }

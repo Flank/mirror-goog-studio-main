@@ -27,6 +27,8 @@ import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestUtils;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
+import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,6 +57,7 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
     List<String> cFlags;
     List<String> cppFlags;
     List<File> nativeBuildConfigurationsJsons;
+    GradleBuildVariant.Builder stats;
 
     @Before
     public void setUp() throws Exception {
@@ -72,6 +75,7 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         objFolder = null;
         jsonFolder = Mockito.mock(File.class);
         makeFile = Mockito.mock(File.class);
+        stats = GradleBuildVariant.newBuilder();
         AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkDirectory);
         LocalPackage cmakePackage =
                 sdk.getLatestLocalPackageForPrefix(
@@ -108,7 +112,8 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
                         buildArguments,
                         cFlags,
                         cppFlags,
-                        nativeBuildConfigurationsJsons);
+                        nativeBuildConfigurationsJsons,
+                        stats);
         List<String> cacheArguments =
                 cmakeAndroidNinjaStrategy.getProcessBuilderArgs("x86", 12, jsonFolder);
 
@@ -132,5 +137,9 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         // the cacheArguments does buildArguments sublist is and verify if it's indeed at the end.
         int indexOfSubset = Collections.indexOfSubList(cacheArguments, buildArguments);
         assertThat(cacheArguments.size() - indexOfSubset).isEqualTo(buildArguments.size());
+
+        // Check statistics carrier
+        assertThat(stats.getNativeBuildSystemType())
+                .isEqualTo(GradleNativeAndroidModule.NativeBuildSystemType.CMAKE);
     }
 }

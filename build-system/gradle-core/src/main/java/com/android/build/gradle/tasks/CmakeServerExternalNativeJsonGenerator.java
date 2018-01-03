@@ -56,6 +56,7 @@ import com.android.utils.ILogger;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.UnsignedInts;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -75,6 +76,7 @@ import org.apache.commons.io.FileUtils;
  * project and generate the android build JSON.
  */
 class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGenerator {
+
     private static final String CMAKE_SERVER_LOG_PREFIX = "CMAKE SERVER: ";
     // Constructor
     public CmakeServerExternalNativeJsonGenerator(
@@ -94,7 +96,8 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             @Nullable List<String> buildArguments,
             @Nullable List<String> cFlags,
             @Nullable List<String> cppFlags,
-            @NonNull List<File> nativeBuildConfigurationsJsons) {
+            @NonNull List<File> nativeBuildConfigurationsJsons,
+            @NonNull GradleBuildVariant.Builder stats) {
         super(
                 ndkHandler,
                 minSdkVersion,
@@ -112,7 +115,8 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 buildArguments,
                 cFlags,
                 cppFlags,
-                nativeBuildConfigurationsJsons);
+                nativeBuildConfigurationsJsons,
+                stats);
 
         logPreviewWarning(androidBuilder);
     }

@@ -1708,6 +1708,7 @@ public abstract class TaskManager {
 
         scope.setExternalNativeJsonGenerator(
                 ExternalNativeJsonGenerator.create(
+                        project.getPath(),
                         project.getProjectDir(),
                         project.getBuildDir(),
                         pathResolution.externalNativeBuildDir,

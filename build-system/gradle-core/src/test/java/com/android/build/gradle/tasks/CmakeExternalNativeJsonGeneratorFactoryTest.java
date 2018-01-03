@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.repository.Revision;
 import com.android.utils.ILogger;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -51,6 +52,7 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
     List<String> cFlags;
     List<String> cppFlags;
     List<File> nativeBuildConfigurationsJsons;
+    GradleBuildVariant.Builder stats;
 
     @Before
     public void setUp() throws Exception {
@@ -68,6 +70,7 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
         makeFile = Mockito.mock(File.class);
         cmakeFolder = Mockito.mock(File.class);
         ninjaFolder = Mockito.mock(File.class);
+        stats = GradleBuildVariant.newBuilder();
         debuggable = true;
         buildArguments = Mockito.mock(List.class);
         cFlags = Mockito.mock(List.class);
@@ -105,24 +108,29 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
     }
 
     private ExternalNativeJsonGenerator getCmakeStrategy(@NonNull Revision cmakeRevision) {
-        return CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
-                cmakeRevision,
-                ndkHandler,
-                minSdkVersion,
-                variantName,
-                abis,
-                androidBuilder,
-                sdkFolder,
-                ndkFolder,
-                soFolder,
-                objFolder,
-                jsonFolder,
-                makeFile,
-                cmakeFolder,
-                debuggable,
-                buildArguments,
-                cFlags,
-                cppFlags,
-                nativeBuildConfigurationsJsons);
+        stats = GradleBuildVariant.newBuilder();
+        ExternalNativeJsonGenerator generator =
+                CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
+                        cmakeRevision,
+                        ndkHandler,
+                        minSdkVersion,
+                        variantName,
+                        abis,
+                        androidBuilder,
+                        sdkFolder,
+                        ndkFolder,
+                        soFolder,
+                        objFolder,
+                        jsonFolder,
+                        makeFile,
+                        cmakeFolder,
+                        debuggable,
+                        buildArguments,
+                        cFlags,
+                        cppFlags,
+                        nativeBuildConfigurationsJsons,
+                        stats);
+        assertThat(stats.getNativeCmakeVersion()).isEqualTo(cmakeRevision.toShortString());
+        return generator;
     }
 }

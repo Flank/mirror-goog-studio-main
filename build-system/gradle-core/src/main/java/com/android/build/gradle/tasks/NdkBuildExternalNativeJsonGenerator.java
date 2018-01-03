@@ -35,6 +35,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.GsonBuilder;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
+import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -67,8 +69,10 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
             @Nullable List<String> buildArguments,
             @Nullable List<String> cFlags,
             @Nullable List<String> cppFlags,
-            @NonNull List<File> nativeBuildConfigurationsJsons) {
-        super(ndkHandler,
+            @NonNull List<File> nativeBuildConfigurationsJsons,
+            @NonNull GradleBuildVariant.Builder stats) {
+        super(
+                ndkHandler,
                 minSdkVersion,
                 variantName,
                 abis,
@@ -76,15 +80,18 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                 sdkFolder,
                 ndkFolder,
                 soFolder,
-                new File(objFolder, "local"),  // ndk-build create libraries in a "local" subfolder.
+                new File(objFolder, "local"), // ndk-build create libraries in a "local" subfolder.
                 jsonFolder,
                 makeFile,
                 debuggable,
                 buildArguments,
                 cFlags,
                 cppFlags,
-                nativeBuildConfigurationsJsons);
+                nativeBuildConfigurationsJsons,
+                stats);
         this.projectDir = projectDir;
+        this.stats.setNativeBuildSystemType(
+                GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD);
     }
 
     @Override
