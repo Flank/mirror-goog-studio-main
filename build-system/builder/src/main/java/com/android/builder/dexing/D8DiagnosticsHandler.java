@@ -28,6 +28,7 @@ import com.android.tools.r8.origin.PathOrigin;
 import com.android.tools.r8.position.Position;
 import com.android.tools.r8.position.TextPosition;
 import com.android.tools.r8.position.TextRange;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -91,6 +92,7 @@ class D8DiagnosticsHandler implements DiagnosticsHandler {
         Position positionInOrigin = diagnostic.getPosition();
         SourceFilePosition position;
         if (origin instanceof PathOrigin) {
+            File originFile = ((PathOrigin) origin).getPath().toFile();
             TextPosition startTextPosition;
             TextPosition endTextPosition;
             if (positionInOrigin instanceof TextRange) {
@@ -107,7 +109,7 @@ class D8DiagnosticsHandler implements DiagnosticsHandler {
             if (startTextPosition != null) {
                 position =
                         new SourceFilePosition(
-                                ((PathOrigin) origin.parent()).getPath().toFile(),
+                                originFile,
                                 new SourcePosition(
                                         startTextPosition.getLine(),
                                         startTextPosition.getColumn(),
@@ -117,13 +119,11 @@ class D8DiagnosticsHandler implements DiagnosticsHandler {
                                         toIntOffset(endTextPosition.getOffset())));
 
             } else {
-                position = SourceFilePosition.UNKNOWN;
+                position = new SourceFilePosition(originFile, SourcePosition.UNKNOWN);
             }
         } else if (origin.parent() instanceof PathOrigin) {
-            position =
-                    new SourceFilePosition(
-                            ((PathOrigin) origin.parent()).getPath().toFile(),
-                            SourcePosition.UNKNOWN);
+            File originFile = ((PathOrigin) origin.parent()).getPath().toFile();
+            position = new SourceFilePosition(originFile, SourcePosition.UNKNOWN);
         } else {
             position = SourceFilePosition.UNKNOWN;
             if (origin != Origin.unknown()) {
