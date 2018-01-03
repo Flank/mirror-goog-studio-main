@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.incremental;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext.Build;
 import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
@@ -1031,16 +1032,40 @@ public class InstantRunBuildContextTest {
     }
 
     @Test
-    public void testRevertsToFullIfAllSplitsRebuilt() throws Exception {
+    public void testRevertsToFullIfAllSplitsRebuiltMultiApk() throws Exception {
+        testRevertsToFullIfAllSplitsRebuilt(InstantRunPatchingPolicy.MULTI_APK);
+    }
+
+    @Test
+    public void testRevertsToFullIfAllSplitsRebuiltSeparateResources() throws Exception {
+        testRevertsToFullIfAllSplitsRebuilt(InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES);
+    }
+
+    private static void testRevertsToFullIfAllSplitsRebuilt(
+            @NonNull InstantRunPatchingPolicy patchingPolicy) throws Exception {
+        AndroidVersion androidVersion;
+        switch (patchingPolicy) {
+            case MULTI_APK:
+                androidVersion = new AndroidVersion(25, null);
+                break;
+            case MULTI_APK_SEPARATE_RESOURCES:
+                androidVersion = new AndroidVersion(26, null);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown patching policy " + patchingPolicy);
+        }
+
         InstantRunBuildContext initial =
                 new InstantRunBuildContext(
                         idAllocator,
                         true,
                         AaptGeneration.AAPT_V2_DAEMON_MODE,
-                        new AndroidVersion(25, null),
+                        androidVersion,
                         null,
                         null,
                         true);
+
+        assertThat(initial.getPatchingPolicy()).isEqualTo(patchingPolicy);
 
         // set the initial build.
         initial.setVerifierStatus(InstantRunVerifierStatus.INITIAL_BUILD);
@@ -1059,7 +1084,7 @@ public class InstantRunBuildContextTest {
                         idAllocator,
                         true,
                         AaptGeneration.AAPT_V2_DAEMON_MODE,
-                        new AndroidVersion(25, null),
+                        androidVersion,
                         null,
                         null,
                         true);
@@ -1078,7 +1103,7 @@ public class InstantRunBuildContextTest {
                         idAllocator,
                         true,
                         AaptGeneration.AAPT_V2_DAEMON_MODE,
-                        new AndroidVersion(25, null),
+                        androidVersion,
                         null,
                         null,
                         true);
