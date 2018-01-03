@@ -662,8 +662,7 @@ public class InstantRunBuildContext {
                 // installed.
                 // In this case we would have purged all of the intermediate history, so all the
                 // artifacts would be on the current build.
-                if (patchingPolicy == InstantRunPatchingPolicy.MULTI_APK
-                        && previousBuilds.keySet().size() == 2
+                if (previousBuilds.keySet().size() == 2
                         && previousBuilds.get(initialFullBuild).artifacts.size()
                                 == currentBuild.artifacts.size()) {
                     currentBuild.buildMode = InstantRunBuildMode.FULL;
