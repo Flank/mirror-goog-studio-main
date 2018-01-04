@@ -132,7 +132,7 @@ string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
   // are the default events used by simpleperf. In that case, we need to use
   // cpu-clock events.
   if (is_emulator_) {
-    command << "-e cpu-clock";
+    command << " -e cpu-clock";
   }
 
   command << " --exit-with-parent";
