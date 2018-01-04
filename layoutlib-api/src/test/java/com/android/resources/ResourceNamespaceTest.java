@@ -77,4 +77,9 @@ public class ResourceNamespaceTest {
         assertNotEquals(TOOLS, bbb2);
         assertNotEquals(RES_AUTO, bbb2);
     }
+
+    @Test
+    public void xmlNamespaceUri() {
+        assertEquals(SdkConstants.ANDROID_URI, ANDROID.getXmlNamespaceUri());
+    }
 }

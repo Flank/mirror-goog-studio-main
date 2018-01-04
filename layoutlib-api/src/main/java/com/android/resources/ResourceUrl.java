@@ -15,7 +15,9 @@
  */
 package com.android.resources;
 
-import static com.android.ide.common.rendering.api.RenderResources.*;
+import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_EMPTY;
+import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_NULL;
+import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_UNDEFINED;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -211,17 +213,23 @@ public class ResourceUrl implements Serializable {
      * necessarily known to be a valid resource; for example, "?attr/hello world"
      */
     public boolean hasValidName() {
+        return isValidName(name, type);
+    }
+
+    public static boolean isValidName(@NonNull String input, @NonNull ResourceType type) {
+        // TODO(namespaces): This (almost) duplicates ValueResourceNameValidator.
+
         // Make sure it looks like a resource name; if not, it could just be a string
         // which starts with a ?, etc.
-        if (name.isEmpty()) {
+        if (input.isEmpty()) {
             return false;
         }
 
-        if (!Character.isJavaIdentifierStart(name.charAt(0))) {
+        if (!Character.isJavaIdentifierStart(input.charAt(0))) {
             return false;
         }
-        for (int i = 1, n = name.length(); i < n; i++) {
-            char c = name.charAt(i);
+        for (int i = 1, n = input.length(); i < n; i++) {
+            char c = input.charAt(i);
             if (!Character.isJavaIdentifierPart(c) && c != '.') {
                 // Sample data allows for extra characters
                 if (type != ResourceType.SAMPLE_DATA
@@ -232,15 +240,6 @@ public class ResourceUrl implements Serializable {
         }
 
         return true;
-    }
-
-    /**
-     * Creates a copy of this {@link ResourceUrl} with the {@code framework} field set to the given
-     * value.
-     */
-    @NonNull
-    public ResourceUrl withFramework(boolean isFramework) {
-        return new ResourceUrl(type, name, namespace, isFramework, create, theme);
     }
 
     /** Creates a copy of this {@link ResourceUrl} with the {@code theme} field set to true. */

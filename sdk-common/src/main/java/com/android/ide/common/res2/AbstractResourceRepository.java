@@ -37,9 +37,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Table;
+import com.google.common.collect.Tables;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -356,22 +359,38 @@ public abstract class AbstractResourceRepository {
      * Returns the resources values matching a given {@link FolderConfiguration}.
      *
      * @param referenceConfig the configuration that each value must match.
-     * @return a map with guaranteed to contain an entry for each {@link ResourceType}
+     * @return a {@link Table} with one row for every namespace present in this repository, where
+     *     every row contains an entry for all resource types.
      */
     @NonNull
-    // TODO: namespaces
-    public Map<ResourceType, ResourceValueMap> getConfiguredResources(
+    public Table<ResourceNamespace, ResourceType, ResourceValueMap> getConfiguredResources(
             @NonNull FolderConfiguration referenceConfig) {
-        Map<ResourceType, ResourceValueMap> map = Maps.newEnumMap(ResourceType.class);
-
         synchronized (ITEM_MAP_LOCK) {
-            for (ResourceType key : ResourceType.values()) {
-                // get the local results and put them in the map
-                map.put(key, getConfiguredResources(key, referenceConfig));
-            }
-        }
+            Set<ResourceNamespace> namespaces = getNamespaces();
 
-        return map;
+            Map<ResourceNamespace, Map<ResourceType, ResourceValueMap>> backingMap;
+            if (KnownNamespacesMap.canContainAll(namespaces)) {
+                backingMap = new KnownNamespacesMap<>();
+            } else {
+                backingMap = new HashMap<>();
+            }
+            Table<ResourceNamespace, ResourceType, ResourceValueMap> table =
+                    Tables.newCustomTable(backingMap, () -> Maps.newEnumMap(ResourceType.class));
+
+            for (ResourceNamespace namespace : namespaces) {
+                // TODO(namespaces): Move this method to ResourceResolverCache.
+                // TODO(namespaces): Once we start storing framework resources in the repository, we
+                //     probably don't want it included in the result, as they have a different lifetime.
+                //     Lets revisit this once we start keeping them in the repo.
+                assert namespace != ResourceNamespace.ANDROID;
+
+                for (ResourceType type : ResourceType.values()) {
+                    // get the local results and put them in the map
+                    table.put(namespace, type, getConfiguredResources(type, referenceConfig));
+                }
+            }
+            return table;
+        }
     }
 
     /**

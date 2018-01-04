@@ -197,8 +197,8 @@ public class ResourceRepositoryTest2 extends TestCase {
         //assertTrue(item.hasDefault());
         FolderConfiguration folderConfig = new FolderConfiguration();
         folderConfig.setLocaleQualifier(LocaleQualifier.getQualifier("en"));
-        Map<ResourceType, ResourceValueMap> configuredItems = mRepository
-                .getConfiguredResources(folderConfig);
+        Map<ResourceType, ResourceValueMap> configuredItems =
+                mRepository.getConfiguredResources(folderConfig).row(ResourceNamespace.RES_AUTO);
         ResourceValue value = configuredItems.get(ResourceType.STRING).get("show_all_apps");
         assertNotNull(value);
         assertEquals("All", value.getValue());
@@ -206,7 +206,8 @@ public class ResourceRepositoryTest2 extends TestCase {
 
         folderConfig = new FolderConfiguration();
         folderConfig.setLocaleQualifier(LocaleQualifier.getQualifier("es"));
-        configuredItems = mRepository.getConfiguredResources(folderConfig);
+        configuredItems =
+                mRepository.getConfiguredResources(folderConfig).row(ResourceNamespace.RES_AUTO);
         value = configuredItems.get(ResourceType.STRING).get("show_all_apps");
         assertNotNull(value);
         assertEquals("Todo", value.getValue());
@@ -248,7 +249,7 @@ public class ResourceRepositoryTest2 extends TestCase {
                 new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
 
         Map<ResourceType, ResourceValueMap> configuredResources =
-                mRepository.getConfiguredResources(folderConfig);
+                mRepository.getConfiguredResources(folderConfig).row(ResourceNamespace.RES_AUTO);
         ResourceValueMap strings = configuredResources.get(ResourceType.STRING);
         ResourceValueMap layouts = configuredResources.get(ResourceType.LAYOUT);
         ResourceValueMap ids = configuredResources.get(ResourceType.ID);
@@ -280,7 +281,7 @@ public class ResourceRepositoryTest2 extends TestCase {
                 new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
 
         Map<ResourceType, ResourceValueMap> configuredResources =
-                mRepository.getConfiguredResources(folderConfig);
+                mRepository.getConfiguredResources(folderConfig).row(ResourceNamespace.RES_AUTO);
         ResourceValueMap layouts = configuredResources.get(ResourceType.LAYOUT);
         assertEquals(6, layouts.size());
         assertNotNull(layouts.get("layout1"));

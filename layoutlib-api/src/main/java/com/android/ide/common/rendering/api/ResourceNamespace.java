@@ -68,6 +68,7 @@ public class ResourceNamespace implements Serializable {
     public static ResourceNamespace fromPackageName(@NonNull String packageName) {
         assert !Strings.isNullOrEmpty(packageName);
         if (packageName.equals(SdkConstants.ANDROID_NS_NAME)) {
+            // Make sure ANDROID is a singleton, so we can use object identity to check for it.
             return ANDROID;
         } else {
             return new ResourceNamespace(packageName);
@@ -151,6 +152,11 @@ public class ResourceNamespace implements Serializable {
         return packageName;
     }
 
+    @NonNull
+    public String getXmlNamespaceUri() {
+        return SdkConstants.URI_PREFIX + packageName;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -178,15 +184,28 @@ public class ResourceNamespace implements Serializable {
             super(null);
         }
 
+        @NonNull
+        @Override
+        public String getXmlNamespaceUri() {
+            return SdkConstants.AUTO_URI;
+        }
+
         @Override
         public String toString() {
             return "res-auto";
         }
+
     }
 
     private static class ToolsNamespace extends ResourceNamespace {
         private ToolsNamespace() {
             super(null);
+        }
+
+        @NonNull
+        @Override
+        public String getXmlNamespaceUri() {
+            return SdkConstants.TOOLS_URI;
         }
 
         @Override

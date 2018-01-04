@@ -30,8 +30,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 public class ResourceItemResolverTest extends TestCase {
-    @SuppressWarnings("ConstantConditions")
-    public void test() throws Exception {
+    public void testBasicFunctionality() throws Exception {
         final TestResourceRepository frameworkResources = TestResourceRepository.create(true,
                 new Object[]{
                         "values/strings.xml", ""
@@ -164,39 +163,44 @@ public class ResourceItemResolverTest extends TestCase {
                     }
                 };
 
-        ResourceItemResolver.ResourceProvider provider = new ResourceItemResolver.ResourceProvider() {
-            private ResourceResolver mResolver;
+        ResourceItemResolver.ResourceProvider provider =
+                new ResourceItemResolver.ResourceProvider() {
+                    private ResourceResolver mResolver;
 
-            @Nullable
-            @Override
-            public ResourceResolver getResolver(boolean createIfNecessary) {
-                if (mResolver == null && createIfNecessary) {
-                    Map<ResourceType, ResourceValueMap> appResourceMap;
-                    appResourceMap = appResources.getConfiguredResources(config);
-                    Map<ResourceType, ResourceValueMap> frameworkResourcesMap =
-                            frameworkResources.getConfiguredResources(config);
-                    assertNotNull(appResourceMap);
-                    mResolver = ResourceResolver.create(appResourceMap, frameworkResourcesMap,
-                            "MyTheme", true);
-                    assertNotNull(mResolver);
-                    mResolver.setLogger(logger);
-                }
+                    @Nullable
+                    @Override
+                    public ResourceResolver getResolver(boolean createIfNecessary) {
+                        if (mResolver == null && createIfNecessary) {
+                            Map<ResourceType, ResourceValueMap> appResourceMap =
+                                    appResources
+                                            .getConfiguredResources(config)
+                                            .row(ResourceNamespace.RES_AUTO);
+                            Map<ResourceType, ResourceValueMap> frameworkResourcesMap =
+                                    frameworkResources.getConfiguredResources(config);
+                            assertNotNull(appResourceMap);
+                            mResolver =
+                                    ResourceResolverNoNamespacesTest.nonNamespacedResolver(
+                                            appResourceMap, frameworkResourcesMap, "MyTheme", true);
+                            assertNotNull(mResolver);
+                            mResolver.setLogger(logger);
+                        }
 
-                return mResolver;
-            }
+                        return mResolver;
+                    }
 
-            @Nullable
-            @Override
-            public com.android.ide.common.resources.ResourceRepository getFrameworkResources() {
-                return frameworkResources;
-            }
+                    @Nullable
+                    @Override
+                    public com.android.ide.common.resources.ResourceRepository
+                            getFrameworkResources() {
+                        return frameworkResources;
+                    }
 
-            @Nullable
-            @Override
-            public ResourceRepository getAppResources() {
-                return appResources;
-            }
-        };
+                    @Nullable
+                    @Override
+                    public ResourceRepository getAppResources() {
+                        return appResources;
+                    }
+                };
 
         ResourceItemResolver resolver = new ResourceItemResolver(config, provider, logger);
 

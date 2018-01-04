@@ -16,8 +16,13 @@
 
 package com.android.ide.common.rendering.api;
 
+import com.android.SdkConstants;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * A class containing all the resources needed to do a rendering.
@@ -111,12 +116,13 @@ public class RenderResources {
     /**
      * Returns a theme by its name.
      *
-     * @param name the name of the theme
-     * @param frameworkTheme whether the theme is a framework theme.
-     * @return the theme or null if there's no match
+     * @deprecated Use {@link #getStyle(ResourceReference)}
      */
+    @Deprecated
     public StyleResourceValue getTheme(String name, boolean frameworkTheme) {
-        return null;
+        return getStyle(
+                new ResourceReference(
+                        ResourceNamespace.fromBoolean(frameworkTheme), ResourceType.STYLE, name));
     }
 
     /**
@@ -131,20 +137,28 @@ public class RenderResources {
 
     /**
      * Returns a framework resource by type and name. The returned resource is resolved.
+     *
      * @param resourceType the type of the resource
      * @param resourceName the name of the resource
+     * @deprecated Use {@link #getResolvedResource(ResourceReference)}
      */
+    @Deprecated
     public ResourceValue getFrameworkResource(ResourceType resourceType, String resourceName) {
-        return null;
+        return getResolvedResource(
+                new ResourceReference(ResourceNamespace.ANDROID, resourceType, resourceName));
     }
 
     /**
      * Returns a project resource by type and name. The returned resource is resolved.
+     *
      * @param resourceType the type of the resource
      * @param resourceName the name of the resource
+     * @deprecated Use {@link #getResolvedResource(ResourceReference)}
      */
+    @Deprecated
     public ResourceValue getProjectResource(ResourceType resourceType, String resourceName) {
-        return null;
+        return getResolvedResource(
+                new ResourceReference(ResourceNamespace.RES_AUTO, resourceType, resourceName));
     }
 
     /**
@@ -230,54 +244,115 @@ public class RenderResources {
     }
 
     /**
-     * Searches for, and returns a {@link ResourceValue} by its reference.
-     * <p>
-     * The reference format can be:
-     * <pre>@resType/resName</pre>
-     * <pre>@android:resType/resName</pre>
-     * <pre>@resType/android:resName</pre>
-     * <pre>?resType/resName</pre>
-     * <pre>?android:resType/resName</pre>
-     * <pre>?resType/android:resName</pre>
-     * Any other string format will return <code>null</code>.
-     * <p>
-     * The actual format of a reference is <pre>@[namespace:]resType/resName</pre> but this method
-     * only support the android namespace.
-     *
-     * @param reference the resource reference to search for.
-     * @param forceFrameworkOnly if true all references are considered to be toward framework
-     *      resource even if the reference does not include the android: prefix.
-     * @return a {@link ResourceValue} or <code>null</code>.
+     * @deprecated Use {@link #dereference(ResourceValue)} instead, to provide context necessary to
+     *     handle namespaces correctly, like the "current" namespace or namespace prefix lookup
+     *     logic. Alternatively, use {@link #getUnresolvedResource(ResourceReference)} or {@link
+     *     #getResolvedResource(ResourceReference)} if you already know exactly what you're looking
+     *     for.
      */
-    public ResourceValue findResValue(String reference, boolean forceFrameworkOnly) {
+    @Nullable
+    @Deprecated
+    public final ResourceValue findResValue(
+            @Nullable String reference, boolean forceFrameworkOnly) {
+        if (reference == null) {
+            return null;
+        }
+
+        // Type is ignored. We don't call setNamespaceLookup, because this method is called from code that's not namespace aware anyway.
+        return dereference(
+                new ResourceValue(
+                        ResourceType.ID,
+                        "com.android.ide.common.rendering.api.RenderResources",
+                        reference,
+                        forceFrameworkOnly));
+    }
+
+    /**
+     * Searches for a {@link ResourceValue} referenced by the given value. This method doesn't
+     * perform recursive resolution, so the returned {@link ResourceValue} (if not null) may be just
+     * another reference.
+     *
+     * <p>References to theme attributes is supported and resolved against the theme from {@link
+     * #getDefaultTheme()}. For more details see <a
+     * href="https://developer.android.com/guide/topics/resources/accessing-resources.html#ReferencesToThemeAttributes">Referencing
+     * style attributes</a>
+     *
+     * <p>Unlike {@link #resolveResValue(ResourceValue)}, this method returns null if the input is
+     * not a reference (i.e. doesn't start with '@' or '?').
+     *
+     * @param resourceValue the value to dereference. Its namespace and namespace lookup logic are
+     *     used to handle namespaces when interpreting the textual value. The type is ignored and
+     *     will not affect the type of the returned value.
+     * @see #resolveResValue(ResourceValue)
+     */
+    @Nullable
+    public ResourceValue dereference(@NonNull ResourceValue resourceValue) {
         return null;
     }
 
+    /** Returns a resource by namespace, type and name. The returned resource is unresolved. */
+    @Nullable
+    public ResourceValue getUnresolvedResource(ResourceReference reference) {
+        return null;
+    }
+
+    /**
+     * Returns a resource by namespace, type and name. The returned resource is resolved, as defined
+     * in {@link #resolveResValue(ResourceValue)}.
+     *
+     * @see #resolveResValue(ResourceValue)
+     */
+    @Nullable
+    public ResourceValue getResolvedResource(ResourceReference reference) {
+        ResourceValue referencedValue = getUnresolvedResource(reference);
+        if (referencedValue == null) {
+            return null;
+        }
+
+        return resolveResValue(referencedValue);
+    }
+
+    /**
+     * Context used when dealing with old layoutlib code.
+     *
+     * <p>Historically we assumed that "tools:" means {@link SdkConstants#TOOLS_URI}, so need to
+     * keep doing that, at least in non-namespaced projects.
+     *
+     * @see #resolveValue(ResourceType, String, String, boolean)
+     */
+    @Deprecated
+    private static final Function<String, String> TOOLS_NS_CONTEXT =
+            Collections.singletonMap(SdkConstants.TOOLS_NS_NAME, SdkConstants.TOOLS_URI)::get;
 
     /**
      * Kept for layoutlib. Remove ASAP.
      *
      * @deprecated Use {@link #resolveResValue(ResourceValue)}
      */
+    @Nullable
+    @Deprecated
     public ResourceValue resolveValue(
             ResourceType type, String name, String value, boolean isFrameworkValue) {
-        return resolveResValue(new ResourceValue(type, name, value, isFrameworkValue));
+        ResourceValue resourceValue = new ResourceValue(type, name, value, isFrameworkValue);
+        resourceValue.setNamespaceLookup(TOOLS_NS_CONTEXT);
+        return resolveResValue(resourceValue);
     }
 
     /**
-     * Returns the {@link ResourceValue} referenced by the value of <var>value</var>.
-     * <p>
-     * This method ensures that it returns a {@link ResourceValue} object that does not
-     * reference another resource.
-     * If the resource cannot be resolved, it returns <code>null</code>.
-     * <p>
-     * If a value that does not need to be resolved is given, the method will return the input
+     * Returns the "final" {@link ResourceValue} referenced by the value of <var>value</var>.
+     *
+     * <p>This method ensures that the returned {@link ResourceValue} object is not a valid
+     * reference to another resource. It may be just a leaf value (e.g. "#000000") or a reference
+     * that could not be dereferenced.
+     *
+     * <p>If a value that does not need to be resolved is given, the method will return the input
      * value.
      *
      * @param value the value containing the reference to resolve.
      * @return a {@link ResourceValue} object or <code>null</code>
      */
-    public ResourceValue resolveResValue(ResourceValue value) {
+    @Nullable
+    public ResourceValue resolveResValue(@Nullable ResourceValue value) {
         return null;
     }
 
@@ -292,10 +367,21 @@ public class RenderResources {
 
     /**
      * Returns the style matching the given name. The name should not contain any namespace prefix.
+     *
      * @param styleName Name of the style. For example, "Widget.ListView.DropDown".
      * @return the {link StyleResourceValue} for the style, or null if not found.
+     * @deprecated Use {@link #getStyle(ResourceReference)}
      */
+    @Deprecated
     public StyleResourceValue getStyle(String styleName, boolean isFramework) {
-         return null;
-     }
+        return getStyle(
+                new ResourceReference(
+                        ResourceNamespace.fromBoolean(isFramework), ResourceType.STYLE, styleName));
+    }
+
+    /** Returns the style matching the given reference. */
+    @Nullable
+    public StyleResourceValue getStyle(@NonNull ResourceReference reference) {
+        return null;
+    }
 }

@@ -115,50 +115,49 @@ public class ResourceItemResolver extends RenderResources {
         return resolveResValue(resolvedResValue, depth + 1);
     }
 
-    @Override
     @Nullable
-    public ResourceValue findResValue(@Nullable String reference, boolean inFramework) {
+    @Override
+    public ResourceValue dereference(@NonNull ResourceValue value) {
         if (mResolver != null) {
-            return mResolver.findResValue(reference, inFramework);
+            return mResolver.dereference(value);
         }
 
-        if (reference == null) {
+        if (mLookupChain != null
+                && !mLookupChain.isEmpty()
+                && !mLookupChain.get(mLookupChain.size() - 1).equals(value)) {
+            mLookupChain.add(value);
+        }
+
+        String valueText = value.getValue();
+        if (valueText == null) {
             return null;
         }
 
-        if (mLookupChain != null && !mLookupChain.isEmpty() &&
-                reference.startsWith(PREFIX_RESOURCE_REF)) {
-            ResourceValue prev = mLookupChain.get(mLookupChain.size() - 1);
-            if (!reference.equals(prev.getValue())) {
-                ResourceValue next = new ResourceValue(prev, reference, prev.getLibraryName());
-                mLookupChain.add(next);
-            }
-        }
-
-        ResourceUrl resource = ResourceUrl.parse(reference);
-        if (resource != null && resource.hasValidName()) {
-            if (resource.theme) {
+        ResourceUrl url = ResourceUrl.parse(valueText);
+        if (url != null && url.hasValidName()) {
+            if (url.theme) {
                 // Do theme lookup? We can't do that here; requires full global analysis, so just use
-                // a real resource resolver
+                // a real resource resolver.
                 ResourceResolver resolver = getFullResolver();
                 if (resolver != null) {
-                    return resolver.findResValue(reference, inFramework);
+                    return resolver.dereference(value);
                 } else {
                     return null;
                 }
-            } else if (reference.startsWith(PREFIX_RESOURCE_REF)) {
-                return findResValue(resource, inFramework || resource.framework);
             }
+
+            // TODO(namespaces)
+            return findResValue(url);
         }
 
         // Looks like the value didn't reference anything. Return null.
         return null;
     }
 
-    private ResourceValue findResValue(ResourceUrl url, boolean framework) {
+    private ResourceValue findResValue(ResourceUrl url) {
         // map of ResourceValue for the given type
         // if allowed, search in the project resources first.
-        if (!framework) {
+        if (!url.framework) {
             if (myAppResources == null) {
                 assert mResourceProvider != null;
                 myAppResources = mResourceProvider.getAppResources();
@@ -166,7 +165,7 @@ public class ResourceItemResolver extends RenderResources {
                     return null;
                 }
             }
-            ResourceValue item = null;
+            ResourceValue item;
             item = myAppResources.getConfiguredValue(url.type, url.name, mConfiguration);
             if (item != null) {
                 if (mLookupChain != null) {
@@ -196,10 +195,7 @@ public class ResourceItemResolver extends RenderResources {
         // didn't find the resource anywhere.
         if (mLogger != null) {
             mLogger.warning(
-                    LayoutLog.TAG_RESOURCES_RESOLVE,
-                    "Couldn't resolve resource " + url.withFramework(framework),
-                    null,
-                    url.withFramework(framework));
+                    LayoutLog.TAG_RESOURCES_RESOLVE, "Couldn't resolve resource " + url, null, url);
         }
         return null;
     }

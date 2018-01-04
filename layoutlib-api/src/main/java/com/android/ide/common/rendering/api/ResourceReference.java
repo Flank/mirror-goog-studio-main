@@ -16,7 +16,6 @@
 
 package com.android.ide.common.rendering.api;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.android.resources.ResourceType;
@@ -75,7 +74,7 @@ public class ResourceReference implements Serializable {
      */
     @Deprecated
     public final boolean isFramework() {
-        return SdkConstants.ANDROID_NS_NAME.equals(mNamespace.getPackageName());
+        return mNamespace == ResourceNamespace.ANDROID;
     }
 
     @NonNull

@@ -113,8 +113,6 @@ public class ResourceValue extends ResourceReference {
      *
      * <p>This method should be called before inspecting the textual value ({@link #getValue}), as
      * it handles namespaces correctly.
-     *
-     * <p>TODO(namespaces): Use this in ResourceResolver.
      */
     @Nullable
     public ResourceReference getReference() {

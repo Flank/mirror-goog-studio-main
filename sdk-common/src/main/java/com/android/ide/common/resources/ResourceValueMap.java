@@ -24,21 +24,28 @@ import java.util.Set;
 
 /** A {@link ResourceNameKeyedMap} that stores {@link ResourceValue}s as values. */
 public class ResourceValueMap extends ResourceNameKeyedMap<ResourceValue> {
-  private ResourceValueMap(@NonNull Map<String, ResourceValue> delegate, @NonNull Set<String> keySet) {
+    private ResourceValueMap(
+            @NonNull Map<String, ResourceValue> delegate, @NonNull Set<String> keySet) {
         super(delegate, keySet);
     }
 
     private ResourceValueMap() {
         super();
-  }
+    }
 
-  @NonNull
-  public static ResourceValueMap createWithExpectedSize(int expectedSize) {
-    return new ResourceValueMap(Maps.newHashMapWithExpectedSize(expectedSize), Sets.newHashSetWithExpectedSize(expectedSize));
-  }
+    @NonNull
+    public static ResourceValueMap createWithExpectedSize(int expectedSize) {
+        return new ResourceValueMap(
+                Maps.newHashMapWithExpectedSize(expectedSize),
+                Sets.newHashSetWithExpectedSize(expectedSize));
+    }
 
-  @NonNull
-  public static ResourceValueMap create() {
+    @NonNull
+    public static ResourceValueMap create() {
         return new ResourceValueMap();
-  }
+    }
+
+    public void put(@NonNull ResourceValue resourceValue) {
+        put(resourceValue.getName(), resourceValue);
+    }
 }

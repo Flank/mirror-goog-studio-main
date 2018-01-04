@@ -1,6 +1,14 @@
 package com.android.ide.common.resources;
 
-import com.android.ide.common.rendering.api.*;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ArrayResourceValue;
+import com.android.ide.common.rendering.api.DensityBasedResourceValue;
+import com.android.ide.common.rendering.api.LayoutLog;
+import com.android.ide.common.rendering.api.RenderResources;
+import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.Density;
 import com.android.resources.ResourceType;
@@ -13,8 +21,24 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import junit.framework.TestCase;
 
-public class ResourceResolverTest extends TestCase {
-    public void test() throws Exception {
+public class ResourceResolverNoNamespacesTest extends TestCase {
+
+    static ResourceResolver nonNamespacedResolver(
+            Map<ResourceType, ResourceValueMap> projectResources,
+            Map<ResourceType, ResourceValueMap> frameworkResources,
+            String themeName,
+            boolean isProjectTheme) {
+        return ResourceResolver.create(
+                ImmutableMap.of(
+                        ResourceNamespace.RES_AUTO,
+                        projectResources,
+                        ResourceNamespace.ANDROID,
+                        frameworkResources),
+                themeName,
+                isProjectTheme);
+    }
+
+    public void testBasicFunctionality() throws Exception {
         TestResourceRepository frameworkRepository = TestResourceRepository.create(true,
                 new Object[]{
                         "values/strings.xml", ""
@@ -128,8 +152,8 @@ public class ResourceResolverTest extends TestCase {
         Map<ResourceType, ResourceValueMap> frameworkResources =
                 frameworkRepository.getConfiguredResources(config);
         assertNotNull(projectResources);
-        ResourceResolver resolver = ResourceResolver.create(projectResources, frameworkResources,
-                "MyTheme", true);
+        ResourceResolver resolver =
+                nonNamespacedResolver(projectResources, frameworkResources, "MyTheme", true);
         assertNotNull(resolver);
 
         LayoutLog logger =
@@ -321,16 +345,18 @@ public class ResourceResolverTest extends TestCase {
 
         // Switch to MyTheme.Dotted1 (to make sure the parent="" inheritance works properly.)
         // To do that we need to create a new resource resolver.
-        resolver = ResourceResolver.create(projectResources, frameworkResources,
-                "MyTheme.Dotted1", true);
+        resolver =
+                nonNamespacedResolver(
+                        projectResources, frameworkResources, "MyTheme.Dotted1", true);
         resolver.setLogger(logger);
         assertNotNull(resolver);
         assertEquals("MyTheme.Dotted1", resolver.getThemeName());
         assertTrue(resolver.isProjectTheme());
         assertNull(resolver.findItemInTheme("colorForeground", true));
 
-        resolver = ResourceResolver.create(projectResources, frameworkResources,
-                "MyTheme.Dotted2", true);
+        resolver =
+                nonNamespacedResolver(
+                        projectResources, frameworkResources, "MyTheme.Dotted2", true);
         resolver.setLogger(logger);
         assertNotNull(resolver);
         assertEquals("MyTheme.Dotted2", resolver.getThemeName());
@@ -339,7 +365,7 @@ public class ResourceResolverTest extends TestCase {
 
         // Test recording resolver
         List<ResourceValue> chain = Lists.newArrayList();
-        resolver = ResourceResolver.create(projectResources, frameworkResources, "MyTheme", true);
+        resolver = nonNamespacedResolver(projectResources, frameworkResources, "MyTheme", true);
         resolver = resolver.createRecorder(chain);
         assertNotNull(resolver.findResValue("@android:color/bright_foreground_dark", true));
         ResourceValue v = resolver.findResValue("@android:color/bright_foreground_dark", false);
@@ -373,8 +399,8 @@ public class ResourceResolverTest extends TestCase {
         Map<ResourceType, ResourceValueMap> projectResources =
                 projectRepository.getConfiguredResources(config);
         assertNotNull(projectResources);
-        ResourceResolver resolver = ResourceResolver.create(projectResources, projectResources,
-                "MyTheme", true);
+        ResourceResolver resolver =
+                nonNamespacedResolver(projectResources, projectResources, "MyTheme", true);
         final AtomicBoolean wasWarned = new AtomicBoolean(false);
         LayoutLog logger =
                 new LayoutLog() {
@@ -414,15 +440,20 @@ public class ResourceResolverTest extends TestCase {
         Map<ResourceType, ResourceValueMap> projectResources =
                 projectRepository.getConfiguredResources(config);
         assertNotNull(projectResources);
-        ResourceResolver resolver = ResourceResolver.create(projectResources, projectResources,
-                "MyTheme", true);
+        ResourceResolver resolver =
+                nonNamespacedResolver(projectResources, projectResources, "MyTheme", true);
         assertNotNull(resolver);
 
         final AtomicBoolean wasWarned = new AtomicBoolean(false);
         LayoutLog logger =
                 new LayoutLog() {
                     @Override
-                    public void error(String tag, String message, Object viewCookie, Object data) {
+                    public void error(
+                            @Nullable String tag,
+                            @NonNull String message,
+                            @Nullable Throwable throwable,
+                            @Nullable Object viewCookie,
+                            @Nullable Object data) {
                         if (("Potential stack overflow trying to resolve "
                                         + "'@color/loop1': cyclic resource definitions?"
                                         + " Render may not be accurate.")
@@ -488,15 +519,20 @@ public class ResourceResolverTest extends TestCase {
         Map<ResourceType, ResourceValueMap> projectResources =
                 projectRepository.getConfiguredResources(config);
         assertNotNull(projectResources);
-        ResourceResolver resolver = ResourceResolver.create(projectResources, projectResources,
-                "ButtonStyle", true);
+        ResourceResolver resolver =
+                nonNamespacedResolver(projectResources, projectResources, "ButtonStyle", true);
         assertNotNull(resolver);
 
         final AtomicBoolean wasWarned = new AtomicBoolean(false);
         LayoutLog logger =
                 new LayoutLog() {
                     @Override
-                    public void error(String tag, String message, Object viewCookie, Object data) {
+                    public void error(
+                            @Nullable String tag,
+                            @NonNull String message,
+                            @Nullable Throwable throwable,
+                            @Nullable Object viewCookie,
+                            @Nullable Object data) {
                         assertEquals(
                                 "Cyclic style parent definitions: \"ButtonStyle\" specifies "
                                         + "parent \"ButtonStyle.Base\" implies parent \"ButtonStyle\"",
@@ -579,8 +615,8 @@ public class ResourceResolverTest extends TestCase {
         Map<ResourceType, ResourceValueMap> frameworkResources = frameworkRepository
                 .getConfiguredResources(config);
         assertNotNull(projectResources);
-        ResourceResolver lightResolver = ResourceResolver.create(projectResources,
-                frameworkResources, "AppTheme", true);
+        ResourceResolver lightResolver =
+                nonNamespacedResolver(projectResources, frameworkResources, "AppTheme", true);
         assertNotNull(lightResolver);
         ResourceValue textColor = lightResolver.findItemInTheme("textColor", true);
         assertNotNull(textColor);
@@ -591,8 +627,8 @@ public class ResourceResolverTest extends TestCase {
         assertNotNull(textColor);
         assertEquals("#ff0000", textColor.getValue());
 
-        ResourceResolver darkResolver = ResourceResolver.create(projectResources,
-                frameworkResources, "AppTheme.Dark", true);
+        ResourceResolver darkResolver =
+                nonNamespacedResolver(projectResources, frameworkResources, "AppTheme.Dark", true);
         assertNotNull(darkResolver);
         textColor = darkResolver.findItemInTheme("textColor", true);
         assertNotNull(textColor);
@@ -657,14 +693,19 @@ public class ResourceResolverTest extends TestCase {
         Map<ResourceType, ResourceValueMap> frameworkResources = frameworkRepository
                 .getConfiguredResources(config);
         assertNotNull(projectResources);
-        ResourceResolver resolver = ResourceResolver.create(projectResources,
-                frameworkResources, "AppTheme", true);
+        ResourceResolver resolver =
+                nonNamespacedResolver(projectResources, frameworkResources, "AppTheme", true);
 
         final AtomicBoolean wasWarned = new AtomicBoolean(false);
         LayoutLog logger =
                 new LayoutLog() {
                     @Override
-                    public void error(String tag, String message, Object viewCookie, Object data) {
+                    public void error(
+                            @Nullable String tag,
+                            @NonNull String message,
+                            @Nullable Throwable throwable,
+                            @Nullable Object viewCookie,
+                            @Nullable Object data) {
                         if ("Cyclic style parent definitions: \"foo\" specifies parent \"bar\" specifies parent \"foo\""
                                 .equals(message)) {
                             wasWarned.set(true);
@@ -718,8 +759,9 @@ public class ResourceResolverTest extends TestCase {
                 frameworkRepository.getConfiguredResources(config);
         assertNotNull(frameworkResources);
 
-        ResourceResolver resolver = ResourceResolver.create(projectResources, frameworkResources,
-                "Theme.Material", false);
+        ResourceResolver resolver =
+                nonNamespacedResolver(
+                        projectResources, frameworkResources, "Theme.Material", false);
         assertNull(ResourceResolver.copy(null));
         ResourceResolver copyResolver = ResourceResolver.copy(resolver);
         assertNotNull(copyResolver);
@@ -740,8 +782,7 @@ public class ResourceResolverTest extends TestCase {
         // If the LocalResourceRespository fails to be loaded, the resolver will be created with empty maps. Make sure
         // empty maps are valid inputs
         ResourceResolver resolver =
-                ResourceResolver.create(
-                        Collections.emptyMap(), Collections.emptyMap(), null, false);
+                nonNamespacedResolver(Collections.emptyMap(), Collections.emptyMap(), null, false);
         assertNotNull(ResourceResolver.copy(resolver));
 
         assertNull(resolver.findResValue("@color/doesnt_exist", false));
@@ -793,7 +834,7 @@ public class ResourceResolverTest extends TestCase {
                 projectRepository.getConfiguredResources(config);
         assertNotNull(projectResources);
         ResourceResolver resolver =
-                ResourceResolver.create(projectResources, projectResources, "ButtonStyle", true);
+                nonNamespacedResolver(projectResources, projectResources, "ButtonStyle", true);
         resolver.setFrameworkResourceIdProvider(
                 new RenderResources.ResourceIdProvider() {
                     @Override
