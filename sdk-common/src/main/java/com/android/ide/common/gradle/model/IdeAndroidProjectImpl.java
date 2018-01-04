@@ -49,6 +49,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     @NonNull private final LintOptions myLintOptions;
     @NonNull private final Collection<String> myUnresolvedDependencies;
     @NonNull private final JavaCompileOptions myJavaCompileOptions;
+    @NonNull private final AaptOptions myAaptOptions;
     @NonNull private final File myBuildFolder;
     @Nullable private final GradleVersion myParsedModelVersion;
     @Nullable private final String myBuildToolsVersion;
@@ -131,6 +132,10 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 modelCache.computeIfAbsent(
                         project.getJavaCompileOptions(),
                         options -> new IdeJavaCompileOptions(options, modelCache));
+        myAaptOptions =
+                modelCache.computeIfAbsent(
+                        project.getAaptOptions(),
+                        options -> new IdeAaptOptions(options, modelCache));
         myBuildFolder = project.getBuildFolder();
         myResourcePrefix = project.getResourcePrefix();
         myApiVersion = project.getApiVersion();
@@ -247,7 +252,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     @Override
     @NonNull
     public AaptOptions getAaptOptions() {
-        throw new UnusedModelMethodException("getAaptOptions");
+        return myAaptOptions;
     }
 
     @Override
@@ -355,6 +360,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 && Objects.equals(myLintOptions, project.myLintOptions)
                 && Objects.equals(myUnresolvedDependencies, project.myUnresolvedDependencies)
                 && Objects.equals(myJavaCompileOptions, project.myJavaCompileOptions)
+                && Objects.equals(myAaptOptions, project.myAaptOptions)
                 && Objects.equals(myBuildFolder, project.myBuildFolder)
                 && Objects.equals(myResourcePrefix, project.myResourcePrefix);
     }
@@ -389,6 +395,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 myLibrary,
                 myProjectType,
                 myPluginGeneration,
+                myAaptOptions,
                 myBaseSplit);
     }
 
@@ -444,6 +451,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 + myProjectType
                 + ", myPluginGeneration="
                 + myPluginGeneration
+                + ", myAaptOptions="
+                + myAaptOptions
                 + ", myBaseSplit="
                 + myBaseSplit
                 + "}";

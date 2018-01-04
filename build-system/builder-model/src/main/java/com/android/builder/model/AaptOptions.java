@@ -47,9 +47,8 @@ public interface AaptOptions {
     @Nullable
     String getIgnoreAssets();
 
-    /**
-     * Returns the list of values for the -0 (disabled compression) option, or null
-     */
+    /** Returns the list of values for the -0 (disabled compression) option, or null */
+    @Nullable
     Collection<String> getNoCompress();
 
     /**
@@ -57,9 +56,8 @@ public interface AaptOptions {
      */
     boolean getFailOnMissingConfigEntry();
 
-    /**
-     * Returns the list of additional parameters to pass.
-     */
+    /** Returns the list of additional parameters to pass. */
+    @NonNull
     List<String> getAdditionalParameters();
 
     /** Returns the resource namespacing strategy for this sub-project */
