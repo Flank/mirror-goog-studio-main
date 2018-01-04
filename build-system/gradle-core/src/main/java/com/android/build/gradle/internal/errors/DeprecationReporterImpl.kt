@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.errors
 
+import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.EvalIssueReporter.Severity
 import com.android.builder.errors.EvalIssueReporter.Type
@@ -27,7 +28,7 @@ class DeprecationReporterImpl(
     override fun reportDeprecatedUsage(
             newDslElement: String,
             oldDslElement: String,
-            deprecationTarget: DeprecationReporter.DeprecationTarget) {
+            deprecationTarget: DeprecationTarget) {
         issueReporter.reportIssue(
                 Type.DEPRECATED_DSL,
                 Severity.WARNING,
@@ -40,7 +41,7 @@ class DeprecationReporterImpl(
             newDslElement: String,
             oldDslElement: String,
             url: String,
-            deprecationTarget: DeprecationReporter.DeprecationTarget) {
+            deprecationTarget: DeprecationTarget) {
         issueReporter.reportIssue(
                 Type.DEPRECATED_DSL,
                 Severity.WARNING,
@@ -51,7 +52,7 @@ class DeprecationReporterImpl(
     }
 
     override fun reportObsoleteUsage(oldDslElement: String,
-            deprecationTarget: DeprecationReporter.DeprecationTarget) {
+            deprecationTarget: DeprecationTarget) {
         issueReporter.reportIssue(
                 Type.DEPRECATED_DSL,
                 Severity.WARNING,
@@ -62,7 +63,7 @@ class DeprecationReporterImpl(
     override fun reportObsoleteUsage(
             oldDslElement: String,
             url: String,
-            deprecationTarget: DeprecationReporter.DeprecationTarget) {
+            deprecationTarget: DeprecationTarget) {
         issueReporter.reportIssue(
                 Type.DEPRECATED_DSL,
                 Severity.WARNING,
@@ -74,7 +75,7 @@ class DeprecationReporterImpl(
     override fun reportDeprecatedConfiguration(
             newConfiguration: String,
             oldConfiguration: String,
-            deprecationTarget: DeprecationReporter.DeprecationTarget) {
+            deprecationTarget: DeprecationTarget) {
         issueReporter.reportIssue(
                 Type.DEPRECATED_CONFIGURATION,
                 Severity.WARNING,
@@ -97,5 +98,18 @@ class DeprecationReporterImpl(
                             "and has not been replaced.\n" +
                         "It will be removed ${deprecationTarget.removalTime}\n",
                 url)
+    }
+
+    override fun reportDeprecatedOption(
+            option: String,
+            value: String?,
+            deprecationTarget: DeprecationTarget) {
+
+        issueReporter.reportIssue(
+                Type.GENERIC,
+                Severity.WARNING,
+                "The option '$option' is deprecated and should not be used anymore.\n" +
+                        (if (value !=null) "Use '$option=$value' to remove this warning.\n" else "") +
+                        "It will be removed ${deprecationTarget.removalTime}.")
     }
 }

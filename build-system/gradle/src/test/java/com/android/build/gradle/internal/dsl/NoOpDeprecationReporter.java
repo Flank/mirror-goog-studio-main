@@ -70,4 +70,12 @@ public class NoOpDeprecationReporter implements DeprecationReporter {
             @NonNull DeprecationTarget deprecationTarget) {
         // do nothing.
     }
+
+    @Override
+    public void reportDeprecatedOption(
+            @NonNull String option,
+            @Nullable String value,
+            @NonNull DeprecationTarget deprecationTarget) {
+        // do nothing
+    }
 }

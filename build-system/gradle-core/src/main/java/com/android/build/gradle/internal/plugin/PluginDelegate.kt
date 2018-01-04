@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.plugin
 
+import com.android.SdkConstants.VALUE_FALSE
 import com.android.build.api.dsl.variant.Variant
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2
 import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl
@@ -100,12 +101,10 @@ class PluginDelegate<out E: BaseExtension2>(
         }
         // b/67675308
         if (!projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
-            issueReporter.reportWarning(
-                    EvalIssueReporter.Type.GENERIC,
-                    String.format(
-                            "AAPT is deprecated and support for it will be soon removed. " +
-                                    "Remove the '%s=false' flag to enable AAPT2.",
-                            BooleanOption.ENABLE_AAPT2.propertyName))
+            deprecationReporter.reportDeprecatedOption(
+                    BooleanOption.ENABLE_AAPT2.propertyName,
+                    VALUE_FALSE,
+                    DeprecationReporter.DeprecationTarget.AAPT)
         }
     }
 

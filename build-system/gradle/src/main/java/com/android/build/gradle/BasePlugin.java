@@ -16,6 +16,7 @@
 
 package com.android.build.gradle;
 
+import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.google.common.base.Preconditions.checkState;
 import static java.io.File.separator;
@@ -49,6 +50,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.SigningConfigFactory;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
@@ -363,14 +365,12 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         // b/67675308
         if (!projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
-            androidBuilder
-                    .getIssueReporter()
-                    .reportWarning(
-                            Type.GENERIC,
-                            String.format(
-                                    "AAPT is deprecated and support for it will be soon removed. "
-                                            + "Remove the '%s=false' flag to enable AAPT2.",
-                                    BooleanOption.ENABLE_AAPT2.getPropertyName()));
+            extraModelInfo
+                    .getDeprecationReporter()
+                    .reportDeprecatedOption(
+                            BooleanOption.ENABLE_AAPT2.getPropertyName(),
+                            VALUE_FALSE,
+                            DeprecationReporter.DeprecationTarget.AAPT);
         }
 
         // Apply the Java plugin
@@ -388,22 +388,22 @@ public abstract class BasePlugin<E extends BaseExtension2>
         gradle.addBuildListener(
                 new BuildListener() {
                     @Override
-                    public void buildStarted(Gradle gradle) {
+                    public void buildStarted(@NonNull Gradle gradle) {
                         TaskInputHelper.enableBypass();
                         BuildableArtifactImpl.Companion.disableResolution();
                     }
 
                     @Override
-                    public void settingsEvaluated(Settings settings) {}
+                    public void settingsEvaluated(@NonNull Settings settings) {}
 
                     @Override
-                    public void projectsLoaded(Gradle gradle) {}
+                    public void projectsLoaded(@NonNull Gradle gradle) {}
 
                     @Override
-                    public void projectsEvaluated(Gradle gradle) {}
+                    public void projectsEvaluated(@NonNull Gradle gradle) {}
 
                     @Override
-                    public void buildFinished(BuildResult buildResult) {
+                    public void buildFinished(@NonNull BuildResult buildResult) {
                         // Do not run buildFinished for included project in composite build.
                         if (buildResult.getGradle().getParent() != null) {
                             return;

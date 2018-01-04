@@ -34,7 +34,9 @@ interface DeprecationReporter {
         // Obsolete Dex Options
         DEX_OPTIONS("at the end of 2018"),
         // "auto" in splits and resConfigs.
-        AUTO_SPLITS_OR_RES_CONFIG("at the end of 2018")
+        AUTO_SPLITS_OR_RES_CONFIG("at the end of 2018"),
+        // Deprecation of AAPT, replaced by AAPT2
+        AAPT("at the end of 2018")
     }
 
     /**
@@ -121,5 +123,18 @@ interface DeprecationReporter {
     fun reportDeprecatedConfiguration(
             newConfiguration: String,
             oldConfiguration: String,
+            deprecationTarget: DeprecationTarget)
+
+    /**
+     * Reports deprecated options usage.
+     *
+     * @param option the deprecated option
+     * @param value the value for the flag which should be used to remove the warning
+     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
+     * timing is added to the message.
+     */
+    fun reportDeprecatedOption(
+            option: String,
+            value: String?,
             deprecationTarget: DeprecationTarget)
 }
