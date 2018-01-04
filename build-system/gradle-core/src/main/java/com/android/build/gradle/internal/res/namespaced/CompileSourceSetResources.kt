@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 package com.android.build.gradle.internal.res.namespaced
-import com.android.build.gradle.internal.aapt.AaptGeneration
-import com.android.build.gradle.internal.aapt.AaptGradleFactory
+
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
-import com.android.builder.internal.aapt.Aapt
 import com.android.ide.common.res2.CompileResourceRequest
 import com.android.ide.common.res2.FileStatus
 import com.android.utils.FileUtils
@@ -27,17 +25,19 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.SkipWhenEmpty
+import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.file.Files
 import javax.inject.Inject
+
 /**
  * Task to compile a single sourceset's resources in to AAPT intermediate format.
  *
  * The link step handles resource overlays.
  */
 open class CompileSourceSetResources
-        @Inject constructor(private val workerExecutor: WorkerExecutor) : IncrementalTask() {
+@Inject constructor(private val workerExecutor: WorkerExecutor) : IncrementalTask() {
 
     @get:InputFiles @get:SkipWhenEmpty lateinit var inputDirectory: File private set
     @get:Input var isPngCrunching: Boolean = false; private set
@@ -66,12 +66,12 @@ open class CompileSourceSetResources
             }
         }
 
-        submit(requests, listOf())
+        submit(requests)
     }
 
     override fun doIncrementalTaskAction(changedInputs: MutableMap<File, FileStatus>) {
         val requests = mutableListOf<CompileResourceRequest>()
-        val toDelete = mutableListOf<File>()
+        val deletes = mutableListOf<File>()
         /** Only consider at files in first level subdirectories of the input directory */
         changedInputs.forEach { file, status ->
             if (willCompile(file) && (inputDirectory == file.parentFile.parentFile)) {
@@ -80,14 +80,21 @@ open class CompileSourceSetResources
                         requests.add(compileRequest(file))
                     }
                     FileStatus.REMOVED -> {
-                        toDelete.add(file)
+                        deletes.add(file)
                     }
                 }
             }
         }
-        submit(requests, toDelete)
+        if (!deletes.isEmpty()) {
+            workerExecutor.submit(Aapt2CompileDeleteRunnable::class.java) {
+                it.isolationMode = IsolationMode.NONE
+                it.setParams(Aapt2CompileDeleteRunnable.Params(
+                        outputDirectory = outputDirectory,
+                        deletedInputs = deletes))
+            }
+        }
+        submit(requests)
     }
-
 
     private fun compileRequest(file: File, inputDirectoryName: String = file.parentFile.name) =
             CompileResourceRequest(
@@ -97,41 +104,23 @@ open class CompileSourceSetResources
                     isPseudoLocalize = isPseudoLocalize,
                     isPngCrunching = isPngCrunching)
 
-    private fun submit(
-            requests: List<CompileResourceRequest>,
-            toDelete: List<File>) {
-        if (requests.isEmpty() && toDelete.isEmpty()) {
+    private fun submit(requests: List<CompileResourceRequest>) {
+        if (requests.isEmpty()) {
             return
         }
-        AaptCompileRunnable(AaptCompileRunnable.Params(
-                aapt = { makeAapt() },
-                requests = requests,
-                toDelete = toDelete,
-                outputDirectory = outputDirectory)).run()
-
-        // TODO: Use worker executor once we figure out how to inject AAPT and manage AAPT processes
-        // see b/70827014
-        /*
-        workerExecutor.submit(AaptCompileRunnable::class.java) {
-            it.isolationMode = IsolationMode.NONE
-            it.setParams(AaptCompileRunnable.Params(
-                    aapt = { makeAapt() },
-                    requests = requests,
-                    toDelete = toDelete,
-                    outputDirectory = outputDirectory))
-        }*/
+        for (request in requests) {
+            workerExecutor.submit(Aapt2CompileRunnable::class.java) {
+                it.isolationMode = IsolationMode.NONE
+                it.setParams(Aapt2CompileRunnable.Params(
+                        revision = builder.buildToolInfo.revision,
+                        requests = listOf(request),
+                        outputDirectory = outputDirectory))
+            }
+        }
     }
 
     // TODO: filtering using same logic as DataSet.isIgnored.
     private fun willCompile(file: File) = !file.name.startsWith(".") && !file.isDirectory
-
-    private fun makeAapt(): Aapt = AaptGradleFactory.make(
-            AaptGeneration.AAPT_V2_DAEMON_MODE,
-            builder,
-            null,
-            false,
-            aaptIntermediateDirectory,
-            0)
 
     class ConfigAction(
             private val name: String,

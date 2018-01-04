@@ -16,7 +16,6 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
@@ -26,8 +25,6 @@ import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.builder.internal.aapt.v2.QueueableAapt2
-import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.utils.FileUtils
 import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
@@ -42,14 +39,17 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.function.Supplier
+import javax.inject.Inject
 
 /**
  * Task to link the resources in a library project into an AAPT2 static library.
  */
 @CacheableTask
-open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
+open class LinkLibraryAndroidResourcesTask @Inject constructor(private val workerExecutor: WorkerExecutor) :
+        AndroidBuilderTask() {
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDirectories: FileCollection private set
@@ -68,14 +68,6 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
 
     @TaskAction
     fun taskAction() {
-
-        val aapt =
-                QueueableAapt2(
-                        LoggedProcessOutputHandler(iLogger),
-                        builder.targetInfo!!.buildTools,
-                        AaptGradleFactory.FilteringLogger(builder.logger),
-                        0 /* use default */)
-
 
         val imports = ImmutableList.builder<File>()
         // Link against library dependencies
@@ -111,7 +103,10 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
                         .setIntermediateDir(aaptIntermediateDir)
                         .build()
 
-        aapt.link(config).get()
+        // TODO: Make AaptPackageConfig serializable and use worker actions.
+        useAaptDaemon(buildTools.revision) { daemon ->
+            daemon.link(config)
+        }
     }
 
     class ConfigAction(

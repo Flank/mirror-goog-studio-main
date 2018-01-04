@@ -18,18 +18,17 @@ package com.android.repository;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
+import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A {@link Revision} which distinguishes between x and x.0, x.0.0, x.y.0, etc; it basically
- * keeps track of the precision of the revision string.
- * <p>
- * This is vital when referencing Gradle artifact numbers,
- * since versions x.y.0 and version x.y are not the same.
+ * The revision of an Android SDK package.
+ *
+ * <p>Distinguishes between x and x.0, x.0.0, x.y.0: it keeps track of the precision of the revision
+ * string.
  */
-public class Revision implements Comparable<Revision> {
+public class Revision implements Comparable<Revision>, Serializable {
     public static final int MISSING_MAJOR_REV  = 0;
     public static final int IMPLICIT_MINOR_REV = 0;
     public static final int IMPLICIT_MICRO_REV = 0;

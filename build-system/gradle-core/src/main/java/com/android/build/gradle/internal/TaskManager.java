@@ -1224,7 +1224,6 @@ public abstract class TaskManager {
             return;
         }
         createNonNamespacedResourceTasks(
-
                 scope,
                 symbolLocation,
                 resPackageOutputFolder,

@@ -289,7 +289,7 @@ class Aapt2DaemonManagerTest {
         val startCount = AtomicInteger(0)
         val stopCount = AtomicInteger(0)
 
-        override fun firstDaemonStarted() {
+        override fun firstDaemonStarted(manager: Aapt2DaemonManager) {
             startCount.incrementAndGet()
         }
 

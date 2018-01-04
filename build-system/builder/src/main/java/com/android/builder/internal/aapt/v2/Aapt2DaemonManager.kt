@@ -107,7 +107,7 @@ class Aapt2DaemonManager(
         val process = daemonFactory.invoke(displayId)
         val daemon = LeasableAaptDaemon(process, timeSource.read())
         if (pool.isEmpty()) {
-            listener.firstDaemonStarted()
+            listener.firstDaemonStarted(this)
         }
         pool.add(daemon)
         return daemon
@@ -190,12 +190,12 @@ class Aapt2DaemonManager(
      * Events may come from arbitrary threads, so implementations must be thread safe.
      */
     interface Listener {
-        fun firstDaemonStarted()
+        fun firstDaemonStarted(manager: Aapt2DaemonManager)
         fun lastDaemonStopped()
     }
 
     class NoOpListener : Listener {
-        override fun firstDaemonStarted() {
+        override fun firstDaemonStarted(manager: Aapt2DaemonManager) {
         }
 
         override fun lastDaemonStopped() {
