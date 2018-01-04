@@ -152,7 +152,8 @@ public class IdeDependenciesFactoryTest {
                 new DependenciesStub(
                         Collections.emptyList(),
                         Collections.singletonList(javaLibraryB),
-                        Lists.newArrayList("project1", "project2"));
+                        Lists.newArrayList("project1", "project2"),
+                        Collections.emptyList());
 
         BaseArtifactStub baseArtifactStub =
                 new BaseArtifactStub() {

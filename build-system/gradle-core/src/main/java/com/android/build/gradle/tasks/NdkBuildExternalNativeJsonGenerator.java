@@ -34,10 +34,10 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.Files;
 import com.google.gson.GsonBuilder;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -117,6 +117,10 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         //
         // NOTE: CMake doesn't have the same issue because CMake JSON generation happens fully
         // within the Exec call which has 'project/app' as the current directory.
+
+        // TODO(jomof): This NativeBuildConfigValue is probably consuming a lot of memory for large
+        // projects. Should be changed to a streaming model where NativeBuildConfigValueBuilder
+        // provides a streaming JsonReader rather than a full object.
         NativeBuildConfigValue buildConfig =
                 new NativeBuildConfigValueBuilder(getMakeFile(), projectDir)
                         .addCommands(
@@ -149,7 +153,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
         // Write the captured ndk-build output to JSON file
         File expectedJson = ExternalNativeBuildTaskUtils.getOutputJson(getJsonFolder(), abi);
-        Files.write(actualResult, expectedJson, Charsets.UTF_8);
+        Files.write(expectedJson.toPath(), actualResult.getBytes(Charsets.UTF_8));
     }
 
     /**
@@ -231,8 +235,8 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
     }
 
     /**
-     * Check whether the configuration looks good enough to generate JSON files and expect that
-     * the result will be valid.
+     * Check whether the configuration looks good enough to generate JSON files and expect that the
+     * result will be valid.
      */
     private void checkConfiguration() {
         List<String> configurationErrors = getConfigurationErrors();
@@ -352,8 +356,9 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         List<String> messages = Lists.newArrayList();
         if (getMakefile().isDirectory()) {
             messages.add(
-                    String.format("Gradle project ndkBuild.path %s is a folder. "
-                            + "Only files (like Android.mk) are allowed.",
+                    String.format(
+                            "Gradle project ndkBuild.path %s is a folder. "
+                                    + "Only files (like Android.mk) are allowed.",
                             getMakefile()));
         } else if (!getMakefile().exists()) {
             messages.add(

@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.scope.BuildOutputs
+import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.VariantScope
@@ -45,7 +45,7 @@ open class MainApkListPersistence : AndroidVariantTask() {
     fun fullTaskAction() {
 
         FileUtils.deleteIfExists(outputFile)
-        val apkDataList = BuildOutputs.persistApkList(apkData)
+        val apkDataList = ExistingBuildElements.persistApkList(apkData)
         FileUtils.createFile(outputFile, apkDataList)
     }
 

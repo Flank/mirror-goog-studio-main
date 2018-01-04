@@ -24,8 +24,9 @@ import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
@@ -36,7 +37,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
@@ -97,7 +97,7 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
         FileUtils.cleanOutputDir(outDir);
 
         if (apkDirectory != null) {
-            Collection<BuildOutput> apks = BuildOutputs.load(APK, apkDirectory);
+            BuildElements apks = ExistingBuildElements.from(APK, apkDirectory);
 
             if (apks.isEmpty()) {
                 throw new IllegalStateException("Wear App dependency resolve to zero APK");

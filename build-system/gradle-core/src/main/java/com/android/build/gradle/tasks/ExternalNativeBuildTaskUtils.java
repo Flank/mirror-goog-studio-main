@@ -46,6 +46,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -59,6 +60,43 @@ import java.util.Map;
 public class ExternalNativeBuildTaskUtils {
     // Forked CMake version is the one we get when we execute "cmake --version" commond.
     public static final String CUSTOM_FORK_CMAKE_VERSION = "3.6.0-rc2";
+
+
+    /**
+     * File 'derived' is consider to depend on the contents of file 'source' this function return
+     * true if source is more recent than derived.
+     *
+     * <p>If derived doesn't exist then it is not consider to be up-to-date with respect to source.
+     *
+     * @param source -- original file (must exist)
+     * @param derived -- derived file
+     * @return true if derived is more recent than original
+     * @throws IOException if there was a problem reading the timestampe of one of the files
+     */
+    public static boolean fileIsUpToDate(@NonNull File source, @NonNull File derived)
+            throws IOException {
+        if (!source.exists()) {
+            // Generally shouldn't happen but if it does then let's claim that derived is out of
+            // date.
+            return false;
+        }
+        if (!derived.exists()) {
+            // Derived file doesn't exist so it is not up-to-date with respect to file 1
+            return false;
+        }
+        long sourceTimestamp = Files.getLastModifiedTime(source.toPath()).toMillis();
+        long derivedTimestamp = Files.getLastModifiedTime(derived.toPath()).toMillis();
+        return sourceTimestamp <= derivedTimestamp;
+    }
+
+    /**
+     * The json mini-config file contains a subset of the regular json file that is much smaller and
+     * less memory-intensive to read.
+     */
+    @NonNull
+    public static File getJsonMiniConfigFile(@NonNull File originalJson) {
+        return new File(originalJson.getParent(), "android_gradle_build_mini.json");
+    }
 
     /**
      * Utility function that takes an ABI string and returns the corresponding output folder. Output

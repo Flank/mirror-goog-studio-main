@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import static com.android.SdkConstants.ATTR_REF_PREFIX;
@@ -25,7 +24,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.configuration.Configurable;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.io.IAbstractFile;
@@ -52,34 +50,34 @@ import java.util.TreeSet;
 /**
  * Base class for resource repository.
  *
- * A repository is both a file representation of a resource folder and a representation
+ * <p>A repository is both a file representation of a resource folder and a representation
  * of the generated resources, organized by type.
  *
- * {@link #getResourceFolder(IAbstractFolder)} and {@link #getSourceFiles(ResourceType, String, FolderConfiguration)}
+ * <p>{@link #getResourceFolder(IAbstractFolder)} and
+ * {@link #getSourceFiles(ResourceType, String, FolderConfiguration)}
  * give access to the folders and files of the resource folder.
  *
- * {@link #getResourceItemsOfType(ResourceType)} gives access to the resources directly.
- *
+ * <p>{@link #getResourceItemsOfType(ResourceType)} gives access to the resources directly.
  */
 public abstract class ResourceRepository {
     private final IAbstractFolder mResourceFolder;
 
     protected Map<ResourceFolderType, List<ResourceFolder>> mFolderMap =
-        new EnumMap<ResourceFolderType, List<ResourceFolder>>(ResourceFolderType.class);
+            new EnumMap<>(ResourceFolderType.class);
 
     protected Map<ResourceType, Map<String, ResourceItem>> mResourceMap =
-            new EnumMap<ResourceType, Map<String, ResourceItem>>(
-                    ResourceType.class);
+            new EnumMap<>(ResourceType.class);
 
     private Map<Map<String, ResourceItem>, Collection<ResourceItem>> mReadOnlyListMap =
-            new IdentityHashMap<Map<String, ResourceItem>, Collection<ResourceItem>>();
+            new IdentityHashMap<>();
 
     private final boolean mFrameworkRepository;
     private boolean mCleared = true;
-    private boolean mInitializing = false;
+    private boolean mInitializing;
 
     /**
-     * Makes a resource repository
+     * Makes a resource repository.
+     *
      * @param resFolder the resource folder of the repository.
      * @param isFrameworkRepository whether the repository is for framework resources.
      */
@@ -110,7 +108,7 @@ public abstract class ResourceRepository {
 
     /**
      * Ensures that the repository has been initialized again after a call to
-     * {@link ResourceRepository#clear()}
+     * {@link ResourceRepository#clear()}.
      *
      * @return true if the repository was just re-initialized.
      */
@@ -151,6 +149,7 @@ public abstract class ResourceRepository {
 
     /**
      * Adds a Folder Configuration to the project.
+     *
      * @param type The resource type.
      * @param config The resource configuration.
      * @param folder The workspace folder object.
@@ -194,6 +193,7 @@ public abstract class ResourceRepository {
 
     /**
      * Removes a {@link ResourceFolder} associated with the specified {@link IAbstractFolder}.
+     *
      * @param type The type of the folder
      * @param removedFolder the IAbstractFolder object.
      * @param context the scanning context
@@ -230,8 +230,7 @@ public abstract class ResourceRepository {
     }
 
     /**
-     * Returns true if this resource repository contains a resource of the given
-     * name.
+     * Returns true if this resource repository contains a resource of the given name.
      *
      * @param url the resource URL
      * @return true if the resource is known
@@ -293,8 +292,7 @@ public abstract class ResourceRepository {
     }
 
     /**
-     * Returns true if this resource repository contains a resource of the given
-     * name.
+     * Returns true if this resource repository contains a resource of the given name.
      *
      * @param type the type of resource to look up
      * @param name the name of the resource
@@ -334,8 +332,7 @@ public abstract class ResourceRepository {
         // create one if there isn't one already, or if the existing one is inlined, since
         // clearly we need a non inlined one (the inline one is removed too)
         if (item == null || item.isDeclaredInline()) {
-            ResourceItem oldItem = item != null && item.isDeclaredInline() ? item : null;
-
+            ResourceItem oldItem = item;
             item = createResourceItem(name);
 
             Map<String, ResourceItem> map = mResourceMap.get(type);
@@ -376,9 +373,9 @@ public abstract class ResourceRepository {
                         default:
                             size = 2;
                     }
-                    map = new HashMap<String, ResourceItem>(size, 1.0f);
+                    map = new HashMap<>(size, 1.0f);
                 } else {
-                    map = new HashMap<String, ResourceItem>();
+                    map = new HashMap<>();
                 }
                 mResourceMap.put(type, map);
             }
@@ -387,7 +384,6 @@ public abstract class ResourceRepository {
 
             if (oldItem != null) {
                 map.remove(oldItem.getName());
-
             }
         }
 
@@ -431,6 +427,7 @@ public abstract class ResourceRepository {
 
     /**
      * Returns a list of {@link ResourceFolder} for a specific {@link ResourceFolderType}.
+     *
      * @param type The {@link ResourceFolderType}
      */
     @Nullable
@@ -456,7 +453,7 @@ public abstract class ResourceRepository {
                 // could be created from multiple folders, even for the folders that only create
                 // one type of resource (drawable for instance, can be created from drawable/ and
                 // values/)
-                if (list.contains(types.get(0)) == false) {
+                if (!list.contains(types.get(0))) {
                     list.add(types.get(0));
                 }
             } else {
@@ -469,7 +466,7 @@ public abstract class ResourceRepository {
 
                         // then we add them, but only if they aren't already in the list.
                         for (ResourceType folderResType : folderContent) {
-                            if (list.contains(folderResType) == false) {
+                            if (!list.contains(folderResType)) {
                                 list.add(folderResType);
                             }
                         }
@@ -702,10 +699,9 @@ public abstract class ResourceRepository {
         for (ResourceItem item : items) {
             if (name.equals(item.getName())) {
                 if (referenceConfig != null) {
-                    Configurable match = referenceConfig.findMatchingConfigurable(
-                            item.getSourceFileList());
-
-                    if (match instanceof ResourceFile) {
+                    ResourceFile match =
+                            referenceConfig.findMatchingConfigurable(item.getSourceFileList());
+                    if (match != null) {
                         return Collections.singletonList((ResourceFile) match);
                     }
 
@@ -780,6 +776,7 @@ public abstract class ResourceRepository {
 
     /**
      * Returns the sorted list of regions used in the resources with the given language.
+     *
      * @param currentLanguage the current language the region must be associated with.
      */
     @NonNull
@@ -848,13 +845,13 @@ public abstract class ResourceRepository {
      * Returns a map of (resource name, resource value) for the given {@link ResourceType}.
      * <p>The values returned are taken from the resource files best matching a given
      * {@link FolderConfiguration}.
+     *
      * @param type the type of the resources.
      * @param referenceConfig the configuration to best match.
      */
     @NonNull
     private ResourceValueMap getConfiguredResource(@NonNull ResourceType type,
-                                                                  @NonNull FolderConfiguration referenceConfig) {
-
+            @NonNull FolderConfiguration referenceConfig) {
         // get the resource item for the given type
         Map<String, ResourceItem> items = mResourceMap.get(type);
         if (items == null) {
@@ -897,10 +894,11 @@ public abstract class ResourceRepository {
     }
 
     /**
-     * Looks up an existing {@link ResourceItem} by {@link ResourceType} and name. This
-     * ignores inline resources.
-     * @param type the Resource Type.
-     * @param name the Resource name.
+     * Looks up an existing {@link ResourceItem} by {@link ResourceType} and name.
+     * Ignores inline resources.
+     *
+     * @param type the resource type.
+     * @param name the resource name.
      * @return the existing ResourceItem or null if no match was found.
      */
     @Nullable

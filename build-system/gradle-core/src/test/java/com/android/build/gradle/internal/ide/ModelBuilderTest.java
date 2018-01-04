@@ -31,6 +31,8 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
+import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
@@ -53,7 +55,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.invocation.Gradle;
 import org.gradle.internal.impldep.com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Rule;
@@ -70,6 +74,8 @@ public class ModelBuilderTest {
     private static final String PROJECT = "project";
 
     @Mock GlobalScope globalScope;
+    @Mock Project project;
+    @Mock Gradle gradle;
     @Mock AndroidBuilder androidBuilder;
     @Mock VariantManager variantManager;
     @Mock TaskManager taskManager;
@@ -87,6 +93,16 @@ public class ModelBuilderTest {
     public void setUp() throws IOException {
 
         MockitoAnnotations.initMocks(this);
+
+        when(globalScope.getProject()).thenReturn(project);
+
+        when(project.getGradle()).thenReturn(gradle);
+        when(project.getProjectDir()).thenReturn(new File(""));
+
+        when(gradle.getRootProject()).thenReturn(project);
+        when(gradle.getParent()).thenReturn(null);
+        when(gradle.getIncludedBuilds()).thenReturn(ImmutableList.of());
+
         apkLocation = temporaryFolder.newFolder("apk");
 
         modelBuilder =
@@ -153,10 +169,13 @@ public class ModelBuilderTest {
         Files.write("some apk", apkOutput, Charsets.UTF_8);
 
         OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
-        outputScope.addOutputForSplit(
-                TaskOutputHolder.TaskOutputType.APK, outputFactory.addMainApk(), apkOutput);
-        outputScope.save(
-                ImmutableList.of(TaskOutputHolder.TaskOutputType.APK), variantOutputFolder);
+        new BuildElements(
+                        ImmutableList.of(
+                                new BuildOutput(
+                                        TaskOutputHolder.TaskOutputType.APK,
+                                        outputFactory.addMainApk(),
+                                        apkOutput)))
+                .save(variantOutputFolder);
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();
@@ -200,23 +219,25 @@ public class ModelBuilderTest {
 
         File apkOutput = createApk(variantOutputFolder, "main.apk");
 
-        outputScope.addOutputForSplit(
-                TaskOutputHolder.TaskOutputType.APK, outputFactory.addMainApk(), apkOutput);
+        ImmutableList.Builder<BuildOutput> buildOutputBuilder = ImmutableList.builder();
+        buildOutputBuilder.add(
+                new BuildOutput(
+                        TaskOutputHolder.TaskOutputType.APK,
+                        outputFactory.addMainApk(),
+                        apkOutput));
 
         for (int i = 0; i < 5; i++) {
             apkOutput = createApk(variantOutputFolder, "split_" + i + ".apk");
 
-            outputScope.addOutputForSplit(
-                    TaskOutputHolder.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                    outputFactory.addConfigurationSplit(
-                            VariantOutput.FilterType.DENSITY, "hdpi", apkOutput.getName()),
-                    apkOutput);
+            buildOutputBuilder.add(
+                    new BuildOutput(
+                            TaskOutputHolder.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                            outputFactory.addConfigurationSplit(
+                                    VariantOutput.FilterType.DENSITY, "hdpi", apkOutput.getName()),
+                            apkOutput));
         }
-        outputScope.save(
-                ImmutableList.of(
-                        TaskOutputHolder.TaskOutputType.APK,
-                        TaskOutputHolder.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
-                variantOutputFolder);
+
+        new BuildElements(buildOutputBuilder.build()).save(variantOutputFolder);
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();
@@ -275,10 +296,13 @@ public class ModelBuilderTest {
 
             OutputFactory outputFactory =
                     new OutputFactory(PROJECT, variantConfiguration, outputScope);
-            outputScope.addOutputForSplit(
-                    TaskOutputHolder.TaskOutputType.APK, outputFactory.addMainApk(), apkOutput);
-            outputScope.save(
-                    ImmutableList.of(TaskOutputHolder.TaskOutputType.APK), variantOutputFolder);
+            new BuildElements(
+                            ImmutableList.of(
+                                    new BuildOutput(
+                                            TaskOutputHolder.TaskOutputType.APK,
+                                            outputFactory.addMainApk(),
+                                            apkOutput)))
+                    .save(variantOutputFolder);
             scopes.add(variantScope);
         }
 
@@ -352,10 +376,13 @@ public class ModelBuilderTest {
         Files.write("some apk", apkOutput, Charsets.UTF_8);
 
         OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
-        outputScope.addOutputForSplit(
-                TaskOutputHolder.TaskOutputType.APK, outputFactory.addMainApk(), apkOutput);
-        outputScope.save(
-                ImmutableList.of(TaskOutputHolder.TaskOutputType.APK), variantOutputFolder);
+        new BuildElements(
+                        ImmutableList.of(
+                                new BuildOutput(
+                                        TaskOutputHolder.TaskOutputType.APK,
+                                        outputFactory.addMainApk(),
+                                        apkOutput)))
+                .save(variantOutputFolder);
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();

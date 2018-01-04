@@ -28,7 +28,6 @@ import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
 import com.android.dx.Version;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
 import com.google.common.io.ByteStreams;
@@ -38,6 +37,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -48,7 +50,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
-import java.util.stream.Collectors;
 
 /** helper class used to cache dex archives in the user or build caches. */
 class DexArchiveBuilderCacheHandler {
@@ -56,18 +57,15 @@ class DexArchiveBuilderCacheHandler {
     static final class CacheableItem {
         @NonNull final QualifiedContent input;
         @NonNull final Collection<File> cachable;
-        @NonNull final List<String> bootclasspath;
-        @NonNull final List<String> classpath;
+        @NonNull final List<Path> dependencies;
 
         CacheableItem(
                 @NonNull QualifiedContent input,
                 @NonNull Collection<File> cachable,
-                @NonNull List<String> bootclasspath,
-                @NonNull List<String> classpath) {
+                @NonNull List<Path> dependencies) {
             this.input = input;
             this.cachable = cachable;
-            this.bootclasspath = bootclasspath;
-            this.classpath = classpath;
+            this.dependencies = dependencies;
         }
     }
 
@@ -103,8 +101,8 @@ class DexArchiveBuilderCacheHandler {
     }
 
     @Nullable
-    File getCachedVersionIfPresent(
-            JarInput input, List<String> bootclasspath, List<String> classpath) throws IOException {
+    File getCachedVersionIfPresent(@NonNull JarInput input, @NonNull List<Path> dependencies)
+            throws IOException {
         FileCache cache =
                 PreDexTransform.getBuildCache(
                         input.getFile(), isExternalLib(input), userLevelCache);
@@ -120,8 +118,7 @@ class DexArchiveBuilderCacheHandler {
                         dexer,
                         minSdkVersion,
                         isDebuggable,
-                        bootclasspath,
-                        classpath,
+                        dependencies,
                         cacheSession);
         return cache.cacheEntryExists(buildCacheInputs)
                 ? cache.getFileInCache(buildCacheInputs)
@@ -145,8 +142,7 @@ class DexArchiveBuilderCacheHandler {
                                 dexer,
                                 minSdkVersion,
                                 isDebuggable,
-                                cacheableItem.bootclasspath,
-                                cacheableItem.classpath,
+                                cacheableItem.dependencies,
                                 cacheSession);
                 FileCache.QueryResult result =
                         cache.createFileInCacheIfAbsent(
@@ -247,11 +243,8 @@ class DexArchiveBuilderCacheHandler {
         /** If generate dex is debuggable. */
         IS_DEBUGGABLE,
 
-        /** The bootclasspath files. */
-        BOOTCLASSPATH,
-
-        /** The classpath files. */
-        CLASSPATH,
+        /** Additional dependency files. */
+        EXTRA_DEPENDENCIES,
     }
 
     /**
@@ -265,8 +258,7 @@ class DexArchiveBuilderCacheHandler {
             @NonNull DexerTool dexerTool,
             int minSdkVersion,
             boolean isDebuggable,
-            @NonNull List<String> bootclasspath,
-            @NonNull List<String> classpath,
+            @NonNull List<Path> extraDependencies,
             FileCache.CacheSession cacheSession)
             throws IOException {
         // To use the cache, we need to specify all the inputs that affect the outcome of a pre-dex
@@ -290,44 +282,22 @@ class DexArchiveBuilderCacheHandler {
                 .putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion)
                 .putBoolean(FileCacheInputParams.IS_DEBUGGABLE.name(), isDebuggable);
 
-        // Remove duplicate entries in the bootclasspath, as the duplicates have no effect on
-        // compilation beyond the first. However, the order of the entries is important, and the use
-        // of Stream.distinct() below preserves that order.
-        List<String> distinctBootClasspath =
-                bootclasspath.stream().distinct().collect(Collectors.toList());
-        for (int i = 0; i < distinctBootClasspath.size(); i++) {
-            File path = new File(distinctBootClasspath.get(i));
-            Preconditions.checkState(path.exists(), path + " does not exist");
-            if (path.isDirectory()) {
+        for (int i = 0; i < extraDependencies.size(); i++) {
+            Path path = extraDependencies.get(i);
+            if (Files.isDirectory(path)) {
                 buildCacheInputs.putDirectory(
-                        FileCacheInputParams.BOOTCLASSPATH.name() + "[" + i + "]",
-                        path,
+                        FileCacheInputParams.EXTRA_DEPENDENCIES.name() + "[" + i + "]",
+                        path.toFile(),
                         FileCache.DirectoryProperties.PATH_HASH);
-            } else {
+            } else if (Files.isRegularFile(path)) {
                 buildCacheInputs.putFile(
-                        FileCacheInputParams.BOOTCLASSPATH.name() + "[" + i + "]",
-                        path,
+                        FileCacheInputParams.EXTRA_DEPENDENCIES.name() + "[" + i + "]",
+                        path.toFile(),
                         FileCache.FileProperties.PATH_HASH);
-            }
-        }
-
-        // Remove duplicate entries in the classpath, as the duplicates have no effect on
-        // compilation beyond the first. However, the order of the entries is important, and the use
-        // of Stream.distinct() below preserves that order.
-        List<String> distinctClasspath = classpath.stream().distinct().collect(Collectors.toList());
-        for (int i = 0; i < distinctClasspath.size(); i++) {
-            File path = new File(distinctClasspath.get(i));
-            Preconditions.checkState(path.exists(), path + " does not exist");
-            if (path.isDirectory()) {
-                buildCacheInputs.putDirectory(
-                        FileCacheInputParams.CLASSPATH.name() + "[" + i + "]",
-                        path,
-                        FileCache.DirectoryProperties.PATH_HASH);
+            } else if (!Files.exists(path)) {
+                throw new NoSuchFileException(path.toString());
             } else {
-                buildCacheInputs.putFile(
-                        FileCacheInputParams.CLASSPATH.name() + "[" + i + "]",
-                        path,
-                        FileCache.FileProperties.PATH_HASH);
+                throw new IOException("Unsupported file '" + path.toString() + "'");
             }
         }
 

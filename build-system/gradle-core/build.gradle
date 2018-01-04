@@ -80,6 +80,12 @@ compileKotlin {
     }
 }
 
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
 jar {
     into('instant-run') {
         from configurations.includeInJar

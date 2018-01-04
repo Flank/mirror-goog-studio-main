@@ -134,8 +134,6 @@ public final class GradleTestProject implements TestRule {
 
     static {
         try {
-
-
             if (BuildSystem.get() == BuildSystem.IDEA) {
                 BUILD_DIR = new File(TestUtils.getWorkspaceRoot(), "out/gradle-integration-tests");
             } else {

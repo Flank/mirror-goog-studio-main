@@ -56,6 +56,7 @@ import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.build.ApkInfo;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -94,14 +95,14 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
     }
 
     @Override
-    public boolean canBuild(String modelName) {
+    public boolean canBuild(@NonNull String modelName) {
         // FIXME: We should not return an AndroidProject here.
         return modelName.equals(AndroidProject.class.getName())
                 || modelName.equals(InstantAppProjectBuildOutput.class.getName());
     }
 
     @Override
-    public Object buildAll(String modelName, Project project) {
+    public Object buildAll(@NonNull String modelName, @NonNull Project project) {
         if (modelName.equals(AndroidProject.class.getName())) {
             return buildAndroidProject(project);
         }
@@ -234,10 +235,14 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
     @NonNull
     private VariantImpl createVariant(@NonNull BaseVariantData variantData) {
         VariantScope variantScope = variantData.getScope();
+        ImmutableMap<String, String> buildMapping =
+                ModelBuilder.computeBuildMapping(
+                        variantScope.getGlobalScope().getProject().getGradle());
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
         Pair<Dependencies, DependencyGraphs> dependencies =
                 ModelBuilder.getDependencies(
                         variantScope,
+                        buildMapping,
                         extraModelInfo,
                         syncIssues,
                         modelLevel,
@@ -278,16 +283,15 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                         new InstantRunImpl(
                                 BuildInfoWriterTask.ConfigAction.getBuildInfoFile(variantScope),
                                 variantConfiguration.getInstantRunSupportStatus()),
-                        (BuildOutputSupplier<Collection<BuildOutput>>)
+                        (BuildOutputSupplier<Collection<EarlySyncBuildOutput>>)
                                 () ->
                                         ImmutableList.of(
-                                                new BuildOutput(
+                                                new EarlySyncBuildOutput(
                                                         TaskOutputHolder.TaskOutputType
                                                                 .INSTANTAPP_BUNDLE,
-                                                        ApkInfo.of(
-                                                                OutputFile.OutputType.MAIN,
-                                                                ImmutableList.of(),
-                                                                -1),
+                                                        OutputFile.OutputType.MAIN,
+                                                        ImmutableList.of(),
+                                                        -1,
                                                         new File(
                                                                 outputLocation,
                                                                 baseName + SdkConstants.DOT_ZIP))),

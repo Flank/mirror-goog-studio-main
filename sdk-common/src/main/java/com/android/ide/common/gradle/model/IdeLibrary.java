@@ -28,6 +28,7 @@ public abstract class IdeLibrary extends IdeModel implements Library {
     private static final long serialVersionUID = 2L;
 
     @NonNull private final IdeMavenCoordinates myResolvedCoordinates;
+    @Nullable private final String myBuildId;
     @Nullable private final String myProject;
     @Nullable private final String myName;
     @Nullable private final Boolean myProvided;
@@ -36,6 +37,7 @@ public abstract class IdeLibrary extends IdeModel implements Library {
     protected IdeLibrary(@NonNull Library library, @NonNull ModelCache modelCache) {
         super(library, modelCache);
         myResolvedCoordinates = computeResolvedCoordinate(library, modelCache);
+        myBuildId = copyNewProperty(library::getBuildId, null);
         myProject = copyNewProperty(library::getProject, null);
         myName = copyNewProperty(library::getName, null); // Library.getName() was added in 2.2
         myProvided = copyNewProperty(library::isProvided, null);
@@ -53,6 +55,12 @@ public abstract class IdeLibrary extends IdeModel implements Library {
     @NonNull
     public IdeMavenCoordinates getResolvedCoordinates() {
         return myResolvedCoordinates;
+    }
+
+    @Nullable
+    @Override
+    public String getBuildId() {
+        return myBuildId;
     }
 
     @Override
@@ -92,6 +100,7 @@ public abstract class IdeLibrary extends IdeModel implements Library {
         return library.canEqual(this)
                 && Objects.equals(myProvided, library.myProvided)
                 && Objects.equals(myResolvedCoordinates, library.myResolvedCoordinates)
+                && Objects.equals(myBuildId, library.myBuildId)
                 && Objects.equals(myProject, library.myProject)
                 && Objects.equals(myName, library.myName);
     }
@@ -107,13 +116,16 @@ public abstract class IdeLibrary extends IdeModel implements Library {
     }
 
     protected int calculateHashCode() {
-        return Objects.hash(myResolvedCoordinates, myProject, myName, myProvided);
+        return Objects.hash(myResolvedCoordinates, myBuildId, myProject, myName, myProvided);
     }
 
     @Override
     public String toString() {
         return "myResolvedCoordinates="
                 + myResolvedCoordinates
+                + ", myBuildId='"
+                + myBuildId
+                + '\''
                 + ", myProject='"
                 + myProject
                 + '\''

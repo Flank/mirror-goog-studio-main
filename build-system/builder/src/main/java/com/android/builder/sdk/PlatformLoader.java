@@ -32,6 +32,7 @@ import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -60,7 +61,7 @@ public class PlatformLoader implements SdkLoader {
             @NonNull File treeLocation) {
         if (sLoader == null) {
             sLoader = new PlatformLoader(treeLocation);
-        } else if (!treeLocation.equals(sLoader.mTreeLocation)) {
+        } else if (!FileUtils.isSameFile(treeLocation, sLoader.mTreeLocation)) {
             throw new IllegalStateException(String.format(
                     "%s already created using %s; cannot also use %s",
                     PlatformLoader.class.getSimpleName(), sLoader.mTreeLocation, treeLocation));

@@ -16,12 +16,16 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
-import java.util.regex.Pattern;
+import com.android.builder.model.Variant;
+import com.android.builder.model.level2.GraphItem;
+import com.google.common.collect.Iterables;
+import com.google.common.truth.Truth;
+import java.util.List;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -38,16 +42,18 @@ public class CompositeBuild {
     @Test
     public void testBuild() throws Exception {
         project.execute("clean", "assembleDebug");
-        // basic project overwrites buildConfigField which emits a sync warning
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
-        model.getSyncIssues()
-                .forEach(
-                        issue -> {
-                            assertThat(issue.getSeverity()).isEqualTo(SyncIssue.SEVERITY_WARNING);
-                            assertThat(issue.getMessage())
-                                    .containsMatch(
-                                            Pattern.compile(
-                                                    ".*Composite builds are not fully supported.*"));
-                        });
+        ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
+
+        AndroidProject appProject = modelContainer.getRootBuildModelMap().get(":app");
+
+        Variant debugVariant = ModelHelper.getVariant(appProject.getVariants(), "debug");
+
+        List<GraphItem> dependencies =
+                debugVariant.getMainArtifact().getDependencyGraphs().getCompileDependencies();
+
+        Truth.assertThat(dependencies).hasSize(1);
+
+        String libAddress = Iterables.getOnlyElement(dependencies).getArtifactAddress();
+        Truth.assertThat(libAddress).endsWith("string-utils@@:");
     }
 }

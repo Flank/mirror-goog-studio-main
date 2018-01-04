@@ -21,11 +21,16 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.external.cmake.server.CmakeInputsResult;
+import com.android.build.gradle.external.cmake.server.CodeModel;
 import com.android.build.gradle.external.cmake.server.CompileCommand;
 import com.android.build.gradle.external.cmake.server.ServerUtils;
+import com.android.build.gradle.external.cmake.server.Target;
 import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessage;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
+import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.repository.Revision;
@@ -35,6 +40,7 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
 import com.android.utils.ILogger;
+import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.File;
@@ -78,11 +84,12 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         variantName = "dummy variant name";
         abis = Mockito.mock(Collection.class);
         androidBuilder = Mockito.mock(AndroidBuilder.class);
-        sdkFolder = TestUtils.getSdk(); //Mockito.mock(File.class);
+        sdkFolder = TestUtils.getSdk();
         ndkFolder = TestUtils.getNdk();
         soFolder = Mockito.mock(File.class);
         objFolder = null;
-        jsonFolder = Mockito.mock(File.class);
+
+        jsonFolder = getTestJsonFolder(); //Mockito.mock(File.class);
         makeFile = Mockito.mock(File.class);
         AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkDirectory);
         LocalPackage cmakePackage =
@@ -304,6 +311,65 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         assertThat(flags).isNull();
     }
 
+    @Test
+    public void testGetNativeBuildConfigValue() throws IOException {
+        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
+
+        String targetStr =
+                " {  \n"
+                        + "     \"artifacts\":[  \n"
+                        + "        \"/usr/local/google/home/AndroidStudioProjects/BugTest/app/build/intermediates/cmake/debug/obj/x86_64/libTest1.so\"\n"
+                        + "     ],\n"
+                        + "     \"buildDirectory\":\"/usr/local/google/home/AndroidStudioProjects/BugTest/app/.externalNativeBuild/cmake/debug/x86_64/src/main/test\",\n"
+                        + "     \"fileGroups\":[  \n"
+                        + "        {  \n"
+                        + "           \"compileFlags\":\"-g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security  -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security   -O0 -fno-limit-debug-info -O0 -fno-limit-debug-info  -fPIC  \",\n"
+                        + "           \"defines\":[  \n"
+                        + "              \"Test1_EXPORTS\"\n"
+                        + "           ],\n"
+                        + "           \"includePath\":[  \n"
+                        + "              {  \n"
+                        + "                 \"isSystem\":true,\n"
+                        + "                 \"path\":\"/usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include\"\n"
+                        + "              },\n"
+                        + "              {  \n"
+                        + "                 \"isSystem\":true,\n"
+                        + "                 \"path\":\"/usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/include\"\n"
+                        + "              },\n"
+                        + "              {  \n"
+                        + "                 \"isSystem\":true,\n"
+                        + "                 \"path\":\"/usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward\"\n"
+                        + "              }\n"
+                        + "           ],\n"
+                        + "           \"isGenerated\":false,\n"
+                        + "           \"language\":\"CXX\",\n"
+                        + "           \"sources\":[  \n"
+                        + "              \"Test1.cpp\"\n"
+                        + "           ]\n"
+                        + "        }\n"
+                        + "     ],\n"
+                        + "     \"fullName\":\"libTest1.so\",\n"
+                        + "     \"linkFlags\":\"-Wl,--build-id -Wl,--warn-shared-textrel -Wl,--fatal-warnings -Wl,--no-undefined -Wl,-z,noexecstack -Qunused-arguments -Wl,-z,relro -Wl,-z,now -Wl,--build-id -Wl,--warn-shared-textrel -Wl,--fatal-warnings -Wl,--no-undefined -Wl,-z,noexecstack -Qunused-arguments -Wl,-z,relro -Wl,-z,now\",\n"
+                        + "     \"linkLibraries\":\"-lm \\\"/usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/libgnustl_static.a\\\"\",\n"
+                        + "     \"linkerLanguage\":\"CXX\",\n"
+                        + "     \"name\":\"Test1\",\n"
+                        + "     \"sourceDirectory\":\"/usr/local/google/home/AndroidStudioProjects/BugTest/app/src/main/test\",\n"
+                        + "     \"sysroot\":\"/usr/local/google/home/Android/Sdk/ndk-bundle/platforms/android-21/arch-x86_64\",\n"
+                        + "     \"type\":\"SHARED_LIBRARY\"\n"
+                        + "}";
+        NativeLibraryValue nativeLibraryValue =
+                cmakeServerStrategy.getNativeLibraryValue("x86", getTestTarget(targetStr));
+
+        assertThat(nativeLibraryValue.files).hasSize(1);
+        NativeSourceFileValue nativeSourceFileValue = Iterables.get(nativeLibraryValue.files, 0);
+        assertThat(nativeSourceFileValue.src.getAbsolutePath())
+                .isEqualTo(
+                        "/usr/local/google/home/AndroidStudioProjects/BugTest/app/src/main/test/Test1.cpp");
+        assertThat(nativeSourceFileValue.flags)
+                .isEqualTo(
+                        "--target=x86_64-none-linux-android --gcc-toolchain=/usr/local/google/home/Android/Sdk/ndk-bundle/toolchains/x86_64-4.9/prebuilt/linux-x86_64 --sysroot=/usr/local/google/home/Android/Sdk/ndk-bundle/platforms/android-21/arch-x86_64  -DTest1_EXPORTS -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/include -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward  -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security  -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security   -O0 -fno-limit-debug-info -O0 -fno-limit-debug-info  -fPIC   -o src/main/test/CMakeFiles/Test1.dir/Test1.cpp.o -c ");
+    }
+
     /** Returns InteractiveMessage object from the given message string. */
     private static InteractiveMessage getInteractiveMessageFromString(@NonNull String messageStr) {
         Gson gson = new GsonBuilder().create();
@@ -346,5 +412,34 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         return TestResources.getFile(
                 CmakeServerExternalNativeJsonGeneratorTest.class,
                 compileCommandsTestFileDir + testFileName);
+    }
+
+    private static CodeModel getTestCodeMode(@NonNull String codeModelStr) {
+        Gson gson = new GsonBuilder().create();
+        return gson.fromJson(codeModelStr, CodeModel.class);
+    }
+
+    private static CmakeInputsResult getTestCmakeInputsResults(@NonNull String cmakeInputsStr) {
+        Gson gson = new GsonBuilder().create();
+        return gson.fromJson(cmakeInputsStr, CmakeInputsResult.class);
+    }
+
+    private static Target getTestTarget(@NonNull String targetStr) {
+        Gson gson = new GsonBuilder().create();
+        return gson.fromJson(targetStr, Target.class);
+    }
+
+    /**
+     * Returns the test json folder.
+     *
+     * @return test json folder
+     */
+    private File getTestJsonFolder() {
+        final String testCompileCommandsPath =
+                "/com/android/build/gradle/testJsonFolder/x86/compile_commands.json";
+        File compileCommands =
+                TestResources.getFile(
+                        CmakeServerExternalNativeJsonGeneratorTest.class, testCompileCommandsPath);
+        return compileCommands.getParentFile().getParentFile();
     }
 }

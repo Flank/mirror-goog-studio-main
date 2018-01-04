@@ -23,6 +23,17 @@ import com.android.annotations.Nullable;
 public interface Library {
 
     /**
+     * Returns an optional build identifier.
+     *
+     * <p>This is only valid if {@link #getProject()} is not <code>null</code>. a <code>null</code>
+     * value in this property indicates that this is the root build.
+     *
+     * @return a build identifier or null.
+     */
+    @Nullable
+    String getBuildId();
+
+    /**
      * Returns an optional project identifier if the library is output
      * by a module.
      *

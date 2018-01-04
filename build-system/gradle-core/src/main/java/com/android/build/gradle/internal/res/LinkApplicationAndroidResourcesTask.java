@@ -28,6 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.TaskManager;
@@ -39,8 +40,9 @@ import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.SplitList;
@@ -68,6 +70,7 @@ import com.android.ide.common.blame.parser.ToolOutputParser;
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser;
 import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
 import com.android.ide.common.build.ApkData;
+import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
@@ -79,13 +82,13 @@ import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
@@ -203,7 +206,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
         WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
-        Collection<BuildOutput> manifestsOutputs = BuildOutputs.load(taskInputType, manifestFiles);
+        BuildElements manifestBuildElements =
+                ExistingBuildElements.from(taskInputType, manifestFiles);
 
         final Set<File> packageIdFileSet =
                 packageIdsFiles != null
@@ -224,60 +228,65 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         ? sharedLibraryDependencies.getFiles()
                         : Collections.emptySet();
 
+        ImmutableList.Builder<BuildOutput> buildOutputs = ImmutableList.builder();
+
         try (Aapt aapt = makeAapt()) {
 
             // do a first pass at the list so we generate the code synchronously since it's required
             // by the full splits asynchronous processing below.
-            List<ApkData> apkDataList = new ArrayList<>(outputScope.getApkDatas());
-            for (ApkData apkData : outputScope.getApkDatas()) {
-                if (apkData.requiresAapt()) {
-                    boolean codeGen =
-                            (apkData.getType() == OutputFile.OutputType.MAIN
-                                    || apkData.getFilter(OutputFile.FilterType.DENSITY) == null);
-                    if (codeGen) {
-                        apkDataList.remove(apkData);
-                        invokeAaptForSplit(
-                                manifestsOutputs,
-                                dependencies,
-                                imports,
-                                packageIdFileSet,
-                                splitList,
-                                featureResourcePackages,
-                                apkData,
-                                codeGen,
-                                aapt);
-                        break;
-                    }
+            List<BuildOutput> unprocessedManifest =
+                    manifestBuildElements.stream().collect(Collectors.toList());
+
+            for (BuildOutput manifestBuildOutput : manifestBuildElements) {
+                ApkInfo apkInfo = manifestBuildOutput.getApkInfo();
+                boolean codeGen =
+                        (apkInfo.getType() == OutputFile.OutputType.MAIN
+                                || apkInfo.getFilter(OutputFile.FilterType.DENSITY) == null);
+                if (codeGen) {
+                    unprocessedManifest.remove(manifestBuildOutput);
+                    buildOutputs.add(
+                            invokeAaptForSplit(
+                                    manifestBuildOutput,
+                                    dependencies,
+                                    imports,
+                                    packageIdFileSet,
+                                    splitList,
+                                    featureResourcePackages,
+                                    apkInfo,
+                                    codeGen,
+                                    aapt));
+                    break;
                 }
             }
-
             // now all remaining splits will be generated asynchronously.
-            for (ApkData apkData : apkDataList) {
-                if (apkData.requiresAapt()) {
+            for (BuildOutput manifestBuildOutput : unprocessedManifest) {
+                ApkInfo apkInfo = manifestBuildOutput.getApkInfo();
+                if (apkInfo.requiresAapt()) {
                     executor.execute(
                             () -> {
-                                invokeAaptForSplit(
-                                        manifestsOutputs,
+                                return invokeAaptForSplit(
+                                        manifestBuildOutput,
                                         dependencies,
                                         imports,
                                         packageIdFileSet,
                                         splitList,
                                         featureResourcePackages,
-                                        apkData,
+                                        apkInfo,
                                         false,
                                         aapt);
-                                return null;
                             });
                 }
             }
 
-            List<WaitableExecutor.TaskResult<Void>> taskResults = executor.waitForAllTasks();
+            List<WaitableExecutor.TaskResult<BuildOutput>> taskResults = executor.waitForAllTasks();
             taskResults.forEach(
                     taskResult -> {
                         if (taskResult.getException() != null) {
                             throw new BuildException(
                                     taskResult.getException().getMessage(),
                                     taskResult.getException());
+                        } else {
+                            buildOutputs.add(taskResult.getValue());
                         }
                     });
 
@@ -289,8 +298,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         if (multiOutputPolicy == MultiOutputPolicy.SPLITS) {
             // now populate the pure splits list in the SplitScope (this should eventually move
             // to the SplitDiscoveryTask.
-            outputScope.deleteAllEntries(
-                    VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES);
             splitList.forEach(
                     (filterType, filters) -> {
                         // only for densities and languages.
@@ -330,11 +337,12 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                     if (packagedResForSplit != null) {
                                         configurationApkData.setOutputFileName(
                                                 packagedResForSplit.getName());
-                                        outputScope.addOutputForSplit(
-                                                VariantScope.TaskOutputType
-                                                        .DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
-                                                configurationApkData,
-                                                packagedResForSplit);
+                                        buildOutputs.add(
+                                                new BuildOutput(
+                                                        VariantScope.TaskOutputType
+                                                                .DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
+                                                        configurationApkData,
+                                                        packagedResForSplit));
                                     } else {
                                         getLogger()
                                                 .warn(
@@ -345,31 +353,36 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                     });
         }
         // and save the metadata file.
-        outputScope.save(
-                ImmutableList.of(
-                        VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
-                        VariantScope.TaskOutputType.PROCESSED_RES),
-                resPackageOutputFolder);
+        new BuildElements(buildOutputs.build()).save(resPackageOutputFolder);
     }
 
-    void invokeAaptForSplit(
-            Collection<BuildOutput> manifestsOutputs,
+    BuildOutput invokeAaptForSplit(
+            BuildOutput manifestOutput,
             @NonNull Set<File> dependencies,
             Set<File> imports,
             @Nullable Set<File> packageIdFileSet,
             @NonNull SplitList splitList,
             @NonNull Set<File> featureResourcePackages,
-            ApkData apkData,
+            ApkInfo apkData,
             boolean generateCode,
             @Nullable Aapt aapt)
             throws IOException {
 
         ImmutableList.Builder<File> featurePackagesBuilder = ImmutableList.builder();
         for (File featurePackage : featureResourcePackages) {
-            Collection<BuildOutput> splitOutputs =
-                    BuildOutputs.load(VariantScope.TaskOutputType.PROCESSED_RES, featurePackage);
-            if (!splitOutputs.isEmpty()) {
-                featurePackagesBuilder.add(Iterables.getOnlyElement(splitOutputs).getOutputFile());
+            BuildElements buildElements =
+                    ExistingBuildElements.from(
+                            VariantScope.TaskOutputType.PROCESSED_RES, featurePackage);
+            if (!buildElements.isEmpty()) {
+                BuildOutput mainBuildOutput =
+                        buildElements.element(variantScope.getOutputScope().getMainSplit());
+                if (mainBuildOutput != null) {
+                    featurePackagesBuilder.add(mainBuildOutput.getOutputFile());
+                } else {
+                    throw new IOException(
+                            "Cannot find PROCESSED_RES output for "
+                                    + variantScope.getOutputScope().getMainSplit());
+                }
             }
         }
 
@@ -381,13 +394,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 + apkData.getFullName()
                                 + SdkConstants.DOT_RES);
 
-        // FIX ME : there should be a better way to always get the manifest file to merge.
-        // for instance, should the library task also output the .gson ?
-        BuildOutput manifestOutput =
-                OutputScope.getOutput(manifestsOutputs, taskInputType, apkData);
-        if (manifestOutput == null) {
-            throw new RuntimeException("Cannot find merged manifest file");
-        }
         File manifestFile = manifestOutput.getOutputFile();
 
         String packageForR = null;
@@ -409,10 +415,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             mainDexListProguardOutputFile = getMainDexListProguardOutputFile();
         }
 
-        String splitFilter = apkData.getFilter(OutputFile.FilterType.DENSITY);
+        FilterData densityFilterData = apkData.getFilter(OutputFile.FilterType.DENSITY);
         String preferredDensity =
-                splitFilter != null
-                        ? splitFilter
+                densityFilterData != null
+                        ? densityFilterData.getIdentifier()
                         // if resConfigs is set, we should not use our preferredDensity.
                         : splitList.getFilters(SplitList.RESOURCE_CONFIGS).isEmpty()
                                 ? buildTargetDensity
@@ -497,7 +503,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         symbolsWithPackageNameOutputFile.toPath());
             }
 
-            outputScope.addOutputForSplit(
+            return new BuildOutput(
                     VariantScope.TaskOutputType.PROCESSED_RES,
                     apkData,
                     resOutBaseNameFile,
@@ -564,17 +570,17 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
      * requested split for this task). A density split identifier can be suffixed with characters
      * added by aapt.
      */
-    private static boolean isValidSplit(ApkData apkData, @NonNull String splitWithOptionalSuffix) {
+    private static boolean isValidSplit(ApkInfo apkData, @NonNull String splitWithOptionalSuffix) {
 
-        String splitFilter = apkData.getFilter(OutputFile.FilterType.DENSITY);
+        FilterData splitFilter = apkData.getFilter(OutputFile.FilterType.DENSITY);
         if (splitFilter != null) {
-            if (splitWithOptionalSuffix.startsWith(splitFilter)) {
+            if (splitWithOptionalSuffix.startsWith(splitFilter.getIdentifier())) {
                 return true;
             }
         }
         String mangledName = unMangleSplitName(splitWithOptionalSuffix);
         splitFilter = apkData.getFilter(OutputFile.FilterType.LANGUAGE);
-        if (mangledName.equals(splitFilter)) {
+        if (splitFilter != null && mangledName.equals(splitFilter.getIdentifier())) {
             return true;
         }
         return false;
@@ -1030,6 +1036,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return getBuildTools().getRevision().toString();
     }
 
+    @Nullable
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.NONE)

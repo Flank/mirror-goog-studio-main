@@ -78,7 +78,7 @@ class ConfigTableTest {
     @Test
     fun testConfigsContaining() {
         // Locate all configs common to all artifacts in the fullHiresReleaseApp variant
-        assertThat(table.configsContaining(fullHiresReleaseAppPath)).isEqualTo(listOf(
+        assertThat(table.filter { it.path.contains(fullHiresReleaseAppPath) }.configs).isEqualTo(listOf(
                 main,
                 full,
                 hires,
@@ -86,7 +86,7 @@ class ConfigTableTest {
                 release,
                 app))
         // Locate configs common to all artifacts in the full flavor
-        assertThat(table.configsContaining(schema.pathFor("full"))).isEqualTo(listOf(main, full))
+        assertThat(table.filter { it.path.contains(schema.pathFor("full")) }.configs).isEqualTo(listOf(main, full))
     }
 
     @Test
@@ -125,13 +125,13 @@ class ConfigTableTest {
     @Test
     fun testConfigsNotContaining() {
         // Locate all configs that aren't common to all artifacts in the fullHiresReleaseApp variant
-        assertThat(table.configsNotContaining(fullHiresReleaseAppPath)).isEqualTo(listOf(
+        assertThat(table.filter { !it.path.contains(fullHiresReleaseAppPath) }.configs).isEqualTo(listOf(
                 demo,
                 lowres,
                 debug,
                 tests))
         // Locate all configs that aren't common to all artifacts in the full flavor
-        assertThat(table.configsNotContaining(schema.pathFor("full"))).isEqualTo(listOf(
+        assertThat(table.filter { !it.path.contains(schema.pathFor("full")) }.configs).isEqualTo(listOf(
                 demo,
                 hires,
                 lowres,
@@ -161,7 +161,7 @@ class ConfigTableTest {
     @Test
     fun testFilterContaining() {
         // Locate configs that are used by all variants of the "tests" artifact.
-        val filtered = table.filterContaining(matchArtifactsWith("*/*/*/tests"))
+        val filtered = table.filter { it.path.contains(matchArtifactsWith("*/*/*/tests")) }
         assertThat(filtered.schema).isEqualTo(table.schema)
         assertThat(filtered.configs).isEqualTo(listOf(main, tests))
         assertThat(filtered.associations).isEqualTo(listOf(
@@ -173,7 +173,7 @@ class ConfigTableTest {
     fun testFilterNotContaining() {
         // Locate all configs that aren't common to the app artifact in the demo/lowres flavor
         // across all build types.
-        val filtered = table.filterNotContaining(matchArtifactsWith("demo/lowres/*/app"))
+        val filtered = table.filter { !it.path.contains(matchArtifactsWith("demo/lowres/*/app")) }
         assertThat(filtered.schema).isEqualTo(table.schema)
         assertThat(filtered.configs).isEqualTo(listOf(
                 full,

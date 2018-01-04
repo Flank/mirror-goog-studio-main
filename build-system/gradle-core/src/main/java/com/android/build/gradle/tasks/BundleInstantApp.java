@@ -21,7 +21,7 @@ import static com.android.SdkConstants.DOT_ZIP;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -33,8 +33,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -59,16 +58,15 @@ public class BundleInstantApp extends AndroidVariantTask {
         try (ZipOutputStream zipOutputStream =
                 new ZipOutputStream(new FileOutputStream(bundleFile))) {
             for (File apkDirectory : apkDirectories) {
-                Collection<BuildOutput> buildOutputs = BuildOutputs.load(apkDirectory);
-                for (BuildOutput buildOutput : buildOutputs) {
-                    if (buildOutput.getType() == TaskOutputHolder.TaskOutputType.APK) {
-                        File apkFile = buildOutput.getOutputFile();
-                        try (FileInputStream fileInputStream = new FileInputStream(apkFile)) {
-                            byte[] inputBuffer = IOUtils.toByteArray(fileInputStream);
-                            zipOutputStream.putNextEntry(new ZipEntry(apkFile.getName()));
-                            zipOutputStream.write(inputBuffer, 0, inputBuffer.length);
-                            zipOutputStream.closeEntry();
-                        }
+                for (BuildOutput buildOutput :
+                        ExistingBuildElements.from(
+                                TaskOutputHolder.TaskOutputType.APK, apkDirectory)) {
+                    File apkFile = buildOutput.getOutputFile();
+                    try (FileInputStream fileInputStream = new FileInputStream(apkFile)) {
+                        byte[] inputBuffer = IOUtils.toByteArray(fileInputStream);
+                        zipOutputStream.putNextEntry(new ZipEntry(apkFile.getName()));
+                        zipOutputStream.write(inputBuffer, 0, inputBuffer.length);
+                        zipOutputStream.closeEntry();
                     }
                 }
             }
@@ -79,7 +77,7 @@ public class BundleInstantApp extends AndroidVariantTask {
                 new InstantAppOutputScope(
                         ApplicationId.load(applicationId.getSingleFile()).getApplicationId(),
                         bundleFile,
-                        apkDirectories.getFiles().stream().collect(Collectors.toList()));
+                        new ArrayList<>(apkDirectories.getFiles()));
         instantAppOutputScope.save(bundleDirectory);
     }
 

@@ -17,13 +17,15 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.OutputScope;
+import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import org.gradle.api.Project;
@@ -32,6 +34,7 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.tooling.BuildException;
 
 /**
  * Copy the location our various tasks outputs into a single location.
@@ -45,7 +48,6 @@ public class CopyOutputs extends AndroidVariantTask {
     FileCollection abiSplits;
     FileCollection resourcesSplits;
     File destinationDir;
-    OutputScope outputScope;
 
     @OutputDirectory
     public java.io.File getDestinationDir() {
@@ -75,26 +77,31 @@ public class CopyOutputs extends AndroidVariantTask {
 
         FileUtils.cleanOutputDir(getDestinationDir());
         // TODO : parallelize at this level.
-        parallelCopy(TaskOutputType.FULL_APK, fullApks);
-        parallelCopy(TaskOutputType.ABI_PACKAGED_SPLIT, abiSplits);
-        parallelCopy(TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT, resourcesSplits);
+        ImmutableList.Builder<BuildOutput> allCopiedFiles = ImmutableList.builder();
+        allCopiedFiles.addAll(parallelCopy(TaskOutputType.FULL_APK, fullApks));
+        allCopiedFiles.addAll(parallelCopy(TaskOutputType.ABI_PACKAGED_SPLIT, abiSplits));
+        allCopiedFiles.addAll(
+                parallelCopy(TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT, resourcesSplits));
         // now save the merged list.
-        outputScope.save(TaskOutputType.APK, getDestinationDir());
+        new BuildElements(allCopiedFiles.build()).save(getDestinationDir());
     }
 
-    private void parallelCopy(TaskOutputType inputType, FileCollection inputs) {
-        outputScope.parallelForEachOutput(
-                BuildOutputs.load(inputType, inputs),
-                inputType,
-                TaskOutputType.APK,
-                (split, output) -> {
-                    if (output != null) {
-                        File destination = new File(getDestinationDir(), output.getName());
-                        FileUtils.copyFile(output, destination);
-                        return destination;
-                    }
-                    return null;
-                });
+    // TODO : shouldn't this be in parallel?
+    private BuildElements parallelCopy(TaskOutputType inputType, FileCollection inputs)
+            throws IOException {
+
+        return ExistingBuildElements.from(inputType, inputs)
+                .transform(
+                        (apkInfo, inputFile) -> {
+                            File destination = new File(getDestinationDir(), inputFile.getName());
+                            try {
+                                FileUtils.copyFile(inputFile, destination);
+                            } catch (IOException e) {
+                                throw new BuildException(e.getMessage(), e);
+                            }
+                            return destination;
+                        })
+                .into(TaskOutputType.APK);
     }
 
     public static class ConfigAction implements TaskConfigAction<CopyOutputs> {
@@ -122,7 +129,6 @@ public class CopyOutputs extends AndroidVariantTask {
         @Override
         public void execute(@NonNull CopyOutputs task) {
             task.setVariantName(variantScope.getFullVariantName());
-            task.outputScope = variantScope.getOutputScope();
             task.fullApks = variantScope.getOutput(TaskOutputType.FULL_APK);
             Project project = variantScope.getGlobalScope().getProject();
             task.abiSplits =

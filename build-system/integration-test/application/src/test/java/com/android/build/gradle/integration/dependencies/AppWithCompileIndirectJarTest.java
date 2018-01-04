@@ -98,7 +98,7 @@ public class AppWithCompileIndirectJarTest {
         assertThat(androidLibrary.getProject()).named("app androidlib deps path").isEqualTo(":library");
         assertThat(androidLibrary.getJavaDependencies()).named("app androidlib java libs count").isEmpty();
 
-        assertThat(deps.getProjects()).named("app module dependency count").isEmpty();
+        assertThat(deps.getJavaModules()).named("app module dependency count").isEmpty();
 
         Collection<JavaLibrary> javaLibraries = deps.getJavaLibraries();
         assertThat(javaLibraries).named("app java dependency count").hasSize(1);

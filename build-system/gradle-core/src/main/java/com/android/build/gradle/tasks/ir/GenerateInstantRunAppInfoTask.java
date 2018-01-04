@@ -30,9 +30,9 @@ import static org.objectweb.asm.Opcodes.V1_6;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.InstantRunVariantScope;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -44,7 +44,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 import javax.xml.parsers.ParserConfigurationException;
@@ -106,19 +105,20 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
 
     @TaskAction
     public void generateInfoTask() throws IOException {
-        Collection<BuildOutput> buildOutputs =
-                BuildOutputs.load(
+
+        BuildElements buildElements =
+                ExistingBuildElements.from(
                         VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
                         getMergedManifests());
 
-        if (buildOutputs.isEmpty()) {
+        if (buildElements.isEmpty()) {
             throw new RuntimeException(
                     "Cannot find the package-id from the merged manifest, "
                             + "please file a bug, a clean build should fix the issue.");
         }
 
         // obtain the application id from any of the split/main manifest file.
-        BuildOutput buildOutput = buildOutputs.iterator().next();
+        BuildOutput buildOutput = buildElements.iterator().next();
         File manifestFile = buildOutput.getOutputFile();
 
         if (manifestFile.exists()) {
@@ -195,15 +195,14 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
     }
 
     public static class ConfigAction implements TaskConfigAction<GenerateInstantRunAppInfoTask> {
-        @NonNull
-        private final InstantRunVariantScope variantScope;
+        @NonNull private final VariantScope variantScope;
         @NonNull
         private final TransformVariantScope transformVariantScope;
         @NonNull private final FileCollection manifests;
 
         public ConfigAction(
                 @NonNull TransformVariantScope transformVariantScope,
-                @NonNull InstantRunVariantScope variantScope,
+                @NonNull VariantScope variantScope,
                 @NonNull FileCollection manifests) {
             this.transformVariantScope = transformVariantScope;
             this.variantScope = variantScope;
@@ -231,7 +230,6 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
                             PackageAndroidArtifact.INSTANT_RUN_PACKAGES_PREFIX + "-bootstrap.jar");
 
             task.mergedManifests = manifests;
-
         }
     }
 }

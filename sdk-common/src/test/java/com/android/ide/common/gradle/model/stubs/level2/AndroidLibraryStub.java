@@ -211,6 +211,13 @@ public class AndroidLibraryStub extends BaseStub implements Library {
                 "getVariant() cannot be called when getType() returns ANDROID_LIBRARY");
     }
 
+    @Nullable
+    @Override
+    public String getBuildId() {
+        throw new UnsupportedOperationException(
+                "getBuildId() cannot be called when getType() returns ANDROID_LIBRARY");
+    }
+
     @Override
     @NonNull
     public String getProjectPath() {

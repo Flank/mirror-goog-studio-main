@@ -18,18 +18,19 @@ package com.android.build.gradle.tasks.ir
 
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext
-import com.android.build.gradle.internal.scope.BuildOutputs
+import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.utils.FileCache
-import com.android.ide.common.build.ApkData
 import com.android.ide.common.build.ApkInfo
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableMap
+import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 import com.google.common.truth.Truth.assertThat
 import org.apache.commons.io.FileUtils
@@ -59,10 +60,9 @@ open class InstantRunMainApkResourcesBuilderTest {
     @Rule @JvmField
     var manifestFileFolder = TemporaryFolder()
 
-    @Mock internal var apkInfo: ApkInfo? = null
     @Mock private lateinit var resources: FileCollection
     private lateinit var manifestFiles: FileCollection
-    @Mock internal var fileTree: FileTree? = null
+    @Mock lateinit internal var fileTree: FileTree
     @Mock internal var buildContext: InstantRunBuildContext? = null
     @Mock internal var logger: ILogger? = null
     @Mock private lateinit var variantConfiguration: GradleVariantConfiguration
@@ -96,6 +96,7 @@ open class InstantRunMainApkResourcesBuilderTest {
         manifestFiles = project.files(manifestFileFolder.root)
         `when`(variantScope.getOutput(TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS))
                 .thenReturn(manifestFiles)
+        `when`(resources.asFileTree).thenReturn(fileTree)
     }
 
     @Test
@@ -118,8 +119,8 @@ open class InstantRunMainApkResourcesBuilderTest {
     // should be tested elsewhere.
     open class InstantRunMainApkResourcesBuilderForTest: InstantRunMainApkResourcesBuilder() {
         @Throws(IOException::class)
-        override fun processSplit(apkData: ApkData, manifestFile: File?): File? {
-            return File(outputDirectory, apkData.baseName)
+        override fun processSplit(apkInfo: ApkInfo, manifestFile: File?): File? {
+            return File(outputDirectory, apkInfo.baseName)
         }
     }
 
@@ -143,22 +144,22 @@ open class InstantRunMainApkResourcesBuilderTest {
                 "      android:versionName=\"1.0\">\n" +
                 "</manifest>\n")
 
-        outputScope.addOutputForSplit(
-                TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+        BuildOutput(TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
                 OutputFactory("test", variantConfiguration, outputScope).addMainApk(),
                 manifestFile)
+                .save(manifestFileFolder.root)
 
-        outputScope.save(TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
-                manifestFileFolder.root)
-
+        `when`(fileTree.files).thenReturn(
+                ImmutableSet.copyOf(manifestFileFolder.root.listFiles()))
         configAction.execute(task)
 
         task.doFullTaskAction()
         val resultingFiles = outDir.listFiles()
         assertThat(resultingFiles).hasLength(1)
         assertThat(resultingFiles[0].name).isEqualTo("output.json")
-        val buildArtifacts = BuildOutputs.load(outDir)
-        assertThat(buildArtifacts.size).isEqualTo(1)
+        val buildArtifacts = ExistingBuildElements.from(
+                TaskOutputHolder.TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES, outDir)
+        assertThat(buildArtifacts.size()).isEqualTo(1)
         val buildArtifact = Iterables.getOnlyElement(buildArtifacts)
         assertThat(buildArtifact.type).isEqualTo(
                 TaskOutputHolder.TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES)

@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.sdk.TargetInfo;
@@ -88,14 +88,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
     final List<InstantRunSplitApkBuilder.DexFiles> dexFilesList =
             new CopyOnWriteArrayList<>();
 
-    final ApkInfo apkInfo =
-            ApkInfo.of(
-                    VariantOutput.OutputType.MAIN,
-                    ImmutableList.of(),
-                    12345,
-                    "test_version_name",
-                    true,
-                    null);
+    final ApkInfo apkInfo = ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 12345);
 
     @Before
     public void setUpMock() {
@@ -110,7 +103,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
 
         File apkListFile = apkListDirectory.newFile("apk-list.json");
         org.apache.commons.io.FileUtils.write(
-                apkListFile, BuildOutputs.persistApkList(ImmutableList.of(apkInfo)));
+                apkListFile, ExistingBuildElements.persistApkList(ImmutableList.of(apkInfo)));
         when(apkList.getSingleFile()).thenReturn(apkListFile);
 
         fileCache = FileCache.getInstanceWithSingleProcessLocking(fileCacheDirectory.getRoot());

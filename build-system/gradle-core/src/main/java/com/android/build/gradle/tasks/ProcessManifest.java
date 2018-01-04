@@ -22,6 +22,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -101,22 +102,20 @@ public class ProcessManifest extends ManifestProcessorTask {
                                 "split", mergedXmlDocument.getSplitName())
                         : ImmutableMap.of();
 
-        outputScope.addOutputForSplit(
-                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                outputScope.getMainSplit(),
-                manifestOutputFile,
-                properties);
-        outputScope.addOutputForSplit(
-                TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
-                outputScope.getMainSplit(),
-                aaptFriendlyManifestOutputFile,
-                properties);
         try {
-            outputScope.save(
-                    TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
-            outputScope.save(
-                    TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
-                    getAaptFriendlyManifestOutputDirectory());
+            new BuildOutput(
+                            TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
+                            outputScope.getMainSplit(),
+                            manifestOutputFile,
+                            properties)
+                    .save(getManifestOutputDirectory());
+
+            new BuildOutput(
+                            TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                            outputScope.getMainSplit(),
+                            aaptFriendlyManifestOutputFile,
+                            properties)
+                    .save(getAaptFriendlyManifestOutputDirectory());
         } catch (IOException e) {
             throw new BuildException("Exception while saving build metadata : ", e);
         }

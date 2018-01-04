@@ -24,11 +24,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.OutputScope;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.IOException;
@@ -56,9 +56,14 @@ public class GenerateTestConfig extends DefaultTask {
     FileCollection assetsDirectory;
     Path sdkHome;
     File generatedJavaResourcesDirectory;
-    OutputScope outputScope;
+    ApkInfo mainApkInfo;
     FileCollection manifests;
     String packageForR;
+
+    @Input
+    ApkInfo getMainApkInfo() {
+        return mainApkInfo;
+    }
 
     @InputFiles
     FileCollection getManifests() {
@@ -72,11 +77,9 @@ public class GenerateTestConfig extends DefaultTask {
         checkNotNull(sdkHome);
 
         BuildOutput output =
-                OutputScope.getOutput(
-                        BuildOutputs.load(
-                                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, manifests),
-                        TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                        outputScope.getMainSplit());
+                ExistingBuildElements.from(
+                                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, manifests)
+                        .element(mainApkInfo);
         generateTestConfigForOutput(
                 assetsDirectory.getSingleFile().toPath().toAbsolutePath(),
                 resourcesDirectory.getSingleFile().toPath().toAbsolutePath(),
@@ -179,7 +182,7 @@ public class GenerateTestConfig extends DefaultTask {
             task.dependsOn(task.assetsDirectory);
             task.manifests =
                     testedScope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
-            task.outputScope = testedScope.getOutputScope();
+            task.mainApkInfo = testedScope.getOutputScope().getMainSplit();
             task.sdkHome =
                     Paths.get(scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation());
             task.generatedJavaResourcesDirectory = outputDirectory;

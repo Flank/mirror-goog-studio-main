@@ -26,6 +26,49 @@ data class SourceSet(private val paths: Map<AndroidPathType, List<PathString>> =
     operator fun get(type: AndroidPathType) = paths[type] ?: emptyList()
 
     /**
+     * Appends the paths in [other] to the paths in this [SourceSet].
+     */
+    operator fun plus(other: SourceSet): SourceSet {
+        if (other.isEmpty()) {
+            return this
+        }
+        if (isEmpty()) {
+            return other
+        }
+        val resultPaths = HashMap<AndroidPathType, List<PathString>>()
+        for ((pathType, locations) in paths.entries) {
+            resultPaths.put(pathType, fastAppend(locations, other[pathType]))
+        }
+
+        for ((pathType, locations) in other.paths.entries) {
+            resultPaths.putIfAbsent(pathType, locations)
+        }
+        return SourceSet(resultPaths)
+    }
+
+    private fun fastAppend(first: List<PathString>, second: List<PathString>): List<PathString> {
+        if (first.isEmpty()) {
+            return second
+        }
+        if (second.isEmpty()) {
+            return first
+        }
+        return first + second
+    }
+
+    /**
+     * Returns true if there are no paths in this [SourceSet].
+     */
+    fun isEmpty(): Boolean {
+        paths.values.forEach {
+            if (!it.isEmpty()) {
+                return false
+            }
+        }
+        return true
+    }
+
+    /**
      * Converts this object into a map of [AndroidPathType] onto lists of [PathString].
      */
     val asMap get() = paths

@@ -301,8 +301,8 @@ public class DesugarTransform extends Transform {
         }
 
         DesugarIncrementalTransformHelper helper =
-                new DesugarIncrementalTransformHelper(projectVariant);
-        Set<Path> additionalPaths = helper.getAdditionalPaths(invocation, waitableExecutor);
+                new DesugarIncrementalTransformHelper(projectVariant, invocation, waitableExecutor);
+        Set<Path> additionalPaths = helper.getAdditionalPaths();
         return additionalPaths.stream().map(Path::toFile).collect(Collectors.toSet());
     }
 

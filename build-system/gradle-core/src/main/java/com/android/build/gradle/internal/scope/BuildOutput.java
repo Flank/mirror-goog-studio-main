@@ -27,6 +27,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,6 +42,7 @@ import java.util.stream.Collectors;
  * <p>Each output is characterized by its type, the intent APK in which this build output will
  * eventually be packaged in and its file location.
  */
+// TODO : rename to BuildElement and make it a data class if possible.
 public final class BuildOutput implements OutputFile, Serializable {
 
     @NonNull private final VariantScope.OutputType outputType;
@@ -76,6 +78,9 @@ public final class BuildOutput implements OutputFile, Serializable {
         this.properties = properties;
     }
 
+    public void save(File folder) throws IOException {
+        new BuildElements(ImmutableList.of(this)).save(folder);
+    }
     /**
      * Returns information about the APK that will package this build output. If the {@link
      * #getType()} is {@link TaskOutputHolder.TaskOutputType#APK}, this build output is an APK and

@@ -19,24 +19,21 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
-import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
+import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.OutputScope;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.ide.common.build.ApkData;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import org.gradle.api.file.FileCollection;
@@ -53,7 +50,6 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
 
     private InstantRunBuildContext buildContext;
     private File manifestCheckerDir;
-    private OutputScope outputScope;
     private FileCollection instantRunManifests;
     private FileCollection processedRes;
     private TaskOutputType resInputType;
@@ -104,37 +100,30 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
         // Cannot call .getLastValue() since it is not declared as an Input which
         // would call .get() before the task run.
 
-        Collection<BuildOutput> manifestsOutputs =
-                BuildOutputs.load(TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS, instantRunManifests);
-        Collection<BuildOutput> processedResOutputs = BuildOutputs.load(resInputType, processedRes);
+        BuildElements processedResOutputs = ExistingBuildElements.from(resInputType, processedRes);
 
-        for (BuildOutput mergedManifest : manifestsOutputs) {
+        for (BuildOutput buildOutput :
+                ExistingBuildElements.from(
+                        TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS, instantRunManifests)) {
+            ApkInfo apkInfo = buildOutput.getApkInfo();
+            File mergedManifest = buildOutput.getOutputFile();
 
-            ApkInfo apkInfo = mergedManifest.getApkInfo();
-            ApkData apkData = outputScope.getSplit(apkInfo.getFilters());
-            if (apkData == null
-                    || !apkData.isEnabled()
-                    || apkData.getType() == VariantOutput.OutputType.SPLIT) {
-                continue;
-            }
-
-            File manifestFile = mergedManifest.getOutputFile();
-            LOG.info("CheckManifestInInstantRunMode : Merged manifest %1$s", manifestFile);
-            runManifestChangeVerifier(buildContext, manifestCheckerDir, manifestFile);
+            LOG.info("CheckManifestInInstantRunMode : Merged manifest %1$s", mergedManifest);
+            runManifestChangeVerifier(buildContext, manifestCheckerDir, mergedManifest);
 
             // Change THIS to not assume MAIN, time to add some API to the split scope that will
             // get MAIN, or UNIVERSAL or in case of FULL SPLIT, use the commented code to select
             // the right one. then change the code above to use the same logic to get the manifest
             // file.
-            BuildOutput output = OutputScope.getOutput(processedResOutputs, resInputType, apkData);
-            if (output == null) {
+            BuildOutput processedResOutput = processedResOutputs.element(apkInfo);
+            if (processedResOutput == null) {
                 throw new RuntimeException(
                         "Cannot find processed resources for "
-                                + apkData
+                                + apkInfo
                                 + " split in "
-                                + Joiner.on(",").join(outputScope.getOutputs(resInputType)));
+                                + Joiner.on(",").join(processedResOutputs.getElements()));
             }
-            File resourcesApk = output.getOutputFile();
+            File resourcesApk = processedResOutput.getOutputFile();
 
             // Cannot call .getLastValue() since it is not declared as an Input which
             // would call .get() before the task run.
@@ -191,7 +180,8 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
         // check the manifest file binary format.
         if (crcFile.exists() && currentIterationCRC != null) {
             // compare its content with the new binary file crc.
-            String previousIterationCRC = Files.readFirstLine(crcFile, Charsets.UTF_8);
+            String previousIterationCRC =
+                    Files.asCharSource(crcFile, Charsets.UTF_8).readFirstLine();
             if (!currentIterationCRC.equals(previousIterationCRC)) {
                 buildContext.setVerifierStatus(
                         InstantRunVerifierStatus.BINARY_MANIFEST_FILE_CHANGE);
@@ -204,7 +194,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
         if (currentIterationCRC != null) {
             // write the new manifest file CRC.
             Files.createParentDirs(crcFile);
-            Files.write(currentIterationCRC, crcFile, Charsets.UTF_8);
+            Files.asCharSink(crcFile, Charsets.UTF_8).write(currentIterationCRC);
         }
     }
 
@@ -238,7 +228,6 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
                             ? TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES
                             : TaskOutputType.PROCESSED_RES;
             task.processedRes = variantScope.getOutput(task.resInputType);
-            task.outputScope = variantScope.getOutputScope();
             task.buildContext = variantScope.getInstantRunBuildContext();
             task.manifestCheckerDir = variantScope.getManifestCheckerDir();
             task.setVariantName(variantScope.getFullVariantName());

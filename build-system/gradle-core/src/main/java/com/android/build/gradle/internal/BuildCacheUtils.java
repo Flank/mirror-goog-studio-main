@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -47,14 +49,41 @@ public final class BuildCacheUtils {
                     + "If you are unable to fix the issue,"
                     + " please file a bug at https://d.android.com/studio/report-bugs.html.";
 
-    /** The number of days that cache entries are kept in the build cache. */
+    /**
+     * The number of days that cache entries created by the current plugin version are kept since
+     * the last time they were created.
+     */
     private static final long CACHE_ENTRY_DAYS_TO_LIVE = 30;
+
+    /**
+     * The number of days that private cache directories created by previous plugin versions are
+     * kept since the last time they were used.
+     *
+     * <p>NOTE: This number should stay constant across plugin versions; if it is changed, we'll
+     * need to think about compatibility across plugin version.
+     */
+    private static final long CACHE_DIRECTORY_DAYS_TO_LIVE = 30;
 
     /**
      * The number of days until the next cache eviction is performed. This is to avoid running cache
      * eviction too frequently (e.g., with every build).
      */
     private static final long DAYS_BETWEEN_CACHE_EVICTION_RUNS = 1;
+
+    /**
+     * The name of an empty marker file inside the current private cache directory whose timestamp
+     * indicates the last time cache eviction was run by the current plugin version.
+     */
+    private static final String CACHE_EVICTION_MARKER_FILE_NAME = ".cache-eviction-marker";
+
+    /**
+     * The name of an empty marker file inside a private cache directory whose timestamp indicates
+     * the last time that cache directory was used.
+     *
+     * <p>NOTE: This file name should stay constant across plugin versions; if it is changed, we'll
+     * need to think about compatibility across plugin version.
+     */
+    @VisibleForTesting static final String CACHE_USE_MARKER_FILE_NAME = ".cache-use-marker";
 
     /**
      * Returns a {@link FileCache} instance representing the build cache if the build cache is
@@ -64,6 +93,7 @@ public final class BuildCacheUtils {
      * <p>Cache eviction may be performed in this method at regular intervals (see {@link
      * BuildCacheUtils#DAYS_BETWEEN_CACHE_EVICTION_RUNS}}).
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Nullable
     public static FileCache createBuildCacheIfEnabled(
             @NonNull Project project, @NonNull ProjectOptions projectOptions) {
@@ -138,10 +168,20 @@ public final class BuildCacheUtils {
                         });
 
         // Run cache eviction at regular intervals
-        deleteOldCacheEntries(
-                buildCache,
-                Duration.ofDays(CACHE_ENTRY_DAYS_TO_LIVE),
-                Duration.ofDays(DAYS_BETWEEN_CACHE_EVICTION_RUNS));
+        boolean shouldRunCacheEviction =
+                shouldRunCacheEviction(
+                        buildCache, Duration.ofDays(DAYS_BETWEEN_CACHE_EVICTION_RUNS));
+        if (shouldRunCacheEviction) {
+            // 1. Delete old cache entries created by the current plugin version
+            deleteOldCacheEntries(buildCache, Duration.ofDays(CACHE_ENTRY_DAYS_TO_LIVE));
+
+            // 2. Delete old cache directories created by previous plugin versions
+            deleteOldCacheDirectories(
+                    sharedBuildCacheDir, Duration.ofDays(CACHE_DIRECTORY_DAYS_TO_LIVE));
+        }
+
+        // Mark that the current cache was last used at this point
+        updateMarkerFile(new File(buildCache.getCacheDirectory(), CACHE_USE_MARKER_FILE_NAME));
 
         return buildCache;
     }
@@ -164,40 +204,108 @@ public final class BuildCacheUtils {
     }
 
     /**
-     * Deletes all the cache entries that have been kept in the build cache for longer than or as
-     * long as the specified life time, but only performs this action if this is the first cache
-     * eviction or the specified interval has elapsed since the last cache eviction.
+     * Determines whether cache eviction should be performed (if this is the first cache eviction
+     * request or the specified interval has elapsed since the last cache eviction request).
+     *
+     * @return {@code true} if cache eviction should be performed
      */
-    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @VisibleForTesting
+    static boolean shouldRunCacheEviction(
+            @NonNull FileCache buildCache, @NonNull Duration cacheEvictionInterval) {
+        // Find out the last time cache eviction was run
+        File markerFile = new File(buildCache.getCacheDirectory(), CACHE_EVICTION_MARKER_FILE_NAME);
+        long lastEvictionTimestamp = markerFile.lastModified();
+        boolean shouldRunCacheEviction =
+                lastEvictionTimestamp == 0 /* The marker file does not yet exist */
+                        || Duration.ofMillis(System.currentTimeMillis() - lastEvictionTimestamp)
+                                        .compareTo(cacheEvictionInterval)
+                                >= 0;
+        if (shouldRunCacheEviction) {
+            updateMarkerFile(markerFile);
+        }
+        return shouldRunCacheEviction;
+    }
+
+    /**
+     * Deletes all the cache entries in the given private cache directory that have existed for the
+     * specified life time or longer.
+     */
     @VisibleForTesting
     static void deleteOldCacheEntries(
-            @NonNull FileCache buildCache,
-            @NonNull Duration cacheEntryLifeTime,
-            @NonNull Duration cacheEvictionInterval) {
-        // Use a marker file to record the last time cache eviction was run
-        File markerFile = new File(buildCache.getCacheDirectory(), ".cache-eviction-marker");
-        long lastEvictionTimestamp = markerFile.lastModified();
+            @NonNull FileCache buildCache, @NonNull Duration cacheEntryLifeTime) {
+        // There could be a race condition here if another thread/process also reaches this point,
+        // but that is Okay because the method call below is thread-safe and process-safe, it's just
+        // that the code below will be executed more than once (which is fine).
+        buildCache.deleteOldCacheEntries(
+                System.currentTimeMillis() - cacheEntryLifeTime.toMillis());
+    }
 
-        if (lastEvictionTimestamp == 0 /* The marker file does not yet exist */
-                || Duration.ofMillis(System.currentTimeMillis() - lastEvictionTimestamp)
-                                .compareTo(cacheEvictionInterval)
-                        >= 0) {
-            // There could be a race condition here if another thread/process also reaches this
-            // point, but that is Okay because the method call below is thread-safe and
-            // process-safe, it's just that the code below will be executed more than once (which is
-            // fine).
-            buildCache.deleteOldCacheEntries(
-                    System.currentTimeMillis() - cacheEntryLifeTime.toMillis());
+    /**
+     * Deletes all the private cache directories in the given shared cache directory that were
+     * created by previous plugin versions and have not been used for the specified life time or
+     * longer.
+     */
+    @VisibleForTesting
+    static void deleteOldCacheDirectories(
+            @NonNull File sharedBuildCacheDir, @NonNull Duration cacheDirectoryLifeTime) {
+        AndroidGradlePluginVersion currentPluginVersion =
+                AndroidGradlePluginVersion.parseString(Version.ANDROID_GRADLE_PLUGIN_VERSION);
+        for (File buildCacheDir : checkNotNull(sharedBuildCacheDir.listFiles())) {
+            // First, make sure the path refers to a private cache directory
+            if (buildCacheDir.isDirectory()
+                    && AndroidGradlePluginVersion.isPluginVersion(buildCacheDir.getName())) {
+                AndroidGradlePluginVersion pluginVersion =
+                        AndroidGradlePluginVersion.parseString(buildCacheDir.getName());
 
-            // Create the marker file if it does not yet exist
-            FileUtils.mkdirs(markerFile.getParentFile());
-            try {
-                markerFile.createNewFile();
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
+                // Then, make sure we only delete private cache directories created by *previous*
+                // plugin versions
+                if (pluginVersion.compareTo(currentPluginVersion) < 0) {
+                    // Find out the last time this cache was used
+                    File markerFile = new File(buildCacheDir, CACHE_USE_MARKER_FILE_NAME);
+                    long lastUsedTimestamp = markerFile.lastModified();
+                    if (lastUsedTimestamp == 0) {
+                        // The marker file does not yet exist, use the directory's timestamp instead
+                        lastUsedTimestamp = buildCacheDir.lastModified();
+                    }
+
+                    // Finally, delete the private cache directory if it has not been used in a while
+                    if (lastUsedTimestamp != 0
+                            && Duration.ofMillis(System.currentTimeMillis() - lastUsedTimestamp)
+                                            .compareTo(cacheDirectoryLifeTime)
+                                    >= 0) {
+                        // There could be a race condition here if another thread/process also
+                        // reaches this point, but that is Okay because the method call below is
+                        // thread-safe and process-safe, it's just that the code below will be
+                        // executed more than once (which is fine).
+                        try {
+                            FileCache.getInstanceWithMultiProcessLocking(buildCacheDir).delete();
+                            // Also delete the lock file. Note that it is generally not safe to
+                            // delete lock files if some other thread/process might be using the
+                            // cache, but since this cache (created and used only by an older plugin
+                            // version) has not been used in a while, it is unlikely that it is
+                            // suddenly being used now.
+                            FileUtils.deleteIfExists(SynchronizedFile.getLockFile(buildCacheDir));
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    }
+                }
             }
-
-            markerFile.setLastModified(System.currentTimeMillis());
         }
+    }
+
+    /**
+     * Updates the timestamp of the given marker file to the current system timestamp, creating it
+     * first if it does not yet exist.
+     */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private static void updateMarkerFile(@NonNull File markerFile) {
+        FileUtils.mkdirs(markerFile.getParentFile());
+        try {
+            markerFile.createNewFile();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        markerFile.setLastModified(System.currentTimeMillis());
     }
 }

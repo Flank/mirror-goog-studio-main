@@ -69,6 +69,12 @@ public final class IdeJavaLibrary extends IdeModel implements Library {
         throw unsupportedMethodForJavaLibrary("getVariant");
     }
 
+    @Nullable
+    @Override
+    public String getBuildId() {
+        throw unsupportedMethodForJavaLibrary("getBuildId");
+    }
+
     @Override
     @NonNull
     public String getProjectPath() {

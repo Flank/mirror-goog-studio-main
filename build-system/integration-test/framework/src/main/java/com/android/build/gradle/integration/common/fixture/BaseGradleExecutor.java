@@ -79,6 +79,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @Nullable Logging.BenchmarkMode benchmarkMode;
     @NonNull private LoggingLevel loggingLevel = LoggingLevel.INFO;
     private boolean offline = true;
+    private boolean sdkInLocalProperties = false;
     private boolean localAndroidSdkHome = false;
     private boolean disableRetryLogic;
 
@@ -90,7 +91,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull ProjectConnection projectConnection,
             @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
             @NonNull Path projectDirectory,
-            @NonNull Path buildDotGradleFile,
+            @Nullable Path buildDotGradleFile,
             @Nullable Path profileDirectory,
             @Nullable String heapSize) {
         this(
@@ -107,14 +108,15 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull ProjectConnection projectConnection,
             @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
             @NonNull Path projectDirectory,
-            @NonNull Path buildDotGradleFile,
+            @Nullable Path buildDotGradleFile,
             @Nullable String heapSize,
             @Nullable Path profileDirectory,
             boolean disableRetryLogic) {
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
         this.projectConnection = projectConnection;
-        if (!buildDotGradleFile.getFileName().toString().equals("build.gradle")) {
+        if (buildDotGradleFile != null
+                && !buildDotGradleFile.getFileName().toString().equals("build.gradle")) {
             arguments.add("--build-file=" + buildDotGradleFile.toString());
         }
         this.heapSize = heapSize;
@@ -184,6 +186,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
+    public final T withSdkInLocalProperties() {
+        sdkInLocalProperties = true;
+        return (T) this;
+    }
+
     public final T withLocalAndroidSdkHome() {
         localAndroidSdkHome = true;
         return (T) this;
@@ -217,20 +224,19 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             arguments.add("--offline");
         }
 
-        Path androidSdkHome;
-        if (localAndroidSdkHome) {
-            androidSdkHome = projectDirectory.getParent().resolve("android_sdk_home");
-        } else {
-            androidSdkHome = GradleTestProject.ANDROID_SDK_HOME.toPath();
+        if (!sdkInLocalProperties) {
+            Path androidSdkHome;
+            if (localAndroidSdkHome) {
+                androidSdkHome = projectDirectory.getParent().resolve("android_sdk_home");
+            } else {
+                androidSdkHome = GradleTestProject.ANDROID_SDK_HOME.toPath();
+            }
+
+            Files.createDirectories(androidSdkHome);
+
+            arguments.add(
+                    String.format("-D%s=%s", "ANDROID_SDK_HOME", androidSdkHome.toAbsolutePath()));
         }
-
-        Files.createDirectories(androidSdkHome);
-
-        arguments.add(
-                String.format(
-                        "-D%s=%s",
-                        "ANDROID_SDK_HOME",
-                        androidSdkHome.toAbsolutePath()));
 
         return arguments;
     }

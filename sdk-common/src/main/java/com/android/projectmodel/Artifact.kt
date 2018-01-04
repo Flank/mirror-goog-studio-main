@@ -19,8 +19,8 @@ package com.android.projectmodel
  * Holds information about what is involved in producing a single Android artifact (a single output
  * of the project).
  *
- * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
- * to stay source compatible.
+ * New properties may be added in the future; clients that invoke the constructor are encouraged to
+ * use Kotlin named arguments to stay source compatible.
  */
 data class Artifact(
         /**

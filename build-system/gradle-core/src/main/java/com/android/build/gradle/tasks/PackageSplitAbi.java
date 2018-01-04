@@ -22,8 +22,7 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
-import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.OutputScope;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
@@ -31,11 +30,8 @@ import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.SigningConfig;
-import com.android.builder.packaging.PackagerException;
-import com.android.builder.packaging.SigningException;
-import com.android.ide.common.build.ApkData;
+import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.res2.FileStatus;
-import com.android.ide.common.signing.KeytoolException;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
@@ -52,6 +48,7 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.tooling.BuildException;
 
 /** Package a abi dimension specific split APK */
 public class PackageSplitAbi extends AndroidBuilderTask {
@@ -71,7 +68,6 @@ public class PackageSplitAbi extends AndroidBuilderTask {
     private File incrementalDir;
 
     private Collection<String> aaptOptionsNoCompress;
-    private OutputScope outputScope;
 
     private Set<String> splits;
 
@@ -117,49 +113,49 @@ public class PackageSplitAbi extends AndroidBuilderTask {
     }
 
     @TaskAction
-    protected void doFullTaskAction()
-            throws SigningException, KeytoolException, PackagerException, IOException {
+    protected void doFullTaskAction() throws IOException {
 
         FileUtils.cleanOutputDir(incrementalDir);
 
-        outputScope.parallelForEachOutput(
-                BuildOutputs.load(
-                        VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, processedAbiResources),
-                VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES,
-                VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
-                (split, output) -> {
-                    String apkName = getApkName(split);
+        ExistingBuildElements.from(
+                        VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, processedAbiResources)
+                .transform(
+                        (split, output) -> {
+                            String apkName = getApkName(split);
+                            File outFile = new File(outputDirectory, apkName);
 
-                    File outFile = new File(outputDirectory, apkName);
+                            try (IncrementalPackager pkg =
+                                    new IncrementalPackagerBuilder()
+                                            .withOutputFile(outFile)
+                                            .withSigning(signingConfig)
+                                            .withCreatedBy(getBuilder().getCreatedBy())
+                                            .withMinSdk(getMinSdkVersion())
+                                            // .withManifest(manifest)
+                                            .withAaptOptionsNoCompress(aaptOptionsNoCompress)
+                                            .withIntermediateDir(incrementalDir)
+                                            .withProject(getProject())
+                                            .withDebuggableBuild(isJniDebuggable())
+                                            .withJniDebuggableBuild(isJniDebuggable())
+                                            .withAcceptedAbis(
+                                                    ImmutableSet.of(split.getFilterName()))
+                                            .build()) {
+                                ImmutableMap<RelativeFile, FileStatus> nativeLibs =
+                                        IncrementalRelativeFileSets.fromZipsAndDirectories(
+                                                getJniFolders());
+                                pkg.updateNativeLibraries(nativeLibs);
 
-                    try (IncrementalPackager pkg =
-                            new IncrementalPackagerBuilder()
-                                    .withOutputFile(outFile)
-                                    .withSigning(signingConfig)
-                                    .withCreatedBy(getBuilder().getCreatedBy())
-                                    .withMinSdk(getMinSdkVersion())
-                                    // .withManifest(manifest)
-                                    .withAaptOptionsNoCompress(aaptOptionsNoCompress)
-                                    .withIntermediateDir(incrementalDir)
-                                    .withProject(getProject())
-                                    .withDebuggableBuild(isJniDebuggable())
-                                    .withJniDebuggableBuild(isJniDebuggable())
-                                    .withAcceptedAbis(ImmutableSet.of(split.getFilterName()))
-                                    .build()) {
-                        ImmutableMap<RelativeFile, FileStatus> nativeLibs =
-                                IncrementalRelativeFileSets.fromZipsAndDirectories(getJniFolders());
-                        pkg.updateNativeLibraries(nativeLibs);
-
-                        ImmutableMap<RelativeFile, FileStatus> androidResources =
-                                IncrementalRelativeFileSets.fromZip(output);
-                        pkg.updateAndroidResources(androidResources);
-                    }
-                    return outFile;
-                });
-        outputScope.save(VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT, outputDirectory);
+                                ImmutableMap<RelativeFile, FileStatus> androidResources =
+                                        IncrementalRelativeFileSets.fromZip(output);
+                                pkg.updateAndroidResources(androidResources);
+                            } catch (IOException e) {
+                                throw new BuildException(e.getMessage(), e);
+                            }
+                            return outFile;
+                        })
+                .into(VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT, outputDirectory);
     }
 
-    private String getApkName(final ApkData apkData) {
+    private String getApkName(final ApkInfo apkData) {
         String archivesBaseName = (String) getProject().getProperties().get("archivesBaseName");
         String apkName = archivesBaseName + "-" + apkData.getBaseName();
         return apkName
@@ -198,7 +194,6 @@ public class PackageSplitAbi extends AndroidBuilderTask {
         public void execute(@NonNull PackageSplitAbi packageSplitAbiTask) {
             VariantConfiguration config = this.scope.getVariantConfiguration();
             packageSplitAbiTask.processedAbiResources = processedAbiResources;
-            packageSplitAbiTask.outputScope = scope.getOutputScope();
             packageSplitAbiTask.signingConfig = config.getSigningConfig();
             packageSplitAbiTask.outputDirectory = outputDirectory;
             packageSplitAbiTask.setAndroidBuilder(this.scope.getGlobalScope().getAndroidBuilder());

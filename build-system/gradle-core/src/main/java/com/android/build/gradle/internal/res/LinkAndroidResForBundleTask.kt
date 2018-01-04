@@ -19,14 +19,12 @@ package com.android.build.gradle.internal.res
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.dsl.convert
-import com.android.build.gradle.internal.scope.BuildOutputs
-import com.android.build.gradle.internal.scope.OutputScope
+import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
-import com.android.build.gradle.internal.variant.TaskContainer
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.Aapt
@@ -37,6 +35,7 @@ import com.android.ide.common.blame.ParsingProcessOutputHandler
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
+import com.android.ide.common.build.ApkInfo
 import com.android.ide.common.process.ProcessException
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
@@ -78,8 +77,6 @@ open class LinkAndroidResForBundleTask : AndroidBuilderTask() {
     lateinit var bundledResFile: File
         private set
 
-    private lateinit var outputScope: OutputScope
-
     @get:Input
     @get:Optional
     var versionName: String? = null
@@ -93,15 +90,15 @@ open class LinkAndroidResForBundleTask : AndroidBuilderTask() {
     lateinit var incrementalFolder: File
         private set
 
+    @get:Input
+    lateinit var mainSplit: ApkInfo
+        private set
+
     @TaskAction
     fun taskAction() {
 
-        val mainSplit = outputScope.mainSplit ?: throw RuntimeException("Failed to find main split")
-
-        val manifestFile = OutputScope.getOutput(
-                BuildOutputs.load(MERGED_MANIFESTS, manifestFiles),
-                MERGED_MANIFESTS,
-                mainSplit)
+        val manifestFile = ExistingBuildElements.from(MERGED_MANIFESTS, manifestFiles)
+                .element(mainSplit)
                 ?.outputFile
                 ?: throw RuntimeException("Cannot find merged manifest file")
 
@@ -221,7 +218,7 @@ open class LinkAndroidResForBundleTask : AndroidBuilderTask() {
             processResources.versionCode = config.versionCode
             processResources.versionName = config.versionName
 
-            processResources.outputScope = variantData.outputScope
+            processResources.mainSplit = variantData.outputScope.mainSplit
 
             processResources.manifestFiles = variantScope.getOutput(MERGED_MANIFESTS)
 

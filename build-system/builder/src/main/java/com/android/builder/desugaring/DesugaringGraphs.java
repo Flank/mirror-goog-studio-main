@@ -53,6 +53,36 @@ public final class DesugaringGraphs {
         return graph;
     }
 
+    /**
+     * Create a {@link com.android.builder.desugaring.DesugaringGraph} associated with this key. Key
+     * should be unique for the project and variant e.g. :app:debug. The graph is created fully from
+     * the supplied data.
+     */
+    @NonNull
+    public static DesugaringGraph forVariant(
+            @NonNull String projectVariant,
+            @NonNull Collection<DesugaringData> fullDesugaringData) {
+        DesugaringGraph graph = new DesugaringGraph(fullDesugaringData);
+        graphs.put(projectVariant, graph);
+        return graph;
+    }
+
+    /**
+     * Update a {@link com.android.builder.desugaring.DesugaringGraph} associated with this key if a
+     * cached version exists. Key should be unique for the project and variant e.g. :app:debug. Does
+     * nothing if no cached version exists for the variant.
+     */
+    @NonNull
+    public static DesugaringGraph updateVariant(
+            @NonNull String projectVariant,
+            @NonNull Supplier<Collection<DesugaringData>> incrementalDesugaringData) {
+        DesugaringGraph graph = graphs.getIfPresent(projectVariant);
+        if (graph != null) {
+            graph.update(incrementalDesugaringData.get());
+        }
+        return graph;
+    }
+
     /** Removes the desugaring graph for the specified project variant. */
     public static void invalidate(@NonNull String projectVariant) {
         graphs.invalidate(projectVariant);

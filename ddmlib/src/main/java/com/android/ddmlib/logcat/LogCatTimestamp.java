@@ -17,7 +17,7 @@
 package com.android.ddmlib.logcat;
 
 import com.android.annotations.NonNull;
-
+import com.android.annotations.Nullable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -101,23 +101,6 @@ public final class LogCatTimestamp {
         mMilli = milli;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        LogCatTimestamp that = (LogCatTimestamp)o;
-
-        if (mMonth != that.mMonth) return false;
-        if (mDay != that.mDay) return false;
-        if (mHour != that.mHour) return false;
-        if (mMinute != that.mMinute) return false;
-        if (mSecond != that.mSecond) return false;
-        if (mMilli != that.mMilli) return false;
-
-        return true;
-    }
-
     public boolean isBefore(@NonNull LogCatTimestamp other) {
         if (mMonth == 12 && other.mMonth == 1) {
             // Timestamps don't indicate year, so in practice, if you get two timestamps in short
@@ -178,6 +161,36 @@ public final class LogCatTimestamp {
 
         return false;
 
+    }
+
+    @Override
+    public boolean equals(@Nullable Object object) {
+        if (!(object instanceof LogCatTimestamp)) {
+            return false;
+        }
+
+        LogCatTimestamp timestamp = (LogCatTimestamp) object;
+
+        return mMonth == timestamp.mMonth
+                && mDay == timestamp.mDay
+                && mHour == timestamp.mHour
+                && mMinute == timestamp.mMinute
+                && mSecond == timestamp.mSecond
+                && mMilli == timestamp.mMilli;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 17;
+
+        hashCode = 31 * hashCode + mMonth;
+        hashCode = 31 * hashCode + mDay;
+        hashCode = 31 * hashCode + mHour;
+        hashCode = 31 * hashCode + mMinute;
+        hashCode = 31 * hashCode + mSecond;
+        hashCode = 31 * hashCode + mMilli;
+
+        return hashCode;
     }
 
     @Override

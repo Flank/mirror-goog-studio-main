@@ -200,6 +200,12 @@ public final class IdeAndroidLibrary extends IdeModel implements Library {
         throw unsupportedMethodForAndroidLibrary("getVariant");
     }
 
+    @Nullable
+    @Override
+    public String getBuildId() {
+        throw unsupportedMethodForAndroidLibrary("getBuildId");
+    }
+
     @Override
     @NonNull
     public String getProjectPath() {

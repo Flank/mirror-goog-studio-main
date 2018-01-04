@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -37,10 +37,8 @@ import com.android.instantapp.run.InstantAppSideLoader;
 import com.android.instantapp.run.RunListener;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import org.gradle.api.GradleException;
@@ -116,10 +114,6 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
 
         String appId = outputScope.getApplicationId();
 
-        // List of apks to install in postO rather than unzipping the bundle
-        // It will be computed only if there's at least one device postO
-        List<File> apks = null;
-
         File bundleFile = outputScope.getInstantAppBundle();
         // FIXME: due to http://b/64504250, bundleFile.getAbsolutePath() is returning
         // the wrong value, then the bellow hack is necessary
@@ -134,20 +128,16 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
 
                 InstantAppSideLoader sideLoader;
                 if (iDevice.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.O)) {
-
-                    if (apks == null) {
-                        // Obtain the list of apks to install in postO if not yet obtained
-                        apks = new LinkedList<>();
-                        for (File apkDirectory : outputScope.getApkDirectories()) {
-                            Collection<BuildOutput> buildOutputs = BuildOutputs.load(apkDirectory);
-                            for (BuildOutput buildOutput : buildOutputs) {
-                                if (buildOutput.getType() == TaskOutputHolder.TaskOutputType.APK) {
-                                    apks.add(buildOutput.getOutputFile());
-                                }
-                            }
+                    // List of apks to install in postO rather than unzipping the bundle
+                    // It will be computed only if there's at least one device postO
+                    final List<File> apks = new ArrayList<>();
+                    for (File apkDirectory : outputScope.getApkDirectories()) {
+                        for (BuildOutput buildOutput :
+                                ExistingBuildElements.from(
+                                        TaskOutputHolder.TaskOutputType.APK, apkDirectory)) {
+                            apks.add(buildOutput.getOutputFile());
                         }
                     }
-
                     sideLoader = new InstantAppSideLoader(appId, apks, runListener);
                 } else {
                     sideLoader = new InstantAppSideLoader(appId, bundleFile, runListener);

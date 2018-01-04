@@ -124,6 +124,8 @@ public class AppWithResolutionStrategyForAarTest {
 
         assertThat(helper.on(artifactCompileGraph).mapTo(COORDINATES))
                 .named("module dependencies of " + variantName)
-                .containsAllOf(":library::" + variantName, aarCoodinate);
+                .containsAllOf(
+                        project.getTestDir().getAbsolutePath() + "@@:library::" + variantName,
+                        aarCoodinate);
     }
 }

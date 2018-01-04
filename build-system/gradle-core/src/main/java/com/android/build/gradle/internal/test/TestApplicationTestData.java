@@ -20,9 +20,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.OutputScope;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.SourceProvider;
@@ -34,16 +34,12 @@ import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.file.FileCollection;
-import org.xml.sax.SAXException;
 
 /** Implementation of {@link TestData} for separate test modules. */
 public class TestApplicationTestData extends AbstractTestDataImpl {
@@ -64,10 +60,9 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
     }
 
     @Override
-    public void loadFromMetadataFile(File metadataFile)
-            throws ParserConfigurationException, SAXException, IOException {
-        Collection<BuildOutput> testedManifests =
-                BuildOutputs.load(
+    public void loadFromMetadataFile(File metadataFile) {
+        BuildElements testedManifests =
+                ExistingBuildElements.from(
                         TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
                         metadataFile.getParentFile());
         // all published manifests have the same package so first one will do.
@@ -109,19 +104,18 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
         // use a Set to remove duplicate entries.
         ImmutableList.Builder<File> selectedApks = ImmutableList.builder();
         // retrieve all the published files.
-        Collection<BuildOutput> testedApkFiles =
-                BuildOutputs.load(VariantScope.TaskOutputType.APK, testedApksDir);
+        BuildElements testedApkFiles =
+                ExistingBuildElements.from(VariantScope.TaskOutputType.APK, testedApksDir);
 
         // if we have more than one, that means pure splits are in the equation.
         if (testedApkFiles.size() > 1 && splitSelectExe != null) {
-            OutputScope testedOutputScope = new OutputScope();
-            List<String> testedSplitApksPath = getSplitApks(testedOutputScope);
+            List<String> testedSplitApksPath = getSplitApks(testedApkFiles);
             selectedApks.addAll(
                     SplitOutputMatcher.computeBestOutput(
                             processExecutor,
                             splitSelectExe,
                             deviceConfigProvider,
-                            getMainApk(testedOutputScope),
+                            getMainApk(testedApkFiles),
                             testedSplitApksPath));
         } else {
             // if we have only one or no split-select tool available, just install them all
@@ -152,9 +146,8 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
     }
 
     @NonNull
-    private static List<String> getSplitApks(OutputScope outputScope) {
-        return outputScope
-                .getOutputs(TaskOutputHolder.TaskOutputType.APK)
+    private static List<String> getSplitApks(BuildElements builtArtifacts) {
+        return builtArtifacts
                 .stream()
                 .filter(
                         splitOutput ->
@@ -171,11 +164,10 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
      * @return the tested main APK
      */
     @NonNull
-    private static File getMainApk(OutputScope outputScope) {
+    private static File getMainApk(BuildElements builtArtifacts) {
 
         Optional<File> mainApk =
-                outputScope
-                        .getOutputs(TaskOutputHolder.TaskOutputType.APK)
+                builtArtifacts
                         .stream()
                         .filter(
                                 splitOutput ->

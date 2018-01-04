@@ -22,6 +22,9 @@ import com.android.SdkConstants;
 import com.android.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
+import com.android.build.gradle.internal.scope.BuildElements;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.ide.common.build.ApkInfo;
@@ -106,55 +109,68 @@ public class PackageAndroidArtifactTest {
 
     @Test
     public void testFileNameUnique() {
-        ImmutableMap<ApkInfo, File> outputFiles =
-                ImmutableMap.of(
-                        ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), -1),
-                        new File("/tmp/file_main.out"),
-                        ApkInfo.of(
-                                VariantOutput.OutputType.SPLIT,
-                                ImmutableList.of(
-                                        new FilterDataImpl(
-                                                VariantOutput.FilterType.DENSITY, "xxhdpi")),
-                                -1),
-                        new File("/tmp/file_xxhdpi.out"),
-                        ApkInfo.of(
-                                VariantOutput.OutputType.SPLIT,
-                                ImmutableList.of(
-                                        new FilterDataImpl(
-                                                VariantOutput.FilterType.LANGUAGE, "fr")),
-                                -1),
-                        new File("/tmp/filefr.out"),
-                        ApkInfo.of(
-                                VariantOutput.OutputType.SPLIT,
-                                ImmutableList.of(
-                                        new FilterDataImpl(
-                                                VariantOutput.FilterType.LANGUAGE, "en")),
-                                -1),
-                        new File("/tmp/fileen.out"));
+        ImmutableList<BuildOutput> outputFiles =
+                ImmutableList.of(
+                        new BuildOutput(
+                                VariantScope.TaskOutputType.APK,
+                                ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), -1),
+                                new File("/tmp/file_main.out")),
+                        new BuildOutput(
+                                VariantScope.TaskOutputType.APK,
+                                ApkInfo.of(
+                                        VariantOutput.OutputType.SPLIT,
+                                        ImmutableList.of(
+                                                new FilterDataImpl(
+                                                        VariantOutput.FilterType.DENSITY,
+                                                        "xxhdpi")),
+                                        -1),
+                                new File("/tmp/file_xxhdpi.out")),
+                        new BuildOutput(
+                                VariantScope.TaskOutputType.APK,
+                                ApkInfo.of(
+                                        VariantOutput.OutputType.SPLIT,
+                                        ImmutableList.of(
+                                                new FilterDataImpl(
+                                                        VariantOutput.FilterType.LANGUAGE, "fr")),
+                                        -1),
+                                new File("/tmp/filefr.out")),
+                        new BuildOutput(
+                                VariantScope.TaskOutputType.APK,
+                                ApkInfo.of(
+                                        VariantOutput.OutputType.SPLIT,
+                                        ImmutableList.of(
+                                                new FilterDataImpl(
+                                                        VariantOutput.FilterType.LANGUAGE, "en")),
+                                        -1),
+                                new File("/tmp/fileen.out")));
 
-        PackageAndroidArtifact.checkFileNameUniqueness(outputFiles);
+        PackageAndroidArtifact.checkFileNameUniqueness(new BuildElements(outputFiles));
     }
 
     @Test
     public void testFileNameNotUnique() {
-        ImmutableMap<ApkInfo, File> outputFiles =
-                ImmutableMap.of(
-                        ApkInfo.of(
-                                VariantOutput.OutputType.SPLIT,
-                                ImmutableList.of(
-                                        new FilterDataImpl(
-                                                VariantOutput.FilterType.LANGUAGE, "fr")),
-                                -1),
-                        new File("/tmp/file.out"),
-                        ApkInfo.of(
-                                VariantOutput.OutputType.SPLIT,
-                                ImmutableList.of(
-                                        new FilterDataImpl(
-                                                VariantOutput.FilterType.LANGUAGE, "en")),
-                                -1),
-                        new File("/tmp/file.out"));
+        ImmutableList<BuildOutput> outputFiles =
+                ImmutableList.of(
+                        new BuildOutput(
+                                VariantScope.TaskOutputType.APK,
+                                ApkInfo.of(
+                                        VariantOutput.OutputType.FULL_SPLIT,
+                                        ImmutableList.of(
+                                                new FilterDataImpl(
+                                                        VariantOutput.FilterType.LANGUAGE, "fr")),
+                                        -1),
+                                new File("/tmp/file.out")),
+                        new BuildOutput(
+                                VariantScope.TaskOutputType.APK,
+                                ApkInfo.of(
+                                        VariantOutput.OutputType.SPLIT,
+                                        ImmutableList.of(
+                                                new FilterDataImpl(
+                                                        VariantOutput.FilterType.LANGUAGE, "en")),
+                                        -1),
+                                new File("/tmp/file.out")));
         try {
-            PackageAndroidArtifact.checkFileNameUniqueness(outputFiles);
+            PackageAndroidArtifact.checkFileNameUniqueness(new BuildElements(outputFiles));
         } catch (Exception e) {
             assertThat(e.getMessage())
                     .contains(

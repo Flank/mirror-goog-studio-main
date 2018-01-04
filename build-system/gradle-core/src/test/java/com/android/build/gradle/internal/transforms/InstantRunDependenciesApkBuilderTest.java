@@ -33,15 +33,12 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
-import com.android.builder.packaging.PackagerException;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkInfo;
-import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.signing.KeytoolException;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
@@ -88,14 +85,7 @@ public class InstantRunDependenciesApkBuilderTest {
     final List<InstantRunSplitApkBuilder.DexFiles> dexFilesList =
             new CopyOnWriteArrayList<>();
 
-    final ApkInfo apkInfo =
-            ApkInfo.of(
-                    VariantOutput.OutputType.MAIN,
-                    ImmutableList.of(),
-                    12345,
-                    "test_version_name",
-                    true,
-                    null);
+    final ApkInfo apkInfo = ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 12345);
 
     @Before
     public void setUpMock() {
@@ -110,7 +100,7 @@ public class InstantRunDependenciesApkBuilderTest {
 
         File apkListFile = apkListDirectory.newFile("apk-list.json");
         org.apache.commons.io.FileUtils.write(
-                apkListFile, BuildOutputs.persistApkList(ImmutableList.of(apkInfo)));
+                apkListFile, ExistingBuildElements.persistApkList(ImmutableList.of(apkInfo)));
         when(apkList.getSingleFile()).thenReturn(apkListFile);
 
         instantRunSliceSplitApkBuilder =
@@ -134,9 +124,7 @@ public class InstantRunDependenciesApkBuilderTest {
                     @NonNull
                     @Override
                     protected File generateSplitApk(
-                            @NonNull ApkInfo apkInfo, @NonNull DexFiles dexFiles)
-                            throws IOException, KeytoolException, PackagerException,
-                                    InterruptedException, ProcessException, TransformException {
+                            @NonNull ApkInfo apkInfo, @NonNull DexFiles dexFiles) {
                         dexFilesList.add(dexFiles);
                         return new File("/dev/null");
                     }

@@ -27,20 +27,23 @@ public class ModuleLibraryStub extends BaseStub implements Library {
     private final int myHashCode;
     private final int myType;
     @NonNull private final String myArtifactAddress;
+    @Nullable private final String myBuildId;
     @Nullable private final String myProjectPath;
     @Nullable private final String myVariant;
 
     public ModuleLibraryStub() {
-        this(LIBRARY_MODULE, "artifact:address:1.0", null, null);
+        this(LIBRARY_MODULE, "artifact:address:1.0", null, null, null);
     }
 
     public ModuleLibraryStub(
             int type,
             @NonNull String artifactAddress,
+            @Nullable String buildId,
             @Nullable String projectPath,
             @Nullable String variant) {
         myType = type;
         myArtifactAddress = artifactAddress;
+        myBuildId = buildId;
         myProjectPath = projectPath;
         myVariant = variant;
         myHashCode = calculateHashCode();
@@ -62,6 +65,12 @@ public class ModuleLibraryStub extends BaseStub implements Library {
     public File getArtifact() {
         throw new UnsupportedOperationException(
                 "getArtifact() cannot be called when getType() returns LIBRARY_MODULE");
+    }
+
+    @Nullable
+    @Override
+    public String getBuildId() {
+        return myBuildId;
     }
 
     @Override
@@ -185,6 +194,7 @@ public class ModuleLibraryStub extends BaseStub implements Library {
         Library that = (Library) o;
         return myType == that.getType()
                 && Objects.equals(myArtifactAddress, that.getArtifactAddress())
+                && Objects.equals(myBuildId, that.getBuildId())
                 && Objects.equals(myProjectPath, that.getProjectPath())
                 && Objects.equals(myVariant, that.getVariant());
     }
@@ -195,7 +205,7 @@ public class ModuleLibraryStub extends BaseStub implements Library {
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myType, myArtifactAddress, myProjectPath, myVariant);
+        return Objects.hash(myType, myArtifactAddress, myBuildId, myProjectPath, myVariant);
     }
 
     @Override
@@ -205,6 +215,9 @@ public class ModuleLibraryStub extends BaseStub implements Library {
                 + myType
                 + ", myArtifactAddress='"
                 + myArtifactAddress
+                + '\''
+                + ", myBuildId='"
+                + myBuildId
                 + '\''
                 + ", myProjectPath='"
                 + myProjectPath

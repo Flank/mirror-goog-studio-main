@@ -46,20 +46,19 @@ import org.junit.rules.TemporaryFolder;
 
 public class DesugarIncrementalTransformHelperTest {
 
+    public static final String PROJECT_VARIANT = "app:debug";
     @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
 
-    @NonNull private final DesugarIncrementalTransformHelper helper;
-
     public DesugarIncrementalTransformHelperTest() {
-        helper = new DesugarIncrementalTransformHelper("app:debug");
     }
 
     @Before
     public void setUp() throws InterruptedException {
         // remove any previous state first
-        helper.getAdditionalPaths(
-                TransformTestHelper.invocationBuilder().setIncremental(false).build(),
-                WaitableExecutor.useDirectExecutor());
+        getDesugarIncrementalTransformHelper(
+                        TransformTestHelper.invocationBuilder().setIncremental(false).build())
+                .getAdditionalPaths();
+
     }
 
     @Test
@@ -84,7 +83,7 @@ public class DesugarIncrementalTransformHelperTest {
                         .setIncremental(true)
                         .build();
         Set<Path> impactedPaths =
-                helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor());
+                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
 
         assertThat(impactedPaths)
                 .containsExactlyElementsIn(getPaths(input, Animal.class, Cat.class, Tiger.class));
@@ -107,7 +106,7 @@ public class DesugarIncrementalTransformHelperTest {
                         .setIncremental(true)
                         .build();
         Set<Path> impactedPaths =
-                helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor());
+                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
 
         assertThat(impactedPaths)
                 .containsExactlyElementsIn(getPaths(input, Cat.class, Tiger.class));
@@ -130,7 +129,7 @@ public class DesugarIncrementalTransformHelperTest {
                         .setIncremental(true)
                         .build();
         Set<Path> impactedPaths =
-                helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor());
+                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
 
         assertThat(impactedPaths)
                 .containsExactlyElementsIn(getPaths(input, Cat.class, Tiger.class));
@@ -152,7 +151,7 @@ public class DesugarIncrementalTransformHelperTest {
                         .setIncremental(true)
                         .build();
         Set<Path> impactedPaths =
-                helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor());
+                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
 
         assertThat(impactedPaths).containsExactlyElementsIn(getPaths(input, Tiger.class));
     }
@@ -173,7 +172,7 @@ public class DesugarIncrementalTransformHelperTest {
                         .setIncremental(true)
                         .build();
         Set<Path> impactedPaths =
-                helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor());
+                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
 
         assertThat(impactedPaths).isEmpty();
     }
@@ -194,7 +193,7 @@ public class DesugarIncrementalTransformHelperTest {
                         .setIncremental(true)
                         .build();
         Set<Path> impactedPaths =
-                helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor());
+                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
 
         assertThat(impactedPaths)
                 .containsExactlyElementsIn(getPaths(input, Cat.class, Animal.class, Tiger.class));
@@ -213,7 +212,7 @@ public class DesugarIncrementalTransformHelperTest {
                         .setIncremental(true)
                         .build();
         Set<Path> impactedPaths =
-                helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor());
+                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
 
         assertThat(impactedPaths).isEmpty();
     }
@@ -239,8 +238,7 @@ public class DesugarIncrementalTransformHelperTest {
                         .addInput(transformJar)
                         .setIncremental(true)
                         .build();
-        assertThat(helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor()))
-                .isEmpty();
+        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths()).isEmpty();
 
         transformJar =
                 TransformTestHelper.singleJarBuilder(inputJar.toFile())
@@ -249,10 +247,11 @@ public class DesugarIncrementalTransformHelperTest {
 
         invocation =
                 TransformTestHelper.invocationBuilder()
+                        .addInput(transformDir)
                         .addInput(transformJar)
                         .setIncremental(true)
                         .build();
-        assertThat(helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor()))
+        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths())
                 .containsExactlyElementsIn(getPaths(inputDir, Cat.class, Tiger.class));
 
         transformDir =
@@ -263,10 +262,11 @@ public class DesugarIncrementalTransformHelperTest {
         invocation =
                 TransformTestHelper.invocationBuilder()
                         .addInput(transformDir)
+                        .addInput(transformJar)
                         .setIncremental(true)
                         .build();
 
-        assertThat(helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor()))
+        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths())
                 .containsExactlyElementsIn(getPaths(inputDir, Cat.class, Tiger.class));
     }
 
@@ -292,8 +292,7 @@ public class DesugarIncrementalTransformHelperTest {
                         .addInput(transformJar)
                         .setIncremental(true)
                         .build();
-        assertThat(helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor()))
-                .isEmpty();
+        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths()).isEmpty();
 
         transformJar =
                 TransformTestHelper.directoryBuilder(inputJar.toFile())
@@ -302,10 +301,11 @@ public class DesugarIncrementalTransformHelperTest {
 
         invocation =
                 TransformTestHelper.invocationBuilder()
+                        .addInput(transformDir)
                         .addInput(transformJar)
                         .setIncremental(true)
                         .build();
-        assertThat(helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor()))
+        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths())
                 .containsExactly(inputJar);
     }
 
@@ -328,8 +328,7 @@ public class DesugarIncrementalTransformHelperTest {
                         .addInput(transformSnd)
                         .setIncremental(true)
                         .build();
-        assertThat(helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor()))
-                .isEmpty();
+        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths()).isEmpty();
 
         transformSnd =
                 TransformTestHelper.singleJarBuilder(sndJar.toFile())
@@ -338,10 +337,11 @@ public class DesugarIncrementalTransformHelperTest {
 
         invocation =
                 TransformTestHelper.invocationBuilder()
+                        .addInput(transformFst)
                         .addInput(transformSnd)
                         .setIncremental(true)
                         .build();
-        assertThat(helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor()))
+        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths())
                 .containsExactly(fstJar);
     }
 
@@ -366,20 +366,21 @@ public class DesugarIncrementalTransformHelperTest {
                         .addInput(transformTrd)
                         .setIncremental(true)
                         .build();
-        assertThat(helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor()))
-                .isEmpty();
+        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths()).isEmpty();
 
-        transformSnd =
+        transformFst =
                 TransformTestHelper.singleJarBuilder(fstJar.toFile())
                         .setStatus(Status.CHANGED)
                         .build();
 
         invocation =
                 TransformTestHelper.invocationBuilder()
+                        .addInput(transformFst)
                         .addInput(transformSnd)
+                        .addInput(transformTrd)
                         .setIncremental(true)
                         .build();
-        assertThat(helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor()))
+        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths())
                 .containsExactly(sndJar, trdJar);
     }
 
@@ -397,11 +398,11 @@ public class DesugarIncrementalTransformHelperTest {
                         .addInput(transformFst)
                         .setIncremental(true)
                         .build();
-        assertThat(helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor()))
-                .isEmpty();
+        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths()).isEmpty();
     }
 
-    private void initializeGraph(@NonNull Path input) throws IOException, InterruptedException {
+    private static void initializeGraph(@NonNull Path input)
+            throws IOException, InterruptedException {
         TestInputsGenerator.pathWithClasses(
                 input,
                 ImmutableList.of(
@@ -415,9 +416,16 @@ public class DesugarIncrementalTransformHelperTest {
                         .setIncremental(true)
                         .build();
         Set<Path> impactedPaths =
-                helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor());
+                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
 
         assertThat(impactedPaths).isEmpty();
+    }
+
+    @NonNull
+    private static DesugarIncrementalTransformHelper getDesugarIncrementalTransformHelper(
+            TransformInvocation invocation) {
+        return new DesugarIncrementalTransformHelper(
+                PROJECT_VARIANT, invocation, WaitableExecutor.useDirectExecutor());
     }
 
     @NonNull
@@ -431,7 +439,7 @@ public class DesugarIncrementalTransformHelperTest {
     }
 
     @NonNull
-    private Collection<Path> getPaths(@NonNull Path root, @NonNull Class<?>... classes) {
+    private static Collection<Path> getPaths(@NonNull Path root, @NonNull Class<?>... classes) {
         List<Path> path = new ArrayList<>(classes.length);
         for (Class<?> klass : classes) {
             path.add(root.resolve(TestInputsGenerator.getPath(klass)));

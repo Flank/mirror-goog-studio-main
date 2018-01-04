@@ -191,11 +191,13 @@ public class OutputFactory {
             return null;
         }
 
+        @NonNull
         @Override
         public String getBaseName() {
             return baseName;
         }
 
+        @NonNull
         @Override
         public String getFullName() {
             return fullName;
@@ -251,11 +253,13 @@ public class OutputFactory {
             return UNIVERSAL;
         }
 
+        @NonNull
         @Override
         public String getBaseName() {
             return baseName;
         }
 
+        @NonNull
         @Override
         public String getFullName() {
             return fullName;
@@ -409,7 +413,7 @@ public class OutputFactory {
             return false;
         }
 
-        @Nullable
+        @NonNull
         @Override
         public String getFilterName() {
             return filterName;

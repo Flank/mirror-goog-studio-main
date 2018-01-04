@@ -44,6 +44,7 @@ import com.google.common.truth.Truth;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -122,8 +123,14 @@ public class AppWithCompileIndirectJavaProjectTest {
         AndroidLibrary appAndroidLibrary = Iterables.getOnlyElement(appLibDeps);
         assertThat(appAndroidLibrary.getProject()).named("app(androidlibs[0]) project").isEqualTo(":library");
 
-        Collection<String> appProjectDeps = appDeps.getProjects();
-        assertThat(appProjectDeps).named("app(modules) count").containsExactly(":jar");
+        Collection<Dependencies.ProjectIdentifier> appProjectDeps = appDeps.getJavaModules();
+        assertThat(
+                        appProjectDeps
+                                .stream()
+                                .map(Dependencies.ProjectIdentifier::getProjectPath)
+                                .collect(Collectors.toList()))
+                .named("app(modules) count")
+                .containsExactly(":jar");
 
         Collection<JavaLibrary> appJavaLibDeps = appDeps.getJavaLibraries();
         assertThat(appJavaLibDeps).named("app(javalibs) count").hasSize(1);
@@ -140,9 +147,9 @@ public class AppWithCompileIndirectJavaProjectTest {
 
         assertThat(libDeps.getLibraries()).named("lib(androidlibs) count").isEmpty();
 
-        Collection<String> libProjectDeps = libDeps.getProjects();
+        Collection<Dependencies.ProjectIdentifier> libProjectDeps = libDeps.getJavaModules();
         assertThat(libProjectDeps).named("lib(modules) count").hasSize(1);
-        String libProjectDep = Iterables.getOnlyElement(libProjectDeps);
+        String libProjectDep = Iterables.getOnlyElement(libProjectDeps).getProjectPath();
         assertThat(libProjectDep).named("lib->:jar project").isEqualTo(":jar");
 
         Collection<JavaLibrary> libJavaLibDeps = appDeps.getJavaLibraries();
@@ -153,6 +160,8 @@ public class AppWithCompileIndirectJavaProjectTest {
 
     @Test
     public void checkLevel4Model() throws Exception {
+        String rootProjectId = project.getTestDir().getAbsolutePath() + "@@";
+
         ModelContainer<AndroidProject> modelContainer =
                 project.model()
                         .level(AndroidProject.MODEL_LEVEL_LATEST)
@@ -190,7 +199,7 @@ public class AppWithCompileIndirectJavaProjectTest {
             // For now it contains all the transitive in a single list, so also :jar
             assertThat(moduleItems.mapTo(Property.COORDINATES))
                     .named(":app compile modules")
-                    .containsExactly(":library::debug", ":jar");
+                    .containsExactly(rootProjectId + ":library::debug", rootProjectId + ":jar");
 
             // once there is a true graph, change this to false
             if (true) {
@@ -261,7 +270,7 @@ public class AppWithCompileIndirectJavaProjectTest {
             // For now it contains all the transitive in a single list, so also :jar
             assertThat(moduleItems.mapTo(Property.COORDINATES))
                     .named(":app package modules")
-                    .containsExactly(":library::debug", ":jar");
+                    .containsExactly(rootProjectId + ":library::debug", rootProjectId + ":jar");
 
             // once there is a true graph, change this to false
             if (true) {

@@ -43,8 +43,7 @@ public class NoCompressTest {
     @Test
     public void noCompressIsAccepted() throws Exception {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\nandroid {\naaptOptions {\nnoCompress '.no'\n}\n}");
+                project.getBuildFile(), "\nandroid {\naaptOptions {\nnoCompress = ['.no']\n}\n}");
 
         /*
          * Create two java resources, one with extension 'no' and one with extension 'yes'.

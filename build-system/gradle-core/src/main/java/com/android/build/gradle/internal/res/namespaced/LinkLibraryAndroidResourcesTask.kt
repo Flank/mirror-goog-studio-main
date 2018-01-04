@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.BuildOutputs
+import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -87,8 +87,8 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
         featureDependencies?.let {
             imports.addAll(
                     it.files
-                            .map { BuildOutputs.load(TaskOutputType.PROCESSED_RES, it) }
-                            .filter { it.isNotEmpty() }
+                            .map { ExistingBuildElements.from(TaskOutputType.PROCESSED_RES, it) }
+                            .filterNot { it.isEmpty() }
                             .map { splitOutputs -> splitOutputs.single().outputFile })
         }
 

@@ -40,6 +40,7 @@ public class NdkBuildJniPureSplitLibTest {
 
     @Before
     public void setup() throws Exception {
+        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         assertTrue(
                 new File(project.getTestDir(), "lib/src/main/jni")
                         .renameTo(new File(project.getTestDir(), "lib/src/main/cxx")));
@@ -62,7 +63,6 @@ public class NdkBuildJniPureSplitLibTest {
 
     @Test
     public void checkVersionCodeAndSo() throws Exception {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         checkVersionCode();
         checkSo();
     }

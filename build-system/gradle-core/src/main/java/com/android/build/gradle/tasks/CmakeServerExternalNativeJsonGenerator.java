@@ -493,36 +493,8 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                     if (!canAddTargetToNativeLibrary(target)) {
                         continue;
                     }
-                    NativeLibraryValue nativeLibraryValue = new NativeLibraryValue();
-                    nativeLibraryValue.abi = abi;
-                    nativeLibraryValue.buildCommand =
-                            CmakeUtils.getBuildCommand(
-                                    getCmakeExecutable(),
-                                    getOutputFolder(getJsonFolder(), abi),
-                                    target.name);
-                    nativeLibraryValue.artifactName = target.name;
-                    nativeLibraryValue.buildType = isDebuggable() ? "debug" : "release";
-                    // We'll have only one output, so get the first one.
-                    if (target.artifacts.length > 0) {
-                        nativeLibraryValue.output = new File(target.artifacts[0]);
-                    }
 
-                    nativeLibraryValue.files = new ArrayList<>();
-
-                    for (FileGroup fileGroup : target.fileGroups) {
-                        for (String source : fileGroup.sources) {
-                            NativeSourceFileValue nativeSourceFileValue =
-                                    new NativeSourceFileValue();
-                            nativeSourceFileValue.workingDirectory =
-                                    new File(target.buildDirectory);
-                            File sourceFile = new File(project.sourceDirectory, source);
-                            nativeSourceFileValue.src = sourceFile;
-                            nativeSourceFileValue.flags =
-                                    getAndroidGradleFileLibFlags(abi, sourceFile.getAbsolutePath());
-                            nativeLibraryValue.files.add(nativeSourceFileValue);
-                        }
-                    }
-
+                    NativeLibraryValue nativeLibraryValue = getNativeLibraryValue(abi, target);
                     nativeLibraryValue.toolchain = toolchainHashString;
                     String libraryName = target.name + "-" + config.name + "-" + abi;
                     assert nativeBuildConfigValue.libraries != null;
@@ -531,6 +503,38 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             } // project
         }
         return nativeBuildConfigValue;
+    }
+
+    @VisibleForTesting
+    protected NativeLibraryValue getNativeLibraryValue(@NonNull String abi, @NonNull Target target)
+            throws IOException {
+        NativeLibraryValue nativeLibraryValue = new NativeLibraryValue();
+        nativeLibraryValue.abi = abi;
+        nativeLibraryValue.buildCommand =
+                CmakeUtils.getBuildCommand(
+                        getCmakeExecutable(), getOutputFolder(getJsonFolder(), abi), target.name);
+        nativeLibraryValue.artifactName = target.name;
+        nativeLibraryValue.buildType = isDebuggable() ? "debug" : "release";
+        // We'll have only one output, so get the first one.
+        if (target.artifacts.length > 0) {
+            nativeLibraryValue.output = new File(target.artifacts[0]);
+        }
+
+        nativeLibraryValue.files = new ArrayList<>();
+
+        for (FileGroup fileGroup : target.fileGroups) {
+            for (String source : fileGroup.sources) {
+                NativeSourceFileValue nativeSourceFileValue = new NativeSourceFileValue();
+                nativeSourceFileValue.workingDirectory = new File(target.buildDirectory);
+                File sourceFile = new File(target.sourceDirectory, source);
+                nativeSourceFileValue.src = sourceFile;
+                nativeSourceFileValue.flags =
+                        getAndroidGradleFileLibFlags(abi, sourceFile.getAbsolutePath());
+                nativeLibraryValue.files.add(nativeSourceFileValue);
+            }
+        }
+
+        return nativeLibraryValue;
     }
 
     /**

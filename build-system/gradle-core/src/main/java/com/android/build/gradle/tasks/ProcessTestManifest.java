@@ -27,9 +27,10 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputProperty;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -41,10 +42,10 @@ import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestProvider;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -106,9 +107,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         }
         String testedApplicationId = this.getTestedApplicationId();
         if (!onlyTestApk && testTargetMetadata != null) {
-            Collection<BuildOutput> manifestOutputs =
-                    BuildOutputs.load(
+            BuildElements manifestOutputs =
+                    ExistingBuildElements.from(
                             TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, testTargetMetadata);
+
             java.util.Optional<BuildOutput> mainSplit =
                     manifestOutputs
                             .stream()
@@ -125,6 +127,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                 throw new RuntimeException("cannot find main APK");
             }
         }
+        // TODO : LOAD FROM APK_LIST...
         List<ApkData> apkDatas = outputScope.getApkDatas();
         if (apkDatas.isEmpty()) {
             throw new RuntimeException("No output defined for test module, please file a bug");
@@ -156,10 +159,14 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                         getPlaceholdersValues(),
                         manifestOutputFile,
                         getTmpDir());
-        outputScope.addOutputForSplit(
-                VariantScope.TaskOutputType.MERGED_MANIFESTS, mainApkData, manifestOutputFile);
-        outputScope.save(
-                VariantScope.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
+
+        new BuildElements(
+                        ImmutableList.of(
+                                new BuildOutput(
+                                        VariantScope.TaskOutputType.MERGED_MANIFESTS,
+                                        mainApkData,
+                                        manifestOutputFile)))
+                .save(getManifestOutputDirectory());
     }
 
     @Nullable
@@ -168,13 +175,14 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         return null;
     }
 
+    @Nullable
     @InputFile
     @Optional
     public File getTestManifestFile() {
         return testManifestFile;
     }
 
-    public void setTestManifestFile(File testManifestFile) {
+    public void setTestManifestFile(@Nullable File testManifestFile) {
         this.testManifestFile = testManifestFile;
     }
 

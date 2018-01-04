@@ -19,8 +19,7 @@ package com.android.build.gradle.tasks.ir
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS
-import com.android.build.gradle.internal.scope.BuildOutputs
-import com.android.build.gradle.internal.scope.OutputScope
+import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.VariantScope
@@ -28,7 +27,7 @@ import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder
 import com.android.builder.utils.FileCache
-import com.android.ide.common.build.ApkData
+import com.android.ide.common.build.ApkInfo
 import com.android.ide.common.process.ProcessException
 import com.google.common.collect.ImmutableList
 import java.io.File
@@ -51,8 +50,6 @@ import org.gradle.api.tasks.TaskAction
  */
 open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
 
-
-    private lateinit var outputScope: OutputScope
     private lateinit var fileCache: FileCache
     private lateinit var aaptIntermediateFolder: File
 
@@ -73,23 +70,16 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
     @Throws(IOException::class)
     fun doFullTaskAction() {
 
-        val buildOutputs = BuildOutputs.load(INSTANT_RUN_MERGED_MANIFESTS, manifestFiles!!)
-
         // at this point, there should only be one instant-run merged manifest, but this may
         // change in the future.
-        outputScope.parallelForEachOutput(
-                buildOutputs,
-                INSTANT_RUN_MERGED_MANIFESTS,
-                INSTANT_RUN_MAIN_APK_RESOURCES,
-                OutputScope.SplitOutputAction { apkData, processedResources ->
-                    this.processSplit(apkData, processedResources)
-                })
-
-        outputScope.save(INSTANT_RUN_MAIN_APK_RESOURCES, outputDirectory)
+        ExistingBuildElements.from(INSTANT_RUN_MERGED_MANIFESTS, manifestFiles!!)
+                .transform { apkData, processedResources ->
+                    processSplit(apkData, processedResources) }
+                .into(INSTANT_RUN_MAIN_APK_RESOURCES, outputDirectory)
     }
 
     @Throws(IOException::class)
-    protected open fun processSplit(apkData: ApkData, manifestFile: File?): File? {
+    protected open fun processSplit(apkData: ApkInfo, manifestFile: File?): File? {
         if (manifestFile == null) {
             return null
         }
@@ -138,7 +128,6 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
                     variantScope.globalScope.projectOptions)
             task.fileCache = variantScope.globalScope.buildCache!!
             task.aaptIntermediateFolder = File(variantScope.getIncrementalDir(name), "aapt-temp")
-            task.outputScope = variantScope.outputScope
 
             variantScope.addTaskOutput(INSTANT_RUN_MAIN_APK_RESOURCES, task.outputDirectory, name)
         }

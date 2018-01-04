@@ -129,6 +129,6 @@ public class CompositeBuildTest {
     @Test
     public void assembleDebug() throws Exception {
         app.execute(":assembleDebug");
-        assertThat(app.getApk("debug")).exists();
+        assertThat(app.getApk(GradleTestProject.ApkType.DEBUG)).exists();
     }
 }

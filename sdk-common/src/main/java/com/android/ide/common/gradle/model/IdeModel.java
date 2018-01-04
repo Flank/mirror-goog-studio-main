@@ -80,6 +80,19 @@ public abstract class IdeModel implements Serializable {
     }
 
     @NonNull
+    protected static <K, V> List<K> copy(
+            @NonNull Supplier<Collection<K>> propertyInvoker,
+            @NonNull ModelCache modelCache,
+            @NonNull Function<K, V> mapper) {
+
+        try {
+            return copy(propertyInvoker.get(), modelCache, mapper);
+        } catch (UnsupportedOperationException ignored) {
+            return Collections.emptyList();
+        }
+    }
+
+    @NonNull
     protected static <K, V> Map<K, V> copy(
             @NonNull Map<K, V> original,
             @NonNull ModelCache modelCache,

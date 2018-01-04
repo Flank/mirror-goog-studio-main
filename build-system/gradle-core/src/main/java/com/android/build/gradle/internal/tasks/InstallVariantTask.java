@@ -23,7 +23,7 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -100,7 +100,8 @@ public class InstallVariantTask extends AndroidBuilderTask {
 
         List<OutputFile> outputs =
                 ImmutableList.copyOf(
-                        BuildOutputs.load(VariantScope.TaskOutputType.APK, getApkDirectory()));
+                        ExistingBuildElements.from(
+                                VariantScope.TaskOutputType.APK, getApkDirectory()));
 
         install(
                 getProjectName(),

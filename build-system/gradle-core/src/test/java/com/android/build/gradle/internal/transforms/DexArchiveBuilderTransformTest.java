@@ -31,9 +31,14 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.transforms.testdata.Animal;
+import com.android.build.gradle.internal.transforms.testdata.CarbonForm;
+import com.android.build.gradle.internal.transforms.testdata.Dog;
+import com.android.build.gradle.internal.transforms.testdata.Toy;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
+import com.android.builder.utils.FileCacheTestUtils;
 import com.android.testutils.TestInputsGenerator;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
@@ -53,6 +58,7 @@ import org.gradle.api.Action;
 import org.gradle.workers.WorkerConfiguration;
 import org.gradle.workers.WorkerExecutionException;
 import org.gradle.workers.WorkerExecutor;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,6 +71,13 @@ import org.mockito.Mockito;
 /** Testing the {@link DexArchiveBuilderTransform} and {@link DexMergerTransform}. */
 @RunWith(Parameterized.class)
 public class DexArchiveBuilderTransformTest {
+    private File cacheDir;
+    private FileCache userCache;
+    private int expectedCacheEntryCount;
+    private int expectedCacheHits;
+    private int expectedCacheMisses;
+
+
 
     @Parameterized.Parameters
     public static Collection<Object[]> setups() {
@@ -107,6 +120,12 @@ public class DexArchiveBuilderTransformTest {
 
     @Before
     public void setUp() throws IOException {
+        expectedCacheEntryCount = 0;
+        expectedCacheHits = 0;
+        expectedCacheMisses = 0;
+        cacheDir = FileUtils.join(tmpDir.getRoot(), "cache");
+        userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir);
+
         context = Mockito.mock(Context.class);
         when(context.getWorkerExecutor()).thenReturn(workerExecutor);
 
@@ -315,104 +334,170 @@ public class DexArchiveBuilderTransformTest {
                         .setOutBufferSize(10)
                         .setIsDebuggable(false)
                         .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
+                        .setProjectVariant("myVariant")
+                        // Should not matter but for the sake of completeness.
+                        .setEnableIncrementalDesugaring(true)
                         .createDexArchiveBuilderTransform();
         useDifferentDexerTransform.transform(invocation);
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(5);
     }
 
     @Test
-    public void testCacheKeyPathChanges() throws Exception {
-        File cacheDir = FileUtils.join(tmpDir.getRoot(), "cache");
-        FileCache userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir);
+    public void testD8DesugaringCacheKeys() throws Exception {
+
+        // Only for D8, Ignore DX
+        Assume.assumeTrue(dexerTool == DexerTool.D8);
 
         Path inputJar = tmpDir.getRoot().toPath().resolve("input.jar");
-        Path libJar = tmpDir.getRoot().toPath().resolve("lib.jar");
-        Path emptyLibDir = tmpDir.getRoot().toPath().resolve("emptylib");
-        Path noEmptyLibDir = tmpDir.getRoot().toPath().resolve("populatedlib");
-        TransformInput jarInput = getJarInput(inputJar, ImmutableList.of());
-        TransformInput jarLibInput = getJarInput(libJar, ImmutableList.of());
+        Path emptyLibDir = tmpDir.getRoot().toPath().resolve("emptylibDir");
+        Path emptyLibJar = tmpDir.getRoot().toPath().resolve("emptylib.jar");
+        Path carbonFormLibJar = tmpDir.getRoot().toPath().resolve("carbonFormlib.jar");
+        Path carbonFormLibJar2 = tmpDir.getRoot().toPath().resolve("carbonFormlib2.jar");
+        Path animalLibDir = tmpDir.getRoot().toPath().resolve("animalLibDir");
+        Path animalLibJar = tmpDir.getRoot().toPath().resolve("animalLib.jar");
+        TestInputsGenerator.pathWithClasses(carbonFormLibJar, ImmutableList.of(CarbonForm.class));
+        TestInputsGenerator.pathWithClasses(
+                carbonFormLibJar2, ImmutableList.of(CarbonForm.class, Toy.class));
+        TestInputsGenerator.pathWithClasses(animalLibDir, ImmutableList.of(Animal.class));
+        TestInputsGenerator.pathWithClasses(animalLibJar, ImmutableList.of(Animal.class));
+        TestInputsGenerator.pathWithClasses(inputJar, ImmutableList.of(Dog.class));
+        TransformInput jarInput = getJarInput(inputJar);
         TransformInput emptyLibDirInput = getDirInput(emptyLibDir, ImmutableList.of());
-        TransformInput notEmptyLibDirInput =
-                getDirInput(noEmptyLibDir, ImmutableList.of(PACKAGE + "/A"));
-        TransformInvocation invocation =
+        TransformInput emptyLibJarInput = getDirInput(emptyLibJar, ImmutableList.of());
+        TransformInput carbonFormLibJarInput = getJarInput(carbonFormLibJar);
+        TransformInput carbonFormLibJar2Input = getJarInput(carbonFormLibJar2);
+        TransformInput animalLibJarInput = getJarInput(animalLibJar);
+        TransformInput animalLibDirInput = getJarInput(animalLibDir);
+
+        // Initial compilation: no lib
+        TransformInvocation inintialInvocation =
                 TransformTestHelper.invocationBuilder()
                         .addInput(jarInput)
                         .setTransformOutputProvider(outputProvider)
                         .setContext(context)
-                        .addReferenceInput(jarLibInput)
                         .build();
 
-        DexArchiveBuilderTransform transform = getTransform(userCache, 19, true);
-        transform.transform(invocation);
-        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(1);
+        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
+                .transform(inintialInvocation);
+        // Cache was empty so it's a miss and result was cached.
+        expectedCacheEntryCount++;
+        expectedCacheMisses++;
+        checkCache();
 
-        if (dexerTool == DexerTool.DX) {
-            TransformInvocation emptyDirLibInvocation =
-                    TransformTestHelper.invocationBuilder()
-                            .addInput(jarInput)
-                            .setTransformOutputProvider(outputProvider)
-                            .setContext(context)
-                            .addReferenceInput(jarLibInput)
-                            .addReferenceInput(emptyLibDirInput)
-                            .build();
-            getTransform(userCache, 19, true).transform(emptyDirLibInvocation);
-            // DX compilation should not be impacted by reference input
-            assertThat(cacheEntriesCount(cacheDir)).isEqualTo(1);
-        } else {
-            TransformInvocation emptyDirLibInvocationJava7 =
-                    TransformTestHelper.invocationBuilder()
-                            .addInput(jarInput)
-                            .setTransformOutputProvider(outputProvider)
-                            .setContext(context)
-                            .addReferenceInput(jarLibInput)
-                            .addReferenceInput(emptyLibDirInput)
-                            .build();
-            getTransform(userCache, 19, true).transform(emptyDirLibInvocationJava7);
-            // D8 no desugaring should not be impacted by reference input
-            assertThat(cacheEntriesCount(cacheDir)).isEqualTo(1);
+        // With a dependency to a class file in a directory
+        TransformInvocation invocation01 =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(jarInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .addReferenceInput(animalLibDirInput)
+                        .addReferenceInput(carbonFormLibJarInput)
+                        .build();
+        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8).transform(invocation01);
+        // The directory dependency should disable caching
+        checkCache();
 
-            // Following are enabling D8 Java 8 support and should depend on classpath
-            TransformInvocation baseInvocation =
-                    TransformTestHelper.invocationBuilder()
-                            .addInput(jarInput)
-                            .setTransformOutputProvider(outputProvider)
-                            .setContext(context)
-                            .addReferenceInput(jarLibInput)
-                            .build();
-            getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
-                    .transform(baseInvocation);
-            assertThat(cacheEntriesCount(cacheDir)).isEqualTo(2);
+        // Rerun initial invocation with D8 desugaring
+        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
+                .transform(inintialInvocation);
+        // Exact same run as inintialInvocation: should be a hit
+        expectedCacheHits++;
+        checkCache();
 
-            TransformInvocation emptyDirLibInvocation =
-                    TransformTestHelper.invocationBuilder()
-                            .addInput(jarInput)
-                            .setTransformOutputProvider(outputProvider)
-                            .setContext(context)
-                            .addReferenceInput(emptyLibDirInput)
-                            .addReferenceInput(jarLibInput)
-                            .build();
-            getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
-                    .transform(emptyDirLibInvocation);
-            assertThat(cacheEntriesCount(cacheDir)).isEqualTo(3);
+        // With the dependencies as jar and an empty directory
+        TransformInvocation invocation02 =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(jarInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .addReferenceInput(animalLibJarInput)
+                        .addReferenceInput(carbonFormLibJarInput)
+                        .addReferenceInput(emptyLibDirInput)
+                        .build();
+        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8).transform(invocation02);
+        // The dir without dependency doesn't prevent caching, presence of the dependencies
+        // changes the cache key
+        expectedCacheMisses++;
+        expectedCacheEntryCount++;
+        checkCache();
 
-            TransformInvocation allLibsInvocation =
-                    TransformTestHelper.invocationBuilder()
-                            .addInput(jarInput)
-                            .setTransformOutputProvider(outputProvider)
-                            .setContext(context)
-                            .addReferenceInput(jarLibInput)
-                            .addReferenceInput(emptyLibDirInput)
-                            .addReferenceInput(notEmptyLibDirInput)
-                            .build();
-            getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
-                    .transform(allLibsInvocation);
-            assertThat(cacheEntriesCount(cacheDir)).isEqualTo(4);
+        // Same as invocation02 without the empty directory
+        TransformInvocation invocation03 =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(jarInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .addReferenceInput(animalLibJarInput)
+                        .addReferenceInput(carbonFormLibJarInput)
+                        .build();
+        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8).transform(invocation03);
+        // Removing the empty directory doesn't change the cache key
+        expectedCacheHits++;
+        checkCache();
 
-            // Check that we can cache hit
-            getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
-                    .transform(allLibsInvocation);
-            assertThat(cacheEntriesCount(cacheDir)).isEqualTo(4);
-        }
+        // Same as invocation03 with empty jar
+        TransformInvocation invocation04 =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(jarInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .addReferenceInput(animalLibJarInput)
+                        .addReferenceInput(carbonFormLibJarInput)
+                        .addReferenceInput(emptyLibJarInput)
+                        .build();
+        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8).transform(invocation04);
+        // Adding the empty jar doesn't change the cache key
+        expectedCacheHits++;
+        checkCache();
+
+        // Same as invocation03 without Animal
+        TransformInvocation invocation05 =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(jarInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .addReferenceInput(carbonFormLibJarInput)
+                        .build();
+        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8).transform(invocation05);
+        // Without Animal we can not see the dependency to animalLibJarInput so it's a hit
+        // on "initial invocation with D8 desugaring"
+        expectedCacheHits++;
+        checkCache();
+
+        // Same as invocation03 without CarbonForm
+        TransformInvocation invocation06 =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(jarInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .addReferenceInput(animalLibJarInput)
+                        .build();
+        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8).transform(invocation06);
+        // Even with incomplete hierarchy we should still be able to identify the dependency to the
+        // one available classpath entry.
+        expectedCacheMisses++;
+        expectedCacheEntryCount++;
+        checkCache();
+
+        /* TODO Enable this test once D8 supports the case
+        // Same as invocation03 with additional version of CarbonForm
+        TransformInvocation invocation07 =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(jarInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .addReferenceInput(animalLibJarInput)
+                        .addReferenceInput(carbonFormLibJarInput)
+                        .addReferenceInput(carbonFormLibJar2Input)
+                        .build();
+        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
+                .transform(invocation07);
+        // As long as we do not handle lib order for dependency tracking, the second version of
+        // CarbonForm is supposed to be an additional dependency.
+        expectedCacheMisses++;
+        expectedCacheEntryCount++;
+        checkCache();
+        */
     }
 
     @Test
@@ -551,6 +636,8 @@ public class DexArchiveBuilderTransformTest {
                 .setOutBufferSize(10)
                 .setIsDebuggable(isDebuggable)
                 .setJava8LangSupportType(java8Support)
+                .setEnableIncrementalDesugaring(true)
+                .setProjectVariant("myVariant")
                 .createDexArchiveBuilderTransform();
     }
 
@@ -570,18 +657,24 @@ public class DexArchiveBuilderTransformTest {
     private TransformInput getDirInput(@NonNull Path path, @NonNull Collection<String> classes)
             throws Exception {
         TestInputsGenerator.dirWithEmptyClasses(path, classes);
+        return getDirInput(path);
+    }
 
+    @NonNull
+    private TransformInput getDirInput(@NonNull Path path) throws IOException {
         return TransformTestHelper.directoryBuilder(path.toFile())
                 .setContentType(QualifiedContent.DefaultContentType.CLASSES)
                 .setScope(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
                 .putChangedFiles(
-                        classes.stream()
+                        Files.walk(path)
+                                .filter(
+                                        entry ->
+                                                Files.isRegularFile(entry)
+                                                        && entry.toString()
+                                                                .endsWith(SdkConstants.DOT_CLASS))
                                 .collect(
                                         Collectors.toMap(
-                                                e ->
-                                                        path.resolve(e + SdkConstants.DOT_CLASS)
-                                                                .toFile(),
-                                                e -> Status.ADDED)))
+                                                entry -> entry.toFile(), entry -> Status.ADDED)))
                 .build();
     }
 
@@ -589,10 +682,29 @@ public class DexArchiveBuilderTransformTest {
     private TransformInput getJarInput(@NonNull Path path, @NonNull Collection<String> classes)
             throws Exception {
         TestInputsGenerator.jarWithEmptyClasses(path, classes);
+        return getJarInput(path);
+    }
+
+    @NonNull
+    private TransformInput getJarInput(@NonNull Path path) throws Exception {
         return TransformTestHelper.singleJarBuilder(path.toFile())
                 .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
                 .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
                 .setStatus(Status.ADDED)
                 .build();
     }
+
+    private void checkCache() {
+        int entriesCount = cacheEntriesCount(userCache.getCacheDirectory());
+        assertThat(entriesCount).named("Cache entry count").isEqualTo(expectedCacheEntryCount);
+        /* TODO change usage of FileCache to allow recording of hits.
+        assertThat(FileCacheTestUtils.getHits(userCache)).named("Cache hits")
+                .isEqualTo(expectedCacheHits);
+        */
+        // Misses occurs when filling the cache
+        assertThat(FileCacheTestUtils.getMisses(userCache))
+                .named("Cache misses")
+                .isEqualTo(expectedCacheMisses);
+    }
+
 }

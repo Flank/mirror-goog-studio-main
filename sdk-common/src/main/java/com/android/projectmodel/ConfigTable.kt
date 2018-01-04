@@ -16,24 +16,21 @@
 package com.android.projectmodel
 
 /**
- * A build matrix holds the set of [Config] instances for an [AndroidProject] and describes how they
+ * A config table holds the set of [Config] instances for an [AndroidProject] and describes how they
  * are shared among build types, [Artifact] instances, and [Variant] instances.
  *
- * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
- * to stay source compatible.
+ * New properties may be added in the future; clients that invoke the constructor are encouraged to
+ * use Kotlin named arguments to stay source compatible.
  */
 data class ConfigTable(
         /**
          * Describes the dimensions of this matrix, the names each dimension, and the possible
-         * values for each dimension. By convention the first dimensions correspond to flavors, if
-         * any, the second-last dimension corresponds to build type, and the last dimensions
-         * corresponds to an artifact name.
+         * values for each dimension.
          */
         val schema: ConfigTableSchema = ConfigTableSchema(),
         /**
-         * Holds the project's [Config] instances. Each [Config] has an associated [ConfigPath]
-         * describing what artifacts and variants it applies to. The configs are ordered. [Config]
-         * instances later in the list take precedence over earlier ones.
+         * Holds the association of the project's [Config] instances with the [ConfigPath] they apply to.
+         * The list is ordered. [Config] instances later in the list take precedence over earlier ones.
          */
         val associations: List<ConfigAssociation> = emptyList()
 ) {
@@ -42,18 +39,6 @@ data class ConfigTable(
      */
     val configs: List<Config>
         get() = associations.map { it.config }
-
-    /**
-     * Returns the list of [Config] instances that completely contain the table region described
-     * by the given path.
-     *
-     * For example, if [Variant.configPath] is passed to this method, it will return all [Config]
-     * instances that are common to all [Artifact] instances within that [Variant]. It will
-     * exclude [Config] instances that may only apply to specific [Artifact] instances and [Config]
-     * instances that don't apply to the [Variant] at all.
-     */
-    fun configsContaining(searchCriteria: ConfigPath): List<Config> =
-            filterContaining(searchCriteria).configs
 
     /**
      * Returns the list of [Config] instances that have any intersection with the table region
@@ -78,23 +63,11 @@ data class ConfigTable(
             filterNotIntersecting(searchCriteria).configs
 
     /**
-     * Returns the list of [Config] instances that do not apply to all [Artifact] instances
-     * within the table region described by the given [ConfigPath].
-     *
-     * For example, if given a [Variant.configPath], it will return all [Config] instances
-     * that are not used by any [Artifact] with that [Variant] and those that only apply to
-     * some [Artifact] instances within that [Variant].
+     * Returns the [ConfigTable] containing the [Config] instances from this table that pass the given
+     * filter.
      */
-    fun configsNotContaining(searchCriteria: ConfigPath): List<Config> =
-            filterNotContaining(searchCriteria).configs
-
-    /**
-     * Returns the [ConfigTable] containing the [Config] instances from this table that completely
-     * contain the table region described by [searchCriteria].
-     */
-    fun filterContaining(searchCriteria: ConfigPath): ConfigTable {
-        return ConfigTable(schema,
-                associations.filter { it.path.contains(searchCriteria) })
+    inline fun filter(func: (ConfigAssociation)-> Boolean): ConfigTable {
+        return ConfigTable(schema, associations.filter(func))
     }
 
     /**
@@ -105,15 +78,6 @@ data class ConfigTable(
         return ConfigTable(schema, associations.filter {
             it.path.intersects(searchCriteria)
         })
-    }
-
-    /**
-     * Returns the [ConfigTable] containing the [Config] instances from this table that do not
-     * completely contain the table region described by [searchCriteria].
-     */
-    fun filterNotContaining(searchCriteria: ConfigPath): ConfigTable {
-        return ConfigTable(schema,
-                associations.filter { !it.path.contains(searchCriteria) })
     }
 
     /**

@@ -24,6 +24,7 @@ import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Keeps track of the type desugaring dependencies. This is required in order to determine a set of
@@ -64,25 +65,44 @@ final class TypeDependencies {
 
     @NonNull
     Set<String> getAllDependents(@NonNull String type) {
-        // BFS traversal: we start from type, traverse all of its dependents, then dependents of its
-        // dependents, and so on.
+        return collectNeighbours(type, this::getDependents);
+    }
+
+    @NonNull
+    Set<String> getAllDependencies(@NonNull String type) {
+        return collectNeighbours(type, this::getDependencies);
+    }
+
+    /**
+     * Transitively collect neighbours of {@code start} node in a graph.
+     *
+     * @param start Start node.
+     * @param getNeighbours A function giving the neighbours of a node.
+     * @return all nodes having a direct or indirect neighbour relation from {@code start} node.
+     *     This does not include {@code start} node.
+     */
+    private static Set<String> collectNeighbours(
+            @NonNull String start, @NonNull Function<String, Set<String>> getNeighbours) {
+        // BFS traversal: we start from start, traverse all of its neighbours, then neighbours of
+        // its neighbours, and so on.
         Set<String> children = Sets.newHashSet();
 
         ArrayDeque<String> dequeue = new ArrayDeque<>();
-        dequeue.add(type);
+        dequeue.add(start);
 
         while (!dequeue.isEmpty()) {
             String current = dequeue.removeFirst();
 
-            Set<String> dependents = getDependents(current);
-            for (String dep : dependents) {
-                if (children.add(dep)) {
-                    dequeue.addLast(dep);
+            Set<String> neighbours = getNeighbours.apply(current);
+            for (String neighbour : neighbours) {
+                if ((!neighbour.equals(start)) && children.add(neighbour)) {
+                    dequeue.addLast(neighbour);
                 }
             }
         }
 
         return children;
+
     }
 
     private void invalidateReverseMapping() {

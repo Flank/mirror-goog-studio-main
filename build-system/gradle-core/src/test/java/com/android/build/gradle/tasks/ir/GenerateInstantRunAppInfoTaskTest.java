@@ -23,15 +23,15 @@ import static org.mockito.Mockito.when;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.incremental.AsmUtils;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.ide.common.build.ApkInfo;
 import com.android.testutils.truth.MoreTruth;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -95,23 +95,18 @@ public class GenerateInstantRunAppInfoTaskTest {
                 androidManifest,
                 Charsets.UTF_8);
 
-        BuildOutput buildOutput =
-                new BuildOutput(
-                        TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
-                        apkInfo,
-                        androidManifest);
         File buildOutputs = temporaryFolder.newFolder("buildOutputs");
-        String json =
-                BuildOutputs.persist(
-                        testDir.toPath(),
+        new BuildElements(
                         ImmutableList.of(
-                                TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS),
-                        ImmutableSetMultimap.of(
-                                TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
-                                buildOutput));
-        Files.write(json, BuildOutputs.getMetadataFile(buildOutputs), Charsets.UTF_8);
+                                new BuildOutput(
+                                        TaskOutputHolder.TaskOutputType
+                                                .INSTANT_RUN_MERGED_MANIFESTS,
+                                        apkInfo,
+                                        androidManifest)))
+                .save(buildOutputs);
+
         when(fileTree.getFiles())
-                .thenReturn(ImmutableSet.of(BuildOutputs.getMetadataFile(buildOutputs)));
+                .thenReturn(ImmutableSet.of(ExistingBuildElements.getMetadataFile(buildOutputs)));
 
         task.generateInfoTask();
 
@@ -129,14 +124,10 @@ public class GenerateInstantRunAppInfoTaskTest {
     @Test
     public void testNoBuildOutput() throws IOException {
         File buildOutputs = temporaryFolder.newFolder("buildOutputs");
-        String json =
-                BuildOutputs.persist(
-                        temporaryFolder.getRoot().toPath(),
-                        ImmutableList.of(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS),
-                        ImmutableSetMultimap.of());
-        Files.write(json, BuildOutputs.getMetadataFile(buildOutputs), Charsets.UTF_8);
+        new BuildElements(ImmutableList.of()).save(buildOutputs);
+
         when(fileTree.getFiles())
-                .thenReturn(ImmutableSet.of(BuildOutputs.getMetadataFile(buildOutputs)));
+                .thenReturn(ImmutableSet.of(ExistingBuildElements.getMetadataFile(buildOutputs)));
 
         assertThat(task.getOutputFile().delete()).isTrue();
 

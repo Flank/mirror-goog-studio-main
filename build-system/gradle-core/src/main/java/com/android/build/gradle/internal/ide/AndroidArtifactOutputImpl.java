@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -38,18 +37,21 @@ import java.util.Objects;
 final class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final BuildOutput buildOutput;
+    private final EarlySyncBuildOutput mainOutput;
     // even if we have pure splits, only one manifest file really matters.
-    private final BuildOutput manifestOutput;
-    private final Collection<BuildOutput> splitApksOutputs;
+    private final EarlySyncBuildOutput manifestOutput;
+    private final Collection<EarlySyncBuildOutput> splitApksOutputs;
 
-    public AndroidArtifactOutputImpl(BuildOutput buildOutput, BuildOutput manifestOutput) {
-        this(buildOutput, manifestOutput, ImmutableList.of());
+    public AndroidArtifactOutputImpl(
+            EarlySyncBuildOutput mainOutput, EarlySyncBuildOutput manifestOutput) {
+        this(mainOutput, manifestOutput, ImmutableList.of());
     }
 
     public AndroidArtifactOutputImpl(
-            BuildOutput mainApk, BuildOutput manifestOutput, List<BuildOutput> splitApksOutputs) {
-        this.buildOutput = mainApk;
+            EarlySyncBuildOutput mainApk,
+            EarlySyncBuildOutput manifestOutput,
+            List<EarlySyncBuildOutput> splitApksOutputs) {
+        this.mainOutput = mainApk;
         this.manifestOutput = manifestOutput;
         this.splitApksOutputs = splitApksOutputs;
     }
@@ -63,14 +65,14 @@ final class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Serializ
     @NonNull
     @Override
     public OutputFile getMainOutputFile() {
-        return buildOutput;
+        return mainOutput;
     }
 
     @NonNull
     @Override
     public Collection<OutputFile> getOutputs() {
         ImmutableList.Builder<OutputFile> outputFileBuilder = ImmutableList.builder();
-        outputFileBuilder.add(buildOutput);
+        outputFileBuilder.add(mainOutput);
         splitApksOutputs.forEach(outputFileBuilder::add);
         return outputFileBuilder.build();
     }
@@ -84,24 +86,24 @@ final class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Serializ
     @NonNull
     @Override
     public String getOutputType() {
-        return buildOutput.getOutputType();
+        return mainOutput.getOutputType();
     }
 
     @NonNull
     @Override
     public Collection<String> getFilterTypes() {
-        return buildOutput.getFilterTypes();
+        return mainOutput.getFilterTypes();
     }
 
     @Nullable
     public String getFilter(String filterType) {
-        return buildOutput.getFilter(filterType);
+        return mainOutput.getFilter(filterType);
     }
 
     @NonNull
     @Override
     public Collection<FilterData> getFilters() {
-        return buildOutput.getFilters();
+        return mainOutput.getFilters();
     }
 
     @NonNull
@@ -112,7 +114,7 @@ final class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Serializ
 
     @Override
     public int getVersionCode() {
-        return buildOutput.getApkInfo().getVersionCode();
+        return mainOutput.getVersionCode();
     }
 
     @Override
@@ -124,20 +126,20 @@ final class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Serializ
             return false;
         }
         AndroidArtifactOutputImpl that = (AndroidArtifactOutputImpl) o;
-        return Objects.equals(buildOutput, that.buildOutput)
+        return Objects.equals(mainOutput, that.mainOutput)
                 && Objects.equals(manifestOutput, that.manifestOutput)
                 && Objects.equals(splitApksOutputs, that.splitApksOutputs);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(splitApksOutputs, manifestOutput, buildOutput);
+        return Objects.hash(splitApksOutputs, manifestOutput, mainOutput);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("output", buildOutput)
+                .add("output", mainOutput)
                 .add("manifest", manifestOutput)
                 .add("pure splits", splitApksOutputs)
                 .toString();

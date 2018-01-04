@@ -67,12 +67,7 @@ class IdeLibraryFactory {
                     library.getArtifactAddress(), library.getArtifact(), modelCache, library);
         }
         if (library.getType() == LIBRARY_MODULE) {
-            return new IdeModuleLibrary(
-                    library,
-                    library.getArtifactAddress(),
-                    modelCache,
-                    library.getProjectPath(),
-                    library.getVariant());
+            return new IdeModuleLibrary(library, library.getArtifactAddress(), modelCache);
         }
         throw new UnsupportedOperationException("Unknown library type " + library.getType());
     }
@@ -104,12 +99,7 @@ class IdeLibraryFactory {
         // If the aar bundle is inside of build directory of sub-module, then it's regular library module dependency, otherwise it's a wrapped aar module.
         if (androidLibrary.getProject() != null
                 && !isLocalAarModule(androidLibrary, moduleBuildDirs)) {
-            return new IdeModuleLibrary(
-                    androidLibrary,
-                    computeAddress(androidLibrary),
-                    modelCache,
-                    androidLibrary.getProject(),
-                    androidLibrary.getProjectVariant());
+            return new IdeModuleLibrary(androidLibrary, computeAddress(androidLibrary), modelCache);
         } else {
             return new IdeAndroidLibrary(
                     androidLibrary,
@@ -161,8 +151,7 @@ class IdeLibraryFactory {
         String project = getProject(javaLibrary);
         if (project != null) {
             // Java modules don't have variant.
-            return new IdeModuleLibrary(
-                    javaLibrary, computeAddress(javaLibrary), modelCache, project, null);
+            return new IdeModuleLibrary(javaLibrary, computeAddress(javaLibrary), modelCache);
         } else {
             return new IdeJavaLibrary(
                     computeAddress(javaLibrary), javaLibrary.getJarFile(), modelCache, javaLibrary);
@@ -185,6 +174,6 @@ class IdeLibraryFactory {
      */
     @NonNull
     static Library create(@NonNull String projectPath, @NonNull ModelCache modelCache) {
-        return new IdeModuleLibrary(projectPath, projectPath, modelCache, projectPath, null);
+        return new IdeModuleLibrary(projectPath, projectPath, modelCache);
     }
 }
