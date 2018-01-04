@@ -37,7 +37,6 @@ import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.packaging.PackagerException;
-import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.resources.configuration.VersionQualifier;
@@ -67,7 +66,6 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     @NonNull
     protected final Project project;
     @NonNull protected final AndroidBuilder androidBuilder;
-    @Nullable private final FileCache fileCache;
     @NonNull private final AaptGeneration aaptGeneration;
     @NonNull protected final InstantRunBuildContext buildContext;
     @NonNull
@@ -97,7 +95,6 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull Project project,
             @NonNull InstantRunBuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
-            @Nullable FileCache fileCache,
             @NonNull String applicationId,
             @Nullable CoreSigningConfig signingConf,
             @NonNull AaptGeneration aaptGeneration,
@@ -113,7 +110,6 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         this.project = project;
         this.buildContext = buildContext;
         this.androidBuilder = androidBuilder;
-        this.fileCache = fileCache;
         this.applicationId = applicationId;
         this.signingConf = signingConf;
         this.aaptGeneration = aaptGeneration;
@@ -379,22 +375,19 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         return resFilePackageFile;
     }
 
-    protected Aapt getAapt() throws IOException {
-        return makeAapt(aaptGeneration, androidBuilder, fileCache, aaptIntermediateDirectory);
+    protected Aapt getAapt() {
+        return makeAapt(aaptGeneration, androidBuilder, aaptIntermediateDirectory);
     }
 
     @NonNull
     public static Aapt makeAapt(
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidBuilder androidBuilder,
-            @Nullable FileCache fileCache,
-            @NonNull File intermediateFolder)
-            throws IOException {
+            @NonNull File intermediateFolder) {
         return AaptGradleFactory.make(
                 aaptGeneration,
                 androidBuilder,
                 null,
-                fileCache,
                 true,
                 FileUtils.mkdirs(intermediateFolder),
                 0);

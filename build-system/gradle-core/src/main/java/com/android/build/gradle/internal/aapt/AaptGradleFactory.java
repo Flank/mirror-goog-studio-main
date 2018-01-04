@@ -23,7 +23,6 @@ import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.v1.AaptV1;
 import com.android.builder.internal.aapt.v2.QueueableAapt2;
 import com.android.builder.sdk.TargetInfo;
-import com.android.builder.utils.FileCache;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.sdklib.BuildToolInfo;
@@ -32,7 +31,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -50,7 +48,6 @@ public final class AaptGradleFactory {
      * @param aaptGeneration which aapt to use
      * @param builder the android builder project model
      * @param outputHandler the output handler to use
-     * @param fileCache the cache to use for AAPT2 jni.
      * @param crunchPng should PNGs be crunched?
      * @param intermediateDir intermediate directory for aapt to use
      * @param cruncherProcesses the number of cruncher processes to use, if cruncher processes are
@@ -62,11 +59,9 @@ public final class AaptGradleFactory {
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidBuilder builder,
             @Nullable ProcessOutputHandler outputHandler,
-            @Nullable FileCache fileCache,
             boolean crunchPng,
             @NonNull File intermediateDir,
-            int cruncherProcesses)
-            throws IOException {
+            int cruncherProcesses) {
         TargetInfo target = builder.getTargetInfo();
         Preconditions.checkNotNull(target, "target == null");
         BuildToolInfo buildTools = target.getBuildTools();

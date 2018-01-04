@@ -153,7 +153,6 @@ open class LinkAndroidResForBundleTask : AndroidBuilderTask() {
                 aaptGeneration!!,
                 builder,
                 processOutputHandler,
-                null /* file cache not needed for AAPT_V@_DAEMON*/,
                 true,
                 FileUtils.mkdirs(File(incrementalFolder, "aapt-temp")),
                 aaptOptions.cruncherProcesses)

@@ -62,7 +62,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
-import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -154,8 +153,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     private TaskOutputHolder.TaskOutputType taskInputType;
 
     private boolean isNamespaced = false;
-
-    @Nullable private FileCache fileCache;
 
     @Input
     public TaskOutputHolder.TaskOutputType getTaskInputType() {
@@ -253,7 +250,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                     splitList,
                                     featureResourcePackages,
                                     apkInfo,
-                                    codeGen,
+                                    true,
                                     aapt));
                     break;
                 }
@@ -263,18 +260,17 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 ApkInfo apkInfo = manifestBuildOutput.getApkInfo();
                 if (apkInfo.requiresAapt()) {
                     executor.execute(
-                            () -> {
-                                return invokeAaptForSplit(
-                                        manifestBuildOutput,
-                                        dependencies,
-                                        imports,
-                                        packageIdFileSet,
-                                        splitList,
-                                        featureResourcePackages,
-                                        apkInfo,
-                                        false,
-                                        aapt);
-                            });
+                            () ->
+                                    invokeAaptForSplit(
+                                            manifestBuildOutput,
+                                            dependencies,
+                                            imports,
+                                            packageIdFileSet,
+                                            splitList,
+                                            featureResourcePackages,
+                                            apkInfo,
+                                            false,
+                                            aapt));
                 }
             }
 
@@ -542,7 +538,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
      * Create an instance of AAPT. Whenever calling this method make sure the close() method is
      * called on the instance once the work is done.
      */
-    private Aapt makeAapt() throws IOException {
+    private Aapt makeAapt() {
         AndroidBuilder builder = getBuilder();
         MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
 
@@ -559,7 +555,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 aaptGeneration,
                 builder,
                 processOutputHandler,
-                fileCache,
                 true,
                 FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
                 aaptOptions.getCruncherProcesses());
@@ -657,7 +652,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
             processResources.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
-            processResources.fileCache = variantScope.getGlobalScope().getBuildCache();
             processResources.setVariantName(config.getFullName());
             processResources.resPackageOutputFolder = resPackageOutputFolder;
             processResources.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);
@@ -840,7 +834,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
             task.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
-            task.fileCache = variantScope.getGlobalScope().getBuildCache();
             task.setVariantName(config.getFullName());
             task.resPackageOutputFolder = resPackageOutputDir;
             task.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);

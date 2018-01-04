@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
@@ -38,7 +37,6 @@ import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.v1.AaptV1;
-import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -64,8 +62,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
@@ -79,9 +75,6 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
     private File mergeBlameLogFolder;
     private TaskOutputHolder.TaskOutputType taskInputType;
     private FileCollection manifestFiles;
-    @Nullable private FileCache fileCache;
-
-    protected static final Logger LOG = Logging.getLogger(VerifyLibraryResourcesTask.class);
 
     private AaptGeneration aaptGeneration;
 
@@ -137,7 +130,6 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                         aaptGeneration,
                         builder,
                         processOutputHandler,
-                        fileCache,
                         true,
                         FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
                         0)) {
@@ -307,7 +299,6 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                                     : VariantScope.TaskOutputType.MERGED_MANIFESTS;
             verifyLibraryResources.manifestFiles =
                     scope.getOutput(verifyLibraryResources.taskInputType);
-            verifyLibraryResources.fileCache = scope.getGlobalScope().getBuildCache();
         }
     }
 

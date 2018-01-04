@@ -129,7 +129,6 @@ open class CompileSourceSetResources
             AaptGeneration.AAPT_V2_DAEMON_MODE,
             builder,
             null,
-            null,
             false,
             aaptIntermediateDirectory,
             0)

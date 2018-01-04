@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.OutputFactory;
-import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
@@ -45,7 +44,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
-import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
@@ -84,11 +82,9 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     private File outputDirectory;
     private boolean debuggable;
     private AaptOptions aaptOptions;
-    private OutputScope outputScope;
     private OutputFactory outputFactory;
     private VariantType variantType;
     private VariantScope variantScope;
-    private FileCache fileCache;
     @Nullable private String featureName;
     @Nullable private FileCollection applicationIdOverride;
 
@@ -179,7 +175,6 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                             builder,
                             new LoggedProcessOutputHandler(
                                     new AaptGradleFactory.FilteringLogger(builder.getLogger())),
-                            fileCache,
                             true,
                             FileUtils.mkdirs(
                                     new File(
@@ -328,7 +323,6 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             generateSplitAbiRes.versionName = config.getVersionName();
             generateSplitAbiRes.aaptGeneration =
                     AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());
-            generateSplitAbiRes.fileCache = scope.getGlobalScope().getBuildCache();
 
             generateSplitAbiRes.variantScope = scope;
             generateSplitAbiRes.variantType = config.getType();
@@ -341,7 +335,6 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             generateSplitAbiRes.debuggable = config.getBuildType().isDebuggable();
             generateSplitAbiRes.aaptOptions =
                     scope.getGlobalScope().getExtension().getAaptOptions();
-            generateSplitAbiRes.outputScope = scope.getOutputScope();
             generateSplitAbiRes.outputFactory = scope.getVariantData().getOutputFactory();
 
             if (scope.getVariantData().getType() == VariantType.FEATURE) {
