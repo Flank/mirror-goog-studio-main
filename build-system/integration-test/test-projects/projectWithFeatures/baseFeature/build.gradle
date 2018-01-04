@@ -5,6 +5,10 @@ android {
     buildToolsVersion = rootProject.buildToolsVersion
 
     baseFeature true
+
+    defaultConfig {
+        minSdkVersion rootProject.supportLibMinSdk
+    }
 }
 
 dependencies {

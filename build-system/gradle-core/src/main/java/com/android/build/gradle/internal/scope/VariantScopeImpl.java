@@ -24,6 +24,7 @@ import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConfiguration.POSTPROCESSING_BLOCK;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SHARED_CLASSES;
@@ -996,7 +997,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                     artifacts,
                                     computeArtifactCollection(
                                                     RUNTIME_CLASSPATH,
-                                                    scope,
+                                                    MODULE,
                                                     ArtifactType.FEATURE_TRANSITIVE_DEPS)
                                             .getArtifactFiles())
                             .getArtifactFiles();
@@ -1040,7 +1041,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                             artifacts,
                             computeArtifactCollection(
                                             RUNTIME_CLASSPATH,
-                                            scope,
+                                            MODULE,
                                             ArtifactType.FEATURE_TRANSITIVE_DEPS)
                                     .getArtifactFiles());
         }
