@@ -106,7 +106,7 @@ public abstract class MultiLineReceiver implements IShellOutputReceiver {
      * @see com.android.ddmlib.adb.IShellOutputReceiver#flush()
      */
     @Override
-    public final void flush() {
+    public void flush() {
         if (mUnfinishedLine != null) {
             processNewLines(new String[] { mUnfinishedLine });
         }
