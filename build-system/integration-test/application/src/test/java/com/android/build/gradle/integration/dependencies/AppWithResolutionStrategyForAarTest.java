@@ -61,8 +61,8 @@ public class AppWithResolutionStrategyForAarTest {
                 "\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    debugCompile project(\":library\")\n"
-                        + "    releaseCompile project(\":library\")\n"
+                        + "    debugImplementation project(\":library\")\n"
+                        + "    releaseImplementation project(\":library\")\n"
                         + "}\n"
                         + "\n"
                         + "android.applicationVariants.all { variant ->\n"
@@ -85,11 +85,12 @@ public class AppWithResolutionStrategyForAarTest {
                         + "}\n"
                         + "\n");
 
-        TestFileUtils.appendToFile(project.getSubproject("library").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile \"org.jdeferred:jdeferred-android-aar:1.2.3\"\n" +
-                "}\n");
+        TestFileUtils.appendToFile(
+                project.getSubproject("library").getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    api \"org.jdeferred:jdeferred-android-aar:1.2.3\"\n"
+                        + "}\n");
 
         modelContainer = project.model().getMulti();
     }

@@ -34,5 +34,5 @@ android {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.kotlinVersion"
+    api "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.kotlinVersion"
 }

@@ -56,7 +56,7 @@ public class BasicMultiFlavorTest {
             new SourceProviderHelper(
                             model.getName(),
                             projectDir,
-                            ANDROID_TEST.getPrefix() + StringHelper.capitalize(name),
+                            StringHelper.appendCapitalized(ANDROID_TEST.getPrefix(), name),
                             container.getSourceProvider())
                     .test();
         }

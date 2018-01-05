@@ -2,7 +2,7 @@
 buildscript { apply from: "../commonBuildScript.gradle" }
 apply from: "../commonLocalRepo.gradle"
 
-apply plugin: 'java'
+apply plugin: 'java-library'
 apply plugin: 'com.android.lint'
 
 lintOptions {

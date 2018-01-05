@@ -45,18 +45,23 @@ public class AppWithPackageLocalJarTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        TestFileUtils.appendToFile(project.getBuildFile(),
-                "\n" +
-                "apply plugin: \"com.android.application\"\n" +
-                "\n" +
-                "android {\n" +
-                "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
-                "    buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n" +
-                "}\n" +
-                "\n" +
-                "dependencies {\n" +
-                "    apk files(\"libs/util-1.0.jar\")\n" +
-                "}\n");
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.application\"\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    runtimeOnly files(\"libs/util-1.0.jar\")\n"
+                        + "}\n");
 
         model = project.executeAndReturnModel("clean", "assembleDebug");
     }

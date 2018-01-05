@@ -61,11 +61,15 @@ public class FlatJavaLibTest {
         appendToFile(
                 project.getSubproject("app").getBuildFile(),
                 "\n"
-                        + "android.defaultConfig.minSdkVersion " + SUPPORT_LIB_MIN_SDK + "\n"
+                        + "android.defaultConfig.minSdkVersion "
+                        + SUPPORT_LIB_MIN_SDK
+                        + "\n"
                         + "dependencies {\n"
-                        + "    compile 'com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION
+                        + "    api 'com.android.support:appcompat-v7:"
+                        + SUPPORT_LIB_VERSION
                         + "'\n"
-                        + "    compile 'com.android.support:design:" + SUPPORT_LIB_VERSION
+                        + "    api 'com.android.support:design:"
+                        + SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");
         models =

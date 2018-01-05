@@ -174,7 +174,7 @@ public class AnnotationProcessorTest {
         TestFileUtils.appendToFile(
                 project.getSubproject(":app").getBuildFile(),
                 "dependencies {\n"
-                        + "    compile project(':lib')\n"
+                        + "    api project(':lib')\n"
                         + "    annotationProcessor project(':lib-compiler')\n"
                         + "}\n");
 
@@ -216,7 +216,7 @@ public class AnnotationProcessorTest {
                         + "    annotationProcessor project(':lib-compiler')\n"
                         + "    testAnnotationProcessor project(':lib-compiler')\n"
                         + "    androidTestAnnotationProcessor project(':lib-compiler')\n"
-                        + "    compile project(':lib')\n"
+                        + "    api project(':lib')\n"
                         + "}\n",
                 project.getSubproject(":app").getBuildFile(),
                 Charsets.UTF_8);
@@ -240,8 +240,8 @@ public class AnnotationProcessorTest {
         Files.append(
                 "\n"
                         + "dependencies {\n"
-                        + "    compile project(':lib-compiler')\n"
-                        + "    compile project(':lib')\n"
+                        + "    api project(':lib-compiler')\n"
+                        + "    api project(':lib')\n"
                         + "}\n",
                 project.getSubproject(":app").getBuildFile(),
                 Charsets.UTF_8);
@@ -273,7 +273,7 @@ public class AnnotationProcessorTest {
                         + "        }\n"
                         + "    }\n"
                         + "dependencies {\n"
-                        + "    compile project(':lib-compiler')\n"
+                        + "    api project(':lib-compiler')\n"
                         + "    annotationProcessor files('empty.jar')\n"
                         + "}\n");
 
@@ -295,7 +295,7 @@ public class AnnotationProcessorTest {
         TestFileUtils.appendToFile(
                 project.getSubproject(":app").getBuildFile(),
                 "dependencies {\n"
-                        + "    compile project(':lib')\n"
+                        + "    api project(':lib')\n"
                         + "    annotationProcessor project(':lib-compiler')\n"
                         + "}\n");
         project.executeConnectedCheck();

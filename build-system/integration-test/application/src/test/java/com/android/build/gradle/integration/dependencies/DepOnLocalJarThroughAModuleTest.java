@@ -48,12 +48,13 @@ public class DepOnLocalJarThroughAModuleTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                        "\n" +
-                        "dependencies {\n" +
-                        "    compile project(\":localJarAsModule\")\n" +
-                        "}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    api project(\":localJarAsModule\")\n"
+                        + "}\n");
         models = project.executeAndReturnMultiModel("clean", ":app:assembleDebug");
     }
 

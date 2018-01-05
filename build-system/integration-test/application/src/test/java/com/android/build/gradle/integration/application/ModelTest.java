@@ -44,7 +44,7 @@ public class ModelTest {
     @Test
     public void unresolvedFixedDependencies() throws Exception {
         TestFileUtils.appendToFile(
-                project.getBuildFile(), "\ndependencies {\n    compile 'foo:bar:1.2.3'\n}\n");
+                project.getBuildFile(), "\ndependencies {\n    api 'foo:bar:1.2.3'\n}\n");
 
         AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
 
@@ -60,11 +60,7 @@ public class ModelTest {
     @Test
     public void unresolvedDynamicDependencies() throws Exception {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\n"
-                        + "dependencies {\n"
-                        + "    compile 'foo:bar:+'\n"
-                        + "}");
+                project.getBuildFile(), "\n" + "dependencies {\n" + "    api 'foo:bar:+'\n" + "}");
         AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
 
         Collection<SyncIssue> issues = model.getSyncIssues();

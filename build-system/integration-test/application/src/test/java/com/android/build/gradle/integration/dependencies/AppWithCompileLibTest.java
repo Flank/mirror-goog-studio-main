@@ -54,11 +54,9 @@ public class AppWithCompileLibTest {
     public static void setUp() throws Exception {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
 
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile project(\":library\")\n" +
-                "}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n" + "dependencies {\n" + "    api project(\":library\")\n" + "}\n");
         modelContainer = project.executeAndReturnMultiModel("clean", ":app:assembleDebug");
     }
 

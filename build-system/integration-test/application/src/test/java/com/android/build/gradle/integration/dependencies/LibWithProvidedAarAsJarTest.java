@@ -51,11 +51,12 @@ public class LibWithProvidedAarAsJarTest {
     public static void setUp() throws Exception {
         Files.write("include 'library', 'library2'", project.getSettingsFile(), Charsets.UTF_8);
 
-        appendToFile(project.getSubproject("library").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    provided project(path: \":library2\", configuration: \"fakeJar\")\n" +
-                "}\n");
+        appendToFile(
+                project.getSubproject("library").getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    compileOnly project(path: \":library2\", configuration: \"fakeJar\")\n"
+                        + "}\n");
 
         appendToFile(project.getSubproject("library2").getBuildFile(),
                 "\n" +

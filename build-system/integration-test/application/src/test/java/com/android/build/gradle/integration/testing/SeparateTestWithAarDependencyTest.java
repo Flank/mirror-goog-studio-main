@@ -53,7 +53,7 @@ public class SeparateTestWithAarDependencyTest {
                         + "    }\n"
                         + "}\n"
                         + "dependencies {\n"
-                        + "    compile 'com.android.support:appcompat-v7:"
+                        + "    api 'com.android.support:appcompat-v7:"
                         + GradleTestProject.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");

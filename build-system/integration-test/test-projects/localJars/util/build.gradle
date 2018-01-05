@@ -1,9 +1,9 @@
-apply plugin: 'java'
+apply plugin: 'java-library'
 
 apply from: "../commonLocalRepo.gradle"
 
 dependencies {
-    compile 'com.google.guava:guava:11.0.2'
+    api 'com.google.guava:guava:11.0.2'
 }
 
 sourceCompatibility = "1.6"

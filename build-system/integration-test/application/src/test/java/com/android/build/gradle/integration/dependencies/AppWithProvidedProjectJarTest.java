@@ -49,11 +49,9 @@ public class AppWithProvidedProjectJarTest {
     public static void setUp() throws Exception {
         Files.write("include 'app', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    provided project(\":jar\")\n" +
-                "}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n" + "dependencies {\n" + "    compileOnly project(\":jar\")\n" + "}\n");
 
         project.execute("clean", ":app:assembleDebug");
     }

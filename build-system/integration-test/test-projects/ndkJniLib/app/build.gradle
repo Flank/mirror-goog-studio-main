@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 import com.android.build.OutputFile;
 
 dependencies {
-    compile project(':lib')
+    api project(':lib')
 }
 
 // map for the version code for ABIs.

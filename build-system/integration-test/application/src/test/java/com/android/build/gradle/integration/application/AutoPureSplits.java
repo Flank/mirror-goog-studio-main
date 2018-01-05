@@ -60,7 +60,7 @@ public class AutoPureSplits {
                         + "  }\n"
                         + "}\n"
                         + "dependencies {\n"
-                        + "  compile \'com.android.support:support-v4:"
+                        + "  api \'com.android.support:support-v4:"
                         + GradleTestProject.SUPPORT_LIB_VERSION
                         + "\'\n"
                         + "}\n");

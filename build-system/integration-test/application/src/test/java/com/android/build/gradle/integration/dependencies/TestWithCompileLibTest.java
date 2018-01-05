@@ -55,11 +55,12 @@ public class TestWithCompileLibTest {
     public static void setUp() throws Exception {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
 
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                        "dependencies {\n" +
-                        "    androidTestCompile project(\":library\")\n" +
-                        "}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    androidTestImplementation project(\":library\")\n"
+                        + "}\n");
         models = project.executeAndReturnMultiModel("clean", ":app:assembleDebugAndroidTest");
     }
 

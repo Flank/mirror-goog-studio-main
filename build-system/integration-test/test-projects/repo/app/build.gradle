@@ -10,7 +10,7 @@ repositories {
 apply from: "../commonLocalRepo.gradle"
 
 dependencies {
-    compile 'com.example.android.multiproject:lib:1.0'
+    api 'com.example.android.multiproject:lib:1.0'
 }
 
 android {

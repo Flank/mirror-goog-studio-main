@@ -630,31 +630,4 @@ public interface AndroidConfig {
      */
     @Nullable
     String getTestBuildType();
-
-    final class DeprecatedConfigurationAction implements Action<Dependency> {
-
-        @NonNull private final String replacement;
-        @NonNull private final String oldName;
-        @NonNull private final Project project;
-        private boolean warningPrintedAlready = false;
-
-        public DeprecatedConfigurationAction(
-                @NonNull String replacement, @NonNull String oldName, @NonNull Project project) {
-            this.replacement = replacement;
-            this.oldName = oldName;
-            this.project = project;
-        }
-
-        @Override
-        public void execute(@NonNull Dependency dependency) {
-            if (!warningPrintedAlready) {
-                warningPrintedAlready = true;
-                project.getLogger()
-                        .quiet(
-                                String.format(
-                                        "Configuration '%s' in project '%s' is deprecated. Use '%s' instead.",
-                                        oldName, project.getPath(), replacement));
-            }
-        }
-    }
 }

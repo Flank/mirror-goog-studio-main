@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.variant2.DeprecatedConfigurationAction;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
@@ -265,7 +266,10 @@ public abstract class BaseExtension implements AndroidConfig {
                         compile.getAllDependencies()
                                 .whenObjectAdded(
                                         new DeprecatedConfigurationAction(
-                                                implementationName, compileName, project));
+                                                implementationName,
+                                                compileName,
+                                                deprecationReporter,
+                                                DeprecationReporter.DeprecationTarget.CONFIG_NAME));
 
                         String packageConfigDescription;
                         if (publishPackage) {
@@ -285,7 +289,10 @@ public abstract class BaseExtension implements AndroidConfig {
                         apk.getAllDependencies()
                                 .whenObjectAdded(
                                         new DeprecatedConfigurationAction(
-                                                runtimeOnlyName, apkName, project));
+                                                runtimeOnlyName,
+                                                apkName,
+                                                deprecationReporter,
+                                                DeprecationReporter.DeprecationTarget.CONFIG_NAME));
 
                         final String providedName = sourceSet.getProvidedConfigurationName();
                         Configuration provided =
@@ -297,7 +304,10 @@ public abstract class BaseExtension implements AndroidConfig {
                         provided.getAllDependencies()
                                 .whenObjectAdded(
                                         new DeprecatedConfigurationAction(
-                                                compileOnlyName, providedName, project));
+                                                compileOnlyName,
+                                                providedName,
+                                                deprecationReporter,
+                                                DeprecationReporter.DeprecationTarget.CONFIG_NAME));
 
                         // then the new configurations.
                         String apiName = sourceSet.getApiConfigurationName();

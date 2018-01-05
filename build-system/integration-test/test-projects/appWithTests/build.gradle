@@ -26,7 +26,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     dependencies {
-        androidTestCompile "com.android.support.test:runner:${project.testSupportLibVersion}"
-        androidTestCompile "com.android.support:support-annotations:${project.supportLibVersion}"
+        androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
+        androidTestImplementation "com.android.support:support-annotations:${project.supportLibVersion}"
     }
 }

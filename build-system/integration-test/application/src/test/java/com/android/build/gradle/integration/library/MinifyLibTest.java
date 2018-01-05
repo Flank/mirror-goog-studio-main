@@ -113,8 +113,8 @@ public class MinifyLibTest {
         // compile time.
         TestFileUtils.searchAndReplace(
                 project.getSubproject(":app").getBuildFile(),
-                "compile project\\(':lib'\\)",
-                "androidTestCompile project\\(':lib'\\)");
+                "api project\\(':lib'\\)",
+                "androidTestImplementation project\\(':lib'\\)");
         GradleBuildResult result = project.executor().run(":app:assembleAndroidTest");
 
         assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))

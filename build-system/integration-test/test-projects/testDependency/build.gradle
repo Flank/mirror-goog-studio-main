@@ -18,8 +18,8 @@ android {
 }
 
 dependencies {
-    compile 'com.google.guava:guava:18.0'
+    api 'com.google.guava:guava:18.0'
 
     // this is added by the test to control the version.
-    //androidTestCompile 'com.google.guava:guava:x.y'
+    //androidTestImplementation 'com.google.guava:guava:x.y'
 }

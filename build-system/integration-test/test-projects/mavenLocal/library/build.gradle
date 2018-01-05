@@ -9,7 +9,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.example.android.multiproject:baseLib:1.0'
+    api 'com.example.android.multiproject:baseLib:1.0'
 }
 
 android {

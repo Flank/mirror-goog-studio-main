@@ -58,18 +58,16 @@ public class OptionalAarTest {
     public static void setUp() throws Exception {
         Files.write("include 'app', 'library', 'library2'", project.getSettingsFile(), Charsets.UTF_8);
 
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "\n" +
-                "dependencies {\n" +
-                "    compile project(\":library\")\n" +
-                "}\n");
-        appendToFile(project.getSubproject("library").getBuildFile(),
-                "\n" +
-                "\n" +
-                "dependencies {\n" +
-                "    provided project(\":library2\")\n" +
-                "}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n" + "\n" + "dependencies {\n" + "    api project(\":library\")\n" + "}\n");
+        appendToFile(
+                project.getSubproject("library").getBuildFile(),
+                "\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compileOnly project(\":library2\")\n"
+                        + "}\n");
 
         // build the app and need to build the aar separately since building the app
         // doesn't build the aar anymore.

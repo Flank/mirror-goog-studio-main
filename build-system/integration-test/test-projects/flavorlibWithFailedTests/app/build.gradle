@@ -16,6 +16,6 @@ android {
 }
 
 dependencies {
-    flavor1Compile project(':lib1')
-    flavor2Compile project(':lib2')
+    flavor1Api project(':lib1')
+    flavor2Api project(':lib2')
 }

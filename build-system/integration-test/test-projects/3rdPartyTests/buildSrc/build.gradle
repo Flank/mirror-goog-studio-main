@@ -1,9 +1,9 @@
-apply plugin: 'java'
+apply plugin: 'java-library'
 apply plugin: 'idea'
 
 apply from: "../../commonVersions.gradle", to: project.ext
 apply from: "../../commonLocalRepo.gradle"
 
 dependencies {
-    compile "com.android.tools.build:builder-test-api:$project.ext.buildVersion"
+    api "com.android.tools.build:builder-test-api:$project.ext.buildVersion"
 }

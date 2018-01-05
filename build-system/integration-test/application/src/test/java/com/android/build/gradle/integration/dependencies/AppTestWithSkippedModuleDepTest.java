@@ -57,11 +57,12 @@ public class AppTestWithSkippedModuleDepTest {
     public static void setUp() throws Exception {
         Files.write("include 'app', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
-        TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
                 "\ndependencies {\n"
-                + "    compile project(':jar')\n"
-                + "    androidTestCompile project(':jar')\n"
-                + "}\n");
+                        + "    api project(':jar')\n"
+                        + "    androidTestImplementation project(':jar')\n"
+                        + "}\n");
 
         project.execute("clean", ":app:assembleDebug", ":app:assembleAndroidTest");
         modelContainer = project.model().withFullDependencies().getMulti();

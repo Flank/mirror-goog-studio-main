@@ -82,10 +82,9 @@ public class LibDependencyTest {
     public void hotSwapChangeInJavaLibrary() throws Exception {
         appendToFile(project.file("settings.gradle"), "\n"
                 + "include 'javalib'\n");
-        appendToFile(project.file("lib/build.gradle"), "\n"
-                + "dependencies {\n"
-                + "    compile project(':javalib')\n"
-                + "}\n");
+        appendToFile(
+                project.file("lib/build.gradle"),
+                "\n" + "dependencies {\n" + "    api project(':javalib')\n" + "}\n");
         mkdirs(project.file("javalib"));
         Files.write(
                 "apply plugin: 'java'\n"

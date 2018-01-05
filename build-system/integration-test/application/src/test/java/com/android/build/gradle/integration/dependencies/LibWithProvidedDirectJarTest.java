@@ -52,17 +52,13 @@ public class LibWithProvidedDirectJarTest {
     public static void setUp() throws Exception {
         Files.write("include 'app', 'library', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile project(\":library\")\n" +
-                "}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n" + "dependencies {\n" + "    api project(\":library\")\n" + "}\n");
 
-        appendToFile(project.getSubproject("library").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    provided project(\":jar\")\n" +
-                "}\n");
+        appendToFile(
+                project.getSubproject("library").getBuildFile(),
+                "\n" + "dependencies {\n" + "    compileOnly project(\":jar\")\n" + "}\n");
 
         project.execute("clean", ":library:assembleDebug");
         modelContainer = project.model().withFullDependencies().getMulti();

@@ -10,8 +10,8 @@ repositories {
 apply from: "../commonLocalRepo.gradle"
 
 dependencies {
-    compile 'com.example.android.multiproject:util:1.0'
-    releaseCompile 'com.google.guava:guava:19.0'
+    api 'com.example.android.multiproject:util:1.0'
+    releaseApi 'com.google.guava:guava:19.0'
 }
 
 android {

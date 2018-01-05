@@ -65,7 +65,7 @@ public class AppWithResolutionStrategyForJarTest {
                 "\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "    compile project(\":library\")\n"
+                        + "    implementation project(\":library\")\n"
                         + "}\n"
                         + "\n"
                         + "configurations { debugCompileClasspath }\n"
@@ -83,10 +83,7 @@ public class AppWithResolutionStrategyForJarTest {
 
         TestFileUtils.appendToFile(
                 project.getSubproject("library").getBuildFile(),
-                "\n"
-                        + "dependencies {\n"
-                        + "    compile \"com.google.guava:guava:19.0\"\n"
-                        + "}\n");
+                "\n" + "dependencies {\n" + "    api \"com.google.guava:guava:19.0\"\n" + "}\n");
 
         models = project.model().withFullDependencies().getMulti();
         helper = new LibraryGraphHelper(models);

@@ -69,7 +69,7 @@ public class JacocoDependenciesTest {
 
         appendToFile(
                 project.getSubproject("app").getBuildFile(),
-                "\ndependencies {\n" + "    compile project(':library')\n" + "}\n");
+                "\ndependencies {\n" + "    api project(':library')\n" + "}\n");
 
         appendToFile(
                 project.getSubproject("library").getBuildFile(),

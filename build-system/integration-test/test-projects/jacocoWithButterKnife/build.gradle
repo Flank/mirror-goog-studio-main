@@ -18,6 +18,6 @@ android {
 }
 
 dependencies {
-    compile 'com.jakewharton:butterknife:7.0.1'
+    api 'com.jakewharton:butterknife:7.0.1'
     annotationProcessor 'com.jakewharton:butterknife:7.0.1'
 }

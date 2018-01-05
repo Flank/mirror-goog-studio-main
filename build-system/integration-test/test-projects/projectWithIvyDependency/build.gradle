@@ -20,5 +20,5 @@ repositories {
 }
 
 dependencies {
-    compile 'com.foo:sample:1.0'
+    api 'com.foo:sample:1.0'
 }

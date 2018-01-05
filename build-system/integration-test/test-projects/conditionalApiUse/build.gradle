@@ -18,7 +18,7 @@ android {
 }
 
 dependencies {
-    compile "com.android.support:support-annotations:${project.supportLibVersion}"
-    androidTestCompile "com.android.support:support-annotations:${project.supportLibVersion}"
-    androidTestCompile "com.android.support.test:runner:${project.testSupportLibVersion}"
+    api "com.android.support:support-annotations:${project.supportLibVersion}"
+    androidTestImplementation "com.android.support:support-annotations:${project.supportLibVersion}"
+    androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
 }

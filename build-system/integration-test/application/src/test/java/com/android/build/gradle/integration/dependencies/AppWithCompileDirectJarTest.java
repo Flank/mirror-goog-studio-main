@@ -49,11 +49,9 @@ public class AppWithCompileDirectJarTest {
     public static void setUp() throws Exception {
         Files.write("include 'app', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
-        TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile project(':jar')\n" +
-                "}\n");
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n" + "dependencies {\n" + "    implementation project(':jar')\n" + "}\n");
         models = project.executeAndReturnMultiModel("clean", ":app:assembleDebug");
     }
 

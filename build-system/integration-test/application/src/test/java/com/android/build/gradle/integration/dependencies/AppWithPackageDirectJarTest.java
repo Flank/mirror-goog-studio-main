@@ -51,11 +51,9 @@ public class AppWithPackageDirectJarTest {
     public static void setUp() throws Exception {
         Files.write("include 'app', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    apk project(\":jar\")\n" +
-                "}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n" + "dependencies {\n" + "    runtimeOnly project(\":jar\")\n" + "}\n");
         project.execute("clean", ":app:assembleDebug");
         modelContainer = project.model().withFullDependencies().getMulti();
     }

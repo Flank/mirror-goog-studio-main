@@ -63,15 +63,13 @@ public class AppWithCompileIndirectJarTest {
 "    apply from: \"$rootDir/../commonLocalRepo.gradle\"\n" +
 "}\n");
 
-        appendToFile(project.getSubproject("app").getBuildFile(),
-"\ndependencies {\n" +
-"    compile project(':library')\n" +
-"}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\ndependencies {\n" + "    implementation project(':library')\n" + "}\n");
 
-        appendToFile(project.getSubproject("library").getBuildFile(),
-"\ndependencies {\n" +
-"    compile 'com.google.guava:guava:18.0'\n" +
-"}\n");
+        appendToFile(
+                project.getSubproject("library").getBuildFile(),
+                "\ndependencies {\n" + "    api 'com.google.guava:guava:18.0'\n" + "}\n");
 
     }
 

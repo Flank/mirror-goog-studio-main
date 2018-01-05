@@ -17,6 +17,6 @@ android {
 }
 
 dependencies {
-    compile files('jar1.jar')
-    compile files('jar2.jar')
+    api files('jar1.jar')
+    api files('jar2.jar')
 }

@@ -9,7 +9,7 @@ android {
 // A basic Android application split over a library and a main project.
 //
 dependencies {
-    compile project(':lib1:libs')
-    compile project(':lib2b:libs')
-    compile project(':libapp:libs')
+    api project(':lib1:libs')
+    api project(':lib2b:libs')
+    api project(':libapp:libs')
 }

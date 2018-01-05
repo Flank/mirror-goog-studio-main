@@ -86,7 +86,7 @@ public class KotlinHelloWorldApp extends HelloWorldApp {
                                 + "    }\n"
                                 + "}\n"
                                 + "dependencies {\n"
-                                + "    compile \"org.jetbrains.kotlin:kotlin-stdlib:$rootProject.kotlinVersion\"\n"
+                                + "    api \"org.jetbrains.kotlin:kotlin-stdlib:$rootProject.kotlinVersion\"\n"
                                 + "}\n");
 
         addFile(buildFile);

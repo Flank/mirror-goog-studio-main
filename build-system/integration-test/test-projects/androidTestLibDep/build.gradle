@@ -7,7 +7,7 @@ apply plugin: 'com.android.library'
 apply from: "../commonLocalRepo.gradle"
 
 dependencies {
-    androidTestCompile 'com.google.guava:guava:19.0'
+    androidTestImplementation 'com.google.guava:guava:19.0'
 }
 
 android {

@@ -26,7 +26,7 @@ android {
             }
         }
 
-        // Make a 64-bits flavor anyway even if the compile sdk version does not support it
+        // Make a 64-bits flavor anyway even if the compileSdkVersion does not support it
         x86_64 {
             ndk {
                 abiFilter "x86_64"

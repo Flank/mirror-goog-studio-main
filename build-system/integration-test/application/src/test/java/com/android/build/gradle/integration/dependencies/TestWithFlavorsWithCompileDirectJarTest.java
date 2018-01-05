@@ -54,19 +54,20 @@ public class TestWithFlavorsWithCompileDirectJarTest {
     public static void setUp() throws Exception {
         Files.write("include 'app', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                        "android {\n" +
-                        "    flavorDimensions 'foo'\n" +
-                        "    productFlavors {\n" +
-                        "      pro { }\n" +
-                        "      free { }\n" +
-                        "    }\n" +
-                        "}\n" +
-                        "\n" +
-                        "dependencies {\n" +
-                        "    androidTestCompile project(\":jar\")\n" +
-                        "}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    flavorDimensions 'foo'\n"
+                        + "    productFlavors {\n"
+                        + "      pro { }\n"
+                        + "      free { }\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    androidTestImplementation project(\":jar\")\n"
+                        + "}\n");
         models = project.executeAndReturnMultiModel("clean", ":app:assembleFreeDebugAndroidTest");
     }
 

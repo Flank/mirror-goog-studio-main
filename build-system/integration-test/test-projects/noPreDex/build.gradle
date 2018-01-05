@@ -4,7 +4,7 @@ buildscript { apply from: "../commonBuildScript.gradle" }
 apply plugin: 'com.android.application'
 
 dependencies {
-    compile "com.android.support:support-v4:${rootProject.supportLibVersion}"
+    api "com.android.support:support-v4:${rootProject.supportLibVersion}"
 }
 
 android {

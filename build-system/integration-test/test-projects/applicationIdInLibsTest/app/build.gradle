@@ -30,6 +30,6 @@ android {
 }
 
 dependencies {
-    compile project(':examplelibrary')
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    api project(':examplelibrary')
+    api fileTree(dir: 'libs', include: ['*.jar'])
 }

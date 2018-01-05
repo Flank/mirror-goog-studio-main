@@ -59,7 +59,7 @@ public class AppWithProvidedRemoteJarTest {
                         + "\"\n"
                         + "}\n"
                         + "dependencies {\n"
-                        + "    provided \"com.google.guava:guava:18.0\"\n"
+                        + "    compileOnly \"com.google.guava:guava:18.0\"\n"
                         + "}\n");
 
         project.execute("clean", "assembleDebug");
