@@ -69,7 +69,7 @@ open class AndroidZip : Zip() {
                     + ".")
 
             bundle.destinationDir = variantScope.aarLocation
-            bundle.archiveNameSupplier = { variantScope.outputScope.mainSplit!!.outputFileName }
+            bundle.archiveNameSupplier = { variantScope.outputScope.mainSplit.outputFileName }
             bundle.extension = BuilderConstants.EXT_LIB_ARCHIVE
             bundle.from(
                     variantScope.getOutput(TaskOutputType.AIDL_PARCELABLE),
@@ -124,7 +124,7 @@ open class AndroidZip : Zip() {
                                 variantScope.aarLocation,
                                 variantScope
                                         .outputScope
-                                        .mainSplit!!
+                                        .mainSplit
                                         .outputFileName)
                     },
                     bundle.name)

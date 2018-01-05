@@ -44,7 +44,7 @@ data class Benchmark(
     fun run(): BenchmarkResult {
         var recordStart = 0L
         var recordEnd = 0L
-        var totalStart = System.nanoTime()
+        val totalStart = System.nanoTime()
 
         /*
          * Any common project configuration should happen here. Note that it isn't possible to take
