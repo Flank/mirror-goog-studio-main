@@ -53,6 +53,7 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.GradleScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -93,7 +94,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 /**
  * Checks Gradle files for potential errors
  */
-public class GradleDetector extends Detector implements Detector.GradleScanner {
+public class GradleDetector extends Detector implements GradleScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             GradleDetector.class,
@@ -394,7 +395,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     private Object compileSdkVersionCookie;
     private int targetSdkVersion;
 
-    // ---- Implements Detector.GradleScanner ----
+    // ---- Implements GradleScanner ----
 
     @Override
     public void visitBuildScript(@NonNull Context context) {

@@ -22,9 +22,10 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import org.jetbrains.uast.UElement
 
-abstract class AbstractAnnotationDetector : Detector(), Detector.UastScanner {
+abstract class AbstractAnnotationDetector : Detector(), SourceCodeScanner {
     protected fun report(
             context: JavaContext,
             issue: Issue,

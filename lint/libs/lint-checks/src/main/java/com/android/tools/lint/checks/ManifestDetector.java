@@ -80,6 +80,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -98,7 +99,7 @@ import org.w3c.dom.NodeList;
  * Checks for issues in AndroidManifest files such as declaring elements in the
  * wrong order.
  */
-public class ManifestDetector extends Detector implements Detector.XmlScanner {
+public class ManifestDetector extends Detector implements XmlScanner {
     private static final Implementation IMPLEMENTATION = new Implementation(
             ManifestDetector.class,
             Scope.MANIFEST_SCOPE
@@ -658,7 +659,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
         }
     }
 
-    // ---- Implements Detector.XmlScanner ----
+    // ---- Implements XmlScanner ----
 
     @Override
     public Collection<String> getApplicableElements() {

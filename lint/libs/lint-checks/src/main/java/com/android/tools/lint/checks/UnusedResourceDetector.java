@@ -46,11 +46,9 @@ import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.UElementHandler;
+import com.android.tools.lint.detector.api.BinaryResourceScanner;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.BinaryResourceScanner;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
-import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -62,7 +60,9 @@ import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -90,7 +90,7 @@ import org.w3c.dom.Node;
 /**
  * Finds unused resources.
  */
-public class UnusedResourceDetector extends ResourceXmlDetector implements UastScanner,
+public class UnusedResourceDetector extends ResourceXmlDetector implements SourceCodeScanner,
         BinaryResourceScanner, XmlScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
@@ -398,7 +398,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
                     recordInactiveJavaReferences(file);
                 } else if (file.getName().endsWith(DOT_JAVA)) {
                     try {
-                        String java = Files.toString(file, UTF_8);
+                        String java = Files.asCharSource(file, UTF_8).read();
                         model.tokenizeJavaCode(java);
                     } catch (Throwable ignore) {
                         // Tolerate parsing errors etc in these files; they're user
@@ -433,7 +433,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
                 boolean isXml = endsWithIgnoreCase(path, DOT_XML);
                 try {
                     if (isXml) {
-                        String xml = Files.toString(file, UTF_8);
+                        String xml = Files.asCharSource(file, UTF_8).read();
                         Document document = XmlUtils.parseDocument(xml, true);
                         model.visitXmlDocument(file, folderType, document);
                     } else {
@@ -550,7 +550,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
         return Character.toTitleCase(ch) + string.substring(1);
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Override
     public boolean appliesToResourceRefs() {

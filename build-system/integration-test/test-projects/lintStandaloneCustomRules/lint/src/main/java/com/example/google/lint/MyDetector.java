@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,7 +35,7 @@ import org.w3c.dom.Element;
 import org.jetbrains.uast.UClass;
 import org.jetbrains.uast.UElement;
 
-public class MyDetector extends Detector implements Detector.UastScanner {
+public class MyDetector extends Detector implements SourceCodeScanner {
     public static final Issue ISSUE =
             Issue.create(
                     "UnitTestLintCheck2",

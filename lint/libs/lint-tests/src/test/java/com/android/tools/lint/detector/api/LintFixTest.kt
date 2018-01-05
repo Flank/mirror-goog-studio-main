@@ -148,7 +148,7 @@ class LintFixTest : TestCase() {
      * Detector which makes use of a couple of lint fix string replacement features:
      * (1) ranges (larger than error range, and (2) back references
      */
-    class SampleTestDetector : Detector(), Detector.UastScanner {
+    class SampleTestDetector : Detector(), SourceCodeScanner {
         override fun getApplicableMethodNames(): List<String> {
             return listOf("d")
         }

@@ -26,12 +26,12 @@ import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.google.common.collect.Lists;
 import com.intellij.psi.PsiMethod;
 import java.util.Collections;
@@ -49,7 +49,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 /**
  * Looks for ListView scrolling performance: should use view holder pattern
  */
-public class ViewHolderDetector extends Detector implements UastScanner {
+public class ViewHolderDetector extends Detector implements SourceCodeScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             ViewHolderDetector.class,
@@ -79,7 +79,7 @@ public class ViewHolderDetector extends Detector implements UastScanner {
     public ViewHolderDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Override
     public List<Class<? extends UElement>> getApplicableUastTypes() {

@@ -11,12 +11,13 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import org.jetbrains.uast.UClass
 
 /**
  * Constructs a new [MediaBrowserServiceCompatVersionDetector] check
  */
-class MediaBrowserServiceCompatVersionDetector : Detector(), Detector.UastScanner {
+class MediaBrowserServiceCompatVersionDetector : Detector(), SourceCodeScanner {
 
     companion object Issues {
 

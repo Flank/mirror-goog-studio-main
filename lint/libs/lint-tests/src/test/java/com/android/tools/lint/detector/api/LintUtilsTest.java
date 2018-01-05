@@ -91,7 +91,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.util.Disposer;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -103,7 +102,6 @@ import java.util.Locale;
 import junit.framework.TestCase;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.uast.UFile;
-import org.jetbrains.uast.UastUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 

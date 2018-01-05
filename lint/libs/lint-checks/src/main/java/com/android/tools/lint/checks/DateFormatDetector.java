@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
@@ -37,7 +38,7 @@ import org.jetbrains.uast.UCallExpression;
 /**
  * Checks for errors related to Date Formats
  */
-public class DateFormatDetector extends Detector implements Detector.UastScanner {
+public class DateFormatDetector extends Detector implements SourceCodeScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             DateFormatDetector.class,
@@ -73,7 +74,7 @@ public class DateFormatDetector extends Detector implements Detector.UastScanner
     public DateFormatDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

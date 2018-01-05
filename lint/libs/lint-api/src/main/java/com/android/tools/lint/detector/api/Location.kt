@@ -18,8 +18,8 @@ package com.android.tools.lint.detector.api
 
 import com.android.ide.common.blame.SourcePosition
 import com.android.ide.common.res2.ResourceItem
-import com.android.tools.lint.client.api.UastParser
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.client.api.UastParser
 import com.android.utils.CharSequences.indexOf
 import com.android.utils.CharSequences.lastIndexOf
 import com.android.utils.CharSequences.startsWith

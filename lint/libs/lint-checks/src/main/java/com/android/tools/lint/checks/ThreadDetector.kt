@@ -26,12 +26,12 @@ import com.android.tools.lint.checks.AnnotationDetector.UI_THREAD_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.WORKER_THREAD_ANNOTATION
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UAnnotation
@@ -42,7 +42,7 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getParentOfType
 import java.util.ArrayList
 
-class ThreadDetector : AbstractAnnotationDetector(), Detector.UastScanner {
+class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
             UI_THREAD_ANNOTATION,
             MAIN_THREAD_ANNOTATION,

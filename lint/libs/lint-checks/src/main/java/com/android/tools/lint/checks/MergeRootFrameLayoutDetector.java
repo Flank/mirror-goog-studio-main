@@ -39,7 +39,6 @@ import com.android.resources.ResourceType;
 import com.android.tools.lint.client.api.ResourceReference;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -49,6 +48,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.UastLintUtils;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
@@ -69,7 +69,7 @@ import org.w3c.dom.Node;
 /**
  * Checks whether a root FrameLayout can be replaced with a {@code <merge>} tag.
  */
-public class MergeRootFrameLayoutDetector extends LayoutDetector implements UastScanner {
+public class MergeRootFrameLayoutDetector extends LayoutDetector implements SourceCodeScanner {
     /**
      * Set of layouts that we want to enable the warning for. We only warn for
      * {@code <FrameLayout>}'s that are the root of a layout included from
@@ -182,7 +182,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Uast
         mWhitelistedLayouts.add(layout);
     }
 
-    // Implements UastScanner
+    // implements SourceCodeScanner
 
     @Override
     public List<String> getApplicableMethodNames() {

@@ -21,12 +21,12 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -39,7 +39,7 @@ import org.jetbrains.uast.UClass;
  * in one or more earlier API levels that are still targeted by the minSdkVersion
  * of this project.
  */
-public class OverrideConcreteDetector extends Detector implements UastScanner {
+public class OverrideConcreteDetector extends Detector implements SourceCodeScanner {
     /** Are previously-abstract methods all overridden? */
     public static final Issue ISSUE = Issue.create(
         "OverrideAbstract",
@@ -80,7 +80,7 @@ public class OverrideConcreteDetector extends Detector implements UastScanner {
     public OverrideConcreteDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

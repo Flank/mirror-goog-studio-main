@@ -61,7 +61,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -72,6 +71,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
@@ -90,7 +90,7 @@ import org.w3c.dom.Element;
 /**
  * Check which looks for RTL issues (right-to-left support) in layouts
  */
-public class RtlDetector extends LayoutDetector implements UastScanner {
+public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
 
     // TODO: Use the new merged manifest model
 
@@ -569,7 +569,7 @@ public class RtlDetector extends LayoutDetector implements UastScanner {
         return name.startsWith(ATTR_PADDING);
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Override
     public List<Class<? extends UElement>> getApplicableUastTypes() {

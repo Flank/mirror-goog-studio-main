@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,7 +40,7 @@ import org.w3c.dom.Element;
  * Checks if an application wants to use permissions that can only be used by
  * system applications.
  */
-public class SystemPermissionsDetector extends Detector implements Detector.XmlScanner {
+public class SystemPermissionsDetector extends Detector implements XmlScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "ProtectedPermissions",
@@ -380,7 +381,7 @@ public class SystemPermissionsDetector extends Detector implements Detector.XmlS
     public SystemPermissionsDetector() {
     }
 
-    // ---- Implements Detector.XmlScanner ----
+    // ---- Implements XmlScanner ----
 
     @Override
     public Collection<String> getApplicableElements() {

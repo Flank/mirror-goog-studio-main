@@ -22,11 +22,11 @@ import com.android.tools.lint.detector.api.Location
 import com.google.common.annotations.Beta
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import java.io.File
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UastContext
+import java.io.File
 
 /**
  * A wrapper for a UAST parser. This allows tools integrating lint to map directly

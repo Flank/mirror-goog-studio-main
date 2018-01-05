@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.google.common.collect.Sets;
 import com.intellij.psi.PsiMethod;
 import java.util.Collections;
@@ -39,7 +40,7 @@ import org.jetbrains.uast.ULiteralExpression;
 /**
  * Ensures that Cipher.getInstance is not called with AES as the parameter.
  */
-public class CipherGetInstanceDetector extends Detector implements Detector.UastScanner {
+public class CipherGetInstanceDetector extends Detector implements SourceCodeScanner {
     public static final Issue ISSUE = Issue.create(
             "GetInstance",
             "Cipher.getInstance with ECB",
@@ -58,7 +59,7 @@ public class CipherGetInstanceDetector extends Detector implements Detector.Uast
     private static final Set<String> ALGORITHM_ONLY =
             Sets.newHashSet("AES", "DES", "DESede");
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

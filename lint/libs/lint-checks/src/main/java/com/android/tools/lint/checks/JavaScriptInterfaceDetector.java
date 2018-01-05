@@ -21,13 +21,13 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.TypeEvaluator;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
@@ -43,7 +43,7 @@ import org.jetbrains.uast.UExpression;
  * Looks for addJavascriptInterface calls on interfaces have been properly annotated
  * with {@code @JavaScriptInterface}
  */
-public class JavaScriptInterfaceDetector extends Detector implements UastScanner {
+public class JavaScriptInterfaceDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "JavascriptInterface",
@@ -69,7 +69,7 @@ public class JavaScriptInterfaceDetector extends Detector implements UastScanner
     public JavaScriptInterfaceDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

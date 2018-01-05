@@ -24,7 +24,6 @@ import static com.android.SdkConstants.NEW_ID_PREFIX;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.res2.AbstractResourceRepository;
-import com.android.ide.common.res2.DuplicateDataException;
 import com.android.ide.common.res2.MergingException;
 import com.android.ide.common.res2.ResourceFile;
 import com.android.ide.common.res2.ResourceItem;

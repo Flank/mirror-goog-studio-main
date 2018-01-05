@@ -21,9 +21,7 @@ import junit.framework.TestCase
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UFile
-import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.asRecursiveLogString
-import org.jetbrains.uast.visitor.AbstractUastVisitor
 import org.jetbrains.uast.visitor.UastVisitor
 import java.io.File
 

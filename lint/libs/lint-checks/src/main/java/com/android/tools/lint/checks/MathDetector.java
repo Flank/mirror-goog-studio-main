@@ -20,13 +20,13 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiMethod;
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +36,7 @@ import org.jetbrains.uast.UCallExpression;
  * Looks for usages of {@link Math} methods which can be replaced with
  * {@code android.util.FloatMath} methods to avoid casting.
  */
-public class MathDetector extends Detector implements UastScanner {
+public class MathDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "FloatMath",
@@ -62,7 +62,7 @@ public class MathDetector extends Detector implements UastScanner {
     public MathDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

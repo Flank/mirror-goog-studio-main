@@ -20,13 +20,13 @@ import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.XmlContext
 import com.google.common.annotations.Beta
-import java.io.File
-import java.io.IOException
-import javax.xml.parsers.ParserConfigurationException
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Node
 import org.xml.sax.SAXException
+import java.io.File
+import java.io.IOException
+import javax.xml.parsers.ParserConfigurationException
 
 /**
  * A wrapper for an XML parser. This allows tools integrating lint to map directly

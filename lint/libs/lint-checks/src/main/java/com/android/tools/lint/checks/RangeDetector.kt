@@ -24,12 +24,12 @@ import com.android.tools.lint.checks.AnnotationDetector.SIZE_ANNOTATION
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
-import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.uast.UAnnotation
@@ -40,7 +40,7 @@ import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UResolvable
 import org.jetbrains.uast.util.isNewArrayWithInitializer
 
-class RangeDetector : AbstractAnnotationDetector(), Detector.UastScanner {
+class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
             INT_RANGE_ANNOTATION,
             FLOAT_RANGE_ANNOTATION,

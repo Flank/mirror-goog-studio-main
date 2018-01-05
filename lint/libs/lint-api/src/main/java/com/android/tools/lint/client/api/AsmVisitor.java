@@ -18,8 +18,8 @@ package com.android.tools.lint.client.api;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.ClassContext;
+import com.android.tools.lint.detector.api.ClassScanner;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.ClassScanner;
 import com.google.common.annotations.Beta;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -71,7 +71,7 @@ class AsmVisitor {
     private List<ClassScanner>[] nodeTypeDetectors;
 
     // Really want this:
-    //<T extends List<Detector> & Detector.ClassScanner> ClassVisitor(T xmlDetectors) {
+    //<T extends List<Detector> & ClassScanner> ClassVisitor(T xmlDetectors) {
     // but it makes client code tricky and ugly.
     @SuppressWarnings("unchecked")
     AsmVisitor(@NonNull LintClient client, @NonNull List<? extends Detector> classDetectors) {
@@ -80,7 +80,7 @@ class AsmVisitor {
         // TODO: Check appliesTo() for files, and find a quick way to enable/disable
         // rules when running through a full project!
         for (Detector detector : classDetectors) {
-            Detector.ClassScanner scanner = (Detector.ClassScanner) detector;
+            ClassScanner scanner = (ClassScanner) detector;
 
             boolean checkFullClass = true;
 
@@ -88,7 +88,7 @@ class AsmVisitor {
             if (names != null) {
                 checkFullClass = false;
                 for (String element : names) {
-                    List<Detector.ClassScanner> list = methodNameToChecks.get(element);
+                    List<ClassScanner> list = methodNameToChecks.get(element);
                     if (list == null) {
                         list = new ArrayList<>();
                         methodNameToChecks.put(element, list);
@@ -101,7 +101,7 @@ class AsmVisitor {
             if (owners != null) {
                 checkFullClass = false;
                 for (String element : owners) {
-                    List<Detector.ClassScanner> list = methodOwnerToChecks.get(element);
+                    List<ClassScanner> list = methodOwnerToChecks.get(element);
                     if (list == null) {
                         list = new ArrayList<>();
                         methodOwnerToChecks.put(element, list);
@@ -147,7 +147,7 @@ class AsmVisitor {
         }
 
         for (Detector detector : fullClassChecks) {
-            Detector.ClassScanner scanner = (Detector.ClassScanner) detector;
+            ClassScanner scanner = (ClassScanner) detector;
             scanner.checkClass(context, classNode);
             detector.afterCheckFile(context);
         }

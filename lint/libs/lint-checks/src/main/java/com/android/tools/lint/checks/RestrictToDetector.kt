@@ -23,13 +23,13 @@ import com.android.tools.lint.checks.AnnotationDetector.RESTRICT_TO_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.VISIBLE_FOR_TESTING_ANNOTATION
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
 import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
 import com.intellij.psi.PsiClass
@@ -47,7 +47,7 @@ import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.util.isArrayInitializer
 
-class RestrictToDetector : AbstractAnnotationDetector(), Detector.UastScanner {
+class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
             RESTRICT_TO_ANNOTATION,
             GMS_HIDE_ANNOTATION,

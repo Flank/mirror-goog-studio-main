@@ -21,12 +21,12 @@ import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiMethod;
 import java.util.Collections;
 import java.util.List;
@@ -43,7 +43,7 @@ import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /** Detector looking for Toast.makeText() without a corresponding show() call */
-public class ToastDetector extends Detector implements UastScanner {
+public class ToastDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "ShowToast",
@@ -64,7 +64,7 @@ public class ToastDetector extends Detector implements UastScanner {
     public ToastDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {

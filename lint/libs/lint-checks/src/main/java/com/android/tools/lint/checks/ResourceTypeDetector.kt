@@ -26,7 +26,6 @@ import com.android.tools.lint.checks.AnnotationDetector.HALF_FLOAT_ANNOTATION
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
-import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
@@ -62,6 +61,7 @@ import com.android.tools.lint.detector.api.ResourceEvaluator.TRANSITION_RES_ANNO
 import com.android.tools.lint.detector.api.ResourceEvaluator.XML_RES_ANNOTATION
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
 import com.google.common.base.Joiner
 import com.google.common.collect.Sets
@@ -87,7 +87,7 @@ import org.jetbrains.uast.util.isNewArrayWithInitializer
 import org.jetbrains.uast.util.isTypeCast
 import java.util.EnumSet
 
-class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner {
+class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
             COLOR_INT_ANNOTATION,
             DIMENSION_ANNOTATION,

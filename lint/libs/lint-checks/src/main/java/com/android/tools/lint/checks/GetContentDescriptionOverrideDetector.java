@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiMethod;
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +36,7 @@ import org.jetbrains.uast.UClass;
  * Check that looks for override of getContentDescription() in any class that descends from View.
  */
 public class GetContentDescriptionOverrideDetector extends Detector
-        implements Detector.UastScanner {
+        implements SourceCodeScanner {
 
     public static final Issue ISSUE =
             Issue.create(

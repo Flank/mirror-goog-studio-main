@@ -54,7 +54,6 @@ import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -62,6 +61,7 @@ import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.ResourceEvaluator;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -82,7 +82,7 @@ import org.w3c.dom.Node;
 /**
  * Ensures that layout width and height attributes are specified
  */
-public class RequiredAttributeDetector extends LayoutDetector implements UastScanner {
+public class RequiredAttributeDetector extends LayoutDetector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "RequiredSize",
@@ -561,7 +561,7 @@ public class RequiredAttributeDetector extends LayoutDetector implements UastSca
         }
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Override
     @Nullable

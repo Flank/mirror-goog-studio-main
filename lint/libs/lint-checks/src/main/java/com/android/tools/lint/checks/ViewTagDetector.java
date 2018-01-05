@@ -24,12 +24,12 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.TypeEvaluator;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
@@ -43,7 +43,7 @@ import org.jetbrains.uast.UExpression;
 /**
  * Checks for missing view tag detectors
  */
-public class ViewTagDetector extends Detector implements UastScanner {
+public class ViewTagDetector extends Detector implements SourceCodeScanner {
     /** Using setTag and leaking memory */
     public static final Issue ISSUE = Issue.create(
             "ViewTag",
@@ -68,7 +68,7 @@ public class ViewTagDetector extends Detector implements UastScanner {
     public ViewTagDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

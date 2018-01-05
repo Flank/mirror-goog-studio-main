@@ -52,6 +52,7 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Collection;
@@ -62,7 +63,7 @@ import org.w3c.dom.Element;
 /**
  * Checks for typos in manifest files
  */
-public class ManifestTypoDetector extends Detector implements Detector.XmlScanner {
+public class ManifestTypoDetector extends Detector implements XmlScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "ManifestTypo",

@@ -24,7 +24,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -33,6 +32,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
@@ -44,7 +44,7 @@ import org.jetbrains.uast.UClass;
 /**
  * Looks for subclasses of custom widgets in projects using app compat
  */
-public class AppCompatCustomViewDetector extends Detector implements UastScanner {
+public class AppCompatCustomViewDetector extends Detector implements SourceCodeScanner {
 
     /** Copy/pasted item decorator code */
     public static final Issue ISSUE = Issue.create(
@@ -70,7 +70,7 @@ public class AppCompatCustomViewDetector extends Detector implements UastScanner
     public AppCompatCustomViewDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

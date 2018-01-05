@@ -19,9 +19,9 @@ package com.android.tools.lint.client.api
 import com.android.SdkConstants.ANDROID_PKG
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
-import com.android.tools.lint.detector.api.Detector.UastScanner
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlScannerConstants
 import com.android.tools.lint.detector.api.interprocedural.CallGraphResult
 import com.android.tools.lint.detector.api.interprocedural.CallGraphVisitor
@@ -102,7 +102,7 @@ import java.util.HashMap
  * of detectors to consult whenever that attribute is encountered.
  * Examples of "attributes" are method names, Android resource identifiers,
  * and general AST node types such as "cast" nodes etc. These are
- * defined on the [UastScanner] interface.
+ * defined on the [SourceCodeScanner] interface.
  *  1.  Second, it iterates over the document a single time, delegating to
  * the detectors found at each relevant AST attribute.
  *  1.  Finally, it calls the remaining visitors (those that need to process a
@@ -122,15 +122,15 @@ internal class UElementVisitor constructor(private val parser: UastParser,
     private val nodePsiTypeDetectors = Maps.newHashMapWithExpectedSize<Class<out UElement>, MutableList<VisitingDetector>>(25)
     private val superClassDetectors = HashMap<String, MutableList<VisitingDetector>>()
     private val annotationHandler: AnnotationHandler?
-    private val callGraphDetectors = ArrayList<UastScanner>()
+    private val callGraphDetectors = ArrayList<SourceCodeScanner>()
 
     init {
         allDetectors = ArrayList(detectors.size)
 
-        var annotationScanners: Multimap<String, UastScanner>? = null
+        var annotationScanners: Multimap<String, SourceCodeScanner>? = null
 
         for (detector in detectors) {
-            val uastScanner = detector as UastScanner
+            val uastScanner = detector as SourceCodeScanner
             val v = VisitingDetector(detector, uastScanner)
             allDetectors.add(v)
 
@@ -365,7 +365,7 @@ internal class UElementVisitor constructor(private val parser: UastParser,
         parser.dispose()
     }
 
-    private class VisitingDetector(val detector: Detector, val uastScanner: UastScanner) {
+    private class VisitingDetector(val detector: Detector, val uastScanner: SourceCodeScanner) {
         private var mVisitor: UElementHandler? = null
         private var mContext: JavaContext? = null
 

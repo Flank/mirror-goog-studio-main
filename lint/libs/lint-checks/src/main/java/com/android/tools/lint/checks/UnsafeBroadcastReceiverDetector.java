@@ -36,8 +36,6 @@ import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
-import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -47,7 +45,9 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Sets;
 import com.intellij.psi.PsiElement;
@@ -67,7 +67,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 public class UnsafeBroadcastReceiverDetector extends Detector
-        implements UastScanner, XmlScanner {
+        implements SourceCodeScanner, XmlScanner {
 
     // TODO: Use the new merged manifest model
 
@@ -617,7 +617,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
         return mReceiversWithProtectedBroadcastIntentFilter;
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

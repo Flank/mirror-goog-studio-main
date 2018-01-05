@@ -21,7 +21,6 @@ import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -29,6 +28,7 @@ import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import java.util.Arrays;
@@ -40,7 +40,7 @@ import org.jetbrains.uast.UastLiteralUtils;
 /**
  * Looks for Parcelable classes that are missing a CREATOR field
  */
-public class ReadParcelableDetector extends Detector implements UastScanner {
+public class ReadParcelableDetector extends Detector implements SourceCodeScanner {
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
@@ -69,7 +69,7 @@ public class ReadParcelableDetector extends Detector implements UastScanner {
     public ReadParcelableDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {

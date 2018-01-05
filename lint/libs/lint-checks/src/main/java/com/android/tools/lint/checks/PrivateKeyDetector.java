@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.OtherFileScanner;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.google.common.base.Charsets;
@@ -35,7 +36,7 @@ import java.util.EnumSet;
 /**
  * Looks for packaged private key files.
  */
-public class PrivateKeyDetector extends Detector implements Detector.OtherFileScanner {
+public class PrivateKeyDetector extends Detector implements OtherFileScanner {
     /** Packaged private key files */
     public static final Issue ISSUE = Issue.create(
             "PackagedPrivateKey",

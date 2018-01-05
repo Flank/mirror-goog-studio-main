@@ -20,13 +20,13 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiMethod;
@@ -46,7 +46,7 @@ import org.jetbrains.uast.UastUtils;
  * Checks that Handler implementations are top level classes or static.
  * See the corresponding check in the android.os.Handler source code.
  */
-public class HandlerDetector extends Detector implements UastScanner {
+public class HandlerDetector extends Detector implements SourceCodeScanner {
 
     /** Potentially leaking handlers */
     public static final Issue ISSUE = Issue.create(
@@ -76,7 +76,7 @@ public class HandlerDetector extends Detector implements UastScanner {
     public HandlerDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

@@ -40,7 +40,6 @@ import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -49,6 +48,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
@@ -73,7 +73,7 @@ import org.w3c.dom.Node;
 /**
  * Checks related to instant apps. FIXME: This needs to be refactored to support the feature plugin.
  */
-public class InstantAppDetector extends ResourceXmlDetector implements UastScanner {
+public class InstantAppDetector extends ResourceXmlDetector implements SourceCodeScanner {
 
     @SuppressWarnings("unchecked")
     public static final Implementation IMPLEMENTATION = new Implementation(

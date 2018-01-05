@@ -65,6 +65,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.android.utils.CharSequences;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -81,7 +82,7 @@ import org.w3c.dom.Node;
 /**
  * Checks for invalid app links URLs
  */
-public class AppLinksValidDetector extends Detector implements Detector.XmlScanner {
+public class AppLinksValidDetector extends Detector implements XmlScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             AppLinksValidDetector.class,
@@ -123,7 +124,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
     public AppLinksValidDetector() {
     }
 
-    // ---- Implements Detector.XmlScanner ----
+    // ---- Implements XmlScanner ----
 
     @Override
     public Collection<String> getApplicableElements() {

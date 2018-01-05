@@ -31,6 +31,7 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
@@ -43,7 +44,7 @@ import org.jetbrains.uast.UClass;
 /**
  * Looks for custom views that do not define the view constructors needed by UI builders
  */
-public class ViewConstructorDetector extends Detector implements Detector.UastScanner {
+public class ViewConstructorDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "ViewConstructor",
@@ -71,7 +72,7 @@ public class ViewConstructorDetector extends Detector implements Detector.UastSc
     public ViewConstructorDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     private static boolean isXmlConstructor(
             @NonNull JavaEvaluator evaluator,

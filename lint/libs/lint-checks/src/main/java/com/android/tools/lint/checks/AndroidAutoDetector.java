@@ -32,15 +32,15 @@ import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
-import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.android.utils.XmlUtils;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,7 +58,7 @@ import org.w3c.dom.Element;
  * as a trigger for validating Automotive specific issues.
  */
 public class AndroidAutoDetector extends Detector
-        implements XmlScanner, UastScanner {
+        implements XmlScanner, SourceCodeScanner {
 
     // TODO: Use the new merged manifest model
 

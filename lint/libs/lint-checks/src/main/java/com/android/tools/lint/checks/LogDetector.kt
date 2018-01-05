@@ -20,12 +20,12 @@ import com.android.tools.lint.client.api.TYPE_STRING
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Detector
-import com.android.tools.lint.detector.api.Detector.UastScanner
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiVariable
@@ -51,7 +51,7 @@ import java.util.Locale
 /**
  * Detector for finding inefficiencies and errors in logging calls.
  */
-class LogDetector : Detector(), UastScanner {
+class LogDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         private val IMPLEMENTATION = Implementation(
                 LogDetector::class.java, Scope.JAVA_FILE_SCOPE)

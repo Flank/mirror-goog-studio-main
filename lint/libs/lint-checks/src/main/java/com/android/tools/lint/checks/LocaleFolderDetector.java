@@ -30,6 +30,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
+import com.android.tools.lint.detector.api.ClassScanner;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
@@ -38,8 +39,10 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceContext;
+import com.android.tools.lint.detector.api.ResourceFolderScanner;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
@@ -64,8 +67,8 @@ import org.objectweb.asm.tree.MethodNode;
 /**
  * Checks for errors related to locale handling
  */
-public class LocaleFolderDetector extends Detector implements Detector.ResourceFolderScanner,
-        Detector.UastScanner, Detector.ClassScanner {
+public class LocaleFolderDetector extends Detector implements ResourceFolderScanner,
+        SourceCodeScanner, ClassScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             LocaleFolderDetector.class,
@@ -470,7 +473,7 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
         return sortedRegions;
     }
 
-    // Implements UastScanner
+    // implements SourceCodeScanner
 
     @Nullable
     @Override

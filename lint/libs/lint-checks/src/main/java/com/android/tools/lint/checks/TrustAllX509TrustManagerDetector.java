@@ -21,15 +21,15 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
+import com.android.tools.lint.detector.api.ClassScanner;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.ClassScanner;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiMethod;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -47,7 +47,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 
-public class TrustAllX509TrustManagerDetector extends Detector implements UastScanner,
+public class TrustAllX509TrustManagerDetector extends Detector implements SourceCodeScanner,
         ClassScanner {
 
     @SuppressWarnings("unchecked")
@@ -70,7 +70,7 @@ public class TrustAllX509TrustManagerDetector extends Detector implements UastSc
     public TrustAllX509TrustManagerDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

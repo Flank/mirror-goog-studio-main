@@ -22,12 +22,12 @@ import com.android.tools.lint.checks.AnnotationDetector.FINDBUGS_ANNOTATIONS_CHE
 import com.android.tools.lint.checks.AnnotationDetector.JAVAX_ANNOTATION_CHECK_RETURN_VALUE
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
 import com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValue
 import com.intellij.psi.PsiMethod
@@ -37,11 +37,10 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
-import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getQualifiedParentOrThis
 
-class CheckResultDetector : AbstractAnnotationDetector(), Detector.UastScanner {
+class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
             CHECK_RESULT_ANNOTATION,
             FINDBUGS_ANNOTATIONS_CHECK_RETURN_VALUE,

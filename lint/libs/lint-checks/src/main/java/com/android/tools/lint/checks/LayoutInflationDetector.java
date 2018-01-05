@@ -31,7 +31,6 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.ResourceReference;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -41,6 +40,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.CharSequences;
 import com.android.utils.Pair;
@@ -67,7 +67,7 @@ import org.xmlpull.v1.XmlPullParserException;
 /**
  * Looks for layout inflation calls passing null as the view root
  */
-public class LayoutInflationDetector extends LayoutDetector implements UastScanner {
+public class LayoutInflationDetector extends LayoutDetector implements SourceCodeScanner {
 
     @SuppressWarnings("unchecked")
     private static final Implementation IMPLEMENTATION = new Implementation(
@@ -137,7 +137,7 @@ public class LayoutInflationDetector extends LayoutDetector implements UastScann
         }
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

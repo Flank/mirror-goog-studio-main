@@ -19,9 +19,9 @@ package com.android.tools.lint.client.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.google.common.annotations.Beta;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,22 +57,22 @@ import org.w3c.dom.NodeList;
  */
 @Beta
 class ResourceVisitor {
-    private final Map<String, List<Detector.XmlScanner>> elementToCheck =
+    private final Map<String, List<XmlScanner>> elementToCheck =
             new HashMap<>();
-    private final Map<String, List<Detector.XmlScanner>> attributeToCheck =
+    private final Map<String, List<XmlScanner>> attributeToCheck =
             new HashMap<>();
-    private final List<Detector.XmlScanner> documentDetectors =
+    private final List<XmlScanner> documentDetectors =
             new ArrayList<>();
-    private final List<Detector.XmlScanner> allElementDetectors =
+    private final List<XmlScanner> allElementDetectors =
             new ArrayList<>();
-    private final List<Detector.XmlScanner> allAttributeDetectors =
+    private final List<XmlScanner> allAttributeDetectors =
             new ArrayList<>();
     private final List<XmlScanner> allDetectors;
     private final List<? extends Detector> binaryDetectors;
     private final XmlParser parser;
 
     // Really want this:
-    //<T extends List<Detector> & Detector.XmlScanner> XmlVisitor(IDomParser parser,
+    //<T extends List<Detector> & XmlScanner> XmlVisitor(IDomParser parser,
     //    T xmlDetectors) {
     // but it makes client code tricky and ugly.
     ResourceVisitor(
@@ -86,13 +86,13 @@ class ResourceVisitor {
         // TODO: Check appliesTo() for files, and find a quick way to enable/disable
         // rules when running through a full project!
         for (XmlScanner detector : allDetectors) {
-            Detector.XmlScanner xmlDetector = (XmlScanner) detector;
+            XmlScanner xmlDetector = (XmlScanner) detector;
             Collection<String> attributes = xmlDetector.getApplicableAttributes();
             if (attributes == XmlScanner.ALL) {
                 allAttributeDetectors.add(xmlDetector);
             }  else if (attributes != null) {
                 for (String attribute : attributes) {
-                    List<Detector.XmlScanner> list = attributeToCheck.get(attribute);
+                    List<XmlScanner> list = attributeToCheck.get(attribute);
                     if (list == null) {
                         list = new ArrayList<>();
                         attributeToCheck.put(attribute, list);
@@ -105,7 +105,7 @@ class ResourceVisitor {
                 allElementDetectors.add(xmlDetector);
             } else if (elements != null) {
                 for (String element : elements) {
-                    List<Detector.XmlScanner> list = elementToCheck.get(element);
+                    List<XmlScanner> list = elementToCheck.get(element);
                     if (list == null) {
                         list = new ArrayList<>();
                         elementToCheck.put(element, list);
@@ -129,7 +129,7 @@ class ResourceVisitor {
                 check.beforeCheckFile(context);
             }
 
-            for (Detector.XmlScanner check : documentDetectors) {
+            for (XmlScanner check : documentDetectors) {
                 check.visitDocument(context, context.document);
             }
 
@@ -147,7 +147,7 @@ class ResourceVisitor {
     }
 
     private void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        List<Detector.XmlScanner> elementChecks = elementToCheck.get(element.getLocalName());
+        List<XmlScanner> elementChecks = elementToCheck.get(element.getLocalName());
         if (elementChecks != null) {
             assert elementChecks instanceof RandomAccess;
             for (XmlScanner check : elementChecks) {
@@ -168,7 +168,7 @@ class ResourceVisitor {
                 if (name == null) {
                     name = attribute.getName();
                 }
-                List<Detector.XmlScanner> list = attributeToCheck.get(name);
+                List<XmlScanner> list = attributeToCheck.get(name);
                 if (list != null) {
                     for (XmlScanner check : list) {
                         check.visitAttribute(context, attribute);

@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
+import com.android.tools.lint.detector.api.ClassScanner;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
@@ -46,7 +47,7 @@ import org.objectweb.asm.tree.VarInsnNode;
  * Looks for getter calls within the same class that could be replaced by
  * direct field references instead.
  */
-public class FieldGetterDetector extends Detector implements Detector.ClassScanner {
+public class FieldGetterDetector extends Detector implements ClassScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "FieldGetter",

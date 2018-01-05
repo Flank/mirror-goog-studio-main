@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UMethod
@@ -52,7 +53,7 @@ class DefaultJavaEvaluatorTest {
                 .expectClean()
     }
 
-    class TestAnnotationLookupDetector : Detector(), Detector.UastScanner {
+    class TestAnnotationLookupDetector : Detector(), SourceCodeScanner {
         companion object Issues {
             val ISSUE = Issue.create(
                     "Order",

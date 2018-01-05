@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.OtherFileScanner;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.SdkUtils;
@@ -34,7 +35,7 @@ import java.util.EnumSet;
 /**
  * Looks for merge markers left behind in the source files.
  */
-public class MergeMarkerDetector extends Detector implements Detector.OtherFileScanner {
+public class MergeMarkerDetector extends Detector implements OtherFileScanner {
     /** Packaged private key files */
     public static final Issue ISSUE = Issue.create(
             "MergeMarker",

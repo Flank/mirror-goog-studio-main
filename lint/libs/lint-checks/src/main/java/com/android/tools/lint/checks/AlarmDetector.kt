@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UExpression
@@ -31,7 +32,7 @@ import org.jetbrains.uast.UExpression
 /**
  * Makes sure that alarms are handled correctly
  */
-class AlarmDetector : Detector(), Detector.UastScanner {
+class AlarmDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         private val IMPLEMENTATION = Implementation(
                 AlarmDetector::class.java,

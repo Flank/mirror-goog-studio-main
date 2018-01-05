@@ -84,8 +84,6 @@ import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.ResourceFolderScanner;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -95,9 +93,11 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceContext;
+import com.android.tools.lint.detector.api.ResourceFolderScanner;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.UastLintUtils;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.XmlUtils;
@@ -175,7 +175,7 @@ import org.w3c.dom.NodeList;
  * by this application (according to its minimum API requirement in the manifest).
  */
 public class ApiDetector extends ResourceXmlDetector
-        implements UastScanner, ResourceFolderScanner {
+        implements SourceCodeScanner, ResourceFolderScanner {
     public static final String REQUIRES_API_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RequiresApi";
     public static final String SDK_SUPPRESS_ANNOTATION = "android.support.test.filters.SdkSuppress";
 
@@ -918,7 +918,7 @@ public class ApiDetector extends ResourceXmlDetector
         return false;
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

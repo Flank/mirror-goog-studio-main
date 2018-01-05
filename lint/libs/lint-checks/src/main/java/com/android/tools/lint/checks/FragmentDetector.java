@@ -24,13 +24,13 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiMethod;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +46,7 @@ import org.jetbrains.uast.UClass;
  *   http://stackoverflow.com/questions/8058809/fragment-activity-crashes-on-screen-rotate
  * (and countless duplicates)
  */
-public class FragmentDetector extends Detector implements UastScanner {
+public class FragmentDetector extends Detector implements SourceCodeScanner {
     /** Are fragment subclasses instantiatable? */
     public static final Issue ISSUE = Issue.create(
         "ValidFragment",
@@ -74,7 +74,7 @@ public class FragmentDetector extends Detector implements UastScanner {
     public FragmentDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

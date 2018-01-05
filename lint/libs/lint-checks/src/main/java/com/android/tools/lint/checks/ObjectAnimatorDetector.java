@@ -26,7 +26,6 @@ import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -36,6 +35,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.TypeEvaluator;
 import com.android.tools.lint.detector.api.UastLintUtils;
 import com.google.common.collect.Sets;
@@ -69,7 +69,7 @@ import org.jetbrains.uast.UastUtils;
 /**
  * Looks for issues around ObjectAnimator usages
  */
-public class ObjectAnimatorDetector extends Detector implements UastScanner {
+public class ObjectAnimatorDetector extends Detector implements SourceCodeScanner {
     public static final String KEEP_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Keep";
 
     private static final Implementation IMPLEMENTATION = new Implementation(

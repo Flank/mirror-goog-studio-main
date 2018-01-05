@@ -20,13 +20,13 @@ import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import java.util.Collections;
@@ -46,7 +46,7 @@ import org.jetbrains.uast.UImportStatement;
  * break. Look out for these erroneous import statements and delete them.
  * </blockquote>
  */
-public class WrongImportDetector extends Detector implements UastScanner {
+public class WrongImportDetector extends Detector implements SourceCodeScanner {
     /** Is android.R being imported? */
     public static final Issue ISSUE = Issue.create(
             "SuspiciousImport",
@@ -69,7 +69,7 @@ public class WrongImportDetector extends Detector implements UastScanner {
     public WrongImportDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Override
     public List<Class<? extends UElement>> getApplicableUastTypes() {

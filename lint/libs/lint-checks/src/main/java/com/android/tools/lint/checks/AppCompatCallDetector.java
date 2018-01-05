@@ -30,6 +30,7 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiMethod;
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +38,7 @@ import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UClass;
 import org.jetbrains.uast.UastUtils;
 
-public class AppCompatCallDetector extends Detector implements Detector.UastScanner {
+public class AppCompatCallDetector extends Detector implements SourceCodeScanner {
     public static final Issue ISSUE = Issue.create(
             "AppCompatMethod",
             "Using Wrong AppCompat Method",

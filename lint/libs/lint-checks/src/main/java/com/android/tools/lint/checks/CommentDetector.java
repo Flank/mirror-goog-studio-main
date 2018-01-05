@@ -27,7 +27,6 @@ import com.android.builder.model.Variant;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -37,6 +36,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Collections;
 import java.util.List;
@@ -50,7 +50,7 @@ import org.w3c.dom.NodeList;
 /**
  * Looks for issues in Java comments
  */
-public class CommentDetector extends ResourceXmlDetector implements UastScanner {
+public class CommentDetector extends ResourceXmlDetector implements SourceCodeScanner {
     private static final String STOPSHIP_COMMENT = "STOPSHIP";
 
     private static final Implementation IMPLEMENTATION = new Implementation(

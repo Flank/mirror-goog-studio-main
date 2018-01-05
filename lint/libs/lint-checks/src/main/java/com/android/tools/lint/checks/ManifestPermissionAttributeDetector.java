@@ -33,6 +33,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import java.util.Collection;
 import java.util.Collections;
 import org.w3c.dom.Attr;
@@ -41,7 +42,7 @@ import org.w3c.dom.Attr;
  * Checks if the 'permission' attribute was set on a valid tag. Valid tags in the Manifest are:
  * activity, application, provider, service, receiver, activity-alias and path-permission.
  */
-public class ManifestPermissionAttributeDetector extends Detector implements Detector.XmlScanner {
+public class ManifestPermissionAttributeDetector extends Detector implements XmlScanner {
 
     public static final Issue ISSUE = Issue.create(
             "InvalidPermission",
@@ -59,7 +60,7 @@ public class ManifestPermissionAttributeDetector extends Detector implements Det
                     Scope.MANIFEST_SCOPE
             ));
 
-    // ---- Implements Detector.XmlScanner ----
+    // ---- Implements XmlScanner ----
 
     @Override
     public Collection<String> getApplicableAttributes() {

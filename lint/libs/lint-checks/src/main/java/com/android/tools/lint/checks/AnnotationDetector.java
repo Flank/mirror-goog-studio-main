@@ -47,7 +47,6 @@ import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.ExternalReferenceExpression;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -56,6 +55,7 @@ import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.UastLintUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -110,7 +110,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 /**
  * Checks annotations to make sure they are valid
  */
-public class AnnotationDetector extends Detector implements UastScanner {
+public class AnnotationDetector extends Detector implements SourceCodeScanner {
     public static final String GMS_HIDE_ANNOTATION = "com.google.android.gms.common.internal.Hide";
     public static final String CHECK_RESULT_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "CheckResult";
     public static final String INT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "IntRange";
@@ -241,7 +241,7 @@ public class AnnotationDetector extends Detector implements UastScanner {
     public AnnotationDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     /**
      * Set of fields we've already warned about {@link #FLAG_STYLE} for; these can

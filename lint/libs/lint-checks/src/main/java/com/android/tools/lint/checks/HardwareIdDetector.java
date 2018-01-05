@@ -29,6 +29,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiMethod;
@@ -51,7 +52,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 /**
  * Detect calls to get device Identifiers.
  */
-public class HardwareIdDetector extends Detector implements Detector.UastScanner {
+public class HardwareIdDetector extends Detector implements SourceCodeScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             HardwareIdDetector.class,

@@ -42,6 +42,7 @@ import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.intellij.psi.PsiElement;
@@ -77,7 +78,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
  * Looks for performance issues in Java files, such as memory allocations during
  * drawing operations and using HashMap instead of SparseArray.
  */
-public class JavaPerformanceDetector extends Detector implements Detector.UastScanner {
+public class JavaPerformanceDetector extends Detector implements SourceCodeScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             JavaPerformanceDetector.class,
@@ -152,7 +153,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.UastSc
     public JavaPerformanceDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Override
     public List<Class<? extends UElement>> getApplicableUastTypes() {

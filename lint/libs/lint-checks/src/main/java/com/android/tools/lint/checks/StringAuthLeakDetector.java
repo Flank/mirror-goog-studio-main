@@ -11,6 +11,7 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -21,7 +22,7 @@ import org.jetbrains.uast.ULiteralExpression;
 /**
  * Detector that looks for leaked credentials in strings.
  */
-public class StringAuthLeakDetector extends Detector implements Detector.UastScanner {
+public class StringAuthLeakDetector extends Detector implements SourceCodeScanner {
 
     /** Looks for hidden code */
     public static final Issue AUTH_LEAK = Issue.create(

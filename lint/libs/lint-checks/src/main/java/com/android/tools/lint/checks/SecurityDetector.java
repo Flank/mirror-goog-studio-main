@@ -43,8 +43,6 @@ import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
-import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -52,7 +50,9 @@ import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.android.utils.XmlUtils;
 import com.intellij.psi.PsiMethod;
 import java.util.Arrays;
@@ -70,7 +70,7 @@ import org.w3c.dom.Node;
 /**
  * Checks that exported services request a permission.
  */
-public class SecurityDetector extends Detector implements XmlScanner, UastScanner {
+public class SecurityDetector extends Detector implements XmlScanner, SourceCodeScanner {
 
     private static final Implementation IMPLEMENTATION_MANIFEST = new Implementation(
             SecurityDetector.class,
@@ -192,7 +192,7 @@ public class SecurityDetector extends Detector implements XmlScanner, UastScanne
     public SecurityDetector() {
     }
 
-    // ---- Implements Detector.XmlScanner ----
+    // ---- Implements XmlScanner ----
 
     @Override
     public Collection<String> getApplicableElements() {
@@ -397,7 +397,7 @@ public class SecurityDetector extends Detector implements XmlScanner, UastScanne
         }
     }
 
-    // ---- Implements Detector.JavaScanner ----
+    // ---- Implements SourceCodeScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {

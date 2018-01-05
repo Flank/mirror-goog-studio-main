@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
+import com.android.tools.lint.detector.api.ClassScanner;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
@@ -44,7 +45,7 @@ import org.objectweb.asm.tree.MethodNode;
 /**
  * Looks for usages of Java packages that are not included in Android.
  */
-public class InvalidPackageDetector extends Detector implements Detector.ClassScanner {
+public class InvalidPackageDetector extends Detector implements ClassScanner {
     /** Accessing an invalid package */
     public static final Issue ISSUE = Issue.create(
             "InvalidPackage",

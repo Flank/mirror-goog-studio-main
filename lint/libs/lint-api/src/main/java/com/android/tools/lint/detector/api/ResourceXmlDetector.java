@@ -29,7 +29,7 @@ import com.google.common.annotations.Beta;
  * to adjust your code for the next tools release.</b>
  */
 @Beta
-public abstract class ResourceXmlDetector extends Detector implements Detector.XmlScanner {
+public abstract class ResourceXmlDetector extends Detector implements XmlScanner {
 
     /**
      * Returns whether this detector applies to the given folder type. This

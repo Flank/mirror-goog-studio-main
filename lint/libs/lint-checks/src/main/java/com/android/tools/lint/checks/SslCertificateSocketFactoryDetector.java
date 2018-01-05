@@ -19,12 +19,12 @@ package com.android.tools.lint.checks;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiType;
@@ -33,7 +33,7 @@ import java.util.List;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 
-public class SslCertificateSocketFactoryDetector extends Detector implements UastScanner {
+public class SslCertificateSocketFactoryDetector extends Detector implements SourceCodeScanner {
 
     private static final Implementation IMPLEMENTATION_JAVA = new Implementation(
             SslCertificateSocketFactoryDetector.class,
@@ -76,7 +76,7 @@ public class SslCertificateSocketFactoryDetector extends Detector implements Uas
     private static final String SSL_CERTIFICATE_SOCKET_FACTORY_CLASS =
             "android.net.SSLCertificateSocketFactory";
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {

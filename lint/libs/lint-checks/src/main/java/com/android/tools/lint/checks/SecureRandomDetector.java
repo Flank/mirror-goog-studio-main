@@ -22,12 +22,12 @@ import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.TypeEvaluator;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
@@ -42,7 +42,7 @@ import org.jetbrains.uast.UastUtils;
 /**
  * Checks for hardcoded seeds with random numbers.
  */
-public class SecureRandomDetector extends Detector implements UastScanner {
+public class SecureRandomDetector extends Detector implements SourceCodeScanner {
     /** Unregistered activities and services */
     public static final Issue ISSUE = Issue.create(
             "SecureRandom",
@@ -67,7 +67,7 @@ public class SecureRandomDetector extends Detector implements UastScanner {
     public SecureRandomDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override
