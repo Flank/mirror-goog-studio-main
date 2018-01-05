@@ -24,6 +24,11 @@
     <string-array name="network_array">
         <item>Http Request</item>
         <item>OkHttp Request</item>
+        <item>OkHttp2 Request</item>
+        <item>Http Post JSON Request</item>
+        <item>OkHttp Post JSON Request</item>
+        <item>Http Post FormData Request</item>
+        <item>OkHttp Post FormData Request</item>
     </string-array>
 
     <string-array name="event_array">

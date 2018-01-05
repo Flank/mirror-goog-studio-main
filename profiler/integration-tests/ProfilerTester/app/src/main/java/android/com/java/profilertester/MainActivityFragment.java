@@ -37,7 +37,6 @@ public class MainActivityFragment extends Fragment {
     private Spinner mActionSpinner, mCategorySpinner;
     private ArrayList<ArrayAdapter<CharSequence> > mAdaptorList;
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
