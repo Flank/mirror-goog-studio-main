@@ -305,6 +305,17 @@ public class AndroidBuilder {
         return computeFilteredBootClasspath();
     }
 
+    /**
+     * Returns the list of additional and requested optional library jar files
+     *
+     * @return the list of files from the additional and optional libraries which appear in the
+     *     filtered boot classpath
+     */
+    public List<File> computeAdditionalAndRequestedOptionalLibraries() {
+        return BootClasspathBuilder.computeAdditionalAndRequestedOptionalLibraries(
+                mTargetInfo.getTarget(), mLibraryRequests, issueReporter);
+    }
+
     private List<File> computeFilteredBootClasspath() {
         // computes and caches the filtered boot classpath.
         // Changes here should be applied to #computeFullClasspath()
