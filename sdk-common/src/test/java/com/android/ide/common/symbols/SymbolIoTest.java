@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
+import com.android.resources.ResourceAccessibility;
 import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
 import com.google.common.base.Charsets;
@@ -717,5 +718,70 @@ public class SymbolIoTest {
 
         List<String> outputLines = java.nio.file.Files.readAllLines(output, StandardCharsets.UTF_8);
         assertThat(outputLines).containsExactly("com.example.lib");
+    }
+
+    @Test
+    public void testPartialRFileRead() throws Exception {
+        File partialR = mTemporaryFolder.newFile();
+        java.nio.file.Files.write(
+                partialR.toPath(),
+                ImmutableList.of(
+                        "public int drawable img",
+                        "default int id bar",
+                        "private int string beep",
+                        "default int string foo",
+                        "default int[] styleable s1",
+                        "default int styleable s1_a1",
+                        "default int styleable s1_a2",
+                        "public int transition t"),
+                StandardCharsets.UTF_8);
+
+        SymbolTable table = SymbolIo.readFromPartialRFile(partialR, "foo.bar.com");
+
+        assertThat(table.getTablePackage()).isEqualTo("foo.bar.com");
+        assertThat(table.getSymbols().values())
+                .containsExactly(
+                        Symbol.createSymbol(
+                                ResourceAccessibility.PUBLIC,
+                                ResourceType.DRAWABLE,
+                                "img",
+                                SymbolJavaType.INT,
+                                "0",
+                                Symbol.NO_CHILDREN),
+                        Symbol.createSymbol(
+                                ResourceAccessibility.DEFAULT,
+                                ResourceType.ID,
+                                "bar",
+                                SymbolJavaType.INT,
+                                "0",
+                                Symbol.NO_CHILDREN),
+                        Symbol.createSymbol(
+                                ResourceAccessibility.PRIVATE,
+                                ResourceType.STRING,
+                                "beep",
+                                SymbolJavaType.INT,
+                                "0",
+                                Symbol.NO_CHILDREN),
+                        Symbol.createSymbol(
+                                ResourceAccessibility.DEFAULT,
+                                ResourceType.STRING,
+                                "foo",
+                                SymbolJavaType.INT,
+                                "0",
+                                Symbol.NO_CHILDREN),
+                        Symbol.createSymbol(
+                                ResourceAccessibility.DEFAULT,
+                                ResourceType.STYLEABLE,
+                                "s1",
+                                SymbolJavaType.INT_LIST,
+                                "{ }",
+                                ImmutableList.of("a1", "a2")),
+                        Symbol.createSymbol(
+                                ResourceAccessibility.PUBLIC,
+                                ResourceType.TRANSITION,
+                                "t",
+                                SymbolJavaType.INT,
+                                "0",
+                                Symbol.NO_CHILDREN));
     }
 }

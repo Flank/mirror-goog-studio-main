@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.xml.AndroidManifestParser;
+import com.android.resources.ResourceAccessibility;
 import com.android.resources.ResourceType;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -63,11 +64,11 @@ public final class SymbolIo {
     @NonNull
     public static SymbolTable read(@NonNull File file, @Nullable String tablePackage)
             throws IOException {
-        return read(file, tablePackage, InOrderHandler::new);
+        return read(file, tablePackage, InOrderHandler::new, SymbolIo::readLine);
     }
 
     /**
-     * Loads a symbol table from a symbol file created by aapt
+     * Loads a symbol table from a symbol file created by aapt.
      *
      * @param file the symbol file
      * @param tablePackage the package name associated with the table
@@ -77,18 +78,33 @@ public final class SymbolIo {
     @NonNull
     public static SymbolTable readFromAapt(@NonNull File file, @Nullable String tablePackage)
             throws IOException {
-        return read(file, tablePackage, AaptHandler::new);
+        return read(file, tablePackage, AaptHandler::new, SymbolIo::readLine);
+    }
+
+    /**
+     * Loads a symbol table from a partial symbol file created by aapt during compilation.
+     *
+     * @param file the partial symbol file
+     * @param tablePackage the package name associated with the table
+     * @return the table read
+     * @throws IOException failed to read the table
+     */
+    @NonNull
+    public static SymbolTable readFromPartialRFile(
+            @NonNull File file, @Nullable String tablePackage) throws IOException {
+        return read(file, tablePackage, InOrderHandler::new, SymbolIo::readPartialRLine);
     }
 
     @NonNull
     private static SymbolTable read(
             @NonNull File file,
             @Nullable String tablePackage,
-            @NonNull Function<String, StyleableIndexHandler> handlerFunction)
+            @NonNull Function<String, StyleableIndexHandler> handlerFunction,
+            @NonNull LineReader lineReader)
             throws IOException {
         List<String> lines = Files.readAllLines(file.toPath(), Charsets.UTF_8);
 
-        SymbolTable.Builder table = readLines(lines, 1, file.toPath(), handlerFunction);
+        SymbolTable.Builder table = readLines(lines, 1, file.toPath(), handlerFunction, lineReader);
 
         if (tablePackage != null) {
             table.tablePackage(tablePackage);
@@ -120,7 +136,8 @@ public final class SymbolIo {
             throw new IOException("Internal error: Symbol file with package cannot be empty.");
         }
 
-        SymbolTable.Builder table = readLines(lines, 2, file, InOrderHandler::new);
+        SymbolTable.Builder table =
+                readLines(lines, 2, file, InOrderHandler::new, SymbolIo::readLine);
         table.tablePackage(lines.get(0).trim());
 
         return table.build();
@@ -131,7 +148,8 @@ public final class SymbolIo {
             @NonNull List<String> lines,
             int startLine,
             @NonNull Path file,
-            @NonNull Function<String, StyleableIndexHandler> handlerFunction)
+            @NonNull Function<String, StyleableIndexHandler> handlerFunction,
+            @NonNull LineReader lineReader)
             throws IOException {
         SymbolTable.Builder table = SymbolTable.builder();
 
@@ -147,7 +165,7 @@ public final class SymbolIo {
             for (; lineIndex <= count; lineIndex++) {
                 line = lines.get(lineIndex - 1);
 
-                SymbolData data = readLine(line, null);
+                SymbolData data = lineReader.readLine(line, null);
                 // because there are some misordered file out there we want to make sure
                 // both the resType is Styleable and the javaType is array.
                 // We skip the non arrays that are out of sort
@@ -160,7 +178,9 @@ public final class SymbolIo {
                         SymbolData subData;
                         // read the next line
                         while (lineIndex < count
-                                && (subData = readLine(lines.get(lineIndex), symbolFilter))
+                                && (subData =
+                                                lineReader.readLine(
+                                                        lines.get(lineIndex), symbolFilter))
                                         != null) {
                             // line is value, inc the index
                             lineIndex++;
@@ -171,6 +191,7 @@ public final class SymbolIo {
 
                         table.add(
                                 Symbol.createSymbol(
+                                        data.accessibility,
                                         data.resourceType,
                                         data.name,
                                         data.javaType,
@@ -181,6 +202,7 @@ public final class SymbolIo {
                 } else {
                     table.add(
                             Symbol.createSymbol(
+                                    data.accessibility,
                                     data.resourceType,
                                     data.name,
                                     data.javaType,
@@ -200,6 +222,7 @@ public final class SymbolIo {
     }
 
     private static class SymbolData {
+        @NonNull final ResourceAccessibility accessibility;
         @NonNull final ResourceType resourceType;
         @NonNull final String name;
         @NonNull final SymbolJavaType javaType;
@@ -210,6 +233,20 @@ public final class SymbolIo {
                 @NonNull String name,
                 @NonNull SymbolJavaType javaType,
                 @NonNull String value) {
+            this.accessibility = ResourceAccessibility.DEFAULT;
+            this.resourceType = resourceType;
+            this.name = name;
+            this.javaType = javaType;
+            this.value = value;
+        }
+
+        public SymbolData(
+                @NonNull ResourceAccessibility accessibility,
+                @NonNull ResourceType resourceType,
+                @NonNull String name,
+                @NonNull SymbolJavaType javaType,
+                @NonNull String value) {
+            this.accessibility = accessibility;
             this.resourceType = resourceType;
             this.name = name;
             this.javaType = javaType;
@@ -222,6 +259,11 @@ public final class SymbolIo {
         boolean validate(@NonNull String resourceType, @NonNull String javaType);
     }
 
+    @FunctionalInterface
+    private interface LineReader {
+        SymbolData readLine(@NonNull String line, @Nullable SymbolFilter filter) throws IOException;
+    }
+
     @Nullable
     private static SymbolData readLine(@NonNull String line, @Nullable SymbolFilter filter)
             throws IOException {
@@ -229,27 +271,62 @@ public final class SymbolIo {
         // don't want to split on space as value could contain spaces.
         int pos = line.indexOf(' ');
         String typeName = line.substring(0, pos);
-
         SymbolJavaType type = SymbolJavaType.getEnum(typeName);
         if (type == null) {
             throw new IOException("Invalid symbol type " + typeName);
         }
+
         int pos2 = line.indexOf(' ', pos + 1);
         String className = line.substring(pos + 1, pos2);
-
         if (filter != null && !filter.validate(className, typeName)) {
             return null;
         }
-
         ResourceType resourceType = ResourceType.getEnum(className);
         if (resourceType == null) {
             throw new IOException("Invalid resource type " + className);
         }
+
         int pos3 = line.indexOf(' ', pos2 + 1);
         String name = line.substring(pos2 + 1, pos3);
         String value = line.substring(pos3 + 1);
 
         return new SymbolData(resourceType, name, type, value);
+    }
+
+    @Nullable
+    private static SymbolData readPartialRLine(@NonNull String line, @Nullable SymbolFilter filter)
+            throws IOException {
+        // format is "<access qualifier> <type> <class> <name>"
+        // value is 0 or empty be default
+        int pos = line.indexOf(' ');
+        String accessName = line.substring(0, pos);
+        ResourceAccessibility accessibility = ResourceAccessibility.getEnum(accessName);
+        if (accessibility == null) {
+            throw new IOException("Invalid resource access qualifier " + accessName);
+        }
+
+        int pos2 = line.indexOf(' ', pos + 1);
+        String typeName = line.substring(pos + 1, pos2);
+        SymbolJavaType type = SymbolJavaType.getEnum(typeName);
+        if (type == null) {
+            throw new IOException("Invalid symbol type " + typeName);
+        }
+
+        int pos3 = line.indexOf(' ', pos2 + 1);
+        String className = line.substring(pos2 + 1, pos3);
+        if (filter != null && !filter.validate(className, typeName)) {
+            return null;
+        }
+        ResourceType resourceType = ResourceType.getEnum(className);
+        if (resourceType == null) {
+            throw new IOException("Invalid resource type " + className);
+        }
+
+        String name = line.substring(pos3 + 1);
+
+        String value = type == SymbolJavaType.INT ? "0" : "{ }";
+
+        return new SymbolData(accessibility, resourceType, name, type, value);
     }
 
     /** Handler for the styleable indices read from a R.txt file. */
