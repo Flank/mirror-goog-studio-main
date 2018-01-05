@@ -23,7 +23,6 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
-import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
@@ -34,7 +33,6 @@ import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.meta.Library;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -307,8 +305,7 @@ public class AddonTarget implements IAndroidTarget {
 
     @Override
     public String hashString() {
-        return String.format(AndroidTargetHash.ADD_ON_FORMAT, getVendor(), getName(),
-                mBasePlatform.getVersion().getApiString());
+        return getVendor() + ":" + getName() + ":" + mBasePlatform.getVersion().getApiString();
     }
 
     @Override

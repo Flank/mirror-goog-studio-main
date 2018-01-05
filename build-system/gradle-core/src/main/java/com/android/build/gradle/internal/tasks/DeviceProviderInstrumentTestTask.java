@@ -372,9 +372,12 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
                 task.setDescription("Installs and runs the tests for " + variantName +
                         " on connected devices.");
             } else {
-                task.setDescription("Installs and runs the tests for " + variantName +
-                        " using provider: " + StringHelper.capitalize(deviceProvider.getName()));
-
+                task.setDescription(
+                        StringHelper.appendCapitalized(
+                                "Installs and runs the tests for "
+                                        + variantName
+                                        + " using provider: ",
+                                deviceProvider.getName()));
             }
             task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             task.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());

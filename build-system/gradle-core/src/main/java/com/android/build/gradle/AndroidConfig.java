@@ -46,7 +46,6 @@ import org.gradle.api.Action;
 import org.gradle.api.Incubating;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.tasks.Internal;
 
@@ -55,9 +54,6 @@ import org.gradle.api.tasks.Internal;
  */
 public interface AndroidConfig {
 
-    String CONFIG_DESC = "%s dependencies for '%s' sources.";
-    String CONFIG_DESC_OLD = "%s dependencies for '%s' sources (deprecated: use '%s' instead).";
-    String DEPRECATED_CONFIG_WARNING = "Configuration '%s' in project '%s' is deprecated. Use '%s' instead.";
 
     /**
      * Specifies the version of the <a
@@ -633,38 +629,31 @@ public interface AndroidConfig {
      * interfaces.
      */
     @Nullable
-    public String getTestBuildType();
+    String getTestBuildType();
 
     final class DeprecatedConfigurationAction implements Action<Dependency> {
 
-        @NonNull
-        private final Project project;
-        @NonNull
-        private final Configuration configuration;
-        @NonNull
-        private final String replacement;
+        @NonNull private final String replacement;
+        @NonNull private final String oldName;
+        @NonNull private final Project project;
         private boolean warningPrintedAlready = false;
 
         public DeprecatedConfigurationAction(
-                @NonNull Project project,
-                @NonNull Configuration configuration,
-                @NonNull String replacement) {
-            this.project = project;
-            this.configuration = configuration;
+                @NonNull String replacement, @NonNull String oldName, @NonNull Project project) {
             this.replacement = replacement;
+            this.oldName = oldName;
+            this.project = project;
         }
 
         @Override
-        public void execute(Dependency dependency) {
+        public void execute(@NonNull Dependency dependency) {
             if (!warningPrintedAlready) {
                 warningPrintedAlready = true;
                 project.getLogger()
                         .quiet(
                                 String.format(
-                                        DEPRECATED_CONFIG_WARNING,
-                                        configuration.getName(),
-                                        project.getPath(),
-                                        replacement));
+                                        "Configuration '%s' in project '%s' is deprecated. Use '%s' instead.",
+                                        oldName, project.getPath(), replacement));
             }
         }
     }

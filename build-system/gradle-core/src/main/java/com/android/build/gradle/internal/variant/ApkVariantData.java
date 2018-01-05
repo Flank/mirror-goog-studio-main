@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.profile.Recorder;
+import com.android.utils.StringHelper;
 
 /** Base data about a variant that generates an APK file. */
 public abstract class ApkVariantData extends InstallableVariantData {
@@ -37,12 +38,16 @@ public abstract class ApkVariantData extends InstallableVariantData {
     @Override
     @NonNull
     public String getDescription() {
-        if (getVariantConfiguration().hasFlavors()) {
-            return String.format("%s%s build",
-                    getCapitalizedBuildTypeName(),
-                    getCapitalizedFlavorName());
+        final GradleVariantConfiguration config = getVariantConfiguration();
+
+        if (config.hasFlavors()) {
+            StringBuilder sb = new StringBuilder(50);
+            StringHelper.appendCapitalized(sb, config.getBuildType().getName());
+            StringHelper.appendCapitalized(sb, config.getFlavorName());
+            sb.append(" build");
+            return sb.toString();
         } else {
-            return String.format("%s build", getCapitalizedBuildTypeName());
+            return StringHelper.capitalizeWithSuffix(config.getBuildType().getName(), " build");
         }
     }
 }

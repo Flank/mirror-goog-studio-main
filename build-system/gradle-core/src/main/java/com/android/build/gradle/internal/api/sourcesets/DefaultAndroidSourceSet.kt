@@ -30,16 +30,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_N
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_PROVIDED
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_PUBLISH
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_RUNTIME_ONLY
-import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_ANNOTATION_PROCESSOR
-import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_API
-import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_APK
-import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_COMPILE
-import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_COMPILE_ONLY
-import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_IMPLEMENTATION
-import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_PROVIDED
-import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_PUBLISH
-import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_RUNTIME_ONLY
-import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_WEAR_APP
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_WEAR_APP
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
@@ -158,42 +148,42 @@ class DefaultAndroidSourceSet(
         get() = if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
             CONFIG_NAME_API
         } else {
-            String.format(CONFIG_NAME_S_API, name)
+            "${name}Api"
         }
 
     override val compileOnlyConfigurationName: String
         get() = if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
             CONFIG_NAME_COMPILE_ONLY
         } else {
-            String.format(CONFIG_NAME_S_COMPILE_ONLY, name)
+            "${name}CompileOnly"
         }
 
     override val implementationConfigurationName: String
         get() = if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
             CONFIG_NAME_IMPLEMENTATION
         } else {
-            String.format(CONFIG_NAME_S_IMPLEMENTATION, name)
+            "${name}Implementation"
         }
 
     override val runtimeOnlyConfigurationName: String
         get() = if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
             CONFIG_NAME_RUNTIME_ONLY
         } else {
-            String.format(CONFIG_NAME_S_RUNTIME_ONLY, name)
+            "${name}RuntimeOnly"
         }
 
     override val wearAppConfigurationName: String
         get() = if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
             CONFIG_NAME_WEAR_APP
         } else {
-            String.format(CONFIG_NAME_S_WEAR_APP, name)
+            "${name}WearApp"
         }
 
     override val annotationProcessorConfigurationName: String
         get() = if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
             CONFIG_NAME_ANNOTATION_PROCESSOR
         } else {
-            String.format(CONFIG_NAME_S_ANNOTATION_PROCESSOR, name)
+            "${name}AnnotationProcessor"
         }
 
     override fun manifest(action: Action<AndroidSourceFile>): AndroidSourceSet {
@@ -277,7 +267,7 @@ class DefaultAndroidSourceSet(
         get() = if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
             CONFIG_NAME_COMPILE
         } else {
-            String.format(CONFIG_NAME_S_COMPILE, name)
+            "${name}Compile"
         }
 
     @Suppress("OverridingDeprecatedMember")
@@ -296,14 +286,14 @@ class DefaultAndroidSourceSet(
                 return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
                     CONFIG_NAME_PUBLISH
                 } else {
-                    String.format(CONFIG_NAME_S_PUBLISH, name)
+                    "${name}Publish"
                 }
             }
 
             return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
                 CONFIG_NAME_APK
             } else {
-                String.format(CONFIG_NAME_S_APK, name)
+                "${name}Apk"
             }
         }
 
@@ -321,7 +311,7 @@ class DefaultAndroidSourceSet(
         get() = if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
             CONFIG_NAME_PROVIDED
         } else {
-            String.format(CONFIG_NAME_S_PROVIDED, name)
+            "${name}Provided"
         }
 
     @Suppress("OverridingDeprecatedMember")

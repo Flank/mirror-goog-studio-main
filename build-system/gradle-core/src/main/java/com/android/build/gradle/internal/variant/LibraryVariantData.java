@@ -25,6 +25,7 @@ import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
+import com.android.utils.StringHelper;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Collection;
@@ -64,12 +65,16 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
     @Override
     @NonNull
     public String getDescription() {
-        if (getVariantConfiguration().hasFlavors()) {
-            return String.format("%s build for flavor %s",
-                    getCapitalizedBuildTypeName(),
-                    getCapitalizedFlavorName());
+        final GradleVariantConfiguration config = getVariantConfiguration();
+
+        if (config.hasFlavors()) {
+            StringBuilder sb = new StringBuilder(50);
+            StringHelper.appendCapitalized(sb, config.getBuildType().getName());
+            sb.append(" build for flavor ");
+            StringHelper.appendCapitalized(sb, config.getFlavorName());
+            return sb.toString();
         } else {
-            return String.format("%s build", getCapitalizedBuildTypeName());
+            return StringHelper.capitalizeWithSuffix(config.getBuildType().getName(), " build");
         }
     }
 

@@ -323,11 +323,7 @@ public class OutputFactory {
             }
             String abiFilter = getFilter(filters, OutputFile.FilterType.ABI);
             if (abiFilter != null) {
-                if (sb.length() > 0) {
-                    sb.append(StringHelper.capitalize(abiFilter));
-                } else {
-                    sb.append(abiFilter);
-                }
+                StringHelper.appendCamelCase(sb, abiFilter);
             }
             return sb.toString();
         }

@@ -19,7 +19,6 @@ package com.android.build.gradle.internal;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.DimensionAware;
-import com.android.builder.model.ProductFlavor;
 import com.android.utils.StringHelper;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ArrayListMultimap;
@@ -28,7 +27,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.gradle.api.Named;
 
 /**
@@ -62,7 +60,7 @@ public class ProductFlavorCombo<T extends DimensionAware & Named> {
                     sb.append(flavor.getName());
                     first = false;
                 } else {
-                    sb.append(StringHelper.capitalize(flavor.getName()));
+                    StringHelper.appendCapitalized(sb, flavor.getName());
                 }
             }
             name = sb.toString();

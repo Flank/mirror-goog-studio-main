@@ -3190,7 +3190,7 @@ public abstract class TaskManager {
         final String sourceSetName =
                 StringHelper.capitalize(dimensionData.getSourceSet().getName());
         return taskFactory.create(
-                "assemble" + sourceSetName,
+                StringHelper.appendCapitalized("assemble", sourceSetName),
                 assembleTask -> {
                     assembleTask.setDescription("Assembles all " + sourceSetName + " builds.");
                     assembleTask.setGroup(BasePlugin.BUILD_GROUP);

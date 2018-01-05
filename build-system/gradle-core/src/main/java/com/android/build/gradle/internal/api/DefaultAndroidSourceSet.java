@@ -25,16 +25,6 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_PROVIDED;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_PUBLISH;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_RUNTIME_ONLY;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_ANNOTATION_PROCESSOR;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_API;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_APK;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_COMPILE;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_COMPILE_ONLY;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_IMPLEMENTATION;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_PROVIDED;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_PUBLISH;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_RUNTIME_ONLY;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_WEAR_APP;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_WEAR_APP;
 
 import com.android.SdkConstants;
@@ -80,37 +70,37 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         this.publishPackage = publishPackage;
         displayName = GUtil.toWords(this.name);
 
-        String javaSrcDisplayName = String.format("%s Java source", displayName);
+        String javaSrcDisplayName = displayName + " Java source";
 
         javaSource = new DefaultAndroidSourceDirectorySet(javaSrcDisplayName, project);
         javaSource.getFilter().include("**/*.java");
 
-        String javaResourcesDisplayName = String.format("%s Java resources", displayName);
+        String javaResourcesDisplayName = displayName + " Java resources";
         javaResources = new DefaultAndroidSourceDirectorySet(javaResourcesDisplayName, project);
         javaResources.getFilter().exclude("**/*.java");
 
-        String manifestDisplayName = String.format("%s manifest", displayName);
+        String manifestDisplayName = displayName + " manifest";
         manifest = new DefaultAndroidSourceFile(manifestDisplayName, project);
 
-        String assetsDisplayName = String.format("%s assets", displayName);
+        String assetsDisplayName = displayName + " assets";
         assets = new DefaultAndroidSourceDirectorySet(assetsDisplayName, project);
 
-        String resourcesDisplayName = String.format("%s resources", displayName);
+        String resourcesDisplayName = displayName + " resources";
         res = new DefaultAndroidSourceDirectorySet(resourcesDisplayName, project);
 
-        String aidlDisplayName = String.format("%s aidl", displayName);
+        String aidlDisplayName = displayName + " aidl";
         aidl = new DefaultAndroidSourceDirectorySet(aidlDisplayName, project);
 
-        String renderscriptDisplayName = String.format("%s renderscript", displayName);
+        String renderscriptDisplayName = displayName + " renderscript";
         renderscript = new DefaultAndroidSourceDirectorySet(renderscriptDisplayName, project);
 
-        String jniDisplayName = String.format("%s jni", displayName);
+        String jniDisplayName = displayName + " jni";
         jni = new DefaultAndroidSourceDirectorySet(jniDisplayName, project);
 
-        String libsDisplayName = String.format("%s jniLibs", displayName);
+        String libsDisplayName = displayName + " jniLibs";
         jniLibs = new DefaultAndroidSourceDirectorySet(libsDisplayName, project);
 
-        String shaderDisplayName = String.format("%s shaders", displayName);
+        String shaderDisplayName = displayName + " shaders";
         shaders = new DefaultAndroidSourceDirectorySet(shaderDisplayName, project);
     }
 
@@ -123,7 +113,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     @Override
     @NonNull
     public String toString() {
-        return String.format("source set %s", getDisplayName());
+        return "source set " + getDisplayName();
     }
 
     public String getDisplayName() {
@@ -136,7 +126,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
             return CONFIG_NAME_API;
         } else {
-            return String.format(CONFIG_NAME_S_API, name);
+            return name + "Api";
         }
     }
 
@@ -146,7 +136,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
             return CONFIG_NAME_COMPILE_ONLY;
         } else {
-            return String.format(CONFIG_NAME_S_COMPILE_ONLY, name);
+            return name + "CompileOnly";
         }
     }
 
@@ -156,7 +146,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
             return CONFIG_NAME_IMPLEMENTATION;
         } else {
-            return String.format(CONFIG_NAME_S_IMPLEMENTATION, name);
+            return name + "Implementation";
         }
     }
 
@@ -166,7 +156,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
             return CONFIG_NAME_RUNTIME_ONLY;
         } else {
-            return String.format(CONFIG_NAME_S_RUNTIME_ONLY, name);
+            return name + "RuntimeOnly";
         }
     }
 
@@ -176,7 +166,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
             return CONFIG_NAME_COMPILE;
         } else {
-            return String.format(CONFIG_NAME_S_COMPILE, name);
+            return name + "Compile";
         }
     }
 
@@ -187,14 +177,14 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
             if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
                 return CONFIG_NAME_PUBLISH;
             } else {
-                return String.format(CONFIG_NAME_S_PUBLISH, name);
+                return name + "Publish";
             }
         }
 
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
             return CONFIG_NAME_APK;
         } else {
-            return String.format(CONFIG_NAME_S_APK, name);
+            return name + "Apk";
         }
     }
 
@@ -204,7 +194,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
             return CONFIG_NAME_PROVIDED;
         } else {
-            return String.format(CONFIG_NAME_S_PROVIDED, name);
+            return name + "Provided";
         }
     }
 
@@ -214,7 +204,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
             return CONFIG_NAME_WEAR_APP;
         } else {
-            return String.format(CONFIG_NAME_S_WEAR_APP, name);
+            return name + "WearApp";
         }
     }
 
@@ -224,7 +214,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
             return CONFIG_NAME_ANNOTATION_PROCESSOR;
         } else {
-            return String.format(CONFIG_NAME_S_ANNOTATION_PROCESSOR, name);
+            return name + "AnnotationProcessor";
         }
     }
 

@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.profile.Recorder;
+import com.android.utils.StringHelper;
 
 /** Data about a variant that produces an instantApp bundle. */
 public class InstantAppVariantData extends BaseVariantData {
@@ -38,12 +39,16 @@ public class InstantAppVariantData extends BaseVariantData {
     @NonNull
     @Override
     public String getDescription() {
-        if (getVariantConfiguration().hasFlavors()) {
-            return String.format(
-                    "%s build for flavor %s",
-                    getCapitalizedBuildTypeName(), getCapitalizedFlavorName());
+        final GradleVariantConfiguration config = getVariantConfiguration();
+
+        if (config.hasFlavors()) {
+            StringBuilder sb = new StringBuilder(50);
+            StringHelper.appendCapitalized(sb, config.getBuildType().getName());
+            sb.append(" build for flavor ");
+            StringHelper.appendCapitalized(sb, config.getFlavorName());
+            return sb.toString();
         } else {
-            return String.format("%s build", getCapitalizedBuildTypeName());
+            return StringHelper.capitalizeWithSuffix(config.getBuildType().getName(), " build");
         }
     }
 }

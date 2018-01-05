@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
@@ -238,7 +239,9 @@ public abstract class BaseExtension implements AndroidConfig {
                 new Action<AndroidSourceSet>() {
                     @Override
                     public void execute(@NonNull AndroidSourceSet sourceSet) {
-                        ConfigurationContainer configurations = project.getConfigurations();
+                        final ConfigurationContainer configurations = project.getConfigurations();
+                        final DeprecationReporter deprecationReporter =
+                                extraModelInfo.getDeprecationReporter();
 
                         final String implementationName =
                                 sourceSet.getImplementationConfigurationName();
@@ -254,59 +257,47 @@ public abstract class BaseExtension implements AndroidConfig {
                                 createConfiguration(
                                         configurations,
                                         compileName,
-                                        String.format(
-                                                CONFIG_DESC_OLD,
-                                                "Compile",
-                                                sourceSet.getName(),
-                                                implementationName),
+                                        getDeprecatedConfigDesc(
+                                                "Compile", sourceSet.getName(), implementationName),
                                         "compile".equals(compileName)
                                                 || "testCompile"
                                                         .equals(compileName) /*canBeResolved*/);
                         compile.getAllDependencies()
                                 .whenObjectAdded(
                                         new DeprecatedConfigurationAction(
-                                                project, compile, implementationName));
+                                                implementationName, compileName, project));
 
                         String packageConfigDescription;
                         if (publishPackage) {
                             packageConfigDescription =
-                                    String.format(
-                                            CONFIG_DESC_OLD,
-                                            "Publish",
-                                            sourceSet.getName(),
-                                            runtimeOnlyName);
+                                    getDeprecatedConfigDesc(
+                                            "Publish", sourceSet.getName(), runtimeOnlyName);
                         } else {
                             packageConfigDescription =
-                                    String.format(
-                                            CONFIG_DESC_OLD,
-                                            "Apk",
-                                            sourceSet.getName(),
-                                            runtimeOnlyName);
+                                    getDeprecatedConfigDesc(
+                                            "Apk", sourceSet.getName(), runtimeOnlyName);
                         }
 
+                        final String apkName = sourceSet.getPackageConfigurationName();
                         Configuration apk =
                                 createConfiguration(
-                                        configurations,
-                                        sourceSet.getPackageConfigurationName(),
-                                        packageConfigDescription);
+                                        configurations, apkName, packageConfigDescription);
                         apk.getAllDependencies()
                                 .whenObjectAdded(
                                         new DeprecatedConfigurationAction(
-                                                project, apk, runtimeOnlyName));
+                                                runtimeOnlyName, apkName, project));
 
+                        final String providedName = sourceSet.getProvidedConfigurationName();
                         Configuration provided =
                                 createConfiguration(
                                         configurations,
-                                        sourceSet.getProvidedConfigurationName(),
-                                        String.format(
-                                                CONFIG_DESC_OLD,
-                                                "Provided",
-                                                sourceSet.getName(),
-                                                compileOnlyName));
+                                        providedName,
+                                        getDeprecatedConfigDesc(
+                                                "Provided", sourceSet.getName(), compileOnlyName));
                         provided.getAllDependencies()
                                 .whenObjectAdded(
                                         new DeprecatedConfigurationAction(
-                                                project, provided, compileOnlyName));
+                                                compileOnlyName, providedName, project));
 
                         // then the new configurations.
                         String apiName = sourceSet.getApiConfigurationName();
@@ -314,33 +305,28 @@ public abstract class BaseExtension implements AndroidConfig {
                                 createConfiguration(
                                         configurations,
                                         apiName,
-                                        String.format(CONFIG_DESC, "API", sourceSet.getName()));
+                                        getConfigDesc("API", sourceSet.getName()));
                         api.extendsFrom(compile);
 
                         Configuration implementation =
                                 createConfiguration(
                                         configurations,
                                         implementationName,
-                                        String.format(
-                                                CONFIG_DESC,
-                                                "Implementation only",
-                                                sourceSet.getName()));
+                                        getConfigDesc("Implementation only", sourceSet.getName()));
                         implementation.extendsFrom(api);
 
                         Configuration runtimeOnly =
                                 createConfiguration(
                                         configurations,
                                         runtimeOnlyName,
-                                        String.format(
-                                                CONFIG_DESC, "Runtime only", sourceSet.getName()));
+                                        getConfigDesc("Runtime only", sourceSet.getName()));
                         runtimeOnly.extendsFrom(apk);
 
                         Configuration compileOnly =
                                 createConfiguration(
                                         configurations,
                                         compileOnlyName,
-                                        String.format(
-                                                CONFIG_DESC, "Compile only", sourceSet.getName()));
+                                        getConfigDesc("Compile only", sourceSet.getName()));
                         compileOnly.extendsFrom(provided);
 
                         // then the secondary configurations.
@@ -359,7 +345,7 @@ public abstract class BaseExtension implements AndroidConfig {
                                         + sourceSet.getName()
                                         + "'.");
 
-                        sourceSet.setRoot(String.format("src/%s", sourceSet.getName()));
+                        sourceSet.setRoot("src/" + sourceSet.getName());
                     }
                 });
 
@@ -374,6 +360,20 @@ public abstract class BaseExtension implements AndroidConfig {
         sourceSetsContainer.create(defaultConfig.getName());
         buildToolsRevision = AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION;
         setDefaultConfigValues();
+    }
+
+    private static String getConfigDesc(String name, String sourceSetName) {
+        return name + " dependencies for '" + sourceSetName + "' sources.";
+    }
+
+    private static String getDeprecatedConfigDesc(
+            String name, String sourceSetName, String replacement) {
+        return name
+                + " dependencies for '"
+                + sourceSetName
+                + "' sources (deprecated: use '"
+                + replacement
+                + "' instead).";
     }
 
     private void setDefaultConfigValues() {

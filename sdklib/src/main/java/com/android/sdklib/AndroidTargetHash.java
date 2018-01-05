@@ -22,7 +22,6 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.targets.AndroidTargetManager;
 import com.google.common.base.Splitter;
-
 import java.util.List;
 
 
@@ -38,21 +37,6 @@ public abstract class AndroidTargetHash {
     public static final String PLATFORM_HASH_PREFIX = "android-";
 
     /**
-     * String to compute hash for add-on targets. <br>
-     * Format is {@code vendor:name:apiVersion}. <br>
-     *
-     * <em>Important</em>: the vendor and name compontents are the display strings, not the
-     * newer id strings.
-     */
-    public static final String ADD_ON_FORMAT = "%s:%s:%s"; //$NON-NLS-1$
-
-    /**
-     * String used to get a hash to the platform target.
-     * This format is compatible with the PlatformPackage.installId().
-     */
-    static final String PLATFORM_HASH = PLATFORM_HASH_PREFIX + "%s";
-
-    /**
      * Returns the hash string for a given platform version.
      *
      * @param version A non-null platform version.
@@ -60,7 +44,7 @@ public abstract class AndroidTargetHash {
      */
     @NonNull
     public static String getPlatformHashString(@NonNull AndroidVersion version) {
-        return String.format(AndroidTargetHash.PLATFORM_HASH, version.getApiString());
+        return PLATFORM_HASH_PREFIX + version.getApiString();
     }
 
     /**
@@ -152,10 +136,7 @@ public abstract class AndroidTargetHash {
             @NonNull String addonVendorDisplay,
             @NonNull String addonNameDisplay,
             @NonNull AndroidVersion version) {
-        return String.format(ADD_ON_FORMAT,
-                addonVendorDisplay,
-                addonNameDisplay,
-                version.getApiString());
+        return addonVendorDisplay + ":" + addonNameDisplay + ":" + version.getApiString();
     }
 
     /**
