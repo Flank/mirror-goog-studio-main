@@ -90,6 +90,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import com.intellij.ide.util.JavaAnonymousClassesHelper;
+import com.intellij.lang.Language;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.CommonClassNames;
 import com.intellij.psi.PsiAnonymousClass;
@@ -1976,5 +1977,10 @@ public class LintUtils {
             return methodIdentifier.getName();
         }
         return call.getMethodName();
+    }
+
+    /** Returns true if the given language is Kotlin */
+    public static boolean isKotlin(@Nullable Language language) {
+        return language != null && language.getID().equals("kotlin");
     }
 }

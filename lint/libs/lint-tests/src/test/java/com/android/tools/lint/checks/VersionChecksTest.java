@@ -2221,6 +2221,60 @@ public class VersionChecksTest extends AbstractCheckTest {
                         "1 errors, 0 warnings");
     }
 
+    public void testKotlinEarlyExit1() {
+        // Regression test for issue 71560541: Wrong API condition
+        // Root cause: https://youtrack.jetbrains.com/issue/IDEA-184544
+        lint().files(
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.app.NotificationChannel\n" +
+                        "import android.app.NotificationManager\n" +
+                        "import android.content.Context\n" +
+                        "import android.os.Build\n" +
+                        "\n" +
+                        "fun foo1(context: Context) {\n" +
+                        "    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager\n" +
+                        "    if (Build.VERSION.SDK_INT < 26 || notificationManager == null) {\n" +
+                        "        return\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    val channel = NotificationChannel(\"id\", \"Test\", NotificationManager.IMPORTANCE_DEFAULT)\n" +
+                        "    channel.description = \"test\"\n" +
+                        "}\n" +
+                        "\n"),
+                mSupportJar)
+                .run()
+                .expectClean();
+    }
+
+    public void testKotlinEarlyExit2() {
+        // Regression test for issue 71560541: Wrong API condition, part 2
+        lint().files(
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.app.NotificationChannel\n" +
+                        "import android.app.NotificationManager\n" +
+                        "import android.content.Context\n" +
+                        "import android.os.Build\n" +
+                        "\n" +
+                        "fun foo2(context: Context) {\n" +
+                        "    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager\n" +
+                        "    \n" +
+                        "    val channel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {\n" +
+                        "        NotificationChannel(\"id\", \"Test\", NotificationManager.IMPORTANCE_DEFAULT)\n" +
+                        "    } else {\n" +
+                        "        return\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    channel.description = \"test\"\n" +
+                        "}"),
+                mSupportJar)
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected Detector getDetector() {
         return new ApiDetector();
