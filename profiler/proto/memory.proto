@@ -74,9 +74,8 @@ service MemoryService {
   rpc GetLegacyAllocationDump(DumpDataRequest) returns (DumpDataResponse) {}
 
   // O+ studio-side only: Mirrors GetLegacyAllocationEvents but for O+ data.
-  // This returns a snapshot of all objects that have been allocated and free_data
-  // within the request's start and end times. Note that if an object is allocated
-  // and collected within the time range, it would not be included in the result.
+  // This returns all allocation deallocation events that happened
+  // within the request's start and end times.
   rpc GetAllocations(AllocationSnapshotRequest)
       returns (BatchAllocationSample) {}
 
@@ -526,6 +525,10 @@ message JNIGlobalRefsEventsRequest {
   Session session = 1;
   int64 start_time = 2;  // inclusive;
   int64 end_time = 3; // exclusive;
+
+  // Ignore |start_time| - include only objects that are still
+  // alive at point in time specified by |end_time|
+  bool live_objects_only = 4;
 }
 
 message BatchJNIGlobalRefEvent {
