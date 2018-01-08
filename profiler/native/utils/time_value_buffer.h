@@ -38,8 +38,8 @@ struct TimeValue {
 template <typename T>
 class TimeValueBuffer {
  public:
-  explicit TimeValueBuffer(size_t capacity, int pid = -1)
-      : pid_(pid), values_(capacity) {}
+  explicit TimeValueBuffer(size_t capacity, int64_t id = -1)
+      : id_(id), values_(capacity) {}
 
   // Add sample value collected at a given time point.
   void Add(T value, const int64_t sample_time) {
@@ -86,14 +86,14 @@ class TimeValueBuffer {
     return values_.Get(index);
   }
 
-  // Returns app id that the profiler data buffer is for.
-  int pid() const { return pid_; }
+  // Returns the id the profiler data buffer is associated with.
+  int64_t id() const { return id_; }
 
   // Returns the maximum number of samples it can hold.
   size_t capacity() const { return values_.capacity(); }
 
  private:
-  const int pid_;
+  const int64_t id_;
 
   mutable std::mutex values_mutex_;
   CircularBuffer<TimeValue<T>> values_;

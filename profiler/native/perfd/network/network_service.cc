@@ -38,7 +38,7 @@ grpc::Status NetworkServiceImpl::GetData(
   int pid = request->process_id();
   NetworkProfilerBuffer *app_buffer = nullptr;
   for (const auto &buffer : app_buffers_) {
-    if (pid == buffer->pid()) {
+    if (pid == buffer->id()) {
       app_buffer = buffer.get();
       break;
     }
@@ -81,7 +81,7 @@ grpc::Status NetworkServiceImpl::StopMonitoringApp(
   int pid = request->process_id();
   collector_.Stop(pid);
   for (auto it = app_buffers_.begin(); it != app_buffers_.end(); it++) {
-    if (pid == (*it)->pid()) {
+    if (pid == (*it)->id()) {
       it->reset();
       app_buffers_.erase(it);
       break;

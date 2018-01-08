@@ -77,11 +77,10 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
   auto samples = cache.Retrieve(kMockAppPid, INT64_MIN, INT64_MAX);
   ASSERT_EQ(1, samples.size());
   auto sample = samples[0];
-  EXPECT_EQ(kMockAppPid, sample.basic_info().process_id());
-  EXPECT_LT(0, sample.basic_info().end_timestamp());
-  EXPECT_EQ(kAppCpuTime, sample.cpu_usage().app_cpu_time_in_millisec());
-  EXPECT_EQ(kSystemCpuTime, sample.cpu_usage().system_cpu_time_in_millisec());
-  EXPECT_EQ(kElapsedTime, sample.cpu_usage().elapsed_time_in_millisec());
+  EXPECT_LT(0, sample.end_timestamp());
+  EXPECT_EQ(kAppCpuTime, sample.app_cpu_time_in_millisec());
+  EXPECT_EQ(kSystemCpuTime, sample.system_cpu_time_in_millisec());
+  EXPECT_EQ(kElapsedTime, sample.elapsed_time_in_millisec());
 }
 
 TEST(CpuUsageSamplerTest, SampleTwoApps) {
@@ -106,21 +105,13 @@ TEST(CpuUsageSamplerTest, SampleTwoApps) {
   auto samples = cache.Retrieve(kMockAppPid_1, INT64_MIN, INT64_MAX);
   ASSERT_EQ(1, samples.size());
   auto sample = samples[0];
-  EXPECT_EQ(kMockAppPid_1, sample.basic_info().process_id());
-  EXPECT_EQ(kAppCpuTime_1, sample.cpu_usage().app_cpu_time_in_millisec());
+  EXPECT_EQ(kAppCpuTime_1, sample.app_cpu_time_in_millisec());
 
   // Test data for process 2 is sampled and cached.
   samples = cache.Retrieve(kMockAppPid_2, INT64_MIN, INT64_MAX);
   ASSERT_EQ(1, samples.size());
   sample = samples[0];
-  EXPECT_EQ(kMockAppPid_2, sample.basic_info().process_id());
-  EXPECT_EQ(kAppCpuTime_2, sample.cpu_usage().app_cpu_time_in_millisec());
-
-  // TODO: Enable the following test after cache supports proto::AppId::ANY.
-  // Test the ANY_APP feature of the cache.
-  // samples =
-  //     cache.Retrieve(proto::CpuDataRequest::ANY_APP, INT64_MIN, INT64_MAX);
-  // ASSERT_EQ(2, samples.size());
+  EXPECT_EQ(kAppCpuTime_2, sample.app_cpu_time_in_millisec());
 }
 
 }  // namespace profiler
