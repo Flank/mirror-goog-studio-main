@@ -25,7 +25,6 @@ import static com.android.build.gradle.internal.ide.ArtifactDependencyGraph.Depe
 import static com.android.build.gradle.internal.ide.ArtifactDependencyGraph.DependencyType.JAVA;
 import static com.android.build.gradle.internal.ide.ModelBuilder.EMPTY_DEPENDENCIES_IMPL;
 import static com.android.build.gradle.internal.ide.ModelBuilder.EMPTY_DEPENDENCY_GRAPH;
-import static com.android.build.gradle.internal.ide.ModelBuilder.ROOT_BUILD_NAME;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -653,10 +652,7 @@ public class ArtifactDependencyGraph {
     private static String getBuildId(
             @NonNull ProjectComponentIdentifier projectId,
             @NonNull ImmutableMap<String, String> buildMapping) {
-        return buildMapping.get(
-                projectId.getBuild().isCurrentBuild()
-                        ? ROOT_BUILD_NAME
-                        : projectId.getBuild().getName());
+        return buildMapping.get(projectId.getBuild().getName());
     }
 
     @NonNull

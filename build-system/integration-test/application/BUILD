@@ -35,6 +35,7 @@ TEST_DEPS = [
     "//tools/base/third_party:org.ow2.asm_asm-tree",
     "//tools/base/third_party:org.smali_dexlib2",
     "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
 ]
 
 TEST_DATA = [
@@ -451,6 +452,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre7/1.2.10:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre8/1.2.10:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.2.10:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-test/1.2.0:jar",
         "//prebuilts/tools/common/m2/repository/org/json/json/20141113:jar",
         "//prebuilts/tools/common/m2/repository/org/jsoup/jsoup/1.7.3:jar",
         "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/1.10.19:jar",

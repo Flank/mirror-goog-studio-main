@@ -17,13 +17,12 @@
 package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.model.Dependencies;
 import java.util.Objects;
 
 public class IdeProjectIdentifierImpl extends IdeModel implements IdeProjectIdentifier {
 
-    @Nullable private final String buildId;
+    @NonNull private final String buildId;
     @NonNull private final String projectPath;
 
     public IdeProjectIdentifierImpl(
@@ -34,7 +33,7 @@ public class IdeProjectIdentifierImpl extends IdeModel implements IdeProjectIden
         this.projectPath = projectIdentifier.getProjectPath();
     }
 
-    @Nullable
+    @NonNull
     @Override
     public String getBuildId() {
         return buildId;

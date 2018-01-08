@@ -46,9 +46,7 @@ fun AndroidProject.getVariantByName(name: String): Variant {
     return searchForExistingItem(variants, name, Variant::getName, "Variant")
 }
 
-fun AndroidProject.getDebugVariant(): Variant {
-    return getVariantByName("debug")
-}
+fun AndroidProject.getDebugVariant() = getVariantByName("debug")
 
 fun AndroidProject.getSigningConfig(
         name: String): SigningConfig {

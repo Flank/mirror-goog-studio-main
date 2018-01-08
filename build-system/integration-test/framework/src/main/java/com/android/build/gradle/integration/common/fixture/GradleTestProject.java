@@ -223,6 +223,7 @@ public final class GradleTestProject implements TestRule {
     private final boolean withDeviceProvider;
     private final boolean withSdk;
     private final boolean withAndroidGradlePlugin;
+    @NonNull private final List<String> withIncludedBuilds;
     @Nullable private File testDir;
     private File sourceDir;
     private File buildFile;
@@ -266,10 +267,12 @@ public final class GradleTestProject implements TestRule {
             boolean withDeviceProvider,
             boolean withSdk,
             boolean withAndroidGradlePlugin,
+            @NonNull List<String> withIncludedBuilds,
             @Nullable File testDir) {
         this.withDeviceProvider = withDeviceProvider;
         this.withSdk = withSdk;
         this.withAndroidGradlePlugin = withAndroidGradlePlugin;
+        this.withIncludedBuilds = withIncludedBuilds;
         this.buildFile = sourceDir = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
         this.targetGradleVersion = targetGradleVersion;
@@ -315,6 +318,7 @@ public final class GradleTestProject implements TestRule {
         this.withSdk = rootProject.withSdk;
         this.withAndroidGradlePlugin = rootProject.withAndroidGradlePlugin;
         this.withCmakeDirInLocalProp = rootProject.withCmakeDirInLocalProp;
+        this.withIncludedBuilds = ImmutableList.of();
     }
 
     private static Path getGradleUserHome(File buildDir) {
@@ -899,6 +903,9 @@ public final class GradleTestProject implements TestRule {
             };
             tmpApkFiles.add(apk);
         } else {
+            // the IDE erroneously indicate to use try-with-resources because APK is a autocloseable
+            // but nothing is opened here.
+            //noinspection resource
             apk = new Apk(apkFile);
         }
         return apk;
@@ -1333,11 +1340,21 @@ public final class GradleTestProject implements TestRule {
     }
 
     private File createLocalProp() throws IOException, StreamException {
-        checkNotNull(testDir, "project");
+        checkNotNull(testDir, "project location is null");
 
+        File mainLocalProp = createLocalProp(testDir);
+
+        for (String includedBuild : withIncludedBuilds) {
+            createLocalProp(new File(testDir, includedBuild));
+        }
+
+        return mainLocalProp;
+    }
+
+    private File createLocalProp(File destDir) throws IOException, StreamException {
         ProjectPropertiesWorkingCopy localProp =
                 ProjectProperties.create(
-                        testDir.getAbsolutePath(), ProjectProperties.PropertyType.LOCAL);
+                        destDir.getAbsolutePath(), ProjectProperties.PropertyType.LOCAL);
 
         if (withSdk) {
             localProp.setProperty(

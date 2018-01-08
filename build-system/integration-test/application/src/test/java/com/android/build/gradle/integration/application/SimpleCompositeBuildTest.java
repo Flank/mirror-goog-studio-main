@@ -28,12 +28,12 @@ import java.util.List;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-public class CompositeBuild {
+public class SimpleCompositeBuildTest {
 
     @ClassRule
     public static GradleTestProject project =
             GradleTestProject.builder()
-                    .fromTestProject("compositeBuild")
+                    .fromTestProject("simpleCompositeBuild")
                     .withoutNdk()
                     .withDependencyChecker(false)
                     .create();
