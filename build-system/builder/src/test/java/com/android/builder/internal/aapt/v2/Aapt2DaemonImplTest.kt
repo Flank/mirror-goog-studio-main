@@ -18,6 +18,7 @@ package com.android.builder.internal.aapt.v2
 
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
+import com.android.builder.internal.aapt.AaptTestUtils
 import com.android.ide.common.res2.CompileResourceRequest
 import com.android.repository.testframework.FakeProgressIndicator
 import com.android.sdklib.BuildToolInfo
@@ -32,6 +33,7 @@ import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.rules.TestName
 import java.io.File
 import java.io.IOException
 import java.nio.charset.StandardCharsets
@@ -48,6 +50,10 @@ class Aapt2DaemonImplTest {
     @JvmField
     val temporaryFolder = TemporaryFolder()
 
+    @Rule
+    @JvmField
+    val testName = TestName()
+
     private val logger = MockLog()
 
     /** keep track of the daemon to ensure it is closed*/
@@ -56,8 +62,7 @@ class Aapt2DaemonImplTest {
     /** No errors or warnings output when the daemon is not used at all. */
     @Test
     fun noOperationsCheck() {
-
-        createDaemon(0).shutDown()
+        createDaemon().shutDown()
     }
 
     @Test
@@ -71,7 +76,7 @@ class Aapt2DaemonImplTest {
                         inputFile = valuesFile("styles", "<resources></resources>"),
                         outputDirectory = outDir)
         )
-        val daemon = createDaemon(1)
+        val daemon = createDaemon()
         requests.forEach { daemon.compile(it, logger) }
         assertThat(outDir.list()).asList()
                 .containsExactlyElementsIn(
@@ -82,7 +87,7 @@ class Aapt2DaemonImplTest {
     fun testCompileInvalidFile() {
         val compiledDir = temporaryFolder.newFolder()
         val inputFile = resourceFile("values", "foo.txt", "content")
-        val daemon = createDaemon(1)
+        val daemon = createDaemon()
         val exception = assertFailsWith(Aapt2Exception::class) {
             daemon.compile(
                     CompileResourceRequest(
@@ -96,7 +101,7 @@ class Aapt2DaemonImplTest {
 
     @Test
     fun testLink() {
-        val daemon = createDaemon(2)
+        val daemon = createDaemon()
 
         val compiledDir = temporaryFolder.newFolder()
         daemon.compile(
@@ -133,7 +138,7 @@ class Aapt2DaemonImplTest {
 
     @Test
     fun testLinkInvalidManifest() {
-        val daemon = createDaemon(3)
+        val daemon = createDaemon()
 
         val compiledDir = temporaryFolder.newFolder()
         daemon.compile(
@@ -185,7 +190,7 @@ class Aapt2DaemonImplTest {
     @Test
     fun testCompileTimeout() {
         val compiledDir = temporaryFolder.newFolder()
-        val daemon = createDaemon(5, Aapt2DaemonTimeouts(compile = 0, compileUnit = TimeUnit.SECONDS))
+        val daemon = createDaemon(Aapt2DaemonTimeouts(compile = 0, compileUnit = TimeUnit.SECONDS))
         val exception = assertFailsWith(Aapt2InternalException::class) {
             daemon.compile(
                     CompileResourceRequest(
@@ -220,12 +225,11 @@ class Aapt2DaemonImplTest {
                         additionalParameters = null))
                 .build()
 
-        val daemon = createDaemon(1, Aapt2DaemonTimeouts(link = 0, linkUnit = TimeUnit.SECONDS))
+        val daemon = createDaemon(Aapt2DaemonTimeouts(link = 0, linkUnit = TimeUnit.SECONDS))
         val exception = assertFailsWith(Aapt2InternalException::class) {
             daemon.link(request)
         }
-        assertThat(exception.message).contains("Link")
-        assertThat(exception.message).contains("timed out, attempting to stop daemon")
+        assertThat(exception.message).contains("Link timed out, attempting to stop daemon")
         // The daemon should be shut down.
         assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.SHUTDOWN)
         // The compile might succeed, ignore the output from it.
@@ -235,10 +239,8 @@ class Aapt2DaemonImplTest {
     @Test
     fun testInvalidAaptBinary() {
         val compiledDir = temporaryFolder.newFolder()
-        val daemon = Aapt2DaemonImpl(
-                displayId = 0,
-                aaptExecutable = temporaryFolder.newFolder("invalidBuildTools").toPath().resolve("aapt2"),
-                logger = logger,
+        val daemon = createDaemon(
+                executable = temporaryFolder.newFolder("invalidBuildTools").toPath().resolve("aapt2"),
                 daemonTimeouts = Aapt2DaemonTimeouts())
         val exception = assertFailsWith(Aapt2InternalException::class) {
             daemon.compile(
@@ -247,8 +249,77 @@ class Aapt2DaemonImplTest {
                             outputDirectory = compiledDir),
                     logger)
         }
-        assertThat(exception.message).contains("failed to start process")
+        assertThat(exception.message).contains("Daemon startup failed")
         assertThat(exception.cause).isInstanceOf(IOException::class.java)
+    }
+
+    @Test
+    fun pngWithLongPathCrunchingTest() {
+        val daemon = createDaemon()
+
+        val request = CompileResourceRequest(
+                AaptTestUtils.getTestPngWithLongFileName(temporaryFolder),
+                AaptTestUtils.getOutputDir(temporaryFolder),
+                "test")
+        daemon.compile(request, logger)
+        val compiled =
+                request.outputDirectory.toPath().resolve(
+                        Aapt2RenamingConventions.compilationRename(request.inputFile))
+        assertThat(compiled).exists()
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun crunchFlagIsRespected() {
+        val daemon = createDaemon()
+        val png = AaptTestUtils.getTestPng(temporaryFolder)
+        val outDir = AaptTestUtils.getOutputDir(temporaryFolder)
+        daemon.compile(
+                CompileResourceRequest(
+                        inputFile = png,
+                        outputDirectory = outDir,
+                        isPseudoLocalize = false,
+                        isPngCrunching = true),
+                logger)
+        val outFile = outDir.toPath().resolve(Aapt2RenamingConventions.compilationRename(png))
+        val withCrunchEnabledSize = Files.size(outFile)
+        daemon.compile(
+                CompileResourceRequest(
+                        inputFile = png,
+                        outputDirectory = outDir,
+                        isPseudoLocalize = false,
+                        isPngCrunching = false),
+                logger)
+
+        val withCrunchDisabledSize = Files.size(outFile)
+        assertThat(withCrunchEnabledSize).isLessThan(withCrunchDisabledSize)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun ninePatchPngsAlwaysProcessedEvenWhenCrunchingDisabled() {
+        val daemon = createDaemon()
+        val ninePatch = AaptTestUtils.getTest9Patch(temporaryFolder)
+        val outDir = AaptTestUtils.getOutputDir(temporaryFolder)
+
+        daemon.compile(
+                CompileResourceRequest(
+                        inputFile = ninePatch,
+                        outputDirectory = outDir,
+                        isPseudoLocalize = false,
+                        isPngCrunching = true),
+                logger)
+        val outFile = outDir.toPath().resolve(Aapt2RenamingConventions.compilationRename(ninePatch))
+        val withCrunchEnabled = Files.readAllBytes(outFile)
+        daemon.compile(
+                CompileResourceRequest(
+                        inputFile = ninePatch,
+                        outputDirectory = outDir,
+                        isPseudoLocalize = false,
+                        isPngCrunching = false),
+                logger)
+        val withCrunchDisabled = Files.readAllBytes(outFile)
+        assertThat(withCrunchDisabled).isEqualTo(withCrunchEnabled)
     }
 
     @After
@@ -269,11 +340,12 @@ class Aapt2DaemonImplTest {
     private fun isStartOrShutdownLog(line: String) =
             line.startsWith("P") && (line.contains("starting") || line.contains("shutdown"))
 
-    private fun createDaemon(displayId: Int,
-            daemonTimeouts: Aapt2DaemonTimeouts = Aapt2DaemonTimeouts()): Aapt2Daemon {
+    private fun createDaemon(
+            daemonTimeouts: Aapt2DaemonTimeouts = Aapt2DaemonTimeouts(),
+            executable: Path = aaptExecutable): Aapt2Daemon {
         val daemon = Aapt2DaemonImpl(
-                displayId = displayId,
-                aaptExecutable = aaptExecutable,
+                displayId = "'Aapt2DaemonImplTest.${testName.methodName}'",
+                aaptExecutable = executable,
                 logger = logger,
                 daemonTimeouts = daemonTimeouts)
         this.daemon = daemon

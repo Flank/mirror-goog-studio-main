@@ -21,7 +21,6 @@ import com.android.ide.common.res2.CompileResourceRequest
 import com.android.utils.GrabProcessOutput
 import com.android.utils.ILogger
 import com.google.common.util.concurrent.SettableFuture
-import java.io.IOException
 import java.io.Writer
 import java.nio.file.Path
 import java.util.concurrent.TimeoutException
@@ -34,16 +33,16 @@ import java.util.concurrent.TimeoutException
  * See [Aapt2Daemon] docs for more information.
  */
 class Aapt2DaemonImpl(
-        displayId: Int,
+        displayId: String,
         aaptExecutable: Path,
         private val daemonTimeouts: Aapt2DaemonTimeouts,
         logger: ILogger) :
         Aapt2Daemon(
-                displayName = "AAPT2 ${aaptExecutable.parent.fileName} Daemon #$displayId",
+                displayName = "AAPT2 ${aaptExecutable.parent.fileName} Daemon $displayId",
                 logger = logger) {
 
     private val aaptPath = aaptExecutable.toFile().absolutePath
-    private val noOutputExpected = NoOutputExpected(displayId, logger)
+    private val noOutputExpected = NoOutputExpected(displayName, logger)
 
     private lateinit var process: Process
     private lateinit var writer: Writer
@@ -60,21 +59,30 @@ class Aapt2DaemonImpl(
     override fun startProcess() {
         val waitForReady = WaitForReadyOnStdOut(displayName, logger)
         processOutput.delegate = waitForReady
-        process = try {
-            ProcessBuilder(aaptPath, Aapt2DaemonUtil.DAEMON_MODE_COMMAND).start()
-        } catch (e: IOException) {
-            throw Aapt2InternalException("$displayName: failed to start process", e)
+        process = ProcessBuilder(aaptPath, Aapt2DaemonUtil.DAEMON_MODE_COMMAND).start()
+        try {
+            GrabProcessOutput.grabProcessOutput(
+                    process,
+                    GrabProcessOutput.Wait.ASYNC,
+                    processOutput)
+            writer = process.outputStream.bufferedWriter(Charsets.UTF_8)
+        } catch (e: Exception) {
+            try {
+                throw e
+            } finally {
+                process.destroyForcibly()
+            }
         }
-        GrabProcessOutput.grabProcessOutput(process, GrabProcessOutput.Wait.ASYNC, processOutput)
-        writer = process.outputStream.bufferedWriter(Charsets.UTF_8)
 
         try {
             waitForReady.future.get(daemonTimeouts.start, daemonTimeouts.startUnit)
         } catch (e: Exception) {
-            shutDown()
-            throw e
+            try {
+                throw e
+            } finally {
+                shutDown()
+            }
         }
-
         //Process is ready
         processOutput.delegate = noOutputExpected
     }
@@ -142,7 +150,7 @@ class Aapt2DaemonImpl(
         }
     }
 
-    class NoOutputExpected(private val displayName: Int,
+    class NoOutputExpected(private val displayName: String,
             val logger: ILogger) : GrabProcessOutput.IProcessOutput {
         override fun out(line: String?) {
             line?.let {

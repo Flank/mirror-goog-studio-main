@@ -49,12 +49,14 @@ abstract class Aapt2Daemon(
         when (state) {
             State.NEW -> {
                 logger.info("%1\$s: starting", displayName)
-                state = State.RUNNING
                 try {
                     startProcess()
                 } catch (e: TimeoutException) {
-                    handleTimeout("Daemon startup", e)
+                    handleError("Daemon startup timed out", e)
+                } catch (e: Exception) {
+                    handleError("Daemon startup failed", e)
                 }
+                state = State.RUNNING
             }
             State.RUNNING -> {
                 // Already ready
@@ -67,6 +69,9 @@ abstract class Aapt2Daemon(
      * Implementors must start the underlying AAPT2 daemon process.
      *
      * This will be called before any calls to [doCompile] or [doLink].
+     *
+     * If the daemon process could not be started, this method throws, having attempted to free any
+     * used resources (e.g. threads, processes).
      */
     @Throws(TimeoutException::class)
     protected abstract fun startProcess()
@@ -76,7 +81,7 @@ abstract class Aapt2Daemon(
         try {
             doCompile(request, logger)
         } catch (e: TimeoutException) {
-            handleTimeout("Compile '${request.inputFile}'", e)
+            handleError("Compile '${request.inputFile}' timed out", e)
         }
     }
 
@@ -93,7 +98,7 @@ abstract class Aapt2Daemon(
         try {
             doLink(request)
         } catch (e: TimeoutException) {
-            handleTimeout("Link", e)
+            handleError("Link timed out", e)
         }
     }
 
@@ -129,17 +134,11 @@ abstract class Aapt2Daemon(
     @Throws(TimeoutException::class)
     protected abstract fun stopProcess()
 
-    /**
-     * Timeouts are not generally expected.
-     *
-     * In the case of a timeout, shut down the whole process, as something has gone badly wrong.
-     *
-     * They could occur on loaded machines or be caused by anti-virus software.
-     */
-    private fun handleTimeout(action: String, exception: TimeoutException) {
+    private fun handleError(action: String, exception: Exception) {
         try {
             throw Aapt2InternalException(
-                    "$displayName: $action timed out, attempting to stop daemon.\n" +
+                    "$displayName: $action" +
+                            if (state == State.RUNNING) ", attempting to stop daemon.\n" else "\n" +
                             "This should not happen under normal circumstances, " +
                             "please file an issue if it does.",
                     exception)
