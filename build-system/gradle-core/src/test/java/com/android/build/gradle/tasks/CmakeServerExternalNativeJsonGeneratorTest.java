@@ -50,6 +50,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -316,8 +317,8 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
 
     @Test
     public void testGetNativeBuildConfigValue() throws IOException {
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
         CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
-
         String targetStr =
                 " {  \n"
                         + "     \"artifacts\":[  \n"
