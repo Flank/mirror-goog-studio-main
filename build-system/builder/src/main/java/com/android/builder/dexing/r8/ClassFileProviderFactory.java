@@ -19,7 +19,7 @@ package com.android.builder.dexing.r8;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.tools.r8.ClassFileResourceProvider;
-import com.android.tools.r8.utils.DirectoryClassFileProvider;
+import com.android.tools.r8.DirectoryClassFileProvider;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;

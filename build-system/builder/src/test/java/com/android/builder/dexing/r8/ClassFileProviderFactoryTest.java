@@ -19,7 +19,7 @@ package com.android.builder.dexing.r8;
 import com.android.builder.dexing.DexArchiveTestUtil;
 import com.android.testutils.TestUtils;
 import com.android.tools.r8.ClassFileResourceProvider;
-import com.android.tools.r8.Resource;
+import com.android.tools.r8.ProgramResource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -81,7 +81,7 @@ public class ClassFileProviderFactoryTest {
         final ClassFileProviderFactory factory = new ClassFileProviderFactory();
         class Runner extends Thread {
             ClassFileResourceProvider[] providers = new ClassFileResourceProvider[nbJars];
-            Resource[][] resources = new Resource[nbJars][classes.size()];
+            ProgramResource[][] resources = new ProgramResource[nbJars][classes.size()];
             ClassFileProviderFactory.Handler handler = factory.open();
 
             @Override
@@ -92,7 +92,7 @@ public class ClassFileProviderFactoryTest {
                         // factory and no unicity of resource can be asserted.
                         providers[i] = handler.getProvider(classpathEntries[i]);
                         for (int j = 0; j < descriptors.size(); j++) {
-                            resources[i][j] = providers[i].getResource(descriptors.get(j));
+                            resources[i][j] = providers[i].getProgramResource(descriptors.get(j));
                         }
                     }
                 } catch (IOException e) {

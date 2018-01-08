@@ -25,7 +25,7 @@ import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8;
 import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
-import com.android.tools.r8.utils.OutputMode;
+import com.android.tools.r8.OutputMode;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -86,11 +86,12 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                 return;
             }
 
-            OutputMode outputMode = isIncremental ? OutputMode.FilePerInputClass : OutputMode.Indexed;
+            OutputMode outputMode =
+                    isIncremental ? OutputMode.DexFilePerClassFile : OutputMode.DexIndexed;
             builder.setMode(compilationMode)
                     .setMinApiLevel(minSdkVersion)
                     .setIntermediate(true)
-                    .setOutputMode(outputMode);
+                    .setOutput(output, outputMode);
 
             if (desugaring) {
                 for (Path entry : bootClasspath) {
@@ -99,12 +100,10 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                 for (Path entry : classpath) {
                     builder.addClasspathResourceProvider(factory.getProvider(entry));
                 }
-                builder.setEnableDesugaring(true);
             } else {
-                builder.setEnableDesugaring(false);
+                builder.setDisableDesugaring(true);
             }
 
-            builder.setOutputPath(output);
             D8.run(builder.build(), MoreExecutors.newDirectExecutorService());
         } catch (Throwable e) {
             throw getExceptionToRethrow(e, d8DiagnosticsHandler);
