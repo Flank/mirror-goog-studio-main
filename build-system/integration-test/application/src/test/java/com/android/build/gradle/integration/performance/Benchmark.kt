@@ -28,6 +28,7 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
@@ -53,7 +54,11 @@ data class Benchmark(
          * a subproject until _after_ project.apply has been called, so if you do need to do that
          * you'll have to supply a postApplyProject function and do it in there.
          */
-        var project = projectFactory(GradleTestProject.builder().enableProfileOutput())
+        var project = projectFactory(
+                GradleTestProject.builder()
+                        .enableProfileOutputInDirectory(BenchmarkTest.getProfileDirectory())
+                        .withTestDir(projectDir().toFile()))
+
         var profileLocation: Path? = null
 
         val statement =
@@ -77,8 +82,7 @@ data class Benchmark(
                                 .with(BooleanOption.ENABLE_D8, scenario.useD8())
                                 .withUseDexArchive(scenario.useDexArchive())
 
-                        val capturer = ProfileCapturer(project)
-                        val recorder = BenchmarkRecorder(capturer)
+                        val recorder = BenchmarkRecorder(BenchmarkTest.getProfileCapturer())
                         val recordCalled = AtomicBoolean(false)
                         val record = { r: () -> Unit ->
                             recordStart = System.nanoTime()
@@ -93,7 +97,7 @@ data class Benchmark(
                                     throw IllegalStateException("record lambda generated more than one profile, this is not allowed")
                                 }
 
-                                profileLocation = Iterables.getOnlyElement(capturer.lastPoll)
+                                profileLocation = Iterables.getOnlyElement(BenchmarkTest.getProfileCapturer().lastPoll)
                             } finally {
                                 recordEnd = System.nanoTime()
                             }
@@ -147,4 +151,10 @@ data class Benchmark(
                 "PERF_BENCHMARK_MODE=${benchmarkMode.name} " +
                 command
     }
+
+    fun projectDir(): Path =
+            BenchmarkTest.getBenchmarkTestRootDirectory()
+                    .resolve(scenario.name)
+                    .resolve(benchmark.name)
+                    .resolve(benchmarkMode.name)
 }

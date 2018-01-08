@@ -16,11 +16,16 @@
 
 package com.android.build.gradle.integration.performance;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.common.category.PerformanceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
 import com.google.common.base.Strings;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +35,7 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.concurrent.NotThreadSafe;
 import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -82,7 +88,28 @@ import org.junit.runners.JUnit4;
  * You can set all or none of these environment variables to run whatever subset of benchmarks you
  * want. Setting none of them will default to running the full set of benchmarks.
  */
+@NotThreadSafe
 public class BenchmarkTest {
+    private static ProfileCapturer PROFILE_CAPTURER;
+
+    @NonNull
+    public static Path getBenchmarkTestRootDirectory() {
+        return Paths.get(GradleTestProject.BUILD_DIR.getAbsolutePath(), "BenchmarkTest");
+    }
+
+    @NonNull
+    public static Path getProfileDirectory() {
+        return getBenchmarkTestRootDirectory().resolve("profiles");
+    }
+
+    @NonNull
+    public static ProfileCapturer getProfileCapturer() throws IOException {
+        if (PROFILE_CAPTURER == null) {
+            PROFILE_CAPTURER = new ProfileCapturer(getProfileDirectory());
+        }
+        return PROFILE_CAPTURER;
+    }
+
     @Test
     @Category(PerformanceTests.class)
     public void run() throws Exception {
@@ -250,7 +277,8 @@ public class BenchmarkTest {
         }
     }
 
-    public static List<Benchmark> filterByScenario(List<Benchmark> benchmarks, String scenarioStr) {
+    private static List<Benchmark> filterByScenario(
+            List<Benchmark> benchmarks, String scenarioStr) {
         ProjectScenario scenario = ProjectScenario.valueOf(scenarioStr);
         return benchmarks
                 .stream()
@@ -258,7 +286,7 @@ public class BenchmarkTest {
                 .collect(Collectors.toList());
     }
 
-    public static List<Benchmark> filterByBenchmark(
+    private static List<Benchmark> filterByBenchmark(
             List<Benchmark> benchmarks, String benchmarkStr) {
         Logging.Benchmark benchmark = Logging.Benchmark.valueOf(benchmarkStr);
         return benchmarks
@@ -267,7 +295,7 @@ public class BenchmarkTest {
                 .collect(Collectors.toList());
     }
 
-    public static List<Benchmark> filterByBenchmarkMode(
+    private static List<Benchmark> filterByBenchmarkMode(
             List<Benchmark> benchmarks, String benchmarkModeStr) {
         Logging.BenchmarkMode benchmarkMode = Logging.BenchmarkMode.valueOf(benchmarkModeStr);
         return benchmarks

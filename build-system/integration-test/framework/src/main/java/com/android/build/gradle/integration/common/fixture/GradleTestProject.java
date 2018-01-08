@@ -252,8 +252,6 @@ public final class GradleTestProject implements TestRule {
     private final GradleTestProject rootProject;
     private final List<ProjectConnection> openConnections;
 
-    private boolean applied = false;
-
     GradleTestProject(
             @Nullable String name,
             @Nullable TestProject testProject,
@@ -268,11 +266,11 @@ public final class GradleTestProject implements TestRule {
             boolean withCmake,
             boolean withDeviceProvider,
             boolean withSdk,
-            boolean withAndroidGradlePlugin) {
+            boolean withAndroidGradlePlugin,
+            @Nullable File testDir) {
         this.withDeviceProvider = withDeviceProvider;
         this.withSdk = withSdk;
         this.withAndroidGradlePlugin = withAndroidGradlePlugin;
-        this.testDir = null;
         this.buildFile = sourceDir = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
         this.targetGradleVersion = targetGradleVersion;
@@ -287,6 +285,7 @@ public final class GradleTestProject implements TestRule {
         this.profileDirectory = profileDirectory;
         this.cmakeVersion = cmakeVersion;
         this.withCmakeDirInLocalProp = withCmake;
+        this.testDir = testDir;
     }
 
     /**
@@ -395,21 +394,6 @@ public final class GradleTestProject implements TestRule {
 
     @Override
     public Statement apply(final Statement base, final Description description) {
-        /*
-         * We only ever want to call apply() once because a bunch of filesystem operations are done
-         * that assume they only happen once, and them happening multiple times could cause weird
-         * things. I also don't want to think about what happens when this is called multiple times.
-         */
-        if (applied) {
-            throw new IllegalStateException("apply() called more than once");
-        }
-        applied = true;
-
-        /*
-         * We only ever want to call apply on the root project because, again, I don't want to think
-         * about the combination of things that might happen if it's called on the subproject, or
-         * subproject + parent, or whatever.
-         */
         if (rootProject != this) {
             return rootProject.apply(base, description);
         }
@@ -417,7 +401,13 @@ public final class GradleTestProject implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                createTestDirectory(description.getTestClass(), description.getMethodName());
+                if (testDir == null) {
+                    testDir =
+                            computeTestDir(
+                                    description.getTestClass(), description.getMethodName(), name);
+                }
+                populateTestDirectory();
+
                 boolean testFailed = false;
                 try {
                     base.evaluate();
@@ -455,14 +445,13 @@ public final class GradleTestProject implements TestRule {
         };
     }
 
-    private void createTestDirectory(Class<?> testClass, String methodName)
-            throws IOException, StreamException {
+    private static File computeTestDir(Class<?> testClass, String methodName, String projectName) {
         // On Windows machines, make sure the test directory's path is short enough to avoid running
         // into path too long exceptions. Typically, on local Windows machines, OUT_DIR's path is
         // long, whereas on Windows build bots, OUT_DIR's path is already short (see
         // https://issuetracker.google.com/69271554). In the first case, let's move the test
         // directory close to root (user home), and in the second case, let's use OUT_DIR directly.
-        testDir =
+        File testDir =
                 SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
                                 && System.getenv("BUILDBOT_BUILDERNAME") == null
                         ? new File(new File(System.getProperty("user.home")), "android-tests")
@@ -505,7 +494,16 @@ public final class GradleTestProject implements TestRule {
             testDir = new File(testDir, methodDir);
         }
 
-        testDir = new File(testDir, name);
+        return new File(testDir, projectName);
+    }
+
+    private void populateTestDirectory() throws IOException, StreamException {
+        if (testDir == null) {
+            throw new IllegalStateException(
+                    "populateTestDirectory() called while testDir is null, either set testDir in "
+                            + "GradleTestProjectBuilder.withTestDir or call "
+                            + "populateTestDirectory(Class<?>, String)");
+        }
 
         buildFile = new File(testDir, "build.gradle");
         sourceDir = new File(testDir, "src");

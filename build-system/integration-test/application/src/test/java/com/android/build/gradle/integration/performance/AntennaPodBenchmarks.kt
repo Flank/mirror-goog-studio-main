@@ -164,8 +164,6 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                 projectFactory = { projectBuilder ->
                     projectBuilder
                         .fromExternalProject("AntennaPod")
-                        .enableProfileOutputInDirectory(
-                                Paths.get("AntennaPod", "build", "android-profile"))
                         .withHeap("1536M")
                         .create()
                 },

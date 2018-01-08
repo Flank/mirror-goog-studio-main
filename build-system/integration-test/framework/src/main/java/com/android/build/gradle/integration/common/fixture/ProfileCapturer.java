@@ -58,11 +58,15 @@ public final class ProfileCapturer {
     @NonNull private Collection<Path> lastPoll = Collections.emptySet();
 
     public ProfileCapturer(@NonNull GradleTestProject project) throws IOException {
+        Path dir = project.getProfileDirectory();
         Preconditions.checkArgument(
-                project.getProfileDirectory() != null,
+                dir != null,
                 "Profile output must be enabled by the GradleTestProject to use ProfileCapturer. Use GradleTestProjectBuilder::enableProfileOutput to do so."); //FIXME more information
-        Path profileDirectory = project.getProfileDirectory();
-        this.poller = new DirectoryPoller(profileDirectory, ".rawproto");
+        this.poller = new DirectoryPoller(dir, ".rawproto");
+    }
+
+    public ProfileCapturer(@NonNull Path dir) throws IOException {
+        this.poller = new DirectoryPoller(dir, ".rawproto");
     }
 
     public Collection<GradleBuildProfile> capture(ExceptionRunnable r) throws Exception {
