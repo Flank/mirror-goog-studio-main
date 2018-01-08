@@ -21,20 +21,22 @@
 #include <mutex>
 #include <vector>
 
-using profiler::proto::CpuUsageData;
+#include "proto/common.pb.h"
+
+using profiler::proto::CpuProfilerData;
 using std::vector;
 
 namespace profiler {
 
-bool CpuCache::AllocateAppCache(int32_t pid) {
-  if (FindAppCache(pid) != nullptr) return true;
-  app_caches_.emplace_back(new AppCpuCache(pid, capacity_));
+bool CpuCache::AllocateAppCache(int32_t app_id) {
+  if (FindAppCache(app_id) != nullptr) return true;
+  app_caches_.emplace_back(new AppCpuCache(app_id, capacity_));
   return true;
 }
 
-bool CpuCache::DeallocateAppCache(int32_t pid) {
+bool CpuCache::DeallocateAppCache(int32_t app_id) {
   for (auto it = app_caches_.begin(); it != app_caches_.end(); it++) {
-    if (pid == (*it)->pid) {
+    if (app_id == (*it)->app_id) {
       app_caches_.erase(it);
       return true;
     }
@@ -42,34 +44,37 @@ bool CpuCache::DeallocateAppCache(int32_t pid) {
   return false;
 }
 
-bool CpuCache::Add(int32_t pid, const CpuUsageData& datum) {
-  auto* found = FindAppCache(pid);
+bool CpuCache::Add(const CpuProfilerData& datum) {
+  int32_t app_id = datum.basic_info().process_id();
+  auto* found = FindAppCache(app_id);
   if (found == nullptr) return false;
-  found->usage_cache.Add(datum, datum.end_timestamp());
+  found->usage_cache.Add(datum, datum.basic_info().end_timestamp());
   return true;
 }
 
-vector<CpuUsageData> CpuCache::Retrieve(int32_t pid, int64_t from, int64_t to) {
-  auto* found = FindAppCache(pid);
+vector<CpuProfilerData> CpuCache::Retrieve(int32_t app_id, int64_t from,
+                                           int64_t to) {
+  auto* found = FindAppCache(app_id);
   if (found == nullptr) {
-    vector<CpuUsageData> empty;
+    vector<CpuProfilerData> empty;
     return empty;
   }
   return found->usage_cache.GetValues(from, to);
 }
 
-bool CpuCache::AddThreads(int32_t pid, const ThreadsSample& sample) {
-  auto* found = FindAppCache(pid);
+bool CpuCache::AddThreads(const ThreadsSample& sample) {
+  int32_t app_id = sample.basic_info.process_id();
+  auto* found = FindAppCache(app_id);
   if (found == nullptr) return false;
-  found->threads_cache.Add(sample, sample.snapshot.timestamp());
+  found->threads_cache.Add(sample, sample.basic_info.end_timestamp());
   return true;
 }
 
-CpuCache::ThreadSampleResponse CpuCache::GetThreads(int32_t pid, int64_t from,
-                                                    int64_t to) {
+CpuCache::ThreadSampleResponse CpuCache::GetThreads(int32_t app_id,
+                                                    int64_t from, int64_t to) {
   CpuCache::ThreadSampleResponse response;
   const ThreadsSample* latest_before_from = nullptr;
-  auto* found = FindAppCache(pid);
+  auto* found = FindAppCache(app_id);
   if (found == nullptr) {
     return response;
   }
@@ -78,16 +83,18 @@ CpuCache::ThreadSampleResponse CpuCache::GetThreads(int32_t pid, int64_t from,
   // TODO: optimize it to binary search the initial point. That will also make
   // it easier to get the data from the greatest timestamp smaller than |from|.
   for (const auto& sample : threads_cache_content) {
-    auto timestamp = sample.snapshot.timestamp();
-    if (timestamp > from && timestamp <= to) {
-      response.activity_samples.push_back(sample);
+    auto id = sample.basic_info.process_id();
+    auto timestamp = sample.basic_info.end_timestamp();
+    if (id == app_id || app_id == proto::AppId::ANY) {
+      if (timestamp > from && timestamp <= to) {
+        response.activity_samples.push_back(sample);
+      }
     }
-
     // Update the latest sample that was registered before (or at the
     // same time) of the request start timestamp, in case there is one.
     if (timestamp <= from &&
         (latest_before_from == nullptr ||
-         timestamp > latest_before_from->snapshot.timestamp())) {
+         timestamp > latest_before_from->basic_info.end_timestamp())) {
       latest_before_from = &sample;
     }
   }
@@ -100,9 +107,9 @@ CpuCache::ThreadSampleResponse CpuCache::GetThreads(int32_t pid, int64_t from,
   return response;
 }
 
-CpuCache::AppCpuCache* CpuCache::FindAppCache(int32_t pid) {
+CpuCache::AppCpuCache* CpuCache::FindAppCache(int32_t app_id) {
   for (auto& cache : app_caches_) {
-    if (pid == cache->pid) {
+    if (app_id == cache->app_id) {
       return cache.get();
     }
   }

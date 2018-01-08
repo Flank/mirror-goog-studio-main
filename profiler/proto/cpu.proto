@@ -81,9 +81,10 @@ enum CpuProfilerType {
 
 // Requests all the traces that overlap with a time range.
 message GetTraceInfoRequest {
-  Session session = 1;
-  int64 from_timestamp = 2;  // inclusive
-  int64 to_timestamp = 3;    // inclusive
+  int32 process_id = 1;
+  Session session = 2;
+  int64 from_timestamp = 3;  // inclusive
+  int64 to_timestamp = 4;    // inclusive
 }
 
 message GetTraceInfoResponse {
@@ -91,8 +92,9 @@ message GetTraceInfoResponse {
 }
 
 message SaveTraceInfoRequest {
-  Session session = 1;
-  TraceInfo trace_info = 2;
+  int32 process_id = 1;
+  Session session = 2;
+  TraceInfo trace_info = 3;
 }
 
 message Thread {
@@ -113,9 +115,10 @@ message TraceInfo {
 }
 
 message GetTraceRequest {
-  Session session = 1;
+  int32 process_id = 1;
+  Session session = 2;
   // Trace ID should be unique within an app.
-  int32 trace_id = 2;
+  int32 trace_id = 3;
 }
 
 message GetTraceResponse {
@@ -131,21 +134,30 @@ message GetTraceResponse {
   CpuProfilerType profiler_type = 3;
 }
 
-// Requests profiler data associated with |session|, in the time range
+// Requests profiler data from the app with ID being |process_id|, in the time range
 // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
 // mathematically written as in interval (start_timestamp, end_timestamp].
 message CpuDataRequest {
-  Session session = 1;
-  int64 start_timestamp = 2;  // Use -2^63 if no data is too old to return.
-  int64 end_timestamp = 3;  // Use 2^63 - 1 if no data is too recent to return.
+  enum SpecialValues {
+    // Protobuf requires the first enum value to be zero.
+    UNSPECIFIED = 0;
+    // A speical value used in |process_id| field to indicate the data of all apps
+    // are requested.
+    ANY_APP = -1;
+  }
+  int32 process_id = 1;  // Use |ANY_APP| if requesting the data of any apps.
+  Session session = 2;
+  int64 start_timestamp = 3;  // Use -2^63 if no data is too old to return.
+  int64 end_timestamp = 4;  // Use 2^63 - 1 if no data is too recent to return.
 }
 
 message CpuDataResponse {
-  repeated CpuUsageData data = 1;
+  repeated CpuProfilerData data = 1;
 }
 
 message CpuStartRequest {
-  Session session = 1;
+  int32 process_id = 1;
+  Session session = 2;
 }
 
 message CpuStartResponse {
@@ -160,7 +172,8 @@ message CpuStartResponse {
 }
 
 message CpuStopRequest {
-  Session session = 1;
+  int32 process_id = 1;
+  Session session = 2;
 }
 
 message CpuStopResponse {
@@ -172,21 +185,23 @@ message CpuStopResponse {
   Status status = 1;
 }
 
-// Request profiling of app (identified by its |session|) to start.
+// Request profiling of app (identified by its process id |process_id|) to
+// start.
 // INSTRUMENTED is support only when ART is the profiler.
 message CpuProfilingAppStartRequest {
+  int32 process_id = 1;
+  Session session = 2;
   enum Mode {
     UNSTATED = 0;
     SAMPLED = 1;
     INSTRUMENTED = 2;
   }
-  Session session = 1;
-  Mode mode = 2;
-  CpuProfilerType profiler_type = 3;
+  Mode mode = 3;
+  CpuProfilerType profiler_type = 4;
   // When using ART, the size of the in-memory buffer that holds tracing data.
-  int32 buffer_size_in_mb = 4;
+  int32 buffer_size_in_mb = 5;
   // When using sampling, the sampling interval in microseconds.
-  int32 sampling_interval_us = 5;
+  int32 sampling_interval_us = 6;
 }
 
 // Returns the status and absolute path location (on device) where the trace
@@ -201,10 +216,12 @@ message CpuProfilingAppStartResponse {
   string error_message = 2;
 }
 
-// Request profiling of app (identified by its |session|) to stop.
+// Request profiling of app (identified by its process id |process_id|) to
+// stop.
 message CpuProfilingAppStopRequest {
-  Session session = 1;
-  CpuProfilerType profiler_type = 2;
+  int32 process_id = 1;
+  Session session = 2;
+  CpuProfilerType profiler_type = 3;
 }
 
 message CpuProfilingAppStopResponse {
@@ -222,9 +239,10 @@ message CpuProfilingAppStopResponse {
 }
 
 message ProfilingStateRequest {
-  Session session = 1;
+  int32 process_id = 1;
+  Session session = 2;
   // The given moment that this request is querying about.
-  int64 timestamp = 2;
+  int64 timestamp = 3;
 }
 
 message ProfilingStateResponse {
@@ -237,6 +255,12 @@ message ProfilingStateResponse {
   int64 start_timestamp = 3;
   // The timestamp when the profiling state was checked.
   int64 check_timestamp = 4;
+}
+
+// CPU data of a given app process.
+message CpuProfilerData {
+  CommonData basic_info = 1;
+  CpuUsageData cpu_usage = 2;
 }
 
 // CPU usage data of an app process and the entire system at a given point.
@@ -254,23 +278,22 @@ message ProfilingStateResponse {
 // The values of the fields may overflow their type, but the usefulness stays
 // the same.
 message CpuUsageData {
-  // Timestamp(ns) when the data sample was collected.
-  int64 end_timestamp = 1;
   // Amount of time that this process has been using CPU, measured in
   // milliseconds.
-  int64 app_cpu_time_in_millisec = 2;
+  int64 app_cpu_time_in_millisec = 1;
   // Amount of time that the entire system (including applications) has been
   // using CPU, measured in milliseconds.
-  int64 system_cpu_time_in_millisec = 3;
+  int64 system_cpu_time_in_millisec = 2;
   // Amount of time since the system start, measured in milliseconds.
-  int64 elapsed_time_in_millisec = 4;
+  int64 elapsed_time_in_millisec = 3;
 }
 
 // Requests the state of all the threads in the given time range.
 message GetThreadsRequest {
-  Session session = 1;
-  int64 start_timestamp = 2;
-  int64 end_timestamp = 3;
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_timestamp = 3;
+  int64 end_timestamp = 4;
 }
 
 message GetThreadsResponse {

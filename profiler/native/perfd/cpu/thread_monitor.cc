@@ -239,8 +239,11 @@ bool ThreadMonitor::MonitorAProcess(int32_t pid) {
     AddThreadSnapshot(map.first, state.state, state.name, &sample);
   }
 
+  sample.basic_info.set_process_id(pid);
+  sample.basic_info.set_end_timestamp(timestamp);
   sample.snapshot.set_timestamp(timestamp);
-  cache_.AddThreads(pid, sample);
+  cache_.AddThreads(sample);
+
   return true;
 }
 

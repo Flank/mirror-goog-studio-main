@@ -41,42 +41,43 @@ class CpuCache {
   // kind of cache (same size for all).
   explicit CpuCache(int32_t capacity) : capacity_(capacity) {}
 
-  // Returns true if successfully allocating a cache for a given pid, or if
+  // Returns true if successfully allocating a cache for a given app, or if
   // the cache is already allocated.
-  bool AllocateAppCache(int32_t pid);
-  // Returns true if successfully deallocating the cache for a given pid.
-  bool DeallocateAppCache(int32_t pid);
+  bool AllocateAppCache(int32_t app_id);
+  // Returns true if successfully deallocating the cache for a given app.
+  bool DeallocateAppCache(int32_t app_id);
 
   // Returns true if successfully adding |datum| to the cache.
-  // If no active cache associated with the pid is found, no data would be saved
-  // and this method returns false.
-  bool Add(int32_t pid, const profiler::proto::CpuUsageData& datum);
-  // Retrieves data of |pid| with timestamps in interval (|from|, |to|].
-  std::vector<profiler::proto::CpuUsageData> Retrieve(int32_t pid, int64_t from,
-                                                      int64_t to);
+  bool Add(const profiler::proto::CpuProfilerData& datum);
+  // Retrieves data of |app_id| with timestamps in interval (|from|, |to|].
+  // TODO: Support proto::AppId::ANY.
+  std::vector<profiler::proto::CpuProfilerData> Retrieve(int32_t app_id,
+                                                         int64_t from,
+                                                         int64_t to);
 
   // Returns true if successfully adding |threads_sample| to the cache.
-  // If no active cache associated with the pid is found, no data would be saved
-  // and this method eturns false.
-  bool AddThreads(int32_t pid, const ThreadsSample& threads_sample);
-  // Gets thread samples data of |pid| with timestamps in interval
+  bool AddThreads(const ThreadsSample& threads_sample);
+  // Gets thread samples data of |app_id| with timestamps in interval
   // (|from|, |to|].
-  ThreadSampleResponse GetThreads(int32_t pid, int64_t from, int64_t to);
+  // TODO: Support proto::AppId::ANY.
+  ThreadSampleResponse GetThreads(int32_t app_id, int64_t from, int64_t to);
 
  private:
   // Each app's cache held by CPU component in the on-device daemon.
   struct AppCpuCache {
-    int32_t pid;
-    TimeValueBuffer<profiler::proto::CpuUsageData> usage_cache;
+    int32_t app_id;
+    TimeValueBuffer<profiler::proto::CpuProfilerData> usage_cache;
     TimeValueBuffer<ThreadsSample> threads_cache;
 
-    AppCpuCache(int32_t pid, int32_t capacity)
-        : pid(pid), usage_cache(capacity, pid), threads_cache(capacity, pid) {}
+    AppCpuCache(int32_t app_id, int32_t capacity)
+        : app_id(app_id),
+          usage_cache(capacity, app_id),
+          threads_cache(capacity, app_id) {}
   };
 
   // Returns the raw pointer to the cache for a given app. Returns null if
   // it doesn't exist. No ownership transfer.
-  AppCpuCache* FindAppCache(int32_t pid);
+  AppCpuCache* FindAppCache(int32_t app_id);
 
   // Each app has a set of dedicated caches.
   std::vector<std::unique_ptr<AppCpuCache>> app_caches_;

@@ -36,6 +36,7 @@ struct ThreadsSample {
     int64_t timestamp;                                 // Activity timestamp
   };
 
+  profiler::proto::CommonData basic_info;
   // State of each alive thread in this sample
   profiler::proto::GetThreadsResponse::ThreadSnapshot snapshot;
   // All the activities that were detected by the sample

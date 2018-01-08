@@ -29,7 +29,7 @@ using grpc::Status;
 using grpc::StatusCode;
 using profiler::proto::CpuDataRequest;
 using profiler::proto::CpuDataResponse;
-using profiler::proto::CpuUsageData;
+using profiler::proto::CpuProfilerData;
 using profiler::proto::CpuProfilerType;
 using profiler::proto::CpuProfilingAppStartRequest;
 using profiler::proto::CpuProfilingAppStartResponse;
@@ -52,10 +52,12 @@ namespace profiler {
 grpc::Status CpuServiceImpl::GetData(ServerContext* context,
                                      const CpuDataRequest* request,
                                      CpuDataResponse* response) {
+  int64_t id_in_request = request->process_id();
+  int64_t id = (id_in_request == CpuDataRequest::ANY_APP ? proto::AppId::ANY
+                                                         : id_in_request);
   Trace trace("CPU:GetData");
-  const vector<CpuUsageData>& data =
-      cache_.Retrieve(request->session().pid(), request->start_timestamp(),
-                      request->end_timestamp());
+  const vector<CpuProfilerData>& data =
+      cache_.Retrieve(id, request->start_timestamp(), request->end_timestamp());
   for (const auto& datum : data) {
     *(response->add_data()) = datum;
   }
@@ -65,10 +67,16 @@ grpc::Status CpuServiceImpl::GetData(ServerContext* context,
 grpc::Status CpuServiceImpl::GetThreads(ServerContext* context,
                                         const GetThreadsRequest* request,
                                         GetThreadsResponse* response) {
+  int64_t id = request->process_id();
+  if (id == CpuDataRequest::ANY_APP) {
+    // |response| expects a single app, so we return early (with error) if
+    // request does not provide a single app process id.
+    return Status(StatusCode::INVALID_ARGUMENT, "Invalid process id");
+  }
+
   Trace trace("CPU:GetThreads");
-  CpuCache::ThreadSampleResponse threads_response =
-      cache_.GetThreads(request->session().pid(), request->start_timestamp(),
-                        request->end_timestamp());
+  CpuCache::ThreadSampleResponse threads_response = cache_.GetThreads(
+      id, request->start_timestamp(), request->end_timestamp());
   // Samples containing all the activities that should be added to the response.
   const vector<ThreadsSample>& samples = threads_response.activity_samples;
 
@@ -114,14 +122,13 @@ grpc::Status CpuServiceImpl::GetThreads(ServerContext* context,
 grpc::Status CpuServiceImpl::StartMonitoringApp(ServerContext* context,
                                                 const CpuStartRequest* request,
                                                 CpuStartResponse* response) {
-  int32_t pid = request->session().pid();
-  if (!cache_.AllocateAppCache(pid)) {
+  if (!cache_.AllocateAppCache(request->process_id())) {
     return Status(StatusCode::RESOURCE_EXHAUSTED,
                   "Cannot allocate a cache for CPU data");
   }
-  auto status = usage_sampler_.AddProcess(pid);
+  auto status = usage_sampler_.AddProcess(request->process_id());
   if (status == CpuStartResponse::SUCCESS) {
-    status = thread_monitor_.AddProcess(pid);
+    status = thread_monitor_.AddProcess(request->process_id());
   }
   response->set_status(status);
   return Status::OK;
@@ -130,11 +137,10 @@ grpc::Status CpuServiceImpl::StartMonitoringApp(ServerContext* context,
 grpc::Status CpuServiceImpl::StopMonitoringApp(ServerContext* context,
                                                const CpuStopRequest* request,
                                                CpuStopResponse* response) {
-  int32_t pid = request->session().pid();
-  cache_.DeallocateAppCache(pid);
-  auto status = usage_sampler_.RemoveProcess(pid);
+  cache_.DeallocateAppCache(request->process_id());
+  auto status = usage_sampler_.RemoveProcess(request->process_id());
   if (status == CpuStopResponse::SUCCESS) {
-    status = thread_monitor_.RemoveProcess(pid);
+    status = thread_monitor_.RemoveProcess(request->process_id());
   }
   response->set_status(status);
   return Status::OK;
@@ -144,9 +150,8 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     ServerContext* context, const CpuProfilingAppStartRequest* request,
     CpuProfilingAppStartResponse* response) {
   Trace trace("CPU:StartProfilingApp");
-  int32_t pid = request->session().pid();
   ProcessManager process_manager;
-  string app_pkg_name = process_manager.GetCmdlineForPid(pid);
+  string app_pkg_name = process_manager.GetCmdlineForPid(request->process_id());
   // GetCmdlineForPid will return an empty string
   // if it can't find an app name corresponding to the given pid.
   if (app_pkg_name.empty()) {
@@ -193,8 +198,7 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
     CpuProfilingAppStopResponse* response) {
   string error;
   ProcessManager process_manager;
-  int32_t pid = request->session().pid();
-  string app_pkg_name = process_manager.GetCmdlineForPid(pid);
+  string app_pkg_name = process_manager.GetCmdlineForPid(request->process_id());
   bool success = false;
   if (request->profiler_type() == CpuProfilerType::SIMPLEPERF) {
     success = simplerperf_manager_.StopProfiling(app_pkg_name, &error);
@@ -228,9 +232,8 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
 grpc::Status CpuServiceImpl::CheckAppProfilingState(
     ServerContext* context, const ProfilingStateRequest* request,
     ProfilingStateResponse* response) {
-  int32_t pid = request->session().pid();
   ProcessManager process_manager;
-  string app_pkg_name = process_manager.GetCmdlineForPid(pid);
+  string app_pkg_name = process_manager.GetCmdlineForPid(request->process_id());
   const auto& last_request = last_start_profiling_requests_.find(app_pkg_name);
 
   // Whether the app is being profiled (there is a stored start profiling
