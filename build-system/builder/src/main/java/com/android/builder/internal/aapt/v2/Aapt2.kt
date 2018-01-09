@@ -17,6 +17,7 @@
 package com.android.builder.internal.aapt.v2
 
 import com.android.builder.internal.aapt.AaptPackageConfig
+import com.android.builder.internal.aapt.BlockingResourceLinker
 import com.android.ide.common.res2.CompileResourceRequest
 import com.android.utils.ILogger
 
@@ -26,10 +27,10 @@ import com.android.utils.ILogger
  * Methods throw [Aapt2Exception] for invalid input (e.g. syntax error in a source file)
  * and [Aapt2InternalException] if there is an internal issue running AAPT itself.
  */
-interface Aapt2 {
+interface Aapt2: BlockingResourceLinker {
     /** Perform the requested compilation. Throws [Aapt2Exception] on failure */
     fun compile(request: CompileResourceRequest, logger: ILogger)
 
     /** Perform the requested linking. Throws [Aapt2Exception] on failure. */
-    fun link(request: AaptPackageConfig, logger: ILogger)
+    override fun link(request: AaptPackageConfig, logger: ILogger)
 }

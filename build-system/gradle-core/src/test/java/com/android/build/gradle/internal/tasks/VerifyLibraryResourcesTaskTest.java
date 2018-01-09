@@ -87,7 +87,7 @@ public class VerifyLibraryResourcesTaskTest {
         File outputDir = mTemporaryFolder.newFolder("output");
         QueueableResourceCompiler aapt = new FakeAapt();
 
-        VerifyLibraryResourcesTask.compileResources(inputs, outputDir, aapt, mergedDir);
+        VerifyLibraryResourcesTask.compileResources(inputs, outputDir, aapt, null, null, mergedDir);
 
         File fileOut = aapt.compileOutputFor(new CompileResourceRequest(file, outputDir, "values"));
         assertTrue(fileOut.exists());

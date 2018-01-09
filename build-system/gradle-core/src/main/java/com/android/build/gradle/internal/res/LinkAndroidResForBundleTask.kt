@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.dsl.convert
+import com.android.build.gradle.internal.res.namespaced.Aapt2LinkRunnable
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.TaskOutputHolder
@@ -38,7 +39,6 @@ import com.android.ide.common.blame.SourceFilePosition
 import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
 import com.android.ide.common.build.ApkInfo
-import com.android.ide.common.process.ProcessException
 import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
@@ -53,17 +53,23 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.gradle.tooling.BuildException
+import org.gradle.workers.IsolationMode
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.function.Function
+import javax.inject.Inject
 
 /**
  * Task to link app resources into a proto format so that it can be consumed by the bundle tool.
  */
 @CacheableTask
-open class LinkAndroidResForBundleTask : AndroidBuilderTask() {
+open class LinkAndroidResForBundleTask
+@Inject constructor(private val workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
 
     private var aaptGeneration: AaptGeneration? = null
+
+    @Input
+    fun getAaptGenerationString() = aaptGeneration.toString()
 
     @get:Input
     var debuggable: Boolean = false
@@ -108,38 +114,32 @@ open class LinkAndroidResForBundleTask : AndroidBuilderTask() {
 
         FileUtils.mkdirs(bundledResFile.parentFile)
 
-        try {
-
-            // If the new resources flag is enabled and if we are dealing with a library process
-            // resources through the new parsers
-            run {
-                val config = AaptPackageConfig(
-                        androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
-                        generateProtos = true,
-                        manifestFile = manifestFile,
-                        options = aaptOptions.convert(),
-                        resourceOutputApk = bundledResFile,
-                        variantType = VariantType.DEFAULT,
-                        debuggable = debuggable,
-                        pseudoLocalize = getPseudoLocalesEnabled(),
-                        resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).singleFile))
-
-                makeAapt().use { aapt ->
-                    AndroidBuilder.processResources(aapt, config, LoggerWrapper(logger))
-                }
-
-                if (logger.isInfoEnabled) {
-                    logger.info("Aapt output file {}", bundledResFile.absolutePath)
-                }
-            }
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            logger.error(e.message, e)
-            throw BuildException(e.message, e)
-        } catch (e: ProcessException) {
-            logger.error(e.message, e)
-            throw BuildException(e.message, e)
+        val config = AaptPackageConfig(
+                androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
+                generateProtos = true,
+                manifestFile = manifestFile,
+                options = aaptOptions.convert(),
+                resourceOutputApk = bundledResFile,
+                variantType = VariantType.DEFAULT,
+                debuggable = debuggable,
+                pseudoLocalize = getPseudoLocalesEnabled(),
+                resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).singleFile))
+        if (logger.isInfoEnabled) {
+            logger.info("Aapt output file {}", bundledResFile.absolutePath)
         }
+        if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+            //TODO: message rewriting.
+            workerExecutor.submit(Aapt2ProcessResourcesRunnable::class.java) {
+                it.isolationMode = IsolationMode.NONE
+                it.params(Aapt2LinkRunnable.Params(buildTools.revision, config))
+            }
+        } else {
+            makeAapt().use { aapt ->
+                AndroidBuilder.processResources(aapt, config, LoggerWrapper(logger))
+            }
+        }
+
+
     }
 
     /**

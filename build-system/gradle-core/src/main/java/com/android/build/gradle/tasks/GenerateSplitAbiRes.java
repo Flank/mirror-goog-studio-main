@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
+import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.OutputFactory;
@@ -56,6 +57,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Set;
+import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -63,9 +65,17 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.workers.WorkerExecutor;
 
 /** Generates all metadata (like AndroidManifest.xml) necessary for a ABI dimension split APK. */
 public class GenerateSplitAbiRes extends AndroidBuilderTask {
+
+    @NonNull private final WorkerExecutor workerExecutor;
+
+    @Inject
+    public GenerateSplitAbiRes(@NonNull WorkerExecutor workerExecutor) {
+        this.workerExecutor = workerExecutor;
+    }
 
     private String applicationId;
     private String outputBaseName;
@@ -169,32 +179,23 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             File manifestFile = generateSplitManifest(split, abiApkData);
 
             AndroidBuilder builder = getBuilder();
-            try (Aapt aapt =
-                    AaptGradleFactory.make(
-                            aaptGeneration,
-                            builder,
-                            new LoggedProcessOutputHandler(
-                                    new AaptGradleFactory.FilteringLogger(builder.getLogger())),
-                            true,
-                            FileUtils.mkdirs(
-                                    new File(
-                                            variantScope.getIncrementalDir(getName()),
-                                            "aapt-temp")),
-                            variantScope
-                                    .getGlobalScope()
-                                    .getExtension()
-                                    .getAaptOptions()
-                                    .getCruncherProcesses())) {
-
-                AaptPackageConfig.Builder aaptConfig = new AaptPackageConfig.Builder();
-                aaptConfig
-                        .setManifestFile(manifestFile)
-                        .setOptions(DslAdaptersKt.convert(aaptOptions))
-                        .setDebuggable(debuggable)
-                        .setResourceOutputApk(resPackageFile)
-                        .setVariantType(variantType);
-
-                getBuilder().processResources(aapt, aaptConfig);
+            AaptPackageConfig.Builder aaptConfig = new AaptPackageConfig.Builder();
+            aaptConfig
+                    .setManifestFile(manifestFile)
+                    .setOptions(DslAdaptersKt.convert(aaptOptions))
+                    .setDebuggable(debuggable)
+                    .setResourceOutputApk(resPackageFile)
+                    .setVariantType(variantType);
+            if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+                Aapt2ProcessResourcesRunnable.Params params =
+                        new Aapt2ProcessResourcesRunnable.Params(
+                                getBuildTools().getRevision(), aaptConfig.build());
+                workerExecutor.submit(
+                        Aapt2ProcessResourcesRunnable.class, it -> it.setParams(params));
+            } else {
+                try (Aapt aapt = makeAapt(builder)) {
+                    builder.processResources(aapt, aaptConfig);
+                }
             }
 
             buildOutputs.add(
@@ -205,6 +206,22 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
         }
 
         new BuildElements(buildOutputs.build()).save(outputDirectory);
+    }
+
+    @NonNull
+    private Aapt makeAapt(@NonNull AndroidBuilder builder) {
+        return AaptGradleFactory.make(
+                aaptGeneration,
+                builder,
+                new LoggedProcessOutputHandler(
+                        new AaptGradleFactory.FilteringLogger(builder.getLogger())),
+                true,
+                FileUtils.mkdirs(new File(variantScope.getIncrementalDir(getName()), "aapt-temp")),
+                variantScope
+                        .getGlobalScope()
+                        .getExtension()
+                        .getAaptOptions()
+                        .getCruncherProcesses());
     }
 
     @VisibleForTesting

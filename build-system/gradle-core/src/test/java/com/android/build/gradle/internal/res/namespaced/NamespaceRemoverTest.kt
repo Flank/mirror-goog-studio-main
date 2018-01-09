@@ -21,7 +21,7 @@ import org.junit.Test
 import java.nio.charset.StandardCharsets
 
 class NamespaceRemoverTest {
-    private val namespaceRemover = NamespaceRemover()
+    private val namespaceRemover = NamespaceRemover
 
     @Test
     fun noChange() {

@@ -26,14 +26,15 @@ import org.junit.rules.TemporaryFolder;
 /*
  * Tests for {@link QueueableResourceCompiler}.
  */
-public class QueueableResourceCompilerTest {
+public class ResourceCompilationServiceTest {
 
     /** Temporary folder to use in tests. */
     @Rule public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
     @Test
     public void callToCompileOutputForDoesNotCreateDirectories() throws Exception {
-        try (QueueableResourceCompiler aapt = QueueableResourceCompiler.NONE) {
+        try (ResourceCompilationService aapt =
+                CopyToOutputDirectoryResourceCompilationService.INSTANCE) {
             File outputDir = mTemporaryFolder.newFolder("empty");
             File input = new File(mTemporaryFolder.newFolder("values"), "values.xml");
 

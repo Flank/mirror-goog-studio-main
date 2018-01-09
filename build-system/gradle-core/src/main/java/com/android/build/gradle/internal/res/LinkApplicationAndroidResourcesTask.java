@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -62,6 +63,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.internal.aapt.v2.Aapt2DaemonManager;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -227,7 +229,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
         ImmutableList.Builder<BuildOutput> buildOutputs = ImmutableList.builder();
 
-        try (Aapt aapt = makeAapt()) {
+        try (@Nullable Aapt aapt = makeAapt()) {
 
             // do a first pass at the list so we generate the code synchronously since it's required
             // by the full splits asynchronous processing below.
@@ -451,11 +453,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             // If the new resources flag is enabled and if we are dealing with a library process
             // resources through the new parsers
             {
-                Preconditions.checkNotNull(
-                        aapt,
-                        "AAPT needs be instantiated for linking if bypassing AAPT is disabled");
-
-                AaptPackageConfig.Builder config =
+                AaptPackageConfig.Builder configBuilder =
                         new AaptPackageConfig.Builder()
                                 .setManifestFile(manifestFile)
                                 .setOptions(DslAdaptersKt.convert(aaptOptions))
@@ -474,17 +472,32 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 .setPreferredDensity(preferredDensity)
                                 .setPackageId(packageId)
                                 .setDependentFeatures(featurePackagesBuilder.build())
-                                .setImports(imports);
+                                .setImports(imports)
+                                .setAndroidTarget(getBuilder().getTarget());
 
                 if (isNamespaced) {
-                    config.setStaticLibraryDependencies(ImmutableList.copyOf(dependencies));
+                    configBuilder.setStaticLibraryDependencies(ImmutableList.copyOf(dependencies));
                 } else {
                     if (generateCode) {
-                        config.setLibrarySymbolTableFiles(dependencies);
+                        configBuilder.setLibrarySymbolTableFiles(dependencies);
                     }
-                    config.setResourceDir(checkNotNull(getInputResourcesDir()).getSingleFile());
+                    configBuilder.setResourceDir(
+                            checkNotNull(getInputResourcesDir()).getSingleFile());
                 }
-                getBuilder().processResources(aapt, config);
+                AaptPackageConfig config = configBuilder.build();
+
+                if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+                    try (Aapt2DaemonManager.LeasedAaptDaemon aaptDaemon =
+                            Aapt2DaemonManagerService.getAaptDaemon(
+                                    getBuilder().getBuildToolInfo().getRevision())) {
+                        AndroidBuilder.processResources(aaptDaemon, config, getILogger());
+                    }
+                } else {
+                    Preconditions.checkNotNull(
+                            aapt,
+                            "AAPT needs be instantiated for linking if bypassing AAPT is disabled");
+                    AndroidBuilder.processResources(aapt, config, getILogger());
+                }
 
                 if (LOG.isInfoEnabled()) {
                     LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
@@ -537,8 +550,16 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     /**
      * Create an instance of AAPT. Whenever calling this method make sure the close() method is
      * called on the instance once the work is done.
+     *
+     * <p>Returns null if the worker action compatible mode should be used, as instances must not be
+     * shared between threads.
      */
+    @Nullable
     private Aapt makeAapt() {
+        if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+            return null;
+        }
+
         AndroidBuilder builder = getBuilder();
         MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
 

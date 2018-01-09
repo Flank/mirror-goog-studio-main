@@ -87,6 +87,9 @@ public final class AaptGradleFactory {
                         buildTools,
                         new FilteringLogger(builder.getLogger()),
                         0 /* use default */);
+            case AAPT_V2_DAEMON_SHARED_POOL:
+                throw new IllegalArgumentException(
+                        "When using worker actions daemon mode use Aapt2DaemonManagerService instead.");
             default:
                 throw new IllegalArgumentException("unknown aapt generation" + aaptGeneration);
         }

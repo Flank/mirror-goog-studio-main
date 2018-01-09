@@ -37,6 +37,8 @@ import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.BlockingResourceLinker;
+import com.android.builder.internal.aapt.v2.Aapt2Exception;
+import com.android.builder.internal.aapt.v2.Aapt2InternalException;
 import com.android.builder.internal.compiler.AidlProcessor;
 import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.compiler.PreDexCache;
@@ -805,6 +807,8 @@ public class AndroidBuilder {
 
         try {
             aapt.link(aaptConfig, logger);
+        } catch (Aapt2Exception | Aapt2InternalException e) {
+            throw e;
         } catch (Exception e) {
             throw new ProcessException("Failed to execute aapt", e);
         }

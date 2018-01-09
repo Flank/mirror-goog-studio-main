@@ -19,28 +19,26 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.annotations.VisibleForTesting
 import com.android.ide.common.res2.CompileResourceRequest
-import com.android.ide.common.res2.QueueableResourceCompiler
+import com.android.ide.common.res2.ResourceCompilationService
 import com.android.ide.common.xml.XmlFormatPreferences
 import com.android.ide.common.xml.XmlFormatStyle
 import com.android.ide.common.xml.XmlPrettyPrinter
 import com.android.utils.FileUtils
 import com.android.utils.PositionXmlParser
-import com.google.common.util.concurrent.Futures
+import org.w3c.dom.Node
+import org.xml.sax.SAXException
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.concurrent.Future
 import javax.xml.parsers.ParserConfigurationException
-import org.w3c.dom.Node
-import org.xml.sax.SAXException
 
-class NamespaceRemover : QueueableResourceCompiler {
+object NamespaceRemover : ResourceCompilationService {
 
     @Throws(Exception::class)
-    override fun compile(request: CompileResourceRequest): Future<File> {
+    override fun submitCompile(request: CompileResourceRequest) {
         val input = request.inputFile
         val output = compileOutputFor(request)
         FileUtils.mkdirs(output.parentFile)
@@ -53,7 +51,6 @@ class NamespaceRemover : QueueableResourceCompiler {
             FileUtils.copyFile(input, output)
         }
 
-        return Futures.immediateFuture(output)
     }
 
     override fun compileOutputFor(request: CompileResourceRequest): File {
@@ -63,7 +60,7 @@ class NamespaceRemover : QueueableResourceCompiler {
 
     @Throws(IOException::class)
     override fun close() {
-        // We don't batch so no need to do anything.
+        // As this currently does work on submission, no need to wait for anything.
     }
 
     /*

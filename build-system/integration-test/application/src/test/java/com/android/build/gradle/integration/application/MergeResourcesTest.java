@@ -46,7 +46,10 @@ public class MergeResourcesTest {
 
     @Parameterized.Parameters(name = "aaptGeneration=\"{0}\"")
     public static Collection<AaptGeneration> expected() {
-        return Arrays.asList(AaptGeneration.AAPT_V1, AaptGeneration.AAPT_V2_DAEMON_MODE);
+        return Arrays.asList(
+                AaptGeneration.AAPT_V1,
+                AaptGeneration.AAPT_V2_DAEMON_MODE,
+                AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL);
     }
 
     @Parameterized.Parameter public AaptGeneration aaptGeneration;

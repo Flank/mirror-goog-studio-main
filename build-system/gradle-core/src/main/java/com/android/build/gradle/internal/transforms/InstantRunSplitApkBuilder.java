@@ -31,11 +31,13 @@ import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
+import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
-import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.internal.aapt.BlockingResourceLinker;
+import com.android.builder.internal.aapt.CloseableBlockingResourceLinker;
 import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.process.ProcessException;
@@ -170,6 +172,9 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         ImmutableMap.Builder<String, Object> builder =
                 ImmutableMap.<String, Object>builder()
                         .put("applicationId", applicationId)
+                        .put(
+                                "aaptVersion",
+                                androidBuilder.getBuildToolInfo().getRevision().toString())
                         .put("aaptGeneration", aaptGeneration.name());
         return builder.build();
     }
@@ -205,7 +210,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         final File alignedOutput = new File(outputDirectory, uniqueName + ".apk");
         Files.createParentDirs(alignedOutput);
 
-        try (Aapt aapt = getAapt()) {
+        try (CloseableBlockingResourceLinker aapt = makeAapt()) {
             File resPackageFile =
                     generateSplitApkResourcesAp(
                             logger,
@@ -295,7 +300,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     @NonNull
     public static File generateSplitApkResourcesAp(
             @NonNull Logger logger,
-            @NonNull Aapt aapt,
+            @NonNull BlockingResourceLinker aapt,
             @NonNull String applicationId,
             @NonNull ApkInfo apkInfo,
             @NonNull File supportDirectory,
@@ -336,7 +341,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     @NonNull
     public static File generateSplitApkResourcesAp(
             @NonNull Logger logger,
-            @NonNull Aapt aapt,
+            @NonNull BlockingResourceLinker aapt,
             @NonNull File androidManifest,
             @NonNull File supportDirectory,
             @NonNull AaptOptions aaptOptions,
@@ -375,15 +380,19 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         return resFilePackageFile;
     }
 
-    protected Aapt getAapt() {
+    protected CloseableBlockingResourceLinker makeAapt() {
         return makeAapt(aaptGeneration, androidBuilder, aaptIntermediateDirectory);
     }
 
     @NonNull
-    public static Aapt makeAapt(
+    public static CloseableBlockingResourceLinker makeAapt(
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File intermediateFolder) {
+        if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+            return Aapt2DaemonManagerService.getAaptDaemon(
+                    androidBuilder.getBuildToolInfo().getRevision());
+        }
         return AaptGradleFactory.make(
                 aaptGeneration,
                 androidBuilder,

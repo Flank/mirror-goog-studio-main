@@ -25,6 +25,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
+import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -45,13 +46,15 @@ import com.android.ide.common.blame.parser.ToolOutputParser;
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser;
 import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
 import com.android.ide.common.process.ProcessOutputHandler;
+import com.android.ide.common.res2.CopyToOutputDirectoryResourceCompilationService;
 import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.res2.FileValidity;
 import com.android.ide.common.res2.GeneratedResourceSet;
 import com.android.ide.common.res2.MergedResourceWriter;
 import com.android.ide.common.res2.MergingException;
 import com.android.ide.common.res2.NoOpResourcePreprocessor;
-import com.android.ide.common.res2.QueueableResourceCompiler;
+import com.android.ide.common.res2.QueueableResourceCompilationService;
+import com.android.ide.common.res2.ResourceCompilationService;
 import com.android.ide.common.res2.ResourceMerger;
 import com.android.ide.common.res2.ResourcePreprocessor;
 import com.android.ide.common.res2.ResourceSet;
@@ -70,6 +73,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -155,9 +159,10 @@ public class MergeResources extends IncrementalTask {
     private ImmutableSet<Flag> flags;
 
     @NonNull
-    private static QueueableResourceCompiler getResourceProcessor(
+    private static ResourceCompilationService getResourceProcessor(
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidBuilder builder,
+            @Nullable WorkerExecutor workerExecutor,
             boolean crunchPng,
             @NonNull VariantScope scope,
             @NonNull File intermediateDir,
@@ -167,23 +172,33 @@ public class MergeResources extends IncrementalTask {
         // If we received the flag for removing namespaces we need to use the namespace remover to
         // process the resources.
         if (flags.contains(Flag.REMOVE_RESOURCE_NAMESPACES)) {
-            return new NamespaceRemover();
+            return NamespaceRemover.INSTANCE;
         }
 
         // If we're not removing namespaces and there's no need to compile the resources, return a
         // no-op resource processor.
         if (!processResources) {
-            return QueueableResourceCompiler.NONE;
+            return CopyToOutputDirectoryResourceCompilationService.INSTANCE;
+        }
+
+        if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+            return new WorkerExecutorResourceCompilationService(
+                    Objects.requireNonNull(workerExecutor),
+                    builder.getBuildToolInfo().getRevision());
         }
 
         // Finally, use AAPT or one of AAPT2 versions based on the project flags.
-        return AaptGradleFactory.make(
-                aaptGeneration,
-                builder,
-                createProcessOutputHandler(aaptGeneration, builder, blameLog),
-                crunchPng,
-                intermediateDir,
-                scope.getGlobalScope().getExtension().getAaptOptions().getCruncherProcesses());
+        return new QueueableResourceCompilationService(
+                AaptGradleFactory.make(
+                        aaptGeneration,
+                        builder,
+                        createProcessOutputHandler(aaptGeneration, builder, blameLog),
+                        crunchPng,
+                        intermediateDir,
+                        scope.getGlobalScope()
+                                .getExtension()
+                                .getAaptOptions()
+                                .getCruncherProcesses()));
     }
 
     @Nullable
@@ -222,11 +237,13 @@ public class MergeResources extends IncrementalTask {
         return dataBindingLayoutInfoOutFolder;
     }
 
+    private final WorkerExecutor workerExecutor;
     private final WorkerExecutorFacade<MergedResourceWriter.FileGenerationParameters>
             workerExecutorFacade;
 
     @Inject
     public MergeResources(WorkerExecutor workerExecutor) {
+        this.workerExecutor = workerExecutor;
         this.workerExecutorFacade =
                 new WorkerExecutorAdapter<>(workerExecutor, FileGenerationWorkAction.class);
     }
@@ -252,10 +269,11 @@ public class MergeResources extends IncrementalTask {
             mergingLog = new MergingLog(blameLogFolder);
         }
 
-        try (QueueableResourceCompiler resourceCompiler =
+        try (ResourceCompilationService resourceCompiler =
                 getResourceProcessor(
                         aaptGeneration,
                         getBuilder(),
+                        workerExecutor,
                         crunchPng,
                         variantScope,
                         getAaptTempDir(),
@@ -353,10 +371,11 @@ public class MergeResources extends IncrementalTask {
             MergingLog mergingLog =
                     getBlameLogFolder() != null ? new MergingLog(getBlameLogFolder()) : null;
 
-            try (QueueableResourceCompiler resourceCompiler =
+            try (ResourceCompilationService resourceCompiler =
                     getResourceProcessor(
                             aaptGeneration,
                             getBuilder(),
+                            workerExecutor,
                             crunchPng,
                             variantScope,
                             getAaptTempDir(),

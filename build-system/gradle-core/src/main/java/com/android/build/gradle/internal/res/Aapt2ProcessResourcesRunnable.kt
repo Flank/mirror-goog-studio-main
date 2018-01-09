@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,28 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.res.namespaced
+package com.android.build.gradle.internal.res
 
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.ide.common.res2.CompileResourceRequest
+import com.android.build.gradle.internal.res.namespaced.useAaptDaemon
+import com.android.builder.core.AndroidBuilder
+import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.repository.Revision
 import org.gradle.api.logging.Logging
 import java.io.Serializable
 import javax.inject.Inject
 
-class Aapt2CompileRunnable @Inject constructor(
+class Aapt2ProcessResourcesRunnable @Inject constructor(
         private val params: Params) : Runnable {
 
     override fun run() {
         val logger = LoggerWrapper(Logging.getLogger(this::class.java))
         useAaptDaemon(params.revision) { daemon ->
-            params.requests.forEach { daemon.compile(it, logger) }
+            AndroidBuilder.processResources(daemon, params.request, logger)
         }
     }
 
     class Params(
             val revision: Revision,
-            val requests: List<CompileResourceRequest>) : Serializable
+            val request: AaptPackageConfig) : Serializable
 }

@@ -17,46 +17,14 @@
 package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
-import com.android.utils.FileUtils;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.File;
-import java.io.IOException;
 
 /**
  * A specialization of the {@link ResourceCompiler} that can queue compile request and execute them
  * all using slave threads or processes.
  */
 public interface QueueableResourceCompiler extends ResourceCompiler, Closeable {
-
-    QueueableResourceCompiler NONE =
-            new QueueableResourceCompiler() {
-
-                @Override
-                public void close() throws IOException {
-                    // no batching
-                }
-
-                @NonNull
-                @Override
-                public ListenableFuture<File> compile(@NonNull CompileResourceRequest request)
-                        throws Exception {
-                    // Copy file instead of compiling.
-                    File out = compileOutputFor(request);
-                    FileUtils.mkdirs(out.getParentFile());
-                    FileUtils.copyFile(request.getInputFile(), out);
-                    return Futures.immediateFuture(out);
-                }
-
-                @NonNull
-                @Override
-                public File compileOutputFor(@NonNull CompileResourceRequest request) {
-                    File parentDir =
-                            new File(request.getOutputDirectory(), request.getInputDirectoryName());
-                    return new File(parentDir, request.getInputFile().getName());
-                }
-            };
 
     /**
      * Obtains the file that will receive the compilation output of a given file. This method will

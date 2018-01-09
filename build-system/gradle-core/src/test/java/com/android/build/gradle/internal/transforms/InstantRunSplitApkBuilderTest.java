@@ -36,6 +36,7 @@ import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.build.ApkInfo;
+import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.base.Charsets;
@@ -123,7 +124,7 @@ public class InstantRunSplitApkBuilderTest {
                         apkList,
                         apkInfo) {
                     @Override
-                    protected Aapt getAapt() {
+                    protected Aapt makeAapt() {
                         return aapt;
                     }
                 };
@@ -131,10 +132,13 @@ public class InstantRunSplitApkBuilderTest {
 
     @Test
     public void testParameterInputs() {
+        when(androidBuilder.getBuildToolInfo()).thenReturn(buildTools);
+        when(buildTools.getRevision()).thenReturn(Revision.parseRevision("27.0.0"));
 
         Map<String, Object> parameterInputs = instantRunSliceSplitApkBuilder.getParameterInputs();
         assertThat(parameterInputs).containsEntry("applicationId", "com.foo.test");
-        assertThat(parameterInputs).hasSize(2);
+        assertThat(parameterInputs).containsEntry("aaptVersion", "27.0.0");
+        assertThat(parameterInputs).hasSize(3);
     }
 
     @Test
@@ -249,7 +253,7 @@ public class InstantRunSplitApkBuilderTest {
                         apkList,
                         apkInfo) {
                     @Override
-                    protected Aapt getAapt() {
+                    protected Aapt makeAapt() {
                         return aapt;
                     }
                 };

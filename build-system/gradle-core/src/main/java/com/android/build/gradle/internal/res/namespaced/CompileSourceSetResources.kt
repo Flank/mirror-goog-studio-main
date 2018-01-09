@@ -113,8 +113,7 @@ open class CompileSourceSetResources
                 it.isolationMode = IsolationMode.NONE
                 it.setParams(Aapt2CompileRunnable.Params(
                         revision = builder.buildToolInfo.revision,
-                        requests = listOf(request),
-                        outputDirectory = outputDirectory))
+                        requests = listOf(request)))
             }
         }
     }

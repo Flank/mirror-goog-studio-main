@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
@@ -24,6 +25,8 @@ import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
+import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable;
+import com.android.build.gradle.internal.res.namespaced.Aapt2CompileRunnable;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -36,7 +39,9 @@ import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.internal.aapt.BlockingResourceLinker;
 import com.android.builder.internal.aapt.v1.AaptV1;
+import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -48,6 +53,7 @@ import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.res2.QueueableResourceCompiler;
+import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -57,17 +63,21 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.workers.IsolationMode;
+import org.gradle.workers.WorkerExecutor;
 
 public class VerifyLibraryResourcesTask extends IncrementalTask {
 
@@ -78,6 +88,13 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
     private FileCollection manifestFiles;
 
     private AaptGeneration aaptGeneration;
+
+    private final WorkerExecutor workerExecutor;
+
+    @Inject
+    public VerifyLibraryResourcesTask(WorkerExecutor workerExecutor) {
+        this.workerExecutor = workerExecutor;
+    }
 
     @Override
     protected boolean isIncremental() {
@@ -126,6 +143,29 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
         BuildElements manifestsOutputs = ExistingBuildElements.from(taskInputType, manifestFiles);
         File manifestFile = Iterables.getOnlyElement(manifestsOutputs).getOutputFile();
 
+        if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+            // If we're using AAPT2 we need to compile the resources into the compiled directory
+            // first as we need the .flat files for linking.
+            compileResources(
+                    inputs,
+                    compiledDirectory,
+                    null,
+                    workerExecutor,
+                    builder.getBuildToolInfo().getRevision(),
+                    inputDirectory.getSingleFile());
+            AaptPackageConfig config = getAaptPackageConfig(compiledDirectory, manifestFile);
+            Aapt2ProcessResourcesRunnable.Params params =
+                    new Aapt2ProcessResourcesRunnable.Params(
+                            builder.getBuildToolInfo().getRevision(), config);
+            workerExecutor.submit(
+                    Aapt2ProcessResourcesRunnable.class,
+                    it -> {
+                        it.setIsolationMode(IsolationMode.NONE);
+                        it.setParams(params);
+                    });
+            return;
+        }
+
         try (Aapt aapt =
                 AaptGradleFactory.make(
                         aaptGeneration,
@@ -141,7 +181,13 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
             } else {
                 // If we're using AAPT2 we need to compile the resources into the compiled directory
                 // first as we need the .flat files for linking.
-                compileResources(inputs, compiledDirectory, aapt, inputDirectory.getSingleFile());
+                compileResources(
+                        inputs,
+                        compiledDirectory,
+                        aapt,
+                        null,
+                        null,
+                        inputDirectory.getSingleFile());
                 linkResources(compiledDirectory, aapt, manifestFile);
             }
         }
@@ -154,19 +200,26 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
      *
      * @param inputs the new, changed or modified files that need to be compiled or removed.
      * @param outDirectory the directory containing compiled resources.
-     * @param aapt AAPT tool to execute the resource compiling.
+     * @param aapt AAPT tool to execute the resource compiling, either must be supplied or worker
+     *     executor and revision must be supplied.
+     * @param workerExecutor the worker executor to submit AAPT compilations to.
+     * @param aaptRevision the revision of aapt used.
      * @param mergedResDirectory directory containing merged uncompiled resources.
      */
     @VisibleForTesting
     public static void compileResources(
             @NonNull Map<File, FileStatus> inputs,
             @NonNull File outDirectory,
-            @NonNull QueueableResourceCompiler aapt,
+            @Nullable QueueableResourceCompiler aapt,
+            @Nullable WorkerExecutor workerExecutor,
+            @Nullable Revision aaptRevision,
             @NonNull File mergedResDirectory)
             throws AaptException, ExecutionException, InterruptedException, IOException {
         Preconditions.checkState(
                 !(aapt instanceof AaptV1),
                 "Library resources should be compiled for verification using AAPT2");
+
+        Preconditions.checkState(aapt != null || (workerExecutor != null && aaptRevision != null));
 
         List<Future<File>> compiling = new ArrayList<>();
 
@@ -182,16 +235,27 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                     // directory. AAPT2 overwrites files in case they were CHANGED so no need to
                     // remove the corresponding file.
                     try {
-                        Future<File> result =
-                                aapt.compile(
-                                        new CompileResourceRequest(
-                                                input.getKey(),
-                                                outDirectory,
-                                                input.getKey().getParent(),
-                                                false /* pseudo-localize */,
-                                                false /* crunch PNGs */));
-
-                        compiling.add(result);
+                        CompileResourceRequest request =
+                                new CompileResourceRequest(
+                                        input.getKey(),
+                                        outDirectory,
+                                        input.getKey().getParent(),
+                                        false /* pseudo-localize */,
+                                        false /* crunch PNGs */);
+                        if (aapt != null) {
+                            Future<File> result = aapt.compile(request);
+                            compiling.add(result);
+                        } else {
+                            workerExecutor.submit(
+                                    Aapt2CompileRunnable.class,
+                                    config -> {
+                                        config.setIsolationMode(IsolationMode.NONE);
+                                        config.params(
+                                                new Aapt2CompileRunnable.Params(
+                                                        aaptRevision,
+                                                        Collections.singletonList(request)));
+                                    });
+                        }
                     } catch (Exception e) {
                         throw new AaptException(
                                 String.format(
@@ -204,17 +268,18 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                     // If the file was REMOVED we need to remove the corresponding file from the
                     // output directory.
                     FileUtils.deleteIfExists(
-                            aapt.compileOutputFor(
-                                    new CompileResourceRequest(
-                                            input.getKey(),
-                                            outDirectory,
-                                            input.getKey().getParent())));
+                            new File(
+                                    outDirectory,
+                                    Aapt2RenamingConventions.compilationRename(input.getKey())));
             }
         }
-
-        // Wait for all the files to finish compiling.
-        for (Future<File> result : compiling) {
-            result.get();
+        if (workerExecutor != null) {
+            workerExecutor.await();
+        } else {
+            // Wait for all the files to finish compiling.
+            for (Future<File> result : compiling) {
+                result.get();
+            }
         }
     }
 
@@ -225,22 +290,29 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
      * @param aapt AAPT tool to execute the resource linking.
      * @param manifestFile the manifest file to package.
      */
-    private void linkResources(@NonNull File resDir, @NonNull Aapt aapt, @NonNull File manifestFile)
+    private void linkResources(
+            @NonNull File resDir, @NonNull BlockingResourceLinker aapt, @NonNull File manifestFile)
             throws ProcessException, IOException {
 
         Preconditions.checkNotNull(manifestFile, "Manifest file cannot be null");
-        AndroidBuilder builder = getBuilder();
 
+        AaptPackageConfig config = getAaptPackageConfig(resDir, manifestFile);
+
+        AndroidBuilder.processResources(aapt, config, getILogger());
+    }
+
+    @NonNull
+    private AaptPackageConfig getAaptPackageConfig(
+            @NonNull File resDir, @NonNull File manifestFile) {
         // We're do not want to generate any files - only to make sure everything links properly.
-        AaptPackageConfig.Builder config =
-                new AaptPackageConfig.Builder()
-                        .setManifestFile(manifestFile)
-                        .setResourceDir(resDir)
-                        .setLibrarySymbolTableFiles(ImmutableSet.of())
-                        .setOptions(DslAdaptersKt.convert(new AaptOptions()))
-                        .setVariantType(VariantType.LIBRARY);
-
-        builder.processResources(aapt, config);
+        return new AaptPackageConfig.Builder()
+                .setManifestFile(manifestFile)
+                .setResourceDir(resDir)
+                .setLibrarySymbolTableFiles(ImmutableSet.of())
+                .setOptions(DslAdaptersKt.convert(new AaptOptions()))
+                .setVariantType(VariantType.LIBRARY)
+                .setAndroidTarget(getBuilder().getTarget())
+                .build();
     }
 
     public static class ConfigAction implements TaskConfigAction<VerifyLibraryResourcesTask> {
