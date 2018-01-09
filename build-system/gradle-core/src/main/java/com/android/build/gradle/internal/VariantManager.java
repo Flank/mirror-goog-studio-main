@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
+import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseFlavor;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -120,6 +121,7 @@ public class VariantManager implements VariantModel {
     @NonNull private final AndroidConfig extension;
     @NonNull private final VariantFactory variantFactory;
     @NonNull private final TaskManager taskManager;
+    @NonNull private final SourceSetManager sourceSetManager;
     @NonNull private final Recorder recorder;
     @NonNull private final ProductFlavorData<CoreProductFlavor> defaultConfigData;
     @NonNull private final Map<String, BuildTypeData> buildTypes;
@@ -139,6 +141,7 @@ public class VariantManager implements VariantModel {
             @NonNull AndroidConfig extension,
             @NonNull VariantFactory variantFactory,
             @NonNull TaskManager taskManager,
+            @NonNull SourceSetManager sourceSetManager,
             @NonNull Recorder recorder) {
         this.globalScope = globalScope;
         this.extension = extension;
@@ -147,6 +150,7 @@ public class VariantManager implements VariantModel {
         this.projectOptions = projectOptions;
         this.variantFactory = variantFactory;
         this.taskManager = taskManager;
+        this.sourceSetManager = sourceSetManager;
         this.recorder = recorder;
         this.signingOverride = createSigningOverride();
         this.variantFilter = new VariantFilter(new ReadOnlyObjectProvider());
@@ -230,7 +234,8 @@ public class VariantManager implements VariantModel {
             throw new RuntimeException("BuildType names cannot collide with ProductFlavor names");
         }
 
-        DefaultAndroidSourceSet mainSourceSet = (DefaultAndroidSourceSet) extension.getSourceSets().maybeCreate(name);
+        DefaultAndroidSourceSet mainSourceSet =
+                (DefaultAndroidSourceSet) sourceSetManager.setUpSourceSet(name);
 
         DefaultAndroidSourceSet androidTestSourceSet = null;
         DefaultAndroidSourceSet unitTestSourceSet = null;
@@ -238,16 +243,14 @@ public class VariantManager implements VariantModel {
             if (buildType.getName().equals(extension.getTestBuildType())) {
                 androidTestSourceSet =
                         (DefaultAndroidSourceSet)
-                                extension
-                                        .getSourceSets()
-                                        .maybeCreate(
-                                                computeSourceSetName(
-                                                        buildType.getName(), ANDROID_TEST));
+                                sourceSetManager.setUpTestSourceSet(
+                                        computeSourceSetName(buildType.getName(), ANDROID_TEST));
             }
 
-            unitTestSourceSet = (DefaultAndroidSourceSet) extension
-                    .getSourceSets().maybeCreate(
-                            computeSourceSetName(buildType.getName(), UNIT_TEST));
+            unitTestSourceSet =
+                    (DefaultAndroidSourceSet)
+                            sourceSetManager.setUpTestSourceSet(
+                                    computeSourceSetName(buildType.getName(), UNIT_TEST));
         }
 
         BuildTypeData buildTypeData =
@@ -271,18 +274,20 @@ public class VariantManager implements VariantModel {
             throw new RuntimeException("ProductFlavor names cannot collide with BuildType names");
         }
 
-        DefaultAndroidSourceSet mainSourceSet = (DefaultAndroidSourceSet) extension.getSourceSets().maybeCreate(
-                productFlavor.getName());
+        DefaultAndroidSourceSet mainSourceSet =
+                (DefaultAndroidSourceSet) sourceSetManager.setUpSourceSet(productFlavor.getName());
 
         DefaultAndroidSourceSet androidTestSourceSet = null;
         DefaultAndroidSourceSet unitTestSourceSet = null;
         if (variantFactory.hasTestScope()) {
-            androidTestSourceSet = (DefaultAndroidSourceSet) extension
-                    .getSourceSets().maybeCreate(
-                            computeSourceSetName(productFlavor.getName(), ANDROID_TEST));
-            unitTestSourceSet = (DefaultAndroidSourceSet) extension
-                    .getSourceSets().maybeCreate(
-                            computeSourceSetName(productFlavor.getName(), UNIT_TEST));
+            androidTestSourceSet =
+                    (DefaultAndroidSourceSet)
+                            sourceSetManager.setUpTestSourceSet(
+                                    computeSourceSetName(productFlavor.getName(), ANDROID_TEST));
+            unitTestSourceSet =
+                    (DefaultAndroidSourceSet)
+                            sourceSetManager.setUpTestSourceSet(
+                                    computeSourceSetName(productFlavor.getName(), UNIT_TEST));
         }
 
         ProductFlavorData<CoreProductFlavor> productFlavorData =
@@ -879,7 +884,7 @@ public class VariantManager implements VariantModel {
                     dimensionName);
         }
 
-        createCompoundSourceSets(productFlavorList, variantConfig, sourceSetsContainer);
+        createCompoundSourceSets(productFlavorList, variantConfig, sourceSetManager);
 
         // Add the container of dependencies.
         // The order of the libraries is important, in descending order:
@@ -957,22 +962,24 @@ public class VariantManager implements VariantModel {
     private static void createCompoundSourceSets(
             @NonNull List<? extends ProductFlavor> productFlavorList,
             @NonNull GradleVariantConfiguration variantConfig,
-            @NonNull NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer) {
+            @NonNull SourceSetManager sourceSetManager) {
         if (!productFlavorList.isEmpty() /* && !variantConfig.getType().isSingleBuildType()*/) {
             DefaultAndroidSourceSet variantSourceSet =
-                    (DefaultAndroidSourceSet) sourceSetsContainer.maybeCreate(
-                            computeSourceSetName(
-                                    variantConfig.getFullName(),
-                                    variantConfig.getType()));
+                    (DefaultAndroidSourceSet)
+                            sourceSetManager.setUpSourceSet(
+                                    computeSourceSetName(
+                                            variantConfig.getFullName(), variantConfig.getType()),
+                                    variantConfig.getType().isForTesting());
             variantConfig.setVariantSourceProvider(variantSourceSet);
         }
 
         if (productFlavorList.size() > 1) {
             DefaultAndroidSourceSet multiFlavorSourceSet =
-                    (DefaultAndroidSourceSet) sourceSetsContainer.maybeCreate(
-                            computeSourceSetName(
-                                    variantConfig.getFlavorName(),
-                                    variantConfig.getType()));
+                    (DefaultAndroidSourceSet)
+                            sourceSetManager.setUpSourceSet(
+                                    computeSourceSetName(
+                                            variantConfig.getFlavorName(), variantConfig.getType()),
+                                    variantConfig.getType().isForTesting());
             variantConfig.setMultiFlavorSourceProvider(multiFlavorSourceSet);
         }
     }
@@ -1039,7 +1046,7 @@ public class VariantManager implements VariantModel {
                     dimensionName);
         }
 
-        createCompoundSourceSets(productFlavorList, testVariantConfig, extension.getSourceSets());
+        createCompoundSourceSets(productFlavorList, testVariantConfig, sourceSetManager);
 
         // create the internal storage for this variant.
         TestVariantData testVariantData =
