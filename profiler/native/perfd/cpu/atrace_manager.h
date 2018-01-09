@@ -52,7 +52,8 @@ class AtraceManager {
   // names keeps the profiling unique.
   bool StartProfiling(const std::string &app_name, int sampling_interval_us,
                       std::string *trace_path, std::string *error);
-  bool StopProfiling(const std::string &app_name, std::string *error);
+  bool StopProfiling(const std::string &app_name, bool need_result,
+                     std::string *error);
   bool IsProfiling() { return is_profiling_; }
   int GetDumpCount() { return dumps_created_; }
 

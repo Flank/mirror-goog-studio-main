@@ -45,10 +45,10 @@ class ActivityManager {
                       std::string *error_string);
 
   // Stops ongoing profiling. If no profiling was ongoing, this function is a
-  // no-op.
+  // no-op. If |need_result|, waits ART for finishing writing the trace file.
   // Returns true is profiling stopped successfully. Otherwise false
   // and populate error_string.
-  bool StopProfiling(const std::string &app_package_name,
+  bool StopProfiling(const std::string &app_package_name, bool need_result,
                      std::string *error_string);
 
   bool TriggerHeapDump(int pid, const std::string &file_path,

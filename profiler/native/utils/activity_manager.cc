@@ -72,7 +72,7 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
 }
 
 bool ActivityManager::StopProfiling(const string &app_package_name,
-                                    string *error_string) {
+                                    bool need_result, string *error_string) {
   Trace trace("CPU:StopProfiling ART");
   std::lock_guard<std::mutex> lock(profiled_lock_);
 
@@ -83,9 +83,11 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
 
   RemoveProfiledApp(app_package_name);
 
-  if (!notifier.IsReadyToNotify()) {
-    *error_string = "Unable to monitor trace file for completion";
-    return false;
+  if (need_result) {
+    if (!notifier.IsReadyToNotify()) {
+      *error_string = "Unable to monitor trace file for completion";
+      return false;
+    }
   }
 
   // Run stop command via actual am.
@@ -97,11 +99,13 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
     return false;
   }
 
-  // Wait until ART has finished writing the trace to the file and closed the
-  // file.
-  if (!notifier.WaitUntilEventOccurs()) {
-    *error_string = "Wait for ART trace file failed.";
-    return false;
+  if (need_result) {
+    // Wait until ART has finished writing the trace to the file and closed the
+    // file.
+    if (!notifier.WaitUntilEventOccurs()) {
+      *error_string = "Wait for ART trace file failed.";
+      return false;
+    }
   }
 
   return true;
