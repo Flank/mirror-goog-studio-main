@@ -93,9 +93,7 @@ open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
                         .setBuildToolInfo(builder.buildToolInfo)
                         .setIntermediateDir(aaptIntermediateDir)
                         .build()
-        val result = aapt.link(config)
-        result.get()
-
+        aapt.link(config)
     }
 
     class ConfigAction(

@@ -37,6 +37,7 @@ import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.internal.aapt.BlockingResourceLinker;
 import com.android.builder.internal.compiler.AidlProcessor;
 import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.compiler.PreDexCache;
@@ -772,12 +773,12 @@ public class AndroidBuilder {
      *     additional data (build tools, Android target and logger) and will be used to request
      *     package invocation in {@code aapt} (see {@link Aapt#link(AaptPackageConfig)})
      * @throws IOException failed
-     * @throws InterruptedException failed
      * @throws ProcessException failed
      */
     public void processResources(
-            @NonNull Aapt aapt, @NonNull AaptPackageConfig.Builder aaptConfigBuilder)
-            throws IOException, InterruptedException, ProcessException {
+            @NonNull BlockingResourceLinker aapt,
+            @NonNull AaptPackageConfig.Builder aaptConfigBuilder)
+            throws IOException, ProcessException {
 
         checkState(mTargetInfo != null,
                 "Cannot call processResources() before setTargetInfo() is called.");
@@ -789,7 +790,7 @@ public class AndroidBuilder {
         AaptPackageConfig aaptConfig = aaptConfigBuilder.build();
 
         try {
-            aapt.link(aaptConfig).get();
+            aapt.link(aaptConfig);
         } catch (Exception e) {
             throw new ProcessException("Failed to execute aapt", e);
         }

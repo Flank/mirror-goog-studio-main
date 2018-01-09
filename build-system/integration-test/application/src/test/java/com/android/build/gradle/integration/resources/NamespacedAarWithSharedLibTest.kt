@@ -42,7 +42,6 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.util.concurrent.TimeUnit
 
 /**
  * Sanity tests for the new namespaced resource pipeline with publication and consumption of an aar.
@@ -197,7 +196,7 @@ class NamespacedAarWithSharedLibTest {
                     buildToolInfo,
                     StdLogger(StdLogger.Level.VERBOSE),
                     0)
-                    .use { it.link(config).get(2, TimeUnit.MINUTES) }
+                    .use { it.link(config) }
 
             // TODO: signing, make usable for running.
 //            val sharedLib = File(unsignedSharedLib.parentFile, "shared.apk")

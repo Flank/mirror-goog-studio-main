@@ -47,6 +47,7 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.ide.common.res2.FileStatus;
+import com.android.ide.common.res2.QueueableResourceCompiler;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -160,7 +161,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
     public static void compileResources(
             @NonNull Map<File, FileStatus> inputs,
             @NonNull File outDirectory,
-            @NonNull Aapt aapt,
+            @NonNull QueueableResourceCompiler aapt,
             @NonNull File mergedResDirectory)
             throws AaptException, ExecutionException, InterruptedException, IOException {
         Preconditions.checkState(
@@ -225,7 +226,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
      * @param manifestFile the manifest file to package.
      */
     private void linkResources(@NonNull File resDir, @NonNull Aapt aapt, @NonNull File manifestFile)
-            throws InterruptedException, ProcessException, IOException {
+            throws ProcessException, IOException {
 
         Preconditions.checkNotNull(manifestFile, "Manifest file cannot be null");
         AndroidBuilder builder = getBuilder();

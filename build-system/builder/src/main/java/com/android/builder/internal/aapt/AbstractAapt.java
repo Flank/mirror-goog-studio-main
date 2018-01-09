@@ -25,6 +25,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Abstract implementation of an {@code aapt} command. It provides a common framework for
@@ -33,11 +34,10 @@ import java.util.List;
 public abstract class AbstractAapt implements Aapt {
 
     @Override
-    @NonNull
-    public final ListenableFuture<Void> link(@NonNull AaptPackageConfig config)
-            throws AaptException {
+    public final void link(@NonNull AaptPackageConfig config)
+            throws AaptException, ExecutionException, InterruptedException {
         validatePackageConfig(config);
-        return makeValidatedPackage(config);
+        makeValidatedPackage(config).get();
     }
 
     /**

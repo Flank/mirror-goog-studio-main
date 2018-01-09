@@ -504,7 +504,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                     apkData,
                     resOutBaseNameFile,
                     manifestOutput.getProperties());
-        } catch (InterruptedException | ProcessException e) {
+        } catch (ProcessException e) {
             getLogger().error(e.getMessage(), e);
             throw new BuildException(e.getMessage(), e);
         }
