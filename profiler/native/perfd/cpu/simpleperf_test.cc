@@ -89,9 +89,9 @@ class FakeSimpleperfGetFeatures final : public Simpleperf {
 
   // A public wrapper for the homonym protected method, for testing.
   string GetRecordCommand(int pid, const string& pkg_name,
-                          const string& trace_path,
+                          const string& abi_arch, const string& trace_path,
                           int sampling_interval_us) const {
-    return Simpleperf::GetRecordCommand(pid, pkg_name, trace_path,
+    return Simpleperf::GetRecordCommand(pid, pkg_name, abi_arch, trace_path,
                                         sampling_interval_us);
   }
 
@@ -100,7 +100,7 @@ class FakeSimpleperfGetFeatures final : public Simpleperf {
     return Simpleperf::SplitRecordCommand(original_cmd, split_cmd);
   }
 
-  string GetFeatures() const { return features_; }
+  string GetFeatures(const string& abi_arch) const { return features_; }
 
   void SetFeatures(string features) { features_ = features; }
 
@@ -111,11 +111,11 @@ class FakeSimpleperfGetFeatures final : public Simpleperf {
 TEST(SimpleperfTest, RecordCommandParams) {
   FakeSimpleperfGetFeatures simpleperf{false};
 
-  string record_command =
-      simpleperf.GetRecordCommand(3039, "my.package", kFakeTracePath, 100);
+  string record_command = simpleperf.GetRecordCommand(3039, "my.package", "arm",
+                                                      kFakeTracePath, 100);
 
   // simpleperf binary + "record"
-  EXPECT_THAT(record_command, StartsWith("/fake/path/simpleperf record"));
+  EXPECT_THAT(record_command, StartsWith("/fake/path/simpleperf_arm record"));
   // PID
   EXPECT_THAT(record_command, HasArgument("-p 3039"));
   // package name
@@ -129,15 +129,39 @@ TEST(SimpleperfTest, RecordCommandParams) {
   EXPECT_THAT(record_command, HasArgument("--exit-with-parent"));
 }
 
+TEST(SimpleperfTest, SimpleperfBinaryName) {
+  FakeSimpleperfGetFeatures simpleperf{false};
+  int pid = 42;
+  string app = "my.good.app";
+  int sampling_interval = 100;
+
+  string record_command = simpleperf.GetRecordCommand(
+      pid, app, "arm", kFakeTracePath, sampling_interval);
+  EXPECT_THAT(record_command, StartsWith("/fake/path/simpleperf_arm record"));
+
+  record_command = simpleperf.GetRecordCommand(
+      pid, app, "arm64", kFakeTracePath, sampling_interval);
+  EXPECT_THAT(record_command, StartsWith("/fake/path/simpleperf_arm64 record"));
+
+  record_command = simpleperf.GetRecordCommand(pid, app, "x86", kFakeTracePath,
+                                               sampling_interval);
+  EXPECT_THAT(record_command, StartsWith("/fake/path/simpleperf_x86 record"));
+
+  record_command = simpleperf.GetRecordCommand(
+      pid, app, "x86_64", kFakeTracePath, sampling_interval);
+  EXPECT_THAT(record_command,
+              StartsWith("/fake/path/simpleperf_x86_64 record"));
+}
+
 TEST(SimpleperfTest, EmulatorUsesCpuClockEvents) {
   FakeSimpleperfGetFeatures simpleperf_emulator{true /* is_emulator */};
-  string record_command =
-      simpleperf_emulator.GetRecordCommand(1, "any.package", kFakeTracePath, 1);
+  string record_command = simpleperf_emulator.GetRecordCommand(
+      1, "any.package", "arm", kFakeTracePath, 1);
   EXPECT_THAT(record_command, HasArgument("-e cpu-clock"));
 
   FakeSimpleperfGetFeatures simpleperf{false /* is_emulator */};
   record_command =
-      simpleperf.GetRecordCommand(1, "any.package", kFakeTracePath, 1);
+      simpleperf.GetRecordCommand(1, "any.package", "arm", kFakeTracePath, 1);
   EXPECT_THAT(record_command, Not(HasArgument("-e cpu-clock")));
 }
 
@@ -145,12 +169,12 @@ TEST(SimpleperfTest, TraceOffCpuFlag) {
   FakeSimpleperfGetFeatures simpleperf{false};
   simpleperf.SetFeatures("trace-offcpu\nother feature");
   string record_command =
-      simpleperf.GetRecordCommand(1, "any.package", kFakeTracePath, 1);
+      simpleperf.GetRecordCommand(1, "any.package", "arm", kFakeTracePath, 1);
   EXPECT_THAT(record_command, HasArgument("--trace-offcpu"));
 
   simpleperf.SetFeatures("other feature");
   record_command =
-      simpleperf.GetRecordCommand(1, "any.package", kFakeTracePath, 1);
+      simpleperf.GetRecordCommand(1, "any.package", "arm", kFakeTracePath, 1);
   EXPECT_THAT(record_command, Not(HasArgument("--trace-offcpu")));
 }
 
@@ -158,12 +182,12 @@ TEST(SimpleperfTest, DwarfVsFpCallGraph) {
   FakeSimpleperfGetFeatures simpleperf{false};
   simpleperf.SetFeatures("dwarf-based-call-graph");
   string record_command =
-      simpleperf.GetRecordCommand(1, "any.package", kFakeTracePath, 1);
+      simpleperf.GetRecordCommand(1, "any.package", "arm", kFakeTracePath, 1);
   EXPECT_THAT(record_command, HasArgument("--call-graph dwarf"));
 
   simpleperf.SetFeatures("");
   record_command =
-      simpleperf.GetRecordCommand(1, "any.package", kFakeTracePath, 1);
+      simpleperf.GetRecordCommand(1, "any.package", "arm", kFakeTracePath, 1);
   EXPECT_THAT(record_command, HasArgument("--call-graph fp"));
 }
 

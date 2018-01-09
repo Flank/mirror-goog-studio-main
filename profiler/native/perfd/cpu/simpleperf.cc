@@ -55,7 +55,7 @@ bool Simpleperf::KillSimpleperf(int simpleperf_pid) const {
   return kill_simpleperf.Run(string_pid.str(), nullptr);
 }
 
-void Simpleperf::Record(int pid, const string& pkg_name,
+void Simpleperf::Record(int pid, const string& pkg_name, const string& abi_arch,
                         const string& trace_path, int sampling_interval_us,
                         const string& log_path) const {
   //  Redirect stdout and stderr to a log file (useful if simpleperf
@@ -66,8 +66,8 @@ void Simpleperf::Record(int pid, const string& pkg_name,
   dup2(fd, fileno(stderr));
   close(fd);
 
-  string record_command =
-      GetRecordCommand(pid, pkg_name, trace_path, sampling_interval_us);
+  string record_command = GetRecordCommand(pid, pkg_name, abi_arch, trace_path,
+                                           sampling_interval_us);
 
   Log::D("Simpleperf record command: %s", record_command.c_str());
 
@@ -82,8 +82,9 @@ void Simpleperf::Record(int pid, const string& pkg_name,
 }
 
 bool Simpleperf::ReportSample(const string& input_path,
-                              const string& output_path, string* output) const {
-  string simpleperf_binary_abspath = simpleperf_dir_ + kSimpleperfExecutable;
+                              const string& output_path, const string& abi_arch,
+                              string* output) const {
+  string simpleperf_binary_abspath = GetSimpleperfPath(abi_arch);
   BashCommandRunner simpleperf_report(simpleperf_binary_abspath);
   ostringstream parameters;
   parameters << "report-sample ";
@@ -101,14 +102,16 @@ bool Simpleperf::ReportSample(const string& input_path,
 }
 
 string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
+                                    const string& abi_arch,
                                     const string& trace_path,
                                     int sampling_interval_us) const {
   ostringstream command;
-  command << simpleperf_dir_ << kSimpleperfExecutable << " record";
+  command << GetSimpleperfPath(abi_arch);
+  command << " record";
   command << " -p " << pid;
   command << " --app " << pkg_name;
 
-  string supported_features = GetFeatures();
+  string supported_features = GetFeatures(abi_arch);
   // If the device supports dwarf-based call graphs, use them. Otherwise use
   // frame pointer.
   command << " --call-graph ";
@@ -140,12 +143,18 @@ string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
   return command.str();
 }
 
-string Simpleperf::GetFeatures() const {
-  string simpleperf_bin = simpleperf_dir_ + kSimpleperfExecutable;
-  BashCommandRunner list_features(simpleperf_bin);
+string Simpleperf::GetFeatures(const string& abi_arch) const {
+  BashCommandRunner list_features(GetSimpleperfPath(abi_arch));
   string supported_features;
   list_features.Run("list --show-features", &supported_features);
   return supported_features;
+}
+
+string Simpleperf::GetSimpleperfPath(const string& abi_arch) const {
+  ostringstream path;
+  path << simpleperf_dir_;
+  path << kSimpleperfExecutable << "_" << abi_arch;
+  return path.str();
 }
 
 void Simpleperf::SplitRecordCommand(char* original_cmd,

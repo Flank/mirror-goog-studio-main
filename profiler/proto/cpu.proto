@@ -187,6 +187,9 @@ message CpuProfilingAppStartRequest {
   int32 buffer_size_in_mb = 4;
   // When using sampling, the sampling interval in microseconds.
   int32 sampling_interval_us = 5;
+  // ABI CPU architecture of the app to be profiled. It should be one the
+  // values defined by SdkConstants.CPU_ARCH_*, e.g. 'arm', 'arm64', 'x86'.
+  string abi_cpu_arch = 6;
 }
 
 // Returns the status and absolute path location (on device) where the trace

@@ -44,7 +44,7 @@ class FakeSimpleperf final : public Simpleperf {
   }
 
   bool ReportSample(const string& input_path, const string& output_path,
-                    string* output) const {
+                    const string& abi_arch, string* output) const {
     return report_sample_success_;
   }
 
@@ -73,9 +73,11 @@ TEST(SimpleperfManagerTest, StartProfiling) {
   string error;
   string fake_trace_path = "/tmp/fake-trace";
   string app_name = "some_app_name";
+  string abi = "arm";
 
   EXPECT_FALSE(simpleperf_manager.IsProfiling(app_name));
-  simpleperf_manager.StartProfiling(app_name, 1000, &fake_trace_path, &error);
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+                                    &error);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 }
 
@@ -90,8 +92,10 @@ TEST(SimpleperfManagerTest, StartProfilingWithoutProfilingEnabled) {
   string error;
   string fake_trace_path = "/tmp/fake-trace";
   string app_name = "some_app_name";
+  string abi = "arm";
 
-  simpleperf_manager.StartProfiling(app_name, 1000, &fake_trace_path, &error);
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+                                    &error);
   EXPECT_FALSE(simpleperf_manager.IsProfiling(app_name));
   EXPECT_THAT(error, HasSubstr("Unable to setprop to enable profiling"));
 }
@@ -103,8 +107,10 @@ TEST(SimpleperfManagerTest, StopProfilingProfiledApp) {
   string error;
   string fake_trace_path = "/tmp/trace_path";
   string app_name = "some_app_name";
+  string abi = "arm";
 
-  simpleperf_manager.StartProfiling(app_name, 1000, &fake_trace_path, &error);
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+                                    &error);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 
   bool result = simpleperf_manager.StopProfiling(app_name, &error);
@@ -135,8 +141,10 @@ TEST(SimpleperfManagerTest, StopProfilingFailToKillSimpleperf) {
   string error;
   string fake_trace_path = "/tmp/trace_path";
   string app_name = "some_app_name";
+  string abi = "arm";
 
-  simpleperf_manager.StartProfiling(app_name, 1000, &fake_trace_path, &error);
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+                                    &error);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 
   bool result = simpleperf_manager.StopProfiling(app_name, &error);
@@ -159,8 +167,10 @@ TEST(SimpleperfManagerTest, StopProfilingFailToConvertProto) {
   string error;
   string fake_trace_path = "/tmp/trace_path";
   string app_name = "some_app_name";
+  string abi = "arm";
 
-  simpleperf_manager.StartProfiling(app_name, 1000, &fake_trace_path, &error);
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+                                    &error);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 
   bool result = simpleperf_manager.StopProfiling(app_name, &error);

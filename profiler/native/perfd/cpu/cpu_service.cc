@@ -160,7 +160,8 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
 
   if (request->profiler_type() == CpuProfilerType::SIMPLEPERF) {
     success = simplerperf_manager_.StartProfiling(
-        app_pkg_name, request->sampling_interval_us(), &trace_path_, &error);
+        app_pkg_name, request->abi_cpu_arch(), request->sampling_interval_us(),
+        &trace_path_, &error);
   } else if (request->profiler_type() == CpuProfilerType::ATRACE) {
     success = atrace_manager_.StartProfiling(
         app_pkg_name, request->sampling_interval_us(), &trace_path_, &error);

@@ -35,8 +35,9 @@ class Simpleperf {
   // Invoke `simpleperf record` given the |pid| of the process to be profiled,
   // its corresponding package name, the path of the resulting trace file, and
   // the sampling interval. Also redirects stdout and stderr to a log file
-  // located at |log_path|.
-  void Record(int pid, const std::string& pkg_name,
+  // located at |log_path|. The |abi_arch| determines the simpleperf binary to
+  // use. The binary must match the abi of the app.
+  void Record(int pid, const std::string& pkg_name, const std::string& abi_arch,
               const std::string& trace_path, int sampling_interval_us,
               const std::string& log_path) const;
 
@@ -49,15 +50,18 @@ class Simpleperf {
 
   // Invokes `simpleperf report-sample` passing |input_path| as input file and
   // |output_path| as the protobuf output file. Adds the command output to
-  // |output| and return true on success.
+  // |output| and return true on success. The |abi_arch| determines the
+  // simpleperf binary to use. The binary must match the abi of the app.
   virtual bool ReportSample(const std::string& input_path,
                             const std::string& output_path,
+                            const std::string& abi_arch,
                             std::string* output) const;
 
  protected:
   // Returns a string with the full `simpleperf record` command, containing all
   // the flags and arguments passed.
   std::string GetRecordCommand(int pid, const std::string& pkg_name,
+                               const std::string& abi_arch,
                                const std::string& trace_path,
                                int sampling_interval_us) const;
 
@@ -69,12 +73,15 @@ class Simpleperf {
   void SplitRecordCommand(char* original_cmd, char** split_cmd) const;
 
   // Returns a string with the features supported by this device.
-  virtual std::string GetFeatures() const;
+  virtual std::string GetFeatures(const std::string& abi_arch) const;
 
  private:
   const std::string simpleperf_dir_;
   const bool is_emulator_;
+
+  // Returns a string with the full simpleperf path (e.g. /path/simpleperf_arm).
+  std::string GetSimpleperfPath(const std::string& abi_arch) const;
 };
-}
+}  // namespace profiler
 
 #endif  // CPU_SIMPLEPERF_H_
