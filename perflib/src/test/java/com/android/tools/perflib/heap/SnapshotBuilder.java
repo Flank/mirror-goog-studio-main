@@ -16,22 +16,18 @@
 
 package com.android.tools.perflib.heap;
 
-import com.android.tools.perflib.heap.io.InMemoryBuffer;
-import com.android.tools.perflib.heap.hprof.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import com.android.tools.perflib.heap.hprof.*;
+import com.android.tools.perflib.heap.io.InMemoryBuffer;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  * Utility for creating Snapshot objects to be used in tests.
@@ -42,9 +38,11 @@ import static org.junit.Assert.fail;
  * instance. The default heap holds the roots.
  */
 public class SnapshotBuilder {
-    public static final int SOFT_REFERENCE_ID = 99;
+    public static final long SOFT_REFERENCE_ID = 99;
 
-    public static final int SOFT_AND_HARD_REFERENCE_ID = 98;
+    public static final long SOFT_AND_HARD_REFERENCE_ID = 98;
+
+    public static final long DEFAULT_HEAP_DEFAULT_CLASS_ID = 97;
 
     private int mNextAvailableSoftReferenceNodeId;
 
@@ -54,6 +52,8 @@ public class SnapshotBuilder {
     private int mNumSoftNodes;
     private int mNumSoftAndHardNodes;
     private int mMaxTotalNodes;
+
+    private int mDefaultHeapInstanceCount;
 
     // Map from node id to the list of nodes it references.
     private List<Integer>[] mReferences;
@@ -73,9 +73,9 @@ public class SnapshotBuilder {
         mMaxTotalNodes = numNodes + numSoftNodes + numSoftAndHardNodes;
         mReferences = (List<Integer>[])new List[mMaxTotalNodes+1];
         for (int i = 0; i < mReferences.length; i++) {
-            mReferences[i] = new ArrayList<Integer>();
+            mReferences[i] = new ArrayList<>();
         }
-        mRoots = new ArrayList<Integer>();
+        mRoots = new ArrayList<>();
     }
 
     public SnapshotBuilder addReferences(int nodeFrom, int... nodesTo) {
@@ -116,6 +116,11 @@ public class SnapshotBuilder {
         return this;
     }
 
+    public SnapshotBuilder setDefaultHeapInstanceCount(int count) {
+        mDefaultHeapInstanceCount = count;
+        return this;
+    }
+
     public Snapshot build() {
         InMemoryBuffer buffer = new InMemoryBuffer(getByteBuffer());
         Snapshot snapshot = Snapshot.createSnapshot(buffer);
@@ -137,13 +142,43 @@ public class SnapshotBuilder {
 
     public byte[] getByteBuffer() {
         HprofStringBuilder strings = new HprofStringBuilder(0);
-        List<HprofRecord> records = new ArrayList<HprofRecord>();
-        List<HprofDumpRecord> dump = new ArrayList<HprofDumpRecord>();
+        List<HprofRecord> records = new ArrayList<>();
+        List<HprofDumpRecord> dump = new ArrayList<>();
         byte objType = HprofType.TYPE_OBJECT;
 
         // Roots go in the default heap. Add those first.
         for (Integer id : mRoots) {
             dump.add(new HprofRootUnknown(id));
+        }
+
+        if (mDefaultHeapInstanceCount > 0) {
+            // The SoftReference class
+            records.add(
+                    new HprofLoadClass(
+                            0,
+                            2,
+                            DEFAULT_HEAP_DEFAULT_CLASS_ID,
+                            0,
+                            strings.get("perflib.default.heap.clazz")));
+            dump.add(
+                    new HprofClassDump(
+                            DEFAULT_HEAP_DEFAULT_CLASS_ID,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            new HprofConstant[0],
+                            new HprofStaticField[0],
+                            new HprofInstanceField[0]));
+        }
+        for (int i = 0; i < mDefaultHeapInstanceCount; i++) {
+            dump.add(
+                    new HprofInstanceDump(
+                            i + mMaxTotalNodes + 1, 0, DEFAULT_HEAP_DEFAULT_CLASS_ID, new byte[0]));
         }
 
         // Everything else goes in "testHeap" with id 13.
