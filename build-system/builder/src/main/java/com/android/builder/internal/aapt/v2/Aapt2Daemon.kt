@@ -19,7 +19,6 @@ package com.android.builder.internal.aapt.v2
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.res2.CompileResourceRequest
 import com.android.utils.ILogger
-import java.io.File
 import java.util.concurrent.TimeoutException
 import javax.annotation.concurrent.NotThreadSafe
 
@@ -89,10 +88,10 @@ abstract class Aapt2Daemon(
     @Throws(TimeoutException::class)
     protected abstract fun doCompile(request: CompileResourceRequest, logger: ILogger)
 
-    override fun link(request: AaptPackageConfig, tempDirectory: File) {
+    override fun link(request: AaptPackageConfig) {
         checkStarted()
         try {
-            doLink(request, tempDirectory)
+            doLink(request)
         } catch (e: TimeoutException) {
             handleTimeout("Link", e)
         }
@@ -104,7 +103,7 @@ abstract class Aapt2Daemon(
      * This will only be called after [startProcess] is called and before [stopProcess] is called.
      */
     @Throws(TimeoutException::class)
-    protected abstract fun doLink(request: AaptPackageConfig, tempDirectory: File)
+    protected abstract fun doLink(request: AaptPackageConfig)
 
     fun shutDown() {
         state = when (state) {

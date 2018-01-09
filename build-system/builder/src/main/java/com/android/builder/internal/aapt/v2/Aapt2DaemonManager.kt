@@ -24,7 +24,6 @@ import com.android.utils.ILogger
 import com.google.common.base.Preconditions
 import com.google.common.base.Ticker
 import java.io.Closeable
-import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.annotation.concurrent.GuardedBy
 import javax.annotation.concurrent.NotThreadSafe
@@ -171,10 +170,9 @@ class Aapt2DaemonManager(
         }
 
         @Throws(Aapt2Exception::class)
-        override fun link(request: AaptPackageConfig,
-                tempDirectory: File) {
+        override fun link(request: AaptPackageConfig) {
             Preconditions.checkState(leaseValid, "Leased process is already closed")
-            leasableDaemon.daemon.link(request, tempDirectory)
+            leasableDaemon.daemon.link(request)
         }
 
         override fun close() {

@@ -70,7 +70,6 @@ open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
                 QueueableAapt2(
                         LoggedProcessOutputHandler(iLogger),
                         builder.targetInfo!!.buildTools,
-                        aaptIntermediateDir,
                         AaptGradleFactory.FilteringLogger(builder.logger),
                         0 /* use default */)
 
@@ -92,6 +91,7 @@ open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
                         .setVariantType(VariantType.LIBRARY)
                         .setLogger(iLogger)
                         .setBuildToolInfo(builder.buildToolInfo)
+                        .setIntermediateDir(aaptIntermediateDir)
                         .build()
         val result = aapt.link(config)
         result.get()

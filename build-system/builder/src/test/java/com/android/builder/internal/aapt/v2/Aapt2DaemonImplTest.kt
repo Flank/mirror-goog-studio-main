@@ -127,7 +127,7 @@ class Aapt2DaemonImplTest {
                         additionalParameters = null))
                 .build()
 
-        daemon.link(request, temporaryFolder.newFolder())
+        daemon.link(request)
         assertThat(Zip(outputFile)).containsFileWithContent("res/raw/foo.txt", "content")
     }
 
@@ -160,13 +160,26 @@ class Aapt2DaemonImplTest {
                         additionalParameters = null))
                 .build()
         val exception = assertFailsWith(Aapt2Exception::class) {
-            daemon.link(request, tempDirectory = temporaryFolder.newFolder())
+            daemon.link(
+                    AaptPackageConfig.Builder(request)
+                            .setIntermediateDir(temporaryFolder.newFolder())
+                            .build())
         }
         assertThat(exception.message).contains("Android resource linking failed")
         assertThat(exception.message).contains("AndroidManifest.xml")
         assertThat(exception.message).contains("error: unclosed token.")
         // Compiled resources should be listed in a file.
         assertThat(exception.message).contains("@")
+
+        val exception2 = assertFailsWith(Aapt2Exception::class) {
+            daemon.link(AaptPackageConfig.Builder(request).setIntermediateDir(null).build())
+        }
+        assertThat(exception2.message).contains("Android resource linking failed")
+        assertThat(exception2.message).contains("AndroidManifest.xml")
+        assertThat(exception2.message).contains("error: unclosed token.")
+        // Compiled resources should not be listed in a file.
+        assertThat(exception2.message).doesNotContain("@")
+        assertThat(exception2.message).contains("foo.txt")
     }
 
     @Test
@@ -209,7 +222,7 @@ class Aapt2DaemonImplTest {
 
         val daemon = createDaemon(1, Aapt2DaemonTimeouts(link = 0, linkUnit = TimeUnit.SECONDS))
         val exception = assertFailsWith(Aapt2InternalException::class) {
-            daemon.link(request, tempDirectory = temporaryFolder.newFolder())
+            daemon.link(request)
         }
         assertThat(exception.message).contains("Link")
         assertThat(exception.message).contains("timed out, attempting to stop daemon")
@@ -218,7 +231,6 @@ class Aapt2DaemonImplTest {
         // The compile might succeed, ignore the output from it.
         logger.clear()
     }
-
 
     @Test
     fun testInvalidAaptBinary() {

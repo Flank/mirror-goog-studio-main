@@ -19,7 +19,6 @@ package com.android.builder.internal.aapt.v2
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.res2.CompileResourceRequest
 import com.android.utils.ILogger
-import java.io.File
 
 /**
  * The operations AAPT2 can perform.
@@ -32,5 +31,5 @@ interface Aapt2 {
     fun compile(request: CompileResourceRequest, logger: ILogger)
 
     /** Perform the requested linking. Throws [Aapt2Exception] on failure. */
-    fun link(request: AaptPackageConfig, tempDirectory: File)
+    fun link(request: AaptPackageConfig)
 }

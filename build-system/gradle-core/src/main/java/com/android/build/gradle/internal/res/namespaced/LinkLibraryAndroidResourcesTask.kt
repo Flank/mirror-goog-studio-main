@@ -73,7 +73,6 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
                 QueueableAapt2(
                         LoggedProcessOutputHandler(iLogger),
                         builder.targetInfo!!.buildTools,
-                        aaptIntermediateDir,
                         AaptGradleFactory.FilteringLogger(builder.logger),
                         0 /* use default */)
 
@@ -109,6 +108,7 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
                         .setSymbolOutputDir(rDotTxt.parentFile)
                         .setLogger(iLogger)
                         .setBuildToolInfo(builder.buildToolInfo)
+                        .setIntermediateDir(aaptIntermediateDir)
                         .build()
 
         aapt.link(config).get()

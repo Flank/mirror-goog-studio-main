@@ -145,12 +145,10 @@ public class AaptProcess {
      * com.android.builder.tasks.Job#finished()} or {@link Job#error(Throwable)} ()} functions.
      *
      * @param config the configuration of the link request
-     * @param intermediateDir the directory for intermediate files
      * @param job the job to notify when the linking is finished successfully or not.
      */
     public void link(
             @NonNull AaptPackageConfig config,
-            @NonNull File intermediateDir,
             @NonNull Job<AaptProcess> job,
             @Nullable ProcessOutputHandler processOutputHandler)
             throws IOException {
@@ -166,7 +164,7 @@ public class AaptProcess {
                 new NotifierProcessOutput(job, mProcessOutputFacade, mLogger, processOutputHandler);
 
         mProcessOutputFacade.setNotifier(notifier);
-        Aapt2DaemonUtil.requestLink(mWriter, config, intermediateDir);
+        Aapt2DaemonUtil.requestLink(mWriter, config);
         processCount++;
         mLogger.verbose("AAPT2 processed(%1$d) linking job:%2$s", hashCode(), job.toString());
     }

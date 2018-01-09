@@ -21,7 +21,6 @@ import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
@@ -35,14 +34,11 @@ public class Aapt2DaemonUtil {
         request(writer, "c", AaptV2CommandBuilder.makeCompile(command));
     }
 
-    public static void requestLink(
-            @NonNull Writer writer,
-            @NonNull AaptPackageConfig command,
-            @NonNull File intermediateDir)
+    public static void requestLink(@NonNull Writer writer, @NonNull AaptPackageConfig command)
             throws IOException {
         ImmutableList<String> args;
         try {
-            args = AaptV2CommandBuilder.makeLink(command, intermediateDir);
+            args = AaptV2CommandBuilder.makeLink(command);
         } catch (AaptException e) {
             throw new IOException("Unable to make AAPT link command.", e);
         }

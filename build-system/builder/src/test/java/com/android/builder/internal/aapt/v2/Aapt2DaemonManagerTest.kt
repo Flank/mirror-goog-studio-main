@@ -91,8 +91,7 @@ class Aapt2DaemonManagerTest {
         manager.leaseDaemon().use { process ->
             manager.maintain()
             process.link(
-                    AaptPackageConfig.Builder().build(),
-                    File("not_a_directory"))
+                    AaptPackageConfig.Builder().build())
             manager.maintain()
         }
         assertThat(daemon.compileRequests).hasSize(1)
@@ -243,7 +242,7 @@ class Aapt2DaemonManagerTest {
             compileRequests.add(request)
         }
 
-        override fun doLink(request: AaptPackageConfig, tempDirectory: File) {
+        override fun doLink(request: AaptPackageConfig) {
             linkRequests.add(request)
         }
 
@@ -259,7 +258,7 @@ class Aapt2DaemonManagerTest {
             throw TimeoutException("Compile timed out")
         }
 
-        override fun doLink(request: AaptPackageConfig, tempDirectory: File) {
+        override fun doLink(request: AaptPackageConfig) {
             throw TimeoutException("Link timed out")
         }
 

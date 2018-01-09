@@ -21,7 +21,6 @@ import com.android.ide.common.res2.CompileResourceRequest
 import com.android.utils.GrabProcessOutput
 import com.android.utils.ILogger
 import com.google.common.util.concurrent.SettableFuture
-import java.io.File
 import java.io.IOException
 import java.io.Writer
 import java.nio.file.Path
@@ -100,19 +99,22 @@ class Aapt2DaemonImpl(
     }
 
     @Throws(TimeoutException::class)
-    override fun doLink(request: AaptPackageConfig, tempDirectory: File) {
+    override fun doLink(request: AaptPackageConfig) {
         val waitForTask = WaitForTaskCompletion(displayName, request.logger!!)
         try {
             processOutput.delegate = waitForTask
-            Aapt2DaemonUtil.requestLink(writer, request, tempDirectory)
+            Aapt2DaemonUtil.requestLink(writer, request)
             val error = waitForTask.future.get(daemonTimeouts.link, daemonTimeouts.linkUnit)
             if (error != null) {
                 val configWithResourcesListed =
-                        AaptPackageConfig.Builder(request).setListResourceFiles(true).build()
+                        if (request.intermediateDir != null) {
+                            AaptPackageConfig.Builder(request).setListResourceFiles(true).build()
+                        } else {
+                            request
+                        }
                 val args =
                         AaptV2CommandBuilder.makeLink(
-                                configWithResourcesListed,
-                                tempDirectory)
+                                configWithResourcesListed)
                                 .joinToString("\\\n        ")
                 throw Aapt2Exception(
                         ("Android resource linking failed ($displayName)\n" +

@@ -50,7 +50,6 @@ public class QueueableAapt2 extends AbstractAapt {
 
     @NonNull private final Aapt2QueuedResourceProcessor aapt;
     @NonNull private final Executor executor;
-    @NonNull private final File intermediateDir;
     @NonNull private final Integer requestKey;
     @Nullable private final ProcessOutputHandler processOutputHandler;
 
@@ -59,19 +58,16 @@ public class QueueableAapt2 extends AbstractAapt {
      *
      * @param processOutputHandler the handler to process the executed process' output
      * @param buildToolInfo the build tools to use
-     * @param intermediateDir directory where to store intermediate files
      * @param logger logger to use
      */
     public QueueableAapt2(
             @Nullable ProcessOutputHandler processOutputHandler,
             @NonNull BuildToolInfo buildToolInfo,
-            @NonNull File intermediateDir,
             @NonNull ILogger logger,
             int numberOfProcesses) {
         this(
                 processOutputHandler,
                 getAapt2ExecutablePath(buildToolInfo),
-                intermediateDir,
                 logger,
                 numberOfProcesses);
     }
@@ -80,15 +76,8 @@ public class QueueableAapt2 extends AbstractAapt {
     QueueableAapt2(
             @Nullable ProcessOutputHandler processOutputHandler,
             @NonNull String aapt2ExecutablePath,
-            @NonNull File intermediateDir,
             @NonNull ILogger logger,
             int numberOfProcesses) {
-        Preconditions.checkArgument(
-                intermediateDir.isDirectory(),
-                "Intermediate directory needs to be a directory.\nintermediateDir: %s",
-                intermediateDir.getAbsolutePath());
-
-        this.intermediateDir = intermediateDir;
         this.processOutputHandler = processOutputHandler;
 
         this.executor =
@@ -165,7 +154,7 @@ public class QueueableAapt2 extends AbstractAapt {
         ListenableFuture<File> futureResult;
 
         try {
-            futureResult = aapt.link(requestKey, config, intermediateDir, processOutputHandler);
+            futureResult = aapt.link(requestKey, config, processOutputHandler);
         } catch (Exception e) {
             throw new AaptException("Failed to link", e);
         }

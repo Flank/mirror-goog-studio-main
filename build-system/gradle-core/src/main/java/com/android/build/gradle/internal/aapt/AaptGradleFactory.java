@@ -85,7 +85,6 @@ public final class AaptGradleFactory {
                 return new QueueableAapt2(
                         outputHandler,
                         buildTools,
-                        intermediateDir,
                         new FilteringLogger(builder.getLogger()),
                         0 /* use default */);
             default:

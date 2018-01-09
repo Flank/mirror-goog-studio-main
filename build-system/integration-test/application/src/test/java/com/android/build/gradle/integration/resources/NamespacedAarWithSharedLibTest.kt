@@ -195,7 +195,6 @@ class NamespacedAarWithSharedLibTest {
             QueueableAapt2(
                     LoggedProcessOutputHandler(StdLogger(StdLogger.Level.INFO)),
                     buildToolInfo,
-                    tempFolder.newFolder(),
                     StdLogger(StdLogger.Level.VERBOSE),
                     0)
                     .use { it.link(config).get(2, TimeUnit.MINUTES) }
