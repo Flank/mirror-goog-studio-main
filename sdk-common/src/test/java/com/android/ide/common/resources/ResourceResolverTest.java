@@ -746,6 +746,8 @@ public class ResourceResolverTest extends TestCase {
 
         assertNull(resolver.findResValue("@color/doesnt_exist", false));
         assertNull(resolver.findResValue("@android:color/doesnt_exist", false));
+        assertNull(resolver.getTheme("NoTheme", false));
+        assertNull(resolver.getTheme("NoTheme", true));
     }
 
     public void testResolverIds() throws IOException {
