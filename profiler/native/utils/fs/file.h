@@ -77,6 +77,9 @@ class File final : public Path {
   // Close a file that is currently in write mode.
   void Close();
 
+  // Return the size of this file. If this file does not exist 0 is returned.
+  int32_t size();
+
   // Support the << operator for cout style |Append|ing
   // e.g. file << "This appends to the end of the file";
   template <typename T>
