@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 315;
+    static final int INITIAL_CAPACITY = 316;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -239,6 +239,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(PluralsDetector.EXTRA);
         issues.add(PluralsDetector.IMPLIED_QUANTITY);
         issues.add(PluralsDetector.MISSING);
+        issues.add(PowerManagerDetector.INVALID_WAKE_LOCK_TAG);
         issues.add(PreferenceActivityDetector.ISSUE);
         issues.add(PrivateApiDetector.ISSUE);
         issues.add(PrivateKeyDetector.ISSUE);
