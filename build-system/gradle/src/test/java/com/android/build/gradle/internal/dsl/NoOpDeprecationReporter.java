@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 
 public class NoOpDeprecationReporter implements DeprecationReporter {
@@ -58,5 +59,15 @@ public class NoOpDeprecationReporter implements DeprecationReporter {
             @NonNull String oldConfiguration,
             @NonNull DeprecationTarget deprecationTarget) {
         // do nothing
+    }
+
+    @Override
+    public void reportDeprecatedValue(
+            @NonNull String dslElement,
+            @NonNull String oldValue,
+            @Nullable String newValue,
+            @Nullable String url,
+            @NonNull DeprecationTarget deprecationTarget) {
+        // do nothing.
     }
 }

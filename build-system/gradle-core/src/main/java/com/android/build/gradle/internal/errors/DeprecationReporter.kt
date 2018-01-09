@@ -32,7 +32,9 @@ interface DeprecationReporter {
         // deprecation due to the move to the new DSL.
         OLD_DSL("at the end of 2018"),
         // Obsolete Dex Options
-        DEX_OPTIONS("at the end of 2018")
+        DEX_OPTIONS("at the end of 2018"),
+        // "auto" in splits and resConfigs.
+        AUTO_SPLITS_OR_RES_CONFIG("at the end of 2018")
     }
 
     /**
@@ -62,6 +64,24 @@ interface DeprecationReporter {
             newDslElement: String,
             oldDslElement: String,
             url: String,
+            deprecationTarget: DeprecationTarget)
+
+    /**
+     * Reports a deprecated value usage for a DSL element in the DSL/API.
+     *
+     * @param dslElement name of DSL element containing the deprecated value, with the name of the
+     * class.
+     * @param oldValue value of the DSL element which has been deprecated.
+     * @param newValue optional new value replacing the deprecated value.
+     * @param url optional url for more context.
+     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
+     * timing is added to the message.
+     */
+    fun reportDeprecatedValue(
+            dslElement: String,
+            oldValue: String,
+            newValue: String?,
+            url: String?,
             deprecationTarget: DeprecationTarget)
 
     /**

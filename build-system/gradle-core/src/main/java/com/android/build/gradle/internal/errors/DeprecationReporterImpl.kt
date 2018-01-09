@@ -82,4 +82,20 @@ class DeprecationReporterImpl(
                         "It will be removed ${deprecationTarget.removalTime}",
                 "$oldConfiguration::$newConfiguration::${deprecationTarget.name}")
     }
+
+    override fun reportDeprecatedValue(dslElement: String,
+            oldValue: String,
+            newValue: String?,
+            url: String?,
+            deprecationTarget: DeprecationReporter.DeprecationTarget) {
+        issueReporter.reportIssue(Type.DEPRECATED_DSL_VALUE,
+                Severity.WARNING,
+                "DSL element '$dslElement' has a value '$oldValue' which is obsolete " +
+                        if (newValue != null)
+                            "and has been replaced with '$newValue'.\n"
+                        else
+                            "and has not been replaced.\n" +
+                        "It will be removed ${deprecationTarget.removalTime}\n",
+                url)
+    }
 }

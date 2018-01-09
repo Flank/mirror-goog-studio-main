@@ -51,4 +51,12 @@ class FakeDeprecationReporter: DeprecationReporter {
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
         deprecationWarnings.add(oldConfiguration)
     }
+
+    override fun reportDeprecatedValue(dslElement: String,
+            oldValue: String,
+            newValue: String?,
+            url: String?,
+            deprecationTarget: DeprecationReporter.DeprecationTarget) {
+        deprecationWarnings.add(dslElement)
+    }
 }

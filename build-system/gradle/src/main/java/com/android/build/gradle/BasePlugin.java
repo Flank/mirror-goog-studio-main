@@ -486,7 +486,11 @@ public abstract class BasePlugin<E extends BaseExtension2>
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
                 project.container(
                         ProductFlavor.class,
-                        new ProductFlavorFactory(objectFactory, project, project.getLogger()));
+                        new ProductFlavorFactory(
+                                objectFactory,
+                                project,
+                                extraModelInfo.getDeprecationReporter(),
+                                project.getLogger()));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
                 project.container(
                         SigningConfig.class,

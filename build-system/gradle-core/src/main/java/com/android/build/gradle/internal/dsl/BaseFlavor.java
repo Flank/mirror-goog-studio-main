@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultProductFlavor;
@@ -49,13 +50,17 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
 
     @NonNull private final ShaderOptions shaderOptions;
 
+    @NonNull private final DeprecationReporter deprecationReporter;
+
     public BaseFlavor(
             @NonNull String name,
             @NonNull Project project,
             @NonNull ObjectFactory objectFactory,
+            @NonNull DeprecationReporter deprecationReporter,
             @NonNull Logger logger) {
         super(name, objectFactory.newInstance(VectorDrawablesOptions.class));
         this.project = project;
+        this.deprecationReporter = deprecationReporter;
         this.logger = logger;
         ndkConfig = objectFactory.newInstance(NdkOptions.class);
         externalNativeBuildOptions =
@@ -459,13 +464,14 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
      *
      * <p>For instance, specifying 'hdpi', will ignore all resources using mdpi, xhdpi, etc...
      *
-     * <p>To package only the localization languages your app includes as string resources, specify
-     * 'auto'. For example, if your app includes string resources for 'values-en' and 'values-fr',
-     * and its dependencies provide 'values-en' and 'values-ja', Gradle packages only the
-     * 'values-en' and 'values-fr' resources from the app and its dependencies. Gradle does not
-     * package 'values-ja' resources in the final APK.
+     * <p>'auto' was supported to package only the localization languages your app includes as
+     * string resources. This created a number of issues when dealing with multiple modules,
+     * therefore 'auto' has been deprecated. If you use 'auto' starting in 3.1, it will package all
+     * the string resources your app or its dependencies provide. It is strongly recommended to
+     * provide an explicit list of localization languages supported by your application
      */
     public void resConfig(@NonNull String config) {
+        checkResConfigValue("resConfig", config);
         addResourceConfiguration(config);
     }
 
@@ -477,13 +483,16 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
      *
      * <p>For instance, specifying 'hdpi', will ignore all resources using mdpi, xhdpi, etc...
      *
-     * <p>To package only the localization languages your app includes as string resources, specify
-     * 'auto'. For example, if your app includes string resources for 'values-en' and 'values-fr',
-     * and its dependencies provide 'values-en' and 'values-ja', Gradle packages only the
-     * 'values-en' and 'values-fr' resources from the app and its dependencies. Gradle does not
-     * package 'values-ja' resources in the final APK.
+     * <p>'auto' was supported to package only the localization languages your app includes as
+     * string resources. This created a number of issues when dealing with multiple modules,
+     * therefore 'auto' has been deprecated. If you use 'auto' starting in 3.1, it will package all
+     * the string resources your app or its dependencies provide. It is strongly recommended to
+     * provide an explicit list of localization languages supported by your application
      */
     public void resConfigs(@NonNull String... config) {
+        for (String aConfig : config) {
+            checkResConfigValue("resConfigs", aConfig);
+        }
         addResourceConfigurations(config);
     }
 
@@ -495,14 +504,28 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
      *
      * <p>For instance, specifying 'hdpi', will ignore all resources using mdpi, xhdpi, etc...
      *
-     * <p>To package only the localization languages your app includes as string resources, specify
-     * 'auto'. For example, if your app includes string resources for 'values-en' and 'values-fr',
-     * and its dependencies provide 'values-en' and 'values-ja', Gradle packages only the
-     * 'values-en' and 'values-fr' resources from the app and its dependencies. Gradle does not
-     * package 'values-ja' resources in the final APK.
+     * <p>'auto' was supported to package only the localization languages your app includes as
+     * string resources. This created a number of issues when dealing with multiple modules,
+     * therefore 'auto' has been deprecated. If you use 'auto' starting in 3.1, it will package all
+     * the string resources your app or its dependencies provide. It is strongly recommended to
+     * provide an explicit list of localization languages supported by your application
      */
     public void resConfigs(@NonNull Collection<String> config) {
+        for (String aConfig : config) {
+            checkResConfigValue("resConfigs", aConfig);
+        }
         addResourceConfigurations(config);
+    }
+
+    private void checkResConfigValue(String dslElement, String resConfigValue) {
+        if (resConfigValue.equals("auto")) {
+            deprecationReporter.reportDeprecatedValue(
+                    "ProductFlavor." + dslElement,
+                    "auto",
+                    null,
+                    "https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.ProductFlavor.html#com.android.build.gradle.internal.dsl.ProductFlavor:resConfig(java.lang.String)",
+                    DeprecationReporter.DeprecationTarget.AUTO_SPLITS_OR_RES_CONFIG);
+        }
     }
 
     /** Options for configuration Java compilation. */

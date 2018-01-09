@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.builder.model.BaseConfig;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -64,8 +65,9 @@ public class ProductFlavor extends BaseFlavor {
             @NonNull String name,
             @NonNull Project project,
             @NonNull ObjectFactory objectFactory,
+            @NonNull DeprecationReporter deprecationReporter,
             @NonNull Logger logger) {
-        super(name, project, objectFactory, logger);
+        super(name, project, objectFactory, deprecationReporter, logger);
     }
 
     private ImmutableList<String> matchingFallbacks;
