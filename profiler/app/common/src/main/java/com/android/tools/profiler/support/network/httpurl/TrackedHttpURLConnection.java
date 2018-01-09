@@ -68,18 +68,39 @@ final class TrackedHttpURLConnection {
     }
 
     /**
+     * Attempt to force the current connection to connect, swallowing any exception so that we don't
+     * affect the site calling this method.
+     *
+     * <p>Calling connect ourselves is useful in case the user calls a HttpURLConnection method
+     * which would otherwise have caused a connect to happen as a side-effect. In that case, we
+     * preemptively do it ourselves, to make sure that our tracking state machine stays valid.
+     */
+    private void tryConnect() {
+        if (!myConnectTracked) {
+            try {
+                connect();
+            } catch (Exception ignored) {
+                // Swallowed, so callers can call this method without worrying about dealing with
+                // exceptions that shouldn't happen normally anywa.
+            }
+        }
+    }
+
+    /**
      * Calls {@link HttpConnectionTracker#trackResponse(String, Map)} only if it hasn't been called
      * before. This should be called to indicate that we received a response and can now start to
      * read its contents.
      *
      * <p>IMPORTANT: This method, as a side-effect, will cause the request to get sent if it hasn't
-     * t been sent already. Therefore, if this method is called too early, it can cause problems if
+     * been sent already. Therefore, if this method is called too early, it can cause problems if
      * the user then tries to modify the request afterwards, e.g. by updating its body via {@link
      * #getOutputStream()}.
      */
     private void trackResponse() throws IOException {
         if (!myResponseTracked) {
             try {
+                tryConnect();
+
                 // Don't call our getResponseMessage/getHeaderFields overrides, as it would call
                 // this method recursively.
                 myConnectionTracker.trackResponse(
@@ -95,6 +116,11 @@ final class TrackedHttpURLConnection {
      * many methods in {@link HttpURLConnection} that a user can call which indicate that a request
      * has been completed (for example, {@link HttpURLConnection#getResponseCode()} which don't,
      * itself, throw an exception.
+     *
+     * <p>IMPORTANT: This method, as a side-effect, will cause the request to get sent if it hasn't
+     * been sent already. Therefore, if this method is called too early, it can cause problems if
+     * the user then tries to modify the request afterwards, e.g. by updating its body via {@link
+     * #getOutputStream()}.
      */
     private void tryTrackResponse() {
         try {
@@ -297,14 +323,6 @@ final class TrackedHttpURLConnection {
         // Internally, HttpURLConnection#getResponseCode() calls HttpURLConnection#getInputStream(),
         // but since we don't have hooks inside that class, we need to call it ourselves here, to
         // ensure the event is tracked.
-        if (!myConnectTracked) {
-            try {
-                getInputStream();
-            } catch (Exception ignored) {
-                // We don't want to cause an exception to potentially be thrown as an unexpected
-                // side-effect to calling getResponseCode
-            }
-        }
         tryTrackResponse();
         return myWrapped.getResponseCode();
     }

@@ -23,6 +23,7 @@ import android.tools.SimpleWebServer.RequestHandler;
 import com.activity.network.NetworkUtils.ServerTest;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
@@ -84,6 +85,29 @@ public final class HttpUrlActivity extends Activity {
                         InputStream inputStream = connection.getInputStream();
 
                         NetworkUtils.printAndCloseResponse(inputStream);
+                    }
+                });
+    }
+
+    /**
+     * HttpURLConnection has many functions to query response values which cause a connection to be
+     * made if one wasn't already established. This test helps makes sure our profiled code handles
+     * these such a function before we call 'connect' or 'getInputStream'.
+     */
+    public void runGet_CallResponseMethodBeforeConnect() throws Exception {
+        NetworkUtils.runWithServer(
+                HANDLER,
+                new ServerTest() {
+                    @Override
+                    public void runWith(SimpleWebServer server) throws Exception {
+                        URL url = new URL(NetworkUtils.getUrl(server.getPort(), "activity", GET));
+                        URLConnection connection = url.openConnection();
+                        // getResponseCode calls connect() under the hood
+                        int responseCode = ((HttpURLConnection) connection).getResponseCode();
+                        if (responseCode != 200) {
+                            throw new AssertionError("Unexpected response code: " + responseCode);
+                        }
+                        NetworkUtils.printAndCloseResponse(connection.getInputStream());
                     }
                 });
     }
