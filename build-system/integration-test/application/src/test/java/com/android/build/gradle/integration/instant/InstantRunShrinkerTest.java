@@ -97,7 +97,7 @@ public class InstantRunShrinkerTest {
                 .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
 
         SplitApks apks =
                 InstantRunTestUtils.getCompiledColdSwapChange(

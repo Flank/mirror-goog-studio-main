@@ -51,7 +51,8 @@ public class TransformInModuleWithKotlinTest {
 
         project.execute("clean", "assembleDebug");
 
-        Map<String, ProjectBuildOutput> multi = project.model().getMulti(ProjectBuildOutput.class);
+        Map<String, ProjectBuildOutput> multi =
+                project.model().fetchMulti(ProjectBuildOutput.class);
         ProjectBuildOutput appBuildOutput = multi.get(":app");
         assertThat(appBuildOutput).isNotNull();
         Collection<VariantBuildOutput> buildOutputs = appBuildOutput.getVariantsBuildOutput();

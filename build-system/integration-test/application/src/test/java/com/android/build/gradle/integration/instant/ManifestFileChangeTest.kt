@@ -26,7 +26,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.OptionalCompilationStep
 import com.android.sdklib.AndroidVersion
 import com.android.tools.ir.client.InstantRunArtifactType
-import com.google.common.collect.Iterators
 import com.google.common.truth.Truth.*
 import org.junit.Rule
 import org.junit.Test
@@ -59,7 +58,7 @@ class ManifestFileChangeTest(val separateResourcesApk: Boolean) {
     @Throws(Exception::class)
     fun testFullAndIncrementalBuilds() {
 
-        val instantRunModel = InstantRunTestUtils.getInstantRunModel(mProject.model().single.onlyModel)
+        val instantRunModel = InstantRunTestUtils.getInstantRunModel(mProject.model().fetchAndroidProjects().onlyModel)
 
         val androidVersion = AndroidVersion(if (separateResourcesApk) 26 else 21, null)
         mProject.executor()

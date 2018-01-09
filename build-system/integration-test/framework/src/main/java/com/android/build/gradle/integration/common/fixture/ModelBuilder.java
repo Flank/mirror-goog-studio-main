@@ -20,7 +20,6 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.builder.model.AndroidProject;
@@ -47,8 +46,8 @@ import org.gradle.tooling.model.GradleTask;
 /**
  * Builder for actions that get the gradle model from a {@link GradleTestProject}.
  *
- * <p>Example: <code>project.model().asStudio1().getMulti()</code> fetches the model for all
- * subprojects as Studio 1.0 does.
+ * <p>Example: <code>project.model().asStudio1().fetchAndroidProjects()</code> fetches the model for
+ * all subprojects as Studio 1.0 does.
  */
 public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
     private int maxSyncIssueSeverityLevel = 0;
@@ -109,7 +108,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
     }
 
     /**
-     * Fetch the model as Studio would, with the specified model level.
+     * Sets the model query with the given level.
      *
      * <p>See {@code AndroidProject.MODEL_LEVEL_*}.
      */
@@ -126,68 +125,86 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
     }
 
     /**
-     * Returns the project model.
+     * Fetches the project model via the tooling API
      *
-     * <p>This will fail if the project is a multi-project setup.
+     * <p>This will fail if the project is a multi-project setup, use {@link #fetchMulti(Class)}
+     * instead.
+     *
+     * <p>This will fail if the requested model is {@link AndroidProject}. Use {@link
+     * #fetchAndroidProjects()} instead
+     *
+     * @param modelClass the class of the model to query
+     * @param <T> the type of the model
      */
     @NonNull
-    public ModelContainer<AndroidProject> getSingle() throws IOException {
-        return assertNoSyncIssues(getSingleModel(AndroidProject.class));
-    }
-
-    /**
-     * Returns the project model.
-     *
-     * <p>This will fail if the project is a multi-project setup.
-     */
-    @NonNull
-    public <T> T getSingle(@NonNull Class<T> modelClass) throws IOException {
+    public <T> T fetch(@NonNull Class<T> modelClass) throws IOException {
         Preconditions.checkArgument(
-                modelClass != AndroidProject.class, "please use getSingle() instead");
-        return getSingleModel(modelClass).getOnlyModel();
-    }
+                modelClass != AndroidProject.class, "please use fetchAndroidProjects() instead");
 
-    /**
-     * Returns the project model.
-     *
-     * <p>This will fail if the project is a multi-project setup.
-     */
-    @NonNull
-    private <T> ModelContainer<T> getSingleModel(@NonNull Class<T> modelClass) throws IOException {
         ModelContainer<T> container =
                 buildModel(new GetAndroidModelAction<>(modelClass), modelLevel);
 
         // ensure there was only one project
         Preconditions.checkState(
                 container.getModelMaps().size() == 1,
-                "attempted to getSingleModel() with multi-project settings");
+                "attempted to fetch() with multi-project settings");
 
-        return container;
+        return container.getOnlyModel();
     }
 
-    /** Returns a project model for each sub-project. */
+    /** Fetches the multi-project Android models via the tooling API. */
     @NonNull
-    public ModelContainer<AndroidProject> getMulti() throws IOException {
-        return assertNoSyncIssues(getMultiContainer(AndroidProject.class));
+    public ModelContainer<AndroidProject> fetchAndroidProjects() throws IOException {
+        return assertNoSyncIssues(doQueryMultiContainer(AndroidProject.class));
     }
 
-    /** Returns a project model for each sub-project. */
+    /**
+     * Fetches the multi=project models via the tooling API and return them as a map of (path,
+     * model).
+     *
+     * <p>This will fail if the requested model is {@link AndroidProject}. Use {@link
+     * #fetchAndroidProjects()} instead
+     *
+     * @param modelClass the class of the model
+     * @param <T> the type of the model
+     */
     @NonNull
-    public <T> Map<String, T> getMulti(@NonNull Class<T> modelClass) throws IOException {
+    public <T> Map<String, T> fetchMulti(@NonNull Class<T> modelClass) throws IOException {
         Preconditions.checkArgument(
-                modelClass != AndroidProject.class, "please use getMulti() instead");
+                modelClass != AndroidProject.class, "please use fetchAndroidProjects() instead");
 
-        final ModelContainer<T> modelContainer = getMultiContainer(modelClass);
+        final ModelContainer<T> modelContainer = doQueryMultiContainer(modelClass);
 
         if (modelContainer.getModelMaps().size() > 1) {
-            throw new RuntimeException("Can't call getMulti(Class) with included builds");
+            throw new RuntimeException(
+                    "Can't call fetchMulti(Class) with included builds, use fetchContainer");
         }
 
         return modelContainer.getRootBuildModelMap();
     }
 
+    /**
+     * Fetches the multi=project models via the tooling API and return them as a {@link
+     * ModelContainer}
+     *
+     * <p>This will fail if the requested model is {@link AndroidProject}. Use {@link
+     * #fetchAndroidProjects()} instead
+     *
+     * @param modelClass the class of the model
+     * @param <T> the type of the model
+     */
     @NonNull
-    private <T> ModelContainer<T> getMultiContainer(@NonNull Class<T> modelClass)
+    public <T> ModelContainer<T> fetchContainer(@NonNull Class<T> modelClass) throws IOException {
+        Preconditions.checkArgument(
+                modelClass != AndroidProject.class, "please use fetchAndroidProjects() instead");
+
+        final ModelContainer<T> modelContainer = doQueryMultiContainer(modelClass);
+
+        return modelContainer;
+    }
+
+    @NonNull
+    private <T> ModelContainer<T> doQueryMultiContainer(@NonNull Class<T> modelClass)
             throws IOException {
         // TODO: Make buildModel multithreaded all the time.
         // Getting multigetMultiContainerple NativeAndroidProject results in duplicated class implemented error
@@ -200,7 +217,7 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
 
     /** Return a list of all task names of the project. */
     @NonNull
-    public List<String> getTaskList() throws IOException {
+    public List<String> fetchTaskList() throws IOException {
         return getProject()
                 .getTasks()
                 .stream()

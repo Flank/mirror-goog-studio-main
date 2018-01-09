@@ -578,9 +578,9 @@ public class NativeModelTest {
     @Test
     public void checkModel() throws Exception {
         assumeNotCMakeOnWindows();
-        AndroidProject androidProject = project.model().getSingle().getOnlyModel();
+        AndroidProject androidProject = project.model().fetchAndroidProjects().getOnlyModel();
         assertThat(androidProject.getSyncIssues()).hasSize(0);
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
+        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model).isNotNull();
         assertThat(model.getName()).isEqualTo("project");
         assertThat(model.getArtifacts())
@@ -640,7 +640,7 @@ public class NativeModelTest {
     @Test
     public void checkNativeSourceFileValue() throws Exception {
         // Syncing once, causes the JSON to exist
-        project.model().getSingle(NativeAndroidProject.class);
+        project.model().fetch(NativeAndroidProject.class);
 
         String[] buildTypes = {"debug", "release"};
         for (String buildType : buildTypes) {
@@ -673,7 +673,7 @@ public class NativeModelTest {
         assertThat(incrementalBuildSentinelFile).doesNotExist();
 
         // Syncing once causes the JSON to exist
-        NativeAndroidProject nativeProject = project.model().getSingle(NativeAndroidProject.class);
+        NativeAndroidProject nativeProject = project.model().fetch(NativeAndroidProject.class);
         assertThat(jsonFile).exists();
         long originalTimeStamp = getHighestResolutionTimeStamp(jsonFile);
         assertThat(incrementalBuildSentinelFile).doesNotExist();
@@ -681,7 +681,7 @@ public class NativeModelTest {
         assertThat(miniConfigFile).exists();
 
         // Syncing again, leaves the JSON unchanged
-        nativeProject = project.model().getSingle(NativeAndroidProject.class);
+        nativeProject = project.model().fetch(NativeAndroidProject.class);
         assertThat(originalTimeStamp).isEqualTo(
                 getHighestResolutionTimeStamp(jsonFile));
         assertThat(incrementalBuildSentinelFile).exists();
@@ -694,7 +694,7 @@ public class NativeModelTest {
         File buildFile = getNativeBuildFile(nativeProject);
         assertThat(buildFile).exists();
         spinTouch(buildFile, originalTimeStamp);
-        nativeProject = project.model().getSingle(NativeAndroidProject.class);
+        nativeProject = project.model().fetch(NativeAndroidProject.class);
         long newTimeStamp = getHighestResolutionTimeStamp(jsonFile);
         assertThat(newTimeStamp).isGreaterThan(originalTimeStamp);
         assertThat(ExternalNativeBuildTaskUtils.fileIsUpToDate(jsonFile, miniConfigFile)).isTrue();
@@ -710,7 +710,7 @@ public class NativeModelTest {
         // Replace flags in the build file (build.gradle) and check that JSON is regenerated
         String originalFileHash = FileUtils.sha1(jsonFile);
         TestFileUtils.searchAndReplace(project.getBuildFile(), "-DTEST_", "-DTEST_CHANGED_");
-        nativeProject = project.model().getSingle(NativeAndroidProject.class);
+        nativeProject = project.model().fetch(NativeAndroidProject.class);
         assertThat(FileUtils.sha1(jsonFile)).isNotEqualTo(originalFileHash);
         assertThat(miniConfigFile).exists();
 
@@ -732,7 +732,7 @@ public class NativeModelTest {
         // Do a clean and check that the JSON is not regenerated
         originalTimeStamp = getHighestResolutionTimeStamp(jsonFile);
         project.execute("clean");
-        nativeProject = project.model().getSingle(NativeAndroidProject.class);
+        nativeProject = project.model().fetch(NativeAndroidProject.class);
         assertThat(originalTimeStamp).isEqualTo(getHighestResolutionTimeStamp(jsonFile));
         assertThat(nativeProject).noBuildOutputsExist();
         assertThat(incrementalBuildSentinelFile).exists();
@@ -755,7 +755,7 @@ public class NativeModelTest {
             // In this case, .so files should remain but additional so files should be deleted (in
             // case they are obsoleted by the change to CMakeLists.txt).
             spinTouch(buildFile, originalTimeStamp);
-            nativeProject = project.model().getSingle(NativeAndroidProject.class);
+            nativeProject = project.model().fetch(NativeAndroidProject.class);
             assertThat(nativeProject).allBuildOutputsExist();
             assertThat(miniConfigFile).isNewerThanOrSameAs(jsonFile);
             assertThatFilesDontExist(additionalSoFiles);
@@ -849,7 +849,7 @@ public class NativeModelTest {
     public void checkNdkBuildCleanHasNoJobsFlags() throws Exception {
         assumeNotCMakeOnWindows();
         if (config.buildSystem == NativeBuildSystem.NDK_BUILD) {
-            project.model().getSingle(NativeAndroidProject.class);
+            project.model().fetch(NativeAndroidProject.class);
             NativeBuildConfigValue buildConfig =
                     getNativeBuildConfigValue(getJsonFile("debug", "x86_64"));
             for (String cleanCommand : buildConfig.cleanCommands) {
@@ -862,7 +862,7 @@ public class NativeModelTest {
     public void checkDebugVsRelease() throws Exception {
         assumeNotCMakeOnWindows();
         // Sync
-        project.model().getSingle(NativeAndroidProject.class);
+        project.model().fetch(NativeAndroidProject.class);
 
         File debugJson = getJsonFile("debug", "x86_64");
         File releaseJson = getJsonFile("release", "x86_64");

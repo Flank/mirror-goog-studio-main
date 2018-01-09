@@ -75,7 +75,7 @@ public class InstantRunResourceShrinkerTest {
                 .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
 
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
         InstantRunApk apk =
                 InstantRunTestUtils.getMainApk(InstantRunTestUtils.getInstantRunModel(model));
 

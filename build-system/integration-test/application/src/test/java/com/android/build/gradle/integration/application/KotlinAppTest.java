@@ -19,8 +19,8 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.category.SmokeTests;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
 import java.io.IOException;
@@ -43,9 +43,9 @@ public class KotlinAppTest {
 
     @Test
     public void projectModel() throws IOException {
-        GetAndroidModelAction.ModelContainer<AndroidProject> models = project.model().getMulti();
+        ModelContainer<AndroidProject> models = project.model().fetchAndroidProjects();
 
-        AndroidProject appModel = models.getModelMap().get(":app");
+        AndroidProject appModel = models.getOnlyModelMap().get(":app");
 
         assertThat(appModel.getProjectType())
                 .named("Project Type")

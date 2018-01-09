@@ -2,11 +2,11 @@ package com.android.build.gradle.integration.testing;
 
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -28,7 +28,7 @@ public class SeparateTestWithAarDependencyTest {
     public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("separateTestModule").create();
 
-    private static GetAndroidModelAction.ModelContainer<AndroidProject> models;
+    private static ModelContainer<AndroidProject> models;
     private static LibraryGraphHelper helper;
 
     @BeforeClass
@@ -59,7 +59,7 @@ public class SeparateTestWithAarDependencyTest {
                         + "}\n");
 
         project.execute("clean", "assemble");
-        models = project.model().withFullDependencies().getMulti();
+        models = project.model().withFullDependencies().fetchAndroidProjects();
         helper = new LibraryGraphHelper(models);
     }
 
@@ -99,10 +99,10 @@ public class SeparateTestWithAarDependencyTest {
 
     @Test
     public void checkTestModelCompileDepsIncludesTheTestedApp() {
-        Collection<Variant> variants = models.getModelMap().get(":test").getVariants();
+        final AndroidProject androidProject = models.getOnlyModelMap().get(":test");
 
         // get the main artifact of the debug artifact and its dependencies
-        Variant variant = ModelHelper.getVariant(variants, "debug");
+        Variant variant = AndroidProjectUtils.getVariantByName(androidProject, "debug");
         AndroidArtifact artifact = variant.getMainArtifact();
 
         DependencyGraphs compileGraph = artifact.getDependencyGraphs();
@@ -146,10 +146,11 @@ public class SeparateTestWithAarDependencyTest {
 
     @Test
     public void checkTestModelPackageDepsDoesNotIncludeTheTestedApp() {
-        Collection<Variant> variants = models.getModelMap().get(":test").getVariants();
+        final AndroidProject androidProject = models.getOnlyModelMap().get(":test");
+        Collection<Variant> variants = androidProject.getVariants();
 
         // get the main artifact of the debug artifact and its dependencies
-        Variant variant = ModelHelper.getVariant(variants, "debug");
+        Variant variant = AndroidProjectUtils.getVariantByName(androidProject, "debug");
         AndroidArtifact artifact = variant.getMainArtifact();
 
         // verify the same dependencies in package are skipped.

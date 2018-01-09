@@ -21,9 +21,9 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
@@ -75,7 +75,7 @@ public class FlatJavaLibTest {
         models =
                 project.model()
                         .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
-                        .getMulti();
+                        .fetchAndroidProjects();
     }
 
     @AfterClass
@@ -86,7 +86,8 @@ public class FlatJavaLibTest {
 
     @Test
     public void checkDeDupedExternalJavaLibraries() throws Exception {
-        Variant variant = ModelHelper.getVariant(models.getModelMap().get(":app").getVariants(), "debug");
+        final AndroidProject androidProject = models.getOnlyModelMap().get(":app");
+        Variant variant = AndroidProjectUtils.getVariantByName(androidProject, "debug");
 
         Dependencies deps = variant.getMainArtifact().getDependencies();
 

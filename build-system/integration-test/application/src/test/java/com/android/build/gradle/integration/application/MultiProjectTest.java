@@ -20,10 +20,10 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -47,7 +47,7 @@ public class MultiProjectTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        modelContainer = project.model().getMulti();
+        modelContainer = project.model().fetchAndroidProjects();
     }
 
     @AfterClass
@@ -59,7 +59,7 @@ public class MultiProjectTest {
     @Test
     public void checkModel() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
-        Map<String, AndroidProject> models = modelContainer.getModelMap();
+        Map<String, AndroidProject> models = modelContainer.getOnlyModelMap();
 
         AndroidProject baseLibModel = models.get(":baseLibrary");
         assertThat(baseLibModel).named("Module app").isNotNull();
@@ -67,7 +67,7 @@ public class MultiProjectTest {
         Collection<Variant> variants = baseLibModel.getVariants();
         assertThat(variants).named("variant list").hasSize(2);
 
-        Variant variant = ModelHelper.getVariant(variants, "release");
+        Variant variant = AndroidProjectUtils.getVariantByName(baseLibModel, "release");
         assertThat(variant).named("release variant").isNotNull();
 
         //noinspection ConstantConditions

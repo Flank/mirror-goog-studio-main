@@ -78,7 +78,7 @@ public class NdkBuildInstantRunTest {
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug");
 
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
         assertThat(apks.getEntries("lib/x86/libhello-jni.so")).hasSize(1);
@@ -109,7 +109,7 @@ public class NdkBuildInstantRunTest {
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug");
 
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
 
         byte[] so1 = getSo(instantRunModel);

@@ -17,10 +17,10 @@
 package com.android.build.gradle.integration.application;
 
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ModelContainerUtils;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
@@ -65,16 +65,16 @@ public class AntennaPodSmokeTest {
     @Test
     @Ignore("issuetracker.google.com/63940887")
     public void buildAntennaPod() throws Exception {
-        GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
-                project.model().ignoreSyncIssues().getMulti();
-        Map<String, AndroidProject> models = modelContainer.getModelMap();
+        ModelContainer<AndroidProject> modelContainer =
+                project.model().ignoreSyncIssues().fetchAndroidProjects();
+        Map<String, AndroidProject> models = modelContainer.getOnlyModelMap();
         PerformanceTestProjects.assertNoSyncErrors(models);
 
         project.executor().run("clean");
 
         project.executor()
                 .with(BooleanOption.IDE_GENERATE_SOURCES_ONLY, true)
-                .run(ModelHelper.getDebugGenerateSourcesCommands(models));
+                .run(ModelContainerUtils.getDebugGenerateSourcesCommands(modelContainer));
 
         if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
             project.executor()

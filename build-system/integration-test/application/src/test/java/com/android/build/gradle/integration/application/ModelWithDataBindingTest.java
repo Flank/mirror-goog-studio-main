@@ -20,7 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -59,8 +59,8 @@ public class ModelWithDataBindingTest {
                 project.model()
                         .with(BooleanOption.ENABLE_DATA_BINDING_V2, enableV2)
                         .ignoreSyncIssues()
-                        .getSingle()
+                        .fetchAndroidProjects()
                         .getOnlyModel();
-        return ModelHelper.getDebugArtifact(model);
+        return AndroidProjectUtils.getVariantByName(model, "debug").getMainArtifact();
     }
 }

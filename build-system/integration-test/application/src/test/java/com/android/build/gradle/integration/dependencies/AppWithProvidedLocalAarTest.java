@@ -17,8 +17,8 @@
 package com.android.build.gradle.integration.dependencies;
 
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import org.junit.AfterClass;
@@ -52,7 +52,7 @@ public class AppWithProvidedLocalAarTest {
                 "    provided files(\"libs/baseLib-1.0.aar\")\n" +
                 "}\n");
 
-        model = project.model().ignoreSyncIssues().getSingle();
+        model = project.model().ignoreSyncIssues().fetchAndroidProjects();
     }
 
     @AfterClass

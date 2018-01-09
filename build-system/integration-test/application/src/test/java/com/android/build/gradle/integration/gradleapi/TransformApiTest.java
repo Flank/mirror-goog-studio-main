@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import com.android.SdkConstants;
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
@@ -70,9 +70,9 @@ public class TransformApiTest {
                 wholeProject
                         .getSubproject("androidproject")
                         .model()
-                        .getSingle(ProjectBuildOutput.class);
+                        .fetch(ProjectBuildOutput.class);
         VariantBuildOutput debugVariantOutput =
-                ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
         assertNotNull("debug Variant null-check", debugVariantOutput);
 
         // get the outputs.

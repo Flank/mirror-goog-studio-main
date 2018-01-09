@@ -21,13 +21,14 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -65,7 +66,7 @@ public class AppTestWithSkippedModuleDepTest {
                         + "}\n");
 
         project.execute("clean", ":app:assembleDebug", ":app:assembleAndroidTest");
-        modelContainer = project.model().withFullDependencies().getMulti();
+        modelContainer = project.model().withFullDependencies().fetchAndroidProjects();
         helper = new LibraryGraphHelper(modelContainer);
     }
 
@@ -97,9 +98,9 @@ public class AppTestWithSkippedModuleDepTest {
     public void checkLevel2AppModel() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        Map<String, AndroidProject> models = modelContainer.getModelMap();
+        Map<String, AndroidProject> models = modelContainer.getOnlyModelMap();
 
-        Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
+        Variant appDebug = AndroidProjectUtils.getVariantByName(models.get(":app"), "debug");
         DependencyGraphs dependencyGraphs = appDebug.getMainArtifact().getDependencyGraphs();
 
         // --- Compile Graph
@@ -147,13 +148,11 @@ public class AppTestWithSkippedModuleDepTest {
     @Test
     public void checkLevel2TestModel() throws Exception {
 
-        Map<String, AndroidProject> models = modelContainer.getModelMap();
+        Map<String, AndroidProject> models = modelContainer.getOnlyModelMap();
 
-        Variant appDebug = ModelHelper.getVariant(
-                models.get(":app").getVariants(), "debug");
+        Variant appDebug = AndroidProjectUtils.getVariantByName(models.get(":app"), "debug");
 
-        AndroidArtifact testArtifact = ModelHelper.getAndroidArtifact(
-                appDebug.getExtraAndroidArtifacts(), AndroidProject.ARTIFACT_ANDROID_TEST);
+        AndroidArtifact testArtifact = VariantUtils.getAndroidTestArtifact(appDebug);
 
         DependencyGraphs dependencyGraphs = testArtifact.getDependencyGraphs();
 

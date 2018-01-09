@@ -34,7 +34,7 @@ public class FilteredOutBuildTypeTest {
     @Test
     public void checkFilteredOutVariantIsNotInModel() throws Exception {
         AndroidProject model = project.executeAndReturnModel("clean", "assemble").getOnlyModel();
-        assertThat(project.model().getTaskList()).doesNotContain("assembleDebug");
+        assertThat(project.model().fetchTaskList()).doesNotContain("assembleDebug");
         // Load the custom model for the project
         assertEquals("Variant Count", 1, model.getVariants().size());
         Variant variant = model.getVariants().iterator().next();

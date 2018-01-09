@@ -20,10 +20,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.TestOptions.Execution;
+import com.android.builder.model.Variant;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -41,9 +43,11 @@ public class TestOptionsExecutionTest {
                 project.getBuildFile(),
                 "android { testOptions.execution \"android_test_orchestrator\" }");
 
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(model, "debug");
+
         Execution execution =
-                ModelHelper.getAndroidTestArtifact(model).getTestOptions().getExecution();
+                VariantUtils.getAndroidTestArtifact(debugVariant).getTestOptions().getExecution();
 
         assertEquals(execution, Execution.ANDROID_TEST_ORCHESTRATOR);
     }
@@ -51,9 +55,11 @@ public class TestOptionsExecutionTest {
     @Test
     public void returnsHost() throws Exception {
 
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(model, "debug");
+
         Execution executionEnum =
-                ModelHelper.getAndroidTestArtifact(model).getTestOptions().getExecution();
+                VariantUtils.getAndroidTestArtifact(debugVariant).getTestOptions().getExecution();
 
         assertEquals(executionEnum, Execution.HOST);
     }

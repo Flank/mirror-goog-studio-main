@@ -134,9 +134,8 @@ public class NativeBuildPlatformVersionTest {
     }
 
     private void checkBuildSucceeds(String... expectedPlatformAbiCombinations) throws Exception {
-        project.model().getSingle(AndroidProject.class);
-        NativeAndroidProject model =
-                project.model().getSingle(NativeAndroidProject.class);
+        project.model().fetch(AndroidProject.class);
+        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
 
         assertThat(model).hasArtifactGroupsOfSize(4);
         Set<String> platformArchitectures = getDistinctPlatformArchitectureCombinations(model);

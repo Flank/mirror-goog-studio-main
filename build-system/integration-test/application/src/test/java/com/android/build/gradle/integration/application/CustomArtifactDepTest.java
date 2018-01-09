@@ -3,9 +3,9 @@ package com.android.build.gradle.integration.application;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -24,14 +24,14 @@ public class CustomArtifactDepTest {
 
     @Test
     public void testModel() throws IOException {
-        GetAndroidModelAction.ModelContainer<AndroidProject> models = project.model().getMulti();
-        AndroidProject appModel = models.getModelMap().get(":app");
+        ModelContainer<AndroidProject> models = project.model().fetchAndroidProjects();
+        AndroidProject appModel = models.getOnlyModelMap().get(":app");
         assertNotNull("Module app null-check", appModel);
 
         Collection<Variant> variants = appModel.getVariants();
         assertEquals("Variant count", 2, variants.size());
 
-        Variant variant = ModelHelper.getVariant(variants, "release");
+        Variant variant = AndroidProjectUtils.getVariantByName(appModel, "release");
 
         AndroidArtifact mainInfo = variant.getMainArtifact();
         assertNotNull("Main Artifact null-check", mainInfo);

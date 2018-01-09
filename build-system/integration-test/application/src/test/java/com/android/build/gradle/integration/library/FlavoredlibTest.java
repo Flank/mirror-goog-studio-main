@@ -21,18 +21,17 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.VARIANT;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.utils.FileUtils;
 import java.io.File;
-import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -74,7 +73,7 @@ public class FlavoredlibTest {
     @Test
     public void testModel() {
         LibraryGraphHelper helper = new LibraryGraphHelper(models);
-        AndroidProject appModel = models.getModelMap().get(":app");
+        AndroidProject appModel = models.getOnlyModelMap().get(":app");
         assertThat(appModel).named("app model").isNotNull();
 
         assertThat(appModel.isLibrary()).named("App isLibrary()").isFalse();
@@ -82,28 +81,25 @@ public class FlavoredlibTest {
                 .named("App Project Type")
                 .isEqualTo(AndroidProject.PROJECT_TYPE_APP);
 
-        Collection<Variant> variants = appModel.getVariants();
-        Collection<ProductFlavorContainer> productFlavors = appModel.getProductFlavors();
-
         // test flavor 1. Query to check presence.
-        ModelHelper.getProductFlavor(productFlavors, "flavor1");
+        AndroidProjectUtils.getProductFlavor(appModel, "flavor1");
 
-        validateVariant(variants, "flavor1Debug", "flavor1Debug", helper);
-        validateVariant(variants, "flavor1Release", "flavor1Release", helper);
+        validateVariant(appModel, "flavor1Debug", "flavor1Debug", helper);
+        validateVariant(appModel, "flavor1Release", "flavor1Release", helper);
 
         // test flavor 2. Query to check presence
-        ModelHelper.getProductFlavor(productFlavors, "flavor2");
+        AndroidProjectUtils.getProductFlavor(appModel, "flavor2");
 
-        validateVariant(variants, "flavor2Debug", "flavor2Debug", helper);
-        validateVariant(variants, "flavor2Release", "flavor2Release", helper);
+        validateVariant(appModel, "flavor2Debug", "flavor2Debug", helper);
+        validateVariant(appModel, "flavor2Release", "flavor2Release", helper);
     }
 
     private void validateVariant(
-            Collection<Variant> variants,
+            @NonNull AndroidProject androidProject,
             String variantName,
             String depVariantName,
             LibraryGraphHelper helper) {
-        Variant variant = ModelHelper.getVariant(variants, variantName);
+        Variant variant = AndroidProjectUtils.getVariantByName(androidProject, variantName);
 
         DependencyGraphs dependencyGraphs = variant.getMainArtifact().getDependencyGraphs();
         assertThat(dependencyGraphs).named(variantName + " dependency graph").isNotNull();

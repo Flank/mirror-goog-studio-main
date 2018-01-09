@@ -20,10 +20,10 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -61,7 +61,7 @@ public class AppWithJarDependOnLibTest {
                 "dependencies {\n" +
                 "    compile project(\":library\")\n" +
                 "}\n");
-        modelContainer = project.model().ignoreSyncIssues().getMulti();
+        modelContainer = project.model().ignoreSyncIssues().fetchAndroidProjects();
     }
 
     @AfterClass
@@ -72,11 +72,11 @@ public class AppWithJarDependOnLibTest {
 
     @Test
     public void checkModelContainsBothSubProjects() throws Exception {
-        AndroidProject model = modelContainer.getModelMap().get(":app");
+        AndroidProject model = modelContainer.getOnlyModelMap().get(":app");
 
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        Variant debug = ModelHelper.getVariant(model.getVariants(), "debug");
+        Variant debug = AndroidProjectUtils.getVariantByName(model, "debug");
         assertThat(debug).isNotNull();
 
         DependencyGraphs dependencyGraph = debug.getMainArtifact().getDependencyGraphs();

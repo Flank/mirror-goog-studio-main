@@ -20,8 +20,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.Sets;
@@ -84,7 +85,7 @@ public class DensitySplitInLWithFlavorsTest {
         Collection<? extends OutputFile> outputs = getOutputs(outputModel, variantName);
         assertThat(outputs).hasSize(5);
         for (OutputFile outputFile : outputs) {
-            String densityFilter = ModelHelper.getFilter(outputFile, OutputFile.DENSITY);
+            String densityFilter = VariantOutputUtils.getFilter(outputFile, OutputFile.DENSITY);
             if (densityFilter == null) {
                 assertThat(outputFile.getOutputType()).contains(OutputFile.MAIN);
             } else {
@@ -104,7 +105,7 @@ public class DensitySplitInLWithFlavorsTest {
 
         // get the outputs.
         VariantBuildOutput debugOutput =
-                ModelHelper.getVariantBuildOutput(variantBuildOutputs, variantName);
+                ProjectBuildOutputUtils.getVariantBuildOutput(outputModel, variantName);
         Collection<OutputFile> outputFiles = debugOutput.getOutputs();
 
         // with pure splits, all split have the same version code.

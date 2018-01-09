@@ -26,7 +26,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidProject;
@@ -1205,7 +1204,7 @@ public final class GradleTestProject implements TestRule {
     public ModelContainer<AndroidProject> executeAndReturnModel(@NonNull String... tasks)
             throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
-        return model().getSingle();
+        return model().fetchAndroidProjects();
     }
 
     /**
@@ -1220,7 +1219,7 @@ public final class GradleTestProject implements TestRule {
     public <T> T executeAndReturnModel(Class<T> modelClass, String... tasks)
             throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
-        return model().getSingle(modelClass);
+        return model().fetch(modelClass);
     }
 
     /**
@@ -1234,7 +1233,7 @@ public final class GradleTestProject implements TestRule {
     public ModelContainer<AndroidProject> executeAndReturnModel(int modelLevel, String... tasks)
             throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
-        return model().level(modelLevel).getSingle();
+        return model().level(modelLevel).fetchAndroidProjects();
     }
 
     /**
@@ -1249,7 +1248,7 @@ public final class GradleTestProject implements TestRule {
     public <T> T executeAndReturnModel(Class<T> modelClass, int modelLevel, String... tasks)
             throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
-        return model().level(modelLevel).getSingle(modelClass);
+        return model().level(modelLevel).fetch(modelClass);
     }
 
     /**
@@ -1263,7 +1262,7 @@ public final class GradleTestProject implements TestRule {
     public ModelContainer<AndroidProject> executeAndReturnMultiModel(String... tasks)
             throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
-        return model().getMulti();
+        return model().fetchAndroidProjects();
     }
 
     /**
@@ -1278,7 +1277,7 @@ public final class GradleTestProject implements TestRule {
     public <T> Map<String, T> executeAndReturnMultiModel(Class<T> modelClass, String... tasks)
             throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
-        return model().getMulti(modelClass);
+        return model().fetchMulti(modelClass);
     }
 
     /** Returns the latest build result. */

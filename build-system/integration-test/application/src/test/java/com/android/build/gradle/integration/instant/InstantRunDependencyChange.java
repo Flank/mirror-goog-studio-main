@@ -48,8 +48,9 @@ public class InstantRunDependencyChange {
     @Test
     public void addingDependency() throws Exception {
 
-        InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(
-                project.model().getSingle().getOnlyModel());
+        InstantRun instantRunModel =
+                InstantRunTestUtils.getInstantRunModel(
+                        project.model().fetchAndroidProjects().getOnlyModel());
 
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.FULL_APK)
@@ -73,8 +74,9 @@ public class InstantRunDependencyChange {
     @Test
     public void changingDependency() throws Exception {
 
-        InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(
-                project.model().getSingle().getOnlyModel());
+        InstantRun instantRunModel =
+                InstantRunTestUtils.getInstantRunModel(
+                        project.model().fetchAndroidProjects().getOnlyModel());
 
         String originalBuildFile =
                 Files.asCharSource(project.file("build.gradle"), Charsets.UTF_8).read();

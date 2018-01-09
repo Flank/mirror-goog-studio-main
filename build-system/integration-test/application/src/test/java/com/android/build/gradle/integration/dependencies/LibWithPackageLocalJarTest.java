@@ -19,10 +19,10 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -65,7 +65,7 @@ public class LibWithPackageLocalJarTest {
                         + "}\n");
 
         project.execute("clean", "assembleDebug");
-        modelContainer = project.model().withFullDependencies().getSingle();
+        modelContainer = project.model().withFullDependencies().fetchAndroidProjects();
         helper = new LibraryGraphHelper(modelContainer);
 
     }
@@ -87,8 +87,8 @@ public class LibWithPackageLocalJarTest {
     @Test
     public void checkPackagedLocalJarIsNotInTheCompileModel() throws Exception {
 
-        Variant variant = ModelHelper.getVariant(
-                modelContainer.getOnlyModel().getVariants(), "debug");
+        Variant variant =
+                AndroidProjectUtils.getVariantByName(modelContainer.getOnlyModel(), "debug");
 
         DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
         assertThat(helper.on(graph).withType(JAVA).asList()).isEmpty();
@@ -96,7 +96,8 @@ public class LibWithPackageLocalJarTest {
 
     @Test
     public void checkPackagedLocalJarIsNotInThePackageModel() throws Exception {
-        Variant variant = ModelHelper.getVariant(modelContainer.getOnlyModel().getVariants(), "debug");
+        Variant variant =
+                AndroidProjectUtils.getVariantByName(modelContainer.getOnlyModel(), "debug");
 
         DependencyGraphs dependencyGraphs = variant.getMainArtifact().getDependencyGraphs();
         assertThat(helper.on(dependencyGraphs).forPackage().withType(JAVA).asList()).hasSize(1);

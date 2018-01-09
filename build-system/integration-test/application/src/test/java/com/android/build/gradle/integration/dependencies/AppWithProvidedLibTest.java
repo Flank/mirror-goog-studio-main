@@ -19,9 +19,9 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.builder;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.google.common.base.Charsets;
@@ -53,7 +53,8 @@ public class AppWithProvidedLibTest {
                 "dependencies {\n" +
                 "    provided project(\":library\")\n" +
                 "}\n");
-        modelContainer = project.model().withFullDependencies().ignoreSyncIssues().getMulti();
+        modelContainer =
+                project.model().withFullDependencies().ignoreSyncIssues().fetchAndroidProjects();
     }
 
     @AfterClass
@@ -75,7 +76,7 @@ public class AppWithProvidedLibTest {
     @Ignore
     public void checkModelFailedToLoad() throws Exception {
         // TODO: full dependency should show us broken provided only dependency.
-        //final AndroidProject androidProject = modelContainer.getModelMap().get(":app");
+        //final AndroidProject androidProject = modelContainer.getOnlyModelMap().get(":app");
         //assertThat(androidProject).hasIssueSize(2);
         //assertThat(androidProject).hasIssue(
         //        SyncIssue.SEVERITY_ERROR,

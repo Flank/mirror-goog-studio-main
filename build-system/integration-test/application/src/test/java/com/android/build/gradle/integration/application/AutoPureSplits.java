@@ -6,8 +6,10 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -72,7 +74,7 @@ public class AutoPureSplits {
         AndroidProject model =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .getSingle()
+                        .fetchAndroidProjects()
                         .getOnlyModel();
         assertThat(model.getSyncIssues()).hasSize(1);
         assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
@@ -84,14 +86,14 @@ public class AutoPureSplits {
         assertEquals("Variant Count", 2, variants.size());
 
         // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, BuilderConstants.DEBUG);
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(model, BuilderConstants.DEBUG);
         AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
         assertNotNull("Debug main info null-check", debugMainArtifact);
 
         // get the outputs.
-        ProjectBuildOutput projectBuildOutput = project.model().getSingle(ProjectBuildOutput.class);
+        ProjectBuildOutput projectBuildOutput = project.model().fetch(ProjectBuildOutput.class);
         VariantBuildOutput debugVariantOutput =
-                ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
 
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(5);
@@ -107,9 +109,9 @@ public class AutoPureSplits {
         assertEquals(9, debugVariantOutput.getOutputs().size());
         Set<String> actual = new HashSet<>();
         for (OutputFile outputFile : debugVariantOutput.getOutputs()) {
-            String filter = ModelHelper.getFilter(outputFile, OutputFile.DENSITY);
+            String filter = VariantOutputUtils.getFilter(outputFile, OutputFile.DENSITY);
             if (filter == null) {
-                filter = ModelHelper.getFilter(outputFile, OutputFile.LANGUAGE);
+                filter = VariantOutputUtils.getFilter(outputFile, OutputFile.LANGUAGE);
             }
 
             assertEquals(
@@ -134,7 +136,7 @@ public class AutoPureSplits {
         AndroidProject model =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .getSingle()
+                        .fetchAndroidProjects()
                         .getOnlyModel();
         assertThat(model.getSyncIssues()).hasSize(1);
         assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
@@ -146,14 +148,14 @@ public class AutoPureSplits {
         assertEquals("Variant Count", 2, variants.size());
 
         // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, BuilderConstants.DEBUG);
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(model, BuilderConstants.DEBUG);
         AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
         assertNotNull("Debug main info null-check", debugMainArtifact);
 
         // get the outputs.
-        ProjectBuildOutput projectBuildOutput = project.model().getSingle(ProjectBuildOutput.class);
+        ProjectBuildOutput projectBuildOutput = project.model().fetch(ProjectBuildOutput.class);
         VariantBuildOutput debugVariantOutput =
-                ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
 
         // build a map from expected file names to filters
         Map<String, String> expected = Maps.newHashMapWithExpectedSize(7);
@@ -173,9 +175,9 @@ public class AutoPureSplits {
         for (OutputFile outputFile : debugVariantOutput.getOutputs()) {
             String fileName = outputFile.getOutputFile().getName();
 
-            String filter = ModelHelper.getFilter(outputFile, OutputFile.DENSITY);
+            String filter = VariantOutputUtils.getFilter(outputFile, OutputFile.DENSITY);
             if (filter == null) {
-                filter = ModelHelper.getFilter(outputFile, OutputFile.LANGUAGE);
+                filter = VariantOutputUtils.getFilter(outputFile, OutputFile.LANGUAGE);
             }
 
             assertEquals(

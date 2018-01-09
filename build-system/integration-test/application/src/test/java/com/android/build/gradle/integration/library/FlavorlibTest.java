@@ -21,17 +21,16 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.VARIANT;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.utils.FileUtils;
 import java.io.File;
-import java.util.Collection;
 import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -46,7 +45,7 @@ public class FlavorlibTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("flavorlib")
             .create();
-    public static GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer;
+    public static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -79,7 +78,7 @@ public class FlavorlibTest {
     @Test
     public void testModel() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
-        Map<String, AndroidProject> models = modelContainer.getModelMap();
+        Map<String, AndroidProject> models = modelContainer.getOnlyModelMap();
 
         AndroidProject appModel = models.get(":app");
         assertThat(appModel).named("app model").isNotNull();
@@ -87,29 +86,26 @@ public class FlavorlibTest {
         assertThat(appModel.isLibrary()).named("App isLibrary()").isFalse();
         assertThat(appModel.getProjectType()).named("App Project Type").isEqualTo(AndroidProject.PROJECT_TYPE_APP);
 
-        Collection<Variant> variants = appModel.getVariants();
-        Collection<ProductFlavorContainer> productFlavors = appModel.getProductFlavors();
+        // query for presence check
+        AndroidProjectUtils.getProductFlavor(appModel, "flavor1");
+
+        validateVariant(appModel, "flavor1Debug", ":lib1", "debug", helper);
+        validateVariant(appModel, "flavor2Debug", ":lib2", "debug", helper);
 
         // query for presence check
-        ModelHelper.getProductFlavor(productFlavors, "flavor1");
+        AndroidProjectUtils.getProductFlavor(appModel, "flavor2");
 
-        validateVariant(variants, "flavor1Debug", ":lib1", "debug", helper);
-        validateVariant(variants, "flavor2Debug", ":lib2", "debug", helper);
-
-        // query for presence check
-        ModelHelper.getProductFlavor(productFlavors, "flavor2");
-
-        validateVariant(variants, "flavor1Release", ":lib1", "release", helper);
-        validateVariant(variants, "flavor2Release", ":lib2", "release", helper);
+        validateVariant(appModel, "flavor1Release", ":lib1", "release", helper);
+        validateVariant(appModel, "flavor2Release", ":lib2", "release", helper);
     }
 
     private void validateVariant(
-            Collection<Variant> variants,
+            @NonNull AndroidProject androidProject,
             String variantName,
             String depModuleName,
             String depVariantName,
             LibraryGraphHelper helper) {
-        Variant variant = ModelHelper.getVariant(variants, variantName);
+        Variant variant = AndroidProjectUtils.getVariantByName(androidProject, variantName);
 
         DependencyGraphs dependencyGraphs = variant.getMainArtifact().getDependencyGraphs();
         assertThat(dependencyGraphs).named(variantName + " dependency graph").isNotNull();

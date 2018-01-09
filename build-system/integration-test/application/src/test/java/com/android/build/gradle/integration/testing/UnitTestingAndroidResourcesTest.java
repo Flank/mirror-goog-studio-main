@@ -10,8 +10,9 @@ import com.android.apkzlib.utils.IOExceptionFunction;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -138,13 +139,11 @@ public class UnitTestingAndroidResourcesTest {
                         .with(
                                 BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION,
                                 rClassStrategy == RClassStrategy.GENERATE_JAR)
-                        .getMulti()
-                        .getModelMap()
+                        .fetchAndroidProjects()
+                        .getOnlyModelMap()
                         .get(":");
-        Variant debug = ModelHelper.getVariant(model.getVariants(), "debug");
-        JavaArtifact debugUnitTest =
-                ModelHelper.getJavaArtifact(
-                        debug.getExtraJavaArtifacts(), AndroidProject.ARTIFACT_UNIT_TEST);
+        Variant debug = AndroidProjectUtils.getVariantByName(model, "debug");
+        JavaArtifact debugUnitTest = VariantUtils.getUnitTestArtifact(debug);
 
         ImmutableList.Builder<String> commands = ImmutableList.builder();
 

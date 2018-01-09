@@ -7,7 +7,8 @@ import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.ImmutableMap;
@@ -54,7 +55,7 @@ public class DensitySplitInLTest {
         Collection<? extends OutputFile> outputs = getOutputs(outputModel);
         assertThat(outputs).hasSize(5);
         for (OutputFile outputFile : outputs) {
-            String densityFilter = ModelHelper.getFilter(outputFile, OutputFile.DENSITY);
+            String densityFilter = VariantOutputUtils.getFilter(outputFile, OutputFile.DENSITY);
             if (densityFilter == null) {
                 assertThat(outputFile.getOutputType()).contains(OutputFile.MAIN);
             } else {
@@ -89,7 +90,7 @@ public class DensitySplitInLTest {
                     assertThat(outputs).hasSize(6);
                     boolean foundAddedAPK = false;
                     for (OutputFile output : outputs) {
-                        String filter = ModelHelper.getFilter(output, OutputFile.DENSITY);
+                        String filter = VariantOutputUtils.getFilter(output, OutputFile.DENSITY);
 
                         if (filter != null && filter.matches("^xxxhdpi$")) {
                             // found our added density, done.
@@ -130,7 +131,7 @@ public class DensitySplitInLTest {
                     Collection<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     assertThat(outputs).hasSize(4);
                     for (OutputFile output : outputs) {
-                        String filter = ModelHelper.getFilter(output, OutputFile.DENSITY);
+                        String filter = VariantOutputUtils.getFilter(output, OutputFile.DENSITY);
                         if (filter == null) {
                             continue;
                         }
@@ -148,7 +149,8 @@ public class DensitySplitInLTest {
 
     private static Collection<? extends OutputFile> getOutputs(ProjectBuildOutput outputModel)
             throws IOException {
-        VariantBuildOutput debugOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
+        VariantBuildOutput debugOutput =
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
 
         Collection<OutputFile> outputFiles = debugOutput.getOutputs();
 
@@ -166,7 +168,9 @@ public class DensitySplitInLTest {
             Collection<? extends OutputFile> outputs) {
         ImmutableMap.Builder<String, Long> builder = ImmutableMap.builder();
         for (OutputFile output : outputs) {
-            String key = output.getOutputType() + ModelHelper.getFilter(output, OutputFile.DENSITY);
+            String key =
+                    output.getOutputType()
+                            + VariantOutputUtils.getFilter(output, OutputFile.DENSITY);
             builder.put(key, output.getOutputFile().lastModified());
         }
 

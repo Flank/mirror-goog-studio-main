@@ -22,10 +22,10 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -73,7 +73,7 @@ public class LibWithProvidedAarAsJarTest {
                 "}\n");
 
         project.execute("clean", ":library:assembleDebug");
-        modelContainer = project.model().withFullDependencies().getMulti();
+        modelContainer = project.model().withFullDependencies().fetchAndroidProjects();
     }
 
     @AfterClass
@@ -92,8 +92,9 @@ public class LibWithProvidedAarAsJarTest {
     public void checkProvidedJarIsInTheMainArtifactDependency() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        Variant variant = ModelHelper.getVariant(
-                modelContainer.getModelMap().get(":library").getVariants(), "debug");
+        Variant variant =
+                AndroidProjectUtils.getVariantByName(
+                        modelContainer.getOnlyModelMap().get(":library"), "debug");
 
         DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 

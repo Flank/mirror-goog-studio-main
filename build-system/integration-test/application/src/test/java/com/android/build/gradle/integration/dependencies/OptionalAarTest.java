@@ -23,10 +23,10 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -36,7 +36,6 @@ import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -73,7 +72,7 @@ public class OptionalAarTest {
         // doesn't build the aar anymore.
 
         project.execute("clean", ":app:assembleDebug", "library:assembleDebug");
-        models = project.model().withFullDependencies().getMulti();
+        models = project.model().withFullDependencies().fetchAndroidProjects();
         helper = new LibraryGraphHelper(models);
 
     }
@@ -110,10 +109,10 @@ public class OptionalAarTest {
 
     @Test
     public void checkAppModelDoesNotIncludeOptionalLibrary() throws Exception {
-        Collection<Variant> variants = models.getModelMap().get(":app").getVariants();
+        final AndroidProject androidProject = models.getOnlyModelMap().get(":app");
 
         // get the main artifact of the debug artifact and its dependencies
-        Variant variant = ModelHelper.getVariant(variants, "debug");
+        Variant variant = AndroidProjectUtils.getVariantByName(androidProject, "debug");
 
         DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 
@@ -129,10 +128,10 @@ public class OptionalAarTest {
 
     @Test
     public void checkLibraryModelIncludesOptionalLibrary() throws Exception {
-        Collection<Variant> variants = models.getModelMap().get(":library").getVariants();
+        final AndroidProject androidProject = models.getOnlyModelMap().get(":library");
 
         // get the main artifact of the debug artifact and its dependencies
-        Variant variant = ModelHelper.getVariant(variants, "debug");
+        Variant variant = AndroidProjectUtils.getVariantByName(androidProject, "debug");
         AndroidArtifact mainArtifact = variant.getMainArtifact();
 
         DependencyGraphs dependencyGraph = mainArtifact.getDependencyGraphs();

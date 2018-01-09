@@ -20,10 +20,10 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
@@ -53,11 +53,11 @@ public class LocalAarTest {
 
     @Test
     public void checkLevel4Model() throws IOException {
-        GetAndroidModelAction.ModelContainer<AndroidProject> models = project.model().getMulti();
+        ModelContainer<AndroidProject> models = project.model().fetchAndroidProjects();
 
-        AndroidProject appModel = models.getModelMap().get(":app");
+        AndroidProject appModel = models.getOnlyModelMap().get(":app");
 
-        Variant debugVariant = ModelHelper.getVariant(appModel.getVariants(), "debug");
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(appModel, "debug");
 
         DependencyGraphs dependencyGraphs = debugVariant.getMainArtifact().getDependencyGraphs();
 
@@ -70,14 +70,14 @@ public class LocalAarTest {
 
     @Test
     public void checkLevel3Model() throws IOException {
-        GetAndroidModelAction.ModelContainer<AndroidProject> models =
+        ModelContainer<AndroidProject> models =
                 project.model()
                         .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
-                        .getMulti();
+                        .fetchAndroidProjects();
 
-        AndroidProject appModel = models.getModelMap().get(":app");
+        AndroidProject appModel = models.getOnlyModelMap().get(":app");
 
-        Variant debugVariant = ModelHelper.getVariant(appModel.getVariants(), "debug");
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(appModel, "debug");
 
         Dependencies deps = debugVariant.getMainArtifact().getDependencies();
 

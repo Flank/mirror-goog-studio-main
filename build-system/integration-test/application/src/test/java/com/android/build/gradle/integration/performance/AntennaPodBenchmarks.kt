@@ -16,17 +16,16 @@
 
 package com.android.build.gradle.integration.performance
 
-import com.android.build.gradle.integration.common.fixture.ModelBuilder
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
-import com.android.build.gradle.integration.common.utils.ModelHelper
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.ModelBuilder
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
+import com.android.build.gradle.integration.common.utils.getDebugGenerateSourcesCommands
 import com.android.build.gradle.integration.instant.InstantRunTestUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
-import java.nio.file.Paths
 import java.util.function.Supplier
 
 object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
@@ -54,7 +53,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             scenario = scenario,
                             benchmarkMode = Logging.BenchmarkMode.SYNC,
                             action = { record, _, _, model ->
-                                record { model.multi }
+                                record { model.fetchAndroidProjects() }
                             }
                     ),
 
@@ -135,7 +134,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.GENERATE_SOURCES,
                             action = { record, _, executor, model ->
                                 // We don't care about the model benchmark here.
-                                val tasks = ModelHelper.getDebugGenerateSourcesCommands(model.multi.modelMap)
+                                val tasks = model.fetchAndroidProjects().getDebugGenerateSourcesCommands()
                                 record {
                                     executor
                                             .with(BooleanOption.IDE_GENERATE_SOURCES_ONLY, true)
@@ -197,7 +196,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
          */
         InstantRunTestUtils.loadContext(
                 InstantRunTestUtils.getInstantRunModel(
-                        model.multi.modelMap[":app"]!!))
+                        model.fetchAndroidProjects().onlyModelMap[":app"]!!))
     }
 }
 

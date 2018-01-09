@@ -22,11 +22,11 @@ import static com.android.build.gradle.integration.common.utils.TestFileUtils.ap
 import static com.android.testutils.truth.MoreTruth.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilder;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
@@ -122,7 +122,7 @@ public class JacocoDependenciesTest {
     @Test
     public void checkJacocoDisabledForInstantRun() throws Exception {
         project.executor().withInstantRun(new AndroidVersion(21)).run("app:assembleDebug");
-        AndroidProject model = project.model().getMulti().getModelMap().get(":app");
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModelMap().get(":app");
 
         SplitApks apks =
                 InstantRunTestUtils.getCompiledColdSwapChange(
@@ -155,11 +155,11 @@ public class JacocoDependenciesTest {
                 modelBuilder
                         .level(AndroidProject.MODEL_LEVEL_LATEST)
                         .withFullDependencies()
-                        .getMulti();
+                        .fetchAndroidProjects();
         LibraryGraphHelper helper = new LibraryGraphHelper(container);
         Variant appDebug =
-                ModelHelper.getVariant(
-                        container.getModelMap().get(":library").getVariants(), "debug");
+                AndroidProjectUtils.getVariantByName(
+                        container.getOnlyModelMap().get(":library"), "debug");
 
         DependencyGraphs dependencyGraphs = appDebug.getMainArtifact().getDependencyGraphs();
         assertThat(

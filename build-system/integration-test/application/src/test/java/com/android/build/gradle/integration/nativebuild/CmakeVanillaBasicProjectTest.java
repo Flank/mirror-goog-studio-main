@@ -141,8 +141,8 @@ public class CmakeVanillaBasicProjectTest {
 
     @Test
     public void checkModel() throws IOException {
-        project.model().getSingle(); // Make sure we can successfully get AndroidProject
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
+        project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
+        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
         assertThat(model.getBuildFiles()).isNotEmpty();
         assertThat(model.getName()).isEqualTo("project");
@@ -170,7 +170,7 @@ public class CmakeVanillaBasicProjectTest {
     @Test
     public void checkClean() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug", "assembleRelease");
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
+        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model).hasBuildOutputCountEqualTo(6);
         assertThat(model).allBuildOutputsExist();
         // CMake .o files are kept in -B folder which is under .externalNativeBuild/
@@ -186,7 +186,7 @@ public class CmakeVanillaBasicProjectTest {
     @Test
     public void checkCleanAfterAbiSubset() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug", "assembleRelease");
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
+        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model).hasBuildOutputCountEqualTo(6);
 
         List<File> allBuildOutputs = Lists.newArrayList();

@@ -21,18 +21,17 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Truth;
-import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -85,7 +84,7 @@ public class AppWithResolutionStrategyForJarTest {
                 project.getSubproject("library").getBuildFile(),
                 "\n" + "dependencies {\n" + "    api \"com.google.guava:guava:19.0\"\n" + "}\n");
 
-        models = project.model().withFullDependencies().getMulti();
+        models = project.model().withFullDependencies().fetchAndroidProjects();
         helper = new LibraryGraphHelper(models);
     }
 
@@ -99,16 +98,15 @@ public class AppWithResolutionStrategyForJarTest {
     @Test
     public void checkModelContainsCorrectDependencies() throws Exception {
 
-        AndroidProject appProject = models.getModelMap().get(":app");
-        Collection<Variant> appVariants = appProject.getVariants();
+        AndroidProject appProject = models.getOnlyModelMap().get(":app");
 
-        Variant debugVariant = ModelHelper.getVariant(appVariants, "debug");
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(appProject, "debug");
 
         Items items = helper.on(debugVariant.getMainArtifact().getDependencyGraphs());
         checkJarDependency(items, "18.0", "debug");
         checkJarDependency(items.forPackage(), "19.0", "debug");
 
-        Variant releaseVariant = ModelHelper.getVariant(appVariants, "release");
+        Variant releaseVariant = AndroidProjectUtils.getVariantByName(appProject, "release");
         Truth.assertThat(releaseVariant).isNotNull();
 
         items = helper.on(releaseVariant.getMainArtifact().getDependencyGraphs());

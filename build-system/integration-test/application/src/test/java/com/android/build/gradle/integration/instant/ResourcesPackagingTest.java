@@ -76,7 +76,8 @@ public class ResourcesPackagingTest {
     public void testFullAndIncrementalBuilds() throws Exception {
 
         InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(mProject.model().getSingle().getOnlyModel());
+                InstantRunTestUtils.getInstantRunModel(
+                        mProject.model().fetchAndroidProjects().getOnlyModel());
 
         AndroidVersion androidVersion = new AndroidVersion(separateResourcesApk ? 26 : 21, null);
         mProject.executor()

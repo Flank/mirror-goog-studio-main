@@ -21,7 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ModelContainerUtils;
 import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,11 +34,10 @@ public class GenerateSourcesOnlyTest {
     @Test
     public void checkLibraryNotBuilt() throws Exception {
         List<String> generateSources =
-                ModelHelper.getDebugGenerateSourcesCommands(project.model().getMulti().getModelMap());
+                ModelContainerUtils.getDebugGenerateSourcesCommands(
+                        project.model().fetchAndroidProjects());
 
-        GradleBuildResult result =
-                project.executor()
-                        .run(generateSources);
+        GradleBuildResult result = project.executor().run(generateSources);
 
         assertThat(result.getStdout()).doesNotContain("compileDebugJava");
         assertThat(result.getStdout()).doesNotContain("compileReleaseJava");

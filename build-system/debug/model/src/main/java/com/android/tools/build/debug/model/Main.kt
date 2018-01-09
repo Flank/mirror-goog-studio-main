@@ -17,8 +17,8 @@
 @file:JvmName("Main")
 package com.android.tools.build.debug.model
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction
 import com.android.build.gradle.integration.common.fixture.ModelBuilder
+import com.android.build.gradle.integration.common.fixture.ModelContainer
 import com.android.builder.model.AndroidProject
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.ProjectConnection
@@ -45,12 +45,12 @@ fun main(args : Array<String>) {
                 null,
                 null)
 
-        val models: GetAndroidModelAction.ModelContainer<AndroidProject> = modelBuilder
+        val models: ModelContainer<AndroidProject> = modelBuilder
                 .withSdkInLocalProperties()
                 .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
                 //.level(AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL)
                 .ignoreSyncIssues()
-                .multi
+                .fetchAndroidProjects()
 
         // TODO print the model
         models.modelMaps.keys.forEach {

@@ -20,10 +20,10 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -65,7 +65,7 @@ public class AppWithCompileLocalAarTest {
                         + "    implementation files(\"libs/baseLib-1.0.aar\")\n"
                         + "}\n");
 
-        modelContainer = project.model().getSingle();
+        modelContainer = project.model().fetchAndroidProjects();
     }
 
     @AfterClass
@@ -80,7 +80,7 @@ public class AppWithCompileLocalAarTest {
 
         AndroidProject model = modelContainer.getOnlyModel();
 
-        Variant debug = ModelHelper.getVariant(model.getVariants(), "debug");
+        Variant debug = AndroidProjectUtils.getVariantByName(model, "debug");
         Truth.assertThat(debug).isNotNull();
 
         DependencyGraphs dependencyGraph = debug.getMainArtifact().getDependencyGraphs();

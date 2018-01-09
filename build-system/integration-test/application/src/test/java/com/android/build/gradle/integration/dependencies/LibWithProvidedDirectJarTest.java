@@ -22,10 +22,10 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -61,7 +61,7 @@ public class LibWithProvidedDirectJarTest {
                 "\n" + "dependencies {\n" + "    compileOnly project(\":jar\")\n" + "}\n");
 
         project.execute("clean", ":library:assembleDebug");
-        modelContainer = project.model().withFullDependencies().getMulti();
+        modelContainer = project.model().withFullDependencies().fetchAndroidProjects();
         helper = new LibraryGraphHelper(modelContainer);
     }
 
@@ -80,8 +80,9 @@ public class LibWithProvidedDirectJarTest {
 
     @Test
     public void checkProvidedJarIsIntheLibCompileDeps() throws Exception {
-        Variant variant = ModelHelper.getVariant(
-                modelContainer.getModelMap().get(":library").getVariants(), "debug");
+        Variant variant =
+                AndroidProjectUtils.getVariantByName(
+                        modelContainer.getOnlyModelMap().get(":library"), "debug");
 
         DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 
@@ -96,8 +97,9 @@ public class LibWithProvidedDirectJarTest {
 
     @Test
     public void checkProvidedJarIsNotIntheLibPackageDeps() throws Exception {
-        Variant variant = ModelHelper.getVariant(
-                modelContainer.getModelMap().get(":library").getVariants(), "debug");
+        Variant variant =
+                AndroidProjectUtils.getVariantByName(
+                        modelContainer.getOnlyModelMap().get(":library"), "debug");
 
         DependencyGraphs dependencyGrap = variant.getMainArtifact().getDependencyGraphs();
         assertThat(dependencyGrap.getPackageDependencies()).isEmpty();
@@ -105,8 +107,9 @@ public class LibWithProvidedDirectJarTest {
 
     @Test
     public void checkProvidedJarIsNotInTheAppDeps() throws Exception {
-        Variant variant = ModelHelper.getVariant
-                (modelContainer.getModelMap().get(":app").getVariants(), "debug");
+        Variant variant =
+                AndroidProjectUtils.getVariantByName(
+                        modelContainer.getOnlyModelMap().get(":app"), "debug");
 
         DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 

@@ -21,10 +21,10 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -32,7 +32,6 @@ import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -92,7 +91,7 @@ public class AppWithResolutionStrategyForAarTest {
                         + "    api \"org.jdeferred:jdeferred-android-aar:1.2.3\"\n"
                         + "}\n");
 
-        modelContainer = project.model().getMulti();
+        modelContainer = project.model().fetchAndroidProjects();
     }
 
     @AfterClass
@@ -105,19 +104,20 @@ public class AppWithResolutionStrategyForAarTest {
     public void checkModelContainsCorrectDependencies() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        AndroidProject appProject = modelContainer.getModelMap().get(":app");
-        Collection<Variant> appVariants = appProject.getVariants();
+        AndroidProject appProject = modelContainer.getOnlyModelMap().get(":app");
 
-        checkJarDependency(helper, appVariants, "debug", "org.jdeferred:jdeferred-android-aar:1.2.2@aar");
-        checkJarDependency(helper, appVariants, "release", "org.jdeferred:jdeferred-android-aar:1.2.3@aar");
+        checkJarDependency(
+                helper, appProject, "debug", "org.jdeferred:jdeferred-android-aar:1.2.2@aar");
+        checkJarDependency(
+                helper, appProject, "release", "org.jdeferred:jdeferred-android-aar:1.2.3@aar");
     }
 
     private static void checkJarDependency(
             @NonNull LibraryGraphHelper helper,
-            @NonNull Collection<Variant> appVariants,
+            @NonNull AndroidProject androidProject,
             @NonNull String variantName,
             @NonNull String aarCoodinate) {
-        Variant appVariant = ModelHelper.getVariant(appVariants, variantName);
+        Variant appVariant = AndroidProjectUtils.getVariantByName(androidProject, variantName);
 
         AndroidArtifact appArtifact = appVariant.getMainArtifact();
 

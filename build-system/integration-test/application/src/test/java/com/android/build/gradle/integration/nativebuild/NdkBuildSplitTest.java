@@ -138,14 +138,14 @@ public class NdkBuildSplitTest {
         AndroidProject nonNativeModel =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .getSingle()
+                        .fetchAndroidProjects()
                         .getOnlyModel();
         assertThat(nonNativeModel.getSyncIssues()).hasSize(1);
         assertThat(Iterables.getOnlyElement(nonNativeModel.getSyncIssues()).getMessage())
                 .contains(
                         "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.");
 
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
+        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model.getBuildFiles()).hasSize(1);
 
         assertThat(model).isNotNull();

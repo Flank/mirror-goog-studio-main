@@ -18,14 +18,15 @@ package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.builder.core.BuilderConstants.DEBUG;
-import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
@@ -53,7 +54,7 @@ public class LibTestDepTest {
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         model = project.executeAndReturnModel("clean", "assembleDebug");
-        outputModel = project.model().getSingle(ProjectBuildOutput.class);
+        outputModel = project.model().fetch(ProjectBuildOutput.class);
     }
 
     @AfterClass
@@ -72,12 +73,10 @@ public class LibTestDepTest {
     public void checkTestVariantInheritsDepsFromMainVariant() {
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        Collection<Variant> variants = model.getOnlyModel().getVariants();
-        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG);
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(model.getOnlyModel(), DEBUG);
 
         Collection<AndroidArtifact> extraAndroidArtifact = debugVariant.getExtraAndroidArtifacts();
-        AndroidArtifact testArtifact =
-                ModelHelper.getAndroidArtifact(extraAndroidArtifact, ARTIFACT_ANDROID_TEST);
+        AndroidArtifact testArtifact = VariantUtils.getAndroidTestArtifact(debugVariant);
 
         DependencyGraphs testGraph = testArtifact.getDependencyGraphs();
         List<Library> javaLibraries = helper.on(testGraph).withType(JAVA).asLibraries();
@@ -91,6 +90,6 @@ public class LibTestDepTest {
 
     @Test
     public void checkDebugAndReleaseOutputHaveDifferentNames() {
-        ModelHelper.compareDebugAndReleaseOutput(outputModel);
+        ProjectBuildOutputUtils.compareDebugAndReleaseOutput(outputModel);
     }
 }

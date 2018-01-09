@@ -47,7 +47,8 @@ public class ResourcesSwapTest {
         Files.write("this is a movie", asset, StandardCharsets.UTF_8);
 
         InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(mProject.model().getSingle().getOnlyModel());
+                InstantRunTestUtils.getInstantRunModel(
+                        mProject.model().fetchAndroidProjects().getOnlyModel());
 
         InstantRunTestUtils.doInitialBuild(mProject, new AndroidVersion(21, null));
         InstantRunApk apk = InstantRunTestUtils.getMainApk(instantRunModel);

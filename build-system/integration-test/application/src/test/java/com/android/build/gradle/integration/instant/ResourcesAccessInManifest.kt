@@ -20,25 +20,16 @@ import com.google.common.truth.Truth.assertThat
 
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.Adb
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus
-import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder
-import com.android.builder.model.InstantRun
-import com.android.builder.model.OptionalCompilationStep
 import com.android.sdklib.AndroidVersion
-import com.android.tools.ir.client.InstantRunArtifact
 import com.android.tools.ir.client.InstantRunArtifactType
-import com.android.tools.ir.client.InstantRunBuildInfo
 import com.google.common.collect.Iterables
-import java.io.File
-import java.io.IOException
 import org.junit.Rule
 import org.junit.Test
 
@@ -57,7 +48,7 @@ class ResourcesAccessInManifest {
     @Throws(Exception::class)
     fun testBuild() {
 
-        val instantRunModel = InstantRunTestUtils.getInstantRunModel(project.model().single.onlyModel)
+        val instantRunModel = InstantRunTestUtils.getInstantRunModel(project.model().fetchAndroidProjects().onlyModel)
 
         InstantRunTestUtils.doInitialBuild(project, AndroidVersion(26, null))
 

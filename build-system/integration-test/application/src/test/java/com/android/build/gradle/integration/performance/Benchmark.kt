@@ -20,7 +20,6 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilder
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
-import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.options.BooleanOption
 import com.google.common.collect.Iterables
@@ -28,10 +27,8 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicLong
 
 typealias BenchmarkAction = (((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, ModelBuilder) -> Unit)
 
@@ -74,7 +71,7 @@ data class Benchmark(
                         project = postApplyProject(project)
 
                         val model = project.model().ignoreSyncIssues().withoutOfflineFlag()
-                        PerformanceTestProjects.assertNoSyncErrors(model.multi.modelMap)
+                        PerformanceTestProjects.assertNoSyncErrors(model.fetchAndroidProjects().onlyModelMap)
 
                         val executor = project.executor()
                                 .withEnableInfoLogging(false)

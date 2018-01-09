@@ -20,15 +20,14 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static org.junit.Assert.assertNotNull;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import java.io.IOException;
-import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -45,7 +44,7 @@ public class LocalJarsTest {
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         project.executor().allowStderr(false).run("clean", "assembleDebug");
-        models = project.model().getMulti();
+        models = project.model().fetchAndroidProjects();
     }
 
     @AfterClass
@@ -61,11 +60,10 @@ public class LocalJarsTest {
 
     @Test
     public void testModel() throws Exception {
-        AndroidProject libModel = models.getModelMap().get(":baseLibrary");
+        AndroidProject libModel = models.getOnlyModelMap().get(":baseLibrary");
         assertNotNull("Module app null-check", libModel);
 
-        Collection<Variant> variants = libModel.getVariants();
-        Variant releaseVariant = ModelHelper.getVariant(variants, "release");
+        Variant releaseVariant = AndroidProjectUtils.getVariantByName(libModel, "release");
 
         DependencyGraphs graph = releaseVariant.getMainArtifact().getDependencyGraphs();
         assertNotNull(graph);

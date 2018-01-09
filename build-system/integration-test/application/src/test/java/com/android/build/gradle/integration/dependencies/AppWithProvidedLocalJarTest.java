@@ -19,10 +19,10 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -79,10 +79,10 @@ public class AppWithProvidedLocalJarTest {
 
     @Test
     public void checkBasicModel() throws Exception {
-        ModelContainer<AndroidProject> model = project.model().getSingle();
+        ModelContainer<AndroidProject> model = project.model().fetchAndroidProjects();
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
+        Variant variant = AndroidProjectUtils.getVariantByName(model.getOnlyModel(), "debug");
 
         DependencyGraphs dependencyGraph = variant.getMainArtifact().getDependencyGraphs();
 
@@ -91,10 +91,11 @@ public class AppWithProvidedLocalJarTest {
 
     @Test
     public void checkFullModel() throws Exception {
-        ModelContainer<AndroidProject> model = project.model().withFullDependencies().getSingle();
+        ModelContainer<AndroidProject> model =
+                project.model().withFullDependencies().fetchAndroidProjects();
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
+        Variant variant = AndroidProjectUtils.getVariantByName(model.getOnlyModel(), "debug");
 
         DependencyGraphs dependencyGraph = variant.getMainArtifact().getDependencyGraphs();
         checkCompileDeps(helper, dependencyGraph);

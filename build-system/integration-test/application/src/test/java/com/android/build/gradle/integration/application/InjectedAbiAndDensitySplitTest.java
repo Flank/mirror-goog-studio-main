@@ -128,7 +128,7 @@ public class InjectedAbiAndDensitySplitTest {
                 sProject.model()
                         .with(StringOption.IDE_BUILD_TARGET_ABI, "mips")
                         .ignoreSyncIssues()
-                        .getSingle()
+                        .fetchAndroidProjects()
                         .getOnlyModel();
 
         assertThat(model).hasIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_GENERIC);

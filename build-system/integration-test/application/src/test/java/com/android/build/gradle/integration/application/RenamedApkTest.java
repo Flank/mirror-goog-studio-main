@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
@@ -56,7 +56,8 @@ public class RenamedApkTest {
     @Test
     public void checkModelReflectsRenamedApk() throws Exception {
         File projectDir = project.getTestDir();
-        VariantBuildOutput variantBuildOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
+        VariantBuildOutput variantBuildOutput =
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
         Collection<OutputFile> outputFiles = variantBuildOutput.getOutputs();
 
         File buildDir = new File(projectDir, "build/outputs/apk/debug");

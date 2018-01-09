@@ -16,15 +16,12 @@
 
 package com.android.build.gradle.integration.performance
 
-import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
-import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.integration.common.utils.getGenerateSourcesCommands
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
-import java.io.File
-import java.util.concurrent.ThreadLocalRandom
 import java.util.function.Supplier
 
 object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
@@ -55,7 +52,7 @@ object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                             scenario = scenario,
                             benchmarkMode = BenchmarkMode.SYNC,
                             action = { record, _, _, model ->
-                                record { model.multi.modelMap }
+                                record { model.fetchAndroidProjects().onlyModelMap }
                             }
                     ),
 
@@ -99,8 +96,7 @@ object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                             scenario = scenario,
                             benchmarkMode = BenchmarkMode.GENERATE_SOURCES,
                             action = { record, _, executor, model ->
-                                val tasks = ModelHelper.getGenerateSourcesCommands(
-                                        model.multi.modelMap,
+                                val tasks = model.fetchAndroidProjects().getGenerateSourcesCommands(
                                         { p -> if (p == ":WordPress") "vanillaDebug" else "debug" })
 
                                 record {

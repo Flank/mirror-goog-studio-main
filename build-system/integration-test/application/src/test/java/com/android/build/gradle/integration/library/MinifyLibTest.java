@@ -75,7 +75,11 @@ public class MinifyLibTest {
                         + "}\n");
 
         AndroidProject model =
-                project.model().ignoreSyncIssues().getMulti().getModelMap().get(":lib");
+                project.model()
+                        .ignoreSyncIssues()
+                        .fetchAndroidProjects()
+                        .getOnlyModelMap()
+                        .get(":lib");
         assertThat(model).hasSingleIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
         assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
                 .contains(

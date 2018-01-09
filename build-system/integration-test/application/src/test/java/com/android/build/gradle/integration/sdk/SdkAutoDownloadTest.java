@@ -561,7 +561,7 @@ public class SdkAutoDownloadTest {
                 .contains("missing components");
 
         // Check that
-        AndroidProject model = getModel().ignoreSyncIssues().getSingle().getOnlyModel();
+        AndroidProject model = getModel().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
         List<SyncIssue> syncErrors =
                 model.getSyncIssues()
                         .stream()

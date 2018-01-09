@@ -22,11 +22,11 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
@@ -83,10 +83,10 @@ public class AppWithCompileIndirectJarTest {
         Map<String, AndroidProject> models =
                 project.model()
                         .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
-                        .getMulti()
-                        .getModelMap();
+                        .fetchAndroidProjects()
+                        .getOnlyModelMap();
 
-        Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
+        Variant appDebug = AndroidProjectUtils.getVariantByName(models.get(":app"), "debug");
 
         Dependencies deps = appDebug.getMainArtifact().getDependencies();
 
@@ -104,7 +104,7 @@ public class AppWithCompileIndirectJarTest {
 
         // ---
 
-        Variant libDebug = ModelHelper.getVariant(models.get(":library").getVariants(), "debug");
+        Variant libDebug = AndroidProjectUtils.getVariantByName(models.get(":library"), "debug");
         Truth.assertThat(libDebug).isNotNull();
 
         deps = libDebug.getMainArtifact().getDependencies();
@@ -121,13 +121,13 @@ public class AppWithCompileIndirectJarTest {
 
     @Test
     public void checkLevel4Model() throws Exception {
-        final ModelContainer<AndroidProject> modelContainer = project.model()
-                .level(AndroidProject.MODEL_LEVEL_LATEST).getMulti();
+        final ModelContainer<AndroidProject> modelContainer =
+                project.model().level(AndroidProject.MODEL_LEVEL_LATEST).fetchAndroidProjects();
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        Map<String, AndroidProject> models = modelContainer.getModelMap();
+        Map<String, AndroidProject> models = modelContainer.getOnlyModelMap();
 
-        Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
+        Variant appDebug = AndroidProjectUtils.getVariantByName(models.get(":app"), "debug");
 
         DependencyGraphs compileGraph = appDebug.getMainArtifact().getDependencyGraphs();
         System.out.println(compileGraph.getCompileDependencies());
@@ -156,7 +156,7 @@ public class AppWithCompileIndirectJarTest {
 
         // ---
 
-        Variant libDebug = ModelHelper.getVariant(models.get(":library").getVariants(), "debug");
+        Variant libDebug = AndroidProjectUtils.getVariantByName(models.get(":library"), "debug");
         Truth.assertThat(libDebug).isNotNull();
 
         compileGraph = libDebug.getMainArtifact().getDependencyGraphs();

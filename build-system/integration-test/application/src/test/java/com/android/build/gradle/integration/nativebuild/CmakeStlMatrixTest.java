@@ -140,8 +140,8 @@ public class CmakeStlMatrixTest {
 
     @Test
     public void checkModel() throws IOException {
-        project.model().getSingle(); // Make sure we can successfully get AndroidProject
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
+        project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
+        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         TruthHelper.assertThat(model.getBuildSystems())
                 .containsExactly(NativeBuildSystem.CMAKE.getName());
         TruthHelper.assertThat(model.getBuildFiles()).hasSize(1);
@@ -170,7 +170,7 @@ public class CmakeStlMatrixTest {
     @Test
     public void checkClean() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug", "assembleRelease");
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
+        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         TruthHelper.assertThat(model).hasBuildOutputCountEqualTo(4);
         TruthHelper.assertThat(model).allBuildOutputsExist();
         // CMake .o files are kept in -B folder which is under .externalNativeBuild/
@@ -193,7 +193,7 @@ public class CmakeStlMatrixTest {
     @Test
     public void checkCleanAfterAbiSubset() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug", "assembleRelease");
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
+        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         TruthHelper.assertThat(model).hasBuildOutputCountEqualTo(4);
 
         List<File> allBuildOutputs = Lists.newArrayList();

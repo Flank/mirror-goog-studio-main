@@ -23,10 +23,10 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -77,8 +77,8 @@ public class AppWithCompileLibTest {
     public void checkCompiledLibraryIsInTheModel() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
-        Map<String, AndroidProject> models = modelContainer.getModelMap();
-        Variant variant = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
+        Map<String, AndroidProject> models = modelContainer.getOnlyModelMap();
+        Variant variant = AndroidProjectUtils.getVariantByName(models.get(":app"), "debug");
 
         DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 

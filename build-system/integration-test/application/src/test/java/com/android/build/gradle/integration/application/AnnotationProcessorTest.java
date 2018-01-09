@@ -28,11 +28,13 @@ import com.android.build.gradle.integration.common.fixture.app.AnnotationProcess
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
+import com.android.builder.model.Variant;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
@@ -183,8 +185,10 @@ public class AnnotationProcessorTest {
         assertThat(new File(aptOutputFolder, "com/example/helloworld/HelloWorldStringValue.java"))
                 .exists();
 
-        AndroidProject model = project.model().getMulti().getModelMap().get(":app");
-        assertThat(ModelHelper.getDebugArtifact(model).getGeneratedSourceFolders())
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModelMap().get(":app");
+        Variant debugVariant = AndroidProjectUtils.getDebugVariant(model);
+
+        assertThat(debugVariant.getMainArtifact().getGeneratedSourceFolders())
                 .contains(aptOutputFolder);
 
         // Ensure that test sources also have their generated sources files sent to the IDE. This
@@ -192,7 +196,7 @@ public class AnnotationProcessorTest {
         // https://issuetracker.google.com/37121918.
         File testAptOutputFolder =
                 project.getSubproject(":app").file("build/generated/source/apt/test/debug");
-        JavaArtifact testArtifact = ModelHelper.getUnitTestArtifact(model);
+        JavaArtifact testArtifact = VariantUtils.getUnitTestArtifact(debugVariant);
         assertThat(testArtifact.getGeneratedSourceFolders()).contains(testAptOutputFolder);
 
         // Ensure that test projects also have their generated sources files sent to the IDE. This
@@ -200,7 +204,7 @@ public class AnnotationProcessorTest {
         // https://issuetracker.google.com/37121918.
         File androidTestAptOutputFolder =
                 project.getSubproject(":app").file("build/generated/source/apt/androidTest/debug");
-        AndroidArtifact androidTest = ModelHelper.getAndroidTestArtifact(model);
+        AndroidArtifact androidTest = VariantUtils.getAndroidTestArtifact(debugVariant);
         assertThat(androidTest.getGeneratedSourceFolders()).contains(androidTestAptOutputFolder);
 
         // check incrementality.

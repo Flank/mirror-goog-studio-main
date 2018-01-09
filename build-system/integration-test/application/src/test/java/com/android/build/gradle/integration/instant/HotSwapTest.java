@@ -56,7 +56,8 @@ public class HotSwapTest {
     @Test
     public void buildIncrementallyWithInstantRun() throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
+                InstantRunTestUtils.getInstantRunModel(
+                        project.model().fetchAndroidProjects().getOnlyModel());
 
         InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(21, null));
 
@@ -85,7 +86,8 @@ public class HotSwapTest {
     @Test
     public void testBuildEligibilityWithColdSwapRequested() throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
+                InstantRunTestUtils.getInstantRunModel(
+                        project.model().fetchAndroidProjects().getOnlyModel());
 
         InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(21, null));
 

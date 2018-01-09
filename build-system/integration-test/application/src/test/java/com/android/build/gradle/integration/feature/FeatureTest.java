@@ -205,7 +205,8 @@ public class FeatureTest {
         sProject.executor().withEnabledAapt2(true).run("clean", "assemble");
 
         // get the initial minimalistic model.
-        Map<String, ProjectBuildOutput> multi = sProject.model().getMulti(ProjectBuildOutput.class);
+        Map<String, ProjectBuildOutput> multi =
+                sProject.model().fetchMulti(ProjectBuildOutput.class);
 
         ProjectBuildOutput projectBuildOutput = multi.get(":feature");
         assertThat(projectBuildOutput).isNotNull();
@@ -230,7 +231,8 @@ public class FeatureTest {
                 });
         assertThat(expectedVariantNames).isEmpty();
 
-        Map<String, AndroidProject> models = sProject.model().getMulti().getModelMap();
+        Map<String, AndroidProject> models =
+                sProject.model().fetchAndroidProjects().getOnlyModelMap();
         assertThat(models.get(":feature").isBaseSplit()).isFalse();
         assertThat(models.get(":baseFeature").isBaseSplit()).isTrue();
     }
@@ -242,7 +244,8 @@ public class FeatureTest {
         GradleTestProject featureProject = sProject.getSubproject(":feature");
 
         // get the initial minimalistic model.
-        Map<String, ProjectBuildOutput> multi = sProject.model().getMulti(ProjectBuildOutput.class);
+        Map<String, ProjectBuildOutput> multi =
+                sProject.model().fetchMulti(ProjectBuildOutput.class);
 
         ProjectBuildOutput projectBuildOutput = multi.get(":feature");
         assertThat(projectBuildOutput).isNotNull();
@@ -264,7 +267,7 @@ public class FeatureTest {
                         .withEnabledAapt2(true)
                         .run("assemble");
 
-        multi = sProject.model().getMulti(ProjectBuildOutput.class);
+        multi = sProject.model().fetchMulti(ProjectBuildOutput.class);
 
         assertThat(assemble.getNotUpToDateTasks()).contains(":feature:assembleDebug");
         assertThat(assemble.getNotUpToDateTasks()).contains(":baseFeature:assemble");
@@ -293,7 +296,8 @@ public class FeatureTest {
         GradleTestProject featureProject = sProject.getSubproject(":feature");
 
         // get the initial minimalistic model.
-        Map<String, ProjectBuildOutput> multi = sProject.model().getMulti(ProjectBuildOutput.class);
+        Map<String, ProjectBuildOutput> multi =
+                sProject.model().fetchMulti(ProjectBuildOutput.class);
 
         ProjectBuildOutput projectBuildOutput = multi.get(":feature");
         assertThat(projectBuildOutput).isNotNull();
@@ -320,7 +324,7 @@ public class FeatureTest {
                         .withEnabledAapt2(true)
                         .run("assembleDebug");
 
-        multi = sProject.model().getMulti(ProjectBuildOutput.class);
+        multi = sProject.model().fetchMulti(ProjectBuildOutput.class);
 
         assertThat(assembleDebug.getNotUpToDateTasks()).contains(":feature:assembleDebug");
         assertThat(assembleDebug.getUpToDateTasks().contains(":feature:assembleRelease"));

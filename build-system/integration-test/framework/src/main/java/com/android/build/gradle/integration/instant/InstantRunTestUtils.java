@@ -186,8 +186,10 @@ public final class InstantRunTestUtils {
             @NonNull GradleTestProject project, @NonNull AndroidVersion androidVersion)
             throws IOException, InterruptedException {
         project.execute("clean");
-        InstantRun instantRunModel = getInstantRunModel(
-                Iterables.getOnlyElement(project.model().getSingle().getModelMap().values()));
+        InstantRun instantRunModel =
+                getInstantRunModel(
+                        Iterables.getOnlyElement(
+                                project.model().fetchAndroidProjects().getOnlyModelMap().values()));
 
         project.executor()
                 .withInstantRun(androidVersion, OptionalCompilationStep.FULL_APK)

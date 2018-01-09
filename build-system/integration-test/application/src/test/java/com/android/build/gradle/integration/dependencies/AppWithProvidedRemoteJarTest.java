@@ -21,11 +21,11 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -78,13 +78,13 @@ public class AppWithProvidedRemoteJarTest {
 
     @Test
     public void checkProvidedRemoteJarIsInTheMainArtifactDependency() throws Exception {
-        GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
-                project.model().withFullDependencies().getSingle();
+        ModelContainer<AndroidProject> modelContainer =
+                project.model().withFullDependencies().fetchAndroidProjects();
 
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
         Variant variant =
-                ModelHelper.getVariant(modelContainer.getOnlyModel().getVariants(), "debug");
+                AndroidProjectUtils.getVariantByName(modelContainer.getOnlyModel(), "debug");
 
         DependencyGraphs dependencyGraph = variant.getMainArtifact().getDependencyGraphs();
 

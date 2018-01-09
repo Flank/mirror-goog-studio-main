@@ -19,14 +19,14 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
-import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -53,7 +53,7 @@ public class AppWithClassifierDepTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        model = project.model().getSingle();
+        model = project.model().fetchAndroidProjects();
         helper = new LibraryGraphHelper(model);
     }
 
@@ -66,7 +66,7 @@ public class AppWithClassifierDepTest {
 
     @Test
     public void checkDebugDepInModel() throws Exception {
-        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
+        Variant variant = AndroidProjectUtils.getVariantByName(model.getOnlyModel(), "debug");
 
         DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 
@@ -82,10 +82,9 @@ public class AppWithClassifierDepTest {
 
     @Test
     public void checkAndroidTestDepInModel() throws Exception {
-        Variant debugVariant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(model.getOnlyModel(), "debug");
 
-        AndroidArtifact androidTestArtifact = ModelHelper.getAndroidArtifact(
-                debugVariant.getExtraAndroidArtifacts(), ARTIFACT_ANDROID_TEST);
+        AndroidArtifact androidTestArtifact = VariantUtils.getAndroidTestArtifact(debugVariant);
 
         DependencyGraphs graph = androidTestArtifact.getDependencyGraphs();
 

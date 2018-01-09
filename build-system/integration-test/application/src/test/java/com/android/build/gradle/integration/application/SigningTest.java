@@ -30,9 +30,10 @@ import com.android.apkzlib.sign.SignatureAlgorithm;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.SigningConfigHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.BuilderConstants;
@@ -234,7 +235,8 @@ public class SigningTest {
 
     @Test
     public void checkCustomSigning() throws Exception {
-        Collection<Variant> variants = project.model().getSingle().getOnlyModel().getVariants();
+        Collection<Variant> variants =
+                project.model().fetchAndroidProjects().getOnlyModel().getVariants();
 
         for (Variant variant : variants) {
             // Release variant doesn't specify the signing config, so it should not be considered
@@ -252,38 +254,37 @@ public class SigningTest {
 
     @Test
     public void signingConfigsModel() throws Exception {
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject androidProject = project.model().fetchAndroidProjects().getOnlyModel();
 
-        Collection<SigningConfig> signingConfigs = model.getSigningConfigs();
+        Collection<SigningConfig> signingConfigs = androidProject.getSigningConfigs();
         assertThat(signingConfigs.stream().map(SigningConfig::getName).collect(Collectors.toList()))
-                .containsExactly("debug", "customDebug");
+                .containsExactly(BuilderConstants.DEBUG, "customDebug");
 
         SigningConfig debugSigningConfig =
-                ModelHelper.getSigningConfig(signingConfigs, BuilderConstants.DEBUG);
+                AndroidProjectUtils.getSigningConfig(androidProject, BuilderConstants.DEBUG);
+
         new SigningConfigHelper(
                         debugSigningConfig,
                         BuilderConstants.DEBUG,
                         GradleTestProject.ANDROID_SDK_HOME)
                 .test();
 
-        SigningConfig mySigningConfig = ModelHelper.getSigningConfig(signingConfigs, "customDebug");
+        SigningConfig mySigningConfig =
+                AndroidProjectUtils.getSigningConfig(androidProject, "customDebug");
         new SigningConfigHelper(mySigningConfig, "customDebug", keystore)
                 .setStorePassword(STORE_PASSWORD)
                 .setKeyAlias(ALIAS_NAME)
                 .setKeyPassword(KEY_PASSWORD)
                 .test();
 
-        Variant debugVariant = ModelHelper.getVariant(model.getVariants(), BuilderConstants.DEBUG);
+        Variant debugVariant =
+                AndroidProjectUtils.getVariantByName(androidProject, BuilderConstants.DEBUG);
         assertThat(debugVariant.getMainArtifact().getSigningConfigName()).isEqualTo("customDebug");
-        Collection<AndroidArtifact> debugExtraAndroidArtifacts =
-                debugVariant.getExtraAndroidArtifacts();
-        AndroidArtifact androidTestArtifact =
-                ModelHelper.getAndroidArtifact(
-                        debugExtraAndroidArtifacts, AndroidProject.ARTIFACT_ANDROID_TEST);
 
+        AndroidArtifact androidTestArtifact = VariantUtils.getAndroidTestArtifact(debugVariant);
         assertThat(androidTestArtifact.getSigningConfigName()).isEqualTo("customDebug");
 
-        Variant releaseVariant = ModelHelper.getVariant(model.getVariants(), RELEASE);
+        Variant releaseVariant = AndroidProjectUtils.getVariantByName(androidProject, RELEASE);
         assertThat(releaseVariant.getMainArtifact().getSigningConfigName()).isNull();
     }
 

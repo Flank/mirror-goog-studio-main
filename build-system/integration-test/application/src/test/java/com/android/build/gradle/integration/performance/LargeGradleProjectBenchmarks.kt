@@ -16,23 +16,20 @@
 
 package com.android.build.gradle.integration.performance
 
-import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
-import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.integration.common.utils.getDebugGenerateSourcesCommands
 import com.android.utils.FileUtils
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.EVALUATION
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.SYNC
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.BUILD__FROM_CLEAN
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.NO_OP
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.BUILD_INC__SUB_PROJECT__JAVA__IMPLEMENTATION_CHANGE
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.BUILD_INC__SUB_PROJECT__JAVA__API_CHANGE
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.BUILD_INC__SUB_PROJECT__JAVA__IMPLEMENTATION_CHANGE
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.BUILD_INC__SUB_PROJECT__RES__ADD
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.BUILD_INC__SUB_PROJECT__RES__EDIT
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.BUILD__FROM_CLEAN
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.EVALUATION
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.GENERATE_SOURCES
-import java.io.File
-import java.util.concurrent.ThreadLocalRandom
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.NO_OP
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.SYNC
 import java.util.function.Supplier
 
 object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
@@ -61,7 +58,7 @@ object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                             scenario = scenario,
                             benchmarkMode = SYNC,
                             action = { record, _, _, model ->
-                                record { model.multi }
+                                record { model.fetchAndroidProjects() }
                             }
                     ),
 
@@ -126,7 +123,7 @@ object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                             scenario = scenario,
                             benchmarkMode = GENERATE_SOURCES,
                             action = { record, _, executor, model ->
-                                val tasks = ModelHelper.getDebugGenerateSourcesCommands(model.multi.modelMap)
+                                val tasks = model.fetchAndroidProjects().getDebugGenerateSourcesCommands()
                                 record { executor.run(tasks) }
                             }
                     )

@@ -24,7 +24,6 @@ import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
 import org.junit.Rule
 import org.junit.Test
-import java.util.stream.Collectors
 
 class BrokenTestModuleSyncTest {
 
@@ -63,7 +62,9 @@ class BrokenTestModuleSyncTest {
 
     @Test
     fun checkSync() {
-        val model: AndroidProject = project.model().ignoreSyncIssues().multi.modelMap[":test"] ?: throw RuntimeException("Failed to find model for :test")
+        val model: AndroidProject =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap[":test"] ?:
+                        throw RuntimeException("Failed to find model for :test")
 
         val issues = model.syncIssues
         TruthHelper.assertThat(issues).hasSize(2)

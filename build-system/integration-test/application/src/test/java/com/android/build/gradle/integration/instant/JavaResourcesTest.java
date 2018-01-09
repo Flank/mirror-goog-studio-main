@@ -74,7 +74,7 @@ public class JavaResourcesTest {
 
     @Test
     public void testChangingJavaResources() throws Exception {
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         project.executor().withInstantRun(androidVersion).run("assembleDebug");
 

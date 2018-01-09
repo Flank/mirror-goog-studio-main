@@ -4,7 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ApkHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
@@ -60,14 +60,16 @@ public class ApplicationIdInLibsTest {
     private static boolean checkPermissionPresent(
             Map<String, ProjectBuildOutput> outputModels, String permission) {
         assertThat(outputModels).containsKey(":app");
-        assertThat(outputModels.get(":app")).isNotNull();
+        final ProjectBuildOutput projectBuildOutput = outputModels.get(":app");
+        assertThat(projectBuildOutput).isNotNull();
+
         Collection<VariantBuildOutput> variantBuildOutputs =
-                outputModels.get(":app").getVariantsBuildOutput();
+                projectBuildOutput.getVariantsBuildOutput();
         assertThat(variantBuildOutputs).hasSize(2);
 
         // select the debug variant
         VariantBuildOutput debugBuildOutput =
-                ModelHelper.getVariantBuildOutput(variantBuildOutputs, "flavorDebug");
+                ProjectBuildOutputUtils.getVariantBuildOutput(projectBuildOutput, "flavorDebug");
         assertThat(debugBuildOutput.getOutputs()).hasSize(1);
 
         List<String> apkBadging =

@@ -25,8 +25,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.VariantBuildOutputUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
@@ -69,7 +70,7 @@ public class OutputRenamingTest {
         model =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .getSingle()
+                        .fetchAndroidProjects()
                         .getOnlyModel();
         assertThat(model.getSyncIssues()).hasSize(1);
         assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
@@ -96,7 +97,7 @@ public class OutputRenamingTest {
         Collection<VariantBuildOutput> variantBuildOutputs = outputModel.getVariantsBuildOutput();
         assertThat(variantBuildOutputs).hasSize(2);
         VariantBuildOutput buildOutput =
-                ModelHelper.getVariantBuildOutput(variantBuildOutputs, buildType);
+                ProjectBuildOutputUtils.getVariantBuildOutput(outputModel, buildType);
 
         // get the outputs.
         Collection<OutputFile> outputs = buildOutput.getOutputs();
@@ -104,7 +105,8 @@ public class OutputRenamingTest {
         assertThat(outputs).hasSize(5);
 
         String expectedFileName = "project--12-" + buildType.toLowerCase() + "-signed.apk";
-        File mainOutputFile = ModelHelper.getMainOutputFile(outputs).getOutputFile();
+        File mainOutputFile =
+                VariantBuildOutputUtils.getMainOutputFile(buildOutput).getOutputFile();
         assertEquals(expectedFileName, mainOutputFile.getName());
         assertTrue(mainOutputFile.exists());
     }

@@ -28,7 +28,8 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -72,7 +73,7 @@ public class BasicTest {
                 project.executeAndReturnModel(
                         ProjectBuildOutput.class, "clean", "assembleDebug", "assembleRelease");
         // basic project overwrites buildConfigField which emits a sync warning
-        model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+        model = project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
         model.getSyncIssues()
                 .forEach(
                         issue -> {
@@ -134,7 +135,7 @@ public class BasicTest {
 
     @Test
     public void sourceProvidersModel() {
-        ModelHelper.testDefaultSourceSets(model, project.getTestDir());
+        AndroidProjectUtils.testDefaultSourceSets(model, project.getTestDir());
 
         // test the source provider for the artifacts
         for (Variant variant : model.getVariants()) {
@@ -146,7 +147,7 @@ public class BasicTest {
 
     @Test
     public void checkDebugAndReleaseOutputHaveDifferentNames() {
-        ModelHelper.compareDebugAndReleaseOutput(outputModel);
+        ProjectBuildOutputUtils.compareDebugAndReleaseOutput(outputModel);
     }
 
     @Test
@@ -176,7 +177,8 @@ public class BasicTest {
                 .run("assemble", "assembleDebugAndroidTest", "testDebugUnitTest");
 
         // get the initial minimalistic model.
-        Map<String, ProjectBuildOutput> multi = project.model().getMulti(ProjectBuildOutput.class);
+        Map<String, ProjectBuildOutput> multi =
+                project.model().fetchMulti(ProjectBuildOutput.class);
         ProjectBuildOutput mainModule = multi.get(":");
         assertThat(mainModule.getVariantsBuildOutput()).hasSize(2);
         assertThat(

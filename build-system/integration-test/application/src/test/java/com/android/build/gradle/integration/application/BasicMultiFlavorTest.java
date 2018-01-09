@@ -4,9 +4,10 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.fixture.SourceSetContainerUtils;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
@@ -31,11 +32,10 @@ public class BasicMultiFlavorTest {
 
     @Test
     public void checkSourceProviders() throws IOException {
-        GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
-                project.model().getSingle();
+        ModelContainer<AndroidProject> modelContainer = project.model().fetchAndroidProjects();
         AndroidProject model = modelContainer.getOnlyModel();
         File projectDir = project.getTestDir();
-        ModelHelper.testDefaultSourceSets(model, projectDir);
+        AndroidProjectUtils.testDefaultSourceSets(model, projectDir);
 
         // test the source provider for the flavor
         Collection<ProductFlavorContainer> productFlavors = model.getProductFlavors();
@@ -50,8 +50,8 @@ public class BasicMultiFlavorTest {
             // Unit tests and android tests.
             assertThat(pfContainer.getExtraSourceProviders()).hasSize(2);
             SourceProviderContainer container =
-                    ModelHelper.getSourceProviderContainer(
-                            pfContainer.getExtraSourceProviders(), ARTIFACT_ANDROID_TEST);
+                    SourceSetContainerUtils.getExtraSourceProviderContainer(
+                            pfContainer, ARTIFACT_ANDROID_TEST);
 
             new SourceProviderHelper(
                             model.getName(),
@@ -86,11 +86,11 @@ public class BasicMultiFlavorTest {
     @Test
     public void checkResValueAndManifestPlaceholders() throws IOException, InterruptedException {
         addResValuesAndPlaceholders();
-        GetAndroidModelAction.ModelContainer<AndroidProject> model =
+        ModelContainer<AndroidProject> model =
                 project.executeAndReturnModel("assembleFreeBetaDebug");
 
         Variant variant =
-                ModelHelper.findVariantByName(model.getOnlyModel().getVariants(), "freeBetaDebug");
+                AndroidProjectUtils.findVariantByName(model.getOnlyModel(), "freeBetaDebug");
 
         assertThat(variant.getMergedFlavor().getResValues().get("VALUE_DEBUG").getValue())
                 .isEqualTo("10"); // Value from "beta".

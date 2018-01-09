@@ -83,8 +83,8 @@ public class CmakeTargetsTest {
         assertThatApk(apk).contains("lib/x86/liblibrary2.so");
         assertThatApk(apk).contains("lib/x86_64/liblibrary2.so");
 
-        project.model().getSingle(); // Make sure we can successfully get AndroidProject
-        assertModel(project.model().getSingle(NativeAndroidProject.class));
+        project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
+        assertModel(project.model().fetch(NativeAndroidProject.class));
     }
 
     @Test
@@ -113,8 +113,8 @@ public class CmakeTargetsTest {
         assertThatApk(apk).contains("lib/x86/liblibrary2.so");
         assertThatApk(apk).contains("lib/x86_64/liblibrary2.so");
 
-        project.model().getSingle(); // Make sure we can successfully get AndroidProject
-        assertModel(project.model().getSingle(NativeAndroidProject.class));
+        project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
+        assertModel(project.model().fetch(NativeAndroidProject.class));
     }
 
     private static void assertModel(NativeAndroidProject model) throws IOException {

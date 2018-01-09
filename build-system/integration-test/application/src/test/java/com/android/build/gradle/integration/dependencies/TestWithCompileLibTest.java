@@ -19,22 +19,20 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
-import static com.android.build.gradle.integration.common.utils.ModelHelper.getAndroidArtifact;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
-import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.assertNotNull;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -49,7 +47,7 @@ public class TestWithCompileLibTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
             .create();
-    static GetAndroidModelAction.ModelContainer<AndroidProject> models;
+    static ModelContainer<AndroidProject> models;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -79,11 +77,10 @@ public class TestWithCompileLibTest {
     @Test
     public void checkCompiledLibraryIsInTheTestArtifactModel() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(models);
-        Variant variant = ModelHelper.getVariant(
-                models.getModelMap().get(":app").getVariants(), "debug");
+        Variant variant =
+                AndroidProjectUtils.getVariantByName(models.getOnlyModelMap().get(":app"), "debug");
 
-        Collection<AndroidArtifact> androidArtifacts = variant.getExtraAndroidArtifacts();
-        AndroidArtifact testArtifact = getAndroidArtifact(androidArtifacts, ARTIFACT_ANDROID_TEST);
+        AndroidArtifact testArtifact = VariantUtils.getAndroidTestArtifact(variant);
         assertNotNull(testArtifact);
 
         DependencyGraphs graph = testArtifact.getDependencyGraphs();

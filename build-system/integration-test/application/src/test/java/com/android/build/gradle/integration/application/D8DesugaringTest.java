@@ -221,8 +221,8 @@ public class D8DesugaringTest {
                         .ignoreSyncIssues()
                         .with(BooleanOption.ENABLE_D8, false)
                         .with(BooleanOption.ENABLE_D8_DESUGARING, true)
-                        .getMulti()
-                        .getModelMap()
+                        .fetchAndroidProjects()
+                        .getOnlyModelMap()
                         .get(":app");
         assertThat(app).hasIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
     }

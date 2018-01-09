@@ -17,17 +17,19 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.model.Variant;
 import com.google.common.collect.Iterables;
+import com.google.common.truth.Truth;
 import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,7 +48,8 @@ public class ModelTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "\ndependencies {\n    api 'foo:bar:1.2.3'\n}\n");
 
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+        AndroidProject model =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
 
         Collection<SyncIssue> issues = model.getSyncIssues();
         assertThat(issues).hasSize(1);
@@ -61,7 +64,8 @@ public class ModelTest {
     public void unresolvedDynamicDependencies() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "\n" + "dependencies {\n" + "    api 'foo:bar:+'\n" + "}");
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+        AndroidProject model =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
 
         Collection<SyncIssue> issues = model.getSyncIssues();
         assertThat(issues).hasSize(1);
@@ -75,9 +79,11 @@ public class ModelTest {
     /** Sanity test that makes sure no unexpected directories end up in the model. */
     @Test
     public void generatedSources() throws Exception {
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+        AndroidProject model =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
 
-        AndroidArtifact debugArtifact = ModelHelper.getDebugArtifact(model);
+        final Variant debugVariant = AndroidProjectUtils.getVariantByName(model, "debug");
+        AndroidArtifact debugArtifact = debugVariant.getMainArtifact();
 
         assertThat(debugArtifact.getGeneratedSourceFolders())
                 .containsExactly(
@@ -92,7 +98,7 @@ public class ModelTest {
                         project.file("build/generated/res/resValues/debug"),
                         project.file("build/generated/res/rs/debug"));
 
-        AndroidArtifact androidTestArtifact = ModelHelper.getAndroidTestArtifact(model);
+        AndroidArtifact androidTestArtifact = VariantUtils.getAndroidTestArtifact(debugVariant);
 
         assertThat(androidTestArtifact.getGeneratedSourceFolders())
                 .containsExactly(
@@ -107,7 +113,7 @@ public class ModelTest {
                         project.file("build/generated/res/resValues/androidTest/debug"),
                         project.file("build/generated/res/rs/androidTest/debug"));
 
-        JavaArtifact unitTestArtifact = ModelHelper.getUnitTestArtifact(model);
+        JavaArtifact unitTestArtifact = VariantUtils.getUnitTestArtifact(debugVariant);
 
         assertThat(unitTestArtifact.getGeneratedSourceFolders())
                 .containsExactly(project.file("build/generated/source/apt/test/debug"));
@@ -115,9 +121,12 @@ public class ModelTest {
 
     @Test
     public void returnsInstrumentedTestTaskName() throws Exception {
-        AndroidProject model = project.model().getSingle().getOnlyModel();
-        assertEquals(
-                ModelHelper.getAndroidTestArtifact(model).getInstrumentedTestTaskName(),
-                "connectedDebugAndroidTest");
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
+
+        final Variant debugVariant = AndroidProjectUtils.getVariantByName(model, "debug");
+        AndroidArtifact androidTestArtifact = VariantUtils.getAndroidTestArtifact(debugVariant);
+
+        Truth.assertThat(androidTestArtifact.getInstrumentedTestTaskName())
+                .isEqualTo("connectedDebugAndroidTest");
     }
 }

@@ -139,8 +139,8 @@ public class NdkBuildBasicProjectTest {
 
     @Test
     public void checkModel() throws IOException {
-        project.model().getSingle(); // Make sure we can successfully get AndroidProject
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
+        project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
+        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.NDK_BUILD.getName());
         assertThat(model.getBuildFiles()).hasSize(1);
         assertThat(model.getName()).isEqualTo("project");
@@ -169,7 +169,7 @@ public class NdkBuildBasicProjectTest {
     public void checkClean() throws IOException, InterruptedException {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug", "assembleRelease");
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
+        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model).hasBuildOutputCountEqualTo(6);
         assertThat(model).allBuildOutputsExist();
         assertThat(model).hasExactObjectFilesInBuildFolder("hello-jni.o");
@@ -184,7 +184,7 @@ public class NdkBuildBasicProjectTest {
     public void checkCleanAfterAbiSubset() throws IOException, InterruptedException {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug", "assembleRelease");
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
+        NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model).hasBuildOutputCountEqualTo(6);
 
         List<File> allBuildOutputs = Lists.newArrayList();

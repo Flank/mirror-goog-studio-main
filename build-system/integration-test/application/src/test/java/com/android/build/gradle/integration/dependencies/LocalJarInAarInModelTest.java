@@ -22,11 +22,11 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
@@ -87,10 +87,10 @@ public class LocalJarInAarInModelTest {
 
     @Test
     public void checkAarsExplodedAfterSync_Level4() throws Exception {
-        ModelContainer<AndroidProject> model = project.model().getSingle();
+        ModelContainer<AndroidProject> model = project.model().fetchAndroidProjects();
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
+        Variant variant = AndroidProjectUtils.getVariantByName(model.getOnlyModel(), "debug");
 
         DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
         LibraryGraphHelper.Items androidItems = helper.on(graph).withType(ANDROID);
@@ -118,9 +118,9 @@ public class LocalJarInAarInModelTest {
         ModelContainer<AndroidProject> model =
                 project.model()
                         .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
-                        .getSingle();
+                        .fetchAndroidProjects();
 
-        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
+        Variant variant = AndroidProjectUtils.getVariantByName(model.getOnlyModel(), "debug");
 
         Dependencies deps = variant.getMainArtifact().getDependencies();
 

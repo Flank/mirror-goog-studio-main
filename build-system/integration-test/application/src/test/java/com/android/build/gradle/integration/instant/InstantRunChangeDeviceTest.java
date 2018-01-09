@@ -19,10 +19,10 @@ package com.android.build.gradle.integration.instant;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.build.gradle.integration.common.utils.VariantBuildOutputUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
@@ -81,7 +81,7 @@ public class InstantRunChangeDeviceTest {
 
     @Test
     public void switchScenario() throws Exception {
-        AndroidProject model = mProject.model().getSingle().getOnlyModel();
+        AndroidProject model = mProject.model().fetchAndroidProjects().getOnlyModel();
 
         AndroidArtifact debug =
                 model.getVariants()
@@ -98,9 +98,8 @@ public class InstantRunChangeDeviceTest {
             ProjectBuildOutput projectBuildOutput =
                     mProject.executeAndReturnModel(ProjectBuildOutput.class, "assembleDebug");
             VariantBuildOutput debugOutput =
-                    ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
-            Collection<OutputFile> outputFiles = debugOutput.getOutputs();
-            File apk = ModelHelper.getMainOutputFile(outputFiles).getOutputFile();
+                    ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
+            File apk = VariantBuildOutputUtils.getMainOutputFile(debugOutput).getOutputFile();
             checkNormalApk(apk);
             startBuildId = null;
         } else {
@@ -119,9 +118,8 @@ public class InstantRunChangeDeviceTest {
             ProjectBuildOutput projectBuildOutput =
                     mProject.executeAndReturnModel(ProjectBuildOutput.class, "assembleDebug");
             VariantBuildOutput debugOutput =
-                    ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
-            Collection<OutputFile> outputFiles = debugOutput.getOutputs();
-            File apk = ModelHelper.getMainOutputFile(outputFiles).getOutputFile();
+                    ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
+            File apk = VariantBuildOutputUtils.getMainOutputFile(debugOutput).getOutputFile();
             checkNormalApk(apk);
         } else {
             mProject.executor()

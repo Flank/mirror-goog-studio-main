@@ -24,8 +24,8 @@ import static com.android.testutils.truth.MoreTruth.assertThatDex;
 import static com.android.utils.FileUtils.mkdirs;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
@@ -62,8 +62,9 @@ public class LibDependencyTest {
     @Test
     public void buildIncrementallyWithInstantRun() throws Exception {
         project.execute("clean");
-        ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
-        InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
+        ModelContainer<AndroidProject> modelContainer = project.model().fetchAndroidProjects();
+        InstantRun instantRunModel =
+                getInstantRunModel(modelContainer.getOnlyModelMap().get(":app"));
 
         // Check that original class is included.
         project.executor()
@@ -93,8 +94,9 @@ public class LibDependencyTest {
                 project.file("javalib/build.gradle"), Charsets.UTF_8);
         createJavaLibraryClass("original");
 
-        ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
-        InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
+        ModelContainer<AndroidProject> modelContainer = project.model().fetchAndroidProjects();
+        InstantRun instantRunModel =
+                getInstantRunModel(modelContainer.getOnlyModelMap().get(":app"));
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
                 .run("clean", ":app:assembleDebug");
@@ -114,8 +116,9 @@ public class LibDependencyTest {
         Files.write("java resource", resource, Charsets.UTF_8);
 
         project.execute("clean");
-        ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
-        InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
+        ModelContainer<AndroidProject> modelContainer = project.model().fetchAndroidProjects();
+        InstantRun instantRunModel =
+                getInstantRunModel(modelContainer.getOnlyModelMap().get(":app"));
 
         // Check that original class is included.
         project.executor()
