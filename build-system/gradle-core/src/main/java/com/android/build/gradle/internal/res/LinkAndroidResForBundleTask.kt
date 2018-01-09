@@ -27,8 +27,8 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantType
+import com.android.builder.internal.aapt.Aapt
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.builder.internal.aapt.BlockingResourceLinker
 import com.android.ide.common.blame.MergingLog
 import com.android.ide.common.blame.MergingLogRewriter
 import com.android.ide.common.blame.ParsingProcessOutputHandler
@@ -119,7 +119,9 @@ open class LinkAndroidResForBundleTask : AndroidBuilderTask() {
                         .setPseudoLocalize(getPseudoLocalesEnabled())
                         .setResourceDir(checkNotNull(getInputResourcesDir()).singleFile)
 
-                builder.processResources(makeAapt(), config)
+                makeAapt().use { aapt ->
+                    builder.processResources(aapt, config)
+                }
 
                 if (logger.isInfoEnabled) {
                     logger.info("Aapt output file {}", bundledResFile.absolutePath)
@@ -139,7 +141,7 @@ open class LinkAndroidResForBundleTask : AndroidBuilderTask() {
      * Create an instance of AAPT. Whenever calling this method make sure the close() method is
      * called on the instance once the work is done.
      */
-    private fun makeAapt(): BlockingResourceLinker {
+    private fun makeAapt(): Aapt {
         val builder = builder
         val mergingLog = MergingLog(mergeBlameLogFolder!!)
 
