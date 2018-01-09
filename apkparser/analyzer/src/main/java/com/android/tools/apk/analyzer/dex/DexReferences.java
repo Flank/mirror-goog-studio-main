@@ -238,14 +238,51 @@ public class DexReferences {
         referenceReferences.put(immutableRef1, immutableRef2);
     }
 
+    /**
+     * Build a full reference tree for the given DEX reference.
+     *
+     * @param referenced the dex element you wish to find references for
+     * @return the root of the reference tree
+     */
     public DexElementNode getReferenceTreeFor(@NonNull Reference referenced) {
+        return getReferenceTreeFor(referenced, false);
+    }
+
+    /**
+     * Build a reference tree for the given DEX reference. Depending on the {@code shallow}
+     * parameter this returns the full tree root or just the root with first level references
+     * evaluated.
+     *
+     * <p>You can then lazy load deeper references using {@link #addReferencesForNode(DexElementNode
+     * node, Reference referenced, boolean shallow)}.
+     *
+     * <p>To check if references were already loaded for a node use {@link
+     * #isAlreadyLoaded(DexElementNode)}
+     *
+     * @param referenced the dex element you wish to find references for
+     * @param shallow false to to build the full tree, true to evaluate just the first level
+     * @return the root of the reference tree
+     */
+    public DexElementNode getReferenceTreeFor(@NonNull Reference referenced, boolean shallow) {
         DexElementNode rootNode =
                 DexElementNodeFactory.from(ImmutableReferenceFactory.of(referenced));
-        createReferenceTree(rootNode, referenced);
+        addReferencesForNode(rootNode, shallow);
+        rootNode.sort(NODE_COMPARATOR);
         return rootNode;
     }
 
-    private void createReferenceTree(@NonNull DexElementNode node, @NonNull Reference referenced) {
+    /**
+     * Finds references to {@code referenced} and attaches them as tree nodes under {@code node}
+     *
+     * <p>Depending on the {@code shallow} parameter this attaches the full reference tree or stops
+     * evaluation at the first level
+     *
+     * @param node the root node under which you wish to attach references
+     * @param shallow false to to build the full tree, true to evaluate just the first level
+     */
+    public void addReferencesForNode(@NonNull DexElementNode node, boolean shallow) {
+        Reference referenced = node.getReference();
+        node.removeAllChildren();
         Collection<? extends ImmutableReference> references = referenceReferences.get(referenced);
         for (ImmutableReference ref : references) {
             if (ref instanceof MethodReference
@@ -265,13 +302,34 @@ public class DexReferences {
                 DexElementNode newNode = DexElementNodeFactory.from(ref);
                 node.setAllowsChildren(true);
                 node.add(newNode);
-                createReferenceTree(newNode, ref);
+                if (!shallow) {
+                    addReferencesForNode(newNode, false);
+                } else {
+                    newNode.setAllowsChildren(true);
+                    //DexPackageNodes are never normally used in a reference tree
+                    //so we'll use them as a sentinel to mark nodes
+                    //that haven't been resolved yet (for lazy loading)
+                    newNode.add(new DexPackageNode("", null));
+                }
             }
         }
-        node.sort(NODE_COMPARATOR);
     }
 
-    private static final Comparator<DexElementNode> NODE_COMPARATOR =
+    /**
+     * Checks if the specified dex reference tree node has had its references evaluated and attached
+     * (if any) or if it still needs to be passed to {@link #addReferencesForNode(DexElementNode,
+     * Reference, boolean)} for lazy evaluation
+     *
+     * @param node the reference tree node to check
+     * @return true if this node is already evaluated
+     */
+    public static boolean isAlreadyLoaded(DexElementNode node) {
+        //as per the comment in addReferencesForNode:
+        //we're checking if the node contains a sentinel (single DexPackageNode child)
+        return !(node.getChildCount() == 1 && node.getFirstChild() instanceof DexPackageNode);
+    }
+
+    public static final Comparator<DexElementNode> NODE_COMPARATOR =
             Comparator.comparing(
                     o -> {
                         if (o instanceof DexClassNode) {
