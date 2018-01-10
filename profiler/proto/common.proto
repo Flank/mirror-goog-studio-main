@@ -26,13 +26,6 @@ enum AppId {
   ANY = -1;
 }
 
-// TODO: Add more essential fields.
-message CommonData {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 end_timestamp = 3;
-}
-
 // Note that |Device| instance refers to a device (physical/emulator) associated
 // with a particular boot. e.g. if the same device is started twice, they are
 // considered two separate |Device| instances.

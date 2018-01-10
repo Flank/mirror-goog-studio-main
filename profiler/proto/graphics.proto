@@ -86,7 +86,7 @@ message GraphicsStopResponse {
 
 // Graphics data of a SurfaceView frame.
 message GraphicsData {
-  CommonData basic_info = 1;
+  int64 end_timestamp = 1;
   FrameStats frame_stats = 2;
 }
 

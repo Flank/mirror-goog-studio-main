@@ -43,7 +43,7 @@ namespace profiler {
 
 using grpc::Status;
 using proto::AgentService;
-using proto::CommonData;
+using proto::HeartBeatRequest;
 using proto::HeartBeatResponse;
 using proto::InternalEventService;
 using proto::InternalIoService;
@@ -206,13 +206,13 @@ void Agent::RunHeartbeatThread() {
     // lowest common.
     deadline += std::chrono::duration_cast<std::chrono::milliseconds>(offset);
     context.set_deadline(deadline);
-    CommonData data;
-    data.set_process_id(getpid());
+    HeartBeatRequest request;
+    request.set_pid(getpid());
 
     // Status returns OK if it succeeds, else it returns a standard grpc error
     // code.
     const grpc::Status status =
-        agent_stub().HeartBeat(&context, data, &response);
+        agent_stub().HeartBeat(&context, request, &response);
 
     int64_t elapsed_ns = stopwatch.GetElapsed() - start_ns;
     // Use status to determine if perfd is alive.

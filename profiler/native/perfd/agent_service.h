@@ -33,7 +33,7 @@ class AgentServiceImpl : public proto::AgentService::Service {
       : clock_(clock), heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
 
   grpc::Status HeartBeat(grpc::ServerContext* context,
-                         const proto::CommonData* data,
+                         const proto::HeartBeatRequest* request,
                          proto::HeartBeatResponse* response) override;
 
  private:

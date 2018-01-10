@@ -24,7 +24,7 @@ grpc::Status IoServiceImpl::GetFileData(grpc::ServerContext *context,
                                         const proto::FileDataRequest *request,
                                         proto::FileDataResponse *response) {
   std::vector<IoSessionDetails> data =
-      io_cache_.GetRange(request->process_id(), request->start_timestamp(),
+      io_cache_.GetRange(request->session().pid(), request->start_timestamp(),
                          request->end_timestamp());
   for (IoSessionDetails session : data) {
     proto::FileSession file_session;
@@ -49,18 +49,14 @@ grpc::Status IoServiceImpl::GetFileData(grpc::ServerContext *context,
 void IoServiceImpl::AddSpeedData(const proto::SpeedDataRequest *request,
                                  profiler::proto::IoType type,
                                  proto::SpeedDataResponse *response) {
+  int32_t pid = request->session().pid();
   std::vector<IoSpeedDetails> data = io_speed_cache_.GetSpeedData(
-      request->process_id(), request->start_timestamp(),
-      request->end_timestamp(), type);
+      pid, request->start_timestamp(), request->end_timestamp(), type);
   for (IoSpeedDetails speed_data : data) {
     proto::IoSpeedData new_speed_data;
     new_speed_data.set_type(type);
     new_speed_data.set_speed(speed_data.speed);
-    new_speed_data.mutable_basic_info()->set_process_id(request->process_id());
-    new_speed_data.mutable_basic_info()->mutable_session()->set_device_id(
-        request->session().device_id());
-    new_speed_data.mutable_basic_info()->set_end_timestamp(
-        speed_data.timestamp);
+    new_speed_data.set_end_timestamp(speed_data.timestamp);
     *(response->add_io_speed_data()) = new_speed_data;
   }
 }
@@ -85,16 +81,18 @@ grpc::Status IoServiceImpl::GetSpeedData(grpc::ServerContext *context,
 grpc::Status IoServiceImpl::StartMonitoringApp(
     grpc::ServerContext *context, const proto::IoStartRequest *request,
     proto::IoStartResponse *response) {
-  io_cache_.AllocateAppCache(request->process_id());
-  io_speed_cache_.AllocateAppCache(request->process_id());
+  int32_t pid = request->session().pid();
+  io_cache_.AllocateAppCache(pid);
+  io_speed_cache_.AllocateAppCache(pid);
   return Status::OK;
 }
 
 grpc::Status IoServiceImpl::StopMonitoringApp(
     grpc::ServerContext *context, const proto::IoStopRequest *request,
     proto::IoStopResponse *response) {
-  io_cache_.DeallocateAppCache(request->process_id());
-  io_speed_cache_.AllocateAppCache(request->process_id());
+  int32_t pid = request->session().pid();
+  io_cache_.DeallocateAppCache(pid);
+  io_speed_cache_.AllocateAppCache(pid);
   return Status::OK;
 }
 }  // namespace profiler
