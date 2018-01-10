@@ -20,11 +20,13 @@ import com.android.annotations.concurrency.Immutable
 import com.android.resources.ResourceAccessibility
 import com.android.resources.ResourceType
 import com.google.common.base.Splitter
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableTable
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Table
 import com.google.common.collect.Tables
+import java.io.File
 import java.util.Arrays
 import java.util.Collections
 import java.util.HashMap
@@ -160,6 +162,43 @@ abstract class SymbolTable protected constructor() {
         }
 
         /**
+         * Adds a symbol if it doesn't exist in the table yet. If a symbol already exists, choose
+         * the correct resource accessibility.
+         *
+         * @param table the other table to merge into the current symbol table.
+         */
+        internal fun addFromPartial(table: SymbolTable): Builder {
+            table.symbols.values().forEach {
+                if (!this.symbols.contains(it.resourceType, it.name)) {
+                    // If this symbol hasn't been encountered yet, simply add it as is.
+                    this.symbols.put(it.resourceType, it.name, it)
+                } else {
+                    val existing = this.symbols.get(it.resourceType, it.name)
+                    // If we already encountered it, check the qualifiers.
+                    // - if they're the same, leave the existing one (the existing one overrode the
+                    //   new one)
+                    // - if the existing one is DEFAULT, use the new one (overriding resource was
+                    //   defined as PRIVATE or PUBLIC)
+                    // - if the new one is DEFAULT, leave the existing one (overridden resource was
+                    //   defined as PRIVATE or PUBLIC)
+                    // - if neither of them is DEFAULT and they differ, that's an error
+                    if (existing.resourceAccessibility != it.resourceAccessibility) {
+                        if (existing.resourceAccessibility == ResourceAccessibility.DEFAULT) {
+                            this.symbols.remove(existing.resourceType, existing.name)
+                            this.symbols.put(it.resourceType, it.name, it)
+                        } else if (it.resourceAccessibility != ResourceAccessibility.DEFAULT) {
+                            // they differ and neither is DEFAULT
+                            throw IllegalResourceAccessibilityException(
+                                    "Symbol with resource type ${it.resourceType} and name " +
+                                            "${it.name} defined both as private and public.")
+                        }
+                    }
+                }
+            }
+            return this
+        }
+
+        /**
          * Sets the table package. See `SymbolTable` description.
          *
          * @param tablePackage; must be a valid java package name
@@ -272,6 +311,50 @@ abstract class SymbolTable protected constructor() {
         }
 
         /**
+         * Merges a list of partial R files. See 'package-info.java' for a detailed description of
+         * the merging algorithm.
+         *
+         * @param tables partial R files in oder of the source-sets relation (base first, overriding
+         *  source-set afterwards etc).
+         * @param packageName the package name for the merged symbol table.
+         */
+        @JvmStatic fun mergePartialTables(tables: List<File>, packageName: String?): SymbolTable {
+            val builder = SymbolTable.builder()
+
+            // A set to keep the names of the visited layout files.
+            val visitedFiles = HashSet<String>()
+
+            try {
+                // Reverse the file list, since we have to start from the 'highest' source-set (base
+                // source-set will be last).
+                tables.reversed().forEach {
+                    if (it.name.startsWith("layout")) {
+                        // When a layout file is overridden, its' contents get overridden too. That
+                        // is why we need to keep the 'highest' version of the file.
+                        if (!visitedFiles.contains(it.name)) {
+                            // If we haven't encountered a file with this name yet, remember it and
+                            // process the partial R file.
+                            visitedFiles.add(it.name)
+                            builder.addFromPartial(SymbolIo.readFromPartialRFile(it, null))
+                        }
+                    } else {
+                        // Partial R files for values XML files and non-XML files need to be parsed
+                        // always. The order matters for declare-styleables and for resource
+                        // accessibility.
+                        builder.addFromPartial(SymbolIo.readFromPartialRFile(it, null))
+                    }
+                }
+            } catch (e: Exception) {
+                throw PartialRMergingException(
+                        "An error occurred during merging of the partial R files", e)
+            }
+
+            builder.tablePackage(packageName ?: "")
+
+            return builder.build()
+        }
+
+        /**
          * Creates a new builder to create a `SymbolTable`.
          *
          * @return a builder
@@ -280,4 +363,6 @@ abstract class SymbolTable protected constructor() {
             return Builder()
         }
     }
+
+    class IllegalResourceAccessibilityException(description: String) : Exception(description)
 }

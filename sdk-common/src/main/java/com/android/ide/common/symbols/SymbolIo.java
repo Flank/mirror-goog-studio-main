@@ -485,6 +485,57 @@ public final class SymbolIo {
         }
     }
 
+    public static void writePartialR(@NonNull SymbolTable table, @NonNull Path file) {
+
+        try (BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file));
+                PrintWriter pw = new PrintWriter(os)) {
+
+            // loop on the resource types so that the order is always the same
+            for (ResourceType resType : ResourceType.values()) {
+                List<Symbol> symbols = table.getSymbolByResourceType(resType);
+                if (symbols.isEmpty()) {
+                    continue;
+                }
+
+                for (Symbol s : symbols) {
+                    pw.print(s.getResourceAccessibility().getName());
+                    pw.print(' ');
+                    pw.print(s.getJavaType().getTypeName());
+                    pw.print(' ');
+                    pw.print(s.getResourceType().getName());
+                    pw.print(' ');
+                    pw.print(s.getName());
+                    pw.print('\n');
+
+                    // Declare styleables have the attributes that were defined under their node
+                    // listed in
+                    // the children list.
+                    if (s.getJavaType() == SymbolJavaType.INT_LIST) {
+                        Preconditions.checkArgument(
+                                s.getResourceType() == ResourceType.STYLEABLE,
+                                "Only resource type 'styleable' is allowed to have java type 'int[]'");
+
+                        List<String> children = s.getChildren();
+                        for (int i = 0; i < children.size(); ++i) {
+                            pw.print(s.getResourceAccessibility().getName());
+                            pw.print(' ');
+                            pw.print(SymbolJavaType.INT.getTypeName());
+                            pw.print(' ');
+                            pw.print(ResourceType.STYLEABLE.getName());
+                            pw.print(' ');
+                            pw.print(s.getName());
+                            pw.print('_');
+                            pw.print(SymbolUtils.canonicalizeValueResourceName(children.get(i)));
+                            pw.print('\n');
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
     /**
      * Writes the symbol table with the package name as the first line.
      *

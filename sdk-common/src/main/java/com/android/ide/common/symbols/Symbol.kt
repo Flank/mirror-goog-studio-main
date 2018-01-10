@@ -109,6 +109,7 @@ abstract class Symbol protected constructor() {
         /**
          * Creates a new symbol without validation. The `name` of the symbol should to be a valid
          * sanitized resource name.
+         * The created resource will have the DEFAULT resource accessibility qualifier.
          *
          * @param resourceType the resource type of the symbol
          * @param name the sanitized name of the symbol
@@ -134,6 +135,7 @@ abstract class Symbol protected constructor() {
          * Creates a new symbol without validation. The `name` of the symbol should to be a valid
          * sanitized resource name.
          *
+         * @param resourceAccessibility the resource accessibility qualifier (e.g. public)
          * @param resourceType the resource type of the symbol
          * @param name the sanitized name of the symbol
          * @param javaType the java type of the symbol
