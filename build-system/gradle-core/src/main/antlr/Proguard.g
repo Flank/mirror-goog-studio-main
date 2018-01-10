@@ -193,10 +193,10 @@ private member [ClassSpecification classSpec]
     (
       (typeSig=type)? name=(NAME|'<init>') (signature=arguments {GrammarActions.method(classSpec, $annotation.annotSpec, typeSig, $name.text, signature, $modifiers.modifiers);}
                   | {GrammarActions.fieldOrAnyMember(classSpec, $annotation.annotSpec, typeSig, $name.text, $modifiers.modifiers);})
-      | '<methods>' {GrammarActions.method(classSpec, $annotation.annotSpec,
+      | type? '<methods>' {GrammarActions.method(classSpec, $annotation.annotSpec,
           GrammarActions.getSignature("***", 0), "*", "\\("+ GrammarActions.getSignature("...", 0) + "\\)",
           $modifiers.modifiers);}
-      | '<fields>' {GrammarActions.field(classSpec, $annotation.annotSpec, null, "*", $modifiers.modifiers);}
+      | type? '<fields>' {GrammarActions.field(classSpec, $annotation.annotSpec, null, "*", $modifiers.modifiers);}
     ) ';'
   ;
 
