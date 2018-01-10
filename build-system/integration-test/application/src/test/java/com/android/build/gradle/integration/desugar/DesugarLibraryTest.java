@@ -18,12 +18,14 @@ package com.android.build.gradle.integration.desugar;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
+import static com.android.builder.core.DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -60,6 +62,22 @@ public class DesugarLibraryTest {
                         "}"));
         project.executor().run("assembleDebug");
         assertThatAar(project.getAar("debug")).containsClass("Lcom/example/helloworld/Data;");
+    }
+
+    @Test
+    public void testTryWithResourcesForTest()
+            throws IOException, InterruptedException, ProcessException {
+        enableDesugar();
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                String.format(
+                        "\n" + "android.defaultConfig.minSdkVersion %d\n",
+                        MIN_SUPPORTED_API_TRY_WITH_RESOURCES - 1));
+        project.executor().run("assembleDebugAndroidTest");
+        Apk testApk = project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG);
+        for (String klass : DesugarAppTest.TRY_WITH_RESOURCES_RUNTIME) {
+            assertThat(testApk).containsClass(klass);
+        }
     }
 
     private void enableDesugar() throws IOException {

@@ -67,14 +67,13 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class DesugarAppTest {
 
-    private static final ImmutableList<String> TRY_WITH_RESOURCES_RUNTIME =
+    static final ImmutableList<String> TRY_WITH_RESOURCES_RUNTIME =
             ImmutableList.of(
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension;",
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$AbstractDesugaringStrategy;",
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$MimicDesugaringStrategy;",
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$NullDesugaringStrategy;",
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$ReuseDesugaringStrategy;");
-
 
     @NonNull private final Boolean enableGradleWorkers;
 
@@ -289,10 +288,12 @@ public class DesugarAppTest {
                 String.format(
                         "\n" + "android.defaultConfig.minSdkVersion %d\n",
                         MIN_SUPPORTED_API_TRY_WITH_RESOURCES - 1));
-        getProjectExecutor().run("assembleDebug");
+        getProjectExecutor().run("assembleDebug", "assembleDebugAndroidTest");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        Apk testApk = project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG);
         for (String klass : TRY_WITH_RESOURCES_RUNTIME) {
             assertThat(apk).containsClass(klass);
+            assertThat(testApk).doesNotContainClass(klass);
         }
     }
 

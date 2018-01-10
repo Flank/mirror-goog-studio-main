@@ -2441,25 +2441,35 @@ public abstract class TaskManager {
             transformManager.addTransform(taskFactory, variantScope, desugarTransform);
 
             if (minSdk.getFeatureLevel()
-                    < DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
-                // add runtime classes for try-with-resources support
-                String taskName =
-                        variantScope.getTaskName(ExtractTryWithResourcesSupportJar.TASK_NAME);
-                ExtractTryWithResourcesSupportJar extractTryWithResources =
-                        taskFactory.create(
-                                new ExtractTryWithResourcesSupportJar.ConfigAction(
-                                        variantScope.getTryWithResourceRuntimeSupportJar(),
-                                        taskName,
-                                        variantScope.getFullVariantName()));
-                variantScope.getTryWithResourceRuntimeSupportJar().builtBy(extractTryWithResources);
-                transformManager.addStream(
-                        OriginalStream.builder(project, "runtime-deps-try-with-resources")
-                                .addContentTypes(TransformManager.CONTENT_CLASS)
-                                .addScope(Scope.EXTERNAL_LIBRARIES)
-                                .setFileCollection(
-                                        variantScope.getTryWithResourceRuntimeSupportJar())
-                                .build());
+                    >= DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
+                return;
             }
+
+            if (variantScope.getVariantConfiguration().getType().isForTesting()) {
+                BaseVariantData testedVariant =
+                        Objects.requireNonNull(variantScope.getTestedVariantData());
+                if (testedVariant.getType() != VariantType.LIBRARY) {
+                    // test variants, except for library, should not package try-with-resources jar
+                    // as the tested variant already contains it
+                    return;
+                }
+            }
+
+            // add runtime classes for try-with-resources support
+            String taskName = variantScope.getTaskName(ExtractTryWithResourcesSupportJar.TASK_NAME);
+            ExtractTryWithResourcesSupportJar extractTryWithResources =
+                    taskFactory.create(
+                            new ExtractTryWithResourcesSupportJar.ConfigAction(
+                                    variantScope.getTryWithResourceRuntimeSupportJar(),
+                                    taskName,
+                                    variantScope.getFullVariantName()));
+            variantScope.getTryWithResourceRuntimeSupportJar().builtBy(extractTryWithResources);
+            transformManager.addStream(
+                    OriginalStream.builder(project, "runtime-deps-try-with-resources")
+                            .addContentTypes(TransformManager.CONTENT_CLASS)
+                            .addScope(Scope.EXTERNAL_LIBRARIES)
+                            .setFileCollection(variantScope.getTryWithResourceRuntimeSupportJar())
+                            .build());
         }
     }
 
