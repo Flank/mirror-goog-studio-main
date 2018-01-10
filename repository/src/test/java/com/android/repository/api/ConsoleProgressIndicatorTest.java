@@ -36,11 +36,14 @@ public class ConsoleProgressIndicatorTest {
         progressIndicator.setFraction(0.2);
         progressIndicator.logInfo("Info msg");
         progressIndicator.setText("baz");
+        progressIndicator.setFraction(0.2999);
         progressIndicator.setFraction(0.3);
         progressIndicator.setSecondaryText("second");
         progressIndicator.logWarning("warning");
         progressIndicator.setText("");
         progressIndicator.setSecondaryText("");
+        progressIndicator.setFraction(0.1);
+        progressIndicator.setFraction(0.1);
         progressIndicator.setFraction(0.1);
         progressIndicator.logError("error");
         progressIndicator.setFraction(1);
