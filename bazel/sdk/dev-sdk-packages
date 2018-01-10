@@ -28,8 +28,8 @@ platforms;android-21:**:{data/**,skins/**,templates/**,*-src.jar}
 platforms;android-19:**:{data/**,skins/**,templates/**,*-src.jar}
 
 # Tools and Emulator
-# mksdcard for AvdListDialogTest; support/*.txt for typo checking
-tools:{package.xml,mksdcard*,support/*.txt}
+# mksdcard for AvdListDialogTest; support/* for typo checking and annotations
+tools:{package.xml,mksdcard*,support/*}
 # emulator isn't needed at this point and is stubbed out
 emulator:package.xml
 
