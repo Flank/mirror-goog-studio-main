@@ -3,6 +3,7 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -10,6 +11,7 @@ import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -17,7 +19,6 @@ import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildOutput;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.IOException;
@@ -31,7 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /** Test to ensure that "auto" resConfig setting only package application's languages. */
-public class AutoPureSplits {
+public class AutoPureSplitsTest {
 
     @Rule
     public GradleTestProject project =
@@ -76,10 +77,27 @@ public class AutoPureSplits {
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
                         .fetchAndroidProjects()
                         .getOnlyModel();
-        assertThat(model.getSyncIssues()).hasSize(1);
-        assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
-                .contains(
-                        "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.");
+        assertThat(model.getSyncIssues()).hasSize(3);
+        for (SyncIssue syncIssue : model.getSyncIssues()) {
+            if (!syncIssue
+                            .getMessage()
+                            .contains(
+                                    "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.")
+                    && !syncIssue
+                            .getMessage()
+                            .contains(
+                                    "DSL element 'DensitySplitOptions.auto' is obsolete and will be removed "
+                                            + DeprecationReporter.DeprecationTarget
+                                                    .AUTO_SPLITS_OR_RES_CONFIG.getRemovalTime())
+                    && !syncIssue
+                            .getMessage()
+                            .contains(
+                                    "DSL element 'LanguageSplitOptions.auto' is obsolete and will be removed "
+                                            + DeprecationReporter.DeprecationTarget
+                                                    .AUTO_SPLITS_OR_RES_CONFIG.getRemovalTime())) {
+                fail("Unexpected sync issue : " + syncIssue.getMessage());
+            }
+        }
 
         // Load the custom model for the project
         Collection<Variant> variants = model.getVariants();
@@ -138,11 +156,27 @@ public class AutoPureSplits {
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
                         .fetchAndroidProjects()
                         .getOnlyModel();
-        assertThat(model.getSyncIssues()).hasSize(1);
-        assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
-                .contains(
-                        "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.");
-
+        assertThat(model.getSyncIssues()).hasSize(3);
+        for (SyncIssue syncIssue : model.getSyncIssues()) {
+            if (!syncIssue
+                            .getMessage()
+                            .contains(
+                                    "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.")
+                    && !syncIssue
+                            .getMessage()
+                            .contains(
+                                    "DSL element 'DensitySplitOptions.auto' is obsolete and will be removed "
+                                            + DeprecationReporter.DeprecationTarget
+                                                    .AUTO_SPLITS_OR_RES_CONFIG.getRemovalTime())
+                    && !syncIssue
+                            .getMessage()
+                            .contains(
+                                    "DSL element 'LanguageSplitOptions.auto' is obsolete and will be removed "
+                                            + DeprecationReporter.DeprecationTarget
+                                                    .AUTO_SPLITS_OR_RES_CONFIG.getRemovalTime())) {
+                fail("Unexpected sync issue : " + syncIssue.getMessage());
+            }
+        }
         // Load the custom model for the project
         Collection<Variant> variants = model.getVariants();
         assertEquals("Variant Count", 2, variants.size());

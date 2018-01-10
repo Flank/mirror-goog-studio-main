@@ -17,11 +17,13 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.google.common.collect.Sets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 
 /**
  * Encapsulates settings for <a
@@ -38,6 +40,12 @@ public class LanguageSplitOptions {
     private boolean enable = false;
     private boolean auto = false;
     private Set<String> include;
+    private final DeprecationReporter deprecationReporter;
+
+    @Inject
+    public LanguageSplitOptions(@NonNull DeprecationReporter deprecationReporter) {
+        this.deprecationReporter = deprecationReporter;
+    }
 
     /**
      * Collection of include patterns.
@@ -95,6 +103,9 @@ public class LanguageSplitOptions {
      *     use the include list.
      */
     public void setAuto(boolean auto) {
+        deprecationReporter.reportObsoleteUsage(
+                "LanguageSplitOptions.auto",
+                DeprecationReporter.DeprecationTarget.AUTO_SPLITS_OR_RES_CONFIG);
         this.auto = auto;
     }
 
