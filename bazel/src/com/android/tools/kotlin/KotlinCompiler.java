@@ -51,19 +51,22 @@ public class KotlinCompiler extends JarOutputCompiler {
     }
 
     @Override
-    protected void additionalOptions(Iterator<String> it) {
-
+    protected List<String> filterOptions(List<String> args) {
+        LinkedList<String> filtered = new LinkedList<>();
+        Iterator<String> it = args.iterator();
         while (it.hasNext()) {
             String arg = it.next();
             if (arg.equals("--module_name") && it.hasNext()) {
                 moduleName = it.next();
             } else if (arg.equals("--friend_dir") && it.hasNext()) {
                 friends.add(it.next());
-            }
-            if (arg.equals("--jvm-target") && it.hasNext()) {
+            } else if (arg.equals("--jvm-target") && it.hasNext()) {
                 jvmTarget = it.next();
+            } else {
+                filtered.add(arg);
             }
         }
+        return filtered;
     }
 
     @Override
@@ -110,8 +113,6 @@ public class KotlinCompiler extends JarOutputCompiler {
                 for (String friend : friends) {
                     File friendDir = new File(friend);
                     if (friendDir.exists()) {
-                        File test = new File(friendDir,
-                                "git4idea/rebase/GitAutomaticRebaseEditor.kt");
                         writer.print("<friendDir path=\"");
                         writer.print(friendDir.getAbsolutePath());
                         writer.println("\"/>");

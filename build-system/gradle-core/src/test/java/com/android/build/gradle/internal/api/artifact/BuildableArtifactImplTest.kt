@@ -33,6 +33,7 @@ class BuildableArtifactImplTest {
     fun default() {
         BuildableArtifactImpl.enableResolution()
         val collection = BuildableArtifactImpl(provider.files(), issueReporter)
+        assertThat(collection.fileCollection).isNotNull()
         assertThat(collection.isEmpty()).isTrue()
         assertThat(collection.files).isEmpty()
         assertThat(collection.iterator().hasNext()).isFalse()

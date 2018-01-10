@@ -40,7 +40,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.0.5/kotlin-compiler-embeddable-1.0.5.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/kotlin-plugin-ij/Kotlin/kotlinc/lib/kotlin-compiler.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
