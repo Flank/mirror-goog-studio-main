@@ -16,6 +16,7 @@
 package com.android.ide.common.gradle.model;
 
 import static com.android.ide.common.gradle.model.IdeModelTestUtils.*;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.BaseArtifact;
@@ -25,6 +26,7 @@ import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.gradle.model.stubs.BaseArtifactStub;
 import com.android.ide.common.repository.GradleVersion;
 import java.io.File;
+import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,6 +37,21 @@ public class IdeBaseArtifactImplTest {
     @Before
     public void setup() {
         myDependenciesFactory = new IdeDependenciesFactory();
+    }
+
+    @Test
+    public void addGeneratedSourceFolder() {
+        BaseArtifact original = new BaseArtifactStub();
+        IdeBaseArtifactImpl copy =
+                new IdeBaseArtifactImpl(
+                        original,
+                        new ModelCache(),
+                        myDependenciesFactory,
+                        GradleVersion.parse("2.3.0")) {};
+        File folder = new File("foo");
+        copy.addGeneratedSourceFolder(folder);
+        Collection<File> generatedSourceFolders = copy.getGeneratedSourceFolders();
+        assertThat(generatedSourceFolders).contains(folder);
     }
 
     @Test

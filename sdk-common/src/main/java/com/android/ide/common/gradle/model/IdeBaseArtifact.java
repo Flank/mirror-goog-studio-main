@@ -18,6 +18,7 @@ package com.android.ide.common.gradle.model;
 import com.android.annotations.NonNull;
 import com.android.builder.model.BaseArtifact;
 import com.android.ide.common.gradle.model.level2.IdeDependencies;
+import java.io.File;
 import java.io.Serializable;
 
 public interface IdeBaseArtifact extends Serializable, BaseArtifact {
@@ -30,4 +31,7 @@ public interface IdeBaseArtifact extends Serializable, BaseArtifact {
     @Deprecated
     @NonNull
     com.android.ide.common.gradle.model.IdeDependencies getDependencies();
+
+    // See: http://b/71706169
+    void addGeneratedSourceFolder(@NonNull File generatedSourceFolder);
 }

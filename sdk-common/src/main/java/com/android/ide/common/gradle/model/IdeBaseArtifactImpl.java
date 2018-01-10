@@ -88,7 +88,7 @@ public abstract class IdeBaseArtifactImpl extends IdeModel implements IdeBaseArt
         }
 
         myIdeSetupTaskNames = ImmutableSet.copyOf(getIdeSetupTaskNames(artifact));
-        myGeneratedSourceFolders = ImmutableList.copyOf(getGeneratedSourceFolders(artifact));
+        myGeneratedSourceFolders = new LinkedHashSet<File>(getGeneratedSourceFolders(artifact));
         myVariantSourceProvider =
                 createSourceProvider(modelCache, artifact.getVariantSourceProvider());
         myMultiFlavorSourceProvider =
@@ -223,7 +223,12 @@ public abstract class IdeBaseArtifactImpl extends IdeModel implements IdeBaseArt
     @Override
     @NonNull
     public Collection<File> getGeneratedSourceFolders() {
-        return myGeneratedSourceFolders;
+        return ImmutableList.copyOf(myGeneratedSourceFolders);
+    }
+
+    @Override
+    public void addGeneratedSourceFolder(@NonNull File generatedSourceFolder) {
+        myGeneratedSourceFolders.add(generatedSourceFolder);
     }
 
     @Override
