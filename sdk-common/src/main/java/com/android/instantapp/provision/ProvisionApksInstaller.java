@@ -75,12 +75,28 @@ class ProvisionApksInstaller {
         int currentInstalling = 0;
         for (Metadata.ApkInfo apkInfo : myApkInfos) {
             listener.setProgress(8.0 / 20 + currentInstalling * 11.0 / (20 * myApkInfos.size()));
-            if (currentInstalling > provisionState.lastInstalled
-                    && getVersion(device, apkInfo.getPkgName()) < apkInfo.getVersionCode()) {
+            long installedVer = getVersion(device, apkInfo.getPkgName());
+            long installingVer = apkInfo.getVersionCode();
+
+            // Normalize SDK version number so we are comparing the actual version, before the
+            // artificial version bump. See b/70919102.
+            if (apkInfo.getPkgName().compareTo("com.google.android.instantapps.supervisor") == 0) {
+                final long sdkVersionCodeRange = 100_000_000L;
+                installingVer =
+                        installingVer > sdkVersionCodeRange
+                                ? installingVer - sdkVersionCodeRange
+                                : installingVer;
+                installedVer =
+                        installedVer > sdkVersionCodeRange
+                                ? installedVer - sdkVersionCodeRange
+                                : installedVer;
+            }
+
+            if (currentInstalling > provisionState.lastInstalled && installedVer < installingVer) {
                 try {
                     listener.printMessage("Installing package " + apkInfo.getPkgName());
                     listener.logMessage("Installing apk " + apkInfo.getApk(), null);
-                    device.installPackage(apkInfo.getApk().getAbsolutePath(), true);
+                    device.installPackage(apkInfo.getApk().getAbsolutePath(), true, "-d");
                     provisionState.lastInstalled = currentInstalling;
                 } catch (InstallException e) {
                     // For the moment we have two different GmsCore apks. If at least one succeeds it's fine.
