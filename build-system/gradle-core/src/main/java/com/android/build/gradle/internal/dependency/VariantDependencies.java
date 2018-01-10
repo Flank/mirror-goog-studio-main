@@ -79,6 +79,7 @@ public class VariantDependencies {
     @NonNull private final Configuration compileClasspath;
     @NonNull private final Configuration runtimeClasspath;
     @NonNull private final Collection<Configuration> sourceSetRuntimeConfigurations;
+    @NonNull private final Collection<Configuration> sourceSetImplementationConfigurations;
 
     @Nullable private final Configuration apiElements;
     @Nullable private final Configuration runtimeElements;
@@ -114,6 +115,7 @@ public class VariantDependencies {
         // Default hash-map size of 16 (w/ load factor of .75) should be enough.
         private final Set<Configuration> compileClasspaths = Sets.newLinkedHashSet();
         private final Set<Configuration> apiClasspaths = Sets.newLinkedHashSet();
+        private final Set<Configuration> implementationConfigurations = Sets.newLinkedHashSet();
         private final Set<Configuration> runtimeClasspaths = Sets.newLinkedHashSet();
         private final Set<Configuration> annotationConfigs = Sets.newLinkedHashSet();
         private final Set<Configuration> wearAppConfigs = Sets.newLinkedHashSet();
@@ -174,6 +176,7 @@ public class VariantDependencies {
                 final Configuration implementationConfig = configs.getByName(sourceSet.getImplementationConfigurationName());
                 compileClasspaths.add(implementationConfig);
                 runtimeClasspaths.add(implementationConfig);
+                implementationConfigurations.add(implementationConfig);
 
                 String apiConfigName = sourceSet.getApiConfigurationName();
                 if (apiConfigName != null) {
@@ -215,7 +218,10 @@ public class VariantDependencies {
             compileClasspath.setDescription("Resolved configuration for compilation for variant: " + variantName);
             compileClasspath.setExtendsFrom(compileClasspaths);
             if (testedVariantDependencies != null) {
-                compileClasspath.extendsFrom(testedVariantDependencies.getCompileClasspath());
+                for (Configuration configuration :
+                        testedVariantDependencies.sourceSetImplementationConfigurations) {
+                    compileClasspath.extendsFrom(configuration);
+                }
             }
             compileClasspath.setCanBeConsumed(false);
             compileClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
@@ -242,7 +248,10 @@ public class VariantDependencies {
             runtimeClasspath.setDescription("Resolved configuration for runtime for variant: " + variantName);
             runtimeClasspath.setExtendsFrom(runtimeClasspaths);
             if (testedVariantDependencies != null) {
-                runtimeClasspath.extendsFrom(testedVariantDependencies.getRuntimeClasspath());
+                for (Configuration configuration :
+                        testedVariantDependencies.sourceSetRuntimeConfigurations) {
+                    runtimeClasspath.extendsFrom(configuration);
+                }
             }
             runtimeClasspath.setCanBeConsumed(false);
             runtimeClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
@@ -375,6 +384,7 @@ public class VariantDependencies {
                     compileClasspath,
                     runtimeClasspath,
                     runtimeClasspaths,
+                    implementationConfigurations,
                     apiElements,
                     runtimeElements,
                     annotationProcessor,
@@ -459,6 +469,7 @@ public class VariantDependencies {
             @NonNull Configuration compileClasspath,
             @NonNull Configuration runtimeClasspath,
             @NonNull Collection<Configuration> sourceSetRuntimeConfigurations,
+            @NonNull Collection<Configuration> sourceSetImplementationConfigurations,
             @Nullable Configuration apiElements,
             @Nullable Configuration runtimeElements,
             @NonNull Configuration annotationProcessorConfiguration,
@@ -470,6 +481,7 @@ public class VariantDependencies {
         this.compileClasspath = compileClasspath;
         this.runtimeClasspath = runtimeClasspath;
         this.sourceSetRuntimeConfigurations = sourceSetRuntimeConfigurations;
+        this.sourceSetImplementationConfigurations = sourceSetImplementationConfigurations;
         this.apiElements = apiElements;
         this.runtimeElements = runtimeElements;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
