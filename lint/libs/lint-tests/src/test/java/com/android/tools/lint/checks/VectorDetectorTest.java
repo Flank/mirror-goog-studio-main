@@ -36,7 +36,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
             + "        android:autoMirrored=\"true\"\n"
             + "        android:tint=\"?attr/colorControlActivated\">\n"
             + "\n"
-            + "    <clip-path />\n" // couldn't find any examples
+            + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
             + "\n"
             + "    <group\n"
             + "        android:name=\"root\"\n"
@@ -57,6 +57,35 @@ public class VectorDetectorTest extends AbstractCheckTest {
             + "\n"
             + "</vector>";
 
+    @Language("XML")
+    private static final String VECTOR_WITH_GRADIENT = ""
+            + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "        xmlns:aapt=\"http://schemas.android.com/aapt\"\n"
+            + "        android:height=\"76dp\"\n"
+            + "        android:width=\"76dp\"\n"
+            + "        android:viewportHeight=\"48\"\n"
+            + "        android:viewportWidth=\"48\"\n"
+            + "        android:autoMirrored=\"true\"\n"
+            + "        android:tint=\"?attr/colorControlActivated\">\n"
+            + "\n"
+            + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
+            + "\n"
+            + "    <group\n"
+            + "            android:name=\"root\"\n"
+            + "            android:translateX=\"24.0\"\n"
+            + "            android:translateY=\"24.0\" >\n"
+            + "        <path android:pathData=\"M10,10h40v30h-40z\">\n"
+            + "            <aapt:attr name=\"android:fillColor\">\n"
+            + "                <gradient android:startY=\"10\" android:startX=\"10\" android:endY=\"40\" android:endX=\"10\">\n"
+            + "                    <item android:offset=\"0\" android:color=\"#FFFF0000\"/>\n"
+            + "                    <item android:offset=\"1\" android:color=\"#FFFFFF00\"/>\n"
+            + "                </gradient>\n"
+            + "            </aapt:attr>\n"
+            + "        </path>\n"
+            + "    </group>\n"
+            + "\n"
+            + "</vector>";
+
     public void testWarn() {
         String expected = ""
                 + "res/drawable/foo.xml:6: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
@@ -66,8 +95,8 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 + "        android:tint=\"?attr/colorControlActivated\">\n"
                 + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "res/drawable/foo.xml:9: Warning: This tag is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
-                + "    <clip-path />\n"
-                + "    ~~~~~~~~~~~~~\n"
+                + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "res/drawable/foo.xml:11: Warning: Update Gradle plugin version to 1.5+ to correctly handle <group> tags in generated bitmaps [VectorRaster]\n"
                 + "    <group\n"
                 + "    ^\n"
@@ -164,6 +193,48 @@ public class VectorDetectorTest extends AbstractCheckTest {
                         + "    }\n"
                         + "}\n"
                         + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void testWarnWithGradient() {
+        String expected = ""
+                + "res/drawable/foo.xml:7: Warning: This attribute is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                + "        android:autoMirrored=\"true\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/drawable/foo.xml:8: Warning: Resource references will not work correctly in images generated for this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                + "        android:tint=\"?attr/colorControlActivated\">\n"
+                + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/drawable/foo.xml:10: Warning: This tag is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 3 warnings\n";
+
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(20),
+                xml("res/drawable/foo.xml", VECTOR_WITH_GRADIENT),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:3.1.0-alpha7'\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expect(expected);
+    }
+
+    public void testNoWarningsWithGradientAndMinSdk24() {
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(24),
+                xml("res/drawable/foo.xml", VECTOR_WITH_GRADIENT),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:3.1.0-alpha7'\n"
+                        + "    }\n"
+                        + "}\n"))
                 .run()
                 .expectClean();
     }

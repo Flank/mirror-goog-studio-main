@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.builder.png;
 
 import static com.android.SdkConstants.TAG_VECTOR;
@@ -30,53 +29,65 @@ import com.android.ide.common.vectordrawable.VdPreview;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.utils.ILogger;
-import com.android.utils.XmlUtils;
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Supplier;
 import javax.imageio.ImageIO;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
 /**
  * Generates PNG images (and XML copies) from VectorDrawable files.
  */
 public class VectorDrawableRenderer implements ResourcePreprocessor {
-    /** Projects with minSdk set to this or higher don't need to generate PNGs. */
-    public static final int MIN_SDK_WITH_VECTOR_SUPPORT = 21;
+    /** Projects with minSdk below this level need to generate PNGs. */
+    private static final int MIN_SDK_WITH_VECTOR_SUPPORT = 21;
+    /**
+     * Projects with minSdk below this level need to generate PNGs, but only for vector drawables
+     * containing gradients.
+     */
+    private static final int MIN_SDK_WITH_GRADIENT_SUPPORT = 24;
+
+    private static final String TAG_GRADIENT = "gradient";
 
     private final Supplier<ILogger> mLogger;
     private final int mMinSdk;
+    private final boolean mSupportLibraryIsUsed;
     private final File mOutputDir;
     private final Collection<Density> mDensities;
 
     public VectorDrawableRenderer(
             int minSdk,
+            boolean supportLibraryIsUsed,
             File outputDir,
             Collection<Density> densities,
             Supplier<ILogger> loggerSupplier) {
         mMinSdk = minSdk;
+        mSupportLibraryIsUsed = supportLibraryIsUsed;
         mOutputDir = outputDir;
         mDensities = densities;
         mLogger = loggerSupplier;
     }
 
     @Override
-    public boolean needsPreprocessing(@NonNull File resourceFile) {
-        return mMinSdk < MIN_SDK_WITH_VECTOR_SUPPORT
-                && isXml(resourceFile)
-                && isInDrawable(resourceFile)
-                && getEffectiveVersion(resourceFile) < MIN_SDK_WITH_VECTOR_SUPPORT
-                && isRootVector(resourceFile);
-    }
-
     @NonNull
-    @Override
-    public Collection<File> getFilesToBeGenerated(@NonNull File inputXmlFile) {
-        Collection<File> filesToBeGenerated = Lists.newArrayList();
+    public Collection<File> getFilesToBeGenerated(@NonNull File inputXmlFile) throws IOException {
+        int versionQualifier = getVersionQualifier(inputXmlFile);
+        if (versionQualifier <= 0) {
+            return Collections.emptyList();
+        }
+
+        Collection<File> filesToBeGenerated = new ArrayList<>();
         FolderConfiguration originalConfiguration = getFolderConfiguration(inputXmlFile);
 
         DensityQualifier densityQualifier = originalConfiguration.getDensityQualifier();
@@ -92,15 +103,15 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
                     getDirectory(originalConfiguration),
                     inputXmlFile.getName().replace(".xml", ".png")));
 
-            originalConfiguration.setVersionQualifier(
-                    new VersionQualifier(MIN_SDK_WITH_VECTOR_SUPPORT));
+            originalConfiguration.setVersionQualifier(new VersionQualifier(versionQualifier));
             filesToBeGenerated.add(new File(
                     getDirectory(originalConfiguration),
                     inputXmlFile.getName()));
         } else {
             // Otherwise, generate one xml and N pngs, one per density.
             for (Density density : mDensities) {
-                FolderConfiguration newConfiguration = FolderConfiguration.copyOf(originalConfiguration);
+                FolderConfiguration newConfiguration =
+                        FolderConfiguration.copyOf(originalConfiguration);
                 newConfiguration.setDensityQualifier(new DensityQualifier(density));
 
                 filesToBeGenerated.add(new File(
@@ -109,14 +120,61 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
             }
 
             originalConfiguration.setDensityQualifier(new DensityQualifier(Density.ANYDPI));
-            originalConfiguration.setVersionQualifier(
-                    new VersionQualifier(MIN_SDK_WITH_VECTOR_SUPPORT));
+            originalConfiguration.setVersionQualifier(new VersionQualifier(versionQualifier));
 
             filesToBeGenerated.add(
                     new File(getDirectory(originalConfiguration), inputXmlFile.getName()));
         }
 
         return filesToBeGenerated;
+    }
+
+    /**
+     * If the file is subject to preprocessing returns the version qualifier for the moved file,
+     * otherwise returns -1.
+     */
+    private int getVersionQualifier(@NonNull File resourceFile) throws IOException {
+        // A vector drawable file needs preprocessing if min SDK is below 21, or if the drawable
+        // contains a gradient and min SDK is below 24.
+        if (mMinSdk >= MIN_SDK_WITH_GRADIENT_SUPPORT) return -1;
+        if (!isXml(resourceFile) || !isInDrawable(resourceFile)) return -1;
+        int effectiveVersion = getEffectiveVersion(resourceFile);
+        if (effectiveVersion >= MIN_SDK_WITH_GRADIENT_SUPPORT) return -1;
+
+        try (InputStream stream = new BufferedInputStream(new FileInputStream(resourceFile))) {
+            XMLInputFactory factory = XMLInputFactory.newFactory();
+            XMLStreamReader xmlStreamReader = factory.createXMLStreamReader(stream);
+
+            boolean beforeFirstTag = true;
+            while (xmlStreamReader.hasNext()) {
+                int event = xmlStreamReader.next();
+                if (event == XMLStreamReader.START_ELEMENT) {
+                    if (beforeFirstTag) {
+                        if (!TAG_VECTOR.equals(xmlStreamReader.getLocalName())) {
+                            return -1;
+                        }
+                        beforeFirstTag = false;
+                    } else {
+                        if (TAG_GRADIENT.equals(xmlStreamReader.getLocalName())) {
+                            return MIN_SDK_WITH_GRADIENT_SUPPORT;
+                        }
+                    }
+                }
+            }
+
+            // The drawable contains no gradients. Preprocessing is needed if API level is below 21.
+            if (!beforeFirstTag
+                    && !mSupportLibraryIsUsed
+                    && mMinSdk < MIN_SDK_WITH_VECTOR_SUPPORT
+                    && effectiveVersion < MIN_SDK_WITH_VECTOR_SUPPORT) {
+                return MIN_SDK_WITH_VECTOR_SUPPORT;
+            }
+        } catch (XMLStreamException e) {
+            throw new IOException(
+                    "Failed to parse resource file " + resourceFile.getAbsolutePath(), e);
+        }
+
+        return -1;
     }
 
     @NonNull
@@ -142,14 +200,14 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
             FolderConfiguration folderConfiguration = getFolderConfiguration(toBeGenerated);
             checkState(folderConfiguration.getDensityQualifier() != null);
             Density density = folderConfiguration.getDensityQualifier().getValue();
-
-            String xmlContent = Files.toString(original, Charsets.UTF_8);
+            assert density != null;
             float scaleFactor = density.getDpiValue() / (float) Density.MEDIUM.getDpiValue();
             if (scaleFactor <= 0) {
                 scaleFactor = 1.0f;
             }
 
-            final VdPreview.TargetSize imageSize = VdPreview.TargetSize.createSizeFromScale(scaleFactor);
+            VdPreview.TargetSize imageSize = VdPreview.TargetSize.createSizeFromScale(scaleFactor);
+            String xmlContent = Files.asCharSource(original, StandardCharsets.UTF_8).read();
             BufferedImage image = VdPreview.getPreviewFromVectorXml(imageSize, xmlContent, null);
             checkState(image != null, "Generating the image failed.");
             ImageIO.write(image, "png", toBeGenerated);
@@ -173,13 +231,6 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
                 ResourceFolderType.getFolderType(inputXmlFile.getParentFile().getName());
 
         return folderType == ResourceFolderType.DRAWABLE;
-    }
-
-    /**
-     * Parse the root element of the file, return true if it is a vector.
-     */
-    private static boolean isRootVector(File resourceFile) {
-        return TAG_VECTOR.equals(XmlUtils.getRootTagName(resourceFile));
     }
 
     private static boolean isXml(File resourceFile) {
