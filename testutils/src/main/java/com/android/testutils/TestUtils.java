@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.GuardedBy;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
 import com.google.common.base.Charsets;
@@ -43,6 +44,9 @@ public class TestUtils {
 
     /** Time to wait between checks to obtain the value of an eventually supplier. */
     private static final long EVENTUALLY_CHECK_CYCLE_TIME_MS = 10;
+
+    @GuardedBy("TestUtils.class")
+    private static File workspaceRoot = null;
 
     /**
      * Returns Kotlin version that is used in new project templates and integration tests.
@@ -127,60 +131,63 @@ public class TestUtils {
     /**
      * Returns the root of the entire Android Studio codebase.
      *
-     * From this path, you should be able to access any file in the workspace via its full path,
+     * <p>From this path, you should be able to access any file in the workspace via its full path,
      * e.g.
      *
-     * new File(TestUtils.getWorkspaceRoot(), "tools/adt/idea/android/testSrc");
-     * new File(TestUtils.getWorkspaceRoot(), "prebuilts/studio/jdk");
+     * <p>new File(TestUtils.getWorkspaceRoot(), "tools/adt/idea/android/testSrc"); new
+     * File(TestUtils.getWorkspaceRoot(), "prebuilts/studio/jdk");
      *
-     * If this method is called by code run via IntelliJ / Gradle, it will simply walk its
+     * <p>If this method is called by code run via IntelliJ / Gradle, it will simply walk its
      * ancestor tree looking for the WORKSPACE file at its root; if called from Bazel, it will
      * simply return the runfiles directory (which should be a mirror of the WORKSPACE root except
      * only populated with explicitly declared dependencies).
      *
-     * Instead of calling this directly, prefer calling {@link #getWorkspaceFile(String)} as it
+     * <p>Instead of calling this directly, prefer calling {@link #getWorkspaceFile(String)} as it
      * is more resilient to cross-platform testing.
      *
      * @throws IllegalStateException if the current directory of the test is not a subdirectory of
-     * the workspace directory when this method is called. This shouldn't happen if the test is run
-     * by Bazel or run by IntelliJ with default configuration settings (where the working directory
-     * is initialized to the module root).
+     *     the workspace directory when this method is called. This shouldn't happen if the test is
+     *     run by Bazel or run by IntelliJ with default configuration settings (where the working
+     *     directory is initialized to the module root).
      */
     @NonNull
-    public static File getWorkspaceRoot() {
-        // If we are using Bazel (which defines the following env vars), simply use the sandboxed
-        // root they provide us.
-        String workspace = System.getenv("TEST_WORKSPACE");
-        String workspaceParent = System.getenv("TEST_SRCDIR");
-        File currDir = new File("");
-        File lastCandidate = null;
-        if (workspace != null && workspaceParent != null) {
-            currDir = new File(workspaceParent, workspace);
-            lastCandidate = currDir;
-        }
-        File initialDir = currDir;
-
-        // If we're using a non-Bazel build system. At this point, assume our working
-        // directory is located underneath our codebase's root folder, so keep navigating up until
-        // we find it. If we're using Bazel, we should still look to see if there's a larger
-        // outermost workspace since we might be within a nested workspace.
-        while (currDir != null) {
-            currDir = currDir.getAbsoluteFile();
-            if (new File(currDir, "WORKSPACE").exists()) {
-                lastCandidate = currDir;
+    public static synchronized File getWorkspaceRoot() {
+        // The logic below depends on the current working directory, so we save the results and hope the first call
+        // is early enough for the user.dir property to be unchanged.
+        if (workspaceRoot == null) {
+            // If we are using Bazel (which defines the following env vars), simply use the sandboxed
+            // root they provide us.
+            String workspace = System.getenv("TEST_WORKSPACE");
+            String workspaceParent = System.getenv("TEST_SRCDIR");
+            File currDir = new File("");
+            if (workspace != null && workspaceParent != null) {
+                currDir = new File(workspaceParent, workspace);
+                workspaceRoot = currDir;
             }
-            currDir = currDir.getParentFile();
+            File initialDir = currDir;
+
+            // If we're using a non-Bazel build system. At this point, assume our working
+            // directory is located underneath our codebase's root folder, so keep navigating up until
+            // we find it. If we're using Bazel, we should still look to see if there's a larger
+            // outermost workspace since we might be within a nested workspace.
+            while (currDir != null) {
+                currDir = currDir.getAbsoluteFile();
+                if (new File(currDir, "WORKSPACE").exists()) {
+                    workspaceRoot = currDir;
+                }
+                currDir = currDir.getParentFile();
+            }
+
+            if (workspaceRoot == null) {
+                throw new IllegalStateException(
+                        "Could not find WORKSPACE root. Is the original working directory a "
+                                + "subdirectory of the Android Studio codebase?\n\n"
+                                + "pwd = "
+                                + initialDir.getAbsolutePath());
+            }
         }
 
-        if (lastCandidate == null) {
-            throw new IllegalStateException(
-                    "Could not find WORKSPACE root. Is the original working directory a "
-                            + "subdirectory of the Android Studio codebase?\n\n"
-                            + "pwd = "
-                            + initialDir.getAbsolutePath());
-        }
-
-        return lastCandidate;
+        return workspaceRoot;
     }
 
     /**
