@@ -149,6 +149,8 @@ public final class BuildCacheUtils {
                             // correspondence between the cache directory and the lock file
                             File lockFile =
                                     SynchronizedFile.getLockFile(normalizedSharedBuildCacheDir);
+                            // Create the parent directory as required by ReadWriteProcessLock
+                            FileUtils.mkdirs(lockFile.getParentFile());
                             ReadWriteProcessLock.Lock lock =
                                     new ReadWriteProcessLock(lockFile.toPath()).readLock();
                             try {
@@ -181,6 +183,23 @@ public final class BuildCacheUtils {
             // including 3.1.x)
             deleteOldCacheDirectories(
                     sharedBuildCacheDir, Duration.ofDays(CACHE_DIRECTORY_DAYS_TO_LIVE));
+
+            // 3. Delete old cache entries created by plugin versions 3.0.x and earlier (in these
+            // versions, the cache entries are located directly under the shared build cache
+            // directory). Note that this operation requires a WRITE lock on the shared build cache
+            // directory, but the shared build cache directory is already being locked with a READ
+            // lock (see above). Therefore, we need to do this at the end of the build after the
+            // READ lock has been released; otherwise, it would deadlock as the READ lock cannot be
+            // promoted to a WRITE lock.
+            BuildSessionImpl.getSingleton()
+                    .executeOnceWhenBuildFinished(
+                            actionGroup,
+                            "deleteOldCacheEntriesInSharedBuildCacheDir",
+                            () ->
+                                    deleteOldCacheEntries(
+                                            FileCache.getInstanceWithMultiProcessLocking(
+                                                    sharedBuildCacheDir),
+                                            Duration.ofDays(CACHE_DIRECTORY_DAYS_TO_LIVE)));
         }
 
         // Mark that the current cache was last used at this point
@@ -230,8 +249,8 @@ public final class BuildCacheUtils {
     }
 
     /**
-     * Deletes all the cache entries in the given private cache directory that have existed for the
-     * specified life time or longer.
+     * Deletes all the cache entries in the given (private or shared) cache directory that have
+     * existed for the specified life time or longer.
      */
     @VisibleForTesting
     static void deleteOldCacheEntries(
