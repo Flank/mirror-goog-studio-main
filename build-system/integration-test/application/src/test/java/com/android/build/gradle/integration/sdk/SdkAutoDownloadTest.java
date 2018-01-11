@@ -71,7 +71,7 @@ public class SdkAutoDownloadTest {
             + System.lineSeparator()
             + "target_link_libraries(hello-jni log)";
 
-    private static final String BUILD_TOOLS_VERSION = "27.0.1";
+    private static final String BUILD_TOOLS_VERSION = "27.0.3";
     private static final String PLATFORM_VERSION = "26";
 
     @Rule
