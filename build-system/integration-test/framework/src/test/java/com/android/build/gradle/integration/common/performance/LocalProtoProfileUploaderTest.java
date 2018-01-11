@@ -17,9 +17,9 @@
 package com.android.build.gradle.integration.common.performance;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.RandomGradleBenchmark;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.performance.LocalProtoProfileUploader;
 import com.android.build.gradle.integration.performance.ProfileUploader;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;

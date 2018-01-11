@@ -24,21 +24,11 @@ import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 
 /**
  * Additional entry point to {@link Truth} framework for custom {@link Subject}.
  */
 public class MoreTruth {
-    @NonNull
-    public static FileSubject assertThat(@Nullable File file) {
-        return FileSubject.assertThat(file);
-    }
-
-    @NonNull
-    public static PathSubject assertThat(@Nullable Path path) {
-        return PathSubject.assertThat(path);
-    }
 
     @NonNull
     public static ZipFileSubject assertThat(@NonNull Zip zip) throws IOException {

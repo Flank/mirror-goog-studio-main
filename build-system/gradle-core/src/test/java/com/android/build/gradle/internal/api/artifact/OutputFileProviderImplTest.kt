@@ -21,7 +21,7 @@ import com.android.build.api.artifact.BuildArtifactType.JAVA_COMPILE_CLASSPATH
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.scope.BuildArtifactHolder
 import com.android.ide.common.util.multimapOf
-import com.android.testutils.truth.MoreTruth.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.BeforeClass

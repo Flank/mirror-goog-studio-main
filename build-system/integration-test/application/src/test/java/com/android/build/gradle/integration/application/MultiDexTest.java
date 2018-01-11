@@ -17,7 +17,9 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -195,9 +197,8 @@ public class MultiDexTest {
         GradleTaskExecutor executor = executor().withUseDexArchive(false);
         executor.run("assembleIcsDebug", "assembleIcsDebugAndroidTest");
 
-        assertThat(
-                project.getApk(ApkType.DEBUG, "ics")
-                        .containsClass("Lcom/android/tests/basic/NotUsed;"));
+        assertThat(project.getApk(ApkType.DEBUG, "ics"))
+                .containsClass("Lcom/android/tests/basic/NotUsed;");
         assertThat(project.getApk(ApkType.DEBUG, "ics"))
                 .doesNotContainMainClass("Lcom/android/tests/basic/NotUsed;");
 

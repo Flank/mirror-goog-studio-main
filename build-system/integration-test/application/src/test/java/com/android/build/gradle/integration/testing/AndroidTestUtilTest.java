@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.integration.testing;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+
+import static com.android.build.gradle.integration.common.truth.ModelSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -26,7 +29,6 @@ import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
-import com.android.testutils.truth.MoreTruth;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.Collection;
@@ -59,7 +61,7 @@ public class AndroidTestUtilTest {
         Collection<File> additionalRuntimeApks =
                 VariantUtils.getAndroidTestArtifact(debugVariant).getAdditionalRuntimeApks();
 
-        additionalRuntimeApks.forEach(apk -> MoreTruth.assertThat(apk).isFile());
+        additionalRuntimeApks.forEach(apk -> assertThat(apk).isFile());
         assertThat(Iterables.transform(additionalRuntimeApks, File::getName))
                 .containsExactly("orchestrator-1.0.0.apk", "test-services-1.0.0.apk");
     }

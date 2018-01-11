@@ -17,6 +17,7 @@
 package com.android.build.gradle.shrinker;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.api.transform.Status;

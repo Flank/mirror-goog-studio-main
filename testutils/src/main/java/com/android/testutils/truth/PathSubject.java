@@ -52,6 +52,10 @@ public class PathSubject extends Subject<PathSubject, Path> {
         return Truth.assert_().about(PathSubject.FACTORY).that(path);
     }
 
+    public static PathSubject assertThat(@Nullable java.io.File file) {
+        return assertThat(file == null ? null : file.toPath());
+    }
+
     public void hasName(String name) {
         check().that(getSubject().getFileName().toString())
                 .named(getDisplaySubject()).isEqualTo(name);

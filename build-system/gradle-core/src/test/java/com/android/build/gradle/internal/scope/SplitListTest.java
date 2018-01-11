@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.scope;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 

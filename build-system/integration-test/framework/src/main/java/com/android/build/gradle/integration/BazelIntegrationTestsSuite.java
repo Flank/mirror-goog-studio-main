@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;

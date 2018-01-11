@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.integration.library;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.DexSubject.assertThat;
+import static com.android.testutils.truth.Java8OptionalSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -40,7 +42,6 @@ import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.apk.SplitApks;
-import com.android.testutils.truth.MoreTruth;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.IOException;
@@ -81,10 +82,10 @@ public class JacocoDependenciesTest {
         project.executor().run("clean", "app:assembleDebug");
 
         Apk apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG);
-        MoreTruth.assertThat(apk.getFile()).isFile();
+        assertThat(apk.getFile()).isFile();
 
         Optional<Dex> dexOptional = apk.getMainDexFile();
-        MoreTruth.assertThat(dexOptional).isPresent();
+        assertThat(dexOptional).isPresent();
 
         // noinspection ConstantConditions
         assertThat(dexOptional.get()).containsClasses("Lorg/jacoco/agent/rt/IAgent;");

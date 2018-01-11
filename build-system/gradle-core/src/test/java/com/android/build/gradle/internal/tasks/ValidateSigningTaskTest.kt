@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.testutils.truth.MoreTruth.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.StringHelper
 import com.google.common.hash.Hashing
 import com.google.common.truth.Truth.assertThat

@@ -28,6 +28,7 @@ import com.android.testutils.MockLog
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.MoreTruth.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Rule

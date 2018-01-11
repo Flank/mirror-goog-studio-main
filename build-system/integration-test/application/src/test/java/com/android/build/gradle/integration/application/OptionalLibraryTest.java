@@ -1,10 +1,12 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.SdkConstants.FN_FRAMEWORK_LIBRARY;
+import static com.android.build.gradle.integration.common.truth.ModelSubject.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -42,7 +44,7 @@ public class OptionalLibraryTest {
         AndroidProject model =
                 project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
 
-        TruthHelper.assertThat(model)
+        assertThat(model)
                 .hasSingleIssue(
                         SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_OPTIONAL_LIB_NOT_FOUND, "foo");
     }
@@ -78,12 +80,12 @@ public class OptionalLibraryTest {
         // the files that the bootclasspath should contain.
         File androidJar = new File(targetLocation, FN_FRAMEWORK_LIBRARY);
         File httpJar = new File(targetLocation, "optional/org.apache.http.legacy.jar");
-        TruthHelper.assertThat(model.getBootClasspath())
+        assertThat(model.getBootClasspath())
                 .containsExactly(androidJar.getAbsolutePath(), httpJar.getAbsolutePath());
 
         // for safety, let's make sure these files actually exists.
-        TruthHelper.assertThat(androidJar).isFile();
-        TruthHelper.assertThat(httpJar).isFile();
+        assertThat(androidJar).isFile();
+        assertThat(httpJar).isFile();
     }
 
     @Test
@@ -113,7 +115,7 @@ public class OptionalLibraryTest {
 
         File targetLocation = new File(target.getLocation());
 
-        TruthHelper.assertThat(model.getBootClasspath())
+        assertThat(model.getBootClasspath())
                 .containsExactly(new File(targetLocation, FN_FRAMEWORK_LIBRARY).getAbsolutePath());
     }
 }

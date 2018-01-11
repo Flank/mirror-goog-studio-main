@@ -33,9 +33,7 @@ import com.android.builder.model.Variant;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
-import com.android.testutils.truth.FileSubject;
 import com.android.testutils.truth.Java8OptionalSubject;
-import com.android.testutils.truth.PathSubject;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Optional;
 import com.google.common.collect.ListMultimap;
@@ -77,7 +75,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
-import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -86,16 +83,6 @@ import java.util.Map;
  * TODO: Remove methods that should be imported directly by statically importing Truth.assertThat
  */
 public class TruthHelper {
-    @NonNull
-    public static FileSubject assertThat(@Nullable File file) {
-        return FileSubject.assertThat(file);
-    }
-
-    @NonNull
-    public static PathSubject assertThat(@NonNull Path path) {
-        return PathSubject.assertThat(path);
-    }
-
 
     @NonNull
     public static NativeLibrarySubject assertThatNativeLib(@Nullable File file) {
