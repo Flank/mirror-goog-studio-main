@@ -46,7 +46,6 @@ iml_module(
         "//tools/idea/.idea/libraries:Guava",
         "//tools/base/sdk-common/aia-manifest-jar-generator:aia-manifest-proto-1.0-jarjar",
         "//tools/idea/.idea/libraries:equalsverifier[test]",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
     ],
 )
 
