@@ -16,10 +16,12 @@
 
 package com.android.testutils.truth;
 
+import static com.google.common.truth.Truth.assert_;
+
+import com.android.annotations.NonNull;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
-
 import java.util.Optional;
 
 /**
@@ -28,10 +30,30 @@ import java.util.Optional;
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public class Java8OptionalSubject<T> extends Subject<Java8OptionalSubject<T>, Optional<T>> {
 
+    private static final SubjectFactory<Java8OptionalSubject<Object>, Optional<Object>> FACTORY =
+            new SubjectFactory<Java8OptionalSubject<Object>, Optional<Object>>() {
+                @Override
+                public Java8OptionalSubject<Object> getSubject(
+                        FailureStrategy fs, Optional<Object> that) {
+                    return new Java8OptionalSubject<>(fs, that);
+                }
+            };
+
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public Java8OptionalSubject(
             FailureStrategy failureStrategy, Optional<T> subject) {
         super(failureStrategy, subject);
+    }
+    @NonNull
+    public static <T> Java8OptionalSubject<T> assertThat(
+            @SuppressWarnings("OptionalUsedAsFieldOrParameterType") @NonNull
+                    java.util.Optional<T> optional) {
+        //noinspection unchecked Ignoring generics to avoid having to instantiate a new factory.
+        return assert_()
+                .about(
+                        (SubjectFactory<Java8OptionalSubject<T>, Optional<T>>)
+                                (SubjectFactory) FACTORY)
+                .that(optional);
     }
 
     public void isPresent() {

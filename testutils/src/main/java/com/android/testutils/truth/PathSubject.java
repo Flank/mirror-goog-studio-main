@@ -16,13 +16,17 @@
 
 package com.android.testutils.truth;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.base.Joiner;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
+import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,6 +46,10 @@ public class PathSubject extends Subject<PathSubject, Path> {
 
     public PathSubject(FailureStrategy failureStrategy, Path subject) {
         super(failureStrategy, subject);
+    }
+
+    public static PathSubject assertThat(@Nullable Path path) {
+        return Truth.assert_().about(PathSubject.FACTORY).that(path);
     }
 
     public void hasName(String name) {
@@ -108,6 +116,22 @@ public class PathSubject extends Subject<PathSubject, Path> {
             }
         } catch (IOException e) {
             failWithRawMessage("Unable to read %s", getSubject());
+        }
+    }
+
+    public void wasModifiedAt(@NonNull FileTime expectedTime) throws IOException {
+        FileTime actualTime = Files.getLastModifiedTime(getSubject());
+        if (!actualTime.equals(expectedTime)) {
+            failWithBadResults(
+                    "was last modified at", expectedTime, "was last modified at", actualTime);
+        }
+    }
+
+    public void isNewerThan(@NonNull FileTime expectedTime) throws IOException {
+        FileTime actualTime = Files.getLastModifiedTime(getSubject());
+        if (actualTime.compareTo(expectedTime) <= 0) {
+            failWithBadResults(
+                    "was modified after", expectedTime, "was last modified at", actualTime);
         }
     }
 }

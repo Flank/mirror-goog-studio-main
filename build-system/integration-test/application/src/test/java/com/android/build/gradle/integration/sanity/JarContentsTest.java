@@ -112,7 +112,6 @@ public class JarContentsTest {
                 "com/android/testutils/classloader/",
                 "com/android/testutils/concurrency/",
                 "com/android/testutils/filesystemdiff/",
-                "com/android/testutils/incremental/",
                 "com/android/testutils/internal/",
                 "com/android/testutils/truth/",
                 "NOTICE",

@@ -17,10 +17,13 @@
 package com.android.testutils.truth;
 
 
+import static com.google.common.truth.Truth.assert_;
+
 import com.android.annotations.NonNull;
 import com.android.testutils.apk.Zip;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.SubjectFactory;
+import java.io.File;
 import java.io.IOException;
 
 /** Truth support for zip files. */
@@ -36,6 +39,15 @@ public class ZipFileSubject extends AbstractZipSubject<ZipFileSubject, Zip> {
 
     public ZipFileSubject(@NonNull FailureStrategy failureStrategy, @NonNull Zip subject) {
         super(failureStrategy, subject);
+    }
+
+    public static ZipFileSubject assertThat(@NonNull Zip zip) {
+        return assert_().about(ZipFileSubject.FACTORY).that(zip);
+    }
+
+    public static ZipFileSubject assertThatZip(@NonNull File file) throws IOException {
+        Zip zip = new Zip(file.toPath());
+        return assert_().about(ZipFileSubject.FACTORY).that(zip);
     }
 
     @Override

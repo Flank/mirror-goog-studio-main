@@ -17,9 +17,10 @@
 package com.android.tools.device.internal.adb;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.TruthJUnit.assume;
 import static org.junit.Assert.fail;
 
-import com.android.testutils.truth.MoreTruth;
+import com.android.testutils.truth.PathSubject;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -77,7 +78,7 @@ public class AdbVersionTest {
     @Test
     public void adbVersion_fromAdb() throws IOException {
         Path adb = AdbTestUtils.getPathToAdb();
-        MoreTruth.assumeThat(adb).isExecutable();
+        assume().about(PathSubject.FACTORY).that(adb).isExecutable();
 
         AdbVersion version = AdbVersion.get(adb);
         assertThat(version).isAtLeast(AdbVersion.parseFrom("1.0.20"));
