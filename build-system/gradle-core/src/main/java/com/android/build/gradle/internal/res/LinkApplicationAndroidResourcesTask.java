@@ -505,8 +505,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                     resOutBaseNameFile,
                     manifestOutput.getProperties());
         } catch (ProcessException e) {
-            getLogger().error(e.getMessage(), e);
-            throw new BuildException(e.getMessage(), e);
+            throw new BuildException(
+                    "Failed to process resources, see aapt output above for details.", e);
         }
     }
 
