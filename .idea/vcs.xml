@@ -3,6 +3,7 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$/../analytics-library" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../apksig" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../apkzlib" vcs="Git" />
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../buildSrc" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../data-binding" vcs="Git" />

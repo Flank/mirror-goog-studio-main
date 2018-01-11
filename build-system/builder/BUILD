@@ -21,7 +21,7 @@ kotlin_library(
     name = "builder",
     srcs = ["src/main/java"],
     bundled_deps = [
-        "//tools/base/apkzlib",
+        "//tools/apkzlib",
         "//tools/base/build-system/profile",
         "//tools/dx/dalvik/dx",
         "//prebuilts/r8:d8-master",
