@@ -158,57 +158,6 @@ public abstract class AbstractAapt implements Aapt {
             //        + "only be defined if there are libraries.");
         }
 
-        Collection<String> splits = packageConfig.getSplits();
-        Collection<String> resourceConfigs = packageConfig.getResourceConfigs();
-        if (splits != null && !splits.isEmpty() && !resourceConfigs.isEmpty()) {
-            Collection<String> resConfigs = Lists.newArrayList(AaptUtils.getDensityResConfigs(
-                    resourceConfigs));
-            List<String> splitsNotInResConfig = new ArrayList<String>(splits);
-            splitsNotInResConfig.removeAll(resConfigs);
-
-            if (!splitsNotInResConfig.isEmpty()) {
-                /*
-                 * Some splits are required, yet the resConfigs do not contain the split density
-                 * value, which mean that the resulting split file would be empty.
-                 */
-                throw new AaptException(
-                        String.format(
-                                "Splits for densities \"%1$s\" were "
-                                + "configured, yet the resConfigs settings does  not include such "
-                                + "splits. The resulting split APKs would be empty.\n Suggestion: "
-                                + "exclude those splits in your build.gradle : \n"
-                                + "splits {\n"
-                                + "     density {\n"
-                                + "         enable true\n"
-                                + "         exclude \"%2$s\"\n"
-                                + "     }\n"
-                                + "}\n"
-                                + "OR add them to the resConfigs list.",
-                        Joiner.on(",").join(splitsNotInResConfig),
-                        Joiner.on("\",\"").join(splitsNotInResConfig)));
-            }
-
-            resConfigs.removeAll(splits);
-            if (!resConfigs.isEmpty()) {
-                /*
-                 * There are densities present in the resConfig but not in splits, which mean that
-                 * those densities will be packaged in the main APK.
-                 */
-                throw new AaptException(
-                        String.format(
-                                "Inconsistent density configuration, with "
-                                + "\"%1$s\" present on resConfig settings, while only \"%2$s\" "
-                                + "densities are requested in splits APK density settings.\n"
-                                + "Suggestion : remove extra densities from the resConfig : \n"
-                                + "defaultConfig {\n"
-                                + "     resConfigs \"%2$s\"\n"
-                                + "}\n"
-                                + "OR remove such densities from the split's exclude list.\n",
-                        Joiner.on(",").join(resConfigs),
-                        Joiner.on("\",\"").join(splits)));
-            }
-        }
-
         if (!packageConfig.getDependentFeatures().isEmpty()
                 && packageConfig.getPackageId() == null) {
             throw new AaptException(

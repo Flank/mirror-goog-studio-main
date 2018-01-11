@@ -37,7 +37,7 @@ public class CombinedLanguageWithDisabledDensityTest {
                     .create();
 
     @Before
-    public void setup() throws IOException, InterruptedException {
+    public void setup() throws IOException {
         AssumeUtil.assumeBuildToolsAtLeast(21);
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

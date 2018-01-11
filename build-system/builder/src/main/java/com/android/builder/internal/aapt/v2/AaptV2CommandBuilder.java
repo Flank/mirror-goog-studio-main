@@ -242,7 +242,14 @@ public final class AaptV2CommandBuilder {
                 Lists.newArrayList(AaptUtils.getNonDensityResConfigs(resourceConfigs));
         String preferredDensity = config.getPreferredDensity();
 
-        if (preferredDensity != null && !densityResourceConfigs.isEmpty()) {
+
+        Iterable<String> densityResSplits =
+                config.getSplits() != null
+                        ? AaptUtils.getDensityResConfigs(config.getSplits())
+                        : ImmutableList.of();
+
+        if ((preferredDensity != null || densityResSplits.iterator().hasNext())
+                && !densityResourceConfigs.isEmpty()) {
             throw new AaptException(
                     String.format("When using splits in tools 21 and above, "
                                     + "resConfigs should not contain any densities. Right now, it "
@@ -254,6 +261,14 @@ public final class AaptV2CommandBuilder {
         if (densityResourceConfigs.size() > 1) {
             throw new AaptException("Cannot filter assets for multiple densities using "
                     + "SDK build tools 21 or later. Consider using apk splits instead.");
+        }
+
+        // if we are in split mode and resConfigs has been specified, we need to add all the
+        // non density based splits back to the resConfigs otherwise they will be filtered out.
+        if (!otherResourceConfigs.isEmpty() && config.getSplits() != null) {
+            Iterable<String> nonDensitySplits =
+                    AaptUtils.getNonDensityResConfigs(config.getSplits());
+            otherResourceConfigs.addAll(Lists.newArrayList(nonDensitySplits));
         }
 
         if (preferredDensity == null && densityResourceConfigs.size() == 1) {
