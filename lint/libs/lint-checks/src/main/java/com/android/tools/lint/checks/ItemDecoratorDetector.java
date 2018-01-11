@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import java.util.Collections;
 import java.util.List;
 import org.jetbrains.uast.UClass;
@@ -33,7 +34,7 @@ import org.jetbrains.uast.UClass;
 /**
  * Looks for copy/paste versions of the divider item decorator.
  */
-public class ItemDecoratorDetector extends Detector implements Detector.UastScanner {
+public class ItemDecoratorDetector extends Detector implements SourceCodeScanner {
 
     /** Copy/pasted item decorator code */
     public static final Issue ISSUE = Issue.create(
@@ -59,7 +60,7 @@ public class ItemDecoratorDetector extends Detector implements Detector.UastScan
     public ItemDecoratorDetector() {
     }
 
-    // ---- Implements JavaScanner ----
+    // ---- Implements SourceCodeScanner ----
 
     @Nullable
     @Override

@@ -57,26 +57,16 @@ import org.gradle.api.model.ObjectFactory;
 public class VariantDependencies {
 
     public static final String CONFIG_NAME_COMPILE = "compile";
-    public static final String CONFIG_NAME_S_COMPILE = "%sCompile";
     public static final String CONFIG_NAME_PUBLISH = "publish";
-    public static final String CONFIG_NAME_S_PUBLISH = "%sPublish";
     public static final String CONFIG_NAME_APK = "apk";
-    public static final String CONFIG_NAME_S_APK = "%sApk";
     public static final String CONFIG_NAME_PROVIDED = "provided";
-    public static final String CONFIG_NAME_S_PROVIDED = "%sProvided";
     public static final String CONFIG_NAME_WEAR_APP = "wearApp";
     public static final String CONFIG_NAME_ANNOTATION_PROCESSOR = "annotationProcessor";
-    public static final String CONFIG_NAME_S_WEAR_APP = "%sWearApp";
-    public static final String CONFIG_NAME_S_ANNOTATION_PROCESSOR = "%sAnnotationProcessor";
 
     public static final String CONFIG_NAME_API = "api";
-    public static final String CONFIG_NAME_S_API = "%sApi";
     public static final String CONFIG_NAME_COMPILE_ONLY = "compileOnly";
-    public static final String CONFIG_NAME_S_COMPILE_ONLY = "%sCompileOnly";
     public static final String CONFIG_NAME_IMPLEMENTATION = "implementation";
-    public static final String CONFIG_NAME_S_IMPLEMENTATION = "%sImplementation";
     public static final String CONFIG_NAME_RUNTIME_ONLY = "runtimeOnly";
-    public static final String CONFIG_NAME_S_RUNTIME_ONLY = "%sRuntimeOnly";
     public static final String CONFIG_NAME_FEATURE = "feature";
     public static final String CONFIG_NAME_APPLICATION = "application";
 

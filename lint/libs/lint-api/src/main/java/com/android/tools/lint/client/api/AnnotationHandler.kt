@@ -19,9 +19,9 @@ package com.android.tools.lint.client.api
 import com.android.SdkConstants.ATTR_VALUE
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.tools.lint.detector.api.AnnotationUsageType
-import com.android.tools.lint.detector.api.Detector.UastScanner
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintUtils.skipParentheses
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.google.common.collect.Multimap
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
@@ -53,7 +53,7 @@ import java.util.HashSet
 /**
  * Looks up annotations on method calls and enforces the various things they express.
  */
-internal class AnnotationHandler(private val scanners: Multimap<String, UastScanner>) {
+internal class AnnotationHandler(private val scanners: Multimap<String, SourceCodeScanner>) {
 
     val relevantAnnotations: Set<String> = HashSet<String>(scanners.keys())
 

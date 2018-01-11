@@ -294,16 +294,6 @@ public abstract class BaseVariantData implements TaskContainer {
     }
 
     @NonNull
-    protected String getCapitalizedBuildTypeName() {
-        return StringHelper.capitalize(variantConfiguration.getBuildType().getName());
-    }
-
-    @NonNull
-    protected String getCapitalizedFlavorName() {
-        return StringHelper.capitalize(variantConfiguration.getFlavorName());
-    }
-
-    @NonNull
     public VariantType getType() {
         return variantConfiguration.getType();
     }
@@ -315,7 +305,7 @@ public abstract class BaseVariantData implements TaskContainer {
 
     @NonNull
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        return prefix + StringHelper.capitalize(variantConfiguration.getFullName()) + suffix;
+        return StringHelper.appendCapitalized(prefix, variantConfiguration.getFullName(), suffix);
     }
 
     @NonNull

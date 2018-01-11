@@ -390,7 +390,8 @@ public class VariantManager implements VariantModel {
                 // assembleTask for this flavor(dimension), created on demand if needed.
                 if (variantConfig.getProductFlavors().size() > 1) {
                     final String name = StringHelper.capitalize(variantConfig.getFlavorName());
-                    final String variantAssembleTaskName = "assemble" + name;
+                    final String variantAssembleTaskName =
+                            StringHelper.appendCapitalized("assemble", name);
                     if (!taskManager.getTaskFactory().containsKey(variantAssembleTaskName)) {
                         Task task = taskManager.getTaskFactory().create(variantAssembleTaskName);
                         task.setDescription("Assembles all builds for flavor combination: " + name);
@@ -989,7 +990,7 @@ public class VariantManager implements VariantModel {
         }
 
         if (!variantType.getPrefix().isEmpty()) {
-            name = variantType.getPrefix() + StringHelper.capitalize(name);
+            name = StringHelper.appendCapitalized(variantType.getPrefix(), name);
         }
 
         return name;

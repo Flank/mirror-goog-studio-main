@@ -96,14 +96,45 @@ public class IdeDependenciesFactory {
         Set<String> visited = new HashSet<>();
         populateAndroidLibraries(dependencies.getLibraries(), visited, modelCache);
         populateJavaLibraries(dependencies.getJavaLibraries(), visited, modelCache);
-        for (String projectPath : dependencies.getProjects()) {
-            if (!visited.contains(projectPath)) {
-                visited.add(projectPath);
-                myLibrariesById.computeIfAbsent(
-                        projectPath, id -> IdeLibraryFactory.create(projectPath, modelCache));
+        populateModuleDependencies(dependencies, visited, modelCache);
+        return createInstance(visited);
+    }
+
+    private void populateModuleDependencies(
+            @NonNull Dependencies dependencies,
+            @NonNull Set<String> visited,
+            @NonNull ModelCache modelCache) {
+        try {
+            for (Dependencies.ProjectIdentifier identifier : dependencies.getJavaModules()) {
+                createModuleLibrary(
+                        visited,
+                        identifier.getProjectPath(),
+                        computeAddress(identifier),
+                        modelCache,
+                        identifier.getBuildId());
+            }
+        } catch (UnsupportedOperationException ignored) {
+            // Dependencies::getJavaModules is available for AGP 3.1+. Use Dependencies::getProjects for the old plugins.
+            for (String projectPath : dependencies.getProjects()) {
+                createModuleLibrary(visited, projectPath, projectPath, modelCache, null);
             }
         }
-        return createInstance(visited);
+    }
+
+    private void createModuleLibrary(
+            @NonNull Set<String> visited,
+            @NonNull String projectPath,
+            @NonNull String artifactAddress,
+            @NonNull ModelCache modelCache,
+            @Nullable String buildId) {
+        if (!visited.contains(artifactAddress)) {
+            visited.add(artifactAddress);
+            myLibrariesById.computeIfAbsent(
+                    artifactAddress,
+                    id ->
+                            IdeLibraryFactory.create(
+                                    projectPath, artifactAddress, modelCache, buildId));
+        }
     }
 
     private void populateAndroidLibraries(

@@ -20,14 +20,16 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
+import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsResponse;
-import com.android.tools.profiler.proto.Profiler;
-import com.android.tools.profiler.proto.Profiler.BytesRequest;
+import com.android.tools.profiler.proto.Profiler.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -41,24 +43,41 @@ public class HttpUrlTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.network.HttpUrlActivity";
 
-    private boolean myIsOPlusDevice = true;
+    private boolean myIsOPlusDevice;
+    private PerfDriver myPerfDriver;
+    private GrpcUtils myGrpc;
+    private Session mySession;
 
     public HttpUrlTest(boolean isOPlusDevice) {
         myIsOPlusDevice = isOPlusDevice;
     }
 
+    @Before
+    public void setup() throws Exception {
+        myPerfDriver = new PerfDriver(myIsOPlusDevice);
+        myPerfDriver.start(ACTIVITY_CLASS);
+        myGrpc = myPerfDriver.getGrpc();
+
+        // Invoke beginSession to establish a session we can use to query data
+        BeginSessionResponse response =
+                myGrpc.getProfilerStub()
+                        .beginSession(
+                                BeginSessionRequest.newBuilder()
+                                        .setDeviceId(1234)
+                                        .setProcessId(myGrpc.getProcessId())
+                                        .build());
+        mySession = response.getSession();
+    }
+
     @Test
     public void testHttpGet() throws IOException {
-        PerfDriver driver = new PerfDriver(myIsOPlusDevice);
-        driver.start(ACTIVITY_CLASS);
         final String getSuccess = "HttpUrlGet SUCCESS";
-        driver.getFakeAndroidDriver().triggerMethod(ACTIVITY_CLASS, "runGet");
-        assertThat(driver.getFakeAndroidDriver().waitForInput(getSuccess)).isTrue();
+        myPerfDriver.getFakeAndroidDriver().triggerMethod(ACTIVITY_CLASS, "runGet");
+        assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(getSuccess)).isTrue();
 
-        GrpcUtils grpc = driver.getGrpc();
-        final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(grpc.getNetworkStub());
+        final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(grpc.getProcessId());
+                stubWrapper.getAllHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -73,23 +92,20 @@ public class HttpUrlTest {
 
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
-        Profiler.BytesResponse bytesResponse =
-                grpc.getProfilerStub().getBytes(BytesRequest.newBuilder().setId(payloadId).build());
+        BytesResponse bytesResponse =
+                myGrpc.getProfilerStub().getBytes(BytesRequest.newBuilder().setId(payloadId).build());
         assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo(getSuccess);
     }
 
     @Test
     public void testHttpPost() throws IOException {
-        PerfDriver driver = new PerfDriver(myIsOPlusDevice);
-        driver.start(ACTIVITY_CLASS);
         final String postSuccess = "HttpUrlPost SUCCESS";
-        driver.getFakeAndroidDriver().triggerMethod(ACTIVITY_CLASS, "runPost");
-        assertThat(driver.getFakeAndroidDriver().waitForInput(postSuccess)).isTrue();
+        myPerfDriver.getFakeAndroidDriver().triggerMethod(ACTIVITY_CLASS, "runPost");
+        assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(postSuccess)).isTrue();
 
-        GrpcUtils grpc = driver.getGrpc();
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(grpc.getNetworkStub());
+        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(grpc.getProcessId());
+                stubWrapper.getAllHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -98,8 +114,9 @@ public class HttpUrlTest {
 
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
-        Profiler.BytesResponse bytesResponse =
-                grpc.getProfilerStub().getBytes(BytesRequest.newBuilder().setId(payloadId).build());
+        BytesResponse bytesResponse =
+                myGrpc.getProfilerStub().getBytes(BytesRequest.newBuilder().setId(payloadId).build
+                        ());
         assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("TestRequestBody");
     }
 }

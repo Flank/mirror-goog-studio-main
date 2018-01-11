@@ -42,7 +42,6 @@ import com.android.resources.ResourceUrl;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -53,6 +52,7 @@ import com.android.tools.lint.detector.api.ResourceEvaluator;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.CharSequences;
 import com.google.common.base.Joiner;
@@ -104,7 +104,7 @@ import org.xmlpull.v1.XmlPullParserException;
  * check its name or class attributes to make sure the cast is compatible with
  * the named fragment class!
  */
-public class ViewTypeDetector extends ResourceXmlDetector implements UastScanner {
+public class ViewTypeDetector extends ResourceXmlDetector implements SourceCodeScanner {
     /** Mismatched view types */
     @SuppressWarnings("unchecked")
     public static final Issue WRONG_VIEW_CAST = Issue.create(
@@ -196,7 +196,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements UastScanner
         }
     }
 
-    // ---- Implements Detector.JavaScanner ----
+    // ---- Implements SourceCodeScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {

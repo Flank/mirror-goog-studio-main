@@ -98,10 +98,10 @@ public class CmakeJniLibTest {
     @Test
     public void checkModel() throws IOException {
         // Make sure we can successfully get AndroidProject
-        project.model().getMulti().getModelMap().get(":app");
+        project.model().fetchAndroidProjects().getOnlyModelMap().get(":app");
 
         NativeAndroidProject model =
-                project.model().getMulti(NativeAndroidProject.class).get(":lib");
+                project.model().fetchMulti(NativeAndroidProject.class).get(":lib");
         assertThat(model).isNotNull();
         assertThat(model.getBuildFiles()).hasSize(1);
         assertThat(model.getName()).isEqualTo("lib");

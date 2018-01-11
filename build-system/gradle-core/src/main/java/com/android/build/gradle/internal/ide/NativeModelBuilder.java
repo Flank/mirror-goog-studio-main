@@ -22,7 +22,8 @@ import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.builder.model.NativeAndroidProject;
-import com.google.gson.stream.JsonReader;
+import com.android.builder.profile.ProcessProfileWriter;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.IOException;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
@@ -56,10 +57,26 @@ public class NativeModelBuilder implements ToolingModelBuilder {
                 continue;
             }
             builder.addBuildSystem(generator.getNativeBuildSystem().getName());
+            GradleBuildVariant.Builder stats =
+                    ProcessProfileWriter.getOrCreateVariant(
+                            project.getPath(), scope.getFullVariantName());
+            GradleBuildVariant.NativeBuildConfigInfo.Builder config =
+                    GradleBuildVariant.NativeBuildConfigInfo.newBuilder();
+
+            if (stats.getNativeBuildConfigCount() == 0) {
+                // Do not include stats if they were gathered during build.
+                stats.addNativeBuildConfig(config);
+            }
+
             try {
-                for (JsonReader stream : generator.streamExistingNativeBuildConfigurations()) {
-                    builder.addJson(stream, generator.getVariantName());
-                }
+                generator.forEachNativeBuildConfiguration(
+                        jsonReader -> {
+                            try {
+                                builder.addJson(jsonReader, generator.getVariantName(), config);
+                            } catch (IOException e) {
+                                throw new RuntimeException("Failed to read native JSON data", e);
+                            }
+                        });
             } catch (IOException e) {
                 throw new RuntimeException("Failed to read native JSON data", e);
             }

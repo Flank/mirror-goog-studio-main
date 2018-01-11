@@ -16,39 +16,26 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.builder.internal.aapt.Aapt
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.ide.common.res2.CompileResourceRequest
+import com.android.repository.Revision
+import org.gradle.api.logging.Logging
 import java.io.File
 import java.io.Serializable
-import java.nio.file.Files
 import javax.inject.Inject
 
-class AaptCompileRunnable @Inject constructor(
+class Aapt2CompileRunnable @Inject constructor(
         private val params: Params) : Runnable {
+
     override fun run() {
-        val aapt = params.aapt.invoke()
-        val runningRequests = params.requests.map { aapt.compile(it) }
-
-        for (toDelete in params.toDelete) {
-            Files.delete(aapt.compileOutputFor(CompileResourceRequest(
-                    inputFile = toDelete,
-                    outputDirectory = params.outputDirectory)).toPath())
-        }
-
-        for (request in runningRequests) {
-            val output =
-                    request.get() ?:
-                            throw IllegalStateException("AAPT2 compiles all file types, " +
-                                    "requests should never return null")
-            if (!output.isFile) {
-                throw IllegalStateException("Output file not created $output")
-            }
+        val logger = LoggerWrapper(Logging.getLogger(this::class.java))
+        useAaptDaemon(params.revision) { daemon ->
+            params.requests.forEach { daemon.compile(it, logger) }
         }
     }
 
     class Params(
-            val aapt: () -> Aapt,
+            val revision: Revision,
             val requests: List<CompileResourceRequest>,
-            val toDelete: List<File>,
             val outputDirectory: File) : Serializable
 }

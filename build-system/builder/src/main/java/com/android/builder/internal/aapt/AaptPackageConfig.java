@@ -173,6 +173,10 @@ public class AaptPackageConfig implements Cloneable {
     /** The dependent APKs to link against */
     private ImmutableList<File> staticLibraryDependencies;
 
+    @Nullable
+    /** The intermediate directory to use */
+    private File mIntermediateDir;
+
     /** Creates a new instance of the the package configuration with default values. */
     private AaptPackageConfig() {
         librarySymbolTableFiles = ImmutableSet.of();
@@ -441,6 +445,11 @@ public class AaptPackageConfig implements Cloneable {
         return staticLibraryDependencies;
     }
 
+    @Nullable
+    public File getIntermediateDir() {
+        return mIntermediateDir;
+    }
+
     /** Builder used to create a {@link AaptPackageConfig}. */
     public static class Builder {
 
@@ -457,6 +466,14 @@ public class AaptPackageConfig implements Cloneable {
             mConfig = new AaptPackageConfig();
         }
 
+        /**
+         * Builder initialized with existing config values.
+         *
+         * @param config existing config to clone values from.
+         */
+        public Builder(@NonNull AaptPackageConfig config) {
+            mConfig = config.clone();
+        }
         /**
          * Creates a new {@link AaptPackageConfig} from the data already placed in the builder.
          *
@@ -829,6 +846,11 @@ public class AaptPackageConfig implements Cloneable {
 
         public Builder generateProtos(boolean value) {
             mConfig.generateProtos = value;
+            return this;
+        }
+
+        public Builder setIntermediateDir(File intermediateDir) {
+            mConfig.mIntermediateDir = intermediateDir;
             return this;
         }
     }

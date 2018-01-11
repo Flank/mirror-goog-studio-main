@@ -12,6 +12,7 @@ TEST_DEPS = [
     "//tools/base/build-system/builder-test-api:tools.builder-test-api",
     "//tools/base/build-system/builder",
     "//tools/base/build-system/builder-model",
+    "//tools/base/build-system/gradle",
     "//tools/base/build-system/gradle-api",
     "//tools/base/build-system/gradle-core",
     "//tools/base/build-system/java-lib-plugin/java-lib-model",
@@ -71,7 +72,6 @@ gradle_integration_test(
         ],
         exclude = [
             "src/test/java/**/CheckAll*",
-            "src/test/java/**/performance/**",
         ],
     ),
     data = TEST_DATA + [

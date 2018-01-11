@@ -39,12 +39,12 @@ import com.android.tools.lint.checks.PermissionRequirement.VALUE_DANGEROUS
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
-import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.utils.XmlUtils
 import com.google.common.collect.Sets
 import com.intellij.psi.PsiClassType
@@ -62,7 +62,7 @@ import org.jetbrains.uast.util.isMethodCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 import java.util.Arrays
 
-class PermissionDetector : AbstractAnnotationDetector(), Detector.UastScanner {
+class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
             PERMISSION_ANNOTATION,
             PERMISSION_ANNOTATION_READ,

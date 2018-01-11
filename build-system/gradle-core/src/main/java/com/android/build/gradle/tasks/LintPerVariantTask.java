@@ -91,9 +91,10 @@ public class LintPerVariantTask extends LintBaseTask {
             lint.variantInputs = new VariantInputs(scope);
 
             lint.setDescription(
-                    "Runs lint on the "
-                            + StringHelper.capitalize(scope.getVariantConfiguration().getFullName())
-                            + " build.");
+                    StringHelper.appendCapitalized(
+                            "Runs lint on the ",
+                            scope.getVariantConfiguration().getFullName(),
+                            " build."));
         }
     }
 

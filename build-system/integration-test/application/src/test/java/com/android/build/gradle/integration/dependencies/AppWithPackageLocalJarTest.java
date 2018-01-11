@@ -19,10 +19,10 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -45,18 +45,23 @@ public class AppWithPackageLocalJarTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        TestFileUtils.appendToFile(project.getBuildFile(),
-                "\n" +
-                "apply plugin: \"com.android.application\"\n" +
-                "\n" +
-                "android {\n" +
-                "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
-                "    buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n" +
-                "}\n" +
-                "\n" +
-                "dependencies {\n" +
-                "    apk files(\"libs/util-1.0.jar\")\n" +
-                "}\n");
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.application\"\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    runtimeOnly files(\"libs/util-1.0.jar\")\n"
+                        + "}\n");
 
         model = project.executeAndReturnModel("clean", "assembleDebug");
     }
@@ -75,7 +80,7 @@ public class AppWithPackageLocalJarTest {
 
     @Test
     public void checkPackagedLocalJarIsNotIntheModel() throws Exception {
-        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
+        Variant variant = AndroidProjectUtils.getVariantByName(model.getOnlyModel(), "debug");
 
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 

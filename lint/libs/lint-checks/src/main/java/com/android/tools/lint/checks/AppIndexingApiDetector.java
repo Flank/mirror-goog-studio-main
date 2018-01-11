@@ -32,15 +32,15 @@ import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
-import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -65,7 +65,7 @@ import org.w3c.dom.Element;
 /**
  * Check if the usage of App Indexing is correct.
  */
-public class AppIndexingApiDetector extends Detector implements XmlScanner, UastScanner {
+public class AppIndexingApiDetector extends Detector implements XmlScanner, SourceCodeScanner {
 
     private static final Implementation URL_IMPLEMENTATION = new Implementation(
             AppIndexingApiDetector.class, Scope.MANIFEST_SCOPE);

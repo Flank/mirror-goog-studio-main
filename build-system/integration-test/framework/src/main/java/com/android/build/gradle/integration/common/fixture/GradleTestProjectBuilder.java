@@ -44,6 +44,7 @@ public final class GradleTestProjectBuilder {
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
     @Nullable private String heapSize;
     @Nullable private Path profileDirectory;
+    @Nullable private File testDir = null;
     private boolean withDependencyChecker = true;
     // Indicates if we need to create a project without setting cmake.dir in local.properties.
     private boolean withCmakeDirInLocalProp = false;
@@ -73,7 +74,8 @@ public final class GradleTestProjectBuilder {
                 withCmakeDirInLocalProp,
                 withDeviceProvider,
                 withSdk,
-                withAndroidGradlePlugin);
+                withAndroidGradlePlugin,
+                testDir);
     }
 
     /**
@@ -104,6 +106,11 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder withAndroidGradlePlugin(boolean withAndroidGradlePlugin) {
         this.withAndroidGradlePlugin = withAndroidGradlePlugin;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withTestDir(File testDir) {
+        this.testDir = testDir;
         return this;
     }
 

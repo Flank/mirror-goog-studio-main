@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import java.util.Collection;
 import java.util.Collections;
 import org.w3c.dom.Attr;
@@ -35,7 +36,7 @@ import org.w3c.dom.Attr;
 /**
  * Checks if signatureOrSystem level permissions are set.
  */
-public class SignatureOrSystemDetector extends Detector implements Detector.XmlScanner {
+public class SignatureOrSystemDetector extends Detector implements XmlScanner {
     public static final Issue ISSUE = Issue.create(
             "SignatureOrSystemPermissions",
             "signatureOrSystem permissions declared",
@@ -54,7 +55,7 @@ public class SignatureOrSystemDetector extends Detector implements Detector.XmlS
             ));
     private static final String SIGNATURE_OR_SYSTEM = "signatureOrSystem";
 
-    // ---- Implements Detector.XmlScanner ----
+    // ---- Implements XmlScanner ----
 
     @Override
     public Collection<String> getApplicableAttributes() {

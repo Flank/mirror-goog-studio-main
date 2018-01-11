@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.Dependencies;
+import com.android.builder.model.Dependencies.ProjectIdentifier;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.level2.Library;
@@ -148,12 +149,42 @@ public class IdeDependenciesFactoryTest {
                     }
                 };
 
+        ProjectIdentifier identifier1 =
+                new ProjectIdentifier() {
+                    @NonNull
+                    @Override
+                    public String getBuildId() {
+                        return "/root/project1";
+                    }
+
+                    @NonNull
+                    @Override
+                    public String getProjectPath() {
+                        return ":";
+                    }
+                };
+
+        ProjectIdentifier identifier2 =
+                new ProjectIdentifier() {
+                    @NonNull
+                    @Override
+                    public String getBuildId() {
+                        return "/root/project2";
+                    }
+
+                    @NonNull
+                    @Override
+                    public String getProjectPath() {
+                        return ":";
+                    }
+                };
+
         DependenciesStub dependenciesStub =
                 new DependenciesStub(
                         Collections.emptyList(),
                         Collections.singletonList(javaLibraryB),
-                        Lists.newArrayList("project1", "project2"),
-                        Collections.emptyList());
+                        Collections.emptyList(),
+                        Lists.newArrayList(identifier1, identifier2));
 
         BaseArtifactStub baseArtifactStub =
                 new BaseArtifactStub() {
@@ -185,6 +216,6 @@ public class IdeDependenciesFactoryTest {
                                 .stream()
                                 .map(Library::getArtifactAddress)
                                 .collect(Collectors.toList()))
-                .containsExactly("project1", "project2");
+                .containsExactly("/root/project1@@:", "/root/project2@@:");
     }
 }

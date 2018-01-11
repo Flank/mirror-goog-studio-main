@@ -42,6 +42,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
@@ -60,7 +61,7 @@ import org.w3c.dom.Node;
 /**
  * Detects various issues for Android TV.
  */
-public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
+public class AndroidTvDetector extends Detector implements XmlScanner {
     private static final Implementation IMPLEMENTATION = new Implementation(
             AndroidTvDetector.class,
             Scope.MANIFEST_SCOPE

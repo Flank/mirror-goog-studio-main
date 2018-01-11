@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
@@ -77,7 +77,9 @@ public class JarJarLibTest {
 
         ProjectBuildOutput outputModel =
                 project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
-        VariantBuildOutput debugBuildOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
+
+        VariantBuildOutput debugBuildOutput =
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
         assertEquals(1, debugBuildOutput.getOutputs().size());
 
         // make sure the Gson library has been renamed and the original one is not present.
@@ -115,7 +117,8 @@ public class JarJarLibTest {
                         + "    registerTransform(new com.android.test.jarjar.JarJarTransform(true /*broken transform*/))\n"
                         + "}\n");
 
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+        AndroidProject model =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
 
         Collection<SyncIssue> issues = model.getSyncIssues();
         assertThat(issues).hasSize(2);

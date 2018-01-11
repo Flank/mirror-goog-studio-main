@@ -19,13 +19,13 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
-import com.android.tools.lint.detector.api.Detector.UastScanner
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiKeyword
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
@@ -41,7 +41,7 @@ import org.jetbrains.uast.java.JavaUAssertExpression
  * Looks for assertion usages.
  */
 /** Constructs a new [AssertDetector] check  */
-class AssertDetector : Detector(), UastScanner {
+class AssertDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         /** Using assertions  */
         @JvmField val ISSUE = Issue.create(

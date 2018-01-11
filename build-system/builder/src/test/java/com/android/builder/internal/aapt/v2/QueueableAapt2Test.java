@@ -67,7 +67,6 @@ public class QueueableAapt2Test {
         return new QueueableAapt2(
                 new LoggedProcessOutputHandler(logger),
                 daemonBuildToolInfo,
-                mTemporaryFolder.newFolder(),
                 logger,
                 5);
     }
@@ -102,7 +101,6 @@ public class QueueableAapt2Test {
                 new QueueableAapt2(
                         new LoggedProcessOutputHandler(logger),
                         notValidAapt2Executable,
-                        mTemporaryFolder.newFolder(),
                         logger,
                         5)) {
             aapt.compile(

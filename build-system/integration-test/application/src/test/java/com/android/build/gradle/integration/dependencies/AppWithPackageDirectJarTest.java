@@ -22,10 +22,10 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -51,13 +51,11 @@ public class AppWithPackageDirectJarTest {
     public static void setUp() throws Exception {
         Files.write("include 'app', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    apk project(\":jar\")\n" +
-                "}\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n" + "dependencies {\n" + "    runtimeOnly project(\":jar\")\n" + "}\n");
         project.execute("clean", ":app:assembleDebug");
-        modelContainer = project.model().withFullDependencies().getMulti();
+        modelContainer = project.model().withFullDependencies().fetchAndroidProjects();
     }
 
     @AfterClass
@@ -74,8 +72,9 @@ public class AppWithPackageDirectJarTest {
 
     @Test
     public void checkPackagedJarIsNotInTheCompileModel() throws Exception {
-        Variant variant = ModelHelper.getVariant(
-                modelContainer.getModelMap().get(":app").getVariants(), "debug");
+        Variant variant =
+                AndroidProjectUtils.getVariantByName(
+                        modelContainer.getOnlyModelMap().get(":app"), "debug");
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
         DependencyGraphs compileGraph = variant.getMainArtifact().getDependencyGraphs();
@@ -89,8 +88,9 @@ public class AppWithPackageDirectJarTest {
 
     @Test
     public void checkPackagedJarIsInThePackageModel() throws Exception {
-        Variant variant = ModelHelper.getVariant(
-                modelContainer.getModelMap().get(":app").getVariants(), "debug");
+        Variant variant =
+                AndroidProjectUtils.getVariantByName(
+                        modelContainer.getOnlyModelMap().get(":app"), "debug");
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
         DependencyGraphs dependencyGraph = variant.getMainArtifact().getDependencyGraphs();

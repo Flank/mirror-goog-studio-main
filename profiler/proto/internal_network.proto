@@ -34,7 +34,7 @@ service InternalNetworkService {
 // associated with this connection.
 message HttpDataRequest {
   int64 conn_id = 1;
-  int32 process_id = 2;
+  int32 pid = 2;
   string url = 3;
   string trace = 4;
   int64 start_timestamp = 5;

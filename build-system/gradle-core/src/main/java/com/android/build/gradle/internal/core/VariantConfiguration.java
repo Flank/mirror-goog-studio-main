@@ -263,7 +263,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         if (!flavorName.isEmpty()) {
             sb.append(flavorName);
-            sb.append(StringHelper.capitalize(buildType.getName()));
+            StringHelper.appendCapitalized(sb, buildType.getName());
         } else {
             sb.append(buildType.getName());
         }
@@ -292,12 +292,12 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         String flavorName = getFlavorName();
         if (!flavorName.isEmpty()) {
             sb.append(flavorName);
-            sb.append(StringHelper.capitalize(splitName));
+            StringHelper.appendCapitalized(sb, splitName);
         } else {
             sb.append(splitName);
         }
 
-        sb.append(StringHelper.capitalize(mBuildType.getName()));
+        StringHelper.appendCapitalized(sb, mBuildType.getName());
 
         if (mType.isForTesting()) {
             sb.append(mType.getSuffix());
@@ -334,14 +334,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         if (flavors.isEmpty()) {
             return "";
         } else {
-            StringBuilder sb = new StringBuilder(flavors.size() * 10);
-            boolean first = true;
-            for (F flavor : flavors) {
-                sb.append(first ? flavor.getName() : StringHelper.capitalize(flavor.getName()));
-                first = false;
-            }
-
-            return sb.toString();
+            return StringHelper.combineAsCamelCase(flavors, F::getName);
         }
     }
 
@@ -410,7 +403,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public String getDirName() {
         if (mDirName == null) {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder(mFlavors.size() * 20 + 100);
             if (mType == VariantType.FEATURE) {
                 sb.append("feature/");
             }
@@ -420,12 +413,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             }
 
             if (!mFlavors.isEmpty()) {
-                boolean first = true;
-                for (F flavor : mFlavors) {
-                    sb.append(first ? flavor.getName() : StringHelper.capitalize(flavor.getName()));
-                    first = false;
-                }
-
+                StringHelper.combineAsCamelCase(sb, mFlavors, F::getName);
                 sb.append('/').append(mBuildType.getName());
 
             } else {

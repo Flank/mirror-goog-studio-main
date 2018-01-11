@@ -119,7 +119,9 @@ open class LinkAndroidResForBundleTask : AndroidBuilderTask() {
                         .setPseudoLocalize(getPseudoLocalesEnabled())
                         .setResourceDir(checkNotNull(getInputResourcesDir()).singleFile)
 
-                builder.processResources(makeAapt(), config)
+                makeAapt().use { aapt ->
+                    builder.processResources(aapt, config)
+                }
 
                 if (logger.isInfoEnabled) {
                     logger.info("Aapt output file {}", bundledResFile.absolutePath)
@@ -153,7 +155,6 @@ open class LinkAndroidResForBundleTask : AndroidBuilderTask() {
                 aaptGeneration!!,
                 builder,
                 processOutputHandler,
-                null /* file cache not needed for AAPT_V@_DAEMON*/,
                 true,
                 FileUtils.mkdirs(File(incrementalFolder, "aapt-temp")),
                 aaptOptions.cruncherProcesses)

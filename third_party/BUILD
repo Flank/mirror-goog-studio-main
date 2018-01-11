@@ -243,6 +243,55 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "com.sun.activation_javax.activation",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/activation/javax.activation/1.2.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "com.sun.istack_istack-commons-runtime",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/istack/istack-commons-runtime/2.21:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "com.sun.istack_istack-commons-tools",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/istack/istack-commons-tools/2.21:jar",
+    visibility = ["//visibility:public"],
+    exports = [":org.apache.ant_ant"],
+)
+
+maven_java_library(
+    name = "com.sun.xml.bind.external_rngom",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/bind/external/rngom/2.2.11:jar",
+    visibility = ["//visibility:public"],
+    exports = [":relaxngDatatype_relaxngDatatype"],
+)
+
+maven_java_library(
+    name = "com.sun.xml.dtd-parser_dtd-parser",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/dtd-parser/dtd-parser/1.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "com.sun.xml.fastinfoset_FastInfoset",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/fastinfoset/FastInfoset/1.2.13:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "com.sun.xsom_xsom",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xsom/xsom/20140925:jar",
+    visibility = ["//visibility:public"],
+    exports = [":relaxngDatatype_relaxngDatatype"],
+)
+
+maven_java_library(
     name = "commons-codec_commons-codec",
     export_artifact = "//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.6:jar",
     visibility = ["//visibility:public"],
@@ -451,6 +500,13 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "javax.xml.bind_jaxb-api",
+    export_artifact = "//prebuilts/tools/common/m2/repository/javax/xml/bind/jaxb-api/2.2.12-b140109.1041:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "junit_junit",
     export_artifact = "//prebuilts/tools/common/m2/repository/junit/junit/4.12:jar",
     visibility = ["//visibility:public"],
@@ -533,6 +589,20 @@ maven_java_library(
 maven_java_library(
     name = "org.antlr_antlr4",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/antlr/antlr4/4.5.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "org.apache.ant_ant",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/ant/ant/1.7.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [":org.apache.ant_ant-launcher"],
+)
+
+maven_java_library(
+    name = "org.apache.ant_ant-launcher",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/ant/ant-launcher/1.7.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -784,6 +854,64 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "org.glassfish.jaxb_codemodel",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/codemodel/2.2.11:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "org.glassfish.jaxb_jaxb-core",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-core/2.2.11:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.sun.istack_istack-commons-runtime",
+        ":javax.xml.bind_jaxb-api",
+        ":org.glassfish.jaxb_txw2",
+    ],
+)
+
+maven_java_library(
+    name = "org.glassfish.jaxb_jaxb-runtime",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-runtime/2.2.11:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.sun.xml.fastinfoset_FastInfoset",
+        ":org.glassfish.jaxb_jaxb-core",
+        ":org.jvnet.staxex_stax-ex",
+    ],
+)
+
+maven_java_library(
+    name = "org.glassfish.jaxb_jaxb-xjc",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-xjc/2.2.11:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.sun.istack_istack-commons-tools",
+        ":com.sun.xml.bind.external_rngom",
+        ":com.sun.xml.dtd-parser_dtd-parser",
+        ":com.sun.xsom_xsom",
+        ":org.glassfish.jaxb_codemodel",
+        ":org.glassfish.jaxb_jaxb-core",
+    ],
+)
+
+maven_java_library(
+    name = "org.glassfish.jaxb_txw2",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/txw2/2.2.11:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "org.gradle_gradle-tooling-api",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/4.4:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+    runtime_deps = [":org.slf4j_slf4j-api"],
+)
+
+maven_java_library(
     name = "org.hamcrest_hamcrest-core",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
     visibility = ["//visibility:public"],
@@ -954,6 +1082,13 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "org.jvnet.staxex_stax-ex",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jvnet/staxex/stax-ex/1.7.7:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "org.mockito_mockito-core",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/2.7.1:jar",
     visibility = ["//visibility:public"],
@@ -1016,7 +1151,7 @@ maven_java_library(
 
 maven_java_library(
     name = "org.slf4j_slf4j-api",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.6.2:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.10:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1053,4 +1188,11 @@ maven_java_library(
         ":com.google.code.findbugs_jsr305",
         ":com.google.guava_guava",
     ],
+)
+
+maven_java_library(
+    name = "relaxngDatatype_relaxngDatatype",
+    export_artifact = "//prebuilts/tools/common/m2/repository/relaxngDatatype/relaxngDatatype/20020414:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
 )

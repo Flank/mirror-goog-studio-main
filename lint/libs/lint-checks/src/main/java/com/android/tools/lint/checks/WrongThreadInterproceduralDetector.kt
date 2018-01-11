@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.interprocedural.CallGraph
 import com.android.tools.lint.detector.api.interprocedural.CallGraphResult
 import com.android.tools.lint.detector.api.interprocedural.CallTarget
@@ -111,7 +112,7 @@ fun searchForInterproceduralThreadAnnotationViolations( // public because access
     return uiPaths + workerPaths
 }
 
-class WrongThreadInterproceduralDetector : Detector(), Detector.UastScanner {
+class WrongThreadInterproceduralDetector : Detector(), SourceCodeScanner {
     override fun isCallGraphRequired(): Boolean = true
 
     override fun analyzeCallGraph(context: Context, callGraph: CallGraphResult) {

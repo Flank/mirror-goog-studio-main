@@ -21,11 +21,10 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
-import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptException;
-import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.ide.common.res2.FileStatus;
+import com.android.ide.common.res2.QueueableResourceCompiler;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
@@ -44,7 +43,7 @@ import org.junit.rules.TemporaryFolder;
  */
 public class VerifyLibraryResourcesTaskTest {
 
-    private static class FakeAapt implements Aapt {
+    private static class FakeAapt implements QueueableResourceCompiler {
 
         @NonNull
         @Override
@@ -63,11 +62,6 @@ public class VerifyLibraryResourcesTaskTest {
             return new File(request.getOutputDirectory(), request.getInputFile().getName() + "-c");
         }
 
-        @NonNull
-        @Override
-        public ListenableFuture<Void> link(@NonNull AaptPackageConfig config) throws AaptException {
-            return null;
-        }
     }
 
     /** Temporary folder to use in tests. */
@@ -91,7 +85,7 @@ public class VerifyLibraryResourcesTaskTest {
         inputs.put(directory, FileStatus.NEW);
 
         File outputDir = mTemporaryFolder.newFolder("output");
-        Aapt aapt = new FakeAapt();
+        QueueableResourceCompiler aapt = new FakeAapt();
 
         VerifyLibraryResourcesTask.compileResources(inputs, outputDir, aapt, mergedDir);
 

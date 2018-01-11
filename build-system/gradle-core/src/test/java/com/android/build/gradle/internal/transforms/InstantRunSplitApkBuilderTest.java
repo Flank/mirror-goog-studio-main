@@ -35,7 +35,6 @@ import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.sdk.TargetInfo;
-import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkInfo;
 import com.android.sdklib.BuildToolInfo;
 import com.google.common.base.Charsets;
@@ -79,10 +78,8 @@ public class InstantRunSplitApkBuilderTest {
 
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder supportDirectory = new TemporaryFolder();
-    @Rule public TemporaryFolder fileCacheDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder apkListDirectory = new TemporaryFolder();
 
-    FileCache fileCache;
     InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder;
     File instantRunFolder;
     File aaptTempFolder;
@@ -103,14 +100,12 @@ public class InstantRunSplitApkBuilderTest {
 
         instantRunFolder = supportDirectory.newFolder("instant-run");
         aaptTempFolder = supportDirectory.newFolder("aapt-temp");
-        fileCache = FileCache.getInstanceWithSingleProcessLocking(fileCacheDirectory.getRoot());
         instantRunSliceSplitApkBuilder =
                 new InstantRunSliceSplitApkBuilder(
                         logger,
                         project,
                         buildContext,
                         androidBuilder,
-                        fileCache,
                         "com.foo.test",
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_DAEMON_MODE,
@@ -233,7 +228,6 @@ public class InstantRunSplitApkBuilderTest {
                         project,
                         buildContext,
                         androidBuilder,
-                        fileCache,
                         "com.foo.test",
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_DAEMON_MODE,

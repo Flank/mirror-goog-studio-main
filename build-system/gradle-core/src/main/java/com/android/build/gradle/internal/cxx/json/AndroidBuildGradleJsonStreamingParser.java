@@ -26,12 +26,15 @@ import java.io.IOException;
  * General purpose parser for android_build_gradle.json file. This parser is streaming so that the
  * entire Json file is never held in memory all at once.
  */
-public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable {
+public class AndroidBuildGradleJsonStreamingParser implements Closeable {
 
     @NonNull private final JsonReader reader;
+    @NonNull private final AndroidBuildGradleJsonStreamingVisitor visitor;
 
-    protected AndroidBuildGradleJsonStreamingParser(@NonNull JsonReader reader) {
+    public AndroidBuildGradleJsonStreamingParser(
+            @NonNull JsonReader reader, @NonNull AndroidBuildGradleJsonStreamingVisitor visitor) {
         this.reader = reader;
+        this.visitor = visitor;
     }
 
     /** Main entry point to the streaming parser. */
@@ -130,25 +133,25 @@ public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable
             String name = reader.nextName();
             switch (name) {
                 case "abi":
-                    visitLibraryAbi(reader.nextString());
+                    visitor.visitLibraryAbi(reader.nextString());
                     break;
                 case "artifactName":
-                    visitLibraryArtifactName(reader.nextString());
+                    visitor.visitLibraryArtifactName(reader.nextString());
                     break;
                 case "buildCommand":
-                    visitLibraryBuildCommand(reader.nextString());
+                    visitor.visitLibraryBuildCommand(reader.nextString());
                     break;
                 case "buildType":
-                    visitLibraryBuildType(reader.nextString());
+                    visitor.visitLibraryBuildType(reader.nextString());
                     break;
                 case "output":
-                    visitLibraryOutput(reader.nextString());
+                    visitor.visitLibraryOutput(reader.nextString());
                     break;
                 case "toolchain":
-                    visitLibraryToolchain(reader.nextString());
+                    visitor.visitLibraryToolchain(reader.nextString());
                     break;
                 case "groupName":
-                    visitLibraryGroupName(reader.nextString());
+                    visitor.visitLibraryGroupName(reader.nextString());
                     break;
                 case "files":
                     parseLibraryFiles();
@@ -170,10 +173,10 @@ public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable
             String name = reader.nextName();
             switch (name) {
                 case "cCompilerExecutable":
-                    visitToolchainCCompilerExecutable(reader.nextString());
+                    visitor.visitToolchainCCompilerExecutable(reader.nextString());
                     break;
                 case "cppCompilerExecutable":
-                    visitToolchainCppCompilerExecutable(reader.nextString());
+                    visitor.visitToolchainCppCompilerExecutable(reader.nextString());
                     break;
                 default:
                     parseUnknown();
@@ -189,13 +192,13 @@ public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable
             String name = reader.nextName();
             switch (name) {
                 case "flags":
-                    visitLibraryFileFlags(reader.nextString());
+                    visitor.visitLibraryFileFlags(reader.nextString());
                     break;
                 case "src":
-                    visitLibraryFileSrc(reader.nextString());
+                    visitor.visitLibraryFileSrc(reader.nextString());
                     break;
                 case "workingDirectory":
-                    visitLibraryFileWorkingDirectory(reader.nextString());
+                    visitor.visitLibraryFileWorkingDirectory(reader.nextString());
                     break;
                 default:
                     parseUnknown();
@@ -211,14 +214,14 @@ public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable
             JsonToken peek = reader.peek();
             switch (reader.peek()) {
                 case STRING:
-                    visitBuildFile(reader.nextString());
+                    visitor.visitBuildFile(reader.nextString());
                     break;
                 case BEGIN_OBJECT:
                     reader.beginObject();
                     String name = reader.nextName();
                     switch (name) {
                         case "path":
-                            visitBuildFile(reader.nextString());
+                            visitor.visitBuildFile(reader.nextString());
                             break;
                         default:
                             parseUnknown();
@@ -238,7 +241,7 @@ public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable
         reader.beginArray();
         while (reader.hasNext()) {
             String value = reader.nextString();
-            visitCleanCommands(value);
+            visitor.visitCleanCommands(value);
         }
         reader.endArray();
     }
@@ -247,7 +250,7 @@ public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable
         reader.beginArray();
         while (reader.hasNext()) {
             String value = reader.nextString();
-            visitCFileExtensions(value);
+            visitor.visitCFileExtensions(value);
         }
         reader.endArray();
     }
@@ -256,7 +259,7 @@ public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable
         reader.beginArray();
         while (reader.hasNext()) {
             String value = reader.nextString();
-            visitCppFileExtensions(value);
+            visitor.visitCppFileExtensions(value);
         }
         reader.endArray();
     }
@@ -265,9 +268,9 @@ public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable
         reader.beginObject();
         while (reader.hasNext()) {
             String name = reader.nextName();
-            beginLibrary(name);
+            visitor.beginLibrary(name);
             parseLibraryObject();
-            endLibrary();
+            visitor.endLibrary();
         }
         reader.endObject();
     }
@@ -276,9 +279,9 @@ public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable
         reader.beginObject();
         while (reader.hasNext()) {
             String name = reader.nextName();
-            beginToolchain(name);
+            visitor.beginToolchain(name);
             parseToolchainObject();
-            endToolchain();
+            visitor.endToolchain();
         }
         reader.endObject();
     }
@@ -286,9 +289,9 @@ public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable
     private void parseLibraryFiles() throws IOException {
         reader.beginArray();
         while (reader.hasNext()) {
-            beginLibraryFile();
+            visitor.beginLibraryFile();
             parseLibraryFileObject();
-            endLibraryFile();
+            visitor.endLibraryFile();
         }
         reader.endArray();
     }
@@ -296,56 +299,10 @@ public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable
     private void parseLibraryRuntimeFiles() throws IOException {
         reader.beginArray();
         while (reader.hasNext()) {
-            visitLibraryRuntimeFile(reader.nextString());
+            visitor.visitLibraryRuntimeFile(reader.nextString());
         }
         reader.endArray();
     }
-
-    protected void beginLibrary(@NonNull String libraryName) {}
-
-    protected void endLibrary() {}
-
-    protected void beginLibraryFile() {}
-
-    protected void endLibraryFile() {}
-
-    protected void beginToolchain(@NonNull String toolchain) {}
-
-    protected void endToolchain() {}
-
-    protected void visitBuildFile(@NonNull String buildFile) {}
-
-    protected void visitLibraryAbi(@NonNull String abi) {}
-
-    protected void visitLibraryArtifactName(@NonNull String artifact) {}
-
-    protected void visitLibraryBuildCommand(@NonNull String buildCommand) {}
-
-    protected void visitLibraryBuildType(@NonNull String buildCommand) {}
-
-    protected void visitLibraryOutput(@NonNull String output) {}
-
-    protected void visitLibraryToolchain(@NonNull String toolchain) {}
-
-    protected void visitLibraryGroupName(@NonNull String groupName) {}
-
-    protected void visitToolchainCCompilerExecutable(@NonNull String executable) {}
-
-    protected void visitToolchainCppCompilerExecutable(@NonNull String executable) {}
-
-    protected void visitLibraryFileFlags(@NonNull String flags) {}
-
-    protected void visitLibraryFileSrc(@NonNull String src) {}
-
-    protected void visitLibraryFileWorkingDirectory(@NonNull String workingDirectory) {}
-
-    protected void visitCleanCommands(@NonNull String cleanCommand) {}
-
-    protected void visitCFileExtensions(@NonNull String buildFile) {}
-
-    protected void visitCppFileExtensions(@NonNull String buildFile) {}
-
-    protected void visitLibraryRuntimeFile(@NonNull String runtimeFile) {}
 
     @Override
     public void close() throws IOException {

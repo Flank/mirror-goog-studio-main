@@ -19,10 +19,8 @@ package com.android.build.gradle.integration.common.fixture;
 import com.android.annotations.NonNull;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.utils.Pair;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +35,7 @@ import org.gradle.tooling.model.gradle.GradleBuild;
 /**
  * a Build Action that returns all the models of the parameterized type for all the Gradle projects
  */
-public class GetAndroidModelAction<T> implements BuildAction<GetAndroidModelAction.ModelContainer<T>> {
+public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> {
 
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
 
@@ -45,57 +43,6 @@ public class GetAndroidModelAction<T> implements BuildAction<GetAndroidModelActi
 
     // Determines whether models are fetched with multiple threads.
     private final boolean isMultiThreaded;
-
-    public static final class ModelContainer<T> implements Serializable {
-        private static final long serialVersionUID = 1L;
-
-        @NonNull private final BuildIdentifier rootBuild;
-        @NonNull private final Map<BuildIdentifier, Map<String, T>> modelMap;
-        @NonNull private final GlobalLibraryMap globalLibraryMap;
-
-        public ModelContainer(
-                @NonNull BuildIdentifier rootBuild,
-                @NonNull Map<BuildIdentifier, Map<String, T>> modelMap,
-                @NonNull GlobalLibraryMap globalLibraryMap) {
-            this.rootBuild = rootBuild;
-            this.modelMap = modelMap;
-            this.globalLibraryMap = globalLibraryMap;
-        }
-
-        /** Returns the model map for the root build @Deprecated Use */
-        @Deprecated
-        @NonNull
-        public Map<String, T> getModelMap() {
-            if (modelMap.keySet().size() > 1) {
-                throw new RuntimeException("Can't call getModelMap with included builds");
-            }
-
-            return getRootBuildModelMap();
-        }
-
-        @NonNull
-        public Map<String, T> getRootBuildModelMap() {
-            return modelMap.get(rootBuild);
-        }
-
-        @NonNull
-        public Map<BuildIdentifier, Map<String, T>> getModelMaps() {
-            return modelMap;
-        }
-
-        @NonNull
-        public GlobalLibraryMap getGlobalLibraryMap() {
-            return globalLibraryMap;
-        }
-
-        @NonNull
-        public T getOnlyModel() {
-            if (modelMap.keySet().size() != 1) {
-                throw new RuntimeException("Can't call getOnlyModel with included builds");
-            }
-            return Iterables.getOnlyElement(getRootBuildModelMap().values());
-        }
-    }
 
     public GetAndroidModelAction(Class<T> type) {
         this(type, true);

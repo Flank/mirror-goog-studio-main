@@ -34,6 +34,7 @@ import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Arrays;
@@ -50,7 +51,7 @@ import org.w3c.dom.Node;
 /**
  * Detects various issues for Chrome OS devices.
  */
-public class ChromeOsDetector extends Detector implements Detector.XmlScanner {
+public class ChromeOsDetector extends Detector implements XmlScanner {
     private static final Implementation IMPLEMENTATION =
             new Implementation(ChromeOsDetector.class, Scope.MANIFEST_SCOPE);
 

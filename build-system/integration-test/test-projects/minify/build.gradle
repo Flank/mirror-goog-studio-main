@@ -36,10 +36,10 @@ android {
 }
 
 dependencies {
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
 
     // This library references java.beans classes that are not part of Android,
     // so ProGuard can't find references and fails without the rule from
     // test-proguard-rules.pro.
-    androidTestCompile 'org.hamcrest:hamcrest-library:1.3'
+    androidTestImplementation 'org.hamcrest:hamcrest-library:1.3'
 }

@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.sdk.TargetInfo;
-import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkInfo;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
@@ -79,11 +78,8 @@ public class InstantRunSlicesSplitApkBuilderTest {
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder supportDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder dexFileFolder = new TemporaryFolder();
-    @Rule public TemporaryFolder fileCacheDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder apkListDirectory = new TemporaryFolder();
 
-
-    FileCache fileCache;
     InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder;
     final List<InstantRunSplitApkBuilder.DexFiles> dexFilesList =
             new CopyOnWriteArrayList<>();
@@ -106,14 +102,12 @@ public class InstantRunSlicesSplitApkBuilderTest {
                 apkListFile, ExistingBuildElements.persistApkList(ImmutableList.of(apkInfo)));
         when(apkList.getSingleFile()).thenReturn(apkListFile);
 
-        fileCache = FileCache.getInstanceWithSingleProcessLocking(fileCacheDirectory.getRoot());
         instantRunSliceSplitApkBuilder =
                 new InstantRunSliceSplitApkBuilder(
                         logger,
                         project,
                         buildContext,
                         androidBuilder,
-                        fileCache,
                         "com.foo.test",
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_DAEMON_MODE,

@@ -20,6 +20,7 @@ dependencies {
     compile project(':base:gradle-api')
     compile libs.kotlin_reflect
     compile libs.kotlin_stdlib
+    compile libs.guava
 }
 
 sourceSets {

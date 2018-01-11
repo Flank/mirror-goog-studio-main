@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.fixture.SourceSetContainerUtils;
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProductFlavorContainer;
@@ -61,8 +61,8 @@ public class MigratedTest {
                 .test();
 
         SourceProviderContainer testSourceProviderContainer =
-                ModelHelper.getSourceProviderContainer(
-                        defaultConfig.getExtraSourceProviders(), ARTIFACT_ANDROID_TEST);
+                SourceSetContainerUtils.getExtraSourceProviderContainer(
+                        defaultConfig, ARTIFACT_ANDROID_TEST);
 
         new SourceProviderHelper(
                         model.getName(),

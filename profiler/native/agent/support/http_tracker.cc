@@ -209,7 +209,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onPr
                                           ClientContext &ctx) {
          HttpDataRequest httpData;
          httpData.set_conn_id(juid);
-         httpData.set_process_id(pid);
+         httpData.set_pid(pid);
          httpData.set_url(url.get());
          httpData.set_trace(stack.get());
          httpData.set_start_timestamp(timestamp);

@@ -21,13 +21,13 @@ import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.TAG_ACTION
 import com.android.SdkConstants.TAG_RECEIVER
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.Detector.UastScanner
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
@@ -38,7 +38,7 @@ import java.util.EnumSet
 /**
  * Checks for issues that negatively affect battery life
  */
-class BatteryDetector : ResourceXmlDetector(), UastScanner {
+class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
     companion object Issues {
         private val IMPLEMENTATION = Implementation(
                 BatteryDetector::class.java,

@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Builds the command lines for use with {@code aapt2}.
@@ -58,7 +59,7 @@ public final class AaptV2CommandBuilder {
      * @return the command line arguments
      */
     public static ImmutableList<String> makeCompile(@NonNull CompileResourceRequest request) {
-        ImmutableList.Builder<String> parameters = new ImmutableList.Builder();
+        ImmutableList.Builder<String> parameters = new ImmutableList.Builder<>();
 
         if (request.isPseudoLocalize()) {
             parameters.add("--pseudo-localize");
@@ -86,12 +87,11 @@ public final class AaptV2CommandBuilder {
      * <p>See {@link com.android.builder.internal.aapt.Aapt#link(AaptPackageConfig)}.
      *
      * @param config see above
-     * @param intermediateDir a directory for intermediate files
      * @return the command line arguments
      * @throws AaptException failed to build the command line
      */
-    public static ImmutableList<String> makeLink(
-            @NonNull AaptPackageConfig config, @NonNull File intermediateDir) throws AaptException {
+    public static ImmutableList<String> makeLink(@NonNull AaptPackageConfig config)
+            throws AaptException {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
 
         if (config.isVerbose()) {
@@ -101,9 +101,6 @@ public final class AaptV2CommandBuilder {
         if (config.isGenerateProtos()) {
             builder.add("--proto-format");
         }
-
-        File stableResourceIdsFile = new File(intermediateDir, "stable-resource-ids.txt");
-        // TODO: For now, we ignore this file, but as soon as aapt2 supports it, we'll use it.
 
         // inputs
         IAndroidTarget target = config.getAndroidTarget();
@@ -137,15 +134,17 @@ public final class AaptV2CommandBuilder {
                     // AAPT2 only accepts individual files passed to the -R flag. In order to not
                     // pass every single resource file, instead create a temporary file containing a
                     // list of resource files and pass it as the only -R argument.
-                    File file =
+                    File resourceListFile =
                             new File(
-                                    intermediateDir,
+                                    Preconditions.checkNotNull(
+                                            config.getIntermediateDir(),
+                                            "Intermediate directory must be supplied."),
                                     "resources-list-for-" + resourceOutputApk.getName() + ".txt");
 
                     // Resources list could have changed since last run.
-                    FileUtils.deleteIfExists(file);
+                    FileUtils.deleteIfExists(resourceListFile);
                     for (File dir : config.getResourceDirs()) {
-                        try (FileOutputStream fos = new FileOutputStream(file);
+                        try (FileOutputStream fos = new FileOutputStream(resourceListFile);
                                 PrintWriter pw = new PrintWriter(fos)) {
 
                             Files.walk(dir.toPath())
@@ -153,7 +152,7 @@ public final class AaptV2CommandBuilder {
                                     .forEach((p) -> pw.print(p.toString() + " "));
                         }
                     }
-                    builder.add("-R", "@" + file.getAbsolutePath());
+                    builder.add("-R", "@" + resourceListFile.getAbsolutePath());
                 } else {
                     for (File dir : config.getResourceDirs()) {
                         Files.walk(dir.toPath())
@@ -218,7 +217,8 @@ public final class AaptV2CommandBuilder {
         /*
          * Add custom no-compress extensions.
          */
-        Collection<String> noCompressList = config.getOptions().getNoCompress();
+        Collection<String> noCompressList =
+                Objects.requireNonNull(config.getOptions()).getNoCompress();
         if (noCompressList != null) {
             for (String noCompress : noCompressList) {
                 builder.add("-0", noCompress);
@@ -229,21 +229,18 @@ public final class AaptV2CommandBuilder {
             builder.addAll(additionalParameters);
         }
 
-        List<String> resourceConfigs = new ArrayList<String>();
-        resourceConfigs.addAll(config.getResourceConfigs());
+        List<String> resourceConfigs = new ArrayList<>(config.getResourceConfigs());
 
         /*
          * Split the density and language resource configs, since starting in 21, the
          * density resource configs should be passed with --preferred-density to ensure packaging
          * of scalable resources when no resource for the preferred density is present.
          */
-        Collection<String> otherResourceConfigs;
-        String preferredDensity = null;
         Collection<String> densityResourceConfigs = Lists.newArrayList(
                 AaptUtils.getDensityResConfigs(resourceConfigs));
-        otherResourceConfigs = Lists.newArrayList(AaptUtils.getNonDensityResConfigs(
-                resourceConfigs));
-        preferredDensity = config.getPreferredDensity();
+        Collection<String> otherResourceConfigs =
+                Lists.newArrayList(AaptUtils.getNonDensityResConfigs(resourceConfigs));
+        String preferredDensity = config.getPreferredDensity();
 
         if (preferredDensity != null && !densityResourceConfigs.isEmpty()) {
             throw new AaptException(

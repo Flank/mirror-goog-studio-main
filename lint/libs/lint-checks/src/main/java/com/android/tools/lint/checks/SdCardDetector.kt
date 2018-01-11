@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.getValueIfStringLiteral
@@ -31,7 +32,7 @@ import org.jetbrains.uast.getValueIfStringLiteral
 /**
  * Looks for hardcoded references to /sdcard/.
  */
-class SdCardDetector : Detector(), Detector.UastScanner {
+class SdCardDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         /** Hardcoded /sdcard/ references  */
         @JvmField val ISSUE = Issue.create(

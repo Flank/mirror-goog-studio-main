@@ -78,9 +78,6 @@ interface ContainerFactory {
             factory: NamedDomainObjectFactory<T>): NamedDomainObjectContainer<T>
 }
 
-val CONFIG_DESC = "%s dependencies for '%s' sources."
-val CONFIG_DESC_OLD = "%s dependencies for '%s' sources (deprecated: use '%s' instead)."
-
 /**
  * Implementation of the DslModelData interface
  */
@@ -321,7 +318,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
      */
     private fun handleNewSourceSet(sourceSet: DefaultAndroidSourceSet) {
         // set the default location of the source set
-        sourceSet.setRoot(String.format("src/%s", sourceSet.name))
+        sourceSet.setRoot("src/${sourceSet.name}")
 
         // create the associated configurations
         val implementationName = sourceSet.implementationConfigurationName
@@ -336,28 +333,16 @@ class DslModelDataImpl<in E: BaseExtension2>(
         val compile = createConfiguration(
                 configurationContainer,
                 compileName,
-                String.format(
-                        CONFIG_DESC_OLD,
-                        "Compile",
-                        sourceSet.name,
-                        implementationName),
+                "Compile dependencies for '${sourceSet.name}' sources (deprecated: use '$implementationName' instead).",
                 "compile" == compileName || "testCompile" == compileName /*canBeResolved*/)
         compile.allDependencies
                 .whenObjectAdded(
                         DeprecatedConfigurationAction(implementationName, compileName, deprecationReporter))
 
         val packageConfigDescription = if (mainVariantType == VariantType.LIBRARY) {
-            String.format(
-                    CONFIG_DESC_OLD,
-                    "Publish",
-                    sourceSet.name,
-                    runtimeOnlyName)
+            "Publish dependencies for '${sourceSet.name}' sources (deprecated: use '$runtimeOnlyName' instead)."
         } else {
-            String.format(
-                    CONFIG_DESC_OLD,
-                    "Apk",
-                    sourceSet.name,
-                    runtimeOnlyName)
+            "Apk dependencies for '${sourceSet.name}' sources (deprecated: use '$runtimeOnlyName' instead)."
         }
 
         val apkName = sourceSet._packageConfigurationName
@@ -372,11 +357,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
         val provided = createConfiguration(
                 configurationContainer,
                 providedName,
-                String.format(
-                        CONFIG_DESC_OLD,
-                        "Provided",
-                        sourceSet.name,
-                        compileOnlyName))
+                "Provided dependencies for '${sourceSet.name}' sources (deprecated: use '$compileOnlyName' instead).")
         provided.allDependencies
                 .whenObjectAdded(
                         DeprecatedConfigurationAction(
@@ -385,30 +366,25 @@ class DslModelDataImpl<in E: BaseExtension2>(
         // then the new configurations.
         val apiName = sourceSet.apiConfigurationName
         val api = createConfiguration(
-                configurationContainer, apiName, String.format(CONFIG_DESC, "API", sourceSet.name))
+                configurationContainer, apiName, "API dependencies for '${sourceSet.name}' sources.")
         api.extendsFrom(compile)
 
         val implementation = createConfiguration(
                 configurationContainer,
                 implementationName,
-                String.format(
-                        CONFIG_DESC,
-                        "Implementation only",
-                        sourceSet.name))
+                "Implementation Only dependencies for '${sourceSet.name}' sources.")
         implementation.extendsFrom(api)
 
         val runtimeOnly = createConfiguration(
                 configurationContainer,
                 runtimeOnlyName,
-                String.format(
-                        CONFIG_DESC, "Runtime only", sourceSet.name))
+                "Runtime Only dependencies for '${sourceSet.name}' sources.")
         runtimeOnly.extendsFrom(apk)
 
         val compileOnly = createConfiguration(
                 configurationContainer,
                 compileOnlyName,
-                String.format(
-                        CONFIG_DESC, "Compile only", sourceSet.name))
+                "Compile Only dependencies for '${sourceSet.name}' sources.")
         compileOnly.extendsFrom(provided)
 
         // then the secondary configurations.
@@ -513,13 +489,16 @@ private fun computeSourceSetName(
     }
 
     if (!variantType.prefix.isEmpty()) {
-        newName = variantType.prefix + StringHelper.capitalize(newName)
+        newName = buildString {
+            append(variantType.prefix)
+            StringHelper.appendCapitalized(this, newName)
+        }
     }
 
     return newName
 }
 
-internal class DeprecatedConfigurationAction(
+class DeprecatedConfigurationAction(
         private val replacement: String,
         private val oldName: String,
         private val deprecationReporter: DeprecationReporter,

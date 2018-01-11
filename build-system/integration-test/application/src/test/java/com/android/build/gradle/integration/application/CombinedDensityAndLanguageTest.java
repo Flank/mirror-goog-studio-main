@@ -9,8 +9,9 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
@@ -43,7 +44,7 @@ public class CombinedDensityAndLanguageTest {
         ProjectBuildOutput projectBuildOutput =
                 project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
         VariantBuildOutput debugBuildOutput =
-                ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
         assertNotNull("Debug variant info null-check", debugBuildOutput);
 
         // get the outputs.
@@ -62,9 +63,9 @@ public class CombinedDensityAndLanguageTest {
 
         assertEquals(8, debugOutputs.size());
         for (OutputFile outputFile : debugOutputs) {
-            String filter = ModelHelper.getFilter(outputFile, VariantOutput.DENSITY);
+            String filter = VariantOutputUtils.getFilter(outputFile, VariantOutput.DENSITY);
             if (filter == null) {
-                filter = ModelHelper.getFilter(outputFile, VariantOutput.LANGUAGE);
+                filter = VariantOutputUtils.getFilter(outputFile, VariantOutput.LANGUAGE);
             }
 
             assertEquals(
@@ -85,7 +86,7 @@ public class CombinedDensityAndLanguageTest {
         AndroidProject model =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .getSingle()
+                        .fetchAndroidProjects()
                         .getOnlyModel();
         assertThat(model.getSyncIssues()).named("Sync Issues").hasSize(1);
         assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
@@ -103,7 +104,7 @@ public class CombinedDensityAndLanguageTest {
         AndroidProject model =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .getSingle()
+                        .fetchAndroidProjects()
                         .getOnlyModel();
         assertThat(model.getSyncIssues()).named("Sync Issues").hasSize(1);
         assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())

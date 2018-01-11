@@ -24,9 +24,6 @@ import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_KT
 import com.android.SdkConstants.DOT_KTS
-import com.android.SdkConstants.FD_GRADLE_WRAPPER
-import com.android.SdkConstants.FN_GRADLE_WRAPPER_PROPERTIES
-import com.android.SdkConstants.FN_LOCAL_PROPERTIES
 import com.android.SdkConstants.FQCN_SUPPRESS_LINT
 import com.android.SdkConstants.KOTLIN_SUPPRESS
 import com.android.SdkConstants.RES_FOLDER
@@ -45,23 +42,29 @@ import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.tools.lint.client.api.LintListener.EventType
+import com.android.tools.lint.detector.api.BinaryResourceScanner
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext
+import com.android.tools.lint.detector.api.ClassScanner
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
-import com.android.tools.lint.detector.api.Detector.XmlScanner
+import com.android.tools.lint.detector.api.GradleScanner
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.LintUtils.isAnonymousClass
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.OtherFileScanner
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.ResourceContext
+import com.android.tools.lint.detector.api.ResourceFolderScanner
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.XmlScanner
 import com.android.utils.Pair
 import com.android.utils.SdkUtils.isBitmapFile
 import com.google.common.annotations.Beta
@@ -101,7 +104,6 @@ import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.File
-import java.io.File.separator
 import java.io.IOException
 import java.net.URL
 import java.net.URLConnection
@@ -556,7 +558,7 @@ class LintDriver
             val javaCodeDetectors = scopeDetectors[Scope.ALL_JAVA_FILES]
             if (javaCodeDetectors != null) {
                 for (detector in javaCodeDetectors) {
-                    assert(detector is Detector.UastScanner)
+                    assert(detector is SourceCodeScanner)
                     { detector }
                 }
             }
@@ -564,7 +566,7 @@ class LintDriver
             val javaFileDetectors = scopeDetectors[Scope.JAVA_FILE]
             if (javaFileDetectors != null) {
                 for (detector in javaFileDetectors) {
-                    assert(detector is Detector.UastScanner)
+                    assert(detector is SourceCodeScanner)
                     { detector }
                 }
             }
@@ -572,42 +574,42 @@ class LintDriver
             val classDetectors = scopeDetectors[Scope.CLASS_FILE]
             if (classDetectors != null) {
                 for (detector in classDetectors) {
-                    assert(detector is Detector.ClassScanner) { detector }
+                    assert(detector is ClassScanner) { detector }
                 }
             }
 
             val classCodeDetectors = scopeDetectors[Scope.ALL_CLASS_FILES]
             if (classCodeDetectors != null) {
                 for (detector in classCodeDetectors) {
-                    assert(detector is Detector.ClassScanner) { detector }
+                    assert(detector is ClassScanner) { detector }
                 }
             }
 
             val gradleDetectors = scopeDetectors[Scope.GRADLE_FILE]
             if (gradleDetectors != null) {
                 for (detector in gradleDetectors) {
-                    assert(detector is Detector.GradleScanner) { detector }
+                    assert(detector is GradleScanner) { detector }
                 }
             }
 
             val otherDetectors = scopeDetectors[Scope.OTHER]
             if (otherDetectors != null) {
                 for (detector in otherDetectors) {
-                    assert(detector is Detector.OtherFileScanner) { detector }
+                    assert(detector is OtherFileScanner) { detector }
                 }
             }
 
             val dirDetectors = scopeDetectors[Scope.RESOURCE_FOLDER]
             if (dirDetectors != null) {
                 for (detector in dirDetectors) {
-                    assert(detector is Detector.ResourceFolderScanner) { detector }
+                    assert(detector is ResourceFolderScanner) { detector }
                 }
             }
 
             val binaryDetectors = scopeDetectors[Scope.BINARY_RESOURCE_FILE]
             if (binaryDetectors != null) {
                 for (detector in binaryDetectors) {
-                    assert(detector is Detector.BinaryResourceScanner) { detector }
+                    assert(detector is BinaryResourceScanner) { detector }
                 }
             }
         }
@@ -1066,22 +1068,14 @@ class LintDriver
     private fun checkProperties(project: Project, main: Project) {
         val detectors = scopeDetectors[Scope.PROPERTY_FILE]
         if (detectors != null) {
-            checkPropertyFile(project, main, detectors, FN_LOCAL_PROPERTIES)
-            checkPropertyFile(project, main, detectors, FD_GRADLE_WRAPPER + separator +
-                    FN_GRADLE_WRAPPER_PROPERTIES)
-        }
-    }
-
-    private fun checkPropertyFile(project: Project, main: Project, detectors: List<Detector>,
-                                  relativePath: String) {
-        val file = File(project.dir, relativePath)
-        if (file.exists()) {
-            val context = Context(this, project, main, file)
-            fireEvent(EventType.SCANNING_FILE, context)
-            for (detector in detectors) {
-                detector.beforeCheckFile(context)
-                detector.run(context)
-                detector.afterCheckFile(context)
+            for (file in project.propertyFiles) {
+                val context = Context(this, project, main, file)
+                fireEvent(EventType.SCANNING_FILE, context)
+                for (detector in detectors) {
+                    detector.beforeCheckFile(context)
+                    detector.run(context)
+                    detector.afterCheckFile(context)
+                }
             }
         }
     }
@@ -1462,7 +1456,7 @@ class LintDriver
         // PSI. Until that's complete, remove them from the list here
         val uastScanners = ArrayList<Detector>(checks.size)
         for (detector in checks) {
-            if (detector is Detector.UastScanner) {
+            if (detector is SourceCodeScanner) {
                 uastScanners.add(detector)
             }
         }

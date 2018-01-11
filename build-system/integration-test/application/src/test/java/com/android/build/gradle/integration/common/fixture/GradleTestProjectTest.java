@@ -102,7 +102,7 @@ public class GradleTestProjectTest {
             run(
                     project,
                     () -> {
-                        project.model().getMulti();
+                        project.model().fetchAndroidProjects();
                     });
             fail("Expected model get to fail");
         } catch (BuildException e) {

@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
@@ -60,12 +61,14 @@ import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
+import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -110,7 +113,9 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.ForkJoinPool;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.api.Action;
@@ -259,6 +264,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST)
                 .setOptions(AnalyticsUtil.toProto(projectOptions));
 
+        BuildableArtifactImpl.Companion.disableResolution();
         if (!projectOptions.get(BooleanOption.ENABLE_NEW_DSL_AND_API)) {
             TaskInputHelper.enableBypass();
 
@@ -384,6 +390,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     @Override
                     public void buildStarted(Gradle gradle) {
                         TaskInputHelper.enableBypass();
+                        BuildableArtifactImpl.Companion.disableResolution();
                     }
 
                     @Override
@@ -407,6 +414,9 @@ public abstract class BasePlugin<E extends BaseExtension2>
                                 project.getPath(),
                                 null,
                                 () -> {
+                                    WorkerActionServiceRegistry.INSTANCE
+                                            .shutdownAllRegisteredServices(
+                                                    ForkJoinPool.commonPool());
                                     PreDexCache.getCache()
                                             .clear(
                                                     FileUtils.join(
@@ -424,6 +434,11 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 .addTaskExecutionGraphListener(
                         taskGraph -> {
                             TaskInputHelper.disableBypass();
+                            Aapt2DaemonManagerService.registerAaptService(
+                                    Objects.requireNonNull(androidBuilder.getTargetInfo())
+                                            .getBuildTools(),
+                                    loggerWrapper,
+                                    WorkerActionServiceRegistry.INSTANCE);
 
                             for (Task task : taskGraph.getAllTasks()) {
                                 if (task instanceof TransformTask) {
@@ -789,6 +804,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         }
                     });
         }
+        BuildableArtifactImpl.Companion.enableResolution();
     }
 
     private void checkSplitConfiguration() {

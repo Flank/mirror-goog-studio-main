@@ -9,8 +9,10 @@ import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ApkHelper;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.VariantBuildOutputUtils;
+import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
@@ -54,7 +56,7 @@ public class CombinedLanguageWithDisabledDensityTest {
         ProjectBuildOutput projectBuildOutput =
                 project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
         VariantBuildOutput debugVariantOutput =
-                ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
 
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(3);
@@ -65,7 +67,7 @@ public class CombinedLanguageWithDisabledDensityTest {
         Collection<OutputFile> debugOutputs = debugVariantOutput.getOutputs();
         assertEquals(4, debugOutputs.size());
         for (OutputFile outputFile : debugOutputs) {
-            String filter = ModelHelper.getFilter(outputFile, VariantOutput.LANGUAGE);
+            String filter = VariantOutputUtils.getFilter(outputFile, VariantOutput.LANGUAGE);
             assertEquals(
                     filter == null ? VariantOutput.MAIN : VariantOutput.SPLIT,
                     outputFile.getOutputType());
@@ -84,13 +86,14 @@ public class CombinedLanguageWithDisabledDensityTest {
         // check that our density resources are indeed packaged in the main APK.
         List<String> apkDump =
                 ApkHelper.getApkBadging(
-                        ModelHelper.getMainOutputFile(debugOutputs).getOutputFile());
+                        VariantBuildOutputUtils.getMainOutputFile(debugVariantOutput)
+                                .getOutputFile());
         assertThat(apkDump).contains("densities: '160' '240' '320' '480'");
 
         AndroidProject model =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .getSingle()
+                        .fetchAndroidProjects()
                         .getOnlyModel();
         assertThat(model.getSyncIssues()).named("Sync Issues").hasSize(1);
         assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())

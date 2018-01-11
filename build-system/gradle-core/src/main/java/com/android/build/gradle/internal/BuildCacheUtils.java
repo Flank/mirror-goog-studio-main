@@ -27,9 +27,11 @@ import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.Version;
 import com.android.builder.utils.FileCache;
 import com.android.builder.utils.SynchronizedFile;
+import com.android.ide.common.repository.GradleVersion;
 import com.android.prefs.AndroidLocation;
 import com.android.utils.FileUtils;
 import com.android.utils.concurrency.ReadWriteProcessLock;
+import com.google.common.base.Verify;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -175,7 +177,8 @@ public final class BuildCacheUtils {
             // 1. Delete old cache entries created by the current plugin version
             deleteOldCacheEntries(buildCache, Duration.ofDays(CACHE_ENTRY_DAYS_TO_LIVE));
 
-            // 2. Delete old cache directories created by previous plugin versions
+            // 2. Delete old cache directories created by previous plugin versions (back to and
+            // including 3.1.x)
             deleteOldCacheDirectories(
                     sharedBuildCacheDir, Duration.ofDays(CACHE_DIRECTORY_DAYS_TO_LIVE));
         }
@@ -248,47 +251,53 @@ public final class BuildCacheUtils {
     @VisibleForTesting
     static void deleteOldCacheDirectories(
             @NonNull File sharedBuildCacheDir, @NonNull Duration cacheDirectoryLifeTime) {
-        AndroidGradlePluginVersion currentPluginVersion =
-                AndroidGradlePluginVersion.parseString(Version.ANDROID_GRADLE_PLUGIN_VERSION);
+        GradleVersion currentPluginVersion =
+                Verify.verifyNotNull(
+                        GradleVersion.tryParseAndroidGradlePluginVersion(
+                                Version.ANDROID_GRADLE_PLUGIN_VERSION));
         for (File buildCacheDir : checkNotNull(sharedBuildCacheDir.listFiles())) {
             // First, make sure the path refers to a private cache directory
-            if (buildCacheDir.isDirectory()
-                    && AndroidGradlePluginVersion.isPluginVersion(buildCacheDir.getName())) {
-                AndroidGradlePluginVersion pluginVersion =
-                        AndroidGradlePluginVersion.parseString(buildCacheDir.getName());
+            if (!buildCacheDir.isDirectory()) {
+                continue;
+            }
+            GradleVersion pluginVersion =
+                    GradleVersion.tryParseAndroidGradlePluginVersion(buildCacheDir.getName());
+            if (pluginVersion == null) {
+                continue;
+            }
 
-                // Then, make sure we only delete private cache directories created by *previous*
-                // plugin versions
-                if (pluginVersion.compareTo(currentPluginVersion) < 0) {
-                    // Find out the last time this cache was used
-                    File markerFile = new File(buildCacheDir, CACHE_USE_MARKER_FILE_NAME);
-                    long lastUsedTimestamp = markerFile.lastModified();
-                    if (lastUsedTimestamp == 0) {
-                        // The marker file does not yet exist, use the directory's timestamp instead
-                        lastUsedTimestamp = buildCacheDir.lastModified();
-                    }
+            // Then, make sure we only delete private cache directories created by *previous*
+            // plugin versions
+            if (pluginVersion.compareTo(currentPluginVersion) >= 0) {
+                continue;
+            }
 
-                    // Finally, delete the private cache directory if it has not been used in a while
-                    if (lastUsedTimestamp != 0
-                            && Duration.ofMillis(System.currentTimeMillis() - lastUsedTimestamp)
-                                            .compareTo(cacheDirectoryLifeTime)
-                                    >= 0) {
-                        // There could be a race condition here if another thread/process also
-                        // reaches this point, but that is Okay because the method call below is
-                        // thread-safe and process-safe, it's just that the code below will be
-                        // executed more than once (which is fine).
-                        try {
-                            FileCache.getInstanceWithMultiProcessLocking(buildCacheDir).delete();
-                            // Also delete the lock file. Note that it is generally not safe to
-                            // delete lock files if some other thread/process might be using the
-                            // cache, but since this cache (created and used only by an older plugin
-                            // version) has not been used in a while, it is unlikely that it is
-                            // suddenly being used now.
-                            FileUtils.deleteIfExists(SynchronizedFile.getLockFile(buildCacheDir));
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    }
+            // Find out the last time this cache was used
+            File markerFile = new File(buildCacheDir, CACHE_USE_MARKER_FILE_NAME);
+            long lastUsedTimestamp = markerFile.lastModified();
+            if (lastUsedTimestamp == 0) {
+                // The marker file does not yet exist, use the directory's timestamp instead
+                lastUsedTimestamp = buildCacheDir.lastModified();
+            }
+
+            // Finally, delete the private cache directory if it has not been used in a while
+            if (lastUsedTimestamp != 0
+                    && Duration.ofMillis(System.currentTimeMillis() - lastUsedTimestamp)
+                                    .compareTo(cacheDirectoryLifeTime)
+                            >= 0) {
+                // There could be a race condition here if another thread/process also reaches this
+                // point, but that is Okay because the method call below is thread-safe and
+                // process-safe, it's just that the code below will be executed more than once
+                // (which is fine).
+                try {
+                    FileCache.getInstanceWithMultiProcessLocking(buildCacheDir).delete();
+                    // Also delete the lock file. Note that it is generally not safe to delete lock
+                    // files if some other thread/process might be using the cache, but since this
+                    // cache (created and used only by an older plugin version) has not been used in
+                    // a while, it is unlikely that it is suddenly being used now.
+                    FileUtils.deleteIfExists(SynchronizedFile.getLockFile(buildCacheDir));
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
                 }
             }
         }

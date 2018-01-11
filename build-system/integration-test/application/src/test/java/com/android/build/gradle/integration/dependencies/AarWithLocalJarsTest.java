@@ -86,8 +86,8 @@ public class AarWithLocalJarsTest {
         // and replace the maven dependency by a local jar dependency.
         TestFileUtils.searchAndReplace(
                 baseLibrary.getBuildFile(),
-                "compile 'com.example.android.multiproject:util:1.0'",
-                "compile files('libs/util-1.0.jar')");
+                "api 'com.example.android.multiproject:util:1.0'",
+                "api files('libs/util-1.0.jar')");
 
         // build and publish the 2 AArs and then build the app.
         baseLibrary.execute("clean", "uploadArchives");

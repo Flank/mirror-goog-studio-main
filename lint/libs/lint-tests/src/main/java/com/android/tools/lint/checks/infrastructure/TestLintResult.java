@@ -17,7 +17,7 @@
 package com.android.tools.lint.checks.infrastructure;
 
 import static java.util.regex.Pattern.MULTILINE;
-import static kotlin.text.StringsKt.*;
+import static kotlin.text.StringsKt.trimIndent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;

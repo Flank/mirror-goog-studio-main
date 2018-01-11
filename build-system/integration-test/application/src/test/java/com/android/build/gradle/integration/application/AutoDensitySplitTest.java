@@ -3,7 +3,7 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
@@ -47,7 +47,8 @@ public class AutoDensitySplitTest {
 
     @Test
     public void testPackaging() throws IOException {
-        VariantBuildOutput debugVariantOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
+        VariantBuildOutput debugVariantOutput =
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
 
         assertThat(debugVariantOutput.getOutputs()).hasSize(5);
 

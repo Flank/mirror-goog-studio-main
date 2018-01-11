@@ -17,8 +17,8 @@
 package com.android.build.gradle.integration.application;
 
 import com.android.SdkConstants;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.builder.model.AndroidProject;
 import java.io.IOException;
@@ -46,9 +46,12 @@ public class UberSkeletonSmokeTest {
     public void checkModel() throws Exception {
         // b/67975239
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
-        GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
-                project.model().withArgument("--continue").ignoreSyncIssues().getMulti();
-        Map<String, AndroidProject> models = modelContainer.getModelMap();
+        ModelContainer<AndroidProject> modelContainer =
+                project.model()
+                        .withArgument("--continue")
+                        .ignoreSyncIssues()
+                        .fetchAndroidProjects();
+        Map<String, AndroidProject> models = modelContainer.getOnlyModelMap();
 
         PerformanceTestProjects.assertNoSyncErrors(models);
     }

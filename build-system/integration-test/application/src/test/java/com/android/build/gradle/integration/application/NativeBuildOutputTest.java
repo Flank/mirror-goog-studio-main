@@ -366,9 +366,9 @@ public class NativeBuildOutputTest {
                 ImmutableList.of("void main() {}"),
                 StandardCharsets.UTF_8);
 
-        AndroidProject androidProject = project.model().getSingle().getOnlyModel();
+        AndroidProject androidProject = project.model().fetchAndroidProjects().getOnlyModel();
         assertThat(androidProject.getSyncIssues()).hasSize(0);
-        NativeAndroidProject nativeProject = project.model().getSingle(NativeAndroidProject.class);
+        NativeAndroidProject nativeProject = project.model().fetch(NativeAndroidProject.class);
         // TODO: remove this if statement once a fresh CMake is deployed to buildbots.
         // Old behavior was to emit two targets: "hello-jni-Debug-x86" and "hello-jni-Release-x86"
         if (nativeProject.getArtifacts().size() != 2) {
@@ -424,7 +424,7 @@ public class NativeBuildOutputTest {
             throws IOException, InterruptedException {
         // Check the sync
         AndroidProject androidProject =
-                project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
 
         // Check for expected sync issues
         assertThat(androidProject.getSyncIssues()).hasSize(expectedSyncIssueCount);
@@ -457,7 +457,7 @@ public class NativeBuildOutputTest {
         }
 
         // Make sure we can get a NativeAndroidProject
-        project.model().getSingle(NativeAndroidProject.class);
+        project.model().fetch(NativeAndroidProject.class);
 
         // Check the build
         GradleBuildResult result =

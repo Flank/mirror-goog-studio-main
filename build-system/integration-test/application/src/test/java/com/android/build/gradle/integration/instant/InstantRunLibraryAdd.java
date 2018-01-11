@@ -46,8 +46,9 @@ public class InstantRunLibraryAdd {
     public void withSync() throws Exception {
 
         project.execute("clean");
-        InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(
-                project.model().getMulti().getModelMap().get(":app"));
+        InstantRun instantRunModel =
+                InstantRunTestUtils.getInstantRunModel(
+                        project.model().fetchAndroidProjects().getOnlyModelMap().get(":app"));
 
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.FULL_APK)
@@ -97,8 +98,9 @@ public class InstantRunLibraryAdd {
     @Test
     public void withColdswapRequested() throws Exception {
         project.execute("clean");
-        InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(
-                project.model().getMulti().getModelMap().get(":app"));
+        InstantRun instantRunModel =
+                InstantRunTestUtils.getInstantRunModel(
+                        project.model().fetchAndroidProjects().getOnlyModelMap().get(":app"));
 
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.FULL_APK)

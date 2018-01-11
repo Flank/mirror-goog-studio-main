@@ -45,8 +45,6 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import org.gradle.api.Named
 import java.io.File
-import java.util.Collections
-import java.util.stream.Collectors
 
 /**
  * A builder of variants.
@@ -370,6 +368,7 @@ class VariantBuilder<in E: BaseExtension2>(
     }
 
     private fun mergeProductFlavorOrVariant(items: List<ProductFlavorOrVariant>): ProductFlavorOrVariantImpl {
+        @Suppress("UnnecessaryVariable")
         val productFlavorOrVariant = ProductFlavorOrVariantImpl(issueReporter)
 
         // merge the default-config + flavors in there.
@@ -618,7 +617,7 @@ private fun computeMultiFlavorName(flavors: List<ProductFlavor>): String {
             sb.append(flavor.name)
             first = false
         } else {
-            sb.append(StringHelper.capitalize(flavor.name))
+            StringHelper.appendCapitalized(sb, flavor.name)
         }
     }
 

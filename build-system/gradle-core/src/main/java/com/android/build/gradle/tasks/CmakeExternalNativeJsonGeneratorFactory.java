@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.repository.Revision;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -50,7 +51,11 @@ class CmakeExternalNativeJsonGeneratorFactory {
             @Nullable List<String> buildArguments,
             @Nullable List<String> cFlags,
             @Nullable List<String> cppFlags,
-            @NonNull List<File> nativeBuildConfigurationsJsons) {
+            @NonNull List<File> nativeBuildConfigurationsJsons,
+            @NonNull GradleBuildVariant.Builder stats) {
+
+        stats.setNativeCmakeVersion(cmakeRevision.toShortString());
+
         // Custom Cmake shipped with Android studio has a fixed version, we'll just use that exact
         // version to check.
         if (cmakeRevision.equals(
@@ -74,7 +79,8 @@ class CmakeExternalNativeJsonGeneratorFactory {
                     buildArguments,
                     cFlags,
                     cppFlags,
-                    nativeBuildConfigurationsJsons);
+                    nativeBuildConfigurationsJsons,
+                    stats);
         }
 
         if (cmakeRevision.getMajor() < 3
@@ -102,6 +108,7 @@ class CmakeExternalNativeJsonGeneratorFactory {
                 buildArguments,
                 cFlags,
                 cppFlags,
-                nativeBuildConfigurationsJsons);
+                nativeBuildConfigurationsJsons,
+                stats);
     }
 }

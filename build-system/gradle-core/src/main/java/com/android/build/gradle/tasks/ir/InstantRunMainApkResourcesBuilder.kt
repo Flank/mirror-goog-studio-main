@@ -86,7 +86,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
 
         try {
             InstantRunSplitApkBuilder.makeAapt(
-                    aaptGeneration, builder, fileCache, aaptIntermediateFolder).use { aapt ->
+                    aaptGeneration, builder, aaptIntermediateFolder).use { aapt ->
 
                 // use default values for aaptOptions since we don't package any resources.
                 return InstantRunSliceSplitApkBuilder.generateSplitApkResourcesAp(

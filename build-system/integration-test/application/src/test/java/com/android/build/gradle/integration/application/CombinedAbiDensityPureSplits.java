@@ -9,7 +9,8 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.Sets;
@@ -39,7 +40,7 @@ public class CombinedAbiDensityPureSplits {
         ProjectBuildOutput projectBuildOutput =
                 project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
         VariantBuildOutput debugBuildOutput =
-                ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
 
         // get the outputs.
         Collection<OutputFile> debugOutputs = debugBuildOutput.getOutputs();
@@ -57,9 +58,9 @@ public class CombinedAbiDensityPureSplits {
 
         assertEquals(8, debugOutputs.size());
         for (OutputFile outputFile : debugOutputs) {
-            String filter = ModelHelper.getFilter(outputFile, VariantOutput.DENSITY);
+            String filter = VariantOutputUtils.getFilter(outputFile, VariantOutput.DENSITY);
             if (filter == null) {
-                filter = ModelHelper.getFilter(outputFile, VariantOutput.ABI);
+                filter = VariantOutputUtils.getFilter(outputFile, VariantOutput.ABI);
             }
 
             assertEquals(

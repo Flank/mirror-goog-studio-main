@@ -32,7 +32,7 @@
 #include "utils/file_reader.h"
 #include "utils/tokenizer.h"
 
-using profiler::proto::CpuProfilerData;
+using profiler::proto::CpuUsageData;
 using profiler::proto::CpuStartResponse;
 using profiler::proto::CpuStopResponse;
 using profiler::proto::CpuUsageData;
@@ -206,14 +206,12 @@ bool CpuUsageSampler::Sample() {
 // a process's usage data (> 1 millisecond), and therefore it is better to get
 // the up-to-date system-wide data each time.
 bool CpuUsageSampler::SampleAProcess(int32_t pid) {
-  CpuProfilerData data;
-  if (CollectSystemUsageData(usage_files_->GetSystemStatFilePath(),
-                             data.mutable_cpu_usage()) &&
+  CpuUsageData data;
+  if (CollectSystemUsageData(usage_files_->GetSystemStatFilePath(), &data) &&
       CollectProcessUsageData(pid, usage_files_->GetProcessStatFilePath(pid),
-                              data.mutable_cpu_usage())) {
-    data.mutable_basic_info()->set_process_id(pid);
-    data.mutable_basic_info()->set_end_timestamp(clock_.GetCurrentTime());
-    cache_.Add(data);
+                              &data)) {
+    data.set_end_timestamp(clock_.GetCurrentTime());
+    cache_.Add(pid, data);
     return true;
   }
   return false;

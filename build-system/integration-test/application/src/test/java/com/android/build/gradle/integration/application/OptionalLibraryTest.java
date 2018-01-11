@@ -39,7 +39,8 @@ public class OptionalLibraryTest {
                         + "    useLibrary 'foo'\n"
                         + "}");
 
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+        AndroidProject model =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
 
         TruthHelper.assertThat(model)
                 .hasSingleIssue(
@@ -62,7 +63,7 @@ public class OptionalLibraryTest {
                         + "    useLibrary 'org.apache.http.legacy'\n"
                         + "}");
 
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
 
         // get the SDK folder
         File sdkLocation = GradleTestProject.getAndroidHome();
@@ -100,7 +101,7 @@ public class OptionalLibraryTest {
                         + "'\n"
                         + "}");
 
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
 
         // get the SDK folder
         File sdkLocation = GradleTestProject.getAndroidHome();

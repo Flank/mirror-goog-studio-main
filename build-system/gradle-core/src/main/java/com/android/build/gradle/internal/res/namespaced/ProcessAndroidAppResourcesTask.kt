@@ -66,23 +66,14 @@ open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
     @TaskAction
     fun taskAction() {
 
-        val aapt =
-                QueueableAapt2(
-                        LoggedProcessOutputHandler(iLogger),
-                        builder.targetInfo!!.buildTools,
-                        aaptIntermediateDir,
-                        AaptGradleFactory.FilteringLogger(builder.logger),
-                        0 /* use default */)
-
-
-
         val staticLibraries = ImmutableList.builder<File>()
         staticLibraries.addAll(libraryDependencies.files)
         staticLibraries.add(thisSubProjectStaticLibrary.singleFile)
         val config =
                 AaptPackageConfig.Builder()
                         .setAndroidTarget(builder.target)
-                        .setManifestFile(File(manifestFileDirectory.singleFile, SdkConstants.ANDROID_MANIFEST_XML))
+                        .setManifestFile(File(manifestFileDirectory.singleFile,
+                                SdkConstants.ANDROID_MANIFEST_XML))
                         .setOptions(AaptOptions(null, false, null))
                         .setLibrarySymbolTableFiles(null)
                         .setStaticLibraryDependencies(staticLibraries.build())
@@ -92,10 +83,16 @@ open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
                         .setVariantType(VariantType.LIBRARY)
                         .setLogger(iLogger)
                         .setBuildToolInfo(builder.buildToolInfo)
+                        .setIntermediateDir(aaptIntermediateDir)
                         .build()
-        val result = aapt.link(config)
-        result.get()
 
+        QueueableAapt2(
+                LoggedProcessOutputHandler(iLogger),
+                builder.targetInfo!!.buildTools,
+                AaptGradleFactory.FilteringLogger(builder.logger),
+                0 /* use default */).use { aapt ->
+            aapt.link(config)
+        }
     }
 
     class ConfigAction(

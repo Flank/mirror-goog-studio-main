@@ -173,7 +173,11 @@ class IdeLibraryFactory {
      * @return An instance of {@link Library} of type LIBRARY_MODULE.
      */
     @NonNull
-    static Library create(@NonNull String projectPath, @NonNull ModelCache modelCache) {
-        return new IdeModuleLibrary(projectPath, projectPath, modelCache);
+    static Library create(
+            @NonNull String projectPath,
+            @NonNull String artifactAddress,
+            @NonNull ModelCache modelCache,
+            @Nullable String buildId) {
+        return new IdeModuleLibrary(projectPath, artifactAddress, modelCache, buildId);
     }
 }

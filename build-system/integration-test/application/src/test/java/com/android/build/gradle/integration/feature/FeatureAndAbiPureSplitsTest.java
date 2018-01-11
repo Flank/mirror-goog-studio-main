@@ -64,19 +64,19 @@ public class FeatureAndAbiPureSplitsTest {
     }
 
     private static void checkModel(ModelBuilder model) throws IOException {
-        Map<String, AndroidProject> projectModels = model.getMulti().getModelMap();
+        Map<String, AndroidProject> projectModels = model.fetchAndroidProjects().getOnlyModelMap();
         AndroidProject instantAppProject = projectModels.get(":bundle");
         assertThat(instantAppProject).isNotNull();
         assertThat(instantAppProject.getVariants()).hasSize(2);
         System.out.println(instantAppProject.getVariants());
 
         Map<String, ProjectBuildOutput> projectOutputModels =
-                model.getMulti(ProjectBuildOutput.class);
+                model.fetchMulti(ProjectBuildOutput.class);
         assertThat(projectOutputModels).hasSize(4);
         assertThat(projectOutputModels).doesNotContainKey(":bundle");
 
         Map<String, InstantAppProjectBuildOutput> models =
-                model.getMulti(InstantAppProjectBuildOutput.class);
+                model.fetchMulti(InstantAppProjectBuildOutput.class);
         assertThat(models).hasSize(1);
 
         InstantAppProjectBuildOutput instantAppModule = models.get(":bundle");
@@ -184,7 +184,7 @@ public class FeatureAndAbiPureSplitsTest {
                 .run("clean", ":bundle:assembleRelease");
 
         Map<String, InstantAppProjectBuildOutput> models =
-                sProject.model().getMulti(InstantAppProjectBuildOutput.class);
+                sProject.model().fetchMulti(InstantAppProjectBuildOutput.class);
         assertThat(models).hasSize(1);
 
         InstantAppProjectBuildOutput instantAppModule = models.get(":bundle");
@@ -244,7 +244,8 @@ public class FeatureAndAbiPureSplitsTest {
 
         ModelBuilder modelBuilder = sProject.model().ignoreSyncIssues();
 
-        AndroidProject model = modelBuilder.getMulti().getModelMap().get(":feature_a");
+        AndroidProject model =
+                modelBuilder.fetchAndroidProjects().getOnlyModelMap().get(":feature_a");
         assertThat(model.getSyncIssues()).named("Sync Issues").hasSize(1);
         assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
                 .contains(

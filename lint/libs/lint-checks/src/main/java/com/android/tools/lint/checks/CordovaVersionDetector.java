@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
+import com.android.tools.lint.detector.api.ClassScanner;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
@@ -53,7 +54,7 @@ import org.objectweb.asm.tree.MethodNode;
 /**
  * Checks to detect vulnerable versions of Apache Cordova.
  */
-public class CordovaVersionDetector extends Detector implements Detector.ClassScanner {
+public class CordovaVersionDetector extends Detector implements ClassScanner {
 
     private static final Implementation IMPL = new Implementation(
             CordovaVersionDetector.class,

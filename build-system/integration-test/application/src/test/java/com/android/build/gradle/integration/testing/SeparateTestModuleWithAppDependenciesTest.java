@@ -20,23 +20,16 @@ public class SeparateTestModuleWithAppDependenciesTest {
         TestFileUtils.appendToFile(
                 project.getSubproject("app").getBuildFile(),
                 "\n"
-                        + "apply plugin: 'com.android.application'\n"
-                        + "\n"
                         + "android {\n"
-                        + "    compileSdkVersion rootProject.latestCompileSdk\n"
-                        + "    buildToolsVersion = rootProject.buildToolsVersion\n"
-                        + "\n"
-                        + "    publishNonDefault true\n"
-                        + "\n"
                         + "    defaultConfig {\n"
                         + "        minSdkVersion 9\n"
                         + "    }\n"
                         + "}\n"
                         + "dependencies {\n"
-                        + "    compile 'com.google.android.gms:play-services-base:"
+                        + "    api 'com.google.android.gms:play-services-base:"
                         + GradleTestProject.PLAY_SERVICES_VERSION
                         + "'\n"
-                        + "    compile 'com.android.support:appcompat-v7:"
+                        + "    api 'com.android.support:appcompat-v7:"
                         + GradleTestProject.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");
@@ -66,10 +59,10 @@ public class SeparateTestModuleWithAppDependenciesTest {
                 project.getSubproject("test").getBuildFile(),
                 "\n"
                         + "dependencies {\n"
-                        + "    compile 'com.android.support.test:rules:"
+                        + "    implementation 'com.android.support.test:rules:"
                         + GradleTestProject.TEST_SUPPORT_LIB_VERSION
                         + "'\n"
-                        + "    compile 'com.android.support:support-annotations:"
+                        + "    implementation 'com.android.support:support-annotations:"
                         + GradleTestProject.SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");

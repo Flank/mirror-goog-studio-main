@@ -18,14 +18,15 @@ package com.android.builder.dexing.r8;
 
 import com.android.annotations.NonNull;
 import com.android.tools.r8.ArchiveClassFileProvider;
-import com.android.tools.r8.Resource;
+import com.android.tools.r8.ProgramResource;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.ConcurrentHashMap;
 
 class CachingArchiveClassFileProvider extends ArchiveClassFileProvider {
 
-    @NonNull private ConcurrentHashMap<String, Resource> resources = new ConcurrentHashMap<>();
+    @NonNull
+    private ConcurrentHashMap<String, ProgramResource> resources = new ConcurrentHashMap<>();
 
     public CachingArchiveClassFileProvider(@NonNull Path archive) throws IOException {
         super(archive);
@@ -33,7 +34,7 @@ class CachingArchiveClassFileProvider extends ArchiveClassFileProvider {
 
     @NonNull
     @Override
-    public Resource getResource(@NonNull String descriptor) {
-        return resources.computeIfAbsent(descriptor, desc -> super.getResource(desc));
+    public ProgramResource getProgramResource(@NonNull String descriptor) {
+        return resources.computeIfAbsent(descriptor, desc -> super.getProgramResource(desc));
     }
 }

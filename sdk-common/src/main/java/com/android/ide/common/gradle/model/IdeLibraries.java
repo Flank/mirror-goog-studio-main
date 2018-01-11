@@ -15,10 +15,13 @@
  */
 package com.android.ide.common.gradle.model;
 
+import static com.android.ide.common.gradle.model.IdeModel.copyNewProperty;
 import static com.android.utils.FileUtils.isFileInDirectory;
+import static com.google.common.base.Strings.nullToEmpty;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.Dependencies.ProjectIdentifier;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
 import com.android.builder.model.MavenCoordinates;
@@ -34,12 +37,15 @@ public final class IdeLibraries {
      */
     @NonNull
     public static String computeAddress(@NonNull Library library) {
-        // If the library is an android module dependency, use projectPath::variant as unique identifier.
+        // If the library is an android module dependency, use projectId:projectPath::variant as unique identifier.
         // MavenCoordinates cannot be used because it doesn't contain variant information, which results
         // in the same MavenCoordinates for different variants of the same module.
         try {
             if (library.getProject() != null && library instanceof AndroidLibrary) {
-                return library.getProject() + "::" + ((AndroidLibrary) library).getProjectVariant();
+                return nullToEmpty(copyNewProperty(library::getBuildId, ""))
+                        + library.getProject()
+                        + "::"
+                        + ((AndroidLibrary) library).getProjectVariant();
             }
         } catch (UnsupportedOperationException ex) {
             // getProject() isn't available for pre-2.0 plugins. Proceed with MavenCoordinates.
@@ -58,6 +64,16 @@ public final class IdeLibraries {
         }
         String packaging = coordinate.getPackaging();
         address = address + "@" + packaging;
+        return address.intern();
+    }
+
+    /**
+     * @param projectIdentifier Instance of ProjectIdentifier.
+     * @return The artifact address that can be used as unique identifier in global library map.
+     */
+    @NonNull
+    public static String computeAddress(@NonNull ProjectIdentifier projectIdentifier) {
+        String address = projectIdentifier.getBuildId() + "@@" + projectIdentifier.getProjectPath();
         return address.intern();
     }
 

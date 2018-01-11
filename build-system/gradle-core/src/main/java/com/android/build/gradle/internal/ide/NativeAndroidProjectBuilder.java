@@ -20,7 +20,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsonCompositeVisitor;
+import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsonStatsBuildingVisitor;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsonStreamingParser;
+import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsonStreamingVisitor;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeFile;
@@ -33,6 +36,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.gson.stream.JsonReader;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -65,8 +69,18 @@ class NativeAndroidProjectBuilder {
      * Add a per-variant Json to builder. JSon is streamed so it is not read into memory all at
      * once.
      */
-    void addJson(@NonNull JsonReader reader, @NonNull String variantName) throws IOException {
-        try (JsonStreamingParser parser = new JsonStreamingParser(reader, this, variantName)) {
+    void addJson(
+            @NonNull JsonReader reader,
+            @NonNull String variantName,
+            @NonNull GradleBuildVariant.NativeBuildConfigInfo.Builder config)
+            throws IOException {
+        JsonStreamingVisitor modelBuildingVisitor = new JsonStreamingVisitor(this, variantName);
+        AndroidBuildGradleJsonStatsBuildingVisitor statsVisitor =
+                new AndroidBuildGradleJsonStatsBuildingVisitor(config);
+        AndroidBuildGradleJsonCompositeVisitor composite =
+                new AndroidBuildGradleJsonCompositeVisitor(statsVisitor, modelBuildingVisitor);
+        try (AndroidBuildGradleJsonStreamingParser parser =
+                new AndroidBuildGradleJsonStreamingParser(reader, composite)) {
             parser.parse();
         }
     }
@@ -96,7 +110,7 @@ class NativeAndroidProjectBuilder {
     /**
      * Json streaming parser that converts a series of JSon files to {@link NativeAndroidProject}
      */
-    private static class JsonStreamingParser extends AndroidBuildGradleJsonStreamingParser {
+    private static class JsonStreamingVisitor extends AndroidBuildGradleJsonStreamingVisitor {
         @NonNull private final NativeAndroidProjectBuilder builder;
         @NonNull private final String variantName;
         @Nullable private String currentToolchain = null;
@@ -106,7 +120,6 @@ class NativeAndroidProjectBuilder {
         @Nullable private String currentLibraryToolchain = null;
         @Nullable private String currentLibraryOutput = null;
         @Nullable private String currentLibraryAbi = null;
-        @Nullable private String currentLibraryGroupName = null;
         @Nullable private String currentLibraryArtifactName = null;
         @Nullable private List<File> currentLibraryRuntimeFiles = null;
         @Nullable private List<NativeFile> currentLibrarySourceFiles = null;
@@ -114,11 +127,8 @@ class NativeAndroidProjectBuilder {
         @Nullable private String currentLibraryFilePath = null;
         @Nullable private String currentLibraryFileWorkingDirectory = null;
 
-        JsonStreamingParser(
-                @NonNull JsonReader reader,
-                @NonNull NativeAndroidProjectBuilder builder,
-                @NonNull String variantName) {
-            super(reader);
+        JsonStreamingVisitor(
+                @NonNull NativeAndroidProjectBuilder builder, @NonNull String variantName) {
             this.variantName = variantName;
             this.builder = builder;
         }
@@ -163,7 +173,6 @@ class NativeAndroidProjectBuilder {
             this.currentLibraryToolchain = null;
             this.currentLibraryOutput = null;
             this.currentLibraryAbi = null;
-            this.currentLibraryGroupName = null;
             this.currentLibraryArtifactName = null;
             this.currentLibraryRuntimeFiles = null;
             this.currentLibrarySourceFiles = null;
@@ -223,11 +232,6 @@ class NativeAndroidProjectBuilder {
         @Override
         public void visitToolchainCppCompilerExecutable(@NonNull String executable) {
             this.currentCppExecutable = executable;
-        }
-
-        @Override
-        public void visitLibraryGroupName(@NonNull String groupName) {
-            this.currentLibraryGroupName = groupName;
         }
 
         @Override

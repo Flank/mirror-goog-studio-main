@@ -28,7 +28,6 @@ import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -37,6 +36,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.UastLintUtils;
 import com.android.utils.XmlUtils;
 import com.intellij.psi.PsiClass;
@@ -57,7 +57,7 @@ import org.w3c.dom.Element;
 /**
  * Checks looking for issues related to the JobScheduler API
  */
-public class JobSchedulerDetector extends Detector implements UastScanner {
+public class JobSchedulerDetector extends Detector implements SourceCodeScanner {
 
     @SuppressWarnings("unchecked")
     public static final Implementation IMPLEMENTATION = new Implementation(

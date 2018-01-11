@@ -24,9 +24,13 @@ import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT;
 import static com.android.SdkConstants.ATTR_MIN_SDK_VERSION;
 import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
+import static com.android.SdkConstants.FD_GRADLE_WRAPPER;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_BUILD_GRADLE;
 import static com.android.SdkConstants.FN_BUILD_GRADLE_KTS;
+import static com.android.SdkConstants.FN_GRADLE_PROPERTIES;
+import static com.android.SdkConstants.FN_GRADLE_WRAPPER_PROPERTIES;
+import static com.android.SdkConstants.FN_LOCAL_PROPERTIES;
 import static com.android.SdkConstants.FN_PROJECT_PROGUARD_FILE;
 import static com.android.SdkConstants.FN_SETTINGS_GRADLE;
 import static com.android.SdkConstants.FN_SETTINGS_GRADLE_KTS;
@@ -39,7 +43,9 @@ import static com.android.SdkConstants.TAG_USES_SDK;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API;
 import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
+import static java.io.File.separator;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
@@ -1001,6 +1007,25 @@ public class Project {
         return proguardFiles;
     }
 
+    /** Returns the .properties files to be analyzed in the project */
+    @NonNull
+    public List<File> getPropertyFiles() {
+        List<File> propertyFiles = new ArrayList<>(2);
+        File local = new File(dir, FN_LOCAL_PROPERTIES);
+        if (local.isFile()) {
+            propertyFiles.add(local);
+        }
+        File gradle = new File(dir, FN_GRADLE_PROPERTIES);
+        if (gradle.isFile()) {
+            propertyFiles.add(gradle);
+        }
+        File wrapper = new File(dir, FD_GRADLE_WRAPPER + separator + FN_GRADLE_WRAPPER_PROPERTIES);
+        if (wrapper.isFile()) {
+            propertyFiles.add(wrapper);
+        }
+        return propertyFiles;
+    }
+
     /**
      * Returns the Gradle build script files configured for this project, if any
      *
@@ -1147,8 +1172,8 @@ public class Project {
         String top = getAospTop();
         if (top != null) {
             File toCompare = new File(top, "frameworks"
-                    + File.separator + "base"
-                    + File.separator + "core");
+                    + separator + "base"
+                    + separator + "core");
             try {
                 return dir.getCanonicalFile().equals(toCompare) && dir.exists();
             } catch (IOException e) {

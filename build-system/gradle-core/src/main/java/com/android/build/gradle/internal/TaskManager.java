@@ -590,6 +590,8 @@ public abstract class TaskManager {
         globalScope.addTaskOutput(PLATFORM_R_TXT, platformRtxt, task.getName());
     }
 
+    public void createBuildArtifactReportTask(@NonNull final VariantScope scope) {}
+
     protected void createDependencyStreams(@NonNull final VariantScope variantScope) {
         // Since it's going to chance the configurations, we need to do it before
         // we start doing queries to fill the streams.
@@ -1222,7 +1224,6 @@ public abstract class TaskManager {
             return;
         }
         createNonNamespacedResourceTasks(
-
                 scope,
                 symbolLocation,
                 resPackageOutputFolder,
@@ -1708,6 +1709,7 @@ public abstract class TaskManager {
 
         scope.setExternalNativeJsonGenerator(
                 ExternalNativeJsonGenerator.create(
+                        project.getPath(),
                         project.getProjectDir(),
                         project.getBuildDir(),
                         pathResolution.externalNativeBuildDir,
@@ -3189,7 +3191,7 @@ public abstract class TaskManager {
         final String sourceSetName =
                 StringHelper.capitalize(dimensionData.getSourceSet().getName());
         return taskFactory.create(
-                "assemble" + sourceSetName,
+                StringHelper.appendCapitalized("assemble", sourceSetName),
                 assembleTask -> {
                     assembleTask.setDescription("Assembles all " + sourceSetName + " builds.");
                     assembleTask.setGroup(BasePlugin.BUILD_GROUP);

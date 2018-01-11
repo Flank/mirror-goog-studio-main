@@ -102,7 +102,7 @@ public class HotSwapTester {
             logcat.start(device, logTag);
 
             // Open project in simulated IDE
-            AndroidProject model = project.model().getSingle().getOnlyModel();
+            AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
             long token = PackagingUtils.computeApplicationHash(model.getBuildFolder());
             InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
 

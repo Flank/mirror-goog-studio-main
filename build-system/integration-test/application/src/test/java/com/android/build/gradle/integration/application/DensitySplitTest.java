@@ -8,7 +8,8 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.testutils.apk.Apk;
@@ -32,7 +33,7 @@ public class DensitySplitTest {
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         project.executor().run("clean", "assembleDebug");
-        outputModel = project.model().getSingle(ProjectBuildOutput.class);
+        outputModel = project.model().fetch(ProjectBuildOutput.class);
     }
 
     @AfterClass
@@ -43,7 +44,8 @@ public class DensitySplitTest {
 
     @Test
     public void testPackaging() throws IOException {
-        VariantBuildOutput debugOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
+        VariantBuildOutput debugOutput =
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
 
         Collection<OutputFile> outputFiles = debugOutput.getOutputs();
         assertThat(outputFiles).hasSize(5);
@@ -78,7 +80,8 @@ public class DensitySplitTest {
 
     @Test
     public void checkVersionCodeInModel() {
-        VariantBuildOutput debugOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
+        VariantBuildOutput debugOutput =
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
 
         Collection<OutputFile> debugOutputs = debugOutput.getOutputs();
         assertEquals(5, debugOutputs.size());
@@ -99,7 +102,7 @@ public class DensitySplitTest {
             assertNotNull(output.getMainOutputFile());
 
             String densityFilter =
-                    ModelHelper.getFilter(output.getMainOutputFile(), VariantOutput.DENSITY);
+                    VariantOutputUtils.getFilter(output.getMainOutputFile(), VariantOutput.DENSITY);
             Integer value = expected.get(densityFilter);
             // this checks we're not getting an unexpected output.
             assertNotNull(

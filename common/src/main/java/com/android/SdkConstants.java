@@ -2234,9 +2234,15 @@ public final class SdkConstants {
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.0.0";
     // Temporary - can be removed once the recommended version supports AIA (with splits).
     public static final String GRADLE_PLUGIN_LATEST_VERSION = GRADLE_PLUGIN_RECOMMENDED_VERSION;
-    public static final String GRADLE_COMPILE_CONFIGURATION = "compile";
-    public static final String GRADLE_TEST_COMPILE_CONFIGURATION = "testCompile";
+
+    /** use api or implementation */
+    @Deprecated public static final String GRADLE_COMPILE_CONFIGURATION = "compile";
+    /** use api or implementation */
+    @Deprecated public static final String GRADLE_TEST_COMPILE_CONFIGURATION = "testCompile";
+    /** use api or implementation */
+    @Deprecated
     public static final String GRADLE_ANDROID_TEST_COMPILE_CONFIGURATION = "androidTestCompile";
+
     public static final String GRADLE_ANDROID_TEST_UTIL_CONFIGURATION = "androidTestUtil";
     public static final String CURRENT_BUILD_TOOLS_VERSION = "27.0.1";
     public static final String SUPPORT_LIB_GROUP_ID = "com.android.support";

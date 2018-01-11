@@ -23,12 +23,12 @@ import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiMethod;
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +38,7 @@ import org.jetbrains.uast.UExpression;
 /**
  * Detector which looks for problems related to SQLite usage
  */
-public class SQLiteDetector extends Detector implements UastScanner {
+public class SQLiteDetector extends Detector implements SourceCodeScanner {
     private static final Implementation IMPLEMENTATION = new Implementation(
           SQLiteDetector.class, Scope.JAVA_FILE_SCOPE);
 
@@ -71,7 +71,7 @@ public class SQLiteDetector extends Detector implements UastScanner {
             IMPLEMENTATION)
             .addMoreInfo("https://www.sqlite.org/datatype3.html");
 
-    // ---- Implements Detector.JavaScanner ----
+    // ---- Implements SourceCodeScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {

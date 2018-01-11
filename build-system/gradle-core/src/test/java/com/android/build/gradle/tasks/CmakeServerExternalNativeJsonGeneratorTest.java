@@ -43,12 +43,14 @@ import com.android.utils.ILogger;
 import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -73,6 +75,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
     List<String> cFlags;
     List<String> cppFlags;
     List<File> nativeBuildConfigurationsJsons;
+    GradleBuildVariant.Builder stats;
 
     @Before
     public void setUp() throws Exception {
@@ -91,6 +94,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
 
         jsonFolder = getTestJsonFolder(); //Mockito.mock(File.class);
         makeFile = Mockito.mock(File.class);
+        stats = GradleBuildVariant.newBuilder();
         AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkDirectory);
         LocalPackage cmakePackage =
                 sdk.getLatestLocalPackageForPrefix(
@@ -313,8 +317,8 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
 
     @Test
     public void testGetNativeBuildConfigValue() throws IOException {
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
         CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
-
         String targetStr =
                 " {  \n"
                         + "     \"artifacts\":[  \n"
@@ -397,7 +401,8 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                 buildArguments,
                 cFlags,
                 cppFlags,
-                nativeBuildConfigurationsJsons);
+                nativeBuildConfigurationsJsons,
+                stats);
     }
 
     /**

@@ -49,8 +49,7 @@ void EventManager::CacheAndEnqueueActivityEvent(
   lock_guard<mutex> guard(activity_cache_mutex_);
   // We may have multiple active activities / fragments, so we cache all
   // that are not destroyed. When we get to this state, we no longer need to
-  // cache
-  // the component.
+  // cache the component.
   if (activity.state_changes(activity.state_changes_size() - 1).state() ==
       ActivityStateData::DESTROYED) {
     hash_activity_cache_.erase(activity.hash());

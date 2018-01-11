@@ -44,7 +44,8 @@ public class PostprocessingTest {
                 project.getBuildFile(),
                 "android.buildTypes.release { postprocessing.removeUnusedCode = true; minifyEnabled = true\n }");
 
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+        AndroidProject model =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
         TruthHelper.assertThat(model)
                 .hasSingleIssue(
                         SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC, "setMinifyEnabled");
@@ -56,7 +57,7 @@ public class PostprocessingTest {
                 project.getBuildFile(),
                 "android.buildTypes.release { postprocessing.removeUnusedCode = true\n }");
 
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
         TruthHelper.assertThat(model).hasIssueSize(0);
 
         BuildTypeContainer buildTypeContainer =

@@ -25,7 +25,9 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LayoutDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.XmlScanner
 import com.google.common.truth.Truth.assertThat
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
@@ -62,7 +64,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
 
     override fun getDetector(): Detector = CrashingDetector()
 
-    class CrashingDetector : Detector(), Detector.UastScanner {
+    class CrashingDetector : Detector(), SourceCodeScanner {
 
         override fun getApplicableUastTypes(): List<Class<out UElement>>? =
                 listOf<Class<out UElement>>(UFile::class.java)
@@ -83,7 +85,7 @@ class LintDriverCrashTest : AbstractCheckTest() {
         }
     }
 
-    class DisposedThrowingDetector : LayoutDetector(), Detector.XmlScanner {
+    class DisposedThrowingDetector : LayoutDetector(), XmlScanner {
 
         override fun getApplicableElements(): Collection<String> {
             return arrayListOf("LinearLayout")

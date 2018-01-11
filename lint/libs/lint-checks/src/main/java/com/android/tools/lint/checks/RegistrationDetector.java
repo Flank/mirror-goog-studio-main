@@ -34,7 +34,6 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -44,6 +43,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Maps;
@@ -59,7 +59,7 @@ import org.w3c.dom.Element;
  * Checks for missing manifest registrations for activities, services etc
  * and also makes sure that they are registered with the correct tag
  */
-public class RegistrationDetector extends LayoutDetector implements UastScanner {
+public class RegistrationDetector extends LayoutDetector implements SourceCodeScanner {
     /** Unregistered activities and services */
     public static final Issue ISSUE = Issue.create(
             "Registered",
@@ -131,7 +131,7 @@ public class RegistrationDetector extends LayoutDetector implements UastScanner 
         }
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

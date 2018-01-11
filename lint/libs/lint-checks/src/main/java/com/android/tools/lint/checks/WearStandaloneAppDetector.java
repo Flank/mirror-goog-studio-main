@@ -37,13 +37,14 @@ import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.android.utils.XmlUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
-public class WearStandaloneAppDetector extends Detector implements Detector.XmlScanner {
+public class WearStandaloneAppDetector extends Detector implements XmlScanner {
 
     public static final Implementation IMPLEMENTATION =
             new Implementation(WearStandaloneAppDetector.class, Scope.MANIFEST_SCOPE);

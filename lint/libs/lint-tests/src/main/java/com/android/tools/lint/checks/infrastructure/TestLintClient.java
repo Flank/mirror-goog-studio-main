@@ -40,7 +40,6 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
 import com.android.ide.common.res2.AbstractResourceRepository;
-import com.android.ide.common.res2.DuplicateDataException;
 import com.android.ide.common.res2.MergingException;
 import com.android.ide.common.res2.ResourceFile;
 import com.android.ide.common.res2.ResourceItem;

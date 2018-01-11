@@ -16,29 +16,13 @@
 
 package com.android.builder.internal.aapt;
 
-import com.android.annotations.NonNull;
 import com.android.ide.common.res2.QueueableResourceCompiler;
-import com.google.common.util.concurrent.ListenableFuture;
 
 
 /**
  * Interface to the {@code aapt} tool. To obtain an instance, a concrete class, tied to a specific
- * {@code aapt} implementation, should be used. For example,
- * {@link com.android.builder.internal.aapt.v1.AaptV1} can be used to create implementations that
- * use version 1 of the {@code aapt} tool.
+ * {@code aapt} implementation, should be used. For example, {@link
+ * com.android.builder.internal.aapt.v1.AaptV1} can be used to create implementations that use
+ * version 1 of the {@code aapt} tool.
  */
-public interface Aapt extends QueueableResourceCompiler {
-
-    /**
-     * Invokes {@code aapt} to link the compiled resources into the {@code ap_} file.
-     *
-     * @param config a package configuration
-     * @return a {@code Future} to monitor execution; this {@code Future} always returns
-     * {@code null}
-     * @throws AaptException if there is a configuration problem, or if {@code aapt} invocation
-     * fails; note that if execution of the {@code aapt} fails, but the command starts successfully,
-     * the error will be reported in the returned {@code Future}, not as an exception here
-     */
-    @NonNull
-    ListenableFuture<Void> link(@NonNull AaptPackageConfig config) throws AaptException;
-}
+public interface Aapt extends QueueableResourceCompiler, BlockingResourceLinker {}

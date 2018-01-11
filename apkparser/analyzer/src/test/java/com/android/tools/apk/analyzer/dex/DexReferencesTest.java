@@ -16,6 +16,8 @@
 package com.android.tools.apk.analyzer.dex;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.tools.apk.analyzer.dex.tree.DexElementNode;
@@ -27,12 +29,13 @@ import org.junit.Test;
 
 public class DexReferencesTest {
     @Test
-    public void createReferenceTree() throws IOException {
+    public void getReferenceTreeFor() throws IOException {
         DexBackedDexFile dexFile =
                 PackageTreeCreatorTest.getTestDexFile(
                         PackageTreeCreatorTest.getDexPath("Test2.dex"));
         DexReferences references = new DexReferences(new DexBackedDexFile[] {dexFile});
         DexElementNode root = references.getReferenceTreeFor(new ImmutableTypeReference("La;"));
+        root.sort(DexReferences.NODE_COMPARATOR);
         StringBuffer sb = new StringBuffer();
         dumpTree(sb, root, 0);
         assertEquals(
@@ -45,6 +48,7 @@ public class DexReferencesTest {
                 sb.toString());
 
         root = references.getReferenceTreeFor(new ImmutableTypeReference("LSomeAnnotation;"));
+        root.sort(DexReferences.NODE_COMPARATOR);
         sb.setLength(0);
         dumpTree(sb, root, 0);
         assertEquals(
@@ -58,6 +62,64 @@ public class DexReferencesTest {
                 sb.toString());
 
 
+    }
+
+    @Test
+    public void getReferenceTreeForShallow() throws IOException {
+        DexBackedDexFile dexFile =
+                PackageTreeCreatorTest.getTestDexFile(
+                        PackageTreeCreatorTest.getDexPath("Test2.dex"));
+        DexReferences references = new DexReferences(new DexBackedDexFile[] {dexFile});
+        DexElementNode root =
+                references.getReferenceTreeFor(new ImmutableTypeReference("La;"), true);
+        root.sort(DexReferences.NODE_COMPARATOR);
+        StringBuffer sb = new StringBuffer();
+        dumpTree(sb, root, 0);
+        assertEquals(
+                "La;: \n"
+                        + "  LTest2;-><init>()V: \n"
+                        + "    null: \n"
+                        + "  LTest2;->aClassField:La;: \n"
+                        + "    null: \n",
+                sb.toString());
+
+        root = references.getReferenceTreeFor(new ImmutableTypeReference("LSomeAnnotation;"), true);
+        root.sort(DexReferences.NODE_COMPARATOR);
+        sb.setLength(0);
+        dumpTree(sb, root, 0);
+        assertEquals("LSomeAnnotation;: \n" + "  La;: \n" + "    null: \n", sb.toString());
+    }
+
+    @Test
+    public void addReferencesForNode() throws IOException {
+        DexBackedDexFile dexFile =
+                PackageTreeCreatorTest.getTestDexFile(
+                        PackageTreeCreatorTest.getDexPath("Test2.dex"));
+        DexReferences references = new DexReferences(new DexBackedDexFile[] {dexFile});
+        DexElementNode root =
+                references.getReferenceTreeFor(new ImmutableTypeReference("La;"), true);
+        root.sort(DexReferences.NODE_COMPARATOR);
+        DexElementNode node = (DexElementNode) root.getFirstChild();
+        references.addReferencesForNode(node, true);
+        StringBuffer sb = new StringBuffer();
+        dumpTree(sb, node, 0);
+        assertEquals(
+                "LTest2;-><init>()V: \n" + "  LTestSubclass;-><init>()V: \n" + "    null: \n",
+                sb.toString());
+    }
+
+    @Test
+    public void isAlreadyLoaded() throws IOException {
+        DexBackedDexFile dexFile =
+                PackageTreeCreatorTest.getTestDexFile(
+                        PackageTreeCreatorTest.getDexPath("Test2.dex"));
+        DexReferences references = new DexReferences(new DexBackedDexFile[] {dexFile});
+        DexElementNode root =
+                references.getReferenceTreeFor(new ImmutableTypeReference("La;"), true);
+        DexElementNode node = (DexElementNode) root.getFirstChild();
+        assertFalse(DexReferences.isAlreadyLoaded(node));
+        references.addReferencesForNode(node, true);
+        assertTrue(DexReferences.isAlreadyLoaded(node));
     }
 
     private static void dumpTree(StringBuffer sb, @NonNull DexElementNode node, int depth) {

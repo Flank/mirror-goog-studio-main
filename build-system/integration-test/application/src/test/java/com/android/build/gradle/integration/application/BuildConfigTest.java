@@ -7,7 +7,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -18,7 +18,6 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -138,7 +137,7 @@ public class BuildConfigTest {
         map.put("VALUE_FLAVOR", "10");
         map.put("VALUE_DEBUG", "100");
         map.put("VALUE_VARIANT", "1000");
-        checkVariant(model.getVariants(), "flavor1Debug", map);
+        checkVariant(model, "flavor1Debug", map);
     }
 
     @Test
@@ -175,7 +174,7 @@ public class BuildConfigTest {
         map.put("VALUE_FLAVOR", "20");
         map.put("VALUE_DEBUG", "100");
         map.put("VALUE_VARIANT", "1000");
-        checkVariant(model.getVariants(), "flavor2Debug", map);
+        checkVariant(model, "flavor2Debug", map);
     }
 
     @Test
@@ -210,7 +209,7 @@ public class BuildConfigTest {
         map.put("VALUE_FLAVOR", "10");
         map.put("VALUE_DEBUG", "10");
         map.put("VALUE_VARIANT", "10");
-        checkVariant(model.getVariants(), "flavor1Release", map);
+        checkVariant(model, "flavor1Release", map);
     }
 
     @Test
@@ -245,7 +244,7 @@ public class BuildConfigTest {
         map.put("VALUE_FLAVOR", "20");
         map.put("VALUE_DEBUG", "20");
         map.put("VALUE_VARIANT", "20");
-        checkVariant(model.getVariants(), "flavor2Release", map);
+        checkVariant(model, "flavor2Release", map);
     }
 
     private static void doCheckBuildConfig(@NonNull String expected, @NonNull String variantDir)
@@ -269,10 +268,10 @@ public class BuildConfigTest {
     }
 
     private static void checkVariant(
-            @NonNull Collection<Variant> variants,
+            @NonNull AndroidProject androidProject,
             @NonNull final String variantName,
             @Nullable Map<String, String> valueMap) {
-        Variant variant = ModelHelper.findVariantByName(variants, variantName);
+        Variant variant = AndroidProjectUtils.findVariantByName(androidProject, variantName);
         assertNotNull(variantName + " variant null-check", variant);
 
         AndroidArtifact artifact = variant.getMainArtifact();

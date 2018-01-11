@@ -23,9 +23,9 @@ import static com.android.build.gradle.integration.common.utils.SyncIssueHelperK
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static org.junit.Assert.fail;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.testutils.apk.Apk;
@@ -92,11 +92,11 @@ public class MatchingFallbackTest {
         project.executor().run("clean", "app:assembleFoo");
 
         // then query the model
-        GetAndroidModelAction.ModelContainer<AndroidProject> models =
-                project.model().ignoreSyncIssues().getMulti();
+        ModelContainer<AndroidProject> models =
+                project.model().ignoreSyncIssues().fetchAndroidProjects();
 
         //get the app model
-        AndroidProject appModel = models.getModelMap().get(":app");
+        AndroidProject appModel = models.getOnlyModelMap().get(":app");
 
         final Collection<SyncIssue> syncIssues = appModel.getSyncIssues();
         assertThat(syncIssues).hasSize(4);

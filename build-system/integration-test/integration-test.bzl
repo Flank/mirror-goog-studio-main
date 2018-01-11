@@ -11,7 +11,7 @@ load('//tools/base/bazel:kotlin.bzl', 'kotlin_library', 'kotlin_jar')
 #     maven_repos = Absolute targets for maven repos containing the plugin(s) under test
 #     shard_count = 8)
 def gradle_integration_test(
-    name, srcs, deps, data, maven_repos, resources=[], runtime_deps=[], shard_count=1, **kwargs):
+    name, srcs, deps, data, maven_repos, dirs=["src/test/java"], resources=[], runtime_deps=[], shard_count=1, **kwargs):
 
   kotlin_srcs = [src for src in srcs if src.endswith('.kt')]
   java_srcs = [src for src in srcs if src.endswith('.java')]
@@ -19,12 +19,13 @@ def gradle_integration_test(
   if not kotlin_srcs and not java_srcs:
     fail('No sources found for gradle_integration_test ' + name)
 
+  java_deps = list(deps)
   if kotlin_srcs:
     kotlin_name = name + '.kotlin.gradle_integration_test'
     kotlin_jar(
         name = kotlin_name,
-        srcs = ['src'],
-        inputs = kotlin_srcs,
+        srcs = dirs,
+        inputs = kotlin_srcs + java_srcs,
         deps = deps,
     )
     kotlin_java_import_name = kotlin_name + '.java_import'
@@ -32,6 +33,7 @@ def gradle_integration_test(
       name = kotlin_java_import_name,
       jars = [kotlin_name],
     )
+    java_deps += [":" + kotlin_java_import_name]
     test_classes_target_names += [kotlin_java_import_name]
 
   if java_srcs:
@@ -40,7 +42,7 @@ def gradle_integration_test(
     native.java_library(
         name = java_name,
         srcs = java_srcs,
-        deps =  deps,
+        deps =  java_deps,
     )
 
   # Stringy conversion of repo to its target and file name
@@ -63,7 +65,7 @@ def gradle_integration_test(
           '-Dfile.encoding=UTF-8',
           '-Dsun.jnu.encoding=UTF-8',
           '-Dmaven.repo.local=/tmp/localMavenRepo',  # For gradle publishing, writing to ~/.m2
-          '-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.DeviceTestsQuarantine,com.android.build.gradle.integration.common.category.OnlineTests',
+          '-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.DeviceTestsQuarantine,com.android.build.gradle.integration.common.category.OnlineTests,com.android.build.gradle.integration.common.category.PerformanceTests',
           '-Dtest.android.build.gradle.integration.repos=' + zip_file_names,
       ],
       resources = resources,

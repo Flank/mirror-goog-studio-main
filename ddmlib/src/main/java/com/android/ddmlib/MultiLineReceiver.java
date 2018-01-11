@@ -17,15 +17,17 @@
 package com.android.ddmlib;
 
 import com.google.common.base.Charsets;
-
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Base implementation of {@link IShellOutputReceiver}, that takes the raw data coming from the
  * socket, and convert it into {@link String} objects.
+ *
  * <p>Additionally, it splits the string by lines.
- * <p>Classes extending it must implement {@link #processNewLines(String[])} which receives
- * new parsed lines as they become available.
+ *
+ * <p>Classes extending it must implement {@link #processNewLines(String[])} which receives new
+ * parsed lines as they become available.
  */
 public abstract class MultiLineReceiver implements IShellOutputReceiver {
 
@@ -34,10 +36,11 @@ public abstract class MultiLineReceiver implements IShellOutputReceiver {
     /** unfinished message line, stored for next packet */
     private String mUnfinishedLine = null;
 
-    private final ArrayList<String> mArray = new ArrayList<String>();
+    private final Collection<String> mArray = new ArrayList<>();
 
     /**
      * Set the trim lines flag.
+     *
      * @param trim whether the lines are trimmed, or not.
      */
     public void setTrimLine(boolean trim) {
@@ -64,7 +67,7 @@ public abstract class MultiLineReceiver implements IShellOutputReceiver {
             mArray.clear();
             int start = 0;
             do {
-                int index = s.indexOf('\n', start); //$NON-NLS-1$
+                int index = s.indexOf('\n', start); // $NON-NLS-1$
 
                 // if \n was not found, this is an unfinished line
                 // and we store it to be processed for the next packet
@@ -106,17 +109,17 @@ public abstract class MultiLineReceiver implements IShellOutputReceiver {
      * @see com.android.ddmlib.adb.IShellOutputReceiver#flush()
      */
     @Override
-    public final void flush() {
+    public void flush() {
         if (mUnfinishedLine != null) {
-            processNewLines(new String[] { mUnfinishedLine });
+            processNewLines(new String[] {mUnfinishedLine});
         }
 
         done();
     }
 
     /**
-     * Terminates the process. This is called after the last lines have been through
-     * {@link #processNewLines(String[])}.
+     * Terminates the process. This is called after the last lines have been through {@link
+     * #processNewLines(String[])}.
      */
     public void done() {
         // do nothing.
@@ -124,7 +127,9 @@ public abstract class MultiLineReceiver implements IShellOutputReceiver {
 
     /**
      * Called when new lines are being received by the remote process.
+     *
      * <p>It is guaranteed that the lines are complete when they are given to this method.
+     *
      * @param lines The array containing the new lines.
      */
     public abstract void processNewLines(String[] lines);

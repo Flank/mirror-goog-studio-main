@@ -33,6 +33,7 @@ filegroup(
         include = ["*/build-tools/4509860/**"],
     ),
     visibility = [
+        "//tools/base/build-system/builder:__subpackages__",
         "//tools/base/build-system/integration-test:__subpackages__",
     ],
 )

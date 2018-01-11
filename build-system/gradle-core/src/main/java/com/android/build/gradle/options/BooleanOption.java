@@ -39,6 +39,7 @@ public enum BooleanOption implements Option<Boolean> {
     ENABLE_DESUGAR("android.enableDesugar", true),
     ENABLE_INCREMENTAL_DESUGARING("android.enableIncrementalDesugaring", true),
     ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", false),
+    ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", false),
 
     ENABLE_D8("android.enableD8", true),
     ENABLE_D8_DESUGARING("android.enableD8.desugaring", false),

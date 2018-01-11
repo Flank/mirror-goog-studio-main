@@ -29,6 +29,7 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.google.common.collect.Maps;
 import com.intellij.psi.PsiMethod;
 import java.util.Collections;
@@ -62,7 +63,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 /**
  * Detector looking for cut &amp; paste issues
  */
-public class CutPasteDetector extends Detector implements Detector.UastScanner {
+public class CutPasteDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "CutPasteId",
@@ -91,7 +92,7 @@ public class CutPasteDetector extends Detector implements Detector.UastScanner {
     public CutPasteDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {

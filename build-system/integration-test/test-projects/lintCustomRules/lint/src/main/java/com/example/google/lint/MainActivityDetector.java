@@ -19,18 +19,18 @@ package com.example.google.lint;
 import static com.android.SdkConstants.TAG_ACTIVITY;
 
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import java.util.Collection;
 import java.util.Collections;
 import org.w3c.dom.Element;
 
-public class MainActivityDetector extends ResourceXmlDetector implements Detector.XmlScanner {
+public class MainActivityDetector extends ResourceXmlDetector implements XmlScanner {
     public static final Issue ISSUE =
             Issue.create(
                     "UnitTestLintCheck",

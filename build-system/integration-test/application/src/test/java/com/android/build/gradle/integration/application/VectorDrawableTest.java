@@ -23,8 +23,8 @@ import static com.google.common.base.Charsets.UTF_8;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.builder.model.AndroidProject;
@@ -628,7 +628,7 @@ public class VectorDrawableTest {
                         + "  }\n"
                         + "}\n");
 
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
 
         VectorDrawablesOptions defaultConfigOptions =
                 model.getDefaultConfig().getProductFlavor().getVectorDrawables();
@@ -637,7 +637,7 @@ public class VectorDrawableTest {
         assertThat(defaultConfigOptions.getGeneratedDensities()).containsExactly("hdpi", "xhdpi");
 
         VectorDrawablesOptions pngsDebug =
-                ModelHelper.getVariant(model.getVariants(), "pngsDebug")
+                AndroidProjectUtils.getVariantByName(model, "pngsDebug")
                         .getMergedFlavor()
                         .getVectorDrawables();
 
@@ -645,14 +645,14 @@ public class VectorDrawableTest {
         assertThat(pngsDebug.getGeneratedDensities()).containsExactly("hdpi", "xhdpi");
 
         VectorDrawablesOptions vectorsDebug =
-                ModelHelper.getVariant(model.getVariants(), "vectorsDebug")
+                AndroidProjectUtils.getVariantByName(model, "vectorsDebug")
                         .getMergedFlavor()
                         .getVectorDrawables();
 
         assertThat(vectorsDebug.getUseSupportLibrary()).isTrue();
 
         VectorDrawablesOptions hdpiOnlyDebug =
-                ModelHelper.getVariant(model.getVariants(), "hdpiOnlyDebug")
+                AndroidProjectUtils.getVariantByName(model, "hdpiOnlyDebug")
                         .getMergedFlavor()
                         .getVectorDrawables();
 

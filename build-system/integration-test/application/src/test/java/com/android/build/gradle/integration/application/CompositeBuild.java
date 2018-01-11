@@ -16,10 +16,9 @@
 
 package com.android.build.gradle.integration.application;
 
-
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.GraphItem;
@@ -42,11 +41,11 @@ public class CompositeBuild {
     @Test
     public void testBuild() throws Exception {
         project.execute("clean", "assembleDebug");
-        ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
+        ModelContainer<AndroidProject> modelContainer = project.model().fetchAndroidProjects();
 
         AndroidProject appProject = modelContainer.getRootBuildModelMap().get(":app");
 
-        Variant debugVariant = ModelHelper.getVariant(appProject.getVariants(), "debug");
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(appProject, "debug");
 
         List<GraphItem> dependencies =
                 debugVariant.getMainArtifact().getDependencyGraphs().getCompileDependencies();

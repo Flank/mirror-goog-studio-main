@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.TypeEvaluator
 import com.android.tools.lint.detector.api.UastLintUtils
 import com.intellij.psi.PsiClassType
@@ -40,7 +41,7 @@ import org.jetbrains.uast.UTypeReferenceExpression
 /**
  * Checks that the code is not using reflection to access hidden Android APIs
  */
-class PrivateApiDetector : Detector(), Detector.UastScanner {
+class PrivateApiDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         /** Using hidden/private APIs  */
         @JvmField val ISSUE = Issue.create(

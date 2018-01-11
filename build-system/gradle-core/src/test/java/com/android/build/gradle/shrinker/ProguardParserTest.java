@@ -24,6 +24,7 @@ import com.android.build.gradle.shrinker.parser.ProguardFlags;
 import com.android.build.gradle.shrinker.parser.UnsupportedFlagsHandler;
 import com.google.common.collect.Iterables;
 import com.google.common.truth.Truth;
+import org.antlr.runtime.RecognitionException;
 import org.junit.Test;
 
 public class ProguardParserTest {
@@ -83,12 +84,47 @@ public class ProguardParserTest {
 
     @Test
     public void keepClassesWithMemberNames_modifiers() throws Exception {
-        ProguardFlags flags = new ProguardFlags();
-        GrammarActions.parse(
+        parse(
                 "-keepclasseswithmembernames,includedescriptorclasses class * { \n"
                         + "    native <methods>; \n"
-                        + "} ",
-                flags,
-                UnsupportedFlagsHandler.NO_OP);
+                        + "} ");
+    }
+
+    @Test
+    public void fieldsMethodsWildcard() throws Exception {
+        parse(
+                "-keepclassmembers class com.google.android.gms.common.api.internal.BasePendingResult {\n"
+                        + "  <fields>;\n"
+                        + "}");
+
+        parse(
+                "-keepclassmembers class com.google.android.gms.common.api.internal.BasePendingResult {\n"
+                        + "  public !static <fields>;\n"
+                        + "}");
+
+        parse(
+                "-keepclassmembers class com.google.android.gms.common.api.internal.BasePendingResult {\n"
+                        + "  com.google.android.gms.common.api.internal.BasePendingResult.ReleasableResultGuardian <fields>;\n"
+                        + "}");
+
+        parse(
+                "-keepclassmembers class com.google.android.gms.common.api.internal.BasePendingResult {\n"
+                        + "  <methods>;\n"
+                        + "}");
+
+        parse(
+                "-keepclassmembers class com.google.android.gms.common.api.internal.BasePendingResult {\n"
+                        + "  public !static <methods>;\n"
+                        + "}");
+
+        parse(
+                "-keepclassmembers class com.google.android.gms.common.api.internal.BasePendingResult {\n"
+                        + "  com.google.android.gms.common.api.internal.BasePendingResult.ReleasableResultGuardian <methods>;\n"
+                        + "}");
+    }
+
+    private static void parse(String input) throws RecognitionException {
+        ProguardFlags flags = new ProguardFlags();
+        GrammarActions.parse(input, flags, UnsupportedFlagsHandler.NO_OP);
     }
 }

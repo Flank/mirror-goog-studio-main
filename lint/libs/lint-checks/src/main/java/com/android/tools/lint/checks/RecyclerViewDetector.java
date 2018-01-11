@@ -25,13 +25,13 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.intellij.psi.PsiClass;
@@ -63,7 +63,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 /**
  * Checks related to RecyclerView usage.
  */
-public class RecyclerViewDetector extends Detector implements UastScanner {
+public class RecyclerViewDetector extends Detector implements SourceCodeScanner {
 
     public static final Implementation IMPLEMENTATION = new Implementation(
             RecyclerViewDetector.class,
@@ -103,7 +103,7 @@ public class RecyclerViewDetector extends Detector implements UastScanner {
     private static final String VIEW_ADAPTER = "android.support.v7.widget.RecyclerView.Adapter";
     private static final String ON_BIND_VIEW_HOLDER = "onBindViewHolder";
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

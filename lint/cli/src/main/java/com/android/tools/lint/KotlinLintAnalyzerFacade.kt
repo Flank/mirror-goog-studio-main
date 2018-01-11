@@ -295,7 +295,6 @@ object KotlinLintAnalyzerFacade {
     private fun createCompilerConfiguration(moduleName: String, javaRoots: List<JavaRoot>): CompilerConfiguration {
         val configuration = CompilerConfiguration()
         configuration.put(CommonConfigurationKeys.MODULE_NAME, moduleName)
-        configuration.put(CommonConfigurationKeys.USE_NEW_INFERENCE, false)
         configuration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)
         if (configuration.getList(JVMConfigurationKeys.SCRIPT_DEFINITIONS).isEmpty()) {
             configuration.add(JVMConfigurationKeys.SCRIPT_DEFINITIONS, StandardScriptDefinition)

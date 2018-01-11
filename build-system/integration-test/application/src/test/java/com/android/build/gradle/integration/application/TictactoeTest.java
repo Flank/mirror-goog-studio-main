@@ -24,15 +24,14 @@ import static com.android.builder.model.AndroidProject.PROJECT_TYPE_LIBRARY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import java.io.IOException;
-import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -60,16 +59,15 @@ public class TictactoeTest {
     public void testModel() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(models);
 
-        AndroidProject libModel = models.getModelMap().get(":lib");
+        AndroidProject libModel = models.getOnlyModelMap().get(":lib");
         assertNotNull("lib module model null-check", libModel);
         assertEquals("lib module library flag", libModel.getProjectType(), PROJECT_TYPE_LIBRARY);
         assertEquals("Project Type", PROJECT_TYPE_LIBRARY, libModel.getProjectType());
 
-        AndroidProject appModel = models.getModelMap().get(":app");
+        AndroidProject appModel = models.getOnlyModelMap().get(":app");
         assertNotNull("app module model null-check", appModel);
 
-        Collection<Variant> variants = appModel.getVariants();
-        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG);
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(appModel, DEBUG);
 
         DependencyGraphs graph = debugVariant.getMainArtifact().getDependencyGraphs();
         assertThat(helper.on(graph).withType(MODULE).mapTo(GRADLE_PATH)).containsExactly(":lib");

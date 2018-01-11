@@ -6,6 +6,6 @@ android {
 }
 
 dependencies{
-    compile project(":lib")
+    api project(":lib")
 }
 

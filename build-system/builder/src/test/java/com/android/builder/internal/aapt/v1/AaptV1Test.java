@@ -353,7 +353,7 @@ public class AaptV1Test {
                             .setVariantType(VariantType.DEFAULT)
                             .setResourceDir(outputDir)
                             .build();
-            aapt.link(config).get();
+            aapt.link(config);
 
             File rJava = FileUtils.join(sourceOutput, "com", "example", "aapt", "R.java");
             assertTrue(rJava.isFile());
@@ -413,7 +413,7 @@ public class AaptV1Test {
                             .setVariantType(VariantType.LIBRARY)
                             .setResourceDir(outputDir)
                             .build();
-            aapt.link(config).get();
+            aapt.link(config);
 
             File rJava = FileUtils.join(sourceOutput, "com", "example", "aapt", "R.java");
             assertTrue(rJava.isFile());

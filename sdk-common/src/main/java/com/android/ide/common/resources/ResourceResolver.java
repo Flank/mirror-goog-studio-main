@@ -242,17 +242,17 @@ public class ResourceResolver extends RenderResources {
         return mThemes;
     }
 
-  @Override
+    @Override
     public StyleResourceValue getTheme(String name, boolean frameworkTheme) {
         ResourceValue theme;
 
         if (frameworkTheme) {
             ResourceValueMap frameworkStyleMap = mFrameworkResources.get(
                     ResourceType.STYLE);
-            theme = frameworkStyleMap.get(name);
+            theme = frameworkStyleMap != null ? frameworkStyleMap.get(name) : null;
         } else {
             ResourceValueMap projectStyleMap = mProjectResources.get(ResourceType.STYLE);
-            theme = projectStyleMap.get(name);
+            theme = projectStyleMap != null ? projectStyleMap.get(name) : null;
         }
 
         if (theme instanceof StyleResourceValue) {

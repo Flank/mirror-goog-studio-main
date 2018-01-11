@@ -20,10 +20,10 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -46,21 +46,26 @@ public class LibWithProvidedLocalJarTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        appendToFile(project.getBuildFile(),
-                "\n" +
-                "apply plugin: \"com.android.library\"\n" +
-                "\n" +
-                "android {\n" +
-                "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
-                "    buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n" +
-                "}\n" +
-                "\n" +
-                "dependencies {\n" +
-                "    provided files(\"libs/util-1.0.jar\")\n" +
-                "}\n");
+        appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.library\"\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compileOnly files(\"libs/util-1.0.jar\")\n"
+                        + "}\n");
 
         project.execute("clean", "assembleDebug");
-        model = project.model().withFullDependencies().getSingle();
+        model = project.model().withFullDependencies().fetchAndroidProjects();
     }
 
     @AfterClass
@@ -78,7 +83,7 @@ public class LibWithProvidedLocalJarTest {
     public void checkProvidedLocalJarIsInTheMainArtifactDependency() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
+        Variant variant = AndroidProjectUtils.getVariantByName(model.getOnlyModel(), "debug");
 
         DependencyGraphs dependencyGraph = variant.getMainArtifact().getDependencyGraphs();
 

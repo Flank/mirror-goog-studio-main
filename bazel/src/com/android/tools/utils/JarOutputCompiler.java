@@ -38,8 +38,8 @@ public abstract class JarOutputCompiler {
     }
 
     protected int run(List<String> args) throws IOException {
+        args = filterOptions(args);
         Options options = parseOptions(args.iterator());
-        additionalOptions(args.iterator());
         if (options.out == null) {
             usage("Output file not specified.");
             return 1;
@@ -56,7 +56,9 @@ public abstract class JarOutputCompiler {
         return 0;
     }
 
-    protected void additionalOptions(Iterator<String> it) {}
+    protected List<String> filterOptions(List<String> args) {
+        return args;
+    }
 
     private Options parseOptions(Iterator<String> it) throws IOException {
         Options options = new Options();

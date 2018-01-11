@@ -20,10 +20,12 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.model.Variant;
 import com.android.testutils.truth.MoreTruth;
 import com.google.common.collect.Iterables;
 import java.io.File;
@@ -52,9 +54,10 @@ public class AndroidTestUtilTest {
                         + "androidTestUtil 'com.android.support.test:orchestrator:1.0.0'\n"
                         + "}\n");
 
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(model, "debug");
         Collection<File> additionalRuntimeApks =
-                ModelHelper.getAndroidTestArtifact(model).getAdditionalRuntimeApks();
+                VariantUtils.getAndroidTestArtifact(debugVariant).getAdditionalRuntimeApks();
 
         additionalRuntimeApks.forEach(apk -> MoreTruth.assertThat(apk).isFile());
         assertThat(Iterables.transform(additionalRuntimeApks, File::getName))
@@ -71,7 +74,8 @@ public class AndroidTestUtilTest {
                         + "androidTestUtil 'com.google.guava:guava:19.0'\n"
                         + "}\n");
 
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+        AndroidProject model =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
         assertThat(model).hasSingleIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
         SyncIssue issue = model.getSyncIssues().iterator().next();
         assertThat(issue.getMessage()).contains("guava");

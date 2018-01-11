@@ -102,6 +102,7 @@ kotlin_test(
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platforms/latest",
     ],
+    friends = [":gradle-core"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
     # TODO: Remove the blacklist, once NDK is checked in.

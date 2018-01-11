@@ -40,5 +40,5 @@ project.afterEvaluate {
 }
 
 dependencies {
-    compile project(':lib')
+    api project(':lib')
 }

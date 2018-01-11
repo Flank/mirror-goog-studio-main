@@ -8,8 +8,8 @@ version='1.0'
 apply from: "../commonLocalRepo.gradle"
 
 dependencies {
-    apk project(':jarProject')
-    provided project(':jarProject2')
+    runtimeOnly project(':jarProject')
+    compileOnly project(':jarProject2')
 }
 
 android {

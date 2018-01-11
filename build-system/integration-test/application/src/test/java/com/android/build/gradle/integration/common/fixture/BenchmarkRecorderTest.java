@@ -69,8 +69,12 @@ public class BenchmarkRecorderTest {
         // Because the profiler deals with lots of static state in the
         // plugin, make sure a sequence of actions with and without the
         // profiler enabled work correctly.
-        recorder.record(scenario, benchmark, BenchmarkMode.SYNC, () -> project.model().getSingle());
-        project.model().getSingle();
+        recorder.record(
+                scenario,
+                benchmark,
+                BenchmarkMode.SYNC,
+                () -> project.model().fetchAndroidProjects());
+        project.model().fetchAndroidProjects();
         recorder.record(
                 scenario,
                 benchmark,

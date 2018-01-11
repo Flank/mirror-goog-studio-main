@@ -23,13 +23,13 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiMethod;
 import java.util.Collections;
 import java.util.List;
@@ -41,7 +41,7 @@ import org.jetbrains.uast.UThrowExpression;
 import org.jetbrains.uast.UastLiteralUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
-public class BadHostnameVerifierDetector extends Detector implements UastScanner {
+public class BadHostnameVerifierDetector extends Detector implements SourceCodeScanner {
 
     @SuppressWarnings("unchecked")
     private static final Implementation IMPLEMENTATION =
@@ -59,7 +59,7 @@ public class BadHostnameVerifierDetector extends Detector implements UastScanner
             Severity.WARNING,
             IMPLEMENTATION);
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

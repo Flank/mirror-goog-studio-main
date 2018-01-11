@@ -1,0 +1,8 @@
+<root>
+    <item name='com.google.common.util.concurrent.SettableFuture com.google.common.util.concurrent.SettableFuture&lt;V&gt; create()'>
+        <annotation name='org.jetbrains.annotations.Contract'>
+            <val name="value" val="&quot;-&gt; !null&quot;"/>
+            <val name="pure" val="true"/>
+        </annotation>
+    </item>
+</root>

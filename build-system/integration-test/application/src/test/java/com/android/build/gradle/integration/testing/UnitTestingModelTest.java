@@ -48,7 +48,7 @@ public class UnitTestingModelTest {
         // Build the project, so we can verify paths in the model exist.
         project.execute("test");
 
-        AndroidProject model = project.model().getMulti().getModelMap().get(":app");
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModelMap().get(":app");
 
         Truth.assertThat(
                         model.getExtraArtifacts()
@@ -132,7 +132,7 @@ public class UnitTestingModelTest {
                         + "    flavorDimensions 'foo'\n"
                         + "    productFlavors { paid; free }\n"
                         + "}");
-        AndroidProject model = project.model().getMulti().getModelMap().get(":app");
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModelMap().get(":app");
 
         assertThat(model.getProductFlavors()).hasSize(2);
 
@@ -148,10 +148,10 @@ public class UnitTestingModelTest {
             assertThat(sourceProvider.getJavaDirectories()).hasSize(1);
             assertThat(sourceProvider.getJavaDirectories().iterator().next().getAbsolutePath())
                     .endsWith(
-                            "test"
-                                    + StringHelper.capitalize(flavor.getProductFlavor().getName())
-                                    + File.separator
-                                    + "java");
+                            StringHelper.appendCapitalized(
+                                    "test",
+                                    flavor.getProductFlavor().getName(),
+                                    File.separator + "java"));
         }
     }
 }

@@ -67,7 +67,7 @@ public class JarJarTest {
                         + "}\n");
 
         project.executor().run("clean", "assembleDebug");
-        project.model().getSingle().getOnlyModel();
+        project.model().fetchAndroidProjects().getOnlyModel();
         verifyApk();
     }
 

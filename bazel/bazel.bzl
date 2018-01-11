@@ -67,8 +67,7 @@ def _iml_module_jar_impl(ctx,
     java_deps,
     form_deps,
     exports,
-    friend_roots,
-    friend_srcs,
+    friends,
     transitive_compile_time_jars,
     transitive_runtime_jars):
   jars = []
@@ -93,7 +92,7 @@ def _iml_module_jar_impl(ctx,
   kotlin_providers = []
   if kotlin_srcs:
     kotlin_providers += [kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs,
-        transitive_runtime_jars, ctx.attr.package_prefixes, kotlin_jar, friend_roots, friend_srcs)]
+        transitive_runtime_jars, ctx.attr.package_prefixes, kotlin_jar, friends)]
 
     jars += [kotlin_jar]
 
@@ -225,7 +224,6 @@ def _iml_module_impl(ctx):
     form_deps,
     exports,
     [],
-    [],
     transitive_compile_time_jars,
     transitive_runtime_jars)
 
@@ -242,8 +240,7 @@ def _iml_module_impl(ctx):
     [main_provider] + test_java_deps,
     test_form_deps,
     exports + test_exports,
-    ctx.attr.roots,
-    ctx.files.kotlin_srcs,
+    [ctx.outputs.production_jar],
     transitive_test_compile_time_jars,
     transitive_test_runtime_jars,
   )

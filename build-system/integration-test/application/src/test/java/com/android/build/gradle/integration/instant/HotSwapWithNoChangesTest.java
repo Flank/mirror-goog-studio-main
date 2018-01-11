@@ -95,7 +95,8 @@ public class HotSwapWithNoChangesTest {
 
     private void doTestArtifacts(BuildRunnable runColdSwapBuild) throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
+                InstantRunTestUtils.getInstantRunModel(
+                        project.model().fetchAndroidProjects().getOnlyModel());
 
         project.executor()
                 .withInstantRun(VERSION_UNDER_TEST, OptionalCompilationStep.FULL_APK)

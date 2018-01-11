@@ -71,8 +71,9 @@ public class InstantRunAddLibraryTest {
     @Test
     public void checkAddedLibraryCausesColdSwap() throws Exception {
         project.execute("clean");
-        InstantRun instantRunModel = InstantRunTestUtils
-                .getInstantRunModel(project.model().getSingle().getOnlyModel());
+        InstantRun instantRunModel =
+                InstantRunTestUtils.getInstantRunModel(
+                        project.model().fetchAndroidProjects().getOnlyModel());
 
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)

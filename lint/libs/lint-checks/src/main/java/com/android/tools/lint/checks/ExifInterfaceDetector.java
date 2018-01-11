@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
@@ -46,7 +47,7 @@ import org.jetbrains.uast.UVariable;
 /**
  * Checks for errors related to the Exif Interface
  */
-public class ExifInterfaceDetector extends Detector implements Detector.UastScanner {
+public class ExifInterfaceDetector extends Detector implements SourceCodeScanner {
 
     public static final String EXIF_INTERFACE = "ExifInterface";
     public static final String OLD_EXIF_INTERFACE = "android.media.ExifInterface";
@@ -73,7 +74,7 @@ public class ExifInterfaceDetector extends Detector implements Detector.UastScan
     public ExifInterfaceDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     private static void fix(@NonNull JavaContext context, @NonNull UElement reference,
             @NonNull PsiElement referenced) {

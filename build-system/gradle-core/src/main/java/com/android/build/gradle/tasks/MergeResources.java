@@ -37,7 +37,6 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.png.VectorDrawableRenderer;
-import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -73,7 +72,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -120,8 +118,6 @@ public class MergeResources extends IncrementalTask {
 
     private File blameLogFolder;
 
-    @Nullable private FileCache fileCache;
-
     // file inputs as raw files, lazy behind a memoized/bypassed supplier
     private Supplier<Collection<File>> sourceFolderInputs;
     private Supplier<List<ResourceSet>> resSetSupplier;
@@ -162,14 +158,12 @@ public class MergeResources extends IncrementalTask {
     private static QueueableResourceCompiler getResourceProcessor(
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidBuilder builder,
-            @Nullable FileCache fileCache,
             boolean crunchPng,
             @NonNull VariantScope scope,
             @NonNull File intermediateDir,
             @Nullable MergingLog blameLog,
             ImmutableSet<Flag> flags,
-            boolean processResources)
-            throws IOException {
+            boolean processResources) {
 
         // If we received the flag for removing namespaces we need to use the namespace remover to
         // process the resources.
@@ -188,7 +182,6 @@ public class MergeResources extends IncrementalTask {
                 aaptGeneration,
                 builder,
                 createProcessOutputHandler(aaptGeneration, builder, blameLog),
-                fileCache,
                 crunchPng,
                 intermediateDir,
                 scope.getGlobalScope().getExtension().getAaptOptions().getCruncherProcesses());
@@ -240,7 +233,7 @@ public class MergeResources extends IncrementalTask {
     }
 
     @Override
-    protected void doFullTaskAction() throws IOException, ExecutionException, JAXBException {
+    protected void doFullTaskAction() throws IOException, JAXBException {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
         // this is full run, clean the previous outputs
@@ -264,7 +257,6 @@ public class MergeResources extends IncrementalTask {
                 getResourceProcessor(
                         aaptGeneration,
                         getBuilder(),
-                        fileCache,
                         crunchPng,
                         variantScope,
                         getAaptTempDir(),
@@ -310,7 +302,7 @@ public class MergeResources extends IncrementalTask {
 
     @Override
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs)
-            throws IOException, ExecutionException, JAXBException {
+            throws IOException, JAXBException {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
         // create a merger and load the known state.
@@ -366,7 +358,6 @@ public class MergeResources extends IncrementalTask {
                     getResourceProcessor(
                             aaptGeneration,
                             getBuilder(),
-                            fileCache,
                             crunchPng,
                             variantScope,
                             getAaptTempDir(),
@@ -820,7 +811,6 @@ public class MergeResources extends IncrementalTask {
             mergeResourcesTask.aaptGeneration =
                     AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());
             mergeResourcesTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
-            mergeResourcesTask.fileCache = scope.getGlobalScope().getBuildCache();
             mergeResourcesTask.setVariantName(scope.getVariantConfiguration().getFullName());
             mergeResourcesTask.setIncrementalFolder(scope.getIncrementalDir(getName()));
             mergeResourcesTask.variantScope = scope;

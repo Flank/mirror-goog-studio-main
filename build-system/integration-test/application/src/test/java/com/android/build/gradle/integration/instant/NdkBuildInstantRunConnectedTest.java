@@ -78,7 +78,7 @@ public class NdkBuildInstantRunConnectedTest {
     public void checkItRunsOnDevice() throws Exception {
         IDevice device = adb.getDevice(thatUsesArt());
         try (Closeable ignored = new UninstallOnClose(device, "com.example.hellojni")) {
-            AndroidProject model = project.model().getSingle().getOnlyModel();
+            AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
             InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
             project.executor()
                     .withInstantRun(

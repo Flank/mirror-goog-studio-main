@@ -52,7 +52,7 @@ public class InstantRunFullBuildTest {
     @Before
     public void getModel() throws Exception {
         mProject.execute("clean");
-        AndroidProject model = mProject.model().getSingle().getOnlyModel();
+        AndroidProject model = mProject.model().fetchAndroidProjects().getOnlyModel();
         instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
     }
 

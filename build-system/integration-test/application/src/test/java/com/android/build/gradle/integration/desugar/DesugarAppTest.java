@@ -114,7 +114,7 @@ public class DesugarAppTest {
                 project.model()
                         .with(BooleanOption.ENABLE_DESUGAR, false)
                         .ignoreSyncIssues()
-                        .getSingle()
+                        .fetchAndroidProjects()
                         .getOnlyModel();
         boolean found =
                 result.getSyncIssues()
@@ -308,7 +308,7 @@ public class DesugarAppTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(
                         Iterables.getOnlyElement(
-                                project.model().getSingle().getModelMap().values()));
+                                project.model().fetchAndroidProjects().getOnlyModelMap().values()));
         getProjectExecutor()
                 .withInstantRun(new AndroidVersion(24, null), OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");

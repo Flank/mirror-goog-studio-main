@@ -25,13 +25,13 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiMethod;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,7 +44,7 @@ import org.jetbrains.uast.UastUtils;
 /**
  * Checks for errors related to locale handling
  */
-public class LocaleDetector extends Detector implements UastScanner {
+public class LocaleDetector extends Detector implements SourceCodeScanner {
     private static final Implementation IMPLEMENTATION = new Implementation(
             LocaleDetector.class,
             Scope.JAVA_FILE_SCOPE);
@@ -76,7 +76,7 @@ public class LocaleDetector extends Detector implements UastScanner {
     public LocaleDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {

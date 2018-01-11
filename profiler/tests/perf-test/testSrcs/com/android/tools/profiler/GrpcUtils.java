@@ -1,5 +1,6 @@
 package com.android.tools.profiler;
 
+import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.EventProfiler.ActivityDataResponse;
 import com.android.tools.profiler.proto.EventProfiler.EventDataRequest;
 import com.android.tools.profiler.proto.EventServiceGrpc;
@@ -74,10 +75,10 @@ public class GrpcUtils {
      * Support function to get the main activity. This function checks for the activity name, if it
      * is not the default activity an assert will be thrown.
      */
-    public ActivityDataResponse getActivity(int processId) {
+    public ActivityDataResponse getActivity(Session session) {
         ActivityDataResponse response =
             myEventServiceStub.getActivityData(
-                EventDataRequest.newBuilder().setProcessId(processId).build());
+                EventDataRequest.newBuilder().setSession(session).build());
         return response;
     }
 }

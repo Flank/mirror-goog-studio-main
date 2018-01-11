@@ -75,7 +75,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
         }
 
         List<NativeBuildConfigValueMini> configValueList =
-                AndroidBuildGradleJsons.getNativeBuildMiniConfigs(existingJsons);
+                AndroidBuildGradleJsons.getNativeBuildMiniConfigs(existingJsons, null);
         List<String> cleanCommands = Lists.newArrayList();
         List<String> targetNames = Lists.newArrayList();
         for (NativeBuildConfigValueMini config : configValueList) {

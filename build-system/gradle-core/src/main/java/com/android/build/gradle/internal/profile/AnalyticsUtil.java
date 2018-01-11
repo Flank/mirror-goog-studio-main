@@ -214,7 +214,7 @@ public class AnalyticsUtil {
     }
 
     @NonNull
-    private static DeviceInfo.ApplicationBinaryInterface getAbi(@NonNull String name) {
+    public static DeviceInfo.ApplicationBinaryInterface getAbi(@NonNull String name) {
         Abi abi = Abi.getByName(name);
         if (abi == null) {
             return DeviceInfo.ApplicationBinaryInterface.UNKNOWN_ABI;

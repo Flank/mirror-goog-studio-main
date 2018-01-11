@@ -151,6 +151,7 @@ kotlin_library(
         "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system/builder-model",
         "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
     ],

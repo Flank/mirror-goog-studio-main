@@ -240,7 +240,7 @@ public class VersionChecks {
                 done = true;
             }
 
-            return done || !expression.equals(node);
+            return done;
         }
 
         @Override

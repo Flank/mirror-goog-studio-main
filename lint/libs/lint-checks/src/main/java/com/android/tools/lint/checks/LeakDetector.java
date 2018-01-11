@@ -34,6 +34,7 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
@@ -66,7 +67,7 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 /**
  * Looks for leaks via static fields
  */
-public class LeakDetector extends Detector implements Detector.UastScanner {
+public class LeakDetector extends Detector implements SourceCodeScanner {
     /** Leaking data via static fields */
     public static final Issue ISSUE = Issue.create(
             "StaticFieldLeak",
@@ -102,7 +103,7 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
     public LeakDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

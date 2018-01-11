@@ -13,6 +13,6 @@ android {
 }
 
 dependencies {
-    flavor1Compile project(':jarProject')
-    androidTestFlavor1Compile project(':jarProject2')
+    flavor1Api project(':jarProject')
+    androidTestFlavor1Implementation project(':jarProject2')
 }

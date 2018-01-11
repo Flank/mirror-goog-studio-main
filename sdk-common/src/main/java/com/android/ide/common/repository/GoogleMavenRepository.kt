@@ -26,6 +26,11 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Predicate
 
+const val GMAVEN_TEST_BASE_URL_ENV_VAR = "GMAVEN_TEST_BASE_URL"
+const val DEFAULT_GMAVEN_URL = "https://maven.google.com/"
+@JvmField
+val GMAVEN_BASE_URL = System.getenv(GMAVEN_TEST_BASE_URL_ENV_VAR) ?: DEFAULT_GMAVEN_URL
+
 /**
  * Provides information about the artifacts and versions available on maven.google.com
  */
@@ -139,7 +144,7 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                 }
 
                 try {
-                    val index = readUrlData("https://maven.google.com/$relative",
+                    val index = readUrlData("$GMAVEN_BASE_URL$relative",
                             networkTimeoutMs)
                     if (index != null) {
                         val parent = file.parentFile

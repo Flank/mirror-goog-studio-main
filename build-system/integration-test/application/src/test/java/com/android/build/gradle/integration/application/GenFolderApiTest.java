@@ -51,7 +51,7 @@ public class GenFolderApiTest {
         model =
                 project.model()
                         .withProperty("inject_enable_generate_values_res", "true")
-                        .getSingle()
+                        .fetchAndroidProjects()
                         .getOnlyModel();
     }
 

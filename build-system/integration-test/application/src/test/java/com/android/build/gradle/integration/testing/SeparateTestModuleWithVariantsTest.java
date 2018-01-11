@@ -78,7 +78,7 @@ public class SeparateTestModuleWithVariantsTest {
         Variant variant =
                 Iterables.getFirst(
                         project.executeAndReturnMultiModel("clean")
-                                .getModelMap()
+                                .getOnlyModelMap()
                                 .get(":test")
                                 .getVariants(),
                         null);

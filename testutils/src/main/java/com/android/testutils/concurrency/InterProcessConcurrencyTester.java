@@ -18,7 +18,7 @@ package com.android.testutils.concurrency;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.utils.FileUtils;
+import com.android.testutils.TestUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import java.io.DataInputStream;
@@ -218,7 +218,12 @@ public final class InterProcessConcurrencyTester {
         for (int i = 0; i < classInvocationList.size(); i++) {
             Class classUnderTest = classInvocationList.get(i);
             String[] args = argsList.get(i);
-            runnables.add(() -> launchProcess(classUnderTest, args, serverSocket.getLocalPort()));
+            // Add the server socket port to the list of arguments for the client process to communicate
+            // with the main process
+            String[] allArgs = Arrays.copyOf(args, args.length + 1);
+            allArgs[args.length] = String.valueOf(serverSocket.getLocalPort());
+
+            runnables.add(() -> TestUtils.launchProcess(classUnderTest, allArgs));
         }
         Map<Thread, Optional<Throwable>> threads = executeRunnablesInThreads(runnables);
 
@@ -301,52 +306,6 @@ public final class InterProcessConcurrencyTester {
             return RunningPattern.CONCURRENT;
         } else {
             return RunningPattern.MIXED;
-        }
-    }
-
-    /**
-     * Launches a new process to execute the class under test's main() method and blocks until the
-     * process exits.
-     *
-     * @param classUnderTest the class under test whose main() method will be executed from a new
-     *     process
-     * @param args the arguments for the class under test's main() method
-     * @param serverSocketPort the port of the server socket for the client process to communicate
-     *     with the main process
-     * @throws RuntimeException if any (checked or runtime) exception occurs or the process returns
-     *     an exit value other than 0
-     */
-    private static void launchProcess(
-            @NonNull Class classUnderTest, String[] args, int serverSocketPort) {
-        List<String> commandAndArgs = new LinkedList<>();
-        commandAndArgs.add(FileUtils.join(System.getProperty("java.home"), "bin", "java"));
-        commandAndArgs.add("-cp");
-        commandAndArgs.add(System.getProperty("java.class.path"));
-        commandAndArgs.add(classUnderTest.getName());
-        commandAndArgs.addAll(Arrays.asList(args));
-        // Add the server socket port to the list of arguments for the client process to communicate
-        // with the main process
-        commandAndArgs.add(String.valueOf(serverSocketPort));
-
-        ProcessBuilder processBuilder = new ProcessBuilder(commandAndArgs);
-        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
-        Process process;
-        try {
-            process = processBuilder.start();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        try {
-            process.waitFor();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        if (process.exitValue() != 0) {
-            throw new RuntimeException(
-                    "Process returned non-zero exit value: " + process.exitValue());
         }
     }
 

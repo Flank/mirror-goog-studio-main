@@ -20,10 +20,10 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 
 import com.android.SdkConstants;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -65,7 +65,7 @@ public class RsSupportModeTest {
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
         Variant debugVariant =
-                ModelHelper.getVariant(model.getOnlyModel().getVariants(), "x86Debug");
+                AndroidProjectUtils.getVariantByName(model.getOnlyModel(), "x86Debug");
 
         AndroidArtifact mainArtifact = debugVariant.getMainArtifact();
 

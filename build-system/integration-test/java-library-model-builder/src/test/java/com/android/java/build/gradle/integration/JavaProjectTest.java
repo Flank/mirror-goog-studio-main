@@ -86,7 +86,7 @@ public class JavaProjectTest {
 
         FileUtils.createFile(project.getSubproject(":lib2")
                 .file("libs/protobuf-java-3.0.0.jar"), "dummy");
-        javaModelMap = project.model().getMulti(JavaProject.class);
+        javaModelMap = project.model().fetchMulti(JavaProject.class);
     }
 
     @Test

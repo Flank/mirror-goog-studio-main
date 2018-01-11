@@ -80,7 +80,7 @@ public class OlderStudioModel {
         // now call the method that will throw
         project.model()
                 .level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE)
-                .getSingle()
+                .fetchAndroidProjects()
                 .getOnlyModel();
     }
 }

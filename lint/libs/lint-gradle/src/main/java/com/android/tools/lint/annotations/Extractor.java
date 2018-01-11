@@ -56,14 +56,12 @@ import com.google.common.io.Files;
 import com.google.common.xml.XmlEscapers;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.StandardFileSystems;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileSystem;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiFile;
@@ -719,8 +717,7 @@ public class Extractor {
                 for (PsiAnnotation pa : modifierList.getAnnotations()) {
                     String fqn = pa.getQualifiedName();
                     if (isNestedAnnotation(fqn)) {
-                        UAnnotation a = JavaUAnnotation.wrap(pa);
-                        a = findRealAnnotation(a, resolved);
+                        UAnnotation a = findRealAnnotation(pa, resolved);
                         List<AnnotationData> list = types.computeIfAbsent(typeName,
                                 k -> new ArrayList<>(2));
                         addAnnotation(a, fqn, list);
@@ -739,60 +736,27 @@ public class Extractor {
         return false;
     }
 
-    private static UAnnotation findRealAnnotation(@NonNull UAnnotation annotation,
+    private static UAnnotation findRealAnnotation(@NonNull PsiAnnotation annotation,
             @NonNull PsiClass resolved) {
-        if (annotation.getPsi() instanceof PsiCompiledElement) {
+        if (LintUtils.isKotlin(resolved.getLanguage())) {
             // We sometimes get binaries out of Kotlin files after a resolve; find the
             // original AST nodes
-            String className = resolved.getQualifiedName();
             Project project = resolved.getProject();
             UastContext uastContext = ServiceManager.getService(project, UastContext.class);
-            // Ideally we could just call
-            //   (UClass) uastContext.convertElementWithParent(resolved, UClass.class);
-            // here and get the real KotlinUAnnotations from the class' getAnnotations method,
-            // but that doesn't work; our resolved class is a ClsWrapperStubPsiFactory innerclass
-            // (wrapping the real KtClass) so when we call conversion on the class we end up
-            // with a JavaUClass instead.
 
-            // Instead look up the underlying source file and convert that, looking
-            // for the UClass within it
-            PsiFile containingFile = resolved.getContainingFile();
-            PsiFile psi = PsiManager.getInstance(project).findFile(containingFile.getVirtualFile());
-            UFile uFile = (UFile) uastContext.convertElement(psi, null, UFile.class);
-            Ref<UClass> cls = new Ref<>();
-            if (uFile != null && className != null) {
-                uFile.accept(new AbstractUastVisitor() {
-                    @Override
-                    public boolean visitClass(UClass node) {
-                        if (className.equals(node.getQualifiedName())) {
-                            cls.set(node);
-                            return true;
-                        }
-                        return super.visitClass(node);
-                    }
-
-                    @Override
-                    public boolean visitElement(UElement node) {
-                        return cls.get() != null || super.visitElement(node);
-                    }
-                });
-
-                UClass uClass = cls.get();
-                String annotationQualifiedName = annotation.getQualifiedName();
-                if (uClass != null && annotationQualifiedName != null) {
-                    //noinspection RedundantCast
-                    for (UAnnotation uAnnotation : ((UAnnotated) uClass).getAnnotations()) {
-                        if (annotationQualifiedName.equals(uAnnotation.getQualifiedName())) {
-                            //((PsiArrayInitializerMemberValue)psiAnnotation.findAttributeValue(null)).getInitializers();
-                            //return JavaUAnnotation.wrap(psiAnnotation);
-                            return uAnnotation;
-                        }
+            UElement uClass = uastContext.convertElement(resolved, null, UClass.class);
+            String annotationQualifiedName = annotation.getQualifiedName();
+            if (uClass != null && annotationQualifiedName != null) {
+                //noinspection RedundantCast
+                for (UAnnotation uAnnotation : ((UAnnotated) uClass).getAnnotations()) {
+                    if (annotationQualifiedName.equals(uAnnotation.getQualifiedName())) {
+                        return uAnnotation;
                     }
                 }
             }
         }
 
-        return annotation;
+        return JavaUAnnotation.wrap(annotation);
     }
 
     static boolean isNestedAnnotation(@Nullable String fqn) {

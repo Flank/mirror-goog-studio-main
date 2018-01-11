@@ -25,13 +25,14 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 
 /**
  * Ensures that addJavascriptInterface is not called for API levels below 17.
  */
-class AddJavascriptInterfaceDetector : Detector(), Detector.UastScanner {
+class AddJavascriptInterfaceDetector : Detector(), SourceCodeScanner {
     companion object {
         @JvmField val ISSUE = Issue.create(
                 "AddJavascriptInterface",
@@ -53,7 +54,7 @@ the injected object's public fields and thus manipulate the host application in 
         const val ADD_JAVASCRIPT_INTERFACE = "addJavascriptInterface"
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     override fun getApplicableMethodNames(): List<String>? = listOf(ADD_JAVASCRIPT_INTERFACE)
 

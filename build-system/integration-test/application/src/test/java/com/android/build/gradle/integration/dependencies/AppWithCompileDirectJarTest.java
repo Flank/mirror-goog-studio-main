@@ -18,11 +18,11 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -49,11 +49,9 @@ public class AppWithCompileDirectJarTest {
     public static void setUp() throws Exception {
         Files.write("include 'app', 'jar'", project.getSettingsFile(), Charsets.UTF_8);
 
-        TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile project(':jar')\n" +
-                "}\n");
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n" + "dependencies {\n" + "    implementation project(':jar')\n" + "}\n");
         models = project.executeAndReturnMultiModel("clean", ":app:assembleDebug");
     }
 
@@ -71,8 +69,8 @@ public class AppWithCompileDirectJarTest {
 
     @Test
     public void checkCompiledJarIsInTheModel() throws Exception {
-        Variant variant = ModelHelper.getVariant(
-                models.getModelMap().get(":app").getVariants(), "debug");
+        Variant variant =
+                AndroidProjectUtils.getVariantByName(models.getOnlyModelMap().get(":app"), "debug");
 
         DependencyGraphs compileGraph = variant.getMainArtifact().getDependencyGraphs();
         LibraryGraphHelper helper = new LibraryGraphHelper(models);

@@ -64,7 +64,7 @@ class IncorrectDslUsageTest {
                     "}\n")
 
         // Query the model to get the incorrect DSL declaration.
-        val model : AndroidProject = project.model().ignoreSyncIssues().single.onlyModel
+        val model : AndroidProject = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModel
 
         val dslIssue = TruthHelper.assertThat(model).hasIssue(
                 SyncIssue.SEVERITY_ERROR,
@@ -96,7 +96,7 @@ class IncorrectDslUsageTest {
 
         // Query the model to get the incorrect ABI target.
         val model = project.model().with(StringOption.IDE_BUILD_TARGET_ABI, "mips")
-                .ignoreSyncIssues().single.onlyModel
+                .ignoreSyncIssues().fetchAndroidProjects().onlyModel
 
         val dslIssue = TruthHelper.assertThat(model).hasIssue(
                 SyncIssue.SEVERITY_WARNING,
@@ -133,7 +133,7 @@ class IncorrectDslUsageTest {
 
         // Query the model to get the incorrect ABI target.
         val model = project.model().with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
-                .ignoreSyncIssues().single.onlyModel
+                .ignoreSyncIssues().fetchAndroidProjects().onlyModel
 
         val dslIssue = TruthHelper.assertThat(model).hasIssue(
                 SyncIssue.SEVERITY_WARNING,

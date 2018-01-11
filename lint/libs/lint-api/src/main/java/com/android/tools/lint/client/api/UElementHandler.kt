@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.client.api
 
-import com.android.tools.lint.detector.api.Detector.UastScanner
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression

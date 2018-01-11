@@ -157,7 +157,7 @@ public class MultiDexTest {
     }
 
     public void checkMinifiedBuild(String buildType) throws Exception {
-        executor().run("assemble" + StringHelper.capitalize(buildType));
+        executor().run(StringHelper.appendCapitalized("assemble", buildType));
 
         assertMainDexListContains(
                 buildType, ImmutableList.of("android/support/multidex/MultiDexApplication"));

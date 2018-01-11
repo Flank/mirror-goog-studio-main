@@ -10,5 +10,5 @@ android {
 }
 
 dependencies {
-    compile project(':util')
+    api project(':util')
 }

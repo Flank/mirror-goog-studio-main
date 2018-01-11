@@ -31,6 +31,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiMethod;
 import java.util.Collections;
 import java.util.List;
@@ -43,7 +44,7 @@ import org.jetbrains.uast.UastUtils;
  * Makes sure that custom views use a declare styleable that matches
  * the name of the custom view
  */
-public class CustomViewDetector extends Detector implements Detector.UastScanner {
+public class CustomViewDetector extends Detector implements SourceCodeScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             CustomViewDetector.class,
@@ -72,7 +73,7 @@ public class CustomViewDetector extends Detector implements Detector.UastScanner
     public CustomViewDetector() {
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {

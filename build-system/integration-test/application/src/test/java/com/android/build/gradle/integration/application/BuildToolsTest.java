@@ -118,7 +118,7 @@ public class BuildToolsTest {
 
     @Test
     public void buildToolsInModel() throws IOException {
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
         assertThat(model.getBuildToolsVersion())
                 .named("Build Tools Version")
                 .isEqualTo(GradleTestProject.DEFAULT_BUILD_TOOL_VERSION);
@@ -130,7 +130,8 @@ public class BuildToolsTest {
                 project.getBuildFile(),
                 "buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'",
                 "buildToolsVersion '24.0.3'");
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+        AndroidProject model =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
         TruthHelper.assertThat(model)
                 .hasIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW);
     }

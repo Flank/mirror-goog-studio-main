@@ -23,8 +23,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.fixture.SourceSetContainerUtils;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantHelper;
@@ -72,8 +74,8 @@ public class FlavorsTest {
                 .test();
 
         SourceProviderContainer testSourceProviderContainer =
-                ModelHelper.getSourceProviderContainer(
-                        defaultConfig.getExtraSourceProviders(), ARTIFACT_ANDROID_TEST);
+                SourceSetContainerUtils.getExtraSourceProviderContainer(
+                        defaultConfig, ARTIFACT_ANDROID_TEST);
 
         new SourceProviderHelper(
                         model.getName(),
@@ -110,18 +112,18 @@ public class FlavorsTest {
 
         Collection<Variant> variants = model.getVariants();
         assertEquals("Variant Count", 8, variants.size());
-        Variant f1faDebugVariant = ModelHelper.getVariant(variants, "f1FaDebug");
+        Variant f1faDebugVariant = AndroidProjectUtils.getVariantByName(model, "f1FaDebug");
         assertThat(f1faDebugVariant.getProductFlavors()).containsExactly("f1", "fa");
         new ProductFlavorHelper(f1faDebugVariant.getMergedFlavor(), "F1faDebug Merged Flavor")
                 .test();
 
         // Verify the build outputs
-        ProjectBuildOutput projectBuildOutput = project.model().getSingle(ProjectBuildOutput.class);
+        ProjectBuildOutput projectBuildOutput = project.model().fetch(ProjectBuildOutput.class);
         Collection<VariantBuildOutput> variantBuildOutputs =
                 projectBuildOutput.getVariantsBuildOutput();
         assertThat(variantBuildOutputs).named("Variant Output Count").hasSize(8);
         VariantBuildOutput f1f1VariantOutput =
-                ModelHelper.getVariantBuildOutput(variantBuildOutputs, "f1FaDebug");
+                ProjectBuildOutputUtils.getVariantBuildOutput(projectBuildOutput, "f1FaDebug");
         new VariantHelper(
                         f1faDebugVariant,
                         f1f1VariantOutput,

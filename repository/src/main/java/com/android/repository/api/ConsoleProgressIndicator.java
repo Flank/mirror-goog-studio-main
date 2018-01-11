@@ -35,6 +35,8 @@ public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
     private PrintStream mOut;
     private PrintStream mErr;
 
+    private String mLast = null;
+
     private static final String SPACES =
             "                                                                                ";
 
@@ -92,14 +94,19 @@ public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
         }
 
         line.append("\r");
-        mOut.print(line);
-        mOut.flush();
+        String result = line.toString();
+        if (!result.equals(mLast)) {
+            mOut.print(result);
+            mOut.flush();
+            mLast = result;
+        }
     }
 
     private void logMessage(@NonNull String s, @Nullable Throwable e, @NonNull PrintStream stream) {
         if (mProgress > 0) {
             mOut.print(SPACES);
             mOut.print("\r");
+            mLast = null;
         }
         stream.println(s);
         if (e != null) {

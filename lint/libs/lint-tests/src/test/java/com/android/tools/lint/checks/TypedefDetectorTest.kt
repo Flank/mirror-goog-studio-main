@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Detector
-import org.junit.Ignore
 
 class TypedefDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = TypedefDetector()

@@ -99,7 +99,7 @@ public class ProvisionApksInstallerTest {
         myApksInstaller.installAll(
                 device, new ProvisionRunner.ProvisionState(), new ProvisionListener.NullListener());
 
-        verify(device, times(4)).installPackage(any(), eq(true));
+        verify(device, times(4)).installPackage(any(), eq(true), eq("-d"));
     }
 
     @Test
@@ -110,7 +110,45 @@ public class ProvisionApksInstallerTest {
         myApksInstaller.installAll(device, provisionState, new ProvisionListener.NullListener());
 
         assertEquals(3, provisionState.lastInstalled);
-        verify(device, times(2)).installPackage(any(), eq(true));
+        verify(device, times(2)).installPackage(any(), eq(true), eq("-d"));
+    }
+
+    @Test
+    public void testInstalledWhenLowerVersionSdkInstalled() throws Throwable {
+        List<Metadata.ApkInfo> apkInfos =
+                Lists.newArrayList(
+                        new Metadata.ApkInfo(
+                                "com.google.android.instantapps.supervisor",
+                                FileUtils.join(
+                                        getInstantAppSdk(),
+                                        "tools",
+                                        "apks",
+                                        "release",
+                                        "supervisor_x86.apk"),
+                                Metadata.Arch.X86,
+                                Sets.newHashSet(23, 24, 25),
+                                10486));
+
+        IDevice device =
+                new InstantAppTests.DeviceGenerator()
+                        .setVersionOfPackage(
+                                "com.google.android.instantapps.supervisor", 100_010_485)
+                        .getDevice();
+        myApksInstaller.installAll(
+                device, new ProvisionRunner.ProvisionState(), new ProvisionListener.NullListener());
+
+        verify(device, times(1))
+                .installPackage(
+                        eq(
+                                FileUtils.join(
+                                                myInstantAppSdk,
+                                                "tools",
+                                                "apks",
+                                                "release",
+                                                "devman.apk")
+                                        .getPath()),
+                        eq(true),
+                        eq("-d"));
     }
 
     @Test
@@ -133,7 +171,8 @@ public class ProvisionApksInstallerTest {
                                                 "release",
                                                 "devman.apk")
                                         .getPath()),
-                        eq(true));
+                        eq(true),
+                        eq("-d"));
         verify(device, times(1))
                 .installPackage(
                         eq(
@@ -144,7 +183,8 @@ public class ProvisionApksInstallerTest {
                                                 "release",
                                                 "supervisor_x86.apk")
                                         .getPath()),
-                        eq(true));
+                        eq(true),
+                        eq("-d"));
         verify(device, times(0))
                 .installPackage(
                         eq(
@@ -155,7 +195,8 @@ public class ProvisionApksInstallerTest {
                                                 "debug",
                                                 "GmsCore_prodmnc_xxhdpi_x86.apk")
                                         .getPath()),
-                        eq(true));
+                        eq(true),
+                        eq("-d"));
         verify(device, times(0))
                 .installPackage(
                         eq(
@@ -166,6 +207,7 @@ public class ProvisionApksInstallerTest {
                                                 "release",
                                                 "GmsCore_prodmnc_xxhdpi_x86.apk")
                                         .getPath()),
-                        eq(true));
+                        eq(true),
+                        eq("-d"));
     }
 }

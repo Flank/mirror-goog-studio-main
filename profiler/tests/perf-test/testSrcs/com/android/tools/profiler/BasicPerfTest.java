@@ -18,9 +18,13 @@ package com.android.tools.profiler;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.EventProfiler.ActivityDataResponse;
+import com.android.tools.profiler.proto.Profiler.*;
 import java.util.Arrays;
 import java.util.Collection;
+
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -32,21 +36,36 @@ public class BasicPerfTest {
         return Arrays.asList(new Boolean[] {false, true});
     }
 
+    private PerfDriver myPerfDriver;
+    private GrpcUtils myGrpc;
+    private Session mySession;
     private boolean myIsOPlusDevice;
 
     public BasicPerfTest(boolean isOPlusDevice) {
         myIsOPlusDevice = isOPlusDevice;
     }
 
+    @Before
+    public void setup() throws Exception {
+        myPerfDriver = new PerfDriver(myIsOPlusDevice);
+        myPerfDriver.start("com.activity.MyActivity");
+        myGrpc = myPerfDriver.getGrpc();
+
+        // Invoke beginSession to establish a session we can use to query data
+        BeginSessionResponse response =
+                myGrpc.getProfilerStub()
+                        .beginSession(
+                                BeginSessionRequest.newBuilder()
+                                        .setDeviceId(1234)
+                                        .setProcessId(myGrpc.getProcessId())
+                                        .build());
+        mySession = response.getSession();
+    }
+
     @Test
     public void testPerfGetActivity() throws Exception {
-        PerfDriver myDriver = new PerfDriver(myIsOPlusDevice);
-        //Start the test driver.
-        myDriver.start("com.activity.MyActivity");
-        GrpcUtils grpc = myDriver.getGrpc();
-
         // Verify that the activity we launched was created.
-        ActivityDataResponse response = grpc.getActivity(grpc.getProcessId());
+        ActivityDataResponse response = myGrpc.getActivity(mySession);
         assertThat(response.getData(0).getName()).isEqualTo("My Activity");
     }
 }

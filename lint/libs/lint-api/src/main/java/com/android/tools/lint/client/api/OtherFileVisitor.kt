@@ -17,12 +17,15 @@ package com.android.tools.lint.client.api
 
 import com.android.SdkConstants.ANDROID_MANIFEST_XML
 import com.android.SdkConstants.DOT_CLASS
+import com.android.SdkConstants.DOT_GRADLE
 import com.android.SdkConstants.DOT_JAVA
+import com.android.SdkConstants.DOT_KT
+import com.android.SdkConstants.DOT_KTS
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_ASSETS
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
-import com.android.tools.lint.detector.api.Detector.OtherFileScanner
+import com.android.tools.lint.detector.api.OtherFileScanner
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.android.utils.SdkUtils
@@ -92,7 +95,7 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
             if (subset != null && !subset.isEmpty()) {
                 val files = ArrayList<File>(subset.size)
                 for (file in subset) {
-                    if (file.path.endsWith(DOT_JAVA)) {
+                    if (file.path.endsWith(DOT_JAVA) || file.path.endsWith(DOT_KT)) {
                         files.add(file)
                     }
                 }
@@ -146,6 +149,57 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
             } else {
                 val manifestFiles = project.manifestFiles
                 files.put(Scope.MANIFEST, manifestFiles)
+            }
+        }
+
+        if (scopes.contains(Scope.GRADLE_FILE)) {
+            if (subset != null && !subset.isEmpty()) {
+                val files = ArrayList<File>(subset.size)
+                for (file in subset) {
+                    if (file.name.endsWith(DOT_GRADLE) || file.name.endsWith(DOT_KTS)) {
+                        files.add(file)
+                    }
+                }
+                if (!files.isEmpty()) {
+                    this.files.put(Scope.GRADLE_FILE, files)
+                }
+            } else {
+                val manifestFiles = project.gradleBuildScripts
+                files.put(Scope.GRADLE_FILE, manifestFiles)
+            }
+        }
+
+        if (scopes.contains(Scope.PROGUARD_FILE)) {
+            if (subset != null && !subset.isEmpty()) {
+                val files = ArrayList<File>(subset.size)
+                for (file in subset) {
+                    if (file.name.startsWith("proguard")) {
+                        files.add(file)
+                    }
+                }
+                if (!files.isEmpty()) {
+                    this.files.put(Scope.PROPERTY_FILE, files)
+                }
+            } else {
+                val manifestFiles = project.proguardFiles
+                files.put(Scope.PROGUARD_FILE, manifestFiles)
+            }
+        }
+
+        if (scopes.contains(Scope.PROPERTY_FILE)) {
+            if (subset != null && !subset.isEmpty()) {
+                val files = ArrayList<File>(subset.size)
+                for (file in subset) {
+                    if (file.name.endsWith(".properties")) {
+                        files.add(file)
+                    }
+                }
+                if (!files.isEmpty()) {
+                    this.files.put(Scope.PROPERTY_FILE, files)
+                }
+            } else {
+                val propertyFiles = project.propertyFiles
+                files.put(Scope.PROPERTY_FILE, propertyFiles)
             }
         }
 

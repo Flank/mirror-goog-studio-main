@@ -40,6 +40,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;
@@ -70,7 +71,7 @@ import org.w3c.dom.NodeList;
 /**
  * Check if the App Link which needs auto verification is correctly set.
  */
-public class AppLinksAutoVerifyDetector extends Detector implements Detector.XmlScanner {
+public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
 
     private static final Implementation IMPLEMENTATION = new Implementation(
             AppLinksAutoVerifyDetector.class, Scope.MANIFEST_SCOPE);

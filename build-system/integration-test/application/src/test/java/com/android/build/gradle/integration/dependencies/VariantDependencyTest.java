@@ -26,11 +26,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.ApkInfoParser;
 import com.android.builder.model.AndroidArtifact;
@@ -113,7 +114,7 @@ public class VariantDependencyTest {
                         + "}\n");
 
         outputModel = project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assemble");
-        model = project.model().getSingle();
+        model = project.model().fetchAndroidProjects();
         helper = new LibraryGraphHelper(model);
 
         FakeProgressIndicator progress = new FakeProgressIndicator();
@@ -179,44 +180,43 @@ public class VariantDependencyTest {
 
     @Test
     public void modelVariantSpecificDependency() {
-        Collection<Variant> variants = model.getOnlyModel().getVariants();
         String variantName = "freeLollipopDebug";
         checkVariant(
-                variants,
+                model.getOnlyModel(),
                 variantName,
                 "com.android.support:leanback-v17:" + SUPPORT_LIB_VERSION + "@aar");
     }
 
     @Test
     public void modelMultiFlavorDependency() {
-        Collection<Variant> variants = model.getOnlyModel().getVariants();
+        final AndroidProject androidProject = model.getOnlyModel();
 
         checkVariant(
-                variants,
+                androidProject,
                 "paidIcsDebug",
                 "com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION + "@aar");
         checkVariant(
-                variants,
+                androidProject,
                 "paidIcsRelease",
                 "com.android.support:appcompat-v7:" + SUPPORT_LIB_VERSION + "@aar");
     }
 
     @Test
     public void modelDefaultDependency() {
-        Collection<Variant> variants = model.getOnlyModel().getVariants();
+        final AndroidProject androidProject = model.getOnlyModel();
 
-        checkVariant(variants, "paidLollipopDebug", null);
-        checkVariant(variants, "paidLollipopRelease", null);
-        checkVariant(variants, "freeLollipopRelease", null);
-        checkVariant(variants, "freeIcsDebug", null);
-        checkVariant(variants, "freeIcsRelease", null);
+        checkVariant(androidProject, "paidLollipopDebug", null);
+        checkVariant(androidProject, "paidLollipopRelease", null);
+        checkVariant(androidProject, "freeLollipopRelease", null);
+        checkVariant(androidProject, "freeIcsDebug", null);
+        checkVariant(androidProject, "freeIcsRelease", null);
     }
 
     private static void checkVariant(
-            @NonNull Collection<Variant> variants,
+            @NonNull AndroidProject androidProject,
             @NonNull String variantName,
             @Nullable String dependencyName) {
-        Variant variant = ModelHelper.findVariantByName(variants, variantName);
+        Variant variant = AndroidProjectUtils.findVariantByName(androidProject, variantName);
         assertThat(variant).named(variantName).isNotNull();
 
         AndroidArtifact artifact = variant.getMainArtifact();
@@ -246,9 +246,7 @@ public class VariantDependencyTest {
     private static void checkApkForContent(
             @NonNull String variantName, @NonNull String checkFilePath) throws Exception {
         // use the model to get the output APK!
-        File apk =
-                ModelHelper.findOutputFileByVariantName(
-                        outputModel.getVariantsBuildOutput(), variantName);
+        File apk = ProjectBuildOutputUtils.findOutputFileByVariantName(outputModel, variantName);
         assertThat(apk).isFile();
         assertThatZip(apk).contains(checkFilePath);
     }
@@ -256,9 +254,7 @@ public class VariantDependencyTest {
     private static void checkApkForMissingContent(
             @NonNull String variantName, @NonNull Set<String> checkFilePath) throws Exception {
         // use the model to get the output APK!
-        File apk =
-                ModelHelper.findOutputFileByVariantName(
-                        outputModel.getVariantsBuildOutput(), variantName);
+        File apk = ProjectBuildOutputUtils.findOutputFileByVariantName(outputModel, variantName);
         assertThat(apk).isFile();
         assertThatZip(apk).entries(".*").containsNoneIn(checkFilePath);
     }

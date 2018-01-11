@@ -13,5 +13,6 @@
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="gradle-api" level="project" />
     <orderEntry type="module" module-name="sdklib-base" />
+    <orderEntry type="library" name="guava-tools" level="project" />
   </component>
 </module>

@@ -41,7 +41,7 @@ Status EventServiceImpl::GetSystemData(ServerContext* context,
   Status status = Status::OK;
   int64_t startTime = request->start_timestamp();
   int64_t endTime = request->end_timestamp();
-  cache_.GetSystemData(request->process_id(), startTime, endTime, response);
+  cache_.GetSystemData(request->session().pid(), startTime, endTime, response);
   return status;
 }
 
@@ -52,7 +52,8 @@ Status EventServiceImpl::GetActivityData(ServerContext* context,
   Status status = Status::OK;
   int64_t startTime = request->start_timestamp();
   int64_t endTime = request->end_timestamp();
-  cache_.GetActivityData(request->process_id(), startTime, endTime, response);
+  cache_.GetActivityData(request->session().pid(), startTime, endTime,
+                         response);
   return status;
 }
 

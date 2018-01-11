@@ -67,7 +67,7 @@ public class ArtifactModelTest {
 
         FileUtils.createFile(project.getSubproject(":lib2")
                 .file("auto-value-1.3.jar"), "dummy");
-        artifactModelMap = project.model().getMulti(ArtifactModel.class);
+        artifactModelMap = project.model().fetchMulti(ArtifactModel.class);
     }
 
     @Test

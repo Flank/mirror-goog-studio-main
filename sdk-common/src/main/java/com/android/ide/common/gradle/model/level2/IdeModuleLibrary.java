@@ -78,11 +78,12 @@ public final class IdeModuleLibrary extends IdeModel implements Library {
     IdeModuleLibrary(
             @NonNull String projectPath,
             @NonNull String artifactAddress,
-            @NonNull ModelCache modelCache) {
-        super(projectPath, modelCache);
+            @NonNull ModelCache modelCache,
+            @Nullable String buildId) {
+        super(artifactAddress, modelCache);
         myType = LIBRARY_MODULE;
         myArtifactAddress = artifactAddress;
-        myBuildId = null;
+        myBuildId = buildId;
         myProjectPath = projectPath;
         myVariant = null;
         myHashCode = calculateHashCode();

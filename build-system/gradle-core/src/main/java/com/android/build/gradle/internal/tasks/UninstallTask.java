@@ -120,9 +120,8 @@ public class UninstallTask extends AndroidBuilderTask {
         @NonNull
         @Override
         public String getName() {
-            String prefix = "uninstall";
-
-            return prefix + StringHelper.capitalize(scope.getVariantConfiguration().getFullName());
+            return StringHelper.appendCapitalized(
+                    "uninstall", scope.getVariantConfiguration().getFullName());
         }
 
         @NonNull

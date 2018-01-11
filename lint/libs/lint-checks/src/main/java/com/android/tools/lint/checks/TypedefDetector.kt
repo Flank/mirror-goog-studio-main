@@ -23,13 +23,13 @@ import com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE
 import com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.ExternalReferenceExpression
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils
 import com.android.tools.lint.detector.api.UastLintUtils.getAnnotationBooleanValue
 import com.android.tools.lint.detector.api.UastLintUtils.getAnnotationValue
@@ -66,7 +66,7 @@ import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isArrayInitializer
 import org.jetbrains.uast.util.isNewArrayWithInitializer
 
-class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
+class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
             INT_DEF_ANNOTATION,
             LONG_DEF_ANNOTATION,

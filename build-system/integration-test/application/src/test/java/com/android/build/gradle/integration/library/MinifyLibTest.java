@@ -75,7 +75,11 @@ public class MinifyLibTest {
                         + "}\n");
 
         AndroidProject model =
-                project.model().ignoreSyncIssues().getMulti().getModelMap().get(":lib");
+                project.model()
+                        .ignoreSyncIssues()
+                        .fetchAndroidProjects()
+                        .getOnlyModelMap()
+                        .get(":lib");
         assertThat(model).hasSingleIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
         assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
                 .contains(
@@ -113,8 +117,8 @@ public class MinifyLibTest {
         // compile time.
         TestFileUtils.searchAndReplace(
                 project.getSubproject(":app").getBuildFile(),
-                "compile project\\(':lib'\\)",
-                "androidTestCompile project\\(':lib'\\)");
+                "api project\\(':lib'\\)",
+                "androidTestImplementation project\\(':lib'\\)");
         GradleBuildResult result = project.executor().run(":app:assembleAndroidTest");
 
         assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))

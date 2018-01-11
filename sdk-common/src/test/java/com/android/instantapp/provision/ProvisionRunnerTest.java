@@ -110,7 +110,9 @@ public class ProvisionRunnerTest {
                         .setHardware("ranchu")
                         .setGoogleAccountLogged()
                         .getDevice();
-        doThrow(new InstallException("Failed.")).when(device).installPackage(any(), eq(true));
+        doThrow(new InstallException("Failed."))
+                .when(device)
+                .installPackage(any(), eq(true), eq("-d"));
         assertProvisionException(device, ProvisionException.ErrorType.INSTALL_FAILED);
         assertEquals(
                 ProvisionRunner.ProvisionState.Step.GSERVICES,

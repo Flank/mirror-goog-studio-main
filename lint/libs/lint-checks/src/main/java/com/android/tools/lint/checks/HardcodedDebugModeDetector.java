@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import java.util.Collection;
 import java.util.Collections;
 import org.w3c.dom.Attr;
@@ -34,7 +35,7 @@ import org.w3c.dom.Attr;
 /**
  * Checks for hardcoded debug mode in manifest files
  */
-public class HardcodedDebugModeDetector extends Detector implements Detector.XmlScanner {
+public class HardcodedDebugModeDetector extends Detector implements XmlScanner {
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
@@ -61,7 +62,7 @@ public class HardcodedDebugModeDetector extends Detector implements Detector.Xml
     public HardcodedDebugModeDetector() {
     }
 
-    // ---- Implements Detector.XmlScanner ----
+    // ---- Implements XmlScanner ----
 
     @Override
     public Collection<String> getApplicableAttributes() {

@@ -3,26 +3,22 @@ load(":maven.bzl", "maven_pom")
 load(":utils.bzl", "singlejar")
 
 
-def kotlin_impl(ctx, name, roots,java_srcs, kotlin_srcs, kotlin_deps, package_prefixes, kotlin_jar, friend_roots, friend_srcs):
+def kotlin_impl(ctx, name, roots,java_srcs, kotlin_srcs, kotlin_deps, package_prefixes, kotlin_jar, friends):
   merged = []
   for root in roots:
     if root in package_prefixes:
       root += ":" + package_prefixes[root]
     merged += [label_workspace_path(ctx.label) + "/" + root]
 
-  full_test_roots = []
-  for root in friend_roots:
-    full_test_roots += [label_workspace_path(ctx.label) + "/" + root]
-
   kotlin_deps = list(kotlin_deps) + ctx.files._kotlin
   args, option_files = create_java_compiler_args_srcs(ctx, merged, kotlin_jar, kotlin_deps)
 
   args += ["--module_name", name]
-  for dir in full_test_roots:
-    args += ["--friend_dir", dir]
+  for friend in friends:
+    args += ["--friend_dir", friend.path]
 
   ctx.action(
-    inputs = java_srcs + kotlin_srcs + option_files + kotlin_deps + friend_srcs,
+    inputs = java_srcs + kotlin_srcs + option_files + kotlin_deps + friends,
     outputs = [kotlin_jar],
     mnemonic = "kotlinc",
     arguments = args,
@@ -50,8 +46,11 @@ def _kotlin_jar_impl(ctx):
 
   args, option_files = create_java_compiler_args_srcs(ctx, merged, class_jar, all_deps)
 
+  for dir in ctx.files.friends:
+    args += ["--friend_dir", dir.path]
+
   ctx.action(
-    inputs = ctx.files.inputs + list(all_deps) + option_files,
+    inputs = ctx.files.inputs + list(all_deps) + option_files + ctx.files.friends,
     outputs = [class_jar],
     mnemonic = "kotlinc",
     arguments = args,
@@ -65,6 +64,9 @@ kotlin_jar = rule(
             allow_files = True,
         ),
         "inputs": attr.label_list(
+            allow_files = True,
+        ),
+        "friends": attr.label_list(
             allow_files = True,
         ),
         "package_prefixes": attr.string_list(),
@@ -97,6 +99,7 @@ def kotlin_library(
     resources=[],
     deps=[],
     bundled_deps=[],
+    friends=[],
     pom=None,
     exclusions=None,
     visibility=None,
@@ -120,6 +123,7 @@ def kotlin_library(
         srcs = srcs,
         inputs = kotlins + javas,
         deps = deps + bundled_deps,
+        friends = friends,
         visibility = visibility,
     )
 
@@ -155,7 +159,7 @@ def kotlin_library(
       source = pom,
     )
 
-def kotlin_test(name, srcs, deps=[], runtime_deps=[], visibility=None, **kwargs):
+def kotlin_test(name, srcs, deps=[], runtime_deps=[], friends=[], visibility=None, **kwargs):
   kotlin_library(
     name = name + ".testlib",
     srcs = srcs,
@@ -163,6 +167,7 @@ def kotlin_test(name, srcs, deps=[], runtime_deps=[], visibility=None, **kwargs)
     runtime_deps = runtime_deps,
     jar_name = name + ".jar",
     visibility = visibility,
+    friends = friends,
   )
 
   native.java_test(

@@ -37,9 +37,9 @@ android {
 }
 
 dependencies {
-    compile "com.android.support:appcompat-v7:${rootProject.supportLibVersion}"
-    compile "com.android.support.constraint:constraint-layout:${rootProject.constraintLayoutVersion}"
-    compile project(':lib')
-    testCompile 'junit:junit:4.12'
-    testCompile "org.robolectric:robolectric:3.3.2"
+    api "com.android.support:appcompat-v7:${rootProject.supportLibVersion}"
+    api "com.android.support.constraint:constraint-layout:${rootProject.constraintLayoutVersion}"
+    api project(':lib')
+    testImplementation 'junit:junit:4.12'
+    testImplementation "org.robolectric:robolectric:3.3.2"
 }

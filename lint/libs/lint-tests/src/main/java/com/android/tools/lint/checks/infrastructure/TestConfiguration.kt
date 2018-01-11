@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks.infrastructure
 
-import org.junit.Assert.fail
 import com.android.tools.lint.client.api.Configuration
 import com.android.tools.lint.client.api.DefaultConfiguration
 import com.android.tools.lint.client.api.IssueRegistry
@@ -26,6 +25,7 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
+import org.junit.Assert.fail
 
 class TestConfiguration(
         private val task: TestLintTask,

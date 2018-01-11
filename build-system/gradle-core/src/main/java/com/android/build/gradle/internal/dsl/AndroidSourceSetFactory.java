@@ -50,8 +50,9 @@ public class AndroidSourceSetFactory implements NamedDomainObjectFactory<Android
         this.project = project;
     }
 
+    @NonNull
     @Override
-    public AndroidSourceSet create(String name) {
+    public AndroidSourceSet create(@NonNull String name) {
         return objectFactory.newInstance(
                 DefaultAndroidSourceSet.class, name, project, publishPackage);
     }

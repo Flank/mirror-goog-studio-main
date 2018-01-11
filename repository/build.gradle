@@ -9,7 +9,9 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     compile project(':base:common')
+    compile libs.activation
     compile libs.apache_compress
+    compile libs.jaxb_runtime
     compile libs.jimfs
     compile libs.kotlin_stdlib
 

@@ -8,10 +8,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.fixture.SourceSetContainerUtils;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
@@ -42,11 +43,11 @@ public class ArtifactApiTest {
     public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("artifactApi").create();
 
-    private static GetAndroidModelAction.ModelContainer<AndroidProject> model;
+    private static ModelContainer<AndroidProject> model;
 
     @BeforeClass
     public static void setUp() throws IOException {
-        model = project.model().getSingle();
+        model = project.model().fetchAndroidProjects();
     }
 
     @AfterClass
@@ -58,17 +59,18 @@ public class ArtifactApiTest {
     @Test
     public void checkMetadataInfoInModel() {
         // check the Artifact Meta Data
-        Collection<ArtifactMetaData> extraArtifacts = model.getOnlyModel().getExtraArtifacts();
+        final AndroidProject androidProject = model.getOnlyModel();
+        Collection<ArtifactMetaData> extraArtifacts = androidProject.getExtraArtifacts();
         assertNotNull("Extra artifact collection null-check", extraArtifacts);
         assertThat(extraArtifacts).hasSize((int) DEFAULT_EXTRA_JAVA_ARTIFACTS + 2);
 
         // query to validate presence
         ArtifactMetaData metaData =
-                ModelHelper.getArtifactMetaData(extraArtifacts, ARTIFACT_ANDROID_TEST);
+                AndroidProjectUtils.getArtifactMetaData(androidProject, ARTIFACT_ANDROID_TEST);
 
         // get the custom one.
         ArtifactMetaData extraArtifactMetaData =
-                ModelHelper.getArtifactMetaData(extraArtifacts, CUSTOM_ARTIFACT_NAME);
+                AndroidProjectUtils.getArtifactMetaData(androidProject, CUSTOM_ARTIFACT_NAME);
         assertFalse("custom extra meta data is Test check", extraArtifactMetaData.isTest());
         assertEquals(
                 "custom extra meta data type check",
@@ -81,7 +83,7 @@ public class ArtifactApiTest {
         final AndroidProject androidProject = model.getOnlyModel();
 
         // get the tested build types as it impacts the number of sourcesets.
-        String testedBuildType = ModelHelper.findTestedBuildType(androidProject);
+        String testedBuildType = AndroidProjectUtils.findTestedBuildType(androidProject);
 
         // check the extra source provider on the build Types.
         for (BuildTypeContainer btContainer : androidProject.getBuildTypes()) {
@@ -110,8 +112,9 @@ public class ArtifactApiTest {
             }
 
             SourceProviderContainer extraSourceProvideContainer =
-                    ModelHelper.getSourceProviderContainer(
-                            extraSourceProviderContainers, CUSTOM_ARTIFACT_NAME);
+                    SourceSetContainerUtils.getExtraSourceProviderContainer(
+                            btContainer, CUSTOM_ARTIFACT_NAME);
+
             name = "Extra artifact source provider for " + buildTypeName;
             assertThat(extraSourceProvideContainer).named(name).isNotNull();
             assertThat(extraSourceProvideContainer.getSourceProvider().getManifestFile().getPath())
@@ -138,12 +141,12 @@ public class ArtifactApiTest {
                     extraSourceProviderContainers.size());
 
             // query to validate presence
-            ModelHelper.getSourceProviderContainer(
-                    extraSourceProviderContainers, ARTIFACT_ANDROID_TEST);
+            SourceSetContainerUtils.getExtraSourceProviderContainer(
+                    pfContainer, ARTIFACT_ANDROID_TEST);
 
             SourceProviderContainer sourceProviderContainer =
-                    ModelHelper.getSourceProviderContainer(
-                            extraSourceProviderContainers, CUSTOM_ARTIFACT_NAME);
+                    SourceSetContainerUtils.getExtraSourceProviderContainer(
+                            pfContainer, CUSTOM_ARTIFACT_NAME);
             assertNotNull(
                     "Custom source provider container for " + name + " null check",
                     sourceProviderContainer);

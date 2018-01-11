@@ -32,7 +32,6 @@ import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -43,6 +42,7 @@ import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.google.common.base.Joiner;
 import com.intellij.psi.PsiClass;
@@ -67,7 +67,7 @@ import org.w3c.dom.Node;
 /**
  * Checks for missing onClick handlers
  */
-public class OnClickDetector extends LayoutDetector implements Detector.UastScanner {
+public class OnClickDetector extends LayoutDetector implements SourceCodeScanner {
 
     /**
      * Missing onClick handlers
@@ -263,7 +263,7 @@ public class OnClickDetector extends LayoutDetector implements Detector.UastScan
         }
     }
 
-    // ---- Implements UastScanner ----
+    // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override

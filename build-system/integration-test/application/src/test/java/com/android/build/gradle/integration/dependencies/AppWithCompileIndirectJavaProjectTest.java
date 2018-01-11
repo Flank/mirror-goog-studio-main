@@ -23,12 +23,12 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
@@ -106,14 +106,14 @@ public class AppWithCompileIndirectJavaProjectTest {
         ModelContainer<AndroidProject> modelContainer =
                 project.model()
                         .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
-                        .getMulti();
+                        .fetchAndroidProjects();
 
-        Map<String, AndroidProject> models = modelContainer.getModelMap();
+        Map<String, AndroidProject> models = modelContainer.getOnlyModelMap();
 
         // ---
         // test the dependencies on the :app module.
 
-        Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
+        Variant appDebug = AndroidProjectUtils.getVariantByName(models.get(":app"), "debug");
         Truth.assertThat(appDebug).isNotNull();
 
         Dependencies appDeps = appDebug.getMainArtifact().getDependencies();
@@ -140,7 +140,7 @@ public class AppWithCompileIndirectJavaProjectTest {
         // ---
         // test the dependencies on the :library module.
 
-        Variant libDebug = ModelHelper.getVariant(models.get(":library").getVariants(), "debug");
+        Variant libDebug = AndroidProjectUtils.getVariantByName(models.get(":library"), "debug");
         Truth.assertThat(libDebug).isNotNull();
 
         Dependencies libDeps = libDebug.getMainArtifact().getDependencies();
@@ -166,16 +166,16 @@ public class AppWithCompileIndirectJavaProjectTest {
                 project.model()
                         .level(AndroidProject.MODEL_LEVEL_LATEST)
                         .withFullDependencies()
-                        .getMulti();
+                        .fetchAndroidProjects();
 
-        Map<String, AndroidProject> models = modelContainer.getModelMap();
+        Map<String, AndroidProject> models = modelContainer.getOnlyModelMap();
 
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
 
         // ---
         // test full transitive dependencies from the :app module.
 
-        Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
+        Variant appDebug = AndroidProjectUtils.getVariantByName(models.get(":app"), "debug");
         Truth.assertThat(appDebug).isNotNull();
 
         DependencyGraphs dependencyGraph = appDebug.getMainArtifact().getDependencyGraphs();
@@ -323,8 +323,8 @@ public class AppWithCompileIndirectJavaProjectTest {
         // ---
         // test full transitive dependencies from the :library module.
         {
-            Variant libDebug = ModelHelper
-                    .getVariant(models.get(":library").getVariants(), "debug");
+            Variant libDebug =
+                    AndroidProjectUtils.getVariantByName(models.get(":library"), "debug");
             Truth.assertThat(libDebug).isNotNull();
 
             DependencyGraphs compileGraph = libDebug.getMainArtifact().getDependencyGraphs();

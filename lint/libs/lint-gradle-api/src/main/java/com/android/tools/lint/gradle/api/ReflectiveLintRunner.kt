@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.gradle.api
 
+import com.google.common.base.Throwables
 import org.gradle.api.GradleException
 import org.gradle.api.invocation.Gradle
 import org.gradle.initialization.BuildCompletionListener
@@ -40,12 +41,10 @@ class ReflectiveLintRunner {
                 // Build error from lint -- pass it on
                 throw e.targetException
             }
-
-            // TEMPORARY DEBUGGING: Class loading bugs!
-            e.printStackTrace()
+            throw wrapExceptionAsString(e)
         } catch (t: Throwable) {
             // Reflection problem
-            throw GradleException("Could not run lint: ${t.printStackTrace()}", t)
+            throw wrapExceptionAsString(t)
         }
     }
 
@@ -65,14 +64,14 @@ class ReflectiveLintRunner {
                 // Build error from lint -- pass it on
                 throw e.targetException
             }
-
-            // TEMPORARY DEBUGGING: Class loading bugs!
-            e.printStackTrace()
+            throw wrapExceptionAsString(e)
         } catch (t: Throwable) {
-            // Reflection problem
-            throw GradleException("Could not extract annotations: ${t.printStackTrace()}", t)
+            throw wrapExceptionAsString(t)
         }
     }
+
+    private fun wrapExceptionAsString(t: Throwable) = RuntimeException(
+            "Lint infrastructure error\nCaused by: ${Throwables.getStackTraceAsString(t)}\n")
 
     companion object {
         var loader: DelegatingClassLoader? = null

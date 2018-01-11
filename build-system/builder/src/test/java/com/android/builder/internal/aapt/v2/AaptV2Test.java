@@ -71,7 +71,6 @@ public class AaptV2Test {
                 return new QueueableAapt2(
                         new LoggedProcessOutputHandler(logger),
                         daemonBuildToolInfo,
-                        mTemporaryFolder.newFolder(),
                         logger,
                         5);
     }

@@ -25,11 +25,13 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.build.gradle.integration.common.utils.VariantUtils;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -96,7 +98,7 @@ public class BasicTest2 {
                 project.executeAndReturnModel(
                         ProjectBuildOutput.class, "clean", "assemble", "assembleAndroidTest");
         // basic project overwrites buildConfigField which emits a sync warning
-        modelContainer = project.model().ignoreSyncIssues().getSingle();
+        modelContainer = project.model().ignoreSyncIssues().fetchAndroidProjects();
         modelContainer
                 .getOnlyModel()
                 .getSyncIssues()
@@ -124,7 +126,7 @@ public class BasicTest2 {
         assertThat(variants).named("variant list").hasSize(2);
 
         // debug variant
-        Variant debugVariant = ModelHelper.getVariant(variants, BuilderConstants.DEBUG);
+        Variant debugVariant = AndroidProjectUtils.getVariantByName(model, BuilderConstants.DEBUG);
         new ProductFlavorHelper(debugVariant.getMergedFlavor(), "Debug Merged Flavor")
                 .setVersionCode(12)
                 .setVersionName("2.0")
@@ -153,7 +155,8 @@ public class BasicTest2 {
                 .named("debug compile task name")
                 .isEqualTo("compileDebugSources");
 
-        VariantBuildOutput debugVariantOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
+        VariantBuildOutput debugVariantOutput =
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
 
         Collection<OutputFile> debugVariantOutputFiles = debugVariantOutput.getOutputs();
         assertThat(debugVariantOutputFiles).named("debug outputs").isNotNull();
@@ -195,12 +198,7 @@ public class BasicTest2 {
         }
 
         // this variant is tested.
-        Collection<AndroidArtifact> debugExtraAndroidArtifacts = debugVariant
-                .getExtraAndroidArtifacts();
-        debugExtraAndroidArtifacts.forEach(System.out::println);
-        AndroidArtifact debugTestInfo = ModelHelper.getAndroidArtifact(
-                debugExtraAndroidArtifacts,
-                AndroidProject.ARTIFACT_ANDROID_TEST);
+        AndroidArtifact debugTestInfo = VariantUtils.getAndroidTestArtifact(debugVariant);
 
         assertThat(debugTestInfo.getApplicationId())
                 .named("test package")
@@ -287,10 +285,8 @@ public class BasicTest2 {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
         AndroidProject model = modelContainer.getOnlyModel();
 
-        Collection<Variant> variants = model.getVariants();
-
         // release variant, not tested.
-        Variant releaseVariant = ModelHelper.getVariant(variants, "release");
+        Variant releaseVariant = AndroidProjectUtils.getVariantByName(model, "release");
 
         AndroidArtifact relMainInfo = releaseVariant.getMainArtifact();
         assertThat(relMainInfo).named("release artifact").isNotNull();
@@ -310,7 +306,7 @@ public class BasicTest2 {
         Collection<VariantBuildOutput> variantBuildOutputs = outputModel.getVariantsBuildOutput();
         assertThat(variantBuildOutputs).hasSize(2);
         VariantBuildOutput releaseVariantOutput =
-                ModelHelper.getVariantBuildOutput(variantBuildOutputs, "release");
+                ProjectBuildOutputUtils.getVariantBuildOutput(outputModel, "release");
 
         Collection<OutputFile> releaseVariantOutputFiles = releaseVariantOutput.getOutputs();
         assertThat(releaseVariantOutputFiles).named("debug outputs").isNotNull();
@@ -326,10 +322,9 @@ public class BasicTest2 {
                 .named("release output versionCode")
                 .isEqualTo(13);
 
-        Collection<AndroidArtifact> releaseExtraAndroidArtifacts =
-            releaseVariant.getExtraAndroidArtifacts();
-        AndroidArtifact relTestInfo = ModelHelper.getOptionalAndroidArtifact(
-                releaseExtraAndroidArtifacts, AndroidProject.ARTIFACT_ANDROID_TEST);
+        AndroidArtifact relTestInfo =
+                VariantUtils.getOptionalAndroidArtifact(
+                        releaseVariant, AndroidProject.ARTIFACT_ANDROID_TEST);
         assertThat(relTestInfo).named("release test artifact").isNull();
 
         // check release dependencies

@@ -27,9 +27,8 @@ import com.android.ide.common.repository.GradleVersion;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
+import com.android.tools.lint.detector.api.ClassScanner;
 import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -38,7 +37,9 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.tools.lint.detector.api.XmlScanner;
 import com.android.xml.AndroidManifest;
 import com.intellij.psi.PsiMethod;
 import java.util.Collection;
@@ -58,8 +59,8 @@ import org.w3c.dom.Node;
  * <b>NOTE: This is not a final API; if you rely on this be prepared
  * to adjust your code for the next tools release.</b>
  */
-public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements Detector.XmlScanner,
-        UastScanner, Detector.ClassScanner {
+public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements XmlScanner,
+        SourceCodeScanner, ClassScanner {
 
     public static final Issue ISSUE = Issue.create(
             "UnpackedNativeCode",
@@ -118,7 +119,7 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements D
     public UnpackedNativeCodeDetector() {
     }
 
-    // ---- Implements Detector.ClassDetector----
+    // ---- Implements ClassScanner----
 
     @Nullable
     @Override
@@ -142,7 +143,7 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements D
         }
     }
 
-    // ---- Implements Detector.JavaPsiScanner ----
+    // ---- Implements SourceCodeScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {

@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.network;
 
+import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
 import com.android.tools.profiler.proto.NetworkServiceGrpc.NetworkServiceBlockingStub;
@@ -30,10 +31,10 @@ final class NetworkStubWrapper {
         myNetworkStub = networkStub;
     }
 
-    NetworkProfiler.HttpRangeResponse getAllHttpRange(int processId) {
+    NetworkProfiler.HttpRangeResponse getAllHttpRange(Session session) {
         return myNetworkStub.getHttpRange(
                 NetworkProfiler.HttpRangeRequest.newBuilder()
-                        .setProcessId(processId)
+                        .setSession(session)
                         .setStartTimestamp(0L)
                         .setEndTimestamp(Long.MAX_VALUE)
                         .build());

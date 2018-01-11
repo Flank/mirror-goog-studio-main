@@ -19,6 +19,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <unordered_map>
 
 #include <grpc++/grpc++.h>
 
@@ -32,31 +33,36 @@ class EventCache {
   explicit EventCache(const Daemon::Utilities& utilities)
       : clock_(utilities.clock()) {}
   // Adds data to the event cache, the data is copied.
-  void AddActivityData(const profiler::proto::ActivityData& data);
-  void AddSystemData(const profiler::proto::SystemData& data);
+  void AddActivityData(const proto::ActivityData& data);
+  void AddSystemData(const proto::SystemData& data);
 
-  // Populates a Response with a copy of the proper protos
-  // that exist within a given time range. The start time is exclusive, while
-  // the end
-  // time is inclusive.
-  void GetActivityData(int app_id, int64_t start_time, int64_t end_time,
-                       profiler::proto::ActivityDataResponse* response);
+  // Populates a Response with a copy of the proper protos that exist within a
+  // given time range. The start time is exclusive, while the end time is
+  // inclusive.
+  void GetActivityData(int32_t app_id, int64_t start_time, int64_t end_time,
+                       proto::ActivityDataResponse* response);
 
-  void GetSystemData(int app_id, int64_t start_time, int64_t end_time,
-                     profiler::proto::SystemDataResponse* response);
+  void GetSystemData(int32_t app_id, int64_t start_time, int64_t end_time,
+                     proto::SystemDataResponse* response);
 
-  void MarkActivitiesAsTerminated(int process_id);
+  void MarkActivitiesAsTerminated(int32_t pid);
 
  private:
-  // TODO: The current cache grows unlimited, the data needs a timeout, or
-  // changed to a ring buffer.
-  // Map of event id to SystemData to map start/stop events
-  std::map<long, profiler::proto::SystemData> system_cache_map_;
-  // Map of activity hash to activity data to map activity states.
-  std::map<int, profiler::proto::ActivityData> activity_cache_map_;
-  // Guards |cache_|
-  std::mutex activity_cache_mutex_;
-  std::mutex system_cache_mutex_;
+  // Per-app storage of system and activity data.
+  struct CacheMaps {
+    // TODO: The current cache grows unlimited, the data needs a timeout, or
+    // changed to a ring buffer.
+    // Map of event id to SystemData to map start/stop events
+    std::map<int64_t, proto::SystemData> system_cache;
+    // Map of activity hash to activity data to map activity states.
+    std::map<int32_t, proto::ActivityData> activity_cache;
+  };
+
+  // Guards caches
+  std::mutex cache_mutex_;
+  // App's Id to CacheMaps map.
+  std::unordered_map<int32_t, CacheMaps> cache_;
+
   const Clock& clock_;
 };
 

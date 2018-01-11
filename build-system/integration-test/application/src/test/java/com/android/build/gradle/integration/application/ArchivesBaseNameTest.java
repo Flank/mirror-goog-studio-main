@@ -6,7 +6,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
@@ -59,7 +59,7 @@ public class ArchivesBaseNameTest {
         ProjectBuildOutput projectBuildOutput =
                 project.executeAndReturnModel(ProjectBuildOutput.class, "assembleDebug");
         VariantBuildOutput debugBuildOutput =
-                ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(projectBuildOutput);
 
         // Get the apk file
         assertThat(debugBuildOutput.getOutputs()).hasSize(1);

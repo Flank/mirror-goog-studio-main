@@ -9,7 +9,8 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
-import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
@@ -58,7 +59,7 @@ public class AbiPureSplits {
         List<? extends OutputFile> outputs = getOutputs(outputModel);
         assertEquals(4, outputs.size());
         for (OutputFile outputFile : outputs) {
-            String filter = ModelHelper.getFilter(outputFile, OutputFile.ABI);
+            String filter = VariantOutputUtils.getFilter(outputFile, OutputFile.ABI);
             assertEquals(
                     filter == null ? OutputFile.MAIN : OutputFile.SPLIT,
                     outputFile.getOutputType());
@@ -123,7 +124,7 @@ public class AbiPureSplits {
                     boolean foundAddedAPK = false;
                     for (OutputFile output : outputs) {
 
-                        String filter = ModelHelper.getFilter(output, OutputFile.ABI);
+                        String filter = VariantOutputUtils.getFilter(output, OutputFile.ABI);
 
                         if (Objects.equals(filter, "armeabi")) {
                             // found our added abi, done.
@@ -170,7 +171,7 @@ public class AbiPureSplits {
                     assertThat(outputs).hasSize(3);
                     for (OutputFile output : outputs) {
 
-                        String filter = ModelHelper.getFilter(output, OutputFile.ABI);
+                        String filter = VariantOutputUtils.getFilter(output, OutputFile.ABI);
                         if (Objects.equals(filter, "mips")) {
                             Assert.fail("Found deleted ABI split : mips");
                         } else {
@@ -188,7 +189,8 @@ public class AbiPureSplits {
     private List<? extends OutputFile> getOutputs(ProjectBuildOutput outputModel)
             throws IOException {
         // Load the project build outputs
-        VariantBuildOutput debugBuildOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
+        VariantBuildOutput debugBuildOutput =
+                ProjectBuildOutputUtils.getDebugVariantBuildOutput(outputModel);
 
         // all splits have the same version.
         debugBuildOutput
@@ -206,7 +208,8 @@ public class AbiPureSplits {
             Collection<? extends OutputFile> outputs) {
         ImmutableMap.Builder<String, Long> builder = ImmutableMap.builder();
         for (OutputFile output : outputs) {
-            String key = output.getOutputType() + ModelHelper.getFilter(output, OutputFile.ABI);
+            String key =
+                    output.getOutputType() + VariantOutputUtils.getFilter(output, OutputFile.ABI);
             builder.put(key, output.getOutputFile().lastModified());
         }
 
@@ -218,12 +221,12 @@ public class AbiPureSplits {
         AndroidProject syncModel =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .getSingle()
+                        .fetchAndroidProjects()
                         .getOnlyModel();
         assertThat(syncModel.getSyncIssues()).hasSize(1);
         assertThat(Iterables.getOnlyElement(syncModel.getSyncIssues()).getMessage())
                 .contains(
                         "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.");
-        return project.model().getSingle(ProjectBuildOutput.class);
+        return project.model().fetch(ProjectBuildOutput.class);
     }
 }

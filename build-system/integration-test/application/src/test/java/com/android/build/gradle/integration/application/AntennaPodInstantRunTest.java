@@ -76,7 +76,11 @@ public class AntennaPodInstantRunTest {
         getExecutor().run("clean");
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(
-                        project.model().ignoreSyncIssues().getMulti().getModelMap().get(":app"));
+                        project.model()
+                                .ignoreSyncIssues()
+                                .fetchAndroidProjects()
+                                .getOnlyModelMap()
+                                .get(":app"));
 
         getExecutor()
                 .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)

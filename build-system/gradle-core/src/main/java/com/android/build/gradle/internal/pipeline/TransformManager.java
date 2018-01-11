@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.pipeline;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
-import static com.android.utils.StringHelper.capitalize;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -262,16 +261,18 @@ public class TransformManager extends FilterableStreamCollection {
         sb.append("transform");
 
         sb.append(
-                transform.getInputTypes()
+                transform
+                        .getInputTypes()
                         .stream()
-                        .map(inputType ->
-                                CaseFormat.UPPER_UNDERSCORE.to(
-                                        CaseFormat.UPPER_CAMEL, inputType.name()))
+                        .map(
+                                inputType ->
+                                        CaseFormat.UPPER_UNDERSCORE.to(
+                                                CaseFormat.UPPER_CAMEL, inputType.name()))
                         .sorted() // Keep the order stable.
-                        .collect(Collectors.joining("And")))
-                .append("With")
-                .append(capitalize(transform.getName()))
-                .append("For");
+                        .collect(Collectors.joining("And")));
+        sb.append("With");
+        StringHelper.appendCapitalized(sb, transform.getName());
+        sb.append("For");
 
         return sb.toString();
     }

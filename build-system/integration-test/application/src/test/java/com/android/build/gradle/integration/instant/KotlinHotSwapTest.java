@@ -53,7 +53,8 @@ public class KotlinHotSwapTest {
     @Test
     public void buildIncrementallyWithInstantRun() throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
+                InstantRunTestUtils.getInstantRunModel(
+                        project.model().fetchAndroidProjects().getOnlyModel());
 
         InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(21, null));
 
@@ -81,7 +82,8 @@ public class KotlinHotSwapTest {
     @Test
     public void testModel() throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
+                InstantRunTestUtils.getInstantRunModel(
+                        project.model().fetchAndroidProjects().getOnlyModel());
 
         assertTrue(instantRunModel.isSupportedByArtifact());
 

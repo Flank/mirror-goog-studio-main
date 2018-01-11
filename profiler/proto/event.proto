@@ -22,7 +22,7 @@ option java_outer_classname = "EventProfiler";
 import "common.proto";
 
 service EventService {
-  // Requests profiler data from the app with ID being |process_id|, in the time range
+  // Requests profiler data associated with a session, in the time range
   // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
   // mathematically written as in interval (start_timestamp, end_timestamp].
   rpc GetActivityData(EventDataRequest) returns (ActivityDataResponse) {
@@ -39,8 +39,7 @@ service EventService {
 }
 
 message EventStartRequest {
-  int32 process_id = 1;
-  Session session = 2;
+  Session session = 1;
 }
 
 message EventStartResponse {
@@ -53,8 +52,7 @@ message EventStartResponse {
 }
 
 message EventStopRequest {
-  int32 process_id = 1;
-  Session session = 2;
+  Session session = 1;
 }
 
 message EventStopResponse {
@@ -67,11 +65,11 @@ message EventStopResponse {
 }
 
 message ActivityDataResponse {
-    repeated ActivityData data = 1;
+  repeated ActivityData data = 1;
 }
 
 message SystemDataResponse {
-    repeated SystemData data = 1;
+  repeated SystemData data = 1;
 }
 
 // TODO: Add support for KeyEvents, and ButtonEvents. The current setup allows
@@ -92,7 +90,7 @@ message SystemData {
   int32 action_id = 2;
   int64 start_timestamp = 3;
   int64 end_timestamp = 4;
-  int32 process_id = 5;
+  int32 pid = 5;
   int64 event_id = 6;
   string event_data = 7;
 }
@@ -103,7 +101,7 @@ message ActivityData {
   // Unique hash identifying this activity from similarly named ones.
   int64 hash = 2;
   // Application Id this activity is associated with.
-  int32 process_id = 3;
+  int32 pid = 3;
   // State changes for activities and fragments.
   repeated ActivityStateData state_changes = 4;
 
@@ -151,9 +149,8 @@ message EventDataRequest {
     // All fragment events
     FRAGMENT_EVENTS = 4;
   }
-  int32 process_id = 1;
-  Session session = 2;
-  int64 start_timestamp = 3;
-  int64 end_timestamp = 4;
-  EventType data_type = 5;
+  Session session = 1;
+  int64 start_timestamp = 2;
+  int64 end_timestamp = 3;
+  EventType data_type = 4;
 }
