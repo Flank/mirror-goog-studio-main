@@ -46,13 +46,13 @@ const int32_t kHprofEndTagLength = 9;
 const int32_t kHprofReadRetryCount = 20;
 const int64_t kHprofReadRetryIntervalUs = profiler::Clock::ms_to_us(250);
 
-// In O, there is a bug in ActivityManagerService where the file descriptor
+// In O+, there is a bug in ActivityManagerService where the file descriptor
 // associated with the dump file does not get closed until the next GC.
 // This means we cannot use the inotify API to reliably detect when the dump
 // event finishes. As a workaround, we wait for the file size to stablize
 // AND check the last 9 bytes of the dump file to validate the  file ends
 // with a HEAP DUMP END segment.
-bool WaitForHeapDumpFinishInO(std::string file_path) {
+bool WaitForHeapDumpFinishInOPlus(std::string file_path) {
   bool result = false;
   std::ifstream stream(file_path, std::ifstream::binary | std::ifstream::ate);
   if (stream.fail()) {
@@ -172,8 +172,8 @@ void MemoryCollector::HeapDumpMain(std::shared_ptr<File> file) {
   bool result = am->TriggerHeapDump(pid_, file->path(), &unusedOutput);
 
   if (result) {
-    if (profiler::DeviceInfo::feature_level() == 26) {
-      result = WaitForHeapDumpFinishInO(file->path());
+    if (profiler::DeviceInfo::feature_level() >= 26) {
+      result = WaitForHeapDumpFinishInOPlus(file->path());
     } else {
       // Monitoring the file to catch close event when the heap dump is complete
       FileSystemNotifier notifier(file->path(), FileSystemNotifier::CLOSE);
