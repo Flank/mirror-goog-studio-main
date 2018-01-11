@@ -40,7 +40,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
 import kotlin.test.assertFailsWith
 
 /** Tests for [Aapt2DaemonImpl], including error conditions */
@@ -185,55 +184,6 @@ class Aapt2DaemonImplTest {
         // Compiled resources should not be listed in a file.
         assertThat(exception2.message).doesNotContain("@")
         assertThat(exception2.message).contains("foo.txt")
-    }
-
-    @Test
-    fun testCompileTimeout() {
-        val compiledDir = temporaryFolder.newFolder()
-        val daemon = createDaemon(Aapt2DaemonTimeouts(compile = 0, compileUnit = TimeUnit.SECONDS))
-        val exception = assertFailsWith(Aapt2InternalException::class) {
-            daemon.compile(
-                    CompileResourceRequest(
-                            inputFile = File("values/does_not_matter.xml"),
-                            outputDirectory = compiledDir),
-                    logger)
-        }
-        assertThat(exception.message).contains("Compile")
-        assertThat(exception.message).contains("timed out, attempting to stop daemon")
-        // The daemon should be shut down.
-        assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.SHUTDOWN)
-        // The compile might succeed, ignore the output from it.
-        logger.clear()
-    }
-
-    @Test
-    fun testLinkTimeout() {
-        val manifest = resourceFile(
-                "src",
-                "AndroidManifest.xml",
-                """<""")
-
-        val outputFile = File(temporaryFolder.newFolder(), "lib.apk")
-
-        val request = AaptPackageConfig.Builder()
-                .setAndroidTarget(target)
-                .setManifestFile(manifest)
-                .setResourceOutputApk(outputFile)
-                .setLogger(logger)
-                .setOptions(AaptOptions(noCompress = null,
-                        failOnMissingConfigEntry = false,
-                        additionalParameters = null))
-                .build()
-
-        val daemon = createDaemon(Aapt2DaemonTimeouts(link = 0, linkUnit = TimeUnit.SECONDS))
-        val exception = assertFailsWith(Aapt2InternalException::class) {
-            daemon.link(request)
-        }
-        assertThat(exception.message).contains("Link timed out, attempting to stop daemon")
-        // The daemon should be shut down.
-        assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.SHUTDOWN)
-        // The compile might succeed, ignore the output from it.
-        logger.clear()
     }
 
     @Test

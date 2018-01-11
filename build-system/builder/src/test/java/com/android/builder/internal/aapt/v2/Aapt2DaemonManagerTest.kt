@@ -29,7 +29,6 @@ import org.junit.rules.Timeout
 import java.io.File
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertFailsWith
 
@@ -211,7 +210,7 @@ class Aapt2DaemonManagerTest {
 
     @Test
     fun testTimeoutHandling() {
-        val manager = createManager { TimeoutAapt2Daemon() }
+        val manager = createManager { CompileLinkTimeoutAapt2Daemon() }
         manager.leaseDaemon().use { daemon ->
             val exception = assertFailsWith(Aapt2InternalException::class) {
                 daemon.compile(CompileResourceRequest(
@@ -244,22 +243,6 @@ class Aapt2DaemonManagerTest {
 
         override fun doLink(request: AaptPackageConfig) {
             linkRequests.add(request)
-        }
-
-        override fun stopProcess() {
-        }
-    }
-
-    class TimeoutAapt2Daemon : Aapt2Daemon("Test Timeout AAPT Daemon", NoErrorsOrWarningsLogger()) {
-        override fun startProcess() {
-        }
-
-        override fun doCompile(request: CompileResourceRequest, logger: ILogger) {
-            throw TimeoutException("Compile timed out")
-        }
-
-        override fun doLink(request: AaptPackageConfig) {
-            throw TimeoutException("Link timed out")
         }
 
         override fun stopProcess() {
