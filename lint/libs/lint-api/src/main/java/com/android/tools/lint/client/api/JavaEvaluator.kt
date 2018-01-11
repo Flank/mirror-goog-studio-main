@@ -705,13 +705,42 @@ class JavaEvaluator {
     open fun findOwnerLibrary(jarFile: String): Library? {
         val dependencies = dependencies
         if (dependencies != null) {
-            var match = findOwnerLibrary(dependencies.libraries, jarFile)
-            if (match != null) {
-                return match
+            val aarMatch = findOwnerLibrary(dependencies.libraries, jarFile)
+            if (aarMatch != null) {
+                return aarMatch
             }
-            match = findOwnerJavaLibrary(dependencies.javaLibraries, jarFile)
-            if (match != null) {
-                return match
+            val jarMatch = findOwnerJavaLibrary(dependencies.javaLibraries, jarFile)
+            if (jarMatch != null) {
+                return jarMatch
+            }
+
+            // Fallback: There are cases, particularly on Windows (see issue 70565382) where we end up with
+            // a mismatch with what is in the model and which class file paths in the gradle cache
+            // are used. For example, we might be looking for
+            // C:\Users\studio\.gradle\caches\transforms-1\files-1.1\mylibrary-release.aar\9a90779305f6d83489fbb0d005980e33\jars\classes.jar
+            // but the builder-model dependencies points to this:
+            // C:\Users\studio\.gradle\caches\transforms-1\files-1.1\mylibrary-release.aar\cb3fd10cf216826d2aa7a59f23e8f35c\jars\classes.jar
+            // To work around this, if there aren't any matches among the dependencies, we do a second search
+            // where we match paths by skipping the checksum in the middle of the path:
+            if (jarFile.contains(".gradle")) {
+                val aar = jarFile.indexOf(".aar" + File.separator)
+                if (aar != -1) {
+                    val prefixEnd = aar + 5
+                    val suffixStart = jarFile.indexOf(File.separatorChar, prefixEnd + 1)
+                    if (suffixStart != -1) {
+                        val prefix = jarFile.substring(0, prefixEnd)
+                        val suffix = jarFile.substring(suffixStart)
+
+                        val aarPrefixMatch = findOwnerLibrary(dependencies.libraries, prefix, suffix)
+                        if (aarPrefixMatch != null) {
+                            return aarPrefixMatch
+                        }
+                        val jarPrefixMatch = findOwnerJavaLibrary(dependencies.javaLibraries, prefix, suffix)
+                        if (jarPrefixMatch != null) {
+                            return jarPrefixMatch
+                        }
+                    }
+                }
             }
         }
 
@@ -726,6 +755,24 @@ class JavaEvaluator {
                 return library
             }
             val match = findOwnerJavaLibrary(library.dependencies, jarFile)
+            if (match != null) {
+                return match
+            }
+        }
+
+        return null
+    }
+
+    private fun findOwnerJavaLibrary(
+        dependencies: Collection<JavaLibrary>,
+        pathPrefix: String,
+        pathSuffix: String): Library? {
+        for (library in dependencies) {
+            val path = library.jarFile.path
+            if (path.startsWith(pathPrefix) && path.endsWith(pathSuffix)) {
+                return library
+            }
+            val match = findOwnerJavaLibrary(library.dependencies, pathPrefix, pathSuffix)
             if (match != null) {
                 return match
             }
@@ -752,6 +799,35 @@ class JavaEvaluator {
             }
 
             match = findOwnerJavaLibrary(library.javaDependencies, jarFile)
+            if (match != null) {
+                return match
+            }
+        }
+
+        return null
+    }
+
+    private fun findOwnerLibrary(
+        dependencies: Collection<AndroidLibrary>,
+        pathPrefix: String,
+        pathSuffix: String): Library? {
+        for (library in dependencies) {
+            val path = library.jarFile.path
+            if (path.startsWith(pathPrefix) && path.endsWith(pathSuffix)) {
+                return library
+            }
+            for (jar in library.localJars) {
+                val localPath = jar.path
+                if (localPath.startsWith(pathPrefix) && localPath.endsWith(pathSuffix)) {
+                    return library
+                }
+            }
+            var match = findOwnerLibrary(library.libraryDependencies, pathPrefix, pathSuffix)
+            if (match != null) {
+                return match
+            }
+
+            match = findOwnerJavaLibrary(library.javaDependencies, pathPrefix, pathSuffix)
             if (match != null) {
                 return match
             }
