@@ -47,4 +47,44 @@ class ClassNameTest {
                 " */\n" +
                 "public class ApiCallTest3 extends Intermediate {}"))
     }
+
+    @Test
+    fun testAnnotations() {
+        assertEquals("Asdf", getClassName("" +
+                "package foo;\n" +
+                "@Anno(SomeClass.cass)\n" +
+                "public class Asdf { }"))
+    }
+
+    @Test
+    fun testGetClassName() {
+        assertEquals("ClickableViewAccessibilityTest", getClassName(""
+                + "package test.pkg;\n"
+                + "\n"
+                + "import android.content.Context;\n"
+                + "import android.view.MotionEvent;\n"
+                + "import android.view.View;\n"
+                + "\n"
+                + "public class ClickableViewAccessibilityTest {\n"
+                + "    // Fails because onTouch does not call view.performClick().\n"
+                + "    private static class InvalidOnTouchListener implements View.OnTouchListener {\n"
+                + "        public boolean onTouch(View v, MotionEvent event) {\n"
+                + "            return false;\n"
+                + "        }\n"
+                + "    }\n"
+                + "\n"
+                + "}\n"))
+    }
+
+    @Test
+    fun testStripComments() {
+        assertEquals("""
+            public class MyClass { String s = "/* This comment is \"in\" a string */" }
+            """.trimIndent().trim(),
+            stripComments("""
+                /** Comment */
+                // Line comment
+                public class MyClass { String s = "/* This comment is \"in\" a string */" }""").
+                    trimIndent().trim())
+    }
 }
