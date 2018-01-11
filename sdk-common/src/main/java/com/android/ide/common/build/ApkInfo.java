@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.util.Collection;
 
@@ -40,7 +39,7 @@ public interface ApkInfo extends Serializable {
     Collection<FilterData> getFilters();
 
     @Nullable
-    FilterData getFilter(VariantOutput.FilterType filterType);
+    FilterData getFilter(@NonNull VariantOutput.FilterType filterType);
 
     /**
      * Returns the version code for this output.
@@ -86,7 +85,7 @@ public interface ApkInfo extends Serializable {
             @Nullable String filterName,
             @Nullable String outputFileName,
             @Nullable String fullName,
-            @Nullable String baseName,
+            @NonNull String baseName,
             boolean enabled) {
         return new DefaultApkInfo(
                 outputType,
@@ -98,120 +97,5 @@ public interface ApkInfo extends Serializable {
                 fullName,
                 baseName,
                 enabled);
-    }
-
-    class DefaultApkInfo implements ApkInfo {
-
-        private final VariantOutput.OutputType outputType;
-        private final Collection<FilterData> filters;
-        private final int versionCode;
-        private final String versionName;
-        private final String filterName;
-        private final String outputFileName;
-        private final boolean enabled;
-        private final String fullName;
-        private final String baseName;
-
-        public DefaultApkInfo(
-                VariantOutput.OutputType outputType,
-                Collection<FilterData> filters,
-                int versionCode,
-                String versionName,
-                String filterName,
-                String outputFileName,
-                String fullName,
-                @NonNull String baseName,
-                boolean enabled) {
-            this.outputType = outputType;
-            this.filters = filters;
-            this.versionCode = versionCode;
-            this.versionName = versionName;
-            this.filterName = filterName;
-            this.outputFileName = outputFileName;
-            this.fullName = fullName;
-            this.baseName = baseName;
-            this.enabled = enabled;
-        }
-
-        @NonNull
-        @Override
-        public OutputFile.OutputType getType() {
-            return outputType;
-        }
-
-        @NonNull
-        @Override
-        public Collection<FilterData> getFilters() {
-            return filters;
-        }
-
-        @Nullable
-        @Override
-        public String getFilterName() {
-            return filterName;
-        }
-
-        @Override
-        public int getVersionCode() {
-            return versionCode;
-        }
-
-        @Nullable
-        @Override
-        public String getVersionName() {
-            return versionName;
-        }
-
-        @Override
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        @Nullable
-        @Override
-        public String getOutputFileName() {
-            return outputFileName;
-        }
-
-        @Override
-        public boolean requiresAapt() {
-            return outputType != VariantOutput.OutputType.SPLIT;
-        }
-
-        @Nullable
-        @Override
-        public String getFullName() {
-            return fullName;
-        }
-
-        @NonNull
-        @Override
-        public String getBaseName() {
-            return baseName;
-        }
-
-        @Override
-        public FilterData getFilter(VariantOutput.FilterType filterType) {
-            for (FilterData filter : filters) {
-                if (filter.getFilterType() == filterType.name()) {
-                    return filter;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                    .add("type", outputType)
-                    .add("versionCode", versionCode)
-                    .add("versionName", versionName)
-                    .add("enabled", enabled)
-                    .add("outputFileName", outputFileName)
-                    .add("fullName", fullName)
-                    .add("baseName", baseName)
-                    .add("filters", filters)
-                    .toString();
-        }
     }
 }

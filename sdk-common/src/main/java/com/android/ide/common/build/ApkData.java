@@ -65,7 +65,7 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
     // so far, we will return things like "fr,fr-rCA" for a single value.
     @Override
     @Nullable
-    public FilterData getFilter(FilterType filterType) {
+    public FilterData getFilter(@NonNull FilterType filterType) {
         for (FilterData filter : getFilters()) {
             if (VariantOutput.FilterType.valueOf(filter.getFilterType()) == filterType) {
                 return filter;
