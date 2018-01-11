@@ -677,6 +677,9 @@ public final class SdkConstants {
     /** SDK property: default skin */
     public static final String PROP_SDK_DEFAULT_SKIN = "sdk.skin.default"; //$NON-NLS-1$
 
+    /** LLDB SDK package major.minor revision compatible with the current version of Studio */
+    public static final String LLDB_PINNED_REVISION = "3.1";
+
     /* Android Class Constants */
     public static final String CLASS_ACTIVITY = "android.app.Activity"; //$NON-NLS-1$
     public static final String CLASS_APPLICATION = "android.app.Application"; //$NON-NLS-1$
