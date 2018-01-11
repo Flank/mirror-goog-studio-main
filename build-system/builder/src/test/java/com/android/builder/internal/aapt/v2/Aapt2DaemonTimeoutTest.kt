@@ -23,6 +23,7 @@ import com.android.repository.testframework.FakeProgressIndicator
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.testutils.MockLog
+import com.android.testutils.NoErrorsOrWarningsLogger
 import com.android.testutils.TestUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -46,6 +47,24 @@ class Aapt2DaemonTimeoutTest {
     val testName = TestName()
 
     @Test
+    fun testStartupTimeout() {
+        val logger = MockLog()
+        val compiledDir = temporaryFolder.newFolder()
+        val daemon = StartupTimeoutAapt2Daemon(name = testName.methodName)
+        val exception = assertFailsWith(Aapt2InternalException::class) {
+            daemon.compile(
+                    CompileResourceRequest(
+                            inputFile = File("values/does_not_matter.xml"),
+                            outputDirectory = compiledDir),
+                    logger)
+        }
+        assertThat(exception.message).contains("Daemon startup timed out")
+        assertThat(exception.suppressed).isEmpty()
+        // The daemon should be shut down.
+        assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.SHUTDOWN)
+    }
+
+    @Test
     fun testCompileTimeout() {
         val logger = MockLog()
         val compiledDir = temporaryFolder.newFolder()
@@ -59,6 +78,7 @@ class Aapt2DaemonTimeoutTest {
         }
         assertThat(exception.message).contains("Compile")
         assertThat(exception.message).contains("timed out, attempting to stop daemon")
+        assertThat(exception.suppressed).isEmpty()
         // The daemon should be shut down.
         assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.SHUTDOWN)
     }
@@ -88,8 +108,27 @@ class Aapt2DaemonTimeoutTest {
             daemon.link(request)
         }
         assertThat(exception.message).contains("Link timed out, attempting to stop daemon")
+        assertThat(exception.suppressed).isEmpty()
         // The daemon should be shut down.
         assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.SHUTDOWN)
+    }
+
+    @Test
+    fun testShutdownTimeout() {
+        val logger = MockLog()
+        val compiledDir = temporaryFolder.newFolder()
+        val daemon = ShutdownTimeoutAapt2Daemon(name = testName.methodName, logger = logger)
+        daemon.compile(
+                CompileResourceRequest(
+                        inputFile = File("values/does_not_matter.xml"),
+                        outputDirectory = compiledDir),
+                NoErrorsOrWarningsLogger())
+        assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.RUNNING)
+        daemon.shutDown()
+        assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.SHUTDOWN)
+        assertThat(logger.messages).contains(
+                "E testShutdownTimeout Shutdown Timeout AAPT Daemon " +
+                        "Failed to shutdown within timeout")
     }
 
     private fun resourceFile(directory: String, name: String, content: String) =
