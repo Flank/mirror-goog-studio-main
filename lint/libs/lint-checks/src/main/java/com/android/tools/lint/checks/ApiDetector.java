@@ -1811,7 +1811,7 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
-            if (name.equals("forEach") && owner.equals("java.lang.Iterable")) {
+            if (name.equals("forEach")) {
                 List<UExpression> arguments = expression.getValueArguments();
                 if (arguments.size() == 1) {
                     PsiType expressionType = arguments.get(0).getExpressionType();
