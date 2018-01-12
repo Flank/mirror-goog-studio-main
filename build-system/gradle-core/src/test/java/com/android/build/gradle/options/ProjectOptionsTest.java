@@ -118,9 +118,9 @@ public class ProjectOptionsTest {
         ProjectOptions projectOptions =
                 new ProjectOptions(ImmutableMap.of("android.incrementalJavaCompile", ""));
 
-        assertThat(projectOptions.hasDeprecatedOptions()).isTrue();
+        assertThat(projectOptions.hasRemovedOptions()).isTrue();
 
-        assertThat(projectOptions.getDeprecatedOptionsErrorMessage())
+        assertThat(projectOptions.getRemovedOptionsErrorMessage())
                 .contains("android.incrementalJavaCompile");
     }
 

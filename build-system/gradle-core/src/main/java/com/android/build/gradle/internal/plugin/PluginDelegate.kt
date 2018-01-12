@@ -95,9 +95,9 @@ class PluginDelegate<out E: BaseExtension2>(
     private val deprecationReporter = DeprecationReporterImpl(issueReporter, projectPath)
 
     init {
-        if (projectOptions.hasDeprecatedOptions()) {
+        if (projectOptions.hasRemovedOptions()) {
             issueReporter.reportError(
-                    EvalIssueReporter.Type.GENERIC, projectOptions.deprecatedOptionsErrorMessage)
+                    EvalIssueReporter.Type.GENERIC, projectOptions.removedOptionsErrorMessage)
         }
         // b/67675308
         if (!projectOptions.get(BooleanOption.ENABLE_AAPT2)) {

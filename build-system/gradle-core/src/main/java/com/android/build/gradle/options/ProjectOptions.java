@@ -39,7 +39,7 @@ public final class ProjectOptions {
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
-    private final ImmutableMap<DeprecatedOptions, String> deprecatedOptions;
+    private final ImmutableMap<RemovedOptions, String> removedOptions;
     private final ImmutableMap<BooleanOption, Boolean> booleanOptions;
     private final ImmutableMap<OptionalBooleanOption, Boolean> optionalBooleanOptions;
     private final ImmutableMap<IntegerOption, Integer> integerOptions;
@@ -49,7 +49,7 @@ public final class ProjectOptions {
     private final EnumOptions enumOptions;
 
     public ProjectOptions(@NonNull ImmutableMap<String, Object> properties) {
-        deprecatedOptions = readOptions(DeprecatedOptions.values(), properties);
+        removedOptions = readOptions(RemovedOptions.values(), properties);
         booleanOptions = readOptions(BooleanOption.values(), properties);
         optionalBooleanOptions = readOptions(OptionalBooleanOption.values(), properties);
         integerOptions = readOptions(IntegerOption.values(), properties);
@@ -181,18 +181,19 @@ public final class ProjectOptions {
     }
 
 
-    public boolean hasDeprecatedOptions() {
-        return !deprecatedOptions.isEmpty();
+    public boolean hasRemovedOptions() {
+        return !removedOptions.isEmpty();
     }
 
     @NonNull
-    public String getDeprecatedOptionsErrorMessage() {
+    public String getRemovedOptionsErrorMessage() {
         Preconditions.check(
-                hasDeprecatedOptions(),
-                "Has deprecated options should be checked before calling this method.");
+                hasRemovedOptions(),
+                "Has removed options should be checked before calling this method.");
         StringBuilder builder =
-                new StringBuilder("The following project options are deprecated: \n");
-        deprecatedOptions.forEach(
+                new StringBuilder(
+                        "The following project options are deprecated and have been removed: \n");
+        removedOptions.forEach(
                 (option, errorMessage) -> {
                     builder.append(option.getPropertyName())
                             .append("\n")

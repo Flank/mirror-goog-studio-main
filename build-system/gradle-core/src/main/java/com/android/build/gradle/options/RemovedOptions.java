@@ -24,7 +24,7 @@ import com.android.annotations.Nullable;
  *
  * <p>If any of the deprecated options are set, a sync error will be raised.
  */
-public enum DeprecatedOptions implements Option<String> {
+public enum RemovedOptions implements Option<String> {
     INCREMENTAL_JAVA_COMPILE(
             "android.incrementalJavaCompile",
             "The android.incrementalJavaCompile property has been replaced by a DSL property. "
@@ -55,7 +55,7 @@ public enum DeprecatedOptions implements Option<String> {
     @NonNull private final String propertyName;
     @NonNull private final String errorMessage;
 
-    DeprecatedOptions(@NonNull String propertyName, @NonNull String errorMessage) {
+    RemovedOptions(@NonNull String propertyName, @NonNull String errorMessage) {
         this.propertyName = propertyName;
         this.errorMessage = errorMessage;
     }
