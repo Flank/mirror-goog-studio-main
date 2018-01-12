@@ -11,7 +11,9 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import org.junit.Before;
@@ -63,6 +65,13 @@ public class BuildToolsTest {
                         + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
                         + "'\n"
                         + "}\n");
+
+        // Add an Aidl file so that it's not skipped due to no-source.
+        File aidlDir = project.file("src/main/aidl/com/example/helloworld");
+        FileUtils.mkdirs(aidlDir);
+        TestFileUtils.appendToFile(
+                new File(aidlDir, "MyRect.aidl"),
+                "" + "package com.example.helloworld;\n" + "parcelable MyRect;\n");
     }
 
     @Test
