@@ -166,7 +166,6 @@ class VdTree {
         ArrayList<VdElement> children = mRootGroup.getChildren();
         for (int i = 0; i < len; i++) {
             VdElement child = children.get(i);
-            System.out.println(prefix  + child.toString());
             if (child.isGroup()) {
                 // TODO: print group info
                 debugPrintTree(level + 1, (VdGroup) child);

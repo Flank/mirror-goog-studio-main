@@ -15,15 +15,23 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.ide.common.vectordrawable.SvgNode.CONTINUATION_INDENT;
+import static com.android.ide.common.vectordrawable.SvgNode.INDENT_UNIT;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.Pair;
+import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import java.awt.geom.AffineTransform;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -33,7 +41,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Converts SVG to VectorDrawable's XML
+ * Converts SVG to VectorDrawable's XML.
  *
  * There are 2 major functions:
  * 1. parse(file)
@@ -56,14 +64,13 @@ public class Svg2Vector {
     public static final String SVG_PATH = "path";
     public static final String SVG_ELLIPSE = "ellipse";
     public static final String SVG_GROUP = "g";
-    public static final String SVG_TRANSFORM = "transform";
     public static final String SVG_STYLE = "style";
     public static final String SVG_DISPLAY = "display";
 
     public static final String SVG_D = "d";
     public static final String SVG_STROKE_COLOR = "stroke";
     public static final String SVG_STROKE_OPACITY = "stroke-opacity";
-    public static final String SVG_STROKE_LINEJOINE = "stroke-linejoin";
+    public static final String SVG_STROKE_LINEJOIN = "stroke-linejoin";
     public static final String SVG_STROKE_LINECAP = "stroke-linecap";
     public static final String SVG_STROKE_WIDTH = "stroke-width";
     public static final String SVG_FILL_COLOR = "fill";
@@ -77,7 +84,7 @@ public class Svg2Vector {
             ImmutableMap.<String, String>builder()
                     .put(SVG_STROKE_COLOR, "android:strokeColor")
                     .put(SVG_STROKE_OPACITY, "android:strokeAlpha")
-                    .put(SVG_STROKE_LINEJOINE, "android:strokeLineJoin")
+                    .put(SVG_STROKE_LINEJOIN, "android:strokeLineJoin")
                     .put(SVG_STROKE_LINECAP, "android:strokeLineCap")
                     .put(SVG_STROKE_WIDTH, "android:strokeWidth")
                     .put(SVG_FILL_COLOR, "android:fillColor")
@@ -102,90 +109,89 @@ public class Svg2Vector {
                     .put("gradientType", "android:type")
                     .build();
 
-    // List all the Svg nodes that we don't support. Categorized by the types.
-    private static final HashSet<String> unsupportedSvgNodes =
-            Sets.newHashSet(
-                    // Animation elements
-                    "animate",
-                    "animateColor",
-                    "animateMotion",
-                    "animateTransform",
-                    "mpath",
-                    "set",
-                    // Container elements
-                    "a",
-                    "glyph",
-                    "marker",
-                    "mask",
-                    "missing-glyph",
-                    "pattern",
-                    "switch",
-                    "symbol",
-                    // Filter primitive elements
-                    "feBlend",
-                    "feColorMatrix",
-                    "feComponentTransfer",
-                    "feComposite",
-                    "feConvolveMatrix",
-                    "feDiffuseLighting",
-                    "feDisplacementMap",
-                    "feFlood",
-                    "feFuncA",
-                    "feFuncB",
-                    "feFuncG",
-                    "feFuncR",
-                    "feGaussianBlur",
-                    "feImage",
-                    "feMerge",
-                    "feMergeNode",
-                    "feMorphology",
-                    "feOffset",
-                    "feSpecularLighting",
-                    "feTile",
-                    "feTurbulence",
-                    // Font elements
-                    "font",
-                    "font-face",
-                    "font-face-format",
-                    "font-face-name",
-                    "font-face-src",
-                    "font-face-uri",
-                    "hkern",
-                    "vkern",
-                    // Gradient elements
-                    "radialGradient",
-                    "stop",
-                    // Graphics elements
-                    "ellipse",
-                    "text",
-                    // Light source elements
-                    "feDistantLight",
-                    "fePointLight",
-                    "feSpotLight",
-                    // Structural elements
-                    "symbol",
-                    // Text content elements
-                    "altGlyph",
-                    "altGlyphDef",
-                    "altGlyphItem",
-                    "glyph",
-                    "glyphRef",
-                    "textPath",
-                    "text",
-                    "tref",
-                    "tspan",
-                    // Text content child elements
-                    "altGlyph",
-                    "textPath",
-                    "tref",
-                    "tspan",
-                    // Uncategorized elements
-                    "color-profile",
-                    "cursor",
-                    "filter",
-                    "foreignObject",
-                    "script",
-                    "view");
+    // Set of all SVG nodes that we don't support. Categorized by the types.
+    private static final Set<String> unsupportedSvgNodes = ImmutableSet.of(
+            // Animation elements
+            "animate",
+            "animateColor",
+            "animateMotion",
+            "animateTransform",
+            "mpath",
+            "set",
+            // Container elements
+            "a",
+            "glyph",
+            "marker",
+            "mask",
+            "missing-glyph",
+            "pattern",
+            "switch",
+            "symbol",
+            // Filter primitive elements
+            "feBlend",
+            "feColorMatrix",
+            "feComponentTransfer",
+            "feComposite",
+            "feConvolveMatrix",
+            "feDiffuseLighting",
+            "feDisplacementMap",
+            "feFlood",
+            "feFuncA",
+            "feFuncB",
+            "feFuncG",
+            "feFuncR",
+            "feGaussianBlur",
+            "feImage",
+            "feMerge",
+            "feMergeNode",
+            "feMorphology",
+            "feOffset",
+            "feSpecularLighting",
+            "feTile",
+            "feTurbulence",
+            // Font elements
+            "font",
+            "font-face",
+            "font-face-format",
+            "font-face-name",
+            "font-face-src",
+            "font-face-uri",
+            "hkern",
+            "vkern",
+            // Gradient elements
+            "radialGradient",
+            "stop",
+            // Graphics elements
+            "ellipse",
+            "text",
+            // Light source elements
+            "feDistantLight",
+            "fePointLight",
+            "feSpotLight",
+            // Structural elements
+            "symbol",
+            // Text content elements
+            "altGlyph",
+            "altGlyphDef",
+            "altGlyphItem",
+            "glyph",
+            "glyphRef",
+            "textPath",
+            "text",
+            "tref",
+            "tspan",
+            // Text content child elements
+            "altGlyph",
+            "textPath",
+            "tref",
+            "tspan",
+            // Uncategorized elements
+            "color-profile",
+            "cursor",
+            "filter",
+            "foreignObject",
+            "script",
+            "view");
 
     @NonNull
     private static SvgTree parse(File f) throws Exception {
@@ -300,14 +306,14 @@ public class Svg2Vector {
                 SvgGradientNode gradientNode =
                         new SvgGradientNode(svgTree, currentNode, nodeName + i);
                 processIdName(svgTree, gradientNode);
-                extractGradientNode(svgTree, gradientNode);
+                extractGradientNode(gradientNode);
                 gradientNode.fillPresentationAttributes("gradientType", "linear");
                 svgTree.setHasGradient(true);
             } else if ("radialGradient".equals(nodeName)) {
                 SvgGradientNode gradientNode =
                         new SvgGradientNode(svgTree, currentNode, nodeName + i);
                 processIdName(svgTree, gradientNode);
-                extractGradientNode(svgTree, gradientNode);
+                extractGradientNode(gradientNode);
                 gradientNode.fillPresentationAttributes("gradientType", "radial");
                 svgTree.setHasGradient(true);
             } else {
@@ -331,7 +337,7 @@ public class Svg2Vector {
      * Reads content from a gradient element's documentNode and fills in attributes for the
      * SvgGradientNode.
      */
-    private static void extractGradientNode(SvgTree svgTree, SvgGradientNode gradientNode) {
+    private static void extractGradientNode(@NonNull SvgGradientNode gradientNode) {
         Node currentNode = gradientNode.getDocumentNode();
         NamedNodeMap a = currentNode.getAttributes();
         int len = a.getLength();
@@ -455,9 +461,6 @@ public class Svg2Vector {
      * styleClassAttributeMap of the SvgTree. SvgNodes reference style elements using a 'class'
      * attribute. The style attribute will be filled into the tree after the svgTree calls
      * traverseSVGAndExtract().
-     *
-     * @param svgTree
-     * @param currentNode
      */
     private static void extractStyleNode(SvgTree svgTree, Node currentNode) {
         NodeList a = currentNode.getChildNodes();
@@ -472,9 +475,9 @@ public class Svg2Vector {
         if (!styleData.isEmpty()) {
             // Separate each of the classes.
             String[] classData = styleData.split("}");
-            for (int i = 0; i < classData.length; i++) {
+            for (String aClassData : classData) {
                 // Separate the class name from the attribute values.
-                String[] splitClassData = classData[i].split("\\{");
+                String[] splitClassData = aClassData.split("\\{");
                 if (splitClassData.length < 2) {
                     // When the class info is empty, then skip.
                     continue;
@@ -1067,42 +1070,53 @@ public class Svg2Vector {
     }
 
     private static void writeFile(OutputStream outStream, SvgTree svgTree) throws IOException {
-        OutputStreamWriter fw = new OutputStreamWriter(outStream);
-        fw.write(HEAD);
-        fw.write(System.lineSeparator());
+        OutputStreamWriter writer = new OutputStreamWriter(outStream);
+        writer.write(HEAD);
+        writer.write(System.lineSeparator());
         if (svgTree.getHasGradient()) {
-            fw.write(AAPT_BOUND);
-            fw.write(System.lineSeparator());
+            writer.write(CONTINUATION_INDENT);
+            writer.write(AAPT_BOUND);
+            writer.write(System.lineSeparator());
         }
         float viewportWidth = svgTree.getViewportWidth();
         float viewportHeight = svgTree.getViewportHeight();
 
-        fw.write("        android:width=\"" +
-                Math.round(svgTree.getWidth() * svgTree.getScaleFactor()) + "dp\"");
-        fw.write(System.lineSeparator());
-        fw.write("        android:height=\"" +
-                Math.round(svgTree.getHeight() * svgTree.getScaleFactor()) + "dp\"");
-        fw.write(System.lineSeparator());
+        writer.write(CONTINUATION_INDENT);
+        writer.write("android:width=\"");
+        writer.write(XmlUtils.formatFloatAttribute(svgTree.getWidth() * svgTree.getScaleFactor()));
+        writer.write("dp\"");
+        writer.write(System.lineSeparator());
+        writer.write(CONTINUATION_INDENT);
+        writer.write("android:height=\"");
+        writer.write(XmlUtils.formatFloatAttribute(svgTree.getHeight() * svgTree.getScaleFactor()));
+        writer.write("dp\"");
+        writer.write(System.lineSeparator());
 
-        fw.write("        android:viewportWidth=\"" + viewportWidth + "\"");
-        fw.write(System.lineSeparator());
-        fw.write("        android:viewportHeight=\"" + viewportHeight + "\">");
-        fw.write(System.lineSeparator());
+        writer.write(CONTINUATION_INDENT);
+        writer.write("android:viewportWidth=\"");
+        writer.write(XmlUtils.formatFloatAttribute(viewportWidth));
+        writer.write("\"");
+        writer.write(System.lineSeparator());
+        writer.write(CONTINUATION_INDENT);
+        writer.write("android:viewportHeight=\"");
+        writer.write(XmlUtils.formatFloatAttribute(viewportHeight));
+        writer.write("\">");
+        writer.write(System.lineSeparator());
 
         svgTree.normalize();
         // TODO: this has to happen in the tree mode!!!
-        writeXML(svgTree, fw);
-        fw.write("</vector>");
-        fw.write(System.lineSeparator());
+        writeXML(svgTree, writer);
+        writer.write("</vector>");
+        writer.write(System.lineSeparator());
 
-        fw.close();
+        writer.close();
     }
 
     private static void writeXML(SvgTree svgTree, OutputStreamWriter fw) throws IOException {
         if (svgTree.getRoot() == null) {
             throw new NullPointerException("SvgTree root is null.");
         }
-        svgTree.getRoot().writeXML(fw, false);
+        svgTree.getRoot().writeXML(fw, false, INDENT_UNIT);
     }
 
     /**
