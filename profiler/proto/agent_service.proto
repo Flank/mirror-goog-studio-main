@@ -39,7 +39,6 @@ enum SocketType {
 // Proto used for configuring perfd + perfa.
 // The message itself is created and pushed to device from Studio
 // and can be access via profiler::Config::Instance().
-// Next ID: 8
 message AgentConfig {
   message MemoryConfig {
     // equivalent to profiler.livealloc flag in Studio.
@@ -66,4 +65,6 @@ message AgentConfig {
   bool profiler_network_request_payload = 6;
   // equivalent to android.profiler.io.enabled flag in Studio.
   bool profiler_io_enabled = 7;
+  // equivalent to StudioFlags.PROFILER_ENERGY_PROFILER_ENABLED.
+  bool energy_profiler_enabled = 8;
 }
