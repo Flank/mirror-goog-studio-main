@@ -377,6 +377,17 @@ public abstract class BasePlugin<E extends BaseExtension2>
                             DeprecationReporter.DeprecationTarget.AAPT);
         }
 
+        if (!projectOptions.get(BooleanOption.ENABLE_D8)) {
+            androidBuilder
+                    .getIssueReporter()
+                    .reportWarning(
+                            Type.GENERIC,
+                            String.format(
+                                    "Legacy dexer is deprecated and will be removed in 3.2. "
+                                            + "Remove the '%s=false' flag to enable new D8 dexer.",
+                                    BooleanOption.ENABLE_D8.getPropertyName()));
+        }
+
         // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);
 
