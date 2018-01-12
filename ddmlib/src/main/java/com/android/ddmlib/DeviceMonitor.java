@@ -30,21 +30,13 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -626,10 +618,11 @@ final class DeviceMonitor implements ClientTracker {
 
     /**
      * Fills a buffer by reading data from a socket.
+     *
      * @return the content of the buffer as a string, or null if it failed to convert the buffer.
      * @throws IOException if there was not enough data to fill the buffer
      */
-    @Nullable
+    @NonNull
     private static String read(@NonNull SocketChannel socket, @NonNull byte[] buffer)
             throws IOException {
         ByteBuffer buf = ByteBuffer.wrap(buffer, 0, buffer.length);
@@ -643,11 +636,7 @@ final class DeviceMonitor implements ClientTracker {
             }
         }
 
-        try {
-            return new String(buffer, 0, buf.position(), AdbHelper.DEFAULT_ENCODING);
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        return new String(buffer, 0, buf.position(), AdbHelper.DEFAULT_CHARSET);
     }
 
     private class DeviceListUpdateListener implements DeviceListMonitorTask.UpdateListener {
