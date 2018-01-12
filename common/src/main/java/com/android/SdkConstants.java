@@ -303,6 +303,8 @@ public final class SdkConstants {
     public static final String FN_PROJECT_PROGUARD_FILE = "proguard-project.txt"; //$NON-NLS-1$
     /** File holding a list of advanced features */
     public static final String FN_ADVANCED_FEATURES = "advancedFeatures.ini";
+    /** File holding a list of advanced features when user is on canary channel */
+    public static final String FN_ADVANCED_FEATURES_CANARY = "advancedFeaturesCanary.ini";
 
     /* Folder Names for Android Projects . */
 
