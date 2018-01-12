@@ -38,11 +38,7 @@ using profiler::proto::MemoryStartRequest;
 using profiler::proto::MemoryStartResponse;
 using profiler::proto::MemoryStopRequest;
 using profiler::proto::MemoryStopResponse;
-using profiler::proto::ResumeTrackAllocationsRequest;
-using profiler::proto::ResumeTrackAllocationsResponse;
 using profiler::proto::Session;
-using profiler::proto::SuspendTrackAllocationsRequest;
-using profiler::proto::SuspendTrackAllocationsResponse;
 using profiler::proto::TrackAllocationsRequest;
 using profiler::proto::TrackAllocationsResponse;
 using profiler::proto::TriggerHeapDumpRequest;
@@ -210,58 +206,6 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
     response->set_status(TrackAllocationsResponse::NOT_PROFILING);
     return ::grpc::Status::OK;
   }
-}
-
-::grpc::Status MemoryServiceImpl::SuspendTrackAllocations(
-    ::grpc::ServerContext* context,
-    const SuspendTrackAllocationsRequest* request,
-    SuspendTrackAllocationsResponse* response) {
-  auto result = collectors_.find(request->session().session_id());
-  PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
-      result, collectors_, response,
-      SuspendTrackAllocationsResponse::FAILURE_UNKNOWN)
-
-  if ((result->second).IsRunning()) {
-    // Forwards a control signal to perfa to toggle JVMTI-based tracking.
-    MemoryControlRequest control_request;
-    control_request.set_pid(request->session().pid());
-    control_request.mutable_suspend_request();
-    if (!private_service_->SendRequestToAgent(control_request)) {
-      return ::grpc::Status(::grpc::StatusCode::UNKNOWN,
-                            "Unable to suspend live allocation tracking.");
-    }
-  } else {
-    response->set_status(SuspendTrackAllocationsResponse::NOT_PROFILING);
-    return ::grpc::Status::OK;
-  }
-  response->set_status(SuspendTrackAllocationsResponse::SUCCESS);
-  return ::grpc::Status::OK;
-}
-
-::grpc::Status MemoryServiceImpl::ResumeTrackAllocations(
-    ::grpc::ServerContext* context,
-    const ResumeTrackAllocationsRequest* request,
-    ResumeTrackAllocationsResponse* response) {
-  auto result = collectors_.find(request->session().session_id());
-  PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
-      result, collectors_, response,
-      ResumeTrackAllocationsResponse::FAILURE_UNKNOWN)
-
-  if ((result->second).IsRunning()) {
-    // Forwards a control signal to perfa to toggle JVMTI-based tracking.
-    MemoryControlRequest control_request;
-    control_request.set_pid(request->session().pid());
-    control_request.mutable_resume_request();
-    if (!private_service_->SendRequestToAgent(control_request)) {
-      return ::grpc::Status(::grpc::StatusCode::UNKNOWN,
-                            "Unable to resume live allocation tracking.");
-    }
-  } else {
-    response->set_status(ResumeTrackAllocationsResponse::NOT_PROFILING);
-    return ::grpc::Status::OK;
-  }
-  response->set_status(ResumeTrackAllocationsResponse::SUCCESS);
-  return ::grpc::Status::OK;
 }
 
 #undef PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND
