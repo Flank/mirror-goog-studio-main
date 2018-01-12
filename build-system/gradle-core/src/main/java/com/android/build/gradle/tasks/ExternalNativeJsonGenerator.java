@@ -28,6 +28,8 @@ import com.android.build.gradle.external.cmake.CmakeUtils;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.cxx.configure.AbiConfigurator;
+import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
@@ -36,13 +38,13 @@ import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -55,14 +57,11 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -72,9 +71,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.Input;
@@ -502,180 +499,10 @@ public abstract class ExternalNativeJsonGenerator {
         return messages;
     }
 
-    @NonNull
-    public Collection<JsonReader> streamExistingNativeBuildConfigurations()
-            throws FileNotFoundException {
-        List<File> files = getNativeBuildConfigurationsJsons();
-        diagnostic("reading %s JSON files", files.size());
-        List<JsonReader> result = Lists.newArrayList();
-        List<File> existing = Lists.newArrayList();
-        for (File file : files) {
-            if (file.exists()) {
-                diagnostic("reading JSON file %s", file.getAbsolutePath());
-                existing.add(file);
-            } else {
-                // If the tool didn't create the JSON file then create fallback with the
-                // information we have so the user can see partial information in the UI.
-                diagnostic("using fallback JSON for %s", file.getAbsolutePath());
-                NativeBuildConfigValueMini fallback = new NativeBuildConfigValueMini();
-                fallback.buildFiles = Lists.newArrayList(makefile);
-
-                String jsonText = new Gson().toJson(fallback);
-                result.add(new JsonReader(new StringReader(new Gson().toJson(fallback))));
-            }
-        }
-
-        for (File json : existing) {
-            JsonReader reader = new JsonReader(new FileReader(json));
-            result.add(reader);
-        }
-        return result;
-    }
-
     /** @return the variant name for this generator */
     @NonNull
     public String getVariantName() {
         return variantName;
-    }
-
-    /** Return ABIs that are available on the platform. */
-    @NonNull
-    private static List<Abi> filterToAvailableAbis(
-            @NonNull Collection<Abi> supportedAbis,
-            @NonNull Collection<String> userRequestedAbis,
-            @NonNull EvalIssueReporter issueReporter,
-            @NonNull String variantName) {
-        List<String> requestedButNotAvailable = Lists.newArrayList();
-        List<Abi> result = Lists.newArrayList();
-        for (String abiName : userRequestedAbis) {
-            Abi requestedAbi = Abi.getByName(abiName);
-            if (requestedAbi == null || !supportedAbis.contains(requestedAbi)) {
-                requestedButNotAvailable.add(abiName);
-            }
-            if (requestedAbi != null) {
-                result.add(requestedAbi);
-            }
-        }
-        if (!requestedButNotAvailable.isEmpty()) {
-            // If the user requested ABIs that aren't valid for the current platform then give
-            // them a SyncIssue that describes which ones are the problem.
-            Iterable<String> supportedAbisNames =
-                    supportedAbis.stream().map(Abi::getName)::iterator;
-            issueReporter.reportError(
-                    Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                    String.format(
-                            "ABIs [%s] are not supported for platform. Supported ABIs are "
-                                    + "[%s].",
-                            Joiner.on(", ").join(requestedButNotAvailable),
-                            Joiner.on(", ").join(supportedAbisNames)),
-                    variantName);
-        }
-        return result;
-    }
-
-    /**
-     * Get the set of abiFilters from the DSL.
-     *
-     * @return a Set of ABIs to build. If the set is empty then build nothing. If user did not
-     *     specify any ABI, return null.
-     */
-    @Nullable
-    private static Collection<String> getUserRequestedAbiFilters(
-            @NonNull NativeBuildSystem buildSystem, @NonNull VariantScope variantScope) {
-
-        // Filters from android.externalNativeBuild.xxx.abiFilters
-        Set<String> externalNativeAbiFilters =
-                emptySetToNull(
-                        getExternalNativeBuildAbiFilters(
-                                buildSystem, variantScope.getVariantConfiguration()));
-
-        // These are the abis from android.ndk.abiFilters that will be packaged. If they exist then
-        // we don't need to build anything besides these (intersect with
-        // externalNativeBuild.xxx.abiFilters)
-        Set<String> abiFilters =
-                filterAbis(
-                        externalNativeAbiFilters,
-                        emptySetToNull(
-                                variantScope
-                                        .getVariantConfiguration()
-                                        .getNdkConfig()
-                                        .getAbiFilters()));
-
-        // Filters from splits.
-        AndroidConfig extension = variantScope.getGlobalScope().getExtension();
-        if (extension.getSplits().getAbi().isEnable()) {
-            abiFilters = filterAbis(abiFilters, extension.getSplits().getAbiFilters());
-        }
-
-        return abiFilters;
-    }
-
-    /**
-     * Normalize ABI list.
-     *
-     * <p>An empty ABI filter list can mean include all ABIs. This method converts an empty list to
-     * null such that the returned filters can be used by methods where an empty ABI filter list is
-     * used to represent filter out all ABI.
-     */
-    @Nullable
-    private static Set<String> emptySetToNull(@Nullable Set<String> abiFilters) {
-        if (abiFilters != null && abiFilters.isEmpty()) {
-            return null;
-        }
-        return abiFilters;
-    }
-
-    @Nullable
-    private static Set<String> filterAbis(
-            @Nullable Set<String> abis, @Nullable Set<String> filters) {
-        if (filters == null) {
-            return abis;
-        }
-        if (abis == null) {
-            return filters;
-        }
-        return Sets.intersection(abis, filters);
-    }
-
-    /**
-     * Get the set of abiFilters from the externalNativeBuild part of the DSL. For example,
-     *
-     * <pre>
-     *     defaultConfig {
-     *          cmake {
-     *              abiFilters "x86", "x86_64"
-     *          }
-     *     }
-     *
-     * @return a Set of ABIs to build. Return the empty set if nothing was specified.
-     */
-    @NonNull
-    private static Set<String> getExternalNativeBuildAbiFilters(
-            @NonNull NativeBuildSystem buildSystem,
-            @NonNull GradleVariantConfiguration variantConfig) {
-        switch (buildSystem) {
-            case NDK_BUILD: {
-                CoreExternalNativeNdkBuildOptions options =
-                        variantConfig.getExternalNativeBuildOptions()
-                                .getExternalNativeNdkBuildOptions();
-                if (options != null) {
-                    return checkNotNull(options.getAbiFilters());
-                }
-                break;
-            }
-            case CMAKE: {
-                CoreExternalNativeCmakeOptions options =
-                        variantConfig.getExternalNativeBuildOptions()
-                                .getExternalNativeCmakeOptions();
-                if (options != null) {
-                    return checkNotNull(options.getAbiFilters());
-                }
-                break;
-            }
-            default:
-                throw new IllegalArgumentException("Unknown ExternalNativeJsonGenerator type");
-        }
-        return Sets.newHashSet();
     }
 
     @NonNull
@@ -701,10 +528,12 @@ public abstract class ExternalNativeJsonGenerator {
         GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
         GradleBuildVariant.Builder stats =
                 ProcessProfileWriter.getOrCreateVariant(projectPath, scope.getFullVariantName());
-        File intermediates = FileUtils.join(
-                scope.getGlobalScope().getIntermediatesDir(),
-                buildSystem.getName(),
-                variantData.getVariantConfiguration().getDirName());
+        GlobalScope globalScope = scope.getGlobalScope();
+        File intermediates =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        buildSystem.getName(),
+                        variantData.getVariantConfiguration().getDirName());
 
         File soFolder = new File(intermediates, "lib");
         File externalNativeBuildFolder =
@@ -718,49 +547,35 @@ public abstract class ExternalNativeJsonGenerator {
         File objFolder = new File(intermediates, "obj");
 
         // Get the highest platform version below compileSdkVersion
-        NdkHandler ndkHandler = scope.getGlobalScope().getNdkHandler();
+        NdkHandler ndkHandler = globalScope.getNdkHandler();
 
-        ApiVersion minSdkVersion = scope
-                .getVariantData()
-                .getVariantConfiguration()
-                .getMergedFlavor()
-                .getMinSdkVersion();
+        ApiVersion minSdkVersion =
+                variantData.getVariantConfiguration().getMergedFlavor().getMinSdkVersion();
         int minSdkVersionApiLevel = minSdkVersion == null ? 1 : minSdkVersion.getApiLevel();
-
-        // Get the filters specified in the DSL. Will be null if we should build all known ABIs.
-        Collection<String> userRequestedAbis = getUserRequestedAbiFilters(buildSystem, scope);
+        NativeBuildSystemVariantConfig nativeBuildVariantConfig =
+                new NativeBuildSystemVariantConfig(
+                        buildSystem, variantData.getVariantConfiguration());
+        ProjectOptions projectOptions = globalScope.getProjectOptions();
+        AbiConfigurator abiConfigurator =
+                new AbiConfigurator(
+                        globalScope.getErrorHandler(),
+                        variantData.getName(),
+                        ndkHandler.getSupportedAbis(),
+                        ndkHandler.getDefaultAbis(),
+                        nativeBuildVariantConfig.getExternalNativeBuildAbiFilters(),
+                        nativeBuildVariantConfig.getNdkAbiFilters(),
+                        globalScope.getExtension().getSplits().getAbiFilters(),
+                        projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI),
+                        projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI));
 
         // These are ABIs that are available on the current platform
-        Collection<Abi> validAbis =
-                userRequestedAbis == null
-                        ? ndkHandler.getDefaultAbis()
-                        : filterToAvailableAbis(
-                                ndkHandler.getSupportedAbis(),
-                                userRequestedAbis,
-                                androidBuilder.getIssueReporter(),
-                                variantData.getName());
-
-        // Check injected target ABI, if present is valid.
-        ProjectOptions projectOptions = scope.getGlobalScope().getProjectOptions();
-        if (projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI)) {
-            checkInjectedAbiIsValid(
-                    projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI),
-                    validAbis,
-                    scope.getGlobalScope().getErrorHandler());
-        }
+        Collection<Abi> validAbis = abiConfigurator.getValidAbis();
 
         // Produce the list of expected JSON files. This list includes possibly invalid ABIs
         // so that generator can create fallback JSON for them.
         List<File> expectedJsons =
                 ExternalNativeBuildTaskUtils.getOutputJsons(
-                        externalNativeBuildFolder,
-                        userRequestedAbis == null
-                                ? ndkHandler
-                                        .getDefaultAbis()
-                                        .stream()
-                                        .map(Abi::getName)
-                                        .collect(Collectors.toList())
-                                : userRequestedAbis);
+                        externalNativeBuildFolder, abiConfigurator.getAllAbis());
 
         switch (buildSystem) {
             case NDK_BUILD:
@@ -809,29 +624,6 @@ public abstract class ExternalNativeJsonGenerator {
         }
     }
 
-    private static void checkInjectedAbiIsValid(
-            @Nullable String targetAbiString,
-            @NonNull Collection<Abi> validAbis,
-            @NonNull EvalIssueReporter issueReporter) {
-        if (targetAbiString != null) {
-            Abi buildTargetAbi = Abi.getByName(targetAbiString);
-            if (buildTargetAbi != null) {
-                if (!validAbis.contains(buildTargetAbi)) {
-                    issueReporter.reportError(
-                            Type.GENERIC,
-                            String.format(
-                                    "Cannot build for ABI: %1$s supported ABIs are: %2$s",
-                                    buildTargetAbi.getName(),
-                                    validAbis.isEmpty()
-                                            ? "none"
-                                            : validAbis
-                                                    .stream()
-                                                    .map(Abi::getName)
-                                                    .collect(Collectors.joining(", "))));
-                }
-            }
-        }
-    }
 
     /**
      * @return creates an instance of CmakeExternalNativeJsonGenerator (server or android-ninja)
@@ -947,8 +739,8 @@ public abstract class ExternalNativeJsonGenerator {
         return new File(getSdkCmakeBinFolder(sdkFolder), "cmake");
     }
 
-    @NonNull
-    public void forEachNativeBuildConfiguration(Consumer<JsonReader> callback) throws IOException {
+    public void forEachNativeBuildConfiguration(@NonNull Consumer<JsonReader> callback)
+            throws IOException {
         List<File> files = getNativeBuildConfigurationsJsons();
         diagnostic("streaming %s JSON files", files.size());
         for (File file : getNativeBuildConfigurationsJsons()) {

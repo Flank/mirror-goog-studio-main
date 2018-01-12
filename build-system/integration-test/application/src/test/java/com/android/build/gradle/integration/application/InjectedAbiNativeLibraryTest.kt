@@ -73,6 +73,8 @@ android {
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi-v7a")
                 .expectFailure()
                 .run(":app:assembleDebug")
-        assertThat(result.failureMessage).contains("Cannot build for ABI: armeabi-v7a")
+        assertThat(result.failureMessage).contains("ABIs [armeabi-v7a] set by " +
+                "'android.injected.build.abi' gradle flag is not supported by this project. " +
+                "Supported ABIs are [x86].")
     }
 }

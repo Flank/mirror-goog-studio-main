@@ -469,6 +469,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/coverage/",
                 "com/android/build/gradle/internal/cxx/",
                 "com/android/build/gradle/internal/cxx/json/",
+                "com/android/build/gradle/internal/cxx/configure/",
                 "com/android/build/gradle/internal/dependency/",
                 "com/android/build/gradle/internal/dsl/",
                 "com/android/build/gradle/internal/errors/",
