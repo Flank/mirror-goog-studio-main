@@ -69,25 +69,6 @@
 </manifest>
 
 
-@lib4_not_package
-
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- It's an error for the manifest to lack a 'package' attribute.
-         We just emit a warning in this case.
-    -->
-
-    <application>
-        <!-- These class name can't be expanded due to the lack of 'package' attribute. -->
-        <activity android:name=".LibActivity4" />
-        <service  android:name=".LibService4" />
-        <receiver android:name=".LibReceiver4" />
-        <provider android:name=".LibProvider4" />
-
-    </application>
-
-</manifest>
-
-
 @result
 
 <manifest
@@ -105,14 +86,6 @@
         <activity android:name="com.example.lib1.WidgetLibrary1" />
         <activity android:name="com.example.lib2.WidgetLibrary2" />
         <activity android:name="com.example.lib3.WidgetLibrary3" />
-# from @lib4_alias
-        <!-- These class name can't be expanded due to the lack of 'package' attribute. -->
-        <activity android:name=".LibActivity4" />
-        <service  android:name=".LibService4" />
-        <receiver android:name=".LibReceiver4" />
-        <provider android:name=".LibProvider4" />
     </application>
 </manifest>
 
-@errors
-WARNING:Missing 'package' declaration in manifest at ManifestMerger2Test4_lib4_not_package.xml:1:1-15:12

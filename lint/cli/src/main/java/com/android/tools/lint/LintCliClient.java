@@ -1157,9 +1157,11 @@ public class LintCliClient extends LintClient {
             ApiVersion targetSdkVersion = mergedFlavor.getTargetSdkVersion();
             ApiVersion minSdkVersion = mergedFlavor.getMinSdkVersion();
             if (targetSdkVersion != null || minSdkVersion != null) {
-                injectedXml.append(""
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                        + "    <uses-sdk");
+                injectedXml.append(
+                        ""
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    package=\"${packageName}\">\n"
+                                + "    <uses-sdk");
                 if (minSdkVersion != null) {
                     injectedXml.append(" android:minSdkVersion=\"")
                             .append(minSdkVersion.getApiString()).append("\"");

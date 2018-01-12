@@ -105,31 +105,6 @@
 </manifest>
 
 
-@lib4_not_package
-
-<!-- It's an error for the manifest to lack a 'package' attribute.
-     We just emit a warning in this case.
--->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!-- Permission tree for lib4 -->
-    <permission-tree
-        android:label="This is not a label"
-        android:name="com.example.PermTree" />
-
-    <!-- This is overridden by main manifest and never merged, INCLUDING all activities. -->
-    <application>
-        <!-- These class name can't be expanded due to the lack of 'package' attribute. -->
-        <activity android:name=".LibActivity4" />
-        <service  android:name=".LibService4" />
-        <receiver android:name=".LibReceiver4" />
-        <provider android:name=".LibProvider4" />
-
-    </application>
-
-</manifest>
-
-
 @result
 
 <manifest
@@ -181,13 +156,5 @@
         android:label="the Spanish Inquisition"
         android:name="com.example.MasterControlPermission" />
 
-    <!-- Permission tree for lib4 -->
-    <permission-tree
-        android:label="This is not a label"
-        android:name="com.example.PermTree" />
-
 </manifest>
 
-@errors
-
-WARNING:Missing 'package' declaration in manifest at ManifestMerger2Test4_lib4_not_package.xml:4:1-21:12

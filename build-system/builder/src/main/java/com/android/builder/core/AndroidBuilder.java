@@ -906,9 +906,9 @@ public class AndroidBuilder {
 
         StringBuilder content = new StringBuilder();
         content.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-                .append("<manifest package=\"\" xmlns:android=\"http://schemas.android.com/apk/res/android\">\n")
-                .append("            <uses-sdk android:minSdkVersion=\"")
-                .append(minSdkVersion).append("\"");
+                .append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
+                .append("    package=\"${packageName}\">\n")
+                .append("    <uses-sdk android:minSdkVersion=\"" + minSdkVersion + "\"");
         if (targetSdkVersion != -1) {
             content.append(" android:targetSdkVersion=\"").append(targetSdkVersion).append("\"");
         }

@@ -125,7 +125,8 @@ class NamespacedAarWithSharedLibTest {
                     .subproject(":app", app)
                     .build()
 
-    private val manifestSnippet =  """<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    private val manifestSnippet =  """<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                            |    package="dummy.package.name">
                             |    <application>
                             |       <uses-static-library
                             |                android:name="foo.bar.lib"

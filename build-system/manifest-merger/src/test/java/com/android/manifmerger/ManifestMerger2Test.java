@@ -65,8 +65,9 @@ public class ManifestMerger2Test {
                 "05_inject_applicationid_not_provided.xml",
                 "07_no_package_provided.xml",
                 "08_no_library_package_provided.xml",
-                "09_overlay_package_provided.xml",
                 "08b_library_injection.xml",
+                "08c_empty_library_package_provided.xml",
+                "09_overlay_package_provided.xml",
                 "09b_overlay_package_different.xml",
                 "09c_overlay_package_not_provided.xml",
                 "10_activity_merge",
@@ -232,9 +233,7 @@ public class ManifestMerger2Test {
                 fail(comparingMessage.get());
             }
             // process any warnings.
-            if (mergeReport.getResult() == MergingReport.Result.WARNING) {
-                compareExpectedAndActualErrors(mergeReport, testFiles.getExpectedErrors());
-            }
+            compareExpectedAndActualErrors(mergeReport, testFiles.getExpectedErrors());
         } else {
             for (Record record : mergeReport.getLoggingRecords()) {
                 Logger.getAnonymousLogger().info("Returned log: " + record);
@@ -270,24 +269,22 @@ public class ManifestMerger2Test {
         try {
             String line = reader.readLine();
             while (line != null) {
-                if (line.startsWith("WARNING") || line.startsWith("ERROR")) {
-                    String message = line;
-                    do {
-                        line = reader.readLine();
-                        if (line != null && line.startsWith("    ")) {
-                            message = message + "\n" + line;
-                        }
-                    } while (line != null && line.startsWith("    "));
-
-                    // next might generate an exception which will make the test fail when we
-                    // get unexpected error message.
-                    if (!findLineInRecords(message, records)) {
-
-                        StringBuilder errorMessage = new StringBuilder();
-                        dumpRecords(records, errorMessage);
-                        errorMessage.append("Cannot find expected error : \n").append(message);
-                        fail(errorMessage.toString());
+                String message = line;
+                do {
+                    line = reader.readLine();
+                    if (line != null && line.startsWith("    ")) {
+                        message = message + "\n" + line;
                     }
+                } while (line != null && line.startsWith("    "));
+
+                // next might generate an exception which will make the test fail when we
+                // get unexpected error message.
+                if (!findLineInRecords(message, records)) {
+
+                    StringBuilder errorMessage = new StringBuilder();
+                    dumpRecords(records, errorMessage);
+                    errorMessage.append("Cannot find expected error : \n").append(message);
+                    fail(errorMessage.toString());
                 }
             }
         } finally {
