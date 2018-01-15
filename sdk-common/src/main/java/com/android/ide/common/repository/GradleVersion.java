@@ -345,14 +345,6 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
 
     /**
      * Is this {@linkplain GradleVersion} at least as high as the given
-     * major, minor, micro version? Any preview suffixes are ignored.
-     */
-    public boolean isAtLeastIncludingPreviews(int major, int minor, int micro) {
-        return isAtLeast(major, minor, micro, "", 0, false);
-    }
-
-    /**
-     * Is this {@linkplain GradleVersion} at least as high as the given
      * major, minor, micro version?
      */
     public boolean isAtLeast(int major, int minor, int micro,

@@ -35,9 +35,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -289,8 +287,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
         }
 
         ResourceFile generatedSetResourceFile = mGeneratedSet.getDataFile(changedFile);
-        boolean needsPreprocessing =
-                !getResourceItemsForGeneratedFilesIfNotFromDependency(changedFile).isEmpty();
+        boolean needsPreprocessing = needsPreprocessing(changedFile);
 
         if (resourceFile != null && generatedSetResourceFile == null && needsPreprocessing) {
             // It didn't use to need preprocessing, but it does now.
@@ -447,12 +444,11 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
         }
 
         if (folderData.type != null) {
-            List<ResourceItem> generatedFiles =
-                    getResourceItemsForGeneratedFilesIfNotFromDependency(file);
-            if (!generatedFiles.isEmpty()) {
+
+            if (needsPreprocessing(file)) {
                 return ResourceFile.generatedFiles(
                         file,
-                        generatedFiles,
+                        getResourceItemsForGeneratedFiles(file),
                         folderData.qualifiers,
                         folderData.folderConfiguration);
             } else if (mShouldParseResourceIds && folderData.isIdGenerating &&
@@ -499,27 +495,20 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
         }
     }
 
-    @NonNull
-    private List<ResourceItem> getResourceItemsForGeneratedFilesIfNotFromDependency(
-            @NonNull File file) throws MergingException {
-        if (mIsFromDependency) {
-            return Collections.emptyList();
-        }
-        return getResourceItemsForGeneratedFiles(file);
+    /**
+     * Determine if the given file needs preprocessing. We don't preprocess files that come from
+     * dependencies, since they should have been preprocessed when creating the AAR.
+     */
+    private boolean needsPreprocessing(@NonNull File file) {
+        return !this.isFromDependency() && mPreprocessor.needsPreprocessing(file);
     }
 
     @NonNull
     private List<ResourceItem> getResourceItemsForGeneratedFiles(@NonNull File file)
             throws MergingException {
-        Collection<File> filesToBeGenerated;
-        try {
-            filesToBeGenerated = mPreprocessor.getFilesToBeGenerated(file);
-        } catch (IOException e) {
-            throw new MergingException(e);
-        }
+        List<ResourceItem> resourceItems = new ArrayList<ResourceItem>();
 
-        List<ResourceItem> resourceItems = new ArrayList<>(filesToBeGenerated.size());
-        for (File generatedFile : filesToBeGenerated) {
+        for (File generatedFile : mPreprocessor.getFilesToBeGenerated(file)) {
             FolderData generatedFileFolderData =
                     getFolderData(generatedFile.getParentFile());
 

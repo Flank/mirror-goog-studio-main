@@ -13,20 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.builder.png;
 
-import static com.android.utils.FileUtils.writeToFile;
-import static org.junit.Assert.assertEquals;
+import static java.nio.charset.Charset.defaultCharset;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.android.utils.NullLogger;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Files;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,33 +39,22 @@ import org.junit.rules.TemporaryFolder;
  * Unit tests for {@link VectorDrawableRenderer}.
  */
 public class VectorDrawableRendererTest {
-    private static final String SIMPLE_VECTOR = "<vector></vector>";
-    private static final String VECTOR_WITH_GRADIENT =
-            "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-            "    xmlns:aapt=\"http://schemas.android.com/aapt\"\n" +
-            "    android:width=\"64dp\" android:height=\"64dp\" android:viewportWidth=\"64\" android:viewportHeight=\"64\">\n" +
-            "  <path android:pathData=\"M10,10h40v30h-40z\">\n" +
-            "    <aapt:attr name=\"android:fillColor\">\n" +
-            "      <gradient android:startY=\"10\" android:startX=\"10\" android:endY=\"40\" android:endX=\"10\">\n" +
-            "      <item android:offset=\"0\" android:color=\"#FFFF0000\"/>\n" +
-            "      <item android:offset=\"1\" android:color=\"#FFFFFF00\"/>\n" +
-            "    </gradient>\n" +
-            "    </aapt:attr>\n" +
-            "  </path>\n" +
-            "</vector>";
-
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
+
     private VectorDrawableRenderer mRenderer;
+
     private File mRes;
+
     private File mOutput;
+
     private Set<Density> mDensities;
 
     @Before
     public void setUp() throws Exception {
         mDensities = ImmutableSet.of(Density.HIGH, Density.MEDIUM, Density.LOW);
         mOutput = new File("output");
-        mRenderer = new VectorDrawableRenderer(19, false, mOutput, mDensities, NullLogger::new);
+        mRenderer = new VectorDrawableRenderer(19, mOutput, mDensities, NullLogger::new);
         mRes = tmpFolder.newFolder("app", "src", "main", "res");
     }
 
@@ -71,11 +63,12 @@ public class VectorDrawableRendererTest {
         File drawable = new File(mRes, "drawable");
         File input = new File(drawable, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
         Collection<File> result = mRenderer.getFilesToBeGenerated(input);
 
-        assertEquals(
+        Assert.assertEquals(
                 ImmutableSet.of(
                         FileUtils.join(mOutput, "drawable-hdpi", "icon.png"),
                         FileUtils.join(mOutput, "drawable-mdpi", "icon.png"),
@@ -86,16 +79,18 @@ public class VectorDrawableRendererTest {
 
     @Test
     public void noDensities() throws Exception {
-        mRenderer = new VectorDrawableRenderer(
-                19, false, mOutput, Collections.emptySet(), NullLogger::new);
+        mRenderer =
+                new VectorDrawableRenderer(
+                        19, mOutput, Collections.<Density>emptySet(), NullLogger::new);
         File drawable = new File(mRes, "drawable");
         File input = new File(drawable, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
         Collection<File> result = mRenderer.getFilesToBeGenerated(input);
 
-        assertEquals(
+        Assert.assertEquals(
                 ImmutableSet.of(
                         FileUtils.join(mOutput, "drawable-anydpi-v21", "icon.xml")),
                 ImmutableSet.copyOf(result));
@@ -106,11 +101,12 @@ public class VectorDrawableRendererTest {
         File drawable = new File(mRes, "drawable-fr");
         File input = new File(drawable, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
         Collection<File> result = mRenderer.getFilesToBeGenerated(input);
 
-        assertEquals(
+        Assert.assertEquals(
                 ImmutableSet.of(
                         FileUtils.join(mOutput, "drawable-fr-hdpi", "icon.png"),
                         FileUtils.join(mOutput, "drawable-fr-mdpi", "icon.png"),
@@ -124,11 +120,12 @@ public class VectorDrawableRendererTest {
         File drawable = new File(mRes, "drawable-v16");
         File input = new File(drawable, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
         Collection<File> result = mRenderer.getFilesToBeGenerated(input);
 
-        assertEquals(
+        Assert.assertEquals(
                 ImmutableSet.of(
                         FileUtils.join(mOutput, "drawable-hdpi-v16", "icon.png"),
                         FileUtils.join(mOutput, "drawable-mdpi-v16", "icon.png"),
@@ -142,11 +139,12 @@ public class VectorDrawableRendererTest {
         File drawable = new File(mRes, "drawable-hdpi");
         File input = new File(drawable, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
         Collection<File> result = mRenderer.getFilesToBeGenerated(input);
 
-        assertEquals(
+        Assert.assertEquals(
                 ImmutableSet.of(
                         FileUtils.join(mOutput, "drawable-hdpi", "icon.png"),
                         FileUtils.join(mOutput, "drawable-hdpi-v21", "icon.xml")),
@@ -158,11 +156,12 @@ public class VectorDrawableRendererTest {
         File drawable = new File(mRes, "drawable-anydpi");
         File input = new File(drawable, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
         Collection<File> result = mRenderer.getFilesToBeGenerated(input);
 
-        assertEquals(
+        Assert.assertEquals(
                 ImmutableSet.of(
                         FileUtils.join(mOutput, "drawable-ldpi", "icon.png"),
                         FileUtils.join(mOutput, "drawable-mdpi", "icon.png"),
@@ -176,11 +175,12 @@ public class VectorDrawableRendererTest {
         File drawable = new File(mRes, "drawable-anydpi-v16");
         File input = new File(drawable, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
         Collection<File> result = mRenderer.getFilesToBeGenerated(input);
 
-        assertEquals(
+        Assert.assertEquals(
                 ImmutableSet.of(
                         FileUtils.join(mOutput, "drawable-ldpi-v16", "icon.png"),
                         FileUtils.join(mOutput, "drawable-mdpi-v16", "icon.png"),
@@ -194,11 +194,12 @@ public class VectorDrawableRendererTest {
         File drawable = new File(mRes, "drawable-nodpi");
         File input = new File(drawable, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
         Collection<File> result = mRenderer.getFilesToBeGenerated(input);
 
-        assertEquals(
+        Assert.assertEquals(
                 ImmutableSet.of(
                         FileUtils.join(mOutput, "drawable-nodpi", "icon.xml")),
                 ImmutableSet.copyOf(result));
@@ -209,11 +210,12 @@ public class VectorDrawableRendererTest {
         File drawable = new File(mRes, "drawable-nodpi-v16");
         File input = new File(drawable, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
         Collection<File> result = mRenderer.getFilesToBeGenerated(input);
 
-        assertEquals(
+        Assert.assertEquals(
                 ImmutableSet.of(
                         FileUtils.join(mOutput, "drawable-nodpi-v16", "icon.xml")),
                 ImmutableSet.copyOf(result));
@@ -224,17 +226,10 @@ public class VectorDrawableRendererTest {
         File drawable = new File(mRes, "drawable");
         File input = new File(drawable, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
-        Collection<File> result = mRenderer.getFilesToBeGenerated(input);
-
-        assertEquals(
-                ImmutableSet.of(
-                        FileUtils.join(mOutput, "drawable-ldpi", "icon.png"),
-                        FileUtils.join(mOutput, "drawable-mdpi", "icon.png"),
-                        FileUtils.join(mOutput, "drawable-hdpi", "icon.png"),
-                        FileUtils.join(mOutput, "drawable-anydpi-v21", "icon.xml")),
-                ImmutableSet.copyOf(result));
+        assertTrue(mRenderer.needsPreprocessing(input));
     }
 
     @Test
@@ -242,9 +237,10 @@ public class VectorDrawableRendererTest {
         File drawableV21 = new File(mRes, "drawable-v21");
         File input = new File(drawableV21, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
-        assertTrue(mRenderer.getFilesToBeGenerated(input).isEmpty());
+        assertFalse(mRenderer.needsPreprocessing(input));
     }
 
     @Test
@@ -252,9 +248,10 @@ public class VectorDrawableRendererTest {
         File drawableV21 = new File(mRes, "drawable-anydpi-v21");
         File input = new File(drawableV21, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
-        assertTrue(mRenderer.getFilesToBeGenerated(input).isEmpty());
+        assertFalse(mRenderer.needsPreprocessing(input));
     }
 
     @Test
@@ -262,17 +259,10 @@ public class VectorDrawableRendererTest {
         File drawableV16 = new File(mRes, "drawable-v16");
         File input = new File(drawableV16, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
-        Collection<File> result = mRenderer.getFilesToBeGenerated(input);
-
-        assertEquals(
-                ImmutableSet.of(
-                        FileUtils.join(mOutput, "drawable-hdpi-v16", "icon.png"),
-                        FileUtils.join(mOutput, "drawable-mdpi-v16", "icon.png"),
-                        FileUtils.join(mOutput, "drawable-ldpi-v16", "icon.png"),
-                        FileUtils.join(mOutput, "drawable-anydpi-v21", "icon.xml")),
-                ImmutableSet.copyOf(result));
+        assertTrue(mRenderer.needsPreprocessing(input));
     }
 
     @Test
@@ -280,11 +270,10 @@ public class VectorDrawableRendererTest {
         File drawable = new File(mRes, "drawable");
         File input = new File(drawable, "icon.xml");
 
-        writeToFile(input,
-                "<bitmap xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "android:src=\"@drawable/icon\"/>");
+        Files.createParentDirs(input);
+        Files.write("<bitmap android:src=\"@drawable/icon\" />", input, defaultCharset());
 
-        assertTrue(mRenderer.getFilesToBeGenerated(input).isEmpty());
+        assertFalse(mRenderer.needsPreprocessing(input));
     }
 
     @Test
@@ -292,49 +281,21 @@ public class VectorDrawableRendererTest {
         File values = new File(mRes, "values");
         File input = new File(values, "strings.xml");
 
-        writeToFile(input, "<resources></resources>");
+        Files.createParentDirs(input);
+        Files.write("<resources></resources>", input, defaultCharset());
 
-        assertTrue(mRenderer.getFilesToBeGenerated(input).isEmpty());
+        assertFalse(mRenderer.needsPreprocessing(input));
     }
 
     @Test
-    public void noGradientSdk21() throws Exception {
-        mRenderer = new VectorDrawableRenderer(21, false, mOutput, mDensities, NullLogger::new);
+    public void needsPreprocessing_minSdk() throws Exception {
+        mRenderer = new VectorDrawableRenderer(21, mOutput, mDensities, NullLogger::new);
         File drawable = new File(mRes, "drawable");
         File input = new File(drawable, "icon.xml");
 
-        writeToFile(input, SIMPLE_VECTOR);
+        Files.createParentDirs(input);
+        Files.write("<vector></vector>", input, defaultCharset());
 
-        assertTrue(mRenderer.getFilesToBeGenerated(input).isEmpty());
-    }
-
-    @Test
-    public void gradientSdk21() throws Exception {
-        mRenderer = new VectorDrawableRenderer(21, false, mOutput, mDensities, NullLogger::new);
-        File drawable = new File(mRes, "drawable");
-        File input = new File(drawable, "icon.xml");
-
-        writeToFile(input, VECTOR_WITH_GRADIENT);
-
-        Collection<File> result = mRenderer.getFilesToBeGenerated(input);
-
-        assertEquals(
-                ImmutableSet.of(
-                        FileUtils.join(mOutput, "drawable-ldpi", "icon.png"),
-                        FileUtils.join(mOutput, "drawable-mdpi", "icon.png"),
-                        FileUtils.join(mOutput, "drawable-hdpi", "icon.png"),
-                        FileUtils.join(mOutput, "drawable-anydpi-v24", "icon.xml")),
-                ImmutableSet.copyOf(result));
-    }
-
-    @Test
-    public void gradientSdk24() throws Exception {
-        mRenderer = new VectorDrawableRenderer(24, false, mOutput, mDensities, NullLogger::new);
-        File drawable = new File(mRes, "drawable");
-        File input = new File(drawable, "icon.xml");
-
-        writeToFile(input, VECTOR_WITH_GRADIENT);
-
-        assertTrue(mRenderer.getFilesToBeGenerated(input).isEmpty());
+        assertFalse(mRenderer.needsPreprocessing(input));
     }
 }

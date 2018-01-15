@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
@@ -32,8 +33,6 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -42,20 +41,19 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Looks for issues with converting vector drawables to bitmaps for backward compatibility.
+ * Looks for issues with vector icon generation
  */
 public class VectorDetector extends ResourceXmlDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "VectorRaster",
             "Vector Image Generation",
-            "Vector icons require API 21 or API 24 depending on used features, " +
-            "but when `minSdkVersion` is less than 21 or 24 and Android Gradle plugin 1.4 or " +
-            "higher is used, a vector drawable placed in the `drawable` folder is automatically " +
-            "moved to `drawable-anydpi-v21` or `drawable-anydpi-v24` and bitmap images are " +
-            "generated for different screen resolutions for backwards compatibility.\n" +
+            "Vector icons require API 21, but when using Android Gradle plugin 1.4 or higher, " +
+            "vectors placed in the `drawable` folder are automatically moved to `drawable-*dpi-v21` " +
+            "and a bitmap image is generated each `drawable-*dpi` folder instead, for backwards " +
+            "compatibility (provided `minSdkVersion` is less than 21).\n" +
             "\n" +
-            "However, there are some limitations to this raster image generation, and this " +
+            "However, there are some limitations to this vector image generation, and this " +
             "lint check flags elements and attributes that are not fully supported. " +
             "You should manually check whether the generated output is acceptable for those " +
             "older devices.",
@@ -77,36 +75,23 @@ public class VectorDetector extends ResourceXmlDetector {
     }
 
     /**
-     * Returns true if the given Gradle project model supports raster image generation
-     * for vector drawables.
+     * Returns true if the given Gradle project model supports vector image generation
      *
      * @param project the project to check
-     * @return true if the plugin supports raster image generation
+     * @return true if the plugin supports vector image generation
      */
     public static boolean isVectorGenerationSupported(@NonNull Project project) {
         GradleVersion modelVersion = project.getGradleModelVersion();
         // Requires 1.4.x or higher.
-        return modelVersion != null && modelVersion.isAtLeastIncludingPreviews(1, 4, 0);
-    }
-
-    /**
-     * Returns true if the given Gradle project model supports raster image generation
-     * for vector drawables.
-     *
-     * @param project the project to check
-     * @return true if the plugin supports raster image generation
-     */
-    public static boolean isVectorGenerationSupportedForGradient(@NonNull Project project) {
-        GradleVersion modelVersion = project.getGradleModelVersion();
-        // Requires 3.1.x or higher.
-        return modelVersion != null && modelVersion.isAtLeastIncludingPreviews(3, 1, 0);
+        return modelVersion != null
+                && (modelVersion.getMajor() >= 2 || modelVersion.getMinor() >= 4);
     }
 
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
-        // If minSdkVersion >= 24, we're not generating compatibility bitmap icons.
+        // If minSdkVersion >= 21, we're not generating compatibility vector icons
         Project project = context.getMainProject();
-        if (project.getMinSdkVersion().getFeatureLevel() >= 24) {
+        if (project.getMinSdkVersion().getFeatureLevel() >= 21) {
             return;
         }
 
@@ -115,7 +100,7 @@ public class VectorDetector extends ResourceXmlDetector {
             return;
         }
 
-        // Not using a Gradle plugin that supports vector image generation?
+        // Not using a plugin that supports vector image generation?
         if (!isVectorGenerationSupported(project)) {
             return;
         }
@@ -126,55 +111,19 @@ public class VectorDetector extends ResourceXmlDetector {
             return;
         }
 
-        // If this vector asset is in a -v24 folder, we're not generating bitmap icons.
-        if (context.getFolderVersion() >= 24) {
+        // If this vector asset is in a -v21 folder, we're not generating vector assets
+        if (context.getFolderVersion() >= 21) {
             return;
         }
 
         // TODO: Check to see if there already is a -?dpi version of the file; if so,
-        // we also won't be generating a bitmap image.
+        // we also won't be generating a vector image
 
-        boolean generationDueToGradient =
-                containsGradient(document) && isVectorGenerationSupportedForGradient(project);
-
-        if (!generationDueToGradient) {
-            // If minSdkVersion >= 21, we're not generating compatibility bitmap icons.
-            if (project.getMinSdkVersion().getFeatureLevel() >= 21) {
-                return;
-            }
-            // If this vector asset is in a -v21 folder, we're not generating bitmap icons.
-            if (context.getFolderVersion() >= 21) {
-                return;
-            }
-            // TODO: When support library starts supporting gradients (http://b/62421666), this
-            // check should be moved up.
-            if (usingSupportLibVectors(project)) {
-                return;
-            }
+        if (usingSupportLibVectors(project)) {
+            return;
         }
 
-        checkSupported(context, root, generationDueToGradient);
-    }
-
-    private static boolean containsGradient(Document document) {
-        Deque<Element> elements = new ArrayDeque<>();
-        elements.add(document.getDocumentElement());
-
-        Element element;
-        while ((element = elements.poll()) != null) {
-            String tag = element.getTagName();
-            if ("gradient".equals(tag)) {
-                return true;
-            }
-            NodeList children = element.getChildNodes();
-            for (int i = 0, n = children.getLength(); i < n; i++) {
-                Node child = children.item(i);
-                if (child.getNodeType() == Node.ELEMENT_NODE) {
-                    elements.add((Element)child);
-                }
-            }
-        }
-        return false;
+        checkSupported(context, root);
     }
 
     static boolean usingSupportLibVectors(@NonNull Project project) {
@@ -189,16 +138,13 @@ public class VectorDetector extends ResourceXmlDetector {
     }
 
     /** Recursive element check for unsupported attributes and tags */
-    private static void checkSupported(@NonNull XmlContext context, @NonNull Element element,
-                                       boolean generationDueToGradient) {
-        int apiThreshold = generationDueToGradient ? 24 : 21;
+    private static void checkSupported(@NonNull XmlContext context, @NonNull Element element) {
         // Unsupported tags
         String tag = element.getTagName();
         if ("clip-path".equals(tag)) {
-            String message = String.format(
-                    "This tag is not supported in images generated from this vector icon for "
-                    + "API < %d; check generated icon to make sure it looks acceptable",
-                    apiThreshold);
+            String message = "This tag is not supported in images generated from this "
+                    + "vector icon for API < 21; check generated icon to make sure it looks "
+                    + "acceptable";
             context.report(ISSUE, element, context.getLocation(element), message);
         } else if ("group".equals(tag)) {
             AndroidProject model = context.getMainProject().getGradleProjectModel();
@@ -218,19 +164,17 @@ public class VectorDetector extends ResourceXmlDetector {
                     || "trimPathEnd".equals(name)
                     || "trimPathOffset".equals(name))
                     && ANDROID_URI.equals(attr.getNamespaceURI())) {
-                String message = String.format(
-                        "This attribute is not supported in images generated from this vector icon "
-                        + "for API < %d; check generated icon to make sure it looks acceptable",
-                        apiThreshold);
+                String message = "This attribute is not supported in images generated from this "
+                        + "vector icon for API < 21; check generated icon to make sure it looks "
+                        + "acceptable";
                 context.report(ISSUE, attr, context.getNameLocation(attr), message);
             }
 
             String value = attr.getValue();
             if (ResourceUrl.parse(value) != null) {
-                String message = String.format(
-                        "Resource references will not work correctly in images generated for this "
-                        + "vector icon for API < %d; check generated icon to make sure it looks "
-                        + "acceptable", apiThreshold);
+                String message = "Resource references will not work correctly in images generated "
+                        + "for this vector icon for API < 21; check generated icon to make sure "
+                        + "it looks acceptable";
                 context.report(ISSUE, attr, context.getValueLocation(attr), message);
             }
         }
@@ -239,7 +183,7 @@ public class VectorDetector extends ResourceXmlDetector {
         for (int i = 0, n = children.getLength(); i < n; i++) {
             Node child = children.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
-                checkSupported(context, (Element)child, generationDueToGradient);
+                checkSupported(context, ((Element) child));
             }
         }
     }

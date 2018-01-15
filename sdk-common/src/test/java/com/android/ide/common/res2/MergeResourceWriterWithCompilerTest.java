@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.ide.common.res2;
 
 import static org.junit.Assert.assertFalse;
@@ -27,8 +28,8 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -38,6 +39,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class MergeResourceWriterWithCompilerTest {
+
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
@@ -53,14 +55,20 @@ public class MergeResourceWriterWithCompilerTest {
     public final void before() throws Exception {
         mEmptyPreprocessor =
                 new ResourcePreprocessor() {
+                    @Override
+                    public boolean needsPreprocessing(@NonNull File file) {
+                        return false;
+                    }
+
                     @NonNull
                     @Override
                     public Collection<File> getFilesToBeGenerated(@NonNull File original) {
-                        return Collections.emptySet();
+                        return null;
                     }
 
                     @Override
-                    public void generateFile(@NonNull File toBeGenerated, @NonNull File original) {}
+                    public void generateFile(@NonNull File toBeGenerated, @NonNull File original)
+                            throws IOException {}
                 };
 
         mSimpleCompiler =
