@@ -16,6 +16,7 @@
 
 package com.android.builder.internal.aapt.v2
 
+import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.AaptTestUtils
@@ -29,6 +30,7 @@ import com.android.testutils.TestUtils
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.MoreTruth.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
+import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Rule
@@ -121,18 +123,15 @@ class Aapt2DaemonImplTest {
 
         val outputFile = File(temporaryFolder.newFolder(), "lib.apk")
 
-        val request = AaptPackageConfig.Builder()
-                .setAndroidTarget(target)
-                .setManifestFile(manifest)
-                .setResourceDir(compiledDir)
-                .setResourceOutputApk(outputFile)
-                .setLogger(logger)
-                .setOptions(AaptOptions(noCompress = null,
-                        failOnMissingConfigEntry = false,
-                        additionalParameters = null))
-                .build()
+        val request = AaptPackageConfig(
+                androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
+                manifestFile = manifest,
+                resourceDirs = ImmutableList.of(compiledDir),
+                resourceOutputApk = outputFile,
+                options = AaptOptions(),
+                variantType = VariantType.DEFAULT)
 
-        daemon.link(request)
+        daemon.link(request, logger)
         assertThat(Zip(outputFile)).containsFileWithContent("res/raw/foo.txt", "content")
     }
 
@@ -154,21 +153,15 @@ class Aapt2DaemonImplTest {
 
         val outputFile = File(temporaryFolder.newFolder(), "lib.apk")
 
-        val request = AaptPackageConfig.Builder()
-                .setAndroidTarget(target)
-                .setManifestFile(manifest)
-                .setResourceOutputApk(outputFile)
-                .setResourceDir(compiledDir)
-                .setLogger(logger)
-                .setOptions(AaptOptions(noCompress = null,
-                        failOnMissingConfigEntry = false,
-                        additionalParameters = null))
-                .build()
+        val request = AaptPackageConfig(
+                androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
+                manifestFile = manifest,
+                resourceOutputApk = outputFile,
+                resourceDirs = ImmutableList.of(compiledDir),
+                options = AaptOptions(),
+                variantType = VariantType.DEFAULT)
         val exception = assertFailsWith(Aapt2Exception::class) {
-            daemon.link(
-                    AaptPackageConfig.Builder(request)
-                            .setIntermediateDir(temporaryFolder.newFolder())
-                            .build())
+            daemon.link(request.copy(intermediateDir = temporaryFolder.newFolder()), logger)
         }
         assertThat(exception.message).contains("Android resource linking failed")
         assertThat(exception.message).contains("AndroidManifest.xml")
@@ -177,7 +170,7 @@ class Aapt2DaemonImplTest {
         assertThat(exception.message).contains("@")
 
         val exception2 = assertFailsWith(Aapt2Exception::class) {
-            daemon.link(AaptPackageConfig.Builder(request).setIntermediateDir(null).build())
+            daemon.link(request, logger)
         }
         assertThat(exception2.message).contains("Android resource linking failed")
         assertThat(exception2.message).contains("AndroidManifest.xml")

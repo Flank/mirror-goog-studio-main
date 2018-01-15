@@ -35,7 +35,6 @@ import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.TestManifestGenerator;
-import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.BlockingResourceLinker;
 import com.android.builder.internal.compiler.AidlProcessor;
@@ -111,14 +110,11 @@ import java.util.zip.ZipFile;
  * <p>then build steps can be done with:
  *
  * <ol>
- *   <li>{@link #mergeManifestsForApplication(File, List, List, String, String, int, String, String,
- *       String, Integer, String, String, String, ManifestMerger2.MergeType, Map, List, File)}
- *   <li>{@link #mergeManifestsForTestVariant(String, String, String, String, String, Boolean,
- *       Boolean, String, File, List, Map, File, File)}
- *   <li>{@link #processResources(Aapt, AaptPackageConfig.Builder)}
- *   <li>{@link #compileAllAidlFiles(Collection, File, File, Collection, Collection,
- *       DependencyFileProcessor, ProcessOutputHandler)}
- *   <li>{@link #getDexByteCodeConverter()}
+ *   <li>{@link #mergeManifestsForApplication }
+ *   <li>{@link #mergeManifestsForTestVariant }
+ *   <li>{@link #processResources }
+ *   <li>{@link #compileAllAidlFiles }
+ *   <li>{@link #getDexByteCodeConverter() }
  * </ol>
  *
  * <p>Java compilation is not handled but the builder provides the boot classpath with {@link
@@ -782,7 +778,8 @@ public class AndroidBuilder {
      * @param aapt the interface to the {@code aapt} tool
      * @param aaptConfigBuilder aapt command invocation parameters; this will receive some
      *     additional data (build tools, Android target and logger) and will be used to request
-     *     package invocation in {@code aapt} (see {@link Aapt#link(AaptPackageConfig)})
+     *     package invocation in {@code aapt} (see {@link
+     *     BlockingResourceLinker#link(AaptPackageConfig, ILogger)})
      * @throws IOException failed
      * @throws ProcessException failed
      */
@@ -794,14 +791,20 @@ public class AndroidBuilder {
         checkState(mTargetInfo != null,
                 "Cannot call processResources() before setTargetInfo() is called.");
 
-        aaptConfigBuilder.setBuildToolInfo(mTargetInfo.getBuildTools());
         aaptConfigBuilder.setAndroidTarget(mTargetInfo.getTarget());
-        aaptConfigBuilder.setLogger(mLogger);
 
         AaptPackageConfig aaptConfig = aaptConfigBuilder.build();
+        processResources(aapt, aaptConfig, mLogger);
+    }
+
+    public static void processResources(
+            @NonNull BlockingResourceLinker aapt,
+            @NonNull AaptPackageConfig aaptConfig,
+            @NonNull ILogger logger)
+            throws IOException, ProcessException {
 
         try {
-            aapt.link(aaptConfig);
+            aapt.link(aaptConfig, logger);
         } catch (Exception e) {
             throw new ProcessException("Failed to execute aapt", e);
         }

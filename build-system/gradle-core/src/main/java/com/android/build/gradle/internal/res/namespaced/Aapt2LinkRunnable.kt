@@ -14,22 +14,26 @@
  * limitations under the License.
  */
 
-package com.android.builder.internal.aapt.v2
+package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.ide.common.res2.CompileResourceRequest
-import com.android.utils.ILogger
+import com.android.repository.Revision
+import org.gradle.api.logging.Logging
+import java.io.Serializable
+import javax.inject.Inject
 
-/**
- * The operations AAPT2 can perform.
- *
- * Methods throw [Aapt2Exception] for invalid input (e.g. syntax error in a source file)
- * and [Aapt2InternalException] if there is an internal issue running AAPT itself.
- */
-interface Aapt2 {
-    /** Perform the requested compilation. Throws [Aapt2Exception] on failure */
-    fun compile(request: CompileResourceRequest, logger: ILogger)
+class Aapt2LinkRunnable @Inject constructor(
+        private val params: Params) : Runnable {
 
-    /** Perform the requested linking. Throws [Aapt2Exception] on failure. */
-    fun link(request: AaptPackageConfig, logger: ILogger)
+    override fun run() {
+        val logger = LoggerWrapper(Logging.getLogger(this::class.java))
+        useAaptDaemon(params.revision) { daemon ->
+            daemon.link(params.request, logger)
+        }
+    }
+
+    class Params(
+            val revision: Revision,
+            val request: AaptPackageConfig) : Serializable
 }

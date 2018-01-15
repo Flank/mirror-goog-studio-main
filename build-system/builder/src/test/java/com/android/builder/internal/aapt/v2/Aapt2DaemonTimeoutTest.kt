@@ -16,6 +16,7 @@
 
 package com.android.builder.internal.aapt.v2
 
+import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.res2.CompileResourceRequest
@@ -93,19 +94,16 @@ class Aapt2DaemonTimeoutTest {
 
         val outputFile = File(temporaryFolder.newFolder(), "lib.apk")
 
-        val request = AaptPackageConfig.Builder()
-                .setAndroidTarget(target)
-                .setManifestFile(manifest)
-                .setResourceOutputApk(outputFile)
-                .setLogger(logger)
-                .setOptions(AaptOptions(noCompress = null,
-                        failOnMissingConfigEntry = false,
-                        additionalParameters = null))
-                .build()
+        val request = AaptPackageConfig(
+                androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
+                manifestFile = manifest,
+                resourceOutputApk = outputFile,
+                options = AaptOptions(),
+                variantType = VariantType.DEFAULT)
 
         val daemon = CompileLinkTimeoutAapt2Daemon(name = testName.methodName)
         val exception = assertFailsWith(Aapt2InternalException::class) {
-            daemon.link(request)
+            daemon.link(request, logger)
         }
         assertThat(exception.message).contains("Link timed out, attempting to stop daemon")
         assertThat(exception.suppressed).isEmpty()

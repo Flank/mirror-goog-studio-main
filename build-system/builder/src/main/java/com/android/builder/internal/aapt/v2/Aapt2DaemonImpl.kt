@@ -107,8 +107,8 @@ class Aapt2DaemonImpl(
     }
 
     @Throws(TimeoutException::class)
-    override fun doLink(request: AaptPackageConfig) {
-        val waitForTask = WaitForTaskCompletion(displayName, request.logger!!)
+    override fun doLink(request: AaptPackageConfig, logger: ILogger) {
+        val waitForTask = WaitForTaskCompletion(displayName, logger)
         try {
             processOutput.delegate = waitForTask
             Aapt2DaemonUtil.requestLink(writer, request)
@@ -116,13 +116,12 @@ class Aapt2DaemonImpl(
             if (error != null) {
                 val configWithResourcesListed =
                         if (request.intermediateDir != null) {
-                            AaptPackageConfig.Builder(request).setListResourceFiles(true).build()
+                            request.copy(listResourceFiles = true)
                         } else {
                             request
                         }
                 val args =
-                        AaptV2CommandBuilder.makeLink(
-                                configWithResourcesListed)
+                        AaptV2CommandBuilder.makeLink(configWithResourcesListed)
                                 .joinToString("\\\n        ")
                 throw Aapt2Exception(
                         ("Android resource linking failed ($displayName)\n" +

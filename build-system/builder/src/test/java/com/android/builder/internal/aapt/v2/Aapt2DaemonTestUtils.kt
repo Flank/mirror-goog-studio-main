@@ -31,7 +31,7 @@ class CompileLinkTimeoutAapt2Daemon(name: String = "Test") :
         throw TimeoutException("Compile timed out")
     }
 
-    override fun doLink(request: AaptPackageConfig) {
+    override fun doLink(request: AaptPackageConfig, logger: ILogger) {
         throw TimeoutException("Link timed out")
     }
 
@@ -49,7 +49,7 @@ class StartupTimeoutAapt2Daemon(name: String = "Test") :
         throw UnsupportedOperationException()
     }
 
-    override fun doLink(request: AaptPackageConfig) {
+    override fun doLink(request: AaptPackageConfig, logger: ILogger) {
         throw UnsupportedOperationException()
     }
 
@@ -67,7 +67,7 @@ class ShutdownTimeoutAapt2Daemon(name: String = "Test", logger: ILogger) :
     override fun doCompile(request: CompileResourceRequest, logger: ILogger) {
     }
 
-    override fun doLink(request: AaptPackageConfig) {
+    override fun doLink(request: AaptPackageConfig, logger: ILogger) {
         throw UnsupportedOperationException()
     }
 

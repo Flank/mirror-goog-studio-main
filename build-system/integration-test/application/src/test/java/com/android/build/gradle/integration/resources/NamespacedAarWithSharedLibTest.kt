@@ -31,6 +31,7 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.QueueableAapt2
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.repository.testframework.FakeProgressIndicator
+import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.testutils.TestUtils
 import com.android.utils.StdLogger
@@ -182,22 +183,19 @@ class NamespacedAarWithSharedLibTest {
             }
             // Use AAPT2 to build installable APK
             val sharedLib = File(tempFolder.newFolder(), "shared.apk")
-            val config = AaptPackageConfig.Builder()
-                    .setStaticLibraryDependencies(ImmutableList.of(staticLib))
-                    .setResourceOutputApk(sharedLib)
-                    .setManifestFile(manifest)
-                    .setOptions(AaptOptions(null, true, null))
-                    .setAndroidTarget(androidTarget)
-                    .setBuildToolInfo(buildToolInfo)
-                    .setVariantType(VariantType.DEFAULT)
-                    .setLogger(StdLogger(StdLogger.Level.INFO))
-                    .build()
+            val config = AaptPackageConfig(
+                    staticLibraryDependencies = ImmutableList.of(staticLib),
+                    resourceOutputApk = sharedLib,
+                    manifestFile = manifest,
+                    options = AaptOptions(),
+                    androidJarPath = androidTarget.getPath(IAndroidTarget.ANDROID_JAR),
+                    variantType = VariantType.DEFAULT)
             QueueableAapt2(
                     LoggedProcessOutputHandler(StdLogger(StdLogger.Level.INFO)),
                     buildToolInfo,
                     StdLogger(StdLogger.Level.VERBOSE),
                     0)
-                    .use { it.link(config) }
+                    .use { it.link(config, StdLogger(StdLogger.Level.INFO)) }
 
             // TODO: signing, make usable for running.
 //            val sharedLib = File(unsignedSharedLib.parentFile, "shared.apk")

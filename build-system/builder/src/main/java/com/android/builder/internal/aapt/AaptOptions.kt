@@ -16,8 +16,9 @@
 
 package com.android.builder.internal.aapt
 
+import java.io.Serializable
 
 data class AaptOptions(
-        val noCompress: Collection<String>?,
-        val failOnMissingConfigEntry: Boolean,
-        val additionalParameters: List<String>?)
+        val noCompress: Collection<String>? = null,
+        val failOnMissingConfigEntry: Boolean = true,
+        val additionalParameters: List<String>? = null) : Serializable

@@ -17,14 +17,8 @@
 package com.android.builder.internal.aapt;
 
 import com.android.annotations.NonNull;
-import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -34,19 +28,20 @@ import java.util.concurrent.ExecutionException;
 public abstract class AbstractAapt implements Aapt {
 
     @Override
-    public final void link(@NonNull AaptPackageConfig config)
+    public final void link(@NonNull AaptPackageConfig config, @NonNull ILogger logger)
             throws AaptException, ExecutionException, InterruptedException {
         validatePackageConfig(config);
         makeValidatedPackage(config).get();
     }
 
     /**
-     * Same as {@link #link(AaptPackageConfig)} but invoked only after validation has
-     * been performed.
+     * Same as {@link BlockingResourceLinker#link(AaptPackageConfig, ILogger)} but invoked only
+     * after validation has been performed.
      *
-     * @param config same as in {@link #link(AaptPackageConfig)}
-     * @return same as in {@link #link(AaptPackageConfig)}
-     * @throws AaptException same as in {@link #link(AaptPackageConfig)}
+     * @param config same as in {@link BlockingResourceLinker#link(AaptPackageConfig, ILogger)}
+     * @return same as in {@link BlockingResourceLinker#link(AaptPackageConfig, ILogger)}
+     * @throws AaptException same as in {@link BlockingResourceLinker#link(AaptPackageConfig,
+     *     ILogger)}
      */
     @NonNull
     protected abstract ListenableFuture<Void> makeValidatedPackage(
@@ -62,9 +57,7 @@ public abstract class AbstractAapt implements Aapt {
      * <ul>
      *   <li>The following fields must be defined:
      *       <ul>
-     *         <li>Android target (see {@link AaptPackageConfig#getAndroidTarget()});
-     *         <li>Build tools information (see {@link AaptPackageConfig#getBuildToolInfo()}};
-     *         <li>Logger (see {@link AaptPackageConfig#getLogger()});
+     *         <li>Android target (see {@link AaptPackageConfig#getAndroidJarPath()});
      *         <li>Manifest file (see {@link AaptPackageConfig#getManifestFile()});
      *         <li>{@code aapt} options (see {@link AaptPackageConfig#getOptions()});
      *         <li>Variant type (see {@link AaptPackageConfig#getVariantType()}};
@@ -85,11 +78,11 @@ public abstract class AbstractAapt implements Aapt {
      *         <li>Source output directory (see {@link AaptPackageConfig#getSourceOutputDir()});
      *         <li>Splits (see {@link AaptPackageConfig#getSplits()});
      *         <li>Symbol output directory (see {@link AaptPackageConfig#getSymbolOutputDir()});
-     *         <li>Debuggable (see {@link AaptPackageConfig#isDebuggable()}), {@code false} by
+     *         <li>Debuggable (see {@link AaptPackageConfig#getDebuggable()}), {@code false} by
      *             default;
-     *         <li>Pseudo localize (see {@link AaptPackageConfig#isPseudoLocalize()}), {@code false}
-     *             by default;
-     *         <li>Verbose (see {@link AaptPackageConfig#isVerbose()}), {@code false} by default;
+     *         <li>Pseudo localize (see {@link AaptPackageConfig#getPseudoLocalize()}), {@code
+     *             false} by default;
+     *         <li>Verbose (see {@link AaptPackageConfig#getVerbose()}), {@code false} by default;
      *       </ul>
      *   <li>Either the source output directory ({@link AaptPackageConfig#getSourceOutputDir()}) or
      *       the resource output APK ({@link AaptPackageConfig#getResourceOutputApk()}) must be
@@ -99,7 +92,7 @@ public abstract class AbstractAapt implements Aapt {
      *       ({@link AaptPackageConfig#getSymbolOutputDir()}) and the source output directory
      *       ({@link AaptPackageConfig#getSourceOutputDir()}) must <i>not</i> be defined; (*)
      *   <li>If the build tools' version is {@code < 21}, then pseudo-localization is not allowed
-     *       ({@link AaptPackageConfig#isPseudoLocalize()});
+     *       ({@link AaptPackageConfig#getPseudoLocalize()});
      *   <li>If the build tools' version is {@code < 21}, then fail on missing config entry ( {@code
      *       getOptions().getFailOnMissingConfigEntry()} must be {@code false};
      *   <li>If there are splits ({@link AaptPackageConfig#getSplits()}) configured and resource
@@ -118,34 +111,8 @@ public abstract class AbstractAapt implements Aapt {
      * @param packageConfig the package config to validate
      * @throws AaptException the package config is not valid
      */
-    protected void validatePackageConfig(@NonNull AaptPackageConfig packageConfig)
+    private static void validatePackageConfig(@NonNull AaptPackageConfig packageConfig)
             throws AaptException {
-        if (packageConfig.getManifestFile() == null) {
-            throw new AaptException("Manifest file not set.");
-        }
-
-        if (packageConfig.getOptions() == null) {
-            throw new AaptException("aapt options not set.");
-        }
-
-        if (packageConfig.getAndroidTarget() == null) {
-            throw new AaptException("Android target not set.");
-        }
-
-        ILogger logger = packageConfig.getLogger();
-        if (logger == null) {
-            throw new AaptException("Logger not set.");
-        }
-
-        BuildToolInfo buildToolInfo = packageConfig.getBuildToolInfo();
-        if (buildToolInfo == null) {
-            throw new AaptException("Build tools not set.");
-        }
-
-        if (packageConfig.getVariantType() == null) {
-            throw new AaptException("Variant type not set.");
-        }
-
         if ((packageConfig.getSymbolOutputDir() != null
                         || packageConfig.getSourceOutputDir() != null)
                 && packageConfig.getLibrarySymbolTableFiles().isEmpty()) {

@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
+import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
@@ -39,6 +40,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.function.Supplier
@@ -83,29 +85,25 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
                             .map { splitOutputs -> splitOutputs.single().outputFile })
         }
 
-        val config =
-                AaptPackageConfig.Builder()
-                        .setAndroidTarget(builder.target)
-                        .setManifestFile(File(manifestFileDirectory.singleFile, SdkConstants.ANDROID_MANIFEST_XML))
-                        .setOptions(AaptOptions(null, false, null))
-                        .setResourceDirs(inputResourcesDirectories.asIterable())
-                        .setLibrarySymbolTableFiles(null)
-                        .setIsStaticLibrary(true)
-                        .setImports(imports.build())
-                        //  TODO: Remove generating R.java once b/69956357 is fixed.
-                        .setSourceOutputDir(rClassSource)
-                        .setResourceOutputApk(staticLibApk)
-                        .setVariantType(VariantType.LIBRARY)
-                        .setCustomPackageForR(packageForR)
-                        .setSymbolOutputDir(rDotTxt.parentFile)
-                        .setLogger(iLogger)
-                        .setBuildToolInfo(builder.buildToolInfo)
-                        .setIntermediateDir(aaptIntermediateDir)
-                        .build()
+        val request = AaptPackageConfig(
+                androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
+                manifestFile = File(manifestFileDirectory.singleFile,
+                        SdkConstants.ANDROID_MANIFEST_XML),
+                options = AaptOptions(null, false, null),
+                resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.asIterable()),
+                staticLibrary = true,
+                imports = imports.build(),
+                // TODO: Remove generating R.java once b/69956357 is fixed.
+                sourceOutputDir = rClassSource,
+                resourceOutputApk = staticLibApk,
+                variantType = VariantType.LIBRARY,
+                customPackageForR = packageForR,
+                symbolOutputDir = rDotTxt.parentFile,
+                intermediateDir = aaptIntermediateDir)
 
-        // TODO: Make AaptPackageConfig serializable and use worker actions.
-        useAaptDaemon(buildTools.revision) { daemon ->
-            daemon.link(config)
+        workerExecutor.submit(Aapt2LinkRunnable::class.java) {
+            it.isolationMode = IsolationMode.NONE
+            it.setParams(Aapt2LinkRunnable.Params(buildTools.revision, request))
         }
     }
 

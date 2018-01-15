@@ -93,10 +93,10 @@ abstract class Aapt2Daemon(
     @Throws(TimeoutException::class)
     protected abstract fun doCompile(request: CompileResourceRequest, logger: ILogger)
 
-    override fun link(request: AaptPackageConfig) {
+    override fun link(request: AaptPackageConfig, logger: ILogger) {
         checkStarted()
         try {
-            doLink(request)
+            doLink(request, logger)
         } catch (e: TimeoutException) {
             handleError("Link timed out", e)
         }
@@ -108,7 +108,7 @@ abstract class Aapt2Daemon(
      * This will only be called after [startProcess] is called and before [stopProcess] is called.
      */
     @Throws(TimeoutException::class)
-    protected abstract fun doLink(request: AaptPackageConfig)
+    protected abstract fun doLink(request: AaptPackageConfig, logger: ILogger)
 
     fun shutDown() {
         state = when (state) {

@@ -16,6 +16,8 @@
 
 package com.android.builder.internal.aapt.v2
 
+import com.android.builder.core.VariantType
+import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.res2.CompileResourceRequest
 import com.android.testutils.NoErrorsOrWarningsLogger
@@ -90,7 +92,13 @@ class Aapt2DaemonManagerTest {
         manager.leaseDaemon().use { process ->
             manager.maintain()
             process.link(
-                    AaptPackageConfig.Builder().build())
+                    AaptPackageConfig(
+                            manifestFile = File(""),
+                            androidJarPath = "",
+                            options = AaptOptions(),
+                            variantType = VariantType.DEFAULT),
+                    NoErrorsOrWarningsLogger()
+            )
             manager.maintain()
         }
         assertThat(daemon.compileRequests).hasSize(1)
@@ -241,7 +249,7 @@ class Aapt2DaemonManagerTest {
             compileRequests.add(request)
         }
 
-        override fun doLink(request: AaptPackageConfig) {
+        override fun doLink(request: AaptPackageConfig, logger: ILogger) {
             linkRequests.add(request)
         }
 

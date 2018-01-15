@@ -174,7 +174,7 @@ public final class SymbolUtils {
      * @return a set of of symbol table for each library
      */
     @NonNull
-    public static Set<SymbolTable> loadDependenciesSymbolTables(@NonNull Set<File> libraries)
+    public static Set<SymbolTable> loadDependenciesSymbolTables(@NonNull Iterable<File> libraries)
             throws IOException {
 
         // For each dependency, load its symbol file.

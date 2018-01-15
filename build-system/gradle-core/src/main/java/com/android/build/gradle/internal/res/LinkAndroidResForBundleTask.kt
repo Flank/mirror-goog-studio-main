@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res
 
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.dsl.convert
@@ -26,6 +27,7 @@ import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.M
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.options.StringOption
+import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.Aapt
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -37,7 +39,9 @@ import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
 import com.android.ide.common.build.ApkInfo
 import com.android.ide.common.process.ProcessException
+import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
+import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -109,18 +113,19 @@ open class LinkAndroidResForBundleTask : AndroidBuilderTask() {
             // If the new resources flag is enabled and if we are dealing with a library process
             // resources through the new parsers
             run {
-                val config = AaptPackageConfig.Builder()
-                        .generateProtos(true)
-                        .setManifestFile(manifestFile)
-                        .setOptions(aaptOptions.convert())
-                        .setResourceOutputApk(bundledResFile)
-                        .setVariantType(VariantType.DEFAULT)
-                        .setDebuggable(debuggable)
-                        .setPseudoLocalize(getPseudoLocalesEnabled())
-                        .setResourceDir(checkNotNull(getInputResourcesDir()).singleFile)
+                val config = AaptPackageConfig(
+                        androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
+                        generateProtos = true,
+                        manifestFile = manifestFile,
+                        options = aaptOptions.convert(),
+                        resourceOutputApk = bundledResFile,
+                        variantType = VariantType.DEFAULT,
+                        debuggable = debuggable,
+                        pseudoLocalize = getPseudoLocalesEnabled(),
+                        resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).singleFile))
 
                 makeAapt().use { aapt ->
-                    builder.processResources(aapt, config)
+                    AndroidBuilder.processResources(aapt, config, LoggerWrapper(logger))
                 }
 
                 if (logger.isInfoEnabled) {
