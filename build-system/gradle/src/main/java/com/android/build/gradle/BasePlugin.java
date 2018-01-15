@@ -16,7 +16,6 @@
 
 package com.android.build.gradle;
 
-import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.google.common.base.Preconditions.checkState;
 import static java.io.File.separator;
@@ -51,7 +50,6 @@ import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.SigningConfigFactory;
 import com.android.build.gradle.internal.dsl.Splits;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
@@ -367,25 +365,10 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     .reportWarning(Type.GENERIC, projectOptions.getRemovedOptionsErrorMessage());
         }
 
-        // b/67675308
-        if (!projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
+        if (projectOptions.hasDeprecatedOptions()) {
             extraModelInfo
                     .getDeprecationReporter()
-                    .reportDeprecatedOption(
-                            BooleanOption.ENABLE_AAPT2.getPropertyName(),
-                            VALUE_FALSE,
-                            DeprecationReporter.DeprecationTarget.AAPT);
-        }
-
-        if (!projectOptions.get(BooleanOption.ENABLE_D8)) {
-            androidBuilder
-                    .getIssueReporter()
-                    .reportWarning(
-                            Type.GENERIC,
-                            String.format(
-                                    "Legacy dexer is deprecated and will be removed in 3.2. "
-                                            + "Remove the '%s=false' flag to enable new D8 dexer.",
-                                    BooleanOption.ENABLE_D8.getPropertyName()));
+                    .reportDeprecatedOptions(projectOptions.getDeprecatedOptions());
         }
 
         // Apply the Java plugin

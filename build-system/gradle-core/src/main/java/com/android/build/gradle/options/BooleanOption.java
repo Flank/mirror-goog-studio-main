@@ -17,11 +17,12 @@
 package com.android.build.gradle.options;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.builder.model.AndroidProject;
 
 public enum BooleanOption implements Option<Boolean> {
-    ENABLE_AAPT2("android.enableAapt2", true),
-
+    ENABLE_AAPT2("android.enableAapt2", true, DeprecationReporter.DeprecationTarget.AAPT),
 
     ENABLE_BUILD_CACHE("android.enableBuildCache", true),
     ENABLE_PROFILE_JSON("android.enableProfileJson", false),
@@ -42,7 +43,7 @@ public enum BooleanOption implements Option<Boolean> {
     ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", false),
     ENABLE_CORE_LAMBDA_STUBS("android.enableCoreLambdaStubs", true),
 
-    ENABLE_D8("android.enableD8", true),
+    ENABLE_D8("android.enableD8", true, DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
     ENABLE_D8_DESUGARING("android.enableD8.desugaring", false),
     ENABLE_D8_MAIN_DEX_LIST("android.enableD8MainDexList", true),
 
@@ -72,14 +73,23 @@ public enum BooleanOption implements Option<Boolean> {
 
     @NonNull private final String propertyName;
     private final boolean defaultValue;
+    @Nullable private final DeprecationReporter.DeprecationTarget deprecationTarget;
 
     BooleanOption(@NonNull String propertyName) {
         this(propertyName, false);
     }
 
     BooleanOption(@NonNull String propertyName, boolean defaultValue) {
+        this(propertyName, defaultValue, null);
+    }
+
+    BooleanOption(
+            @NonNull String propertyName,
+            boolean defaultValue,
+            @Nullable DeprecationReporter.DeprecationTarget deprecationTarget) {
         this.propertyName = propertyName;
         this.defaultValue = defaultValue;
+        this.deprecationTarget = deprecationTarget;
     }
 
     @Override
@@ -114,5 +124,16 @@ public enum BooleanOption implements Option<Boolean> {
                         + "' of type '"
                         + value.getClass()
                         + "' as boolean.");
+    }
+
+    @Override
+    public boolean isDeprecated() {
+        return (deprecationTarget != null);
+    }
+
+    @Nullable
+    @Override
+    public DeprecationReporter.DeprecationTarget getDeprecationTarget() {
+        return deprecationTarget;
     }
 }

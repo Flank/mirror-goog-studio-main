@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationT
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.EvalIssueReporter.Severity
 import com.android.builder.errors.EvalIssueReporter.Type
+import com.google.common.collect.ImmutableTable
 
 class DeprecationReporterImpl(
         private val issueReporter: EvalIssueReporter,
@@ -111,5 +112,12 @@ class DeprecationReporterImpl(
                 "The option '$option' is deprecated and should not be used anymore.\n" +
                         (if (value !=null) "Use '$option=$value' to remove this warning.\n" else "") +
                         "It will be removed ${deprecationTarget.removalTime}.")
+    }
+
+    override fun reportDeprecatedOptions(
+            options: ImmutableTable<String, String, DeprecationTarget>) {
+        for (cell in options.cellSet()) {
+            reportDeprecatedOption(cell.rowKey!!, cell.columnKey, cell.value!!)
+        }
     }
 }

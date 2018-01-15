@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.plugin
 
-import com.android.SdkConstants.VALUE_FALSE
 import com.android.build.api.dsl.variant.Variant
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2
 import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl
@@ -37,7 +36,6 @@ import com.android.build.gradle.internal.variant2.DslModelDataImpl
 import com.android.build.gradle.internal.variant2.VariantBuilder
 import com.android.build.gradle.internal.variant2.VariantFactory2
 import com.android.build.gradle.internal.variant2.VariantModelData
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.errors.EvalIssueReporter
@@ -99,12 +97,9 @@ class PluginDelegate<out E: BaseExtension2>(
             issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC, projectOptions.removedOptionsErrorMessage)
         }
-        // b/67675308
-        if (!projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
-            deprecationReporter.reportDeprecatedOption(
-                    BooleanOption.ENABLE_AAPT2.propertyName,
-                    VALUE_FALSE,
-                    DeprecationReporter.DeprecationTarget.AAPT)
+
+        if (projectOptions.hasDeprecatedOptions()) {
+            deprecationReporter.reportDeprecatedOptions(projectOptions.deprecatedOptions)
         }
     }
 

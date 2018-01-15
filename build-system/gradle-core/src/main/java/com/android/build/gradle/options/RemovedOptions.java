@@ -18,6 +18,7 @@ package com.android.build.gradle.options;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 
 /**
  * The list of options that have been removed.
@@ -76,5 +77,19 @@ public enum RemovedOptions implements Option<String> {
     @Override
     public String parse(@NonNull Object value) {
         return errorMessage;
+    }
+
+    @Override
+    public boolean isDeprecated() {
+        // The option is already removed, so it shouldn't be counted as deprecated (but not yet
+        // removed).
+        return false;
+    }
+
+    @Nullable
+    @Override
+    public DeprecationReporter.DeprecationTarget getDeprecationTarget() {
+        // Already removed.
+        return null;
     }
 }

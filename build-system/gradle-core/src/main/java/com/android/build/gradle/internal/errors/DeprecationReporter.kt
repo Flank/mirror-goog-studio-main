@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.errors
 
+import com.google.common.collect.ImmutableTable
+
 /**
  * Reporter for issues during evaluation.
  *
@@ -35,8 +37,10 @@ interface DeprecationReporter {
         DEX_OPTIONS("at the end of 2018"),
         // "auto" in splits and resConfigs.
         AUTO_SPLITS_OR_RES_CONFIG("at the end of 2018"),
-        // Deprecation of AAPT, replaced by AAPT2
-        AAPT("at the end of 2018")
+        // Deprecation of AAPT, replaced by AAPT2.
+        AAPT("at the end of 2018"),
+        // When legacy dexer will be removed and fully replaced by D8.
+        LEGACY_DEXER("in AGP version 3.2")
     }
 
     /**
@@ -126,7 +130,7 @@ interface DeprecationReporter {
             deprecationTarget: DeprecationTarget)
 
     /**
-     * Reports deprecated options usage.
+     * Reports a deprecated option usage.
      *
      * @param option the deprecated option
      * @param value the value for the flag which should be used to remove the warning
@@ -137,4 +141,12 @@ interface DeprecationReporter {
             option: String,
             value: String?,
             deprecationTarget: DeprecationTarget)
+
+    /**
+     * Reports deprecated options usage.
+     *
+     * @param options a table containing the flag name, default value and the deprecation target of
+     * each deprecated option.
+     */
+    fun reportDeprecatedOptions(options: ImmutableTable<String, String, DeprecationTarget>)
 }

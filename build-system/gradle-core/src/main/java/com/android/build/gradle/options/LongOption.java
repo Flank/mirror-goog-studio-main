@@ -18,15 +18,24 @@ package com.android.build.gradle.options;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 
 public enum LongOption implements Option<Long> {
     DEPRECATED_NDK_COMPILE_LEASE("android.deprecatedNdkCompileLease"),
     ;
 
     @NonNull private final String propertyName;
+    @Nullable private final DeprecationReporter.DeprecationTarget deprecationTarget;
 
     LongOption(@NonNull String propertyName) {
+        this(propertyName, null);
+    }
+
+    LongOption(
+            @NonNull String propertyName,
+            @Nullable DeprecationReporter.DeprecationTarget deprecationTarget) {
         this.propertyName = propertyName;
+        this.deprecationTarget = deprecationTarget;
     }
 
     @Override
@@ -62,5 +71,16 @@ public enum LongOption implements Option<Long> {
                         + "' of type '"
                         + value.getClass()
                         + "' as long.");
+    }
+
+    @Override
+    public boolean isDeprecated() {
+        return (deprecationTarget != null);
+    }
+
+    @Nullable
+    @Override
+    public DeprecationReporter.DeprecationTarget getDeprecationTarget() {
+        return deprecationTarget;
     }
 }
