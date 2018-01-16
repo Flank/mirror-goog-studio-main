@@ -62,11 +62,10 @@ import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -93,7 +92,6 @@ import org.gradle.workers.WorkerExecutor;
 
 @CacheableTask
 public class MergeResources extends IncrementalTask {
-
     // ----- PUBLIC TASK API -----
 
     /**
@@ -135,6 +133,8 @@ public class MergeResources extends IncrementalTask {
 
     private boolean disableVectorDrawables;
 
+    private boolean vectorSupportLibraryIsUsed;
+
     private Collection<String> generatedDensities;
 
     private int minSdk;
@@ -164,7 +164,6 @@ public class MergeResources extends IncrementalTask {
             @Nullable MergingLog blameLog,
             ImmutableSet<Flag> flags,
             boolean processResources) {
-
         // If we received the flag for removing namespaces we need to use the namespace remover to
         // process the resources.
         if (flags.contains(Flag.REMOVE_RESOURCE_NAMESPACES)) {
@@ -397,7 +396,6 @@ public class MergeResources extends IncrementalTask {
     }
 
     public static class FileGenerationWorkAction implements Runnable {
-
         private final MergedResourceWriter.FileGenerationWorkAction workAction;
 
         @Inject
@@ -415,10 +413,11 @@ public class MergeResources extends IncrementalTask {
 
         public MergeResourcesVectorDrawableRenderer(
                 int minSdk,
+                boolean supportLibraryIsUsed,
                 File outputDir,
                 Collection<Density> densities,
                 Supplier<ILogger> loggerSupplier) {
-            super(minSdk, outputDir, densities, loggerSupplier);
+            super(minSdk, supportLibraryIsUsed, outputDir, densities, loggerSupplier);
         }
 
         @Override
@@ -440,11 +439,12 @@ public class MergeResources extends IncrementalTask {
         }
     }
 
+    /**
+     * Only one pre-processor for now. The code will need slight changes when we add more.
+     */
     @NonNull
     private ResourcePreprocessor getPreprocessor() {
-        // Only one pre-processor for now. The code will need slight changes when we add more.
-
-        if (isDisableVectorDrawables()) {
+        if (disableVectorDrawables) {
             // If the user doesn't want any PNGs, leave the XML file alone as well.
             return NoOpResourcePreprocessor.INSTANCE;
         }
@@ -453,20 +453,21 @@ public class MergeResources extends IncrementalTask {
                 getGeneratedDensities().stream().map(Density::getEnum).collect(Collectors.toList());
 
         return new MergeResourcesVectorDrawableRenderer(
-                getMinSdk(),
-                getGeneratedPngsOutputDir(),
+                minSdk,
+                vectorSupportLibraryIsUsed,
+                generatedPngsOutputDir,
                 densities,
                 LoggerWrapper.supplierFor(MergeResources.class));
     }
 
     @NonNull
     private List<ResourceSet> getConfiguredResourceSets(ResourcePreprocessor preprocessor) {
-        // it is possible that this get called twice in case the incremental run fails and reverts
+        // It is possible that this get called twice in case the incremental run fails and reverts
         // back to full task run. Because the cached ResourceList is modified we don't want
         // to recompute this twice (plus, why recompute it twice anyway?)
         if (processedInputs == null) {
             processedInputs = computeResourceSetList();
-            List<ResourceSet> generatedSets = Lists.newArrayListWithCapacity(processedInputs.size());
+            List<ResourceSet> generatedSets = new ArrayList<>(processedInputs.size());
 
             for (ResourceSet resourceSet : processedInputs) {
                 resourceSet.setPreprocessor(preprocessor);
@@ -495,7 +496,7 @@ public class MergeResources extends IncrementalTask {
     }
 
     /**
-     * Release resource sets not needed any more, otherwise they will waste heap space for the
+     * Releases resource sets not needed anymore, otherwise they will waste heap space for the
      * duration of the build.
      *
      * <p>This might be called twice when an incremental build falls back to a full one.
@@ -608,10 +609,6 @@ public class MergeResources extends IncrementalTask {
         return validateEnabled;
     }
 
-    public void setValidateEnabled(boolean validateEnabled) {
-        this.validateEnabled = validateEnabled;
-    }
-
     @OutputDirectory
     @Optional
     public File getBlameLogFolder() {
@@ -627,10 +624,6 @@ public class MergeResources extends IncrementalTask {
         return generatedPngsOutputDir;
     }
 
-    public void setGeneratedPngsOutputDir(File generatedPngsOutputDir) {
-        this.generatedPngsOutputDir = generatedPngsOutputDir;
-    }
-
     @Input
     public Collection<String> getGeneratedDensities() {
         return generatedDensities;
@@ -641,21 +634,9 @@ public class MergeResources extends IncrementalTask {
         return minSdk;
     }
 
-    public void setMinSdk(int minSdk) {
-        this.minSdk = minSdk;
-    }
-
-    public void setGeneratedDensities(Collection<String> generatedDensities) {
-        this.generatedDensities = generatedDensities;
-    }
-
     @Input
-    public boolean isDisableVectorDrawables() {
-        return disableVectorDrawables;
-    }
-
-    public void setDisableVectorDrawables(boolean disableVectorDrawables) {
-        this.disableVectorDrawables = disableVectorDrawables;
+    public boolean isVectorSupportLibraryUsed() {
+        return vectorSupportLibraryIsUsed;
     }
 
     @Input
@@ -686,7 +667,7 @@ public class MergeResources extends IncrementalTask {
     }
 
     /**
-     * Compute the list of resource set to be used during execution based all the inputs.
+     * Computes the list of resource sets to be used during execution based all the inputs.
      */
     @VisibleForTesting
     @NonNull
@@ -697,7 +678,7 @@ public class MergeResources extends IncrementalTask {
             size += libraries.getArtifacts().size();
         }
 
-        List<ResourceSet> resourceSetList = Lists.newArrayListWithExpectedSize(size);
+        List<ResourceSet> resourceSetList = new ArrayList<>(size);
 
         // add at the beginning since the libraries are less important than the folder based
         // resource sets.
@@ -724,7 +705,7 @@ public class MergeResources extends IncrementalTask {
         resourceSetList.addAll(sourceFolderSets);
 
         // We add the generated folders to the main set
-        List<File> generatedResFolders = Lists.newArrayList();
+        List<File> generatedResFolders = new ArrayList<>();
 
         generatedResFolders.addAll(renderscriptResOutputDir.getFiles());
         generatedResFolders.addAll(generatedResOutputDir.getFiles());
@@ -756,7 +737,6 @@ public class MergeResources extends IncrementalTask {
     }
 
     public static class ConfigAction implements TaskConfigAction<MergeResources> {
-
         @NonNull
         private final VariantScope scope;
         @NonNull
@@ -802,11 +782,11 @@ public class MergeResources extends IncrementalTask {
 
         @Override
         public void execute(@NonNull MergeResources mergeResourcesTask) {
-            final BaseVariantData variantData = scope.getVariantData();
-            final Project project = scope.getGlobalScope().getProject();
+            BaseVariantData variantData = scope.getVariantData();
+            Project project = scope.getGlobalScope().getProject();
 
-            mergeResourcesTask.setMinSdk(
-                    variantData.getVariantConfiguration().getMinSdkVersion().getApiLevel());
+            mergeResourcesTask.minSdk =
+                    variantData.getVariantConfiguration().getMinSdkVersion().getApiLevel();
 
             mergeResourcesTask.aaptGeneration =
                     AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());
@@ -826,26 +806,25 @@ public class MergeResources extends IncrementalTask {
                     .getVariantConfiguration()
                     .getMergedFlavor()
                     .getVectorDrawables();
+            mergeResourcesTask.generatedDensities = vectorDrawablesOptions.getGeneratedDensities();
+            if (mergeResourcesTask.generatedDensities == null) {
+                mergeResourcesTask.generatedDensities = Collections.emptySet();
+            }
 
-            Set<String> generatedDensities = vectorDrawablesOptions.getGeneratedDensities();
+            mergeResourcesTask.disableVectorDrawables =
+                    !processVectorDrawables || mergeResourcesTask.generatedDensities.isEmpty();
 
-            // Collections.<String>emptySet() is used intentionally instead of Collections.emptySet()
-            // to keep compatibility with javac 1.8.0_45 used by ab/
-            mergeResourcesTask.setGeneratedDensities(
-                    MoreObjects.firstNonNull(generatedDensities, Collections.emptySet()));
+            // TODO: When support library starts supporting gradients (http://b/62421666), remove
+            // the vectorSupportLibraryIsUsed field and set disableVectorDrawables when
+            // the getUseSupportLibrary method returns TRUE.
+            mergeResourcesTask.vectorSupportLibraryIsUsed =
+                    Boolean.TRUE.equals(vectorDrawablesOptions.getUseSupportLibrary());
 
-            mergeResourcesTask.setDisableVectorDrawables(
-                    !processVectorDrawables
-                            || (vectorDrawablesOptions.getUseSupportLibrary() != null
-                                    && vectorDrawablesOptions.getUseSupportLibrary())
-                            || mergeResourcesTask.getGeneratedDensities().isEmpty());
-
-            final boolean validateEnabled =
+            boolean validateEnabled =
                     !scope.getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.DISABLE_RESOURCE_VALIDATION);
-
-            mergeResourcesTask.setValidateEnabled(validateEnabled);
+            mergeResourcesTask.validateEnabled = validateEnabled;
 
             if (includeDependencies) {
                 mergeResourcesTask.libraries = scope.getArtifactCollection(
@@ -861,15 +840,18 @@ public class MergeResources extends IncrementalTask {
                                             .getVariantConfiguration()
                                             .getSourceFiles(SourceProvider::getResDirectories));
             mergeResourcesTask.extraGeneratedResFolders = variantData.getExtraGeneratedResFolders();
-            mergeResourcesTask.renderscriptResOutputDir = project.files(scope.getRenderscriptResOutputDir());
-            mergeResourcesTask.generatedResOutputDir = project.files(scope.getGeneratedResOutputDir());
+            mergeResourcesTask.renderscriptResOutputDir =
+                    project.files(scope.getRenderscriptResOutputDir());
+            mergeResourcesTask.generatedResOutputDir =
+                    project.files(scope.getGeneratedResOutputDir());
             if (scope.getMicroApkTask() != null &&
                     variantData.getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
-                mergeResourcesTask.microApkResDirectory = project.files(scope.getMicroApkResDirectory());
+                mergeResourcesTask.microApkResDirectory =
+                        project.files(scope.getMicroApkResDirectory());
             }
 
-            mergeResourcesTask.setOutputDir(outputLocation);
-            mergeResourcesTask.setGeneratedPngsOutputDir(scope.getGeneratedPngsOutputDir());
+            mergeResourcesTask.outputDir = outputLocation;
+            mergeResourcesTask.generatedPngsOutputDir = scope.getGeneratedPngsOutputDir();
 
             variantData.mergeResourcesTask = mergeResourcesTask;
 
