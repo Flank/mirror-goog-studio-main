@@ -60,12 +60,12 @@ class Aapt2DaemonImpl(
         val waitForReady = WaitForReadyOnStdOut(displayName, logger)
         processOutput.delegate = waitForReady
         process = ProcessBuilder(aaptPath, Aapt2DaemonUtil.DAEMON_MODE_COMMAND).start()
-        try {
+        writer = try {
             GrabProcessOutput.grabProcessOutput(
                     process,
                     GrabProcessOutput.Wait.ASYNC,
                     processOutput)
-            writer = process.outputStream.bufferedWriter(Charsets.UTF_8)
+            process.outputStream.bufferedWriter(Charsets.UTF_8)
         } catch (e: Exception) {
             try {
                 throw e
