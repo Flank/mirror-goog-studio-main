@@ -17,24 +17,27 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.ir.client.InstantRunArtifactType;
 import com.android.tools.ir.client.InstantRunBuildInfo;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import com.google.common.collect.ImmutableList;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * Tests related to instant run when adding a library which should force a manifest file change
- * notification. The test can also be used to test IDE sync request in the middle of Instant Run
- * enabled builds.
+ * Tests related to instant run when adding/removing a library which should force a manifest file
+ * change notification. The test can also be used to test IDE sync request in the middle of Instant
+ * Run enabled builds.
  */
 public class InstantRunLibraryAdd {
 
@@ -60,16 +63,15 @@ public class InstantRunLibraryAdd {
         String originalTimestamp = context.getTimeStamp();
 
         // now add a library to the project.
-        Files.write("include 'app'\n include 'mylibrary'",
-                project.file("settings.gradle"),
-                Charsets.UTF_8);
+        Files.write(
+                project.file("settings.gradle").toPath(),
+                "include 'app'\n include 'mylibrary'".getBytes());
 
         // change the dependencies on the project build.
-        Files.append("dependencies {\n"
-                + "    compile project(path: ':mylibrary')\n"
-                + "}",
-                project.file("app/build.gradle"),
-                Charsets.UTF_8);
+        Files.write(
+                project.file("app/build.gradle").toPath(),
+                ImmutableList.of("dependencies {", "    compile project(path: ':mylibrary')", "}"),
+                StandardOpenOption.APPEND);
 
         // and make sure we use the library code.
         updateClass();
@@ -108,16 +110,15 @@ public class InstantRunLibraryAdd {
                 .run("assembleDebug");
 
         // now add a library to the project.
-        Files.write("include 'app'\n include 'mylibrary'",
-                project.file("settings.gradle"),
-                Charsets.UTF_8);
+        Files.write(
+                project.file("settings.gradle").toPath(),
+                "include 'app'\n include 'mylibrary'".getBytes());
 
         // change the dependencies on the project build.
-        Files.append("dependencies {\n"
-                        + "    compile project(path: ':mylibrary')\n"
-                        + "}",
-                project.file("app/build.gradle"),
-                Charsets.UTF_8);
+        Files.write(
+                project.getSubproject("app").getBuildFile().toPath(),
+                ImmutableList.of("dependencies {", "    compile project(path: ':mylibrary')", "}"),
+                StandardOpenOption.APPEND);
 
         // and make sure we use the library code.
         updateClass();
@@ -135,6 +136,40 @@ public class InstantRunLibraryAdd {
         context.getArtifacts().forEach(artifact ->
                 assertThat(artifact.type).isAnyOf(InstantRunArtifactType.SPLIT,
                         InstantRunArtifactType.SPLIT_MAIN));
+    }
+
+    @Test
+    public void withJava8AddingAndRemovingLibrary() throws Exception {
+        Path buildFile = project.getSubproject("app").getBuildFile().toPath();
+        Files.write(
+                buildFile,
+                ImmutableList.of(
+                        "android.compileOptions {",
+                        "  sourceCompatibility 1.8",
+                        "  targetCompatibility 1.8",
+                        "}"),
+                StandardOpenOption.APPEND);
+        // now add a library to the project.
+        Files.write(
+                project.file("settings.gradle").toPath(),
+                "include 'app'\n include 'mylibrary'".getBytes());
+
+        List<String> originalBuildFile = Files.readAllLines(buildFile);
+        // change the dependencies on the project build.
+        Files.write(
+                buildFile,
+                ImmutableList.of("dependencies {", "    compile project(path: ':mylibrary')", "}"),
+                StandardOpenOption.APPEND);
+
+        project.executor()
+                .with(BooleanOption.ENABLE_DESUGAR, true)
+                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
+                .run("assembleDebug");
+        Files.write(buildFile, originalBuildFile);
+        project.executor()
+                .with(BooleanOption.ENABLE_DESUGAR, true)
+                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
+                .run("assembleDebug");
     }
 
     private void updateClass() throws Exception {
@@ -192,9 +227,10 @@ public class InstantRunLibraryAdd {
                 + "        return super.onOptionsItemSelected(item);\n"
                 + "    }\n"
                 + "}\n";
-        Files.write(updatedClass,
+        Path mainActivity =
                 project.file(
-                        "app/src/main/java/noapkrebuilt/tests/android/com/b220425/MainActivity.java"),
-                Charsets.UTF_8);
+                                "app/src/main/java/noapkrebuilt/tests/android/com/b220425/MainActivity.java")
+                        .toPath();
+        Files.write(mainActivity, updatedClass.getBytes());
     }
 }
