@@ -23,6 +23,7 @@ import com.android.utils.ILogger
 import com.google.common.util.concurrent.SettableFuture
 import java.io.Writer
 import java.nio.file.Path
+import java.util.Locale
 import java.util.concurrent.TimeoutException
 
 /**
@@ -34,14 +35,30 @@ import java.util.concurrent.TimeoutException
  */
 class Aapt2DaemonImpl(
         displayId: String,
-        aaptExecutable: Path,
+        private val aaptPath: String,
+        private val aaptCommand: List<String>,
+        versionString: String,
         private val daemonTimeouts: Aapt2DaemonTimeouts,
         logger: ILogger) :
         Aapt2Daemon(
-                displayName = "AAPT2 ${aaptExecutable.parent.fileName} Daemon $displayId",
+                displayName = "AAPT2 $versionString Daemon $displayId",
                 logger = logger) {
 
-    private val aaptPath = aaptExecutable.toFile().absolutePath
+    constructor(
+            displayId: String,
+            aaptExecutable: Path,
+            daemonTimeouts: Aapt2DaemonTimeouts,
+            logger: ILogger) :
+            this(
+                    displayId = displayId,
+                    aaptPath = aaptExecutable.toFile().absolutePath,
+                    aaptCommand = listOf(
+                            aaptExecutable.toFile().absolutePath,
+                            Aapt2DaemonUtil.DAEMON_MODE_COMMAND),
+                    versionString = aaptExecutable.parent.fileName.toString(),
+                    daemonTimeouts = daemonTimeouts,
+                    logger = logger)
+
     private val noOutputExpected = NoOutputExpected(displayName, logger)
 
     private lateinit var process: Process
@@ -59,7 +76,7 @@ class Aapt2DaemonImpl(
     override fun startProcess() {
         val waitForReady = WaitForReadyOnStdOut(displayName, logger)
         processOutput.delegate = waitForReady
-        process = ProcessBuilder(aaptPath, Aapt2DaemonUtil.DAEMON_MODE_COMMAND).start()
+        process = ProcessBuilder(aaptCommand).start()
         writer = try {
             GrabProcessOutput.grabProcessOutput(
                     process,
@@ -67,24 +84,43 @@ class Aapt2DaemonImpl(
                     processOutput)
             process.outputStream.bufferedWriter(Charsets.UTF_8)
         } catch (e: Exception) {
-            try {
-                throw e
-            } finally {
-                process.destroyForcibly()
+            // Something went wrong with starting the process or reader threads.
+            // Propagate the original exception, but also try to forcibly shutdown the process.
+            throw e.apply {
+                try {
+                    process.destroyForcibly()
+                } catch (suppressed: Exception) {
+                    addSuppressed(suppressed)
+                }
             }
         }
 
         try {
             waitForReady.future.get(daemonTimeouts.start, daemonTimeouts.startUnit)
+        } catch (e: TimeoutException) {
+            stopQuietly("Failed to start AAPT2 process $displayName. " +
+                    "Not ready within ${daemonTimeouts.start} " +
+                    "${daemonTimeouts.startUnit.name.toLowerCase(Locale.US)}.", e)
         } catch (e: Exception) {
-            try {
-                throw e
-            } finally {
-                shutDown()
-            }
+            stopQuietly("Failed to start AAPT2 process.", e)
         }
         //Process is ready
         processOutput.delegate = noOutputExpected
+    }
+
+    /**
+     * Something went wrong with the daemon startup.
+     *
+     * Propagate the original exception, but also try to shutdown the process.
+     */
+    private fun stopQuietly(message: String, e: Exception): Nothing {
+        throw Aapt2InternalException(message, e).apply {
+            try {
+                stopProcess()
+            } catch (suppressed: Exception) {
+                addSuppressed(suppressed)
+            }
+        }
     }
 
     @Throws(TimeoutException::class)
@@ -140,11 +176,18 @@ class Aapt2DaemonImpl(
         writer.flush()
 
         val shutdown = process.waitFor(daemonTimeouts.stop, daemonTimeouts.stopUnit)
-        if (!shutdown) {
+        if (shutdown) {
+            return
+        }
+        throw TimeoutException(
+                "$displayName: Failed to shut down within " +
+                        "${daemonTimeouts.stop} " +
+                        "${daemonTimeouts.stopUnit.name.toLowerCase(Locale.US)}. " +
+                        "Forcing shutdown").apply {
             try {
-                throw TimeoutException("$displayName: Failed to shut down within ${daemonTimeouts.stop}, ${daemonTimeouts.stopUnit}. Forcing shutdown")
-            } finally {
                 process.destroyForcibly()
+            } catch (suppressed: Exception) {
+                addSuppressed(suppressed)
             }
         }
     }

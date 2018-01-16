@@ -70,10 +70,9 @@ abstract class Aapt2Daemon(
      *
      * This will be called before any calls to [doCompile] or [doLink].
      *
-     * If the daemon process could not be started, this method throws, having attempted to free any
-     * used resources (e.g. threads, processes).
+     * If the daemon process could not be started, this method must throw an exception,
+     * having attempted to free any used resources (e.g. threads, processes).
      */
-    @Throws(TimeoutException::class)
     protected abstract fun startProcess()
 
     override fun compile(request: CompileResourceRequest, logger: ILogger) {
@@ -134,16 +133,19 @@ abstract class Aapt2Daemon(
     @Throws(TimeoutException::class)
     protected abstract fun stopProcess()
 
-    private fun handleError(action: String, exception: Exception) {
-        try {
-            throw Aapt2InternalException(
+    /** Wrap and propagate the original exception, but also try to shut down the daemon. */
+    private fun handleError(action: String, exception: Exception): Nothing {
+        throw Aapt2InternalException(
                     "$displayName: $action" +
                             if (state == State.RUNNING) ", attempting to stop daemon.\n" else "\n" +
                             "This should not happen under normal circumstances, " +
                             "please file an issue if it does.",
-                    exception)
-        } finally {
-            shutDown()
+                    exception).apply {
+            try {
+                shutDown()
+            } catch (suppressed: Exception) {
+                addSuppressed(suppressed)
+            }
         }
     }
 }
