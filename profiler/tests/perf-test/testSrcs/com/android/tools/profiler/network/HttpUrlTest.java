@@ -28,7 +28,6 @@ import com.android.tools.profiler.proto.Profiler.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,14 +58,7 @@ public class HttpUrlTest {
         myGrpc = myPerfDriver.getGrpc();
 
         // Invoke beginSession to establish a session we can use to query data
-        BeginSessionResponse response =
-                myGrpc.getProfilerStub()
-                        .beginSession(
-                                BeginSessionRequest.newBuilder()
-                                        .setDeviceId(1234)
-                                        .setProcessId(myGrpc.getProcessId())
-                                        .build());
-        mySession = response.getSession();
+        mySession = myGrpc.beginSession();
     }
 
     @Test

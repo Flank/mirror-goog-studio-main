@@ -7,6 +7,7 @@ import com.android.tools.profiler.proto.EventServiceGrpc;
 import com.android.tools.profiler.proto.MemoryServiceGrpc;
 import com.android.tools.profiler.proto.NetworkServiceGrpc;
 import com.android.tools.profiler.proto.Profiler;
+import com.android.tools.profiler.proto.Profiler.*;
 import com.android.tools.profiler.proto.ProfilerServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -80,5 +81,26 @@ public class GrpcUtils {
             myEventServiceStub.getActivityData(
                 EventDataRequest.newBuilder().setSession(session).build());
         return response;
+    }
+
+    /**
+     * Begins the profiler session when perfa having one process running. There are some time gap
+     * between app activity started and perfa process running, need wait first.
+     */
+    public Session beginSession() {
+        while (true) {
+            Profiler.GetProcessesResponse process =
+                    myProfilerServiceStub.getProcesses(
+                            Profiler.GetProcessesRequest.getDefaultInstance());
+            if (process.getProcessCount() == 1) {
+                BeginSessionResponse response =
+                        myProfilerServiceStub.beginSession(
+                                BeginSessionRequest.newBuilder()
+                                        .setDeviceId(1234)
+                                        .setProcessId(process.getProcess(0).getPid())
+                                        .build());
+                return response.getSession();
+            }
+        }
     }
 }
