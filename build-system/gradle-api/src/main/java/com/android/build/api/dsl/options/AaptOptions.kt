@@ -72,7 +72,7 @@ interface AaptOptions : Initializable<AaptOptions> {
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
 
-    /** Returns the list of additional parameters to pass to `appt`.  */
+    /** Returns the list of additional parameters to pass to `aapt`.  */
     var additionalParameters: List<String>?
 
     /**

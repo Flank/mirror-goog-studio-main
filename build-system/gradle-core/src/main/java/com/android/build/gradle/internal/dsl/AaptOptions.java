@@ -213,9 +213,7 @@ public class AaptOptions {
         additionalParameters = parameters;
     }
 
-    /**
-     * Returns the list of additional parameters to pass to {@code appt}.
-     */
+    /** Returns the list of additional parameters to pass to {@code aapt}. */
     @Nullable
     @Optional
     @Input
