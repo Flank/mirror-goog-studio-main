@@ -105,10 +105,10 @@ public class SdkUtils {
      * Wraps the given text at the given line width, with an optional hanging
      * indent.
      *
-     * @param text the text to be wrapped
-     * @param lineWidth the number of characters to wrap the text to
+     * @param text          the text to be wrapped
+     * @param lineWidth     the number of characters to wrap the text to
      * @param hangingIndent the hanging indent (to be used for the second and
-     *            subsequent lines in each paragraph, or null if not known
+     *                      subsequent lines in each paragraph, or null if not known
      * @return the string, wrapped
      */
     @NonNull
@@ -116,9 +116,31 @@ public class SdkUtils {
             @NonNull String text,
             int lineWidth,
             @Nullable String hangingIndent) {
+        return wrap(text, lineWidth, lineWidth, hangingIndent);
+    }
+
+    /**
+     * Wraps the given text at the given line width, with an optional hanging
+     * indent.
+     *
+     * @param text           the text to be wrapped
+     * @param firstLineWidth the line width to wrap the text to (on the first line)
+     * @param nextLineWidth  the line width to wrap the text to (on subsequent lines).
+     *                       This does not include the hanging indent, if any.
+     * @param hangingIndent  the hanging indent (to be used for the second and
+     *                       subsequent lines in each paragraph, or null if not known
+     * @return the string, wrapped
+     */
+    @NonNull
+    public static String wrap(
+            @NonNull String text,
+            int firstLineWidth,
+            int nextLineWidth,
+            @Nullable String hangingIndent) {
         if (hangingIndent == null) {
             hangingIndent = "";
         }
+        int lineWidth = firstLineWidth;
         int explanationLength = text.length();
         StringBuilder sb = new StringBuilder(explanationLength * 2);
         int index = 0;
@@ -151,7 +173,7 @@ public class SdkUtils {
             if (sb.length() > 0) {
                 sb.append(hangingIndent);
             } else {
-                lineWidth -= hangingIndent.length();
+                lineWidth = nextLineWidth - hangingIndent.length();
             }
 
             sb.append(text.substring(index, lineEnd));
