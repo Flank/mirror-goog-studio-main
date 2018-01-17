@@ -798,8 +798,8 @@ public final class SdkConstants {
     /* Android ConstraintLayout Constants */
     public static final String CLASS_CONSTRAINT_LAYOUT =
             "android.support.constraint.ConstraintLayout"; //$NON-NLS-1$
-    public static final String CLASS_TRANSITION_LAYOUT =
-      "android.support.constraint.TransitionLayout"; //$NON-NLS-1$
+    public static final String CLASS_MOTION_LAYOUT =
+      "android.support.constraint.motion.MotionLayout"; //$NON-NLS-1$
     public static final String CLASS_CONSTRAINT_LAYOUT_HELPER =
             "android.support.constraint.ConstraintHelper"; //$NON-NLS-1$
     public static final String CLASS_CONSTRAINT_LAYOUT_BARRIER =
@@ -1160,7 +1160,7 @@ public final class SdkConstants {
 
     /* Android ConstraintLayout Tag Constants */
     public static final String CONSTRAINT_LAYOUT = CLASS_CONSTRAINT_LAYOUT;
-    public static final String TRANSITION_LAYOUT = CLASS_TRANSITION_LAYOUT;
+    public static final String MOTION_LAYOUT = CLASS_MOTION_LAYOUT;
     public static final String TABLE_CONSTRAINT_LAYOUT = CLASS_TABLE_CONSTRAINT_LAYOUT;
     public static final String CONSTRAINT_LAYOUT_GUIDELINE = CLASS_CONSTRAINT_LAYOUT_GUIDELINE;
     public static final String CONSTRAINT_LAYOUT_BARRIER = CLASS_CONSTRAINT_LAYOUT_BARRIER;
