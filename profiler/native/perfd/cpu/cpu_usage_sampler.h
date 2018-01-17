@@ -21,10 +21,10 @@
 #include <mutex>
 #include <unordered_set>
 
-#include "perfd/cpu/procfs_files.h"
 #include "perfd/daemon.h"
 #include "proto/cpu.grpc.pb.h"
 #include "utils/clock.h"
+#include "utils/procfs_files.h"
 
 namespace profiler {
 

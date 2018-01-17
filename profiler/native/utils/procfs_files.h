@@ -28,6 +28,9 @@ class ProcfsFiles {
 
   virtual std::string GetSystemStatFilePath() const;
   virtual std::string GetProcessStatFilePath(int32_t pid) const;
+
+  // Maps file usually is accessable only by the app itself or the root.
+  virtual std::string GetMemoryMapFilePath(int32_t pid) const;
 };
 
 }  // namespace profiler

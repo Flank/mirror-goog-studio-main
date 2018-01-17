@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "perfd/cpu/procfs_files.h"
+#include "utils/procfs_files.h"
 
 #include <sstream>  // for std::ostringstream
 
@@ -22,7 +22,7 @@ using std::string;
 namespace {
 
 // Absolute path of system stat file.
-const char* const kProcStatFilename = "/proc/stat";
+constexpr char kProcStatFilename[] = "/proc/stat";
 
 }  // namespace
 
@@ -34,6 +34,12 @@ string ProcfsFiles::GetProcessStatFilePath(int32_t pid) const {
   // TODO: Use std::to_string() after we use libc++. NDK doesn't support itoa().
   std::ostringstream os;
   os << "/proc/" << pid << "/stat";
+  return os.str();
+}
+
+std::string ProcfsFiles::GetMemoryMapFilePath(int32_t pid) const {
+  std::ostringstream os;
+  os << "/proc/" << pid << "/maps";
   return os.str();
 }
 
