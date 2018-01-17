@@ -17,6 +17,7 @@
 package com.android.ide.common.symbols
 
 import com.android.annotations.concurrency.Immutable
+import com.android.resources.ResourceAccessibility
 import com.android.resources.ResourceType
 import com.google.common.base.Splitter
 import com.google.common.collect.ImmutableTable
@@ -104,6 +105,19 @@ abstract class SymbolTable protected constructor() {
      */
     fun getSymbolByResourceType(type: ResourceType): List<Symbol> {
         val symbols = Lists.newArrayList(symbols.row(type).values)
+        symbols.sortWith(compareBy { it.name })
+        return Collections.unmodifiableList(symbols)
+    }
+
+    /**
+     * Collect all the symbols for a particular resource accessibility to a sorted list of symbols.
+     *
+     * The symbols are sorted by name to make the output predicable.
+     */
+    fun getSymbolByAccessibility(accessibility: ResourceAccessibility): List<Symbol> {
+        val symbols =
+                Lists.newArrayList(
+                        symbols.values().filter { it.resourceAccessibility == accessibility })
         symbols.sortWith(compareBy { it.name })
         return Collections.unmodifiableList(symbols)
     }

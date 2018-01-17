@@ -2275,6 +2275,40 @@ public class VersionChecksTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testNestedIfs() {
+        // Regression test for issue 67553351
+        lint().files(
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.os.Build;\n" +
+                        "import android.support.annotation.RequiresApi;\n" +
+                        "\n" +
+                        "@SuppressWarnings({\"unused\", ClassNameDiffersFromFileName})\n" +
+                        "public class NestedIfs {\n" +
+                        "    @RequiresApi(20)\n" +
+                        "    private void requires20() {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresApi(23)\n" +
+                        "    private void requires23() {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    void test() {\n" +
+                        "        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {\n" +
+                        "            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {\n" +
+                        "                requires23();\n" +
+                        "            } else {\n" +
+                        "                requires20();\n" +
+                        "            }\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "}\n"),
+                mSupportJar)
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected Detector getDetector() {
         return new ApiDetector();

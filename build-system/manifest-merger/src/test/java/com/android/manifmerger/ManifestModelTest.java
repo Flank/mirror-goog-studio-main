@@ -17,6 +17,7 @@
 package com.android.manifmerger;
 
 import static com.android.manifmerger.XmlNode.NodeKey;
+import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -203,6 +204,54 @@ public class ManifestModelTest extends TestCase {
         assertEquals("normal", screenDefinitions.get(2).getKey());
         assertEquals("normal+mdpi", screenDefinitions.get(3).getKey());
     }
+
+    public void testIntentFilterKeyResolution()
+            throws ParserConfigurationException, SAXException, IOException {
+
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "    <application android:name=\"com.example.app1.TheApp\">\n"
+                        + "        <activity android:name=\"com.example.app1.MainActivity\">\n"
+                        + "            <intent-filter>\n"
+                        + "                <action android:name=\"android.intent.action.VIEW\"/>\n"
+                        + "                <category android:name=\"android.intent.category.DEFAULT\"/>\n"
+                        + "                <category android:name=\"android.intent.category.BROWSABLE\"/>\n"
+                        + "                <data android:scheme=\"https\"/>\n"
+                        + "                <data android:host=\"www.example.com\"/>\n"
+                        + "                <data android:path=\"/\"/>\n"
+                        + "            </intent-filter>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "</manifest>";
+
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testIntentFilterKeyResolution"), input);
+
+        XmlElement applicationXmlElement =
+                xmlDocument
+                        .getRootNode()
+                        .getAllNodesByType(ManifestModel.NodeTypes.APPLICATION)
+                        .get(0);
+        XmlElement activityXmlElement =
+                applicationXmlElement.getAllNodesByType(ManifestModel.NodeTypes.ACTIVITY).get(0);
+        XmlElement intentFilterXmlElement =
+                activityXmlElement.getAllNodesByType(ManifestModel.NodeTypes.INTENT_FILTER).get(0);
+        assertThat(intentFilterXmlElement.getKey())
+                .isEqualTo(
+                        ""
+                                + "action:name:android.intent.action.VIEW"
+                                + "+category:name:android.intent.category.BROWSABLE"
+                                + "+category:name:android.intent.category.DEFAULT"
+                                + "+data:host:www.example.com"
+                                + "+data:path:/"
+                                + "+data:scheme:https");
+    }
+
 
     public void testProtectionLevelValues()
             throws ParserConfigurationException, SAXException, IOException {

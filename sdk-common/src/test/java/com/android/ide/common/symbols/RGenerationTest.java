@@ -17,7 +17,7 @@
 package com.android.ide.common.symbols;
 
 import static com.android.ide.common.symbols.SymbolTestUtils.createSymbol;
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static org.junit.Assert.assertFalse;
 
 import com.android.utils.FileUtils;

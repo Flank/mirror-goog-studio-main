@@ -16,6 +16,10 @@
 
 package com.android.testutils.truth;
 
+import static com.google.common.truth.Truth.assert_;
+
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -41,8 +45,13 @@ public class FileSubject extends Subject<FileSubject, File> {
                 }
             };
 
-    public FileSubject(FailureStrategy failureStrategy, File subject) {
+    public FileSubject(@NonNull FailureStrategy failureStrategy, @Nullable File subject) {
         super(failureStrategy, subject);
+    }
+
+    @NonNull
+    public static FileSubject assertThat(@Nullable File file) {
+        return assert_().about(FileSubject.FACTORY).that(file);
     }
 
     public void hasName(String name) {

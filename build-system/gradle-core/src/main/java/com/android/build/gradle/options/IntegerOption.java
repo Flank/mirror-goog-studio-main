@@ -18,6 +18,7 @@ package com.android.build.gradle.options;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.builder.model.AndroidProject;
 
 public enum IntegerOption implements Option<Integer> {
@@ -56,9 +57,17 @@ public enum IntegerOption implements Option<Integer> {
     DEXING_WRITE_BUFFER_SIZE("android.dexingWriteBuffer.size");
 
     @NonNull private final String propertyName;
+    @Nullable private final DeprecationReporter.DeprecationTarget deprecationTarget;
 
     IntegerOption(@NonNull String propertyName) {
+        this(propertyName, null);
+    }
+
+    IntegerOption(
+            @NonNull String propertyName,
+            @Nullable DeprecationReporter.DeprecationTarget deprecationTarget) {
         this.propertyName = propertyName;
+        this.deprecationTarget = deprecationTarget;
     }
 
     @Override
@@ -94,5 +103,16 @@ public enum IntegerOption implements Option<Integer> {
                         + "' of type '"
                         + value.getClass()
                         + "' as integer.");
+    }
+
+    @Override
+    public boolean isDeprecated() {
+        return (deprecationTarget != null);
+    }
+
+    @Nullable
+    @Override
+    public DeprecationReporter.DeprecationTarget getDeprecationTarget() {
+        return deprecationTarget;
     }
 }

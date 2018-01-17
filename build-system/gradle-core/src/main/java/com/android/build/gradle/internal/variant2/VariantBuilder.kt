@@ -220,7 +220,7 @@ class VariantBuilder<in E: BaseExtension2>(
                 { it.applicationIdSuffix },
                 '.')
 
-        @Suppress("UNCHECKED_CAST")
+        @Suppress("UNCHECKED_CAST", "UNUSED_VARIABLE")  // TODO: Implement method
         val variantNameSuffixFromFlavors = combineSuffixes(
                 items as MutableList<BuildTypeOrProductFlavor>,
                 { it.versionNameSuffix },
@@ -367,6 +367,7 @@ class VariantBuilder<in E: BaseExtension2>(
         return clone
     }
 
+    @Suppress("UNUSED_PARAMETER")  // TODO: Implement method
     private fun mergeProductFlavorOrVariant(items: List<ProductFlavorOrVariant>): ProductFlavorOrVariantImpl {
         @Suppress("UnnecessaryVariable")
         val productFlavorOrVariant = ProductFlavorOrVariantImpl(issueReporter)

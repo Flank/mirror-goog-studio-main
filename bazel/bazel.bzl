@@ -535,6 +535,10 @@ def _iml_project_impl(ctx):
     if hasattr(dep, "module"):
       fail("Don't depend on modules directly: " + str(dep.label))
 
+  for dep in ctx.attr.libraries + ctx.attr.modules:
+    if java_common.provider in dep:
+      transitive_data += dep[java_common.provider].transitive_runtime_jars
+
   text = ""
   transitive_data += module_jars.values()
   for name, files in module_runtime.items():
@@ -578,6 +582,8 @@ def _iml_project_impl(ctx):
     inputs = [ctx.file.build, module_info, artifact_info] + ctx.files.data + ctx.files.artifacts + list(transitive_data),
     outputs = outs,
     executable = ctx.executable.ant,
+    # We cannot enable this yet, because Mac's sandbox throws an error
+    # execution_requirements = { "block-network" : "1" },
     arguments = args,
   )
 
@@ -587,6 +593,8 @@ _iml_project = rule(
             non_empty = True,
         ),
         "artifacts": attr.label_list(
+        ),
+        "libraries": attr.label_list(
         ),
         "data": attr.label_list(
           allow_files = True,
@@ -623,7 +631,7 @@ def iml_project(name,modules=[], **kwargs):
   normalized_modules = [normalize_label(module) for module in modules]
   _iml_project(
     name = name,
-    modules = [n + "_runtime" for n in normalized_modules],
+    modules = [n + "_runtime" for n in normalized_modules] + [n + "_testlib" for n in normalized_modules],
     **kwargs
   )
 

@@ -16,6 +16,7 @@
 
 package com.android.builder.internal.aapt.v2
 
+import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.AaptTestUtils
@@ -28,6 +29,10 @@ import com.android.testutils.MockLog
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.MoreTruth.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
+import com.android.utils.FileUtils
+import com.google.common.base.Throwables
+import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Rule
@@ -41,6 +46,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlin.test.assertFailsWith
 
 /** Tests for [Aapt2DaemonImpl], including error conditions */
@@ -121,18 +127,15 @@ class Aapt2DaemonImplTest {
 
         val outputFile = File(temporaryFolder.newFolder(), "lib.apk")
 
-        val request = AaptPackageConfig.Builder()
-                .setAndroidTarget(target)
-                .setManifestFile(manifest)
-                .setResourceDir(compiledDir)
-                .setResourceOutputApk(outputFile)
-                .setLogger(logger)
-                .setOptions(AaptOptions(noCompress = null,
-                        failOnMissingConfigEntry = false,
-                        additionalParameters = null))
-                .build()
+        val request = AaptPackageConfig(
+                androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
+                manifestFile = manifest,
+                resourceDirs = ImmutableList.of(compiledDir),
+                resourceOutputApk = outputFile,
+                options = AaptOptions(),
+                variantType = VariantType.DEFAULT)
 
-        daemon.link(request)
+        daemon.link(request, logger)
         assertThat(Zip(outputFile)).containsFileWithContent("res/raw/foo.txt", "content")
     }
 
@@ -154,21 +157,15 @@ class Aapt2DaemonImplTest {
 
         val outputFile = File(temporaryFolder.newFolder(), "lib.apk")
 
-        val request = AaptPackageConfig.Builder()
-                .setAndroidTarget(target)
-                .setManifestFile(manifest)
-                .setResourceOutputApk(outputFile)
-                .setResourceDir(compiledDir)
-                .setLogger(logger)
-                .setOptions(AaptOptions(noCompress = null,
-                        failOnMissingConfigEntry = false,
-                        additionalParameters = null))
-                .build()
+        val request = AaptPackageConfig(
+                androidJarPath = target.getPath(IAndroidTarget.ANDROID_JAR),
+                manifestFile = manifest,
+                resourceOutputApk = outputFile,
+                resourceDirs = ImmutableList.of(compiledDir),
+                options = AaptOptions(),
+                variantType = VariantType.DEFAULT)
         val exception = assertFailsWith(Aapt2Exception::class) {
-            daemon.link(
-                    AaptPackageConfig.Builder(request)
-                            .setIntermediateDir(temporaryFolder.newFolder())
-                            .build())
+            daemon.link(request.copy(intermediateDir = temporaryFolder.newFolder()), logger)
         }
         assertThat(exception.message).contains("Android resource linking failed")
         assertThat(exception.message).contains("AndroidManifest.xml")
@@ -177,7 +174,7 @@ class Aapt2DaemonImplTest {
         assertThat(exception.message).contains("@")
 
         val exception2 = assertFailsWith(Aapt2Exception::class) {
-            daemon.link(AaptPackageConfig.Builder(request).setIntermediateDir(null).build())
+            daemon.link(request, logger)
         }
         assertThat(exception2.message).contains("Android resource linking failed")
         assertThat(exception2.message).contains("AndroidManifest.xml")
@@ -185,55 +182,6 @@ class Aapt2DaemonImplTest {
         // Compiled resources should not be listed in a file.
         assertThat(exception2.message).doesNotContain("@")
         assertThat(exception2.message).contains("foo.txt")
-    }
-
-    @Test
-    fun testCompileTimeout() {
-        val compiledDir = temporaryFolder.newFolder()
-        val daemon = createDaemon(Aapt2DaemonTimeouts(compile = 0, compileUnit = TimeUnit.SECONDS))
-        val exception = assertFailsWith(Aapt2InternalException::class) {
-            daemon.compile(
-                    CompileResourceRequest(
-                            inputFile = File("values/does_not_matter.xml"),
-                            outputDirectory = compiledDir),
-                    logger)
-        }
-        assertThat(exception.message).contains("Compile")
-        assertThat(exception.message).contains("timed out, attempting to stop daemon")
-        // The daemon should be shut down.
-        assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.SHUTDOWN)
-        // The compile might succeed, ignore the output from it.
-        logger.clear()
-    }
-
-    @Test
-    fun testLinkTimeout() {
-        val manifest = resourceFile(
-                "src",
-                "AndroidManifest.xml",
-                """<""")
-
-        val outputFile = File(temporaryFolder.newFolder(), "lib.apk")
-
-        val request = AaptPackageConfig.Builder()
-                .setAndroidTarget(target)
-                .setManifestFile(manifest)
-                .setResourceOutputApk(outputFile)
-                .setLogger(logger)
-                .setOptions(AaptOptions(noCompress = null,
-                        failOnMissingConfigEntry = false,
-                        additionalParameters = null))
-                .build()
-
-        val daemon = createDaemon(Aapt2DaemonTimeouts(link = 0, linkUnit = TimeUnit.SECONDS))
-        val exception = assertFailsWith(Aapt2InternalException::class) {
-            daemon.link(request)
-        }
-        assertThat(exception.message).contains("Link timed out, attempting to stop daemon")
-        // The daemon should be shut down.
-        assertThat(daemon.state).isEqualTo(Aapt2Daemon.State.SHUTDOWN)
-        // The compile might succeed, ignore the output from it.
-        logger.clear()
     }
 
     @Test
@@ -320,6 +268,50 @@ class Aapt2DaemonImplTest {
                 logger)
         val withCrunchDisabled = Files.readAllBytes(outFile)
         assertThat(withCrunchDisabled).isEqualTo(withCrunchEnabled)
+    }
+
+    @Test
+    fun testNeverReady() {
+        val args = listOf<String>(
+                FileUtils.join(System.getProperty("java.home"), "bin", "java"),
+                "-cp",
+                System.getProperty("java.class.path"),
+                NeverReadyAapt2Daemon::class.java.name)
+
+        val daemon = Aapt2DaemonImpl(
+                displayId = "'Aapt2DaemonImplTest.${testName.methodName}'",
+                aaptPath = "fake_path",
+                aaptCommand = args,
+                versionString = "fake_version",
+                daemonTimeouts = Aapt2DaemonTimeouts(
+                        start = 2, startUnit = TimeUnit.MILLISECONDS,
+                        stop = 3000, stopUnit = TimeUnit.NANOSECONDS),
+                logger = logger)
+        this.daemon = daemon
+
+        val compiledDir = temporaryFolder.newFolder()
+        val exception = assertFailsWith(Aapt2InternalException::class) {
+            daemon.compile(
+                    CompileResourceRequest(
+                            inputFile = File("values/does_not_matter.xml"),
+                            outputDirectory = compiledDir),
+                    logger)
+        }
+
+        assertThat(exception.javaClass).isEqualTo(Aapt2InternalException::class.java)
+        assertThat(exception.cause).isNotNull()
+        // The inner startup failure
+        assertThat(exception.cause!!.javaClass).isEqualTo(Aapt2InternalException::class.java)
+        // The original cause was a timeout waiting for ready.
+        assertThat(Throwables.getRootCause(exception).javaClass).isEqualTo(TimeoutException::class.java)
+
+        // The shutdown failure should be a suppressed exception on the inner startup failure,
+        // which is also a timeout.
+        assertThat(exception.cause!!.suppressed).hasLength(1)
+        exception.cause!!.suppressed[0].let {
+            assertThat(it.javaClass).isEqualTo(TimeoutException::class.java)
+            assertThat(it.cause).isNull()
+        }
     }
 
     @After

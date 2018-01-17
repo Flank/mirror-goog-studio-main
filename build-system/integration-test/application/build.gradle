@@ -12,7 +12,6 @@ dependencies {
     testCompile project(':base:build-system:integration-test:framework')
     testCompile project(':analytics-library:protos')
     testCompile project(':apksig')
-    testCompile project(':base:apkzlib')
     testCompile project(':base:builder')
     testCompile project(':base:builder-model')
     testCompile project(':base:gradle')
@@ -23,6 +22,7 @@ dependencies {
     testCompile project(':base:java-lib-model')
 
     testCompile libs.kotlin_stdlib
+    testCompile libs.kotlin_test
 
     testCompile gradleApi()
     testCompile libs.apache_commons_io

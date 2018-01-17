@@ -123,6 +123,7 @@ public class CheckAll {
                     "lintStandaloneVital", // Not an Android project
                     "lintStandaloneCustomRules", // Not an Android project
                     "lintCustomRules", // contains integ test for lint itself
-                    "compositeBuild" // broken composite build project.
+                    "simpleCompositeBuild", // broken composite build project.
+                    "multiCompositeBuild" // too complex composite build project to setup
                     );
 }

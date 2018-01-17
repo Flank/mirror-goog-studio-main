@@ -35,7 +35,6 @@ import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.TestManifestGenerator;
-import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.BlockingResourceLinker;
 import com.android.builder.internal.compiler.AidlProcessor;
@@ -111,14 +110,11 @@ import java.util.zip.ZipFile;
  * <p>then build steps can be done with:
  *
  * <ol>
- *   <li>{@link #mergeManifestsForApplication(File, List, List, String, String, int, String, String,
- *       String, Integer, String, String, String, ManifestMerger2.MergeType, Map, List, File)}
- *   <li>{@link #mergeManifestsForTestVariant(String, String, String, String, String, Boolean,
- *       Boolean, String, File, List, Map, File, File)}
- *   <li>{@link #processResources(Aapt, AaptPackageConfig.Builder)}
- *   <li>{@link #compileAllAidlFiles(Collection, File, File, Collection, Collection,
- *       DependencyFileProcessor, ProcessOutputHandler)}
- *   <li>{@link #getDexByteCodeConverter()}
+ *   <li>{@link #mergeManifestsForApplication }
+ *   <li>{@link #mergeManifestsForTestVariant }
+ *   <li>{@link #processResources }
+ *   <li>{@link #compileAllAidlFiles }
+ *   <li>{@link #getDexByteCodeConverter() }
  * </ol>
  *
  * <p>Java compilation is not handled but the builder provides the boot classpath with {@link
@@ -127,14 +123,14 @@ import java.util.zip.ZipFile;
 public class AndroidBuilder {
 
     /** Minimal supported version of build tools. */
-    public static final Revision MIN_BUILD_TOOLS_REV = new Revision(27, 0, 1);
+    public static final Revision MIN_BUILD_TOOLS_REV = new Revision(27, 0, 3);
 
     /**
      * Default version of build tools that will be used if the user does not specify.
      *
      * <p><strong>Update the DSL documentation on BaseExtension when changing this value.</strong>
      */
-    public static final Revision DEFAULT_BUILD_TOOLS_REVISION = new Revision(27, 0, 1);
+    public static final Revision DEFAULT_BUILD_TOOLS_REVISION = new Revision(27, 0, 3);
 
     /** API level for split APKs. */
     private static final int API_LEVEL_SPLIT_APK = 21;
@@ -303,6 +299,17 @@ public class AndroidBuilder {
         }
 
         return computeFilteredBootClasspath();
+    }
+
+    /**
+     * Returns the list of additional and requested optional library jar files
+     *
+     * @return the list of files from the additional and optional libraries which appear in the
+     *     filtered boot classpath
+     */
+    public List<File> computeAdditionalAndRequestedOptionalLibraries() {
+        return BootClasspathBuilder.computeAdditionalAndRequestedOptionalLibraries(
+                mTargetInfo.getTarget(), mLibraryRequests, issueReporter);
     }
 
     private List<File> computeFilteredBootClasspath() {
@@ -771,7 +778,8 @@ public class AndroidBuilder {
      * @param aapt the interface to the {@code aapt} tool
      * @param aaptConfigBuilder aapt command invocation parameters; this will receive some
      *     additional data (build tools, Android target and logger) and will be used to request
-     *     package invocation in {@code aapt} (see {@link Aapt#link(AaptPackageConfig)})
+     *     package invocation in {@code aapt} (see {@link
+     *     BlockingResourceLinker#link(AaptPackageConfig, ILogger)})
      * @throws IOException failed
      * @throws ProcessException failed
      */
@@ -783,14 +791,20 @@ public class AndroidBuilder {
         checkState(mTargetInfo != null,
                 "Cannot call processResources() before setTargetInfo() is called.");
 
-        aaptConfigBuilder.setBuildToolInfo(mTargetInfo.getBuildTools());
         aaptConfigBuilder.setAndroidTarget(mTargetInfo.getTarget());
-        aaptConfigBuilder.setLogger(mLogger);
 
         AaptPackageConfig aaptConfig = aaptConfigBuilder.build();
+        processResources(aapt, aaptConfig, mLogger);
+    }
+
+    public static void processResources(
+            @NonNull BlockingResourceLinker aapt,
+            @NonNull AaptPackageConfig aaptConfig,
+            @NonNull ILogger logger)
+            throws IOException, ProcessException {
 
         try {
-            aapt.link(aaptConfig);
+            aapt.link(aaptConfig, logger);
         } catch (Exception e) {
             throw new ProcessException("Failed to execute aapt", e);
         }
@@ -895,9 +909,9 @@ public class AndroidBuilder {
 
         StringBuilder content = new StringBuilder();
         content.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-                .append("<manifest package=\"\" xmlns:android=\"http://schemas.android.com/apk/res/android\">\n")
-                .append("            <uses-sdk android:minSdkVersion=\"")
-                .append(minSdkVersion).append("\"");
+                .append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
+                .append("    package=\"${packageName}\">\n")
+                .append("    <uses-sdk android:minSdkVersion=\"" + minSdkVersion + "\"");
         if (targetSdkVersion != -1) {
             content.append(" android:targetSdkVersion=\"").append(targetSdkVersion).append("\"");
         }

@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.integration.packaging;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
+import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -26,6 +28,8 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.StringOption;
 import com.android.testutils.apk.Apk;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -69,11 +73,9 @@ public class ApkOutputFileChangeTest {
         assertThat(project.getApk("x86_64", GradleTestProject.ApkType.DEBUG)).doesNotExist();
         assertThat(project.getApk("arm64-v8a", GradleTestProject.ApkType.DEBUG)).doesNotExist();
 
-        long x86LastModifiedTime =
-                project.getApk("x86", GradleTestProject.ApkType.DEBUG)
-                        .getFile()
-                        .toFile()
-                        .lastModified();
+        FileTime x86LastModifiedTime =
+                Files.getLastModifiedTime(
+                        project.getApk("x86", GradleTestProject.ApkType.DEBUG).getFile());
 
         // Run the second build with another target ABI, check that another APK for that ABI is
         // generated (and generated correctly--regression test for
@@ -92,11 +94,9 @@ public class ApkOutputFileChangeTest {
 
         assertThat(project.getApk("x86", GradleTestProject.ApkType.DEBUG).getFile())
                 .wasModifiedAt(x86LastModifiedTime);
-        long armeabiV7aLastModifiedTime =
-                project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG)
-                        .getFile()
-                        .toFile()
-                        .lastModified();
+        FileTime armeabiV7aLastModifiedTime =
+                Files.getLastModifiedTime(
+                        project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG).getFile());
 
         // Run the third build without any target ABI, check that the APKs for all ABIs are
         // generated (or regenerated)
@@ -115,25 +115,17 @@ public class ApkOutputFileChangeTest {
                 .isNewerThan(armeabiV7aLastModifiedTime);
 
         x86LastModifiedTime =
-                project.getApk("x86", GradleTestProject.ApkType.DEBUG)
-                        .getFile()
-                        .toFile()
-                        .lastModified();
+                Files.getLastModifiedTime(
+                        project.getApk("x86", GradleTestProject.ApkType.DEBUG).getFile());
         armeabiV7aLastModifiedTime =
-                project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG)
-                        .getFile()
-                        .toFile()
-                        .lastModified();
-        long x8664LastModifiedTime =
-                project.getApk("x86_64", GradleTestProject.ApkType.DEBUG)
-                        .getFile()
-                        .toFile()
-                        .lastModified();
-        long armeabiV8aLastModifiedTime =
-                project.getApk("arm64-v8a", GradleTestProject.ApkType.DEBUG)
-                        .getFile()
-                        .toFile()
-                        .lastModified();
+                Files.getLastModifiedTime(
+                        project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG).getFile());
+        FileTime x8664LastModifiedTime =
+                Files.getLastModifiedTime(
+                        project.getApk("x86_64", GradleTestProject.ApkType.DEBUG).getFile());
+        FileTime armeabiV8aLastModifiedTime =
+                Files.getLastModifiedTime(
+                        project.getApk("arm64-v8a", GradleTestProject.ApkType.DEBUG).getFile());
 
         // Run the fourth build with a target ABI, check that the APK for that ABI is re-generated
         result =
@@ -171,8 +163,9 @@ public class ApkOutputFileChangeTest {
         assertThat(project.getApk("x86", GradleTestProject.ApkType.DEBUG)).doesNotExist();
         assertThat(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG)).doesNotExist();
 
-        long apkLastModifiedTime =
-                project.getApk(GradleTestProject.ApkType.DEBUG).getFile().toFile().lastModified();
+        FileTime apkLastModifiedTime =
+                Files.getLastModifiedTime(
+                        project.getApk(GradleTestProject.ApkType.DEBUG).getFile());
 
         // Run the second build with another target ABI, again check that no split APKs are
         // generated (and the main APK is not re-generated)

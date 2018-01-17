@@ -22,8 +22,8 @@ import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptUtils;
+import com.android.builder.internal.aapt.BlockingResourceLinker;
 import com.android.ide.common.res2.CompileResourceRequest;
-import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -84,7 +84,7 @@ public final class AaptV2CommandBuilder {
     /**
      * Creates the command line used to link the package.
      *
-     * <p>See {@link com.android.builder.internal.aapt.Aapt#link(AaptPackageConfig)}.
+     * <p>See {@link BlockingResourceLinker#link(AaptPackageConfig, ILogger)}.
      *
      * @param config see above
      * @return the command line arguments
@@ -94,18 +94,16 @@ public final class AaptV2CommandBuilder {
             throws AaptException {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-        if (config.isVerbose()) {
+        if (config.getVerbose()) {
             builder.add("-v");
         }
 
-        if (config.isGenerateProtos()) {
+        if (config.getGenerateProtos()) {
             builder.add("--proto-format");
         }
 
         // inputs
-        IAndroidTarget target = config.getAndroidTarget();
-        Preconditions.checkNotNull(target);
-        builder.add("-I", target.getPath(IAndroidTarget.ANDROID_JAR));
+        builder.add("-I", Preconditions.checkNotNull(config.getAndroidJarPath()));
 
         config.getImports().forEach(file -> builder.add("-I", file.getAbsolutePath()));
 
@@ -128,7 +126,7 @@ public final class AaptV2CommandBuilder {
         }
         builder.add("-o", resourceOutputApk.getAbsolutePath());
 
-        if (config.getResourceDirs() != null) {
+        if (!config.getResourceDirs().isEmpty()) {
             try {
                 if (config.isListResourceFiles()) {
                     // AAPT2 only accepts individual files passed to the -R flag. In order to not
@@ -193,8 +191,6 @@ public final class AaptV2CommandBuilder {
         }
 
         // options controlled by build variants
-        ILogger logger = config.getLogger();
-        Preconditions.checkNotNull(logger);
         if (config.getVariantType() != VariantType.ANDROID_TEST
                 && config.getCustomPackageForR() != null) {
             builder.add("--custom-package", config.getCustomPackageForR());
@@ -242,7 +238,14 @@ public final class AaptV2CommandBuilder {
                 Lists.newArrayList(AaptUtils.getNonDensityResConfigs(resourceConfigs));
         String preferredDensity = config.getPreferredDensity();
 
-        if (preferredDensity != null && !densityResourceConfigs.isEmpty()) {
+
+        Iterable<String> densityResSplits =
+                config.getSplits() != null
+                        ? AaptUtils.getDensityResConfigs(config.getSplits())
+                        : ImmutableList.of();
+
+        if ((preferredDensity != null || densityResSplits.iterator().hasNext())
+                && !densityResourceConfigs.isEmpty()) {
             throw new AaptException(
                     String.format("When using splits in tools 21 and above, "
                                     + "resConfigs should not contain any densities. Right now, it "
@@ -254,6 +257,14 @@ public final class AaptV2CommandBuilder {
         if (densityResourceConfigs.size() > 1) {
             throw new AaptException("Cannot filter assets for multiple densities using "
                     + "SDK build tools 21 or later. Consider using apk splits instead.");
+        }
+
+        // if we are in split mode and resConfigs has been specified, we need to add all the
+        // non density based splits back to the resConfigs otherwise they will be filtered out.
+        if (!otherResourceConfigs.isEmpty() && config.getSplits() != null) {
+            Iterable<String> nonDensitySplits =
+                    AaptUtils.getNonDensityResConfigs(config.getSplits());
+            otherResourceConfigs.addAll(Lists.newArrayList(nonDensitySplits));
         }
 
         if (preferredDensity == null && densityResourceConfigs.size() == 1) {
@@ -299,10 +310,6 @@ public final class AaptV2CommandBuilder {
             }
         }
 
-        ImmutableList<String> arguments = builder.build();
-
-        config.getLogger().verbose("aapt2 %s", Joiner.on(' ').join(arguments));
-
-        return arguments;
+        return builder.build();
     }
 }

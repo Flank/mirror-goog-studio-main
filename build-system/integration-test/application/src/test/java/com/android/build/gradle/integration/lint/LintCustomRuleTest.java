@@ -16,7 +16,8 @@
 
 package com.android.build.gradle.integration.lint;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+
+import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;

@@ -60,7 +60,11 @@ class SimpleperfManager {
   bool StartProfiling(const std::string &app_name, const std::string &abi_arch,
                       int sampling_interval_us, std::string *trace_path,
                       std::string *error);
-  bool StopProfiling(const std::string &app_name, std::string *error);
+  // Stops simpleperf process that is currently profiling |app_name|.
+  // If |need_result|, convert the raw data to the processed data in a file.
+  // Always cleans up raw data file and log file.
+  bool StopProfiling(const std::string &app_name, bool need_result,
+                     std::string *error);
   // Returns true if the app is currently being profiled by a simpleperf
   // process.
   bool IsProfiling(const std::string &app_name);
@@ -90,6 +94,6 @@ class SimpleperfManager {
   bool StopSimpleperf(const OnGoingProfiling &ongoing_recording,
                       std::string *error) const;
 };
-}
+}  // namespace profiler
 
 #endif  // CPU_SIMPLEPERFMANAGER_H_

@@ -87,6 +87,7 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
       if (details != nullptr) {
         details->response.payload_id = payload_file->name();
+        details->response.payload_size = payload_file->size();
         details->end_timestamp = httpEvent->timestamp();
       }
     }

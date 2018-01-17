@@ -126,7 +126,6 @@ MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count,
       track_global_jni_refs_(track_global_jni_refs),
       is_first_tracking_(true),
       is_live_tracking_(false),
-      is_suspended_(false),
       app_id_(getpid()),
       class_class_tag_(-1),
       current_capture_time_ns_(-1),
@@ -283,7 +282,6 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   }
   Stopwatch stopwatch;
   is_live_tracking_ = true;
-  is_suspended_ = false;
   current_capture_time_ns_ = timestamp;
   total_live_count_ = 0;
   total_free_count_ = 0;
@@ -340,25 +338,6 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
          (long long)stopwatch.GetElapsed());
 }
 
-void MemoryTrackingEnv::ResumeLiveTracking() {
-  std::lock_guard<std::mutex> data_lock(tracking_data_mutex_);
-  std::lock_guard<std::mutex> count_lock(tracking_count_mutex_);
-  if (!is_live_tracking_ || !is_suspended_) {
-    return;
-  }
-  Stopwatch stopwatch;
-  is_suspended_ = false;
-  allocation_event_queue_.Reset();
-  jni_ref_event_queue_.Reset();
-  SendBackClassData();
-  SetAllocationCallbacksStatus(true);
-  if (track_global_jni_refs_) {
-    SetJNIRefCallbacksStatus(true);
-  }
-
-  Log::V("Resuming Tracking took: %lldns", (long long)stopwatch.GetElapsed());
-}
-
 /**
  * Stops live allocation tracking.
  * - Disable allocation callbacks and clear the queued allocation events.
@@ -386,22 +365,6 @@ void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
   }
   known_methods_.clear();
   thread_id_map_.clear();
-}
-
-void MemoryTrackingEnv::SuspendLiveTracking() {
-  std::lock_guard<std::mutex> data_lock(tracking_data_mutex_);
-  std::lock_guard<std::mutex> count_lock(tracking_count_mutex_);
-  if (!is_live_tracking_ || is_suspended_) {
-    return;
-  }
-  is_suspended_ = true;
-  SetAllocationCallbacksStatus(false);
-  if (track_global_jni_refs_) {
-    SetJNIRefCallbacksStatus(false);
-  }
-
-  allocation_event_queue_.Reset();
-  jni_ref_event_queue_.Reset();
 }
 
 /**
@@ -523,14 +486,6 @@ void MemoryTrackingEnv::HandleControlSignal(
     case MemoryControlRequest::kDisableRequest:
       Log::V("Live memory tracking disabled.");
       StopLiveTracking(request->disable_request().timestamp());
-      break;
-    case MemoryControlRequest::kSuspendRequest:
-      Log::V("Live memory tracking suspended.");
-      SuspendLiveTracking();
-      break;
-    case MemoryControlRequest::kResumeRequest:
-      Log::V("Live memory tracking resumed.");
-      ResumeLiveTracking();
       break;
     default:
       Log::V("Unknown memory control signal.");
@@ -678,7 +633,7 @@ void MemoryTrackingEnv::AllocCountWorker(jvmtiEnv* jvmti, JNIEnv* jni,
     int64_t start_time_ns = stopwatch.GetElapsed();
     {
       std::lock_guard<std::mutex> lock(env->tracking_count_mutex_);
-      if (env->is_live_tracking_ && !env->is_suspended_) {
+      if (env->is_live_tracking_) {
         profiler::EnqueueAllocStats(env->total_live_count_,
                                     env->total_free_count_);
       }
@@ -720,7 +675,7 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
 // Drain allocation_event_queue_ and send events to perfd
 void MemoryTrackingEnv::DrainAllocationEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
   std::lock_guard<std::mutex> lock(tracking_data_mutex_);
-  if (!is_live_tracking_ || is_suspended_) {
+  if (!is_live_tracking_) {
     return;
   }
 
@@ -815,7 +770,7 @@ void MemoryTrackingEnv::DrainAllocationEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
 
 void MemoryTrackingEnv::DrainJNIRefEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
   std::lock_guard<std::mutex> lock(tracking_data_mutex_);
-  if (!is_live_tracking_ || is_suspended_) {
+  if (!is_live_tracking_) {
     return;
   }
 

@@ -119,7 +119,7 @@ class ExistingBuildElements {
         @JvmStatic
         fun load(
                 projectPath: Path,
-                outputType: TaskOutputHolder.OutputType,
+                outputType: TaskOutputHolder.OutputType?,
                 reader: Reader): Collection<BuildOutput> {
             val gsonBuilder = GsonBuilder()
 
@@ -132,7 +132,7 @@ class ExistingBuildElements {
             // resolve the file path to the current project location.
             return buildOutputs
                     .asSequence()
-                    .filter { it.type == outputType }
+                    .filter { outputType == null || it.type == outputType }
                     .map { buildOutput ->
                         BuildOutput(
                                 buildOutput.type,

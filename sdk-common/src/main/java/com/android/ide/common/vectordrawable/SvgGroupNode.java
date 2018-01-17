@@ -30,7 +30,6 @@ import org.w3c.dom.Node;
  */
 class SvgGroupNode extends SvgNode {
     private static final Logger logger = Logger.getLogger(SvgGroupNode.class.getSimpleName());
-    private static final String INDENT_LEVEL = "    ";
 
     protected final ArrayList<SvgNode> mChildren = new ArrayList<>();
 
@@ -74,7 +73,7 @@ class SvgGroupNode extends SvgNode {
 
         // Then print all the children.
         for (SvgNode node : mChildren) {
-            node.dumpNode(indent + INDENT_LEVEL);
+            node.dumpNode(indent + INDENT_UNIT);
         }
     }
 
@@ -120,9 +119,10 @@ class SvgGroupNode extends SvgNode {
     }
 
     @Override
-    public void writeXML(OutputStreamWriter writer, boolean inClipPath) throws IOException {
+    public void writeXML(@NonNull OutputStreamWriter writer, boolean inClipPath,
+            @NonNull String indent) throws IOException {
         for (SvgNode node : mChildren) {
-            node.writeXML(writer, inClipPath);
+            node.writeXML(writer, inClipPath, indent);
         }
     }
 

@@ -86,7 +86,8 @@ using ThreadIdMap = std::unordered_map<std::string, int32_t>;
 class MemoryTrackingEnv : public GlobalRefListener {
  public:
   static MemoryTrackingEnv* Instance(JavaVM* vm, bool log_live_alloc_count,
-                              int max_stack_depth, bool track_global_jni_refs);
+                                     int max_stack_depth,
+                                     bool track_global_jni_refs);
 
   void AfterGlobalRefCreated(jobject prototype, jobject gref) override;
   void BeforeGlobalRefDeleted(jobject gref) override;
@@ -114,8 +115,6 @@ class MemoryTrackingEnv : public GlobalRefListener {
   void Initialize();
   void StartLiveTracking(int64_t timestamp);
   void StopLiveTracking(int64_t timestamp);
-  void SuspendLiveTracking();
-  void ResumeLiveTracking();
   const AllocatedClass& RegisterNewClass(jvmtiEnv* jvmti, JNIEnv* jni,
                                          jclass klass);
   void SendBackClassData();
@@ -196,7 +195,6 @@ class MemoryTrackingEnv : public GlobalRefListener {
   bool track_global_jni_refs_;
   bool is_first_tracking_;
   bool is_live_tracking_;
-  bool is_suspended_;
   int32_t app_id_;
   int32_t class_class_tag_;
   int64_t current_capture_time_ns_;

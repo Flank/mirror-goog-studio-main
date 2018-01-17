@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.getInstantRunModel;
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.utils.FileUtils.mkdirs;
 
 import com.android.annotations.NonNull;

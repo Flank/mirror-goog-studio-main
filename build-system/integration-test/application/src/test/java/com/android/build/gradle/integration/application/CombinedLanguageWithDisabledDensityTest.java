@@ -1,6 +1,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -37,7 +38,7 @@ public class CombinedLanguageWithDisabledDensityTest {
                     .create();
 
     @Before
-    public void setup() throws IOException, InterruptedException {
+    public void setup() throws IOException {
         AssumeUtil.assumeBuildToolsAtLeast(21);
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

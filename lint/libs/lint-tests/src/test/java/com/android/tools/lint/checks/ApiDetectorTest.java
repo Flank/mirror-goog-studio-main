@@ -4655,8 +4655,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         "2 errors, 0 warnings\n");
     }
 
-    // This is still broken! It works in the IDE, but from the command line, the resolve()
-    // method returns the wrong method! Try to reproduce in KotlinUAST.
     public void test69534659() {
         // Regression test for issue 69534659
         //noinspection all // Sample code
@@ -4695,6 +4693,51 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         "}"))
                 .run()
                 .expectClean();
+    }
+
+    public void testForEach2() {
+        // Regression test for 70965444: False positives for Map#forEach
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(21),
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import java.util.List;\n" +
+                        "import java.util.function.Consumer;\n" +
+                        "\n" +
+                        "public class JavaForEach {\n" +
+                        "    public void test(List<String> list) {\n" +
+                        "        list.forEach(new Consumer<String>() {\n" +
+                        "            @Override\n" +
+                        "            public void accept(String s) {\n" +
+                        "                System.out.println(s);\n" +
+                        "            }\n" +
+                        "        });\n" +
+                        "    }\n" +
+                        "}\n"),
+                kotlin("" +
+                        "import android.webkit.WebResourceRequest\n" +
+                        "import android.webkit.WebResourceResponse\n" +
+                        "import android.webkit.WebView\n" +
+                        "import android.webkit.WebViewClient\n" +
+                        "\n" +
+                        "class MyWebViewClient() : WebViewClient() {\n" +
+                        "    override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {\n" +
+                        "        val header: Map<String, String> = request.requestHeaders\n" +
+                        "        // Lint reports this Map.forEach as java.util.Map's but it's kotlin.collections.Map's!\n" +
+                        "        header.forEach { (key, value) ->\n" +
+                        "            TODO(\"addHeader(key, value)\")\n" +
+                        "        }\n" +
+                        "\n" +
+                        "        return TODO(\"Somethi9ng\")\n" +
+                        "    }\n" +
+                        "}"))
+                .run()
+                .expect("src/test/pkg/JavaForEach.java:8: Error: Call requires API level 24 (current min is 21): java.lang.Iterable#forEach [NewApi]\n" +
+                        "        list.forEach(new Consumer<String>() {\n" +
+                        "             ~~~~~~~\n" +
+                        "1 errors, 0 warnings");
     }
 
     public void testCastsToSelf() {

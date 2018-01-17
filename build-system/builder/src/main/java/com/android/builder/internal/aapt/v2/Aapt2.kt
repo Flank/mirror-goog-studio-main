@@ -31,5 +31,5 @@ interface Aapt2 {
     fun compile(request: CompileResourceRequest, logger: ILogger)
 
     /** Perform the requested linking. Throws [Aapt2Exception] on failure. */
-    fun link(request: AaptPackageConfig)
+    fun link(request: AaptPackageConfig, logger: ILogger)
 }

@@ -22,9 +22,9 @@
 #include <queue>
 
 using std::string;
+using testing::EndsWith;
 using testing::Ge;
 using testing::Lt;
-using testing::EndsWith;
 
 namespace profiler {
 
@@ -127,7 +127,7 @@ TEST(AtraceManagerTest, ProfilingStartStop) {
   EXPECT_TRUE(atrace.IsProfiling());
   atrace.BlockForXTraces(dump_count);
   EXPECT_THAT(atrace.GetDumpCount(), Ge(dump_count));
-  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, &test_data.error));
+  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
   EXPECT_FALSE(atrace.IsProfiling());
 }
 
@@ -142,7 +142,8 @@ TEST(AtraceManagerTest, ProfilerReentrant) {
     EXPECT_TRUE(atrace.IsProfiling());
     atrace.BlockForXTraces(dump_count);
     EXPECT_THAT(atrace.GetDumpCount(), Ge(dump_count));
-    EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, &test_data.error));
+    EXPECT_TRUE(
+        atrace.StopProfiling(test_data.app_name, false, &test_data.error));
     EXPECT_FALSE(atrace.IsProfiling());
     atrace.ResetState();
   }
@@ -157,7 +158,7 @@ TEST(AtraceManagerTest, ProfilingStartTwice) {
   EXPECT_TRUE(atrace.IsProfiling());
   EXPECT_FALSE(atrace.StartProfiling(test_data.app_name, 1000,
                                      &test_data.trace_path, &test_data.error));
-  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, &test_data.error));
+  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
 }
 
 TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
@@ -175,7 +176,7 @@ TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
                                     &test_data.trace_path, &test_data.error));
   EXPECT_THAT(atrace.GetDumpCount(), Ge(0));
   atrace.BlockForXTraces(dump_count);
-  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, &test_data.error));
+  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
 
   // On stop profiling get the dump count (this is incremented by stop
   // profiling)

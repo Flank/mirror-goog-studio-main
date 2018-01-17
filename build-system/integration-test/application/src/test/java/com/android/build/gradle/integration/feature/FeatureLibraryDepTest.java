@@ -16,18 +16,14 @@
 
 package com.android.build.gradle.integration.feature;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
-import com.android.testutils.apk.Apk;
-import com.android.testutils.apk.Dex;
-import java.util.Optional;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class FeatureLibraryDepTest {
@@ -44,6 +40,12 @@ public class FeatureLibraryDepTest {
         TestFileUtils.appendToFile(
                 sProject.getSubproject("feature").getBuildFile(),
                 "dependencies {\n" + "    implementation project(':libfeat')\n" + "}\n");
+
+        TestFileUtils.appendToFile(
+                sProject.getSubproject("baseFeature").getBuildFile(),
+                "dependencies {\n"
+                        + "    implementation \"com.android.support:support-v4:${rootProject.supportLibVersion}\"\n"
+                        + "}");
     }
 
     @AfterClass
@@ -57,14 +59,25 @@ public class FeatureLibraryDepTest {
         sProject.executor().withEnabledAapt2(true).run("clean", "assemble");
 
         // Check the library class was not packaged in the feature APK.
-        Apk apk = sProject.getSubproject("feature").getFeatureApk(GradleTestProject.ApkType.DEBUG);
-        assertThat(apk.getFile()).isFile();
-        Optional<Dex> dex = apk.getMainDexFile();
-        assertThat(dex).isPresent();
+        GradleTestProject featureProject = sProject.getSubproject(":feature");
+        try (ApkSubject featureApk =
+                assertThatApk(featureProject.getFeatureApk(GradleTestProject.ApkType.DEBUG))) {
+            featureApk.exists();
+            featureApk.containsClass("Lcom/example/android/multiproject/libfeat/R;");
+            featureApk.containsClass("Lcom/example/android/multiproject/libfeat/LibFeatView;");
+            featureApk.doesNotContainClass("Lcom/example/android/multiproject/library/PersonView;");
 
-        //noinspection OptionalGetWithoutIsPresent
-        final Dex dexFile = dex.get();
-        assertThat(dexFile)
-                .doesNotContainClasses("Lcom/example/android/multiproject/library/PersonView;");
+            // Ensure external dependencies are packaged properly in their respective features.
+            featureApk.containsClass("Landroid/support/v7/appcompat/R;");
+            featureApk.doesNotContainClass("Landroid/support/v4/R;");
+        }
+
+        // Check the external library was packaged in the base APK.
+        GradleTestProject baseProject = sProject.getSubproject(":baseFeature");
+        try (ApkSubject baseFeatureApk =
+                assertThatApk(baseProject.getFeatureApk(GradleTestProject.ApkType.DEBUG))) {
+            baseFeatureApk.exists();
+            baseFeatureApk.containsClass("Landroid/support/v4/R;");
+        }
     }
 }

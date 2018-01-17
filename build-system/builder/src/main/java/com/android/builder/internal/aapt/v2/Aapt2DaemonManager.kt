@@ -170,9 +170,9 @@ class Aapt2DaemonManager(
         }
 
         @Throws(Aapt2Exception::class)
-        override fun link(request: AaptPackageConfig) {
+        override fun link(request: AaptPackageConfig, logger: ILogger) {
             Preconditions.checkState(leaseValid, "Leased process is already closed")
-            leasableDaemon.daemon.link(request)
+            leasableDaemon.daemon.link(request, logger)
         }
 
         override fun close() {

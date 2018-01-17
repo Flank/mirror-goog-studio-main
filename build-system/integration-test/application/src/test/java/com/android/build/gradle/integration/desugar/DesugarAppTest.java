@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.desugar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.builder.core.DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -67,14 +68,13 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class DesugarAppTest {
 
-    private static final ImmutableList<String> TRY_WITH_RESOURCES_RUNTIME =
+    static final ImmutableList<String> TRY_WITH_RESOURCES_RUNTIME =
             ImmutableList.of(
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension;",
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$AbstractDesugaringStrategy;",
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$MimicDesugaringStrategy;",
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$NullDesugaringStrategy;",
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$ReuseDesugaringStrategy;");
-
 
     @NonNull private final Boolean enableGradleWorkers;
 
@@ -289,10 +289,12 @@ public class DesugarAppTest {
                 String.format(
                         "\n" + "android.defaultConfig.minSdkVersion %d\n",
                         MIN_SUPPORTED_API_TRY_WITH_RESOURCES - 1));
-        getProjectExecutor().run("assembleDebug");
+        getProjectExecutor().run("assembleDebug", "assembleDebugAndroidTest");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        Apk testApk = project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG);
         for (String klass : TRY_WITH_RESOURCES_RUNTIME) {
             assertThat(apk).containsClass(klass);
+            assertThat(testApk).doesNotContainClass(klass);
         }
     }
 
@@ -478,20 +480,22 @@ public class DesugarAppTest {
                         + "android.compileOptions.targetCompatibility 1.8");
     }
 
-    @NonNull
-    private List<String> createLibToDesugarAndGetClasses() throws IOException {
-        class Utility {
-            public void lambdaMethod() {
-                Runnable r = () -> {};
-                try (java.io.StringReader reader = new java.io.StringReader("")) {
-                    System.out.println("In try-with-resources with reader " + reader.hashCode());
-                }
+    static class TestClass {
+        public void lambdaMethod() {
+            Runnable r = () -> {};
+            try (java.io.StringReader reader = new java.io.StringReader("")) {
+                System.out.println("In try-with-resources with reader " + reader.hashCode());
             }
         }
+    }
+
+    @NonNull
+    private List<String> createLibToDesugarAndGetClasses() throws IOException {
+
         Path lib = project.getTestDir().toPath().resolve("libs/my-lib.jar");
         Files.createDirectories(lib.getParent());
 
-        String path = Utility.class.getName().replace('.', '/') + SdkConstants.DOT_CLASS;
+        String path = TestClass.class.getName().replace('.', '/') + SdkConstants.DOT_CLASS;
         try (InputStream in = getClass().getClassLoader().getResourceAsStream(path);
                 ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(lib))) {
             ZipEntry entry = new ZipEntry(path);
@@ -499,7 +503,7 @@ public class DesugarAppTest {
             out.write(ByteStreams.toByteArray(in));
             out.closeEntry();
         }
-        return ImmutableList.of("L" + Utility.class.getName().replaceAll("\\.", "/") + ";");
+        return ImmutableList.of("L" + TestClass.class.getName().replaceAll("\\.", "/") + ";");
     }
 
     private void writeClassWithTryWithResources() throws IOException {

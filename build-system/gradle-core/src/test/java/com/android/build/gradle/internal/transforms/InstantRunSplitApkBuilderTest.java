@@ -37,6 +37,7 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.build.ApkInfo;
 import com.android.sdklib.BuildToolInfo;
+import com.android.sdklib.IAndroidTarget;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -75,6 +76,7 @@ public class InstantRunSplitApkBuilderTest {
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
     @Mock FileCollection apkList;
+    @Mock IAndroidTarget target;
 
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder supportDirectory = new TemporaryFolder();
@@ -91,6 +93,8 @@ public class InstantRunSplitApkBuilderTest {
         MockitoAnnotations.initMocks(this);
         when(androidBuilder.getTargetInfo()).thenReturn(targetInfo);
         when(targetInfo.getBuildTools()).thenReturn(buildTools);
+        when(androidBuilder.getTarget()).thenReturn(target);
+        when(target.getPath(IAndroidTarget.ANDROID_JAR)).thenReturn("fake android.jar");
         when(mainResources.getAsFileTree()).thenReturn(mainResourcesApkFileTree);
 
         File apkListFile = apkListDirectory.newFile("apk-list.json");
@@ -171,11 +175,13 @@ public class InstantRunSplitApkBuilderTest {
         Mockito.verify(androidBuilder)
                 .processResources(any(Aapt.class), aaptConfigCaptor.capture());
 
-        AaptPackageConfig build = aaptConfigCaptor.getValue().build();
+        AaptPackageConfig.Builder builder = aaptConfigCaptor.getValue();
+        builder.setAndroidTarget(androidBuilder.getTarget());
+        AaptPackageConfig build = builder.build();
         File resourceOutputApk = build.getResourceOutputApk();
         assertThat(resourceOutputApk.getName()).isEqualTo("resources_ap");
         assertThat(build.getVariantType()).isEqualTo(VariantType.DEFAULT);
-        assertThat(build.isDebuggable()).isTrue();
+        assertThat(build.getDebuggable()).isTrue();
     }
 
     @Test
@@ -196,7 +202,9 @@ public class InstantRunSplitApkBuilderTest {
         Mockito.verify(androidBuilder)
                 .processResources(any(Aapt.class), aaptConfigCaptor.capture());
 
-        AaptPackageConfig build = aaptConfigCaptor.getValue().build();
+        AaptPackageConfig.Builder builder = aaptConfigCaptor.getValue();
+        builder.setAndroidTarget(androidBuilder.getTarget());
+        AaptPackageConfig build = builder.build();
         File resourceOutputApk = build.getResourceOutputApk();
         assertThat(build.getImports()).hasSize(1);
         assertThat(build.getImports()).containsExactly(mainResourcesApk);

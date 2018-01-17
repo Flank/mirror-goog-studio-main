@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.truth;
 
 import static com.android.build.gradle.integration.common.truth.AbstractAndroidSubject.isClassName;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import org.junit.Test;
 

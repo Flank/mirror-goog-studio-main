@@ -306,8 +306,8 @@ public class VersionChecks {
                 if (prev != condition) {
                     boolean fromThen = prev.equals(ifStatement.getThenExpression());
                     Boolean ok = isVersionCheckConditional(api, condition, fromThen, prev, null);
-                    if (ok != null) {
-                        return ok;
+                    if (ok != null && ok) {
+                        return true;
                     }
                 }
             } else if (current instanceof UPolyadicExpression &&
@@ -324,8 +324,8 @@ public class VersionChecks {
                 }
             } else if (current instanceof UCallExpression && prev instanceof ULambdaExpression) {
                 Boolean ok = isValidVersionCall(api, true, (UCallExpression) current);
-                if (ok != null) {
-                    return ok;
+                if (ok != null && ok) {
+                    return true;
                 }
             } else if (current instanceof UMethod || current instanceof PsiFile) {
                 return false;

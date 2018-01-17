@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.performance;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

@@ -52,6 +52,8 @@ kotlin_test(
         "//prebuilts/tools/common/lint-psi/uast",
         "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar",
         "//tools/base/annotations",
+        "//tools/base/apkparser:tools.binary-resources",
+        "//tools/base/apkparser/analyzer:tools.analyzer",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",

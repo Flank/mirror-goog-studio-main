@@ -1,5 +1,6 @@
 <#import "../../common/shared_manifest_macros.ftl" as manifestMacros>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" >
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="${packageName}">
 
     <!-- Include required permissions for Google Mobile Ads to run. -->
     <uses-permission android:name="android.permission.INTERNET"/>

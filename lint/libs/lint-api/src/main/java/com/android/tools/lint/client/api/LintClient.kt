@@ -1124,6 +1124,16 @@ abstract class LintClient {
         val lintJar = library.lintJar
         if (lintJar.exists()) {
             lintJars.add(lintJar)
+        } else if (library.project != null) {  // Local project: might have locally packaged lint jar
+            // Temporary workaround for 66166521: Add lintChecks dependencies into the builder model
+            val path = library.folder.path
+            val index = path.indexOf("intermediate-jars")
+            if (index != -1) {
+                val manualPath = File(path.substring(0, index) + "lint" + File.separator + SdkConstants.FN_LINT_JAR)
+                if (manualPath.exists()) {
+                    lintJars.add(manualPath)
+                }
+            }
         }
         addLintJarsFromDependencies(lintJars, library.libraryDependencies, seen)
     }

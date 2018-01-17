@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;

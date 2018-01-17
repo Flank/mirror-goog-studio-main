@@ -515,6 +515,7 @@ public abstract class PermissionRequirement {
     static final String[] REVOCABLE_PERMISSION_NAMES = new String[] {
             "android.permission.ACCESS_COARSE_LOCATION",
             "android.permission.ACCESS_FINE_LOCATION",
+            "android.permission.ANSWER_PHONE_CALLS",
             "android.permission.BODY_SENSORS",
             "android.permission.CALL_PHONE",
             "android.permission.CAMERA",
@@ -524,10 +525,9 @@ public abstract class PermissionRequirement {
             "android.permission.READ_CELL_BROADCASTS",
             "android.permission.READ_CONTACTS",
             "android.permission.READ_EXTERNAL_STORAGE",
+            "android.permission.READ_PHONE_NUMBERS",
             "android.permission.READ_PHONE_STATE",
-            "android.permission.READ_PROFILE",
             "android.permission.READ_SMS",
-            "android.permission.READ_SOCIAL_STREAM",
             "android.permission.RECEIVE_MMS",
             "android.permission.RECEIVE_SMS",
             "android.permission.RECEIVE_WAP_PUSH",
@@ -538,9 +538,6 @@ public abstract class PermissionRequirement {
             "android.permission.WRITE_CALL_LOG",
             "android.permission.WRITE_CONTACTS",
             "android.permission.WRITE_EXTERNAL_STORAGE",
-            "android.permission.WRITE_PROFILE",
-            "android.permission.WRITE_SETTINGS",
-            "android.permission.WRITE_SOCIAL_STREAM",
-            "com.android.voicemail.permission.ADD_VOICEMAIL"
+            "com.android.voicemail.permission.ADD_VOICEMAIL",
     };
 }

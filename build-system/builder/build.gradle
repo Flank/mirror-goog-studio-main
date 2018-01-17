@@ -96,11 +96,11 @@ dependencies {
         transitive = false
     }
 
-    provided(project(':base:apkzlib')) {
+    provided(project(':apkzlib')) {
         transitive = false
     }
 
-    sourcesProvided(project(path:':base:apkzlib', configuration:'sourcesOnly')) {
+    sourcesProvided(project(path:':apkzlib', configuration:'sourcesOnly')) {
         transitive = false
     }
 

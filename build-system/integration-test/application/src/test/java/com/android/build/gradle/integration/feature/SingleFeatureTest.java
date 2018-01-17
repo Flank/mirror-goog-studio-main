@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.integration.feature;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
@@ -65,7 +65,7 @@ public class SingleFeatureTest {
     }
 
     private static void checkManifestContents(File manifestFile) {
-        assertThat(manifestFile.exists());
+        assertThat(manifestFile).exists();
         assertThat(manifestFile)
                 .containsAllOf(
                         "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"",

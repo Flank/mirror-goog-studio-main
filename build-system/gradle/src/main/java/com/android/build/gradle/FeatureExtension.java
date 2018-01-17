@@ -23,6 +23,7 @@ import com.android.build.gradle.api.FeatureVariant;
 import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -59,6 +60,7 @@ public class FeatureExtension extends LibraryExtension {
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
+            @NonNull SourceSetManager sourceSetManager,
             @NonNull ExtraModelInfo extraModelInfo) {
         super(
                 project,
@@ -69,6 +71,7 @@ public class FeatureExtension extends LibraryExtension {
                 productFlavors,
                 signingConfigs,
                 buildOutputs,
+                sourceSetManager,
                 extraModelInfo);
         setGeneratePureSplits(true);
     }

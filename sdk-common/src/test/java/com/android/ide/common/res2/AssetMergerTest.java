@@ -16,7 +16,7 @@
 
 package com.android.ide.common.res2;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.common.utils;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.NativeAndroidProject;

@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import com.android.annotations.NonNull;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -92,28 +93,25 @@ public class SvgClipPathNode extends SvgGroupNode {
         }
     }
 
-    /**
-     * Writes the XML for a group containing a clip-path and its affected elements. Concatenates
-     * path data of children into one path for the clip-path. Affected nodes are contained in the
-     * same group as the clip-path.
-     *
-     * @param writer the writer to write the group XML element to
-     * @param inClipPath boolean to flag whether the pathData should be apart of clip-path or not
-     */
     @Override
-    public void writeXML(OutputStreamWriter writer, boolean inClipPath) throws IOException {
-        writer.write("    <group>");
+    public void writeXML(@NonNull OutputStreamWriter writer, boolean inClipPath,
+            @NonNull String indent) throws IOException {
+        writer.write(indent);
+        writer.write("<group>");
         writer.write(System.lineSeparator());
-        writer.write("        <clip-path android:pathData=\"");
+        writer.write(indent);
+        writer.write(INDENT_UNIT);
+        writer.write("<clip-path android:pathData=\"");
         for (SvgNode node : mChildren) {
-            node.writeXML(writer, true);
+            node.writeXML(writer, true, indent + INDENT_UNIT);
         }
-        writer.write("\" />");
+        writer.write("\"/>");
         writer.write(System.lineSeparator());
         for (SvgNode node : mAffectedNodes) {
-            node.writeXML(writer, false);
+            node.writeXML(writer, false, indent + INDENT_UNIT);
         }
-        writer.write("    </group>");
+        writer.write(indent);
+        writer.write("</group>");
         writer.write(System.lineSeparator());
     }
 

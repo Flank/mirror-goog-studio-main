@@ -17,7 +17,8 @@
 package com.android.builder.internal;
 
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import java.io.File;
 import org.junit.Rule;

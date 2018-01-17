@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.TestApplicationTaskManager;
 import com.android.build.gradle.internal.api.dsl.extensions.TestExtensionImpl;
+import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -66,6 +67,7 @@ public class TestPlugin extends BasePlugin<TestExtensionImpl> {
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
+            @NonNull SourceSetManager sourceSetManager,
             @NonNull ExtraModelInfo extraModelInfo) {
         return project.getExtensions()
                 .create(
@@ -79,6 +81,7 @@ public class TestPlugin extends BasePlugin<TestExtensionImpl> {
                         productFlavorContainer,
                         signingConfigContainer,
                         buildOutputs,
+                        sourceSetManager,
                         extraModelInfo);
     }
 

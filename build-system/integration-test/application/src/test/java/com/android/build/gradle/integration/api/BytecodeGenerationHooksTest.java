@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.api;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.transforms;
 import static com.android.build.api.transform.Status.CHANGED;
 import static com.android.build.api.transform.Status.REMOVED;
 import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;

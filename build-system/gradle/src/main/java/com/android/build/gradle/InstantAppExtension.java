@@ -22,6 +22,7 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -41,6 +42,7 @@ class InstantAppExtension extends BaseExtension {
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
+            @NonNull SourceSetManager sourceSetManager,
             @NonNull ExtraModelInfo extraModelInfo) {
         super(
                 project,
@@ -51,8 +53,8 @@ class InstantAppExtension extends BaseExtension {
                 productFlavors,
                 signingConfigs,
                 buildOutputs,
-                extraModelInfo,
-                false);
+                sourceSetManager,
+                extraModelInfo);
     }
 
     @Override

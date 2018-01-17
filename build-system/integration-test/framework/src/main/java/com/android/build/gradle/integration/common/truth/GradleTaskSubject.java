@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.truth.Truth.assert_;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.truth.TaskStateList.TaskInfo;
 import com.google.common.truth.FailureStrategy;
@@ -43,6 +45,11 @@ public class GradleTaskSubject extends Subject<GradleTaskSubject, TaskInfo> {
             @NonNull FailureStrategy failureStrategy,
             @NonNull TaskInfo taskInfo) {
         super(failureStrategy, taskInfo);
+    }
+
+    @NonNull
+    public static GradleTaskSubject assertThat(@NonNull TaskStateList.TaskInfo taskInfo) {
+        return assert_().about(GradleTaskSubject.FACTORY).that(taskInfo);
     }
 
     @Override

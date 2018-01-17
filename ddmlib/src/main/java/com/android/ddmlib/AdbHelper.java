@@ -21,11 +21,12 @@ import com.android.annotations.Nullable;
 import com.android.ddmlib.log.LogReceiver;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,7 +43,7 @@ final class AdbHelper {
 
     static final int WAIT_TIME = 5; // spin-wait sleep, in ms
 
-    static final String DEFAULT_ENCODING = "ISO-8859-1"; //$NON-NLS-1$
+    static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
     /** do not instantiate */
     private AdbHelper() {
@@ -192,13 +193,7 @@ final class AdbHelper {
      */
     public static byte[] formAdbRequest(String req) {
         String resultStr = String.format("%04X%s", req.length(), req); //$NON-NLS-1$
-        byte[] result;
-        try {
-            result = resultStr.getBytes(DEFAULT_ENCODING);
-        } catch (UnsupportedEncodingException uee) {
-            uee.printStackTrace(); // not expected
-            return null;
-        }
+        byte[] result = resultStr.getBytes(DEFAULT_CHARSET);
         assert result.length == req.length() + 4;
         return result;
     }
@@ -823,14 +818,7 @@ final class AdbHelper {
      * Converts an ADB reply to a string.
      */
     static String replyToString(byte[] reply) {
-        String result;
-        try {
-            result = new String(reply, DEFAULT_ENCODING);
-        } catch (UnsupportedEncodingException uee) {
-            uee.printStackTrace(); // not expected
-            result = "";
-        }
-        return result;
+        return new String(reply, DEFAULT_CHARSET);
     }
 
     /**

@@ -98,7 +98,7 @@ public abstract class AbstractProcessExecutionAapt extends AbstractAapt {
      * @param config the package configuration
      * @return a builder to invoke {@code aapt}
      * @throws AaptException failed to create the command, for example, package configuration is
-     * invalid in spite of having already been validated
+     *     invalid in spite of having already been validated
      */
     @NonNull
     protected abstract ProcessInfoBuilder makePackageProcessBuilder(

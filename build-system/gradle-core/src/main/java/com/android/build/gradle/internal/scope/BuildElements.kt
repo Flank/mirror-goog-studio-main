@@ -94,14 +94,10 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
     @Throws(IOException::class)
     fun save(folder: File) : BuildElements {
         val persistedOutput = persist(folder.toPath())
-        FileWriter(getMetadataFile(folder)).use { writer ->
+        FileWriter(ExistingBuildElements.getMetadataFile(folder)).use { writer ->
             writer.append(persistedOutput)
         }
         return this
-    }
-
-    private fun getMetadataFile(folder: File): File {
-        return File(folder, "output.json")
     }
 
     private data class ExecutorBasedScheduler(val input : BuildElements,

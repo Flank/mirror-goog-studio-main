@@ -16,17 +16,21 @@
 
 package com.android.build.gradle.options;
 
+import static com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
+
 import android.databinding.tool.util.Preconditions;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.OptionalCompilationStep;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableTable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
@@ -39,7 +43,7 @@ public final class ProjectOptions {
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
-    private final ImmutableMap<DeprecatedOptions, String> deprecatedOptions;
+    private final ImmutableMap<RemovedOptions, String> removedOptions;
     private final ImmutableMap<BooleanOption, Boolean> booleanOptions;
     private final ImmutableMap<OptionalBooleanOption, Boolean> optionalBooleanOptions;
     private final ImmutableMap<IntegerOption, Integer> integerOptions;
@@ -47,16 +51,27 @@ public final class ProjectOptions {
     private final ImmutableMap<StringOption, String> stringOptions;
     private final ImmutableMap<String, String> testRunnerArgs;
     private final EnumOptions enumOptions;
+    private final ImmutableTable<String, String, DeprecationTarget> deprecatedOptions;
 
     public ProjectOptions(@NonNull ImmutableMap<String, Object> properties) {
-        deprecatedOptions = readOptions(DeprecatedOptions.values(), properties);
-        booleanOptions = readOptions(BooleanOption.values(), properties);
-        optionalBooleanOptions = readOptions(OptionalBooleanOption.values(), properties);
-        integerOptions = readOptions(IntegerOption.values(), properties);
-        longOptions = readOptions(LongOption.values(), properties);
-        stringOptions = readOptions(StringOption.values(), properties);
+        ImmutableTable.Builder<String, String, DeprecationTarget> deprecatedOptionsBuilder =
+                ImmutableTable.builder();
+
+        removedOptions = readOptions(RemovedOptions.values(), properties, deprecatedOptionsBuilder);
+        booleanOptions = readOptions(BooleanOption.values(), properties, deprecatedOptionsBuilder);
+        optionalBooleanOptions =
+                readOptions(OptionalBooleanOption.values(), properties, deprecatedOptionsBuilder);
+        integerOptions = readOptions(IntegerOption.values(), properties, deprecatedOptionsBuilder);
+        longOptions = readOptions(LongOption.values(), properties, deprecatedOptionsBuilder);
+        stringOptions = readOptions(StringOption.values(), properties, deprecatedOptionsBuilder);
+        enumOptions =
+                EnumOptions.load(
+                        readOptions(
+                                EnumOptions.EnumOption.values(),
+                                properties,
+                                deprecatedOptionsBuilder));
+        deprecatedOptions = deprecatedOptionsBuilder.build();
         testRunnerArgs = readTestRunnerArgs(properties);
-        enumOptions = EnumOptions.load(readOptions(EnumOptions.EnumOption.values(), properties));
     }
 
     /**
@@ -105,14 +120,25 @@ public final class ProjectOptions {
     @NonNull
     private static <OptionT extends Option<ValueT>, ValueT>
             ImmutableMap<OptionT, ValueT> readOptions(
-                    @NonNull OptionT[] values, @NonNull Map<String, ?> properties) {
+                    @NonNull OptionT[] values,
+                    @NonNull Map<String, ?> properties,
+                    @NonNull
+                            ImmutableTable.Builder<String, String, DeprecationTarget>
+                                    deprecatedOptions) {
         Map<String, OptionT> optionLookup =
                 Arrays.stream(values).collect(Collectors.toMap(Option::getPropertyName, v -> v));
         ImmutableMap.Builder<OptionT, ValueT> valuesBuilder = ImmutableMap.builder();
         for (Map.Entry<String, ?> property : properties.entrySet()) {
             OptionT option = optionLookup.get(property.getKey());
             if (option != null) {
-                valuesBuilder.put(option, option.parse(property.getValue()));
+                ValueT value = option.parse(property.getValue());
+                valuesBuilder.put(option, value);
+                if (option.isDeprecated() && !Objects.equals(option.getDefaultValue(), value)) {
+                    deprecatedOptions.put(
+                            option.getPropertyName(),
+                            String.valueOf(option.getDefaultValue()),
+                            Objects.requireNonNull(option.getDeprecationTarget()));
+                }
             }
         }
         return valuesBuilder.build();
@@ -181,18 +207,19 @@ public final class ProjectOptions {
     }
 
 
-    public boolean hasDeprecatedOptions() {
-        return !deprecatedOptions.isEmpty();
+    public boolean hasRemovedOptions() {
+        return !removedOptions.isEmpty();
     }
 
     @NonNull
-    public String getDeprecatedOptionsErrorMessage() {
+    public String getRemovedOptionsErrorMessage() {
         Preconditions.check(
-                hasDeprecatedOptions(),
-                "Has deprecated options should be checked before calling this method.");
+                hasRemovedOptions(),
+                "Has removed options should be checked before calling this method.");
         StringBuilder builder =
-                new StringBuilder("The following project options are deprecated: \n");
-        deprecatedOptions.forEach(
+                new StringBuilder(
+                        "The following project options are deprecated and have been removed: \n");
+        removedOptions.forEach(
                 (option, errorMessage) -> {
                     builder.append(option.getPropertyName())
                             .append("\n")
@@ -220,5 +247,13 @@ public final class ProjectOptions {
 
     public ImmutableMap<StringOption, String> getExplicitlySetStringOptions() {
         return stringOptions;
+    }
+
+    public boolean hasDeprecatedOptions() {
+        return !deprecatedOptions.isEmpty();
+    }
+
+    public ImmutableTable<String, String, DeprecationTarget> getDeprecatedOptions() {
+        return deprecatedOptions;
     }
 }

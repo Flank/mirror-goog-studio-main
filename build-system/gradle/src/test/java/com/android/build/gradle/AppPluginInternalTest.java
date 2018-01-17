@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.tasks.factory.AndroidJavaCompile;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
 import com.android.builder.model.SigningConfig;
@@ -34,6 +35,8 @@ import groovy.util.Eval;
 import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import junit.framework.TestCase;
 import org.gradle.api.Project;
 import org.junit.Before;
@@ -468,5 +471,22 @@ public class AppPluginInternalTest {
 
         TestCase.assertNotNull(recordedException);
         TestCase.assertEquals(BadPluginException.class, recordedException.getClass());
+    }
+
+    @Test
+    public void testJavaCompileBootclasspath() {
+        AppExtension android = project.getExtensions().getByType(AppExtension.class);
+        android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION);
+        android.setBuildToolsVersion(TestConstants.BUILD_TOOL_VERSION);
+
+        AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
+        plugin.createAndroidTasks(true);
+
+        AndroidJavaCompile compileDebugJavaWithJavac =
+                (AndroidJavaCompile) project.getTasks().getByName("compileDebugJavaWithJavac");
+        Set<File> bootclasspath =
+                compileDebugJavaWithJavac.getOptions().getBootstrapClasspath().getFiles();
+        assertThat(bootclasspath.stream().map(File::getName).collect(Collectors.toSet()))
+                .containsExactly("android.jar", "core-lambda-stubs.jar");
     }
 }

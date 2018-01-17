@@ -191,6 +191,16 @@ public class AndroidUnitTest extends Test {
                                 TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
             }
 
+            // Any additional or requested optional libraries
+            collection.from(
+                    scope.getGlobalScope()
+                            .getProject()
+                            .files(
+                                    scope.getGlobalScope()
+                                            .getAndroidBuilder()
+                                            .computeAdditionalAndRequestedOptionalLibraries()));
+
+
             // Mockable JAR is last, to make sure you can shadow the classes with
             // dependencies.
             collection.from(scope.getGlobalScope().getOutput(TaskOutputType.MOCKABLE_JAR));

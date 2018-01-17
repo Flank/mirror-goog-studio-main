@@ -141,6 +141,7 @@ grpc::Status NetworkServiceImpl::GetHttpDetails(
         if (conn->response.payload_id != "") {
           auto body_details = response->mutable_response_body();
           body_details->set_payload_id(conn->response.payload_id);
+          body_details->set_payload_size(conn->response.payload_size);
         }
       } break;
 

@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.BuildCacheUtils.CACHE_USE_MARKER_FILE_NAME;
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 

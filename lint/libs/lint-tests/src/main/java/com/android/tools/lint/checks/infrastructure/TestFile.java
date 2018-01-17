@@ -610,6 +610,8 @@ public class TestFile {
         @Override
         public File createFile(@NonNull File targetDir) throws IOException {
             String target = getTargetPath();
+            // Allow test paths
+            target = target.replace(File.separatorChar, '/');
             int index = target.lastIndexOf('/');
             String relative = null;
             String name = target;

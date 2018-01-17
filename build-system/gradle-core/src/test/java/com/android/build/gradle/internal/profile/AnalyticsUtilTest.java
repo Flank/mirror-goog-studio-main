@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter;
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -76,7 +77,7 @@ public class AnalyticsUtilTest {
 
     @Test
     public void splitConverterTest() throws IOException {
-        Splits splits = new Splits(new FakeObjectFactory());
+        Splits splits = new Splits(new FakeObjectFactory(), new FakeDeprecationReporter());
         // Defaults
         {
             GradleBuildSplits proto = AnalyticsUtil.toProto(splits);

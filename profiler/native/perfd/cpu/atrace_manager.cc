@@ -103,7 +103,7 @@ string AtraceManager::GetNextDumpPath() {
   return path.str();
 }
 
-bool AtraceManager::StopProfiling(const std::string &app_name,
+bool AtraceManager::StopProfiling(const std::string &app_name, bool need_result,
                                   std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:StopProfiling atrace");
@@ -111,8 +111,12 @@ bool AtraceManager::StopProfiling(const std::string &app_name,
   is_profiling_ = false;
   atrace_thread_.join();
   RunAtrace(profiled_app_.app_name, GetNextDumpPath(), "--async_stop");
-  return CombineFiles(profiled_app_.trace_path.c_str(), dumps_created_,
-                      profiled_app_.trace_path.c_str());
+  if (need_result) {
+    return CombineFiles(profiled_app_.trace_path.c_str(), dumps_created_,
+                        profiled_app_.trace_path.c_str());
+  } else {
+    return true;
+  }
 }
 
 bool AtraceManager::CombineFiles(const std::string &combine_file_prefix,

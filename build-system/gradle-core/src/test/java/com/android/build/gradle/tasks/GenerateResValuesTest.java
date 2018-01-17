@@ -16,7 +16,8 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+
+import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.builder.internal.ClassFieldImpl;
 import com.google.common.collect.ImmutableList;

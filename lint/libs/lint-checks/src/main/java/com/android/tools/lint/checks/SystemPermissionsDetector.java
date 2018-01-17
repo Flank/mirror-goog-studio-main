@@ -21,6 +21,7 @@ import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.TAG_USES_PERMISSION;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
@@ -59,12 +60,16 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
 
     // List of permissions have the protection levels signature, privileged or systemOrSignature.
     // This list must be sorted alphabetically.
-    private static final String[] SYSTEM_PERMISSIONS = new String[] {
+    @VisibleForTesting
+    static final String[] SYSTEM_PERMISSIONS = new String[]{
         "android.intent.category.MASTER_CLEAR.permission.C2D_MESSAGE",
+        "android.permission.ACCESS_ALL_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_BROADCAST_RADIO",
         "android.permission.ACCESS_CACHE_FILESYSTEM",
         "android.permission.ACCESS_CHECKIN_PROPERTIES",
         "android.permission.ACCESS_CONTENT_PROVIDERS_EXTERNALLY",
         "android.permission.ACCESS_DRM_CERTIFICATES",
+        "android.permission.ACCESS_EPHEMERAL_APPS",
         "android.permission.ACCESS_FM_RADIO",
         "android.permission.ACCESS_IMS_CALL_SERVICE",
         "android.permission.ACCESS_INPUT_FLINGER",
@@ -79,9 +84,13 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.ACCESS_SURFACE_FLINGER",
         "android.permission.ACCESS_UCE_OPTIONS_SERVICE",
         "android.permission.ACCESS_UCE_PRESENCE_SERVICE",
+        "android.permission.ACCESS_USB",
         "android.permission.ACCESS_VOICE_INTERACTION_SERVICE",
         "android.permission.ACCESS_VR_MANAGER",
+        "android.permission.ACCESS_VR_STATE",
         "android.permission.ACCOUNT_MANAGER",
+        "android.permission.ACTIVITY_EMBEDDING",
+        "android.permission.ADD_SYSTEM_SERVICE",
         "android.permission.ALLOCATE_AGGRESSIVE",
         "android.permission.ALLOW_ANY_CODEC_FOR_PLAYBACK",
         "android.permission.ASEC_ACCESS",
@@ -90,12 +99,14 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.ASEC_MOUNT_UNMOUNT",
         "android.permission.ASEC_RENAME",
         "android.permission.BACKUP",
+        "android.permission.BACKUP_DATA",
         "android.permission.BATTERY_STATS",
         "android.permission.BIND_ACCESSIBILITY_SERVICE",
         "android.permission.BIND_APPWIDGET",
         "android.permission.BIND_AUTOFILL",
         "android.permission.BIND_AUTOFILL_SERVICE",
         "android.permission.BIND_CACHE_QUOTA_SERVICE",
+        "android.permission.BIND_CALL_SERVICE",
         "android.permission.BIND_CARRIER_MESSAGING_SERVICE",
         "android.permission.BIND_CARRIER_SERVICES",
         "android.permission.BIND_CHOOSER_TARGET_SERVICE",
@@ -105,7 +116,6 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.BIND_DEVICE_ADMIN",
         "android.permission.BIND_DIRECTORY_SEARCH",
         "android.permission.BIND_DREAM_SERVICE",
-        "android.permission.BIND_EUICC_SERVICE",
         "android.permission.BIND_IMS_SERVICE",
         "android.permission.BIND_INCALL_SERVICE",
         "android.permission.BIND_INPUT_METHOD",
@@ -117,13 +127,14 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.BIND_NFC_SERVICE",
         "android.permission.BIND_NOTIFICATION_ASSISTANT_SERVICE",
         "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE",
+        "android.permission.BIND_NOTIFICATION_RANKER_SERVICE",
         "android.permission.BIND_PACKAGE_VERIFIER",
         "android.permission.BIND_PRINT_RECOMMENDATION_SERVICE",
         "android.permission.BIND_PRINT_SERVICE",
         "android.permission.BIND_PRINT_SPOOLER_SERVICE",
         "android.permission.BIND_QUICK_SETTINGS_TILE",
-        "android.permission.BIND_REMOTE_DISPLAY",
         "android.permission.BIND_REMOTEVIEWS",
+        "android.permission.BIND_REMOTE_DISPLAY",
         "android.permission.BIND_RESOLVER_RANKER_SERVICE",
         "android.permission.BIND_ROUTE_PROVIDER",
         "android.permission.BIND_RUNTIME_PERMISSION_PRESENTER_SERVICE",
@@ -144,6 +155,7 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.BRICK",
         "android.permission.BROADCAST_NETWORK_PRIVILEGED",
         "android.permission.BROADCAST_PACKAGE_REMOVED",
+        "android.permission.BROADCAST_SCORE_NETWORKS",
         "android.permission.BROADCAST_SMS",
         "android.permission.BROADCAST_WAP_PUSH",
         "android.permission.CACHE_CONTENT",
@@ -164,12 +176,13 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.CHANGE_DEVICE_IDLE_TEMP_WHITELIST",
         "android.permission.CHANGE_HDMI_CEC_ACTIVE_SOURCE",
         "android.permission.CHANGE_LOWPAN_STATE",
+        "android.permission.CHANGE_NETWORK_STATE",
         "android.permission.CHANGE_OVERLAY_PACKAGES",
         "android.permission.CLEAR_APP_CACHE",
         "android.permission.CLEAR_APP_GRANTED_URI_PERMISSIONS",
         "android.permission.CLEAR_APP_USER_DATA",
-        "android.permission.CONFIGURE_ASSIST_GESTURE",
         "android.permission.CONFIGURE_DISPLAY_COLOR_MODE",
+        "android.permission.CONFIGURE_DISPLAY_COLOR_TRANSFORM",
         "android.permission.CONFIGURE_WIFI_DISPLAY",
         "android.permission.CONFIRM_FULL_BACKUP",
         "android.permission.CONNECTIVITY_INTERNAL",
@@ -195,6 +208,7 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.FILTER_EVENTS",
         "android.permission.FORCE_BACK",
         "android.permission.FORCE_STOP_PACKAGES",
+        "android.permission.FOTA_UPDATE",
         "android.permission.FRAME_STATS",
         "android.permission.FREEZE_SCREEN",
         "android.permission.GET_ACCOUNTS_PRIVILEGED",
@@ -202,11 +216,13 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.GET_APP_OPS_STATS",
         "android.permission.GET_DETAILED_TASKS",
         "android.permission.GET_INTENT_SENDER_INTENT",
+        "android.permission.GET_PACKAGE_IMPORTANCE",
         "android.permission.GET_PASSWORD",
         "android.permission.GET_PROCESS_STATE_AND_OOM_SCORE",
         "android.permission.GET_TOP_ACTIVITY_INFO",
         "android.permission.GLOBAL_SEARCH",
         "android.permission.GLOBAL_SEARCH_CONTROL",
+        "android.permission.GRANT_REVOKE_PERMISSIONS",
         "android.permission.GRANT_RUNTIME_PERMISSIONS",
         "android.permission.HARDWARE_TEST",
         "android.permission.HDMI_CEC",
@@ -226,12 +242,13 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.LOCAL_MAC_ADDRESS",
         "android.permission.LOCATION_HARDWARE",
         "android.permission.LOOP_RADIO",
+        "android.permission.MAGNIFY_DISPLAY",
         "android.permission.MANAGE_ACTIVITY_STACKS",
         "android.permission.MANAGE_APP_OPS_RESTRICTIONS",
         "android.permission.MANAGE_APP_TOKENS",
         "android.permission.MANAGE_AUTO_FILL",
-        "android.permission.MANAGE_CA_CERTIFICATES",
         "android.permission.MANAGE_CARRIER_OEM_UNLOCK_STATE",
+        "android.permission.MANAGE_CA_CERTIFICATES",
         "android.permission.MANAGE_DEVICE_ADMINS",
         "android.permission.MANAGE_DOCUMENTS",
         "android.permission.MANAGE_FINGERPRINT",
@@ -241,10 +258,12 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.MANAGE_NOTIFICATIONS",
         "android.permission.MANAGE_PROFILE_AND_DEVICE_OWNERS",
         "android.permission.MANAGE_SOUND_TRIGGER",
+        "android.permission.MANAGE_SUBSCRIPTION_PLANS",
         "android.permission.MANAGE_USB",
-        "android.permission.MANAGE_USER_OEM_UNLOCK_STATE",
         "android.permission.MANAGE_USERS",
+        "android.permission.MANAGE_USER_OEM_UNLOCK_STATE",
         "android.permission.MANAGE_VOICE_KEYPHRASES",
+        "android.permission.MARK_NETWORK_SOCKET",
         "android.permission.MASTER_CLEAR",
         "android.permission.MEDIA_CONTENT_CONTROL",
         "android.permission.MODIFY_ACCESSIBILITY_DATA",
@@ -259,11 +278,10 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.MOUNT_FORMAT_FILESYSTEMS",
         "android.permission.MOUNT_UNMOUNT_FILESYSTEMS",
         "android.permission.MOVE_PACKAGE",
-        "android.permission.NET_ADMIN",
-        "android.permission.MODIFY_PHONE_STATE",
-        "android.permission.NET_TUNNELING",
         "android.permission.NETWORK_SETTINGS",
         "android.permission.NETWORK_STACK",
+        "android.permission.NET_ADMIN",
+        "android.permission.NET_TUNNELING",
         "android.permission.NFC_HANDOVER_STATUS",
         "android.permission.NOTIFICATION_DURING_SETUP",
         "android.permission.NOTIFY_PENDING_SYSTEM_UPDATE",
@@ -290,8 +308,11 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.READ_NETWORK_USAGE_HISTORY",
         "android.permission.READ_OEM_UNLOCK_STATE",
         "android.permission.READ_PRECISE_PHONE_STATE",
+        "android.permission.READ_PRINT_SERVICES",
+        "android.permission.READ_PRINT_SERVICE_RECOMMENDATIONS",
         "android.permission.READ_PRIVILEGED_PHONE_STATE",
         "android.permission.READ_SEARCH_INDEXABLES",
+        "android.permission.READ_WALLPAPER_INTERNAL",
         "android.permission.READ_WIFI_CREDENTIAL",
         "android.permission.REAL_GET_TASKS",
         "android.permission.REBOOT",
@@ -315,10 +336,12 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.RESET_SHORTCUT_MANAGER_THROTTLING",
         "android.permission.RESTRICTED_VR_ACCESS",
         "android.permission.RETRIEVE_WINDOW_CONTENT",
+        "android.permission.RETRIEVE_WINDOW_INFO",
         "android.permission.RETRIEVE_WINDOW_TOKEN",
         "android.permission.REVOKE_RUNTIME_PERMISSIONS",
         "android.permission.RUN_IN_BACKGROUND",
         "android.permission.SCORE_NETWORKS",
+        "android.permission.SEND_EMBMS_INTENTS",
         "android.permission.SEND_RESPOND_VIA_MESSAGE",
         "android.permission.SEND_SMS_NO_CONFIRMATION",
         "android.permission.SERIAL_PORT",
@@ -333,6 +356,7 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.SET_ORIENTATION",
         "android.permission.SET_POINTER_SPEED",
         "android.permission.SET_PREFERRED_APPLICATIONS",
+        "android.permission.SET_PROCESS_FOREGROUND",
         "android.permission.SET_PROCESS_LIMIT",
         "android.permission.SET_SCREEN_COMPATIBILITY",
         "android.permission.SET_TIME",
@@ -362,17 +386,19 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         "android.permission.UPDATE_LOCK",
         "android.permission.UPDATE_LOCK_TASK_PACKAGES",
         "android.permission.UPDATE_TIME_ZONE_RULES",
-        "android.permission.USE_DATA_IN_BACKGROUND",
         "android.permission.USER_ACTIVITY",
+        "android.permission.USE_COLORIZED_NOTIFICATIONS",
+        "android.permission.USE_DATA_IN_BACKGROUND",
         "android.permission.VIEW_INSTANT_APPS",
         "android.permission.WRITE_APN_SETTINGS",
         "android.permission.WRITE_BLOCKED_NUMBERS",
         "android.permission.WRITE_DREAM_STATE",
-        "android.permission.WRITE_EMBEDDED_SUBSCRIPTIONS",
         "android.permission.WRITE_GSERVICES",
         "android.permission.WRITE_MEDIA_STORAGE",
         "android.permission.WRITE_SECURE_SETTINGS",
         "android.permission.WRITE_SETTINGS",
+        "com.android.permission.BIND_EUICC_SERVICE",
+        "com.android.permission.WRITE_EMBEDDED_SUBSCRIPTIONS",
         "com.android.voicemail.permission.READ_VOICEMAIL",
         "com.android.voicemail.permission.WRITE_VOICEMAIL"
     };
@@ -394,9 +420,58 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
         if (nameNode != null) {
             String permissionName = nameNode.getValue();
             if (Arrays.binarySearch(SYSTEM_PERMISSIONS, permissionName) >= 0) {
+
+                if (permissionName.equals("android.permission.CHANGE_NETWORK_STATE")) {
+                    // This permission was briefly (*only* in API level 23) marked
+                    // signature permission; it was fixed again in the next API level.
+                    return;
+                }
+
+                // Special cases: some permissions were added as signature permissions later;
+                // look for these and allow it.
+                int max = getLastNonSignatureApiLevel(permissionName);
+                if (max != -1) {
+                    //  android:maxSdkVersion="22"
+                    Attr maxAttribute = element.getAttributeNodeNS(ANDROID_URI, "maxSdkVersion");
+                    if (maxAttribute != null) {
+                        try {
+                            int maxValue = Integer.parseInt(maxAttribute.getValue());
+                            if (maxValue <= max) {
+                                return;
+                            }
+                        } catch (NumberFormatException ignore) {
+                        }
+
+                    }
+                }
+
                 context.report(ISSUE, element, context.getLocation(nameNode),
                     "Permission is only granted to system apps");
             }
+        }
+    }
+
+    private static int getLastNonSignatureApiLevel(@NonNull String name) {
+        switch (name) {
+            case "android.permission.READ_LOGS": return 15;
+            case "android.permission.SET_ALWAYS_FINISH": return 15;
+            case "android.permission.SET_ANIMATION_SCALE": return 15;
+            case "android.permission.SET_DEBUG_APP": return 15;
+            case "android.permission.SET_PROCESS_LIMIT": return 15;
+            case "android.permission.SIGNAL_PERSISTENT_PROCESSES": return 15;
+            case "android.permission.CHANGE_CONFIGURATION": return 16;
+            case "android.permission.MOUNT_FORMAT_FILESYSTEMS": return 16;
+            case "android.permission.MOUNT_UNMOUNT_FILESYSTEMS": return 16;
+            case "com.android.voicemail.permission.READ_VOICEMAIL": return 21;
+            case "com.android.voicemail.permission.WRITE_VOICEMAIL": return 21;
+            case "android.permission.ACCESS_MOCK_LOCATION": return 22;
+            case "android.permission.CHANGE_NETWORK_STATE": return 22;
+            case "android.permission.CLEAR_APP_CACHE": return 22;
+            case "android.permission.SYSTEM_ALERT_WINDOW": return 22;
+            case "android.permission.WRITE_SETTINGS": return 22;
+            case "android.permission.REQUEST_INSTALL_PACKAGES": return 25;
+            case "android.permission.SET_TIME_ZONE": return 25;
+            default: return -1;
         }
     }
 }

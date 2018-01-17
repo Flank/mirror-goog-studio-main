@@ -28,6 +28,7 @@ import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.QueueableAapt2
 import com.android.ide.common.process.LoggedProcessOutputHandler
+import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
@@ -69,29 +70,24 @@ open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
         val staticLibraries = ImmutableList.builder<File>()
         staticLibraries.addAll(libraryDependencies.files)
         staticLibraries.add(thisSubProjectStaticLibrary.singleFile)
-        val config =
-                AaptPackageConfig.Builder()
-                        .setAndroidTarget(builder.target)
-                        .setManifestFile(File(manifestFileDirectory.singleFile,
-                                SdkConstants.ANDROID_MANIFEST_XML))
-                        .setOptions(AaptOptions(null, false, null))
-                        .setLibrarySymbolTableFiles(null)
-                        .setStaticLibraryDependencies(staticLibraries.build())
-                        .setImports(sharedLibraryDependencies.files)
-                        .setSourceOutputDir(rClassSource)
-                        .setResourceOutputApk(resourceApUnderscore)
-                        .setVariantType(VariantType.LIBRARY)
-                        .setLogger(iLogger)
-                        .setBuildToolInfo(builder.buildToolInfo)
-                        .setIntermediateDir(aaptIntermediateDir)
-                        .build()
+        val config = AaptPackageConfig(
+                androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
+                manifestFile = (File(manifestFileDirectory.singleFile,
+                        SdkConstants.ANDROID_MANIFEST_XML)),
+                options = AaptOptions(null, false, null),
+                staticLibraryDependencies = staticLibraries.build(),
+                imports = ImmutableList.copyOf(sharedLibraryDependencies.asIterable()),
+                sourceOutputDir = rClassSource,
+                resourceOutputApk = resourceApUnderscore,
+                variantType = VariantType.LIBRARY,
+                intermediateDir = aaptIntermediateDir)
 
         QueueableAapt2(
                 LoggedProcessOutputHandler(iLogger),
                 builder.targetInfo!!.buildTools,
                 AaptGradleFactory.FilteringLogger(builder.logger),
                 0 /* use default */).use { aapt ->
-            aapt.link(config)
+            aapt.link(config, iLogger)
         }
     }
 

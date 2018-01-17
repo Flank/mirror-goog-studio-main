@@ -134,7 +134,7 @@ class BlameFileTest {
                 + "ADDED from \${ROOT}/app/src/main/AndroidManifest.xml:12:9-18:20\n"
                 + "\tandroid:name\n"
                 + "\t\tADDED from \${ROOT}/app/src/main/AndroidManifest.xml:12:19-47\n"
-                + "intent-filter#android.intent.action.MAIN+android.intent.category.LAUNCHER\n"
+                + "intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER\n"
                 + "ADDED from \${ROOT}/app/src/main/AndroidManifest.xml:13:13-17:29\n"
                 + "action#android.intent.action.MAIN\n"
                 + "ADDED from \${ROOT}/app/src/main/AndroidManifest.xml:14:17-69\n"

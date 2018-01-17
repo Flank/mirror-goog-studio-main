@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.transforms;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Verify.verifyNotNull;
 import static com.google.common.truth.Truth.assertThat;

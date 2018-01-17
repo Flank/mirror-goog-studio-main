@@ -19,6 +19,7 @@ import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_COLOR;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_WIDTH;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -26,12 +27,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 /** Parent class for a SVG file's node, can be either group or leaf element. */
 abstract class SvgNode {
     private static final Logger logger = Logger.getLogger(SvgNode.class.getSimpleName());
+
+    protected static final String INDENT_UNIT = "  ";
+    protected static final String CONTINUATION_INDENT = INDENT_UNIT + INDENT_UNIT;
 
     private static final String TRANSFORM_TAG = "transform";
 
@@ -84,13 +89,13 @@ abstract class SvgNode {
         }
     }
 
-    protected void parseLocalTransform(String nodeValue) {
+    protected void parseLocalTransform(@NonNull String nodeValue) {
         // We separate the string into multiple parts and look like this:
         // "translate" "30" "rotate" "4.5e1  5e1  50"
         nodeValue = nodeValue.replaceAll(",", " ");
-        String[] matrices = nodeValue.split("\\(|\\)");
+        String[] matrices = nodeValue.split("[()]");
         AffineTransform parsedTransform;
-        for (int i = 0; i < matrices.length -1; i += 2) {
+        for (int i = 0; i < matrices.length - 1; i += 2) {
             parsedTransform = parseOneTransform(matrices[i].trim(), matrices[i+1].trim());
             if (parsedTransform != null) {
                 mLocalTransform.concatenate(parsedTransform);
@@ -98,9 +103,12 @@ abstract class SvgNode {
         }
     }
 
-    @NonNull
+    @Nullable
     private static AffineTransform parseOneTransform(String type, String data) {
         float[] numbers = getNumbers(data);
+        if (numbers == null) {
+            return null;
+        }
         int numLength = numbers.length;
         AffineTransform parsedTransform = new AffineTransform();
 
@@ -146,6 +154,7 @@ abstract class SvgNode {
         return parsedTransform;
     }
 
+    @Nullable
     private static float[] getNumbers(String data) {
         String[] numbers = data.split("\\s+");
         int len = numbers.length;
@@ -177,8 +186,15 @@ abstract class SvgNode {
      */
     public abstract void dumpNode(String indent);
 
-    /** Writes the Node content into the VectorDrawable's XML file. */
-    public abstract void writeXML(OutputStreamWriter writer, boolean inClipPath) throws IOException;
+     /**
+     * Writes content of the node into the VectorDrawable's XML file.
+     *
+     * @param writer the writer to write the group XML element to
+     * @param inClipPath boolean to flag whether the pathData should be apart of clip-path or not
+     * @param indent whitespace used for indending output XML
+     */
+    public abstract void writeXML(@NonNull OutputStreamWriter writer, boolean inClipPath,
+            @NonNull String indent) throws IOException;
 
     /**
      * Returns true the node is a group node.

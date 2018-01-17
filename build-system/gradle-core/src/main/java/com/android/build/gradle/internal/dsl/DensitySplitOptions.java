@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.resources.Density;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -24,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 
 /**
  * DSL object for configuring per-density splits options.
@@ -35,6 +37,12 @@ public class DensitySplitOptions extends SplitOptions {
     private boolean strict = true;
     private boolean auto = false;
     private Set<String> compatibleScreens;
+    private final DeprecationReporter deprecationReporter;
+
+    @Inject
+    public DensitySplitOptions(@NonNull DeprecationReporter deprecationReporter) {
+        this.deprecationReporter = deprecationReporter;
+    }
 
     @Override
     protected Set<String> getDefaultValues() {
@@ -113,6 +121,9 @@ public class DensitySplitOptions extends SplitOptions {
      *             to use the include list.
      */
     public void setAuto(boolean auto) {
+        deprecationReporter.reportObsoleteUsage(
+                "DensitySplitOptions.auto",
+                DeprecationReporter.DeprecationTarget.AUTO_SPLITS_OR_RES_CONFIG);
         this.auto = auto;
     }
 

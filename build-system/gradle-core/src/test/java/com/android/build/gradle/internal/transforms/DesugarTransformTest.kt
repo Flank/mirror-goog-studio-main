@@ -21,7 +21,7 @@ import com.android.build.api.transform.TransformInvocation
 import com.android.build.api.transform.TransformOutputProvider
 import com.android.ide.common.internal.WaitableExecutor
 import com.android.ide.common.process.JavaProcessExecutor
-import com.android.testutils.truth.MoreTruth
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.collect.Iterables
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -149,8 +149,8 @@ class DesugarTransformTest {
 
         val cacheMisses = transform.cacheMisses
         assertThat(cacheMisses).hasSize(0)
-        MoreTruth.assertThat(outputJar).doesNotExist()
-        MoreTruth.assertThat(outputDir).doesNotExist()
+        assertThat(outputJar).doesNotExist()
+        assertThat(outputDir).doesNotExist()
     }
 
     @Test
@@ -206,7 +206,7 @@ class DesugarTransformTest {
 
         val onlyMiss = Iterables.getOnlyElement(transform.cacheMisses)
         // the changed files should be copied to a temporary directory
-        MoreTruth.assertThat(onlyMiss.inputPath).isNotEqualTo(dir)
+        assertThat(onlyMiss.inputPath).isNotEqualTo(dir)
         assertThat(
                 Files.walk(onlyMiss.inputPath)
                         .filter { Files.isRegularFile(it) }
@@ -239,7 +239,7 @@ class DesugarTransformTest {
         val changedFiles = changed.keys.map { it.name }
 
         val onlyMiss = Iterables.getOnlyElement(transform.cacheMisses)
-        MoreTruth.assertThat(onlyMiss.inputPath).isEqualTo(dir)
+        assertThat(onlyMiss.inputPath).isEqualTo(dir)
         assertThat(
                 Files.walk(onlyMiss.inputPath)
                         .filter { Files.isRegularFile(it) }
@@ -279,7 +279,7 @@ class DesugarTransformTest {
         val transform = runTransform(invocation)
 
         val onlyMiss = Iterables.getOnlyElement(transform.cacheMisses)
-        MoreTruth.assertThat(onlyMiss.inputPath).isNotEqualTo(dir)
+        assertThat(onlyMiss.inputPath).isNotEqualTo(dir)
         assertThat(
                 Files.walk(onlyMiss.inputPath)
                         .filter { Files.isRegularFile(it) }
@@ -287,9 +287,9 @@ class DesugarTransformTest {
                         .toList())
                 .containsExactly("A.class", "AA.class", "AAA.class")
 
-        MoreTruth.assertThat(outputDir.resolve("A.class")).doesNotExist()
-        MoreTruth.assertThat(outputDir.resolve("AA.class")).doesNotExist()
-        MoreTruth.assertThat(outputDir.resolve("AAA.class")).doesNotExist()
+        assertThat(outputDir.resolve("A.class")).doesNotExist()
+        assertThat(outputDir.resolve("AA.class")).doesNotExist()
+        assertThat(outputDir.resolve("AAA.class")).doesNotExist()
     }
 
     @Test
@@ -310,7 +310,7 @@ class DesugarTransformTest {
         val transform = runTransform(invocation, setOf(additionalClassFile.toFile()))
 
         val onlyMiss = Iterables.getOnlyElement(transform.cacheMisses)
-        MoreTruth.assertThat(onlyMiss.inputPath).isNotEqualTo(dir)
+        assertThat(onlyMiss.inputPath).isNotEqualTo(dir)
         assertThat(
                 Files.walk(onlyMiss.inputPath)
                         .filter { Files.isRegularFile(it) }

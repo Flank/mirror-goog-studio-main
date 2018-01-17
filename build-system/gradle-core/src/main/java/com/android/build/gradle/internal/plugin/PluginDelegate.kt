@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.variant2.DslModelDataImpl
 import com.android.build.gradle.internal.variant2.VariantBuilder
 import com.android.build.gradle.internal.variant2.VariantFactory2
 import com.android.build.gradle.internal.variant2.VariantModelData
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.errors.EvalIssueReporter
@@ -94,18 +93,13 @@ class PluginDelegate<out E: BaseExtension2>(
     private val deprecationReporter = DeprecationReporterImpl(issueReporter, projectPath)
 
     init {
-        if (projectOptions.hasDeprecatedOptions()) {
+        if (projectOptions.hasRemovedOptions()) {
             issueReporter.reportError(
-                    EvalIssueReporter.Type.GENERIC, projectOptions.deprecatedOptionsErrorMessage)
+                    EvalIssueReporter.Type.GENERIC, projectOptions.removedOptionsErrorMessage)
         }
-        // b/67675308
-        if (!projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
-            issueReporter.reportWarning(
-                    EvalIssueReporter.Type.GENERIC,
-                    String.format(
-                            "AAPT is deprecated and support for it will be soon removed. " +
-                                    "Remove the '%s=false' flag to enable AAPT2.",
-                            BooleanOption.ENABLE_AAPT2.propertyName))
+
+        if (projectOptions.hasDeprecatedOptions()) {
+            deprecationReporter.reportDeprecatedOptions(projectOptions.deprecatedOptions)
         }
     }
 

@@ -127,7 +127,7 @@ public class CompatibleScreensManifest extends AndroidVariantTask {
         StringBuilder content = new StringBuilder();
         content.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
                 .append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
-                .append("    package=\"\">\n")
+                .append("    package=\"${packageName}\">\n")
                 .append("\n");
         if (minSdkVersion.get() != null) {
             content.append("    <uses-sdk android:minSdkVersion=\"")

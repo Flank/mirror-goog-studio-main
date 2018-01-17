@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.sdk;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.SdkConstants;
@@ -71,7 +72,7 @@ public class SdkAutoDownloadTest {
             + System.lineSeparator()
             + "target_link_libraries(hello-jni log)";
 
-    private static final String BUILD_TOOLS_VERSION = "27.0.1";
+    private static final String BUILD_TOOLS_VERSION = "27.0.3";
     private static final String PLATFORM_VERSION = "26";
 
     @Rule

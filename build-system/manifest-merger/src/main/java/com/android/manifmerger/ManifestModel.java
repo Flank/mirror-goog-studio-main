@@ -28,18 +28,11 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.utils.SdkUtils;
 import com.android.xml.AndroidManifest;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  * Model for the manifest file merging activities.
@@ -54,38 +47,14 @@ import org.w3c.dom.NodeList;
 class ManifestModel {
 
     /**
-     * Interface responsible for providing a key extraction capability from a xml element.
-     * Some elements store their keys as an attribute, some as a sub-element attribute, some don't
-     * have any key.
-     */
-    @Immutable
-    interface NodeKeyResolver {
-
-        /**
-         * Returns the key associated with this xml element.
-         * @param xmlElement the xml element to get the key from
-         * @return the key as a string to uniquely identify xmlElement from similarly typed elements
-         * in the xml document or null if there is no key.
-         */
-        @Nullable String getKey(Element xmlElement);
-
-        /**
-         * Returns the attribute(s) used to store the xml element key.
-         * @return the key attribute(s) name(s) or null of this element does not have a key.
-         */
-        @NonNull
-        ImmutableList<String> getKeyAttributesNames();
-    }
-
-    /**
-     * Implementation of {@link com.android.manifmerger.ManifestModel.NodeKeyResolver} that do not
-     * provide any key (the element has to be unique in the xml document).
+     * Implementation of {@link NodeKeyResolver} that do not provide any key (the element has to be
+     * unique in the xml document).
      */
     private static class NoKeyNodeResolver implements NodeKeyResolver {
 
         @Override
         @Nullable
-        public String getKey(Element xmlElement) {
+        public String getKey(@NonNull Element element) {
             return null;
         }
 
@@ -97,8 +66,7 @@ class ManifestModel {
     }
 
     /**
-     * Implementation of {@link com.android.manifmerger.ManifestModel.NodeKeyResolver} that uses an
-     * attribute to resolve the key value.
+     * Implementation of {@link NodeKeyResolver} that uses an attribute to resolve the key value.
      */
     private static class AttributeBasedNodeKeyResolver implements NodeKeyResolver {
 
@@ -119,16 +87,17 @@ class ManifestModel {
 
         @Override
         @Nullable
-        public String getKey(@NonNull Element xmlElement) {
-            String key = mNamespaceUri == null
-                ? xmlElement.getAttribute(mAttributeName)
-                : xmlElement.getAttributeNS(mNamespaceUri, mAttributeName);
+        public String getKey(@NonNull Element element) {
+            String key =
+                    mNamespaceUri == null
+                            ? element.getAttribute(mAttributeName)
+                            : element.getAttributeNS(mNamespaceUri, mAttributeName);
             if (Strings.isNullOrEmpty(key)) return null;
 
             // Resolve unqualified names
             if (key.startsWith(".") && ATTR_NAME.equals(mAttributeName) &&
                     ANDROID_URI.equals(mNamespaceUri)) {
-                Document document = xmlElement.getOwnerDocument();
+                Document document = element.getOwnerDocument();
                 if (document != null) {
                     Element root = document.getDocumentElement();
                     if (root != null) {
@@ -160,78 +129,36 @@ class ManifestModel {
     private static final NoKeyNodeResolver DEFAULT_NO_KEY_NODE_RESOLVER = new NoKeyNodeResolver();
 
     /**
-     * A {@link com.android.manifmerger.ManifestModel.NodeKeyResolver} capable of extracting the
-     * element key first in an "android:name" attribute and if not value found there, in the
-     * "android:glEsVersion" attribute.
+     * A {@link NodeKeyResolver} capable of extracting the element key first in an "android:name"
+     * attribute and if not value found there, in the "android:glEsVersion" attribute.
      */
     @Nullable
-    private static final NodeKeyResolver NAME_AND_GLESVERSION_KEY_RESOLVER = new NodeKeyResolver() {
-        private final NodeKeyResolver nameAttrResolver = DEFAULT_NAME_ATTRIBUTE_RESOLVER;
-        private final NodeKeyResolver glEsVersionResolver =
-                new AttributeBasedNodeKeyResolver(ANDROID_URI,
-                        AndroidManifest.ATTRIBUTE_GLESVERSION);
+    private static final NodeKeyResolver NAME_AND_GLESVERSION_KEY_RESOLVER =
+            new NodeKeyResolver() {
+                private final NodeKeyResolver nameAttrResolver = DEFAULT_NAME_ATTRIBUTE_RESOLVER;
+                private final NodeKeyResolver glEsVersionResolver =
+                        new AttributeBasedNodeKeyResolver(
+                                ANDROID_URI, AndroidManifest.ATTRIBUTE_GLESVERSION);
 
-        @Nullable
-        @Override
-        public String getKey(Element xmlElement) {
-            @Nullable String key = nameAttrResolver.getKey(xmlElement);
-            return Strings.isNullOrEmpty(key)
-                    ? glEsVersionResolver.getKey(xmlElement)
-                    : key;
-        }
-
-        @NonNull
-        @Override
-        public ImmutableList<String> getKeyAttributesNames() {
-            return ImmutableList.of(SdkConstants.ATTR_NAME, AndroidManifest.ATTRIBUTE_GLESVERSION);
-        }
-    };
-
-    /**
-     * Specific {@link com.android.manifmerger.ManifestModel.NodeKeyResolver} for intent-filter
-     * elements.
-     * Intent filters do not have a proper key, therefore their identity is really carried by
-     * the presence of the action and category sub-elements.
-     * We concatenate such elements sub-keys (after sorting them to work around declaration order)
-     * and use that for the intent-filter unique key.
-     */
-    @Nullable
-    private static final NodeKeyResolver INTENT_FILTER_KEY_RESOLVER = new NodeKeyResolver() {
-        @Nullable
-        @Override
-        public String getKey(@NonNull Element element) {
-            @NonNull OrphanXmlElement xmlElement = new OrphanXmlElement(element);
-            assert(xmlElement.getType() == NodeTypes.INTENT_FILTER);
-            // concatenate all actions and categories attribute names.
-            @NonNull List<String> allSubElementKeys = new ArrayList<String>();
-            NodeList childNodes = element.getChildNodes();
-            for (int i = 0; i < childNodes.getLength(); i++) {
-                Node child = childNodes.item(i);
-                if (child.getNodeType() != Node.ELEMENT_NODE) continue;
-                @NonNull OrphanXmlElement subElement = new OrphanXmlElement((Element) child);
-                if (subElement.getType() == NodeTypes.ACTION
-                        || subElement.getType() == NodeTypes.CATEGORY) {
-                    Attr nameAttribute = subElement.getXml()
-                            .getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
-                    if (nameAttribute != null) {
-                        allSubElementKeys.add(nameAttribute.getValue());
-                    }
+                @Nullable
+                @Override
+                public String getKey(@NonNull Element element) {
+                    @Nullable String key = nameAttrResolver.getKey(element);
+                    return Strings.isNullOrEmpty(key) ? glEsVersionResolver.getKey(element) : key;
                 }
-            }
-            Collections.sort(allSubElementKeys);
-            return Joiner.on('+').join(allSubElementKeys);
-        }
 
-        @NonNull
-        @Override
-        public ImmutableList<String> getKeyAttributesNames() {
-            return ImmutableList.of("action#name", "category#name");
-        }
-    };
+                @NonNull
+                @Override
+                public ImmutableList<String> getKeyAttributesNames() {
+                    return ImmutableList.of(
+                            SdkConstants.ATTR_NAME, AndroidManifest.ATTRIBUTE_GLESVERSION);
+                }
+            };
+;
 
     /**
-     * Implementation of {@link com.android.manifmerger.ManifestModel.NodeKeyResolver} that
-     * combined two attributes values to create the key value.
+     * Implementation of {@link NodeKeyResolver} that combined two attributes values to create the
+     * key value.
      */
     private static final class TwoAttributesBasedKeyResolver implements NodeKeyResolver {
         private final NodeKeyResolver firstAttributeKeyResolver;
@@ -245,9 +172,9 @@ class ManifestModel {
 
         @Nullable
         @Override
-        public String getKey(Element xmlElement) {
-            @Nullable String firstKey = firstAttributeKeyResolver.getKey(xmlElement);
-            @Nullable String secondKey = secondAttributeKeyResolver.getKey(xmlElement);
+        public String getKey(@NonNull Element element) {
+            @Nullable String firstKey = firstAttributeKeyResolver.getKey(element);
+            @Nullable String secondKey = secondAttributeKeyResolver.getKey(element);
 
             return Strings.isNullOrEmpty(firstKey)
                     ? secondKey
@@ -270,35 +197,36 @@ class ManifestModel {
     private static final boolean MULTIPLE_DECLARATION_FOR_SAME_KEY_ALLOWED = true;
 
     /**
-     * Definitions of the support node types in the Android Manifest file.
-     * {@link <a href=http://developer.android.com/guide/topics/manifest/manifest-intro.html>}
-     * for more details about the xml format.
+     * Definitions of the support node types in the Android Manifest file. {@link <a
+     * href=http://developer.android.com/guide/topics/manifest/manifest-intro.html>} for more
+     * details about the xml format.
      *
-     * There is no DTD or schema associated with the file type so this is best effort in providing
-     * some metadata on the elements of the Android's xml file.
+     * <p>There is no DTD or schema associated with the file type so this is best effort in
+     * providing some metadata on the elements of the Android's xml file.
      *
-     * Each xml element is defined as an enum value and for each node, extra metadata is added
+     * <p>Each xml element is defined as an enum value and for each node, extra metadata is added
+     *
      * <ul>
-     *     <li>{@link com.android.manifmerger.MergeType} to identify how the merging engine
-     *     should process this element.</li>
-     *     <li>{@link com.android.manifmerger.ManifestModel.NodeKeyResolver} to resolve the
-     *     element's key. Elements can have an attribute like "android:name", others can use
-     *     a sub-element, and finally some do not have a key and are meant to be unique.</li>
-     *     <li>List of attributes models with special behaviors :
-     *     <ul>
+     *   <li>{@link com.android.manifmerger.MergeType} to identify how the merging engine should
+     *       process this element.
+     *   <li>{@link NodeKeyResolver} to resolve the element's key. Elements can have an attribute
+     *       like "android:name", others can use a sub-element, and finally some do not have a key
+     *       and are meant to be unique.
+     *   <li>List of attributes models with special behaviors :
+     *       <ul>
      *         <li>Smart substitution of class names to fully qualified class names using the
-     *         document's package declaration. The list's size can be 0..n</li>
-     *         <li>Implicit default value when no defined on the xml element.</li>
-     *         <li>{@link AttributeModel.Validator} to validate attribute value against.</li>
-     *     </ul>
+     *             document's package declaration. The list's size can be 0..n
+     *         <li>Implicit default value when no defined on the xml element.
+     *         <li>{@link AttributeModel.Validator} to validate attribute value against.
+     *       </ul>
      * </ul>
      *
      * It is of the outermost importance to keep this model correct as it is used by the merging
      * engine to make all its decisions. There should not be special casing in the engine, all
      * decisions must be represented here.
      *
-     * If you find yourself needing to extend the model to support future requirements, do it here
-     * and modify the engine to make proper decision based on the added metadata.
+     * <p>If you find yourself needing to extend the model to support future requirements, do it
+     * here and modify the engine to make proper decision based on the added metadata.
      */
     enum NodeTypes {
 
@@ -400,13 +328,14 @@ class ManifestModel {
         ),
 
         /**
-         * Intent-filter (contained in activity, activity-alias, service, receiver)
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/intent-filter-element.html>
-         *     Intent-filter Xml documentation</a>}
+         * Intent-filter (contained in activity, activity-alias, service, receiver) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/intent-filter-element.html>
+         * Intent-filter Xml documentation</a>}
          */
-        INTENT_FILTER(MergeType.ALWAYS, INTENT_FILTER_KEY_RESOLVER,
+        INTENT_FILTER(
+                MergeType.ALWAYS,
+                IntentFilterNodeKeyResolver.INSTANCE,
                 MULTIPLE_DECLARATION_FOR_SAME_KEY_ALLOWED),
 
         /**

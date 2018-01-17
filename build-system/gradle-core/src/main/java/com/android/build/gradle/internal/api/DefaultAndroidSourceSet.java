@@ -102,6 +102,8 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
 
         String shaderDisplayName = displayName + " shaders";
         shaders = new DefaultAndroidSourceDirectorySet(shaderDisplayName, project);
+
+        setRoot("src/" + getName());
     }
 
     @Override

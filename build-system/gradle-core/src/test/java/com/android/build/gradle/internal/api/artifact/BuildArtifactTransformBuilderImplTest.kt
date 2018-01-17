@@ -26,7 +26,7 @@ import com.android.build.api.artifact.InputArtifactProvider
 import com.android.build.api.artifact.OutputFileProvider
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.scope.BuildArtifactHolder
-import com.android.testutils.truth.MoreTruth.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task

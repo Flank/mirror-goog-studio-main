@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.truth.Truth.assert_;
+
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.integration.common.utils.ApkHelper;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
@@ -63,6 +66,11 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
 
     public ApkSubject(@NonNull FailureStrategy failureStrategy, @NonNull Apk subject) {
         super(failureStrategy, subject);
+    }
+
+    @NonNull
+    public static ApkSubject assertThat(@Nullable Apk apk) {
+        return assert_().about(ApkSubject.FACTORY).that(apk);
     }
 
     @NonNull

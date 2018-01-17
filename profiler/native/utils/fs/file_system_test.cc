@@ -311,13 +311,12 @@ TEST(FileSystem, WalkDirectoriesWithMaxDepthWorks) {
 
   {
     set<string> files;
-    root->Walk(
-        [&files](const PathStat &pstat) {
-          if (pstat.type() == PathStat::Type::FILE) {
-            files.insert(pstat.rel_path());
-          }
-        },
-        3);
+    root->Walk([&files](const PathStat &pstat) {
+                 if (pstat.type() == PathStat::Type::FILE) {
+                   files.insert(pstat.rel_path());
+                 }
+               },
+               3);
 
     EXPECT_TRUE(files.find("file01") != files.end());
     EXPECT_TRUE(files.find("dir1/file11") != files.end());
@@ -330,13 +329,12 @@ TEST(FileSystem, WalkDirectoriesWithMaxDepthWorks) {
 
   {
     set<string> files;
-    root->Walk(
-        [&files](const PathStat &pstat) {
-          if (pstat.type() == PathStat::Type::FILE) {
-            files.insert(pstat.rel_path());
-          }
-        },
-        1);
+    root->Walk([&files](const PathStat &pstat) {
+                 if (pstat.type() == PathStat::Type::FILE) {
+                   files.insert(pstat.rel_path());
+                 }
+               },
+               1);
 
     EXPECT_TRUE(files.find("file01") != files.end());
     EXPECT_EQ(files.size(), 1u);
@@ -344,13 +342,12 @@ TEST(FileSystem, WalkDirectoriesWithMaxDepthWorks) {
 
   {
     set<string> files;
-    root->Walk(
-        [&files](const PathStat &pstat) {
-          if (pstat.type() == PathStat::Type::FILE) {
-            files.insert(pstat.rel_path());
-          }
-        },
-        0);
+    root->Walk([&files](const PathStat &pstat) {
+                 if (pstat.type() == PathStat::Type::FILE) {
+                   files.insert(pstat.rel_path());
+                 }
+               },
+               0);
 
     EXPECT_EQ(files.size(), 0u);
   }
@@ -581,4 +578,18 @@ TEST(FileSystem, MovingFileIsNoOpIfFileIsMovedInPlace) {
   EXPECT_EQ(f1->Contents(), "Test contents");
   EXPECT_TRUE(f2->Exists());
   EXPECT_EQ(f2->Contents(), "Test contents");
+}
+
+TEST(FileSystem, GetFileSize) {
+  MemoryFileSystem fs;
+  auto root = fs.NewDir("/mock/root");
+
+  auto f1 = root->NewFile("f1.txt");
+  f1->OpenForWrite();
+  f1->Append("Test contents");
+  f1->Close();
+
+  EXPECT_TRUE(f1->Exists());
+  EXPECT_EQ(f1->Contents(), "Test contents");
+  EXPECT_EQ(f1->size(), strlen("Test contents"));
 }

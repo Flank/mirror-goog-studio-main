@@ -1,11 +1,11 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.ProjectBuildOutput;
@@ -66,7 +66,7 @@ public class ArchivesBaseNameTest {
 
         File outputFile = debugBuildOutput.getOutputs().iterator().next().getOutputFile();
 
-        TruthHelper.assertThat(outputFile.getName()).isEqualTo(name + "-debug." + extension);
-        TruthHelper.assertThat(outputFile).isFile();
+        assertThat(outputFile.getName()).isEqualTo(name + "-debug." + extension);
+        assertThat(outputFile).isFile();
     }
 }

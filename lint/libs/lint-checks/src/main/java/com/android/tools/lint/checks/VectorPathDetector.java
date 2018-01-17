@@ -289,8 +289,20 @@ public class VectorPathDetector extends ResourceXmlDetector {
                 String number = s.substring(startPosition, currentIndex);
                 String replace = number.startsWith(".")
                         ? ("0" + number) : ("-0." + number.substring(2));
+
                 String message = String.format("Use %1$s instead of %2$s to avoid crashes "
                         + "on some devices", replace, number);
+
+                if (number.startsWith(".") &&
+                        startPosition > 0 && Character.isDigit(s.charAt(startPosition-1))) {
+                    // Some SVG files pack numbers adjacent to each other without a separating
+                    // space when the dot implies a space, e.g. "1.2.3" is the number "1.2"
+                    // followed by ".3" (0.3). If we just replace the ".3" with "0.3" we end
+                    // up with "1.20.3", which is the same as before: 1.20 and 0.3. We need
+                    // a separating space here: "1.2 0.3"
+                    replace = " " + replace;
+                }
+
                 reportInvalidPathData(context, attribute, s, startPosition, currentIndex, number,
                         replace, message);
             }
@@ -320,7 +332,13 @@ public class VectorPathDetector extends ResourceXmlDetector {
                     startPos.getOffset() + startPosition,
                     startPos.getOffset() + currentIndex);
             if (replace != null) {
-                lintFix = fix().replace().text(number).with(replace).build();
+                lintFix = fix()
+                        .name("Replace with " + replace.trim())
+                        .replace()
+                        .text(number)
+                        .with(replace)
+                        .range(location)
+                        .build();
             }
         }
 

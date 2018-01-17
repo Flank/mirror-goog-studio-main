@@ -16,82 +16,49 @@
 
 package com.android.testutils.truth;
 
-import static com.google.common.truth.Truth.assert_;
-import static com.google.common.truth.TruthJUnit.assume;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.apk.Zip;
-import com.android.testutils.incremental.FileRecord;
-import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
-import com.google.common.truth.SubjectFactory;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * Additional entry point to {@link Truth} framework for custom {@link Subject}.
  */
 public class MoreTruth {
+
     @NonNull
-    public static FileSubject assertThat(@Nullable File file) {
-        return assert_().about(FileSubjectFactory.factory()).that(file);
+    public static ZipFileSubject assertThat(@NonNull Zip zip) throws IOException {
+        return ZipFileSubject.assertThat(zip);
     }
 
     @NonNull
-    public static PathSubject assertThat(@Nullable Path path) {
-        return assert_().about(PathSubject.FACTORY).that(path);
+    public static ZipFileSubject assertThatZip(@NonNull File file) throws IOException {
+        return ZipFileSubject.assertThatZip(file);
     }
 
     @NonNull
-    public static PathSubject assumeThat(@NonNull Path path) {
-        return assume().about(PathSubject.FACTORY).that(path);
-    }
-
-    public static FileRecordSubject assertThat(@NonNull FileRecord fileRecord) {
-        return assert_().about(FileRecordSubject.FACTORY).that(fileRecord);
-    }
-
-    @NonNull
-    public static ZipFileSubject assertThat(@Nullable Zip zip) throws IOException {
-        return  assert_().about(ZipFileSubject.FACTORY).that(zip);
-    }
-
-    @NonNull
-    public static ZipFileSubject assertThatZip(@Nullable File file) throws IOException {
-        Zip zip = new Zip(file.toPath());
-        return assert_().about(ZipFileSubject.FACTORY).that(zip);
-    }
-
-    @NonNull
-    public static ZipFileSubject assertThatZip(@Nullable Zip zip) throws IOException {
-        return assert_().about(ZipFileSubject.FACTORY).that(zip);
+    public static ZipFileSubject assertThatZip(@NonNull Zip zip) throws IOException {
+        return assertThat(zip);
     }
 
     @NonNull
     public static DexSubject assertThatDex(@Nullable File dex) {
-        return assertThat(dex != null ? new Dex(dex.toPath()) : null);
+        return DexSubject.assertThatDex(dex);
     }
 
     @NonNull
     public static DexSubject assertThat(@Nullable Dex dex) {
-        return assert_().about(DexSubject.FACTORY).that(dex);
+        return DexSubject.assertThat(dex);
     }
 
     @NonNull
     public static <T> Java8OptionalSubject<T> assertThat(
             @SuppressWarnings("OptionalUsedAsFieldOrParameterType") @NonNull
                     java.util.Optional<T> optional) {
-        // need to create a new factory here so that it's generic
-        return assert_().about(new SubjectFactory<Java8OptionalSubject<T>, Optional<T>>() {
-            @Override
-            public Java8OptionalSubject<T> getSubject(FailureStrategy fs, java.util.Optional<T> that) {
-                return new Java8OptionalSubject<>(fs, that);
-            }
-        }).that(optional);
+        return Java8OptionalSubject.assertThat(optional);
     }
 }

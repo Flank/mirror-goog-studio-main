@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
+import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -162,6 +163,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
     private VariantFactory variantFactory;
 
+    private SourceSetManager sourceSetManager;
+
     private ToolingModelBuilderRegistry registry;
 
     private LoggerWrapper loggerWrapper;
@@ -193,6 +196,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
+            @NonNull SourceSetManager sourceSetManager,
             @NonNull ExtraModelInfo extraModelInfo);
 
     @NonNull
@@ -355,22 +359,16 @@ public abstract class BasePlugin<E extends BaseExtension2>
         dataBindingBuilder.setPrintMachineReadableOutput(
                 SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
-        if (projectOptions.hasDeprecatedOptions()) {
+        if (projectOptions.hasRemovedOptions()) {
             androidBuilder
                     .getIssueReporter()
-                    .reportWarning(Type.GENERIC, projectOptions.getDeprecatedOptionsErrorMessage());
+                    .reportWarning(Type.GENERIC, projectOptions.getRemovedOptionsErrorMessage());
         }
 
-        // b/67675308
-        if (!projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
-            androidBuilder
-                    .getIssueReporter()
-                    .reportWarning(
-                            Type.GENERIC,
-                            String.format(
-                                    "AAPT is deprecated and support for it will be soon removed. "
-                                            + "Remove the '%s=false' flag to enable AAPT2.",
-                                    BooleanOption.ENABLE_AAPT2.getPropertyName()));
+        if (projectOptions.hasDeprecatedOptions()) {
+            extraModelInfo
+                    .getDeprecationReporter()
+                    .reportDeprecatedOptions(projectOptions.getDeprecatedOptions());
         }
 
         // Apply the Java plugin
@@ -388,22 +386,22 @@ public abstract class BasePlugin<E extends BaseExtension2>
         gradle.addBuildListener(
                 new BuildListener() {
                     @Override
-                    public void buildStarted(Gradle gradle) {
+                    public void buildStarted(@NonNull Gradle gradle) {
                         TaskInputHelper.enableBypass();
                         BuildableArtifactImpl.Companion.disableResolution();
                     }
 
                     @Override
-                    public void settingsEvaluated(Settings settings) {}
+                    public void settingsEvaluated(@NonNull Settings settings) {}
 
                     @Override
-                    public void projectsLoaded(Gradle gradle) {}
+                    public void projectsLoaded(@NonNull Gradle gradle) {}
 
                     @Override
-                    public void projectsEvaluated(Gradle gradle) {}
+                    public void projectsEvaluated(@NonNull Gradle gradle) {}
 
                     @Override
-                    public void buildFinished(BuildResult buildResult) {
+                    public void buildFinished(@NonNull BuildResult buildResult) {
                         // Do not run buildFinished for included project in composite build.
                         if (buildResult.getGradle().getParent() != null) {
                             return;
@@ -486,7 +484,11 @@ public abstract class BasePlugin<E extends BaseExtension2>
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
                 project.container(
                         ProductFlavor.class,
-                        new ProductFlavorFactory(objectFactory, project, project.getLogger()));
+                        new ProductFlavorFactory(
+                                objectFactory,
+                                project,
+                                extraModelInfo.getDeprecationReporter(),
+                                project.getLogger()));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
                 project.container(
                         SigningConfig.class,
@@ -499,6 +501,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         project.getExtensions().add("buildOutputs", buildOutputs);
 
+        sourceSetManager = createSourceSetManager();
+
         extension =
                 createExtension(
                         project,
@@ -509,6 +513,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         productFlavorContainer,
                         signingConfigContainer,
                         buildOutputs,
+                        sourceSetManager,
                         extraModelInfo);
 
         ndkHandler =
@@ -558,6 +563,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         extension,
                         variantFactory,
                         taskManager,
+                        sourceSetManager,
                         threadRecorder);
 
         registerModels(registry, globalScope, variantManager, extension, extraModelInfo);
@@ -751,6 +757,10 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         BaseVariantData variantData = variantScope.getVariantData();
                         apiObjectFactory.create(variantData);
                     }
+
+                    // Make sure no SourceSets were added through the DSL without being properly configured
+                    sourceSetManager.checkForUnconfiguredSourceSets();
+
                     // must run this after scopes are created so that we can configure kotlin
                     // kapt tasks
                     taskManager.addDataBindingDependenciesIfNecessary(
@@ -1040,5 +1050,21 @@ public abstract class BasePlugin<E extends BaseExtension2>
             // if kotlin plugin code changes unexpectedly.
             return "unknown";
         }
+    }
+
+    private SourceSetManager createSourceSetManager() {
+        return new SourceSetManager(
+                project,
+                isPackagePublished(),
+                extraModelInfo.getDeprecationReporter(),
+                extraModelInfo.getSyncIssueHandler());
+    }
+
+    /**
+     * If overridden in a subclass to return "true," the package Configuration will be named
+     * "publish" instead of "apk"
+     */
+    protected boolean isPackagePublished() {
+        return false;
     }
 }

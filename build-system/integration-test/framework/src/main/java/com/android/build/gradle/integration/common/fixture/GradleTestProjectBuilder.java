@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 
 public final class GradleTestProjectBuilder {
@@ -53,6 +54,8 @@ public final class GradleTestProjectBuilder {
     private boolean withDeviceProvider = true;
     private boolean withSdk = true;
     private boolean withAndroidGradlePlugin = true;
+    // list of included builds, relative to the main testDir
+    private List<String> withIncludedBuilds = Lists.newArrayList();
 
     /** Create a GradleTestProject. */
     @NonNull
@@ -75,6 +78,7 @@ public final class GradleTestProjectBuilder {
                 withDeviceProvider,
                 withSdk,
                 withAndroidGradlePlugin,
+                withIncludedBuilds,
                 testDir);
     }
 
@@ -111,6 +115,16 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder withTestDir(File testDir) {
         this.testDir = testDir;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withIncludedBuilds(String relativePath) {
+        withIncludedBuilds.add(relativePath);
+        return this;
+    }
+
+    public GradleTestProjectBuilder withIncludedBuilds(String... relativePaths) {
+        withIncludedBuilds.addAll(Arrays.asList(relativePaths));
         return this;
     }
 

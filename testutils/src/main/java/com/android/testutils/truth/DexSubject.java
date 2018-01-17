@@ -26,6 +26,8 @@ import com.google.common.collect.Sets;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
+import com.google.common.truth.Truth;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
@@ -43,6 +45,16 @@ public class DexSubject extends Subject<DexSubject, Dex> {
 
     private DexSubject(@NonNull FailureStrategy fs, @Nullable Dex that) {
         super(fs, that);
+    }
+
+    @NonNull
+    public static DexSubject assertThat(@Nullable Dex dex) {
+        return Truth.assert_().about(DexSubject.FACTORY).that(dex);
+    }
+
+    @NonNull
+    public static DexSubject assertThatDex(@Nullable File dex) {
+        return assertThat(dex != null ? new Dex(dex.toPath()) : null);
     }
 
     public IndirectSubject<DexClassSubject> containsClass(@NonNull String className)

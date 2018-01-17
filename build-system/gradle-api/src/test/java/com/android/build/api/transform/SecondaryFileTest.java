@@ -16,7 +16,7 @@
 
 package com.android.build.api.transform;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import java.io.File;

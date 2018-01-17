@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.truth.Truth.assert_;
+
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.google.common.collect.ArrayListMultimap;
@@ -63,6 +66,12 @@ public class NativeAndroidProjectSubject
             @NonNull FailureStrategy failureStrategy,
             @NonNull NativeAndroidProject subject) {
         super(failureStrategy, subject);
+    }
+
+
+    @NonNull
+    public static NativeAndroidProjectSubject assertThat(@Nullable NativeAndroidProject project) {
+        return assert_().about(NativeAndroidProjectSubject.Factory.get()).that(project);
     }
 
     @NonNull

@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.testutils.truth.PathSubject.assertThat;
+
 import com.android.testutils.truth.MoreTruth;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -50,7 +52,7 @@ public class ZipMergingTaskTest {
         task.init(project.files(zip1, zip2), output);
         task.merge();
 
-        MoreTruth.assertThat(output).exists();
+        assertThat(output).exists();
 
         MoreTruth.assertThatZip(output).containsFileWithContent("foo.txt", "foo");
         MoreTruth.assertThatZip(output).containsFileWithContent("bar.txt", "bar");

@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
 
-import com.android.utils.FileUtils;
+import static com.android.testutils.truth.PathSubject.assertThat;
+
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;

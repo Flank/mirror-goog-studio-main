@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 

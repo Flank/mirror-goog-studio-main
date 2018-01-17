@@ -16,9 +16,14 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib;
+import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.build.gradle.options.StringOption;
@@ -113,16 +118,16 @@ public class CmakeStlMatrixTest {
     public void checkApkContent() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
-        TruthHelper.assertThatApk(apk).hasVersionCode(1);
-        TruthHelper.assertThatApk(apk).contains("lib/armeabi-v7a/libhello-jni.so");
-        TruthHelper.assertThatApk(apk).contains("lib/x86/libhello-jni.so");
+        assertThatApk(apk).hasVersionCode(1);
+        assertThatApk(apk).contains("lib/armeabi-v7a/libhello-jni.so");
+        assertThatApk(apk).contains("lib/x86/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/armeabi-v7a/libhello-jni.so");
-        TruthHelper.assertThatNativeLib(lib).isStripped();
+        assertThatNativeLib(lib).isStripped();
 
 
         lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
-        TruthHelper.assertThatNativeLib(lib).isStripped();
+        assertThatNativeLib(lib).isStripped();
     }
 
     @Test
@@ -131,74 +136,72 @@ public class CmakeStlMatrixTest {
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug");
         Apk apk = project.getApk("debug");
-        TruthHelper.assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
-        TruthHelper.assertThatApk(apk).contains("lib/x86/libhello-jni.so");
+        assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
+        assertThatApk(apk).contains("lib/x86/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
-        TruthHelper.assertThatNativeLib(lib).isStripped();
+        assertThatNativeLib(lib).isStripped();
     }
 
     @Test
     public void checkModel() throws IOException {
         project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        TruthHelper.assertThat(model.getBuildSystems())
-                .containsExactly(NativeBuildSystem.CMAKE.getName());
-        TruthHelper.assertThat(model.getBuildFiles()).hasSize(1);
-        TruthHelper.assertThat(model.getName()).isEqualTo("project");
+        assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
+        assertThat(model.getBuildFiles()).hasSize(1);
+        assertThat(model.getName()).isEqualTo("project");
         int abiCount = 2;
-        TruthHelper.assertThat(model.getArtifacts()).hasSize(abiCount * 2);
-        TruthHelper.assertThat(model.getFileExtensions()).hasSize(1);
+        assertThat(model.getArtifacts()).hasSize(abiCount * 2);
+        assertThat(model.getFileExtensions()).hasSize(1);
 
         for (File file : model.getBuildFiles()) {
-            TruthHelper.assertThat(file).isFile();
+            assertThat(file).isFile();
         }
 
         Multimap<String, NativeArtifact> groupToArtifacts = ArrayListMultimap.create();
 
         for (NativeArtifact artifact : model.getArtifacts()) {
             List<String> pathElements = TestFileUtils.splitPath(artifact.getOutputFile());
-            TruthHelper.assertThat(pathElements).contains("obj");
-            TruthHelper.assertThat(pathElements).doesNotContain("lib");
+            assertThat(pathElements).contains("obj");
+            assertThat(pathElements).doesNotContain("lib");
             groupToArtifacts.put(artifact.getGroupName(), artifact);
         }
 
-        TruthHelper.assertThat(model).hasArtifactGroupsNamed("debug", "release");
-        TruthHelper.assertThat(model).hasArtifactGroupsOfSize(abiCount);
+        assertThat(model).hasArtifactGroupsNamed("debug", "release");
+        assertThat(model).hasArtifactGroupsOfSize(abiCount);
     }
 
     @Test
     public void checkClean() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        TruthHelper.assertThat(model).hasBuildOutputCountEqualTo(4);
-        TruthHelper.assertThat(model).allBuildOutputsExist();
+        assertThat(model).hasBuildOutputCountEqualTo(4);
+        assertThat(model).allBuildOutputsExist();
         // CMake .o files are kept in -B folder which is under .externalNativeBuild/
-        TruthHelper.assertThat(model)
-                .hasExactObjectFilesInExternalNativeBuildFolder("hello-jni.c.o");
+        assertThat(model).hasExactObjectFilesInExternalNativeBuildFolder("hello-jni.c.o");
         // CMake .so files are kept in -DCMAKE_LIBRARY_OUTPUT_DIRECTORY folder which is under build/
         if (stl.endsWith("_shared")) {
-            TruthHelper.assertThat(model)
+            assertThat(model)
                     .hasExactSharedObjectFilesInBuildFolder("libhello-jni.so", "lib" + stl + ".so");
         } else {
-            TruthHelper.assertThat(model).hasExactSharedObjectFilesInBuildFolder("libhello-jni.so");
+            assertThat(model).hasExactSharedObjectFilesInBuildFolder("libhello-jni.so");
         }
 
         project.execute("clean");
-        TruthHelper.assertThat(model).noBuildOutputsExist();
-        TruthHelper.assertThat(model).hasExactObjectFilesInBuildFolder();
-        TruthHelper.assertThat(model).hasExactSharedObjectFilesInBuildFolder();
+        assertThat(model).noBuildOutputsExist();
+        assertThat(model).hasExactObjectFilesInBuildFolder();
+        assertThat(model).hasExactSharedObjectFilesInBuildFolder();
     }
 
     @Test
     public void checkCleanAfterAbiSubset() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        TruthHelper.assertThat(model).hasBuildOutputCountEqualTo(4);
+        assertThat(model).hasBuildOutputCountEqualTo(4);
 
         List<File> allBuildOutputs = Lists.newArrayList();
         for (NativeArtifact artifact : model.getArtifacts()) {
-            TruthHelper.assertThat(artifact.getOutputFile()).isFile();
+            assertThat(artifact.getOutputFile()).isFile();
             allBuildOutputs.add(artifact.getOutputFile());
         }
 
@@ -223,7 +226,7 @@ public class CmakeStlMatrixTest {
 
         // All build outputs should no longer exist, even the non-x86 outputs
         for (File output : allBuildOutputs) {
-            TruthHelper.assertThat(output).doesNotExist();
+            assertThat(output).doesNotExist();
         }
     }
 }

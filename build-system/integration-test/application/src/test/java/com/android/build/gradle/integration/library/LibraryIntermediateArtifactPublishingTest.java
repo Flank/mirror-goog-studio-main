@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;

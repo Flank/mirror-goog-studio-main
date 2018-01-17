@@ -56,16 +56,16 @@ class VdPath extends VdElement {
     private static final String PATH_TRIM_START = "android:trimPathStart";
     private static final String PATH_TRIM_END = "android:trimPathEnd";
     private static final String PATH_TRIM_OFFSET = "android:trimPathOffset";
-    private static final String PATH_STROKE_LINECAP = "android:strokeLineCap";
-    private static final String PATH_STROKE_LINEJOIN = "android:strokeLineJoin";
-    private static final String PATH_STROKE_MITERLIMIT = "android:strokeMiterLimit";
+    private static final String PATH_STROKE_LINE_CAP = "android:strokeLineCap";
+    private static final String PATH_STROKE_LINE_JOIN = "android:strokeLineJoin";
+    private static final String PATH_STROKE_MITER_LIMIT = "android:strokeMiterLimit";
 
-    private static final String LINECAP_BUTT = "butt";
-    private static final String LINECAP_ROUND = "round";
-    private static final String LINECAP_SQUARE = "square";
-    private static final String LINEJOIN_MITER = "miter";
-    private static final String LINEJOIN_ROUND = "round";
-    private static final String LINEJOIN_BEVEL = "bevel";
+    private static final String LINE_CAP_BUTT = "butt";
+    private static final String LINE_CAP_ROUND = "round";
+    private static final String LINE_CAP_SQUARE = "square";
+    private static final String LINE_JOIN_MITER = "miter";
+    private static final String LINE_JOIN_ROUND = "round";
+    private static final String LINE_JOIN_BEVEL = "bevel";
     public static final float EPSILON = 1e-6f;
 
 
@@ -461,23 +461,23 @@ class VdPath extends VdElement {
             mTrimPathEnd = Float.parseFloat(value);
         } else if (PATH_TRIM_OFFSET.equals(name)) {
             mTrimPathOffset = Float.parseFloat(value);
-        } else if (PATH_STROKE_LINECAP.equals(name)) {
-            if (LINECAP_BUTT.equals(value)) {
+        } else if (PATH_STROKE_LINE_CAP.equals(name)) {
+            if (LINE_CAP_BUTT.equals(value)) {
                 mStrokeLineCap = 0;
-            } else if (LINECAP_ROUND.equals(value)) {
+            } else if (LINE_CAP_ROUND.equals(value)) {
                 mStrokeLineCap = 1;
-            } else if (LINECAP_SQUARE.equals(value)) {
+            } else if (LINE_CAP_SQUARE.equals(value)) {
                 mStrokeLineCap = 2;
             }
-        } else if (PATH_STROKE_LINEJOIN.equals(name)) {
-            if (LINEJOIN_MITER.equals(value)) {
+        } else if (PATH_STROKE_LINE_JOIN.equals(name)) {
+            if (LINE_JOIN_MITER.equals(value)) {
                 mStrokeLineJoin = 0;
-            } else if (LINEJOIN_ROUND.equals(value)) {
+            } else if (LINE_JOIN_ROUND.equals(value)) {
                 mStrokeLineJoin = 1;
-            } else if (LINEJOIN_BEVEL.equals(value)) {
+            } else if (LINE_JOIN_BEVEL.equals(value)) {
                 mStrokeLineJoin = 2;
             }
-        } else if (PATH_STROKE_MITERLIMIT.equals(name)) {
+        } else if (PATH_STROKE_MITER_LIMIT.equals(name)) {
             mStrokeMiterlimit = Float.parseFloat(value);
         } else {
             getLogger().log(Level.WARNING, ">>>>>> DID NOT UNDERSTAND ! \"" + name + "\" <<<<");
@@ -616,8 +616,8 @@ class VdPath extends VdElement {
                 org.w3c.dom.Node stop = items.item(i);
                 if (stop.getNodeName().equals("item")) {
                     NamedNodeMap stopAttr = stop.getAttributes();
-                    String color = "";
-                    String offset = "";
+                    String color = null;
+                    String offset = null;
                     for (int j = 0; j < stopAttr.getLength(); j++) {
                         org.w3c.dom.Node currentItem = stopAttr.item(j);
                         if (currentItem.getNodeName().equals("android:color")) {
@@ -626,11 +626,11 @@ class VdPath extends VdElement {
                             offset = currentItem.getNodeValue();
                         }
                     }
-                    if (color.isEmpty()) {
+                    if (color == null) {
                         color = "#000000";
                         getLogger().log(Level.WARNING, ">>>>>> No color for gradient found >>>>>>");
                     }
-                    if (offset.isEmpty()) {
+                    if (offset == null) {
                         offset = "0";
                         getLogger().log(Level.WARNING, ">>>>>> No offset for gradient found>>>>>>");
                     }
@@ -645,16 +645,16 @@ class VdPath extends VdElement {
      * Contains gradient information in order to draw the fill or stroke of a path with a gradient.
      */
     class VdGradient {
-        // Gradient attributes
-        private float mStartX = 0;
-        private float mStartY = 0;
-        private float mEndX = 0;
-        private float mEndY = 0;
-        private float mCenterX = 0;
-        private float mCenterY = 0;
-        private float mGradientRadius = 0;
+        // Gradient attributes.
+        private float mStartX;
+        private float mStartY;
+        private float mEndX;
+        private float mEndY;
+        private float mCenterX;
+        private float mCenterY;
+        private float mGradientRadius;
         private String mTileMode = "NO_CYCLE";
-        private String mGradientType = "";
+        private String mGradientType = "linear";
 
         private final ArrayList<GradientStop> mGradientStops = new ArrayList<>();
 
@@ -763,8 +763,8 @@ class VdPath extends VdElement {
                                     mGradientColors,
                                     tile);
                     g.setPaint(gradient);
-                } else {
-                    RadialGradientPaint radialGradientPaint =
+                } else if (mGradientType.equals("radial")) {
+                    RadialGradientPaint paint =
                             new RadialGradientPaint(
                                     mCenterX,
                                     mCenterY,
@@ -772,7 +772,10 @@ class VdPath extends VdElement {
                                     mFractions,
                                     mGradientColors,
                                     tile);
-                    g.setPaint(radialGradientPaint);
+                    g.setPaint(paint);
+                } else {
+                    getLogger().log(Level.WARNING,
+                            ">>>>>> Unsupported gradient type: \"" + mGradientType + "\">>>>>>");
                 }
                 if (fill) {
                     g.fill(path2d);

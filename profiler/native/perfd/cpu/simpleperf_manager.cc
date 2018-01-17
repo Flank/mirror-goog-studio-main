@@ -122,7 +122,7 @@ bool SimpleperfManager::IsProfiling(const std::string &app_name) {
 }
 
 bool SimpleperfManager::StopProfiling(const std::string &app_name,
-                                      std::string *error) {
+                                      bool need_result, std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:StopProfiling simpleperf");
   Log::D("Profiler:Stopping profiling for %s", app_name.c_str());
@@ -142,43 +142,53 @@ bool SimpleperfManager::StopProfiling(const std::string &app_name,
   pid_t current_pid = pm.GetPidForBinary(app_name);
   Log::D("%s app has pid:%d", app_name.c_str(), current_pid);
 
-  // Make sure it is still running.
-  if (current_pid == -1) {
-    string msg = "App died since profiling started.";
-    error->append("\n");
-    error->append(msg);
-    Log::D("%s", msg.c_str());
-    return false;
+  bool success = true;
+  if (need_result) {
+    // Make sure it is still running.
+    if (current_pid == -1) {
+      string msg = "App died since profiling started.";
+      error->append("\n");
+      error->append(msg);
+      Log::D("%s", msg.c_str());
+      success = false;
+    }
+
+    // Make sure pid is what is expected
+    if (current_pid != ongoing_recording.pid) {
+      // Looks like the app was restarted. Simpleperf died as a result.
+      string msg = "Recorded pid and current app pid do not match: Aborting";
+      error->append("\n");
+      error->append(msg);
+      Log::D("%s", msg.c_str());
+      success = false;
+    }
   }
 
-  // Make sure pid is what is expected
-  if (current_pid != ongoing_recording.pid) {
-    // Looks like the app was restarted. Simpleperf died as a result.
-    string msg = "Recorded pid and current app pid do not match: Aborting";
-    error->append("\n");
-    error->append(msg);
-    Log::D("%s", msg.c_str());
-    return false;
-  }
-
-  // Make sure simpleperf is still running.
+  // No simpleperf should be running after tracing is stopped. Simpleperf is
+  // expected to die when the app exits, but there may be bug preventing it
+  // killing itself. Simpleperf may also die (due to bugs) even if the app is
+  // running.
   if (!pm.IsPidAlive(ongoing_recording.simpleperf_pid)) {
     string msg = "Simpleperf died while profiling. Logfile :" +
                  ongoing_recording.log_file_path;
     Log::D("%s", msg.c_str());
     *error = msg;
-    return false;
+    success = false;
+  } else {
+    bool stop_simpleperf_success = StopSimpleperf(ongoing_recording, error);
+    success = success && stop_simpleperf_success;
+    if (stop_simpleperf_success) {
+      if (!WaitForSimpleperf(ongoing_recording, error)) success = false;
+    }
   }
 
-  if (!StopSimpleperf(ongoing_recording, error)) return false;
-
-  if (!WaitForSimpleperf(ongoing_recording, error)) return false;
-
-  if (!ConvertRawToProto(ongoing_recording, error)) return false;
+  if (need_result && success) {
+    if (!ConvertRawToProto(ongoing_recording, error)) success = false;
+  }
 
   CleanUp(ongoing_recording);
 
-  return true;
+  return success;
 }
 
 bool SimpleperfManager::StopSimpleperf(
@@ -239,7 +249,7 @@ bool SimpleperfManager::WaitForSimpleperf(
 
   // Make sure simpleperf exited normally.
   if (!WIFEXITED(status)) {
-    string msg = "Simpleperf did not exit as expected. Logfile:" +
+    string msg = "Simpleperf did not exit as expected. Logfile: " +
                  ongoing_recording.log_file_path;
     Log::D("%s", msg.c_str());
     error->append("\n");

@@ -120,8 +120,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilder;
  * Builder for the custom Android model.
  */
 public class ModelBuilder implements ToolingModelBuilder {
-
-    public static final String ROOT_BUILD_NAME = "__root_build_name__";
+    private static final String ROOT_BUILD_NAME = ":";
 
     @NonNull
     static final DependenciesImpl EMPTY_DEPENDENCIES_IMPL =
@@ -143,7 +142,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     private boolean modelWithFullDependency = false;
     /**
      * a map that goes from build name ({@link BuildIdentifier#getName()} to the root dir of the
-     * build. For the root build, there is no name so {@link #ROOT_BUILD_NAME} is used.
+     * build.
      */
     private ImmutableMap<String, String> buildMapping = null;
 
@@ -1011,7 +1010,7 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
-        // get the roo dir for the top project
+        // get the root dir for the top project
         builder.put(ROOT_BUILD_NAME, gradle.getRootProject().getProjectDir().getAbsolutePath());
 
         for (IncludedBuild includedBuild : gradle.getIncludedBuilds()) {

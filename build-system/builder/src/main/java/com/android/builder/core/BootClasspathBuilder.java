@@ -46,16 +46,14 @@ public class BootClasspathBuilder {
         }
 
         // add additional libraries if any
-        List<IAndroidTarget.OptionalLibrary> libs = target.getAdditionalLibraries();
-        for (IAndroidTarget.OptionalLibrary lib : libs) {
+        for (IAndroidTarget.OptionalLibrary lib : target.getAdditionalLibraries()) {
             File jar = lib.getJar();
             Verify.verify(jar != null, "Jar missing from additional library %s.", lib.getName());
             classpath.add(jar);
         }
 
         // add optional libraries if any
-        List<IAndroidTarget.OptionalLibrary> optionalLibraries = target.getOptionalLibraries();
-        for (IAndroidTarget.OptionalLibrary lib : optionalLibraries) {
+        for (IAndroidTarget.OptionalLibrary lib : target.getOptionalLibraries()) {
             File jar = lib.getJar();
             Verify.verify(jar != null, "Jar missing from optional library %s.", lib.getName());
             classpath.add(jar);
@@ -72,58 +70,78 @@ public class BootClasspathBuilder {
     @NonNull
     public static ImmutableList<File> computeFilteredClasspath(
             @NonNull IAndroidTarget target,
-            @NonNull List<LibraryRequest> libraryRequestsArg,
+            @NonNull List<LibraryRequest> libraryRequests,
             @NonNull EvalIssueReporter issueReporter,
             @NonNull File annotationsJar) {
-        List<File> classpath = Lists.newArrayList();
+        ImmutableList.Builder<File> classpath = ImmutableList.builder();
 
         for (String p : target.getBootClasspath()) {
             classpath.add(new File(p));
         }
 
-        List<LibraryRequest> requestedLibs = Lists.newArrayList(libraryRequestsArg);
-
-        // add additional libraries if any
-        List<IAndroidTarget.OptionalLibrary> libs = target.getAdditionalLibraries();
-        for (IAndroidTarget.OptionalLibrary lib : libs) {
-            // add it always for now
-            classpath.add(lib.getJar());
-
-            // remove from list of requested if match
-            Optional<LibraryRequest> requestedLib = findMatchingLib(lib.getName(), requestedLibs);
-            if (requestedLib.isPresent()) {
-                requestedLibs.remove(requestedLib.get());
-            }
-        }
-
-        // add optional libraries if needed.
-        List<IAndroidTarget.OptionalLibrary> optionalLibraries = target.getOptionalLibraries();
-        for (IAndroidTarget.OptionalLibrary lib : optionalLibraries) {
-            // search if requested
-            Optional<LibraryRequest> requestedLib = findMatchingLib(lib.getName(), requestedLibs);
-            if (requestedLib.isPresent()) {
-                // add to classpath
-                classpath.add(lib.getJar());
-
-                // remove from requested list.
-                requestedLibs.remove(requestedLib.get());
-            }
-        }
-
-        // look for not found requested libraries.
-        for (LibraryRequest library : requestedLibs) {
-            issueReporter.reportError(
-                    EvalIssueReporter.Type.OPTIONAL_LIB_NOT_FOUND,
-                    "Unable to find optional library: " + library.getName(),
-                    library.getName());
-        }
+        // add additional and requested optional libraries if any
+        classpath.addAll(
+                computeAdditionalAndRequestedOptionalLibraries(
+                        target, libraryRequests, issueReporter));
 
         // add annotations.jar if needed.
         if (target.getVersion().getApiLevel() <= 15) {
             classpath.add(annotationsJar);
         }
 
-        return ImmutableList.copyOf(classpath);
+        return classpath.build();
+    }
+
+    /**
+     * Returns the list of additional and requested optional library jar files
+     *
+     * @param target the Android Target
+     * @param libraryRequestsArg the list of requested libraries
+     * @param issueReporter the issueReporter which is written to if a requested library is not
+     *     found
+     * @return the list of additional and requested optional library jar files
+     */
+    @NonNull
+    public static ImmutableList<File> computeAdditionalAndRequestedOptionalLibraries(
+            @NonNull IAndroidTarget target,
+            @NonNull List<LibraryRequest> libraryRequestsArg,
+            @NonNull EvalIssueReporter issueReporter) {
+        ImmutableList.Builder<File> classpath = ImmutableList.builder();
+
+        List<LibraryRequest> libraryRequests = Lists.newArrayList(libraryRequestsArg);
+
+        // iterate through additional libraries first, in case they contain a requested library
+        for (IAndroidTarget.OptionalLibrary lib : target.getAdditionalLibraries()) {
+            // add it always for now
+            File jar = lib.getJar();
+            Verify.verify(jar != null, "Jar missing from additional library %s.", lib.getName());
+            classpath.add(jar);
+            // search if requested, and remove from libraryRequests if so
+            findMatchingLib(lib.getName(), libraryRequests).ifPresent(libraryRequests::remove);
+        }
+
+        // then iterate through optional libraries
+        for (IAndroidTarget.OptionalLibrary lib : target.getOptionalLibraries()) {
+            // search if requested
+            Optional<LibraryRequest> requestedLib = findMatchingLib(lib.getName(), libraryRequests);
+            if (requestedLib.isPresent()) {
+                // add to jar and remove from requests
+                File jar = lib.getJar();
+                Verify.verify(jar != null, "Jar missing from optional library %s.", lib.getName());
+                classpath.add(jar);
+                libraryRequests.remove(requestedLib.get());
+            }
+        }
+
+        // look for not found requested libraries.
+        for (LibraryRequest library : libraryRequests) {
+            issueReporter.reportError(
+                    EvalIssueReporter.Type.OPTIONAL_LIB_NOT_FOUND,
+                    "Unable to find optional library: " + library.getName(),
+                    library.getName());
+        }
+
+        return classpath.build();
     }
 
     @NonNull

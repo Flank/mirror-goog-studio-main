@@ -38,7 +38,6 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.intellij.psi.JavaTokenType;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -242,90 +241,13 @@ public class PermissionRequirementTest extends TestCase {
         }
     }
 
-    public static void testDbUpToDate() throws Exception {
-        List<String> expected = getDangerousPermissions();
-        if (expected == null) {
+    public void testDbUpToDate() {
+        PermissionDataGenerator generator = new PermissionDataGenerator();
+        List<Permission> permissions = generator.getDangerousPermissions(false, 23);
+        if (permissions.isEmpty()) {
             return;
         }
-        List<String> actual = Arrays.asList(REVOCABLE_PERMISSION_NAMES);
-        if (!expected.equals(actual)) {
-            System.out.println("Correct list of permissions:");
-            for (String name : expected) {
-                System.out.println("            \"" + name + "\",");
-            }
-            fail("List of revocable permissions has changed:\n" +
-                // Make the diff show what it take to bring the actual results into the
-                // expected results
-                TestUtils.getDiff(Joiner.on('\n').join(actual),
-                    Joiner.on('\n').join(expected)));
-        }
-    }
-
-    @Nullable
-    private static List<String> getDangerousPermissions() throws IOException {
-        Pattern pattern = Pattern.compile("dangerous");
-        String top = System.getenv("ANDROID_BUILD_TOP");
-
-        // Alternatively, you can look up the version for the release branch on ag via
-        // something like
-        //   platform/frameworks/base/+/nyc-release/core/res/AndroidManifest.xml
-        // and then set file = new File(path to copy of above)
-        // TODO: We should ship this file with the SDK!
-        File file = new File(top, "frameworks/base/core/res/AndroidManifest.xml");
-        if (!file.exists()) {
-            System.out.println("Set $ANDROID_BUILD_TOP to point to the git repository");
-            return null;
-        }
-        boolean passedRuntimeHeader = false;
-        boolean passedInstallHeader = false;
-        String xml = Files.toString(file, Charsets.UTF_8);
-        Document document = XmlUtils.parseDocumentSilently(xml, true);
-        Set<String> revocable = Sets.newHashSet();
-        if (document != null && document.getDocumentElement() != null) {
-            NodeList children = document.getDocumentElement().getChildNodes();
-            for (int i = 0, n = children.getLength(); i < n; i++) {
-                Node child = children.item(i);
-                short nodeType = child.getNodeType();
-                if (nodeType == Node.COMMENT_NODE) {
-                    String comment = child.getNodeValue();
-                    if (comment.contains("RUNTIME PERMISSIONS")) {
-                        passedRuntimeHeader = true;
-                    } else if (comment.contains("INSTALLTIME PERMISSIONS"))
-                        passedInstallHeader = true;
-                } else if (passedRuntimeHeader
-                        && !passedInstallHeader
-                        && nodeType == Node.ELEMENT_NODE
-                        && child.getNodeName().equals(TAG_PERMISSION)) {
-                    Element element = (Element) child;
-                    String protectionLevel = element.getAttributeNS(ANDROID_URI, "protectionLevel");
-                    String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                    if (name.equals("android.permission.GET_ACCOUNTS")) {
-                        // No longer needed in M. See issue 223244.
-                        continue;
-                    }
-                    if (!name.isEmpty() && pattern.matcher(protectionLevel).find()) {
-                        revocable.add(name);
-                    } else {
-                        // Some permissions have been removed. We need to know about the historical
-                        // data for these. Whenever a new annotation i
-                        if (name.equals("android.permission.READ_SOCIAL_STREAM") ||
-                            name.equals("android.permission.WRITE_SOCIAL_STREAM") ||
-                            name.equals("android.permission.READ_PROFILE") ||
-                            name.equals("android.permission.WRITE_PROFILE")) {
-                            // Removed in 6d2c0e5
-                            revocable.add(name);
-                        } else if (name.equals("android.permission.WRITE_SETTINGS")) {
-                            // This one seems to have gone from a dangerous permission
-                            // in M to a signature permission
-                            revocable.add(name);
-                        }
-                    }
-                }
-            }
-        }
-
-        List<String> expected = Lists.newArrayList(revocable);
-        Collections.sort(expected);
-        return expected;
+        String[] names = generator.getPermissionNames(permissions);
+        generator.assertSamePermissions(REVOCABLE_PERMISSION_NAMES, names);
     }
 }

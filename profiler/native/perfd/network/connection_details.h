@@ -66,6 +66,11 @@ struct ConnectionDetails final {
     // response payload (or empty string otherwise).
     // Available when |end_timestamp| is non-zero.
     std::string payload_id;
+
+    // The size on disk of the payload. If the payload does not exist
+    // the size will be 0.
+    // Available when |end_timestamp| is non-zero.
+    int32_t payload_size;
   };
 
   // Thread information obtained from Java, which is different from the thread

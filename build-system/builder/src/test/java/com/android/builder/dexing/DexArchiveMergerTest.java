@@ -17,7 +17,8 @@
 package com.android.builder.dexing;
 
 import static com.android.builder.dexing.DexArchiveTestUtil.PACKAGE;
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.DexSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.fail;
 import static org.objectweb.asm.Opcodes.V1_6;
 
