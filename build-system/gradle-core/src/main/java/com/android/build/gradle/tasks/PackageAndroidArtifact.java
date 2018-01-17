@@ -105,14 +105,15 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     // ----- PUBLIC TASK API -----
 
+    // Path sensitivity here and below is absolute due to http://b/72085541
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     public FileCollection getManifests() {
         return manifests;
     }
 
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     public FileCollection getResourceFiles() {
         return resourceFiles;
     }
@@ -138,14 +139,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     @InputFiles
     @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     public FileCollection getJavaResourceFiles() {
         return javaResourceFiles;
     }
 
     @InputFiles
     @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     public FileCollection getJniFolders() {
         return jniFolders;
     }
@@ -158,13 +159,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     @InputFiles
     @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     public FileCollection getDexFolders() {
         return dexFolders;
     }
 
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     public FileCollection getAssets() {
         return assets;
     }
