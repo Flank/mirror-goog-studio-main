@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.gradle.model.stubs;
 
+import com.android.annotations.NonNull;
 import com.android.builder.model.NativeSettings;
 import java.util.Arrays;
 import java.util.List;
@@ -33,11 +34,13 @@ public class NativeSettingsStub extends BaseStub implements NativeSettings {
         myCompilerFlags = flags;
     }
 
+    @NonNull
     @Override
     public String getName() {
         return myName;
     }
 
+    @NonNull
     @Override
     public List<String> getCompilerFlags() {
         return myCompilerFlags;

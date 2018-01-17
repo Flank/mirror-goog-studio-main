@@ -16,6 +16,8 @@
 
 package com.android.builder.model;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.io.File;
 import java.util.Map;
 
@@ -24,21 +26,20 @@ import java.util.Map;
  */
 public interface NativeFolder {
 
-    /**
-     * Folder containing the source files.
-     */
+    /** Folder containing the source files. */
+    @NonNull
     File getFolderPath();
 
     /**
      * The compile settings for each file type.
      *
-     * The key is the file type, which can be "c" or "c++".  The value is the name of a
-     * {@link NativeSettings}.
+     * <p>The key is the file type, which can be "c" or "c++". The value is the name of a {@link
+     * NativeSettings}.
      */
+    @NonNull
     Map<String, String> getPerLanguageSettings();
 
-    /**
-     * The working directory for the compiler.
-     */
+    /** The working directory for the compiler. */
+    @Nullable
     File getWorkingDirectory();
 }

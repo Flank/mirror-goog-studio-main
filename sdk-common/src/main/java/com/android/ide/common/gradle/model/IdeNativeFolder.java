@@ -44,6 +44,7 @@ public final class IdeNativeFolder extends IdeModel implements NativeFolder {
         myHashCode = calculateHashCode();
     }
 
+    @NonNull
     @Override
     public File getFolderPath() {
         return myFolderPath;
