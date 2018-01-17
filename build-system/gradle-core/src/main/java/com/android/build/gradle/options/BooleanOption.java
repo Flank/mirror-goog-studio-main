@@ -30,13 +30,10 @@ public enum BooleanOption implements Option<Boolean> {
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
     ENABLE_DEX_ARCHIVE("android.useDexArchive", true),
 
-    ENABLE_IMPROVED_DEPENDENCY_RESOLUTION("android.enableImprovedDependenciesResolution", true),
     ENABLE_INTERMEDIATE_ARTIFACTS_CACHE("android.enableIntermediateArtifactsCache", true),
     ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true),
     VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck"),
-    VERSION_CHECK_OVERRIDE_PROPERTY_OLD("com.android.build.gradle.overrideVersionCheck"),
     OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck"),
-    OVERRIDE_PATH_CHECK_PROPERTY_OLD("com.android.build.gradle.overridePathCheck"),
     ENABLE_DESUGAR("android.enableDesugar", true),
     ENABLE_INCREMENTAL_DESUGARING("android.enableIncrementalDesugaring", true),
     ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", false),

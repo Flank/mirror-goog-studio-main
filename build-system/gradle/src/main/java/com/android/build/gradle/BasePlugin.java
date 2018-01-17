@@ -654,7 +654,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
     static void checkGradleVersion(
             @NonNull Project project,
             @NonNull ILogger logger,
-            @Nullable ProjectOptions projectOptions) {
+            @NonNull ProjectOptions projectOptions) {
         String currentVersion = project.getGradle().getGradleVersion();
         if (GRADLE_MIN_VERSION.compareTo(currentVersion) > 0) {
             File file = new File("gradle" + separator + "wrapper" + separator +
@@ -668,10 +668,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                             currentVersion,
                             file.getAbsolutePath(),
                             GRADLE_MIN_VERSION);
-            if (projectOptions != null
-                    && (projectOptions.get(BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY)
-                            || projectOptions.get(
-                                    BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY_OLD))) {
+            if (projectOptions.get(BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY)) {
                 logger.warning(errorMessage);
                 logger.warning(
                         "As %s is set, continuing anyway.",
@@ -917,8 +914,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         }
 
         // See if the user disabled the check:
-        if (projectOptions.get(BooleanOption.OVERRIDE_PATH_CHECK_PROPERTY)
-                || projectOptions.get(BooleanOption.OVERRIDE_PATH_CHECK_PROPERTY_OLD)) {
+        if (projectOptions.get(BooleanOption.OVERRIDE_PATH_CHECK_PROPERTY)) {
             return;
         }
 

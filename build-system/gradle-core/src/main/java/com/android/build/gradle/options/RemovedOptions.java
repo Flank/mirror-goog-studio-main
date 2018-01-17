@@ -51,6 +51,12 @@ public enum RemovedOptions implements Option<String> {
     ENABLE_IN_PROCESS_AAPT2("android.enableAapt2jni", "AAPT2 JNI has been removed."),
     ENABLE_DAEMON_MODE_AAPT2(
             "android.enableAapt2DaemonMode", "AAPT2 daemon mode is now always enabled."),
+    VERSION_CHECK_OVERRIDE_PROPERTY_OLD(
+            "com.android.build.gradle.overrideVersionCheck",
+            "This property has been replaced by android.overrideVersionCheck"),
+    OVERRIDE_PATH_CHECK_PROPERTY_OLD(
+            "com.android.build.gradle.overridePathCheck",
+            "This property has been replaced by android.overridePathCheck"),
     ;
 
     @NonNull private final String propertyName;
