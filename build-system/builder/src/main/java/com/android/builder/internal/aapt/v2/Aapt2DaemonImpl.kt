@@ -148,8 +148,8 @@ class Aapt2DaemonImpl(
         try {
             processOutput.delegate = waitForTask
             Aapt2DaemonUtil.requestLink(writer, request)
-            val error = waitForTask.future.get(daemonTimeouts.link, daemonTimeouts.linkUnit)
-            if (error != null) {
+            val errors = waitForTask.future.get(daemonTimeouts.link, daemonTimeouts.linkUnit)
+            if (errors != null) {
                 val configWithResourcesListed =
                         if (request.intermediateDir != null) {
                             request.copy(listResourceFiles = true)
@@ -162,7 +162,7 @@ class Aapt2DaemonImpl(
                 throw Aapt2Exception(
                         ("Android resource linking failed ($displayName)\n" +
                                 "Command: $aaptPath link $args\n" +
-                                "Output:  $error"))
+                                "Output:  $errors"))
             }
         } finally {
             processOutput.delegate = noOutputExpected
@@ -237,6 +237,7 @@ class Aapt2DaemonImpl(
         /** Set to null on success, the error output on failure. */
         val future = SettableFuture.create<String?>()!!
         private var errors: StringBuilder? = null
+        private var foundError: Boolean = false
 
         override fun out(line: String?) {
             line?.let { logger.info("%1\$s: %2\$s", displayName, it) }
@@ -245,8 +246,22 @@ class Aapt2DaemonImpl(
         override fun err(line: String?) {
             when (line) {
                 null -> return
-                "Done" -> future.set(errors?.toString())
-                "Error" -> if (errors == null) { errors = StringBuilder() }
+                "Done" -> {
+                    when {
+                        foundError -> future.set(errors!!.toString())
+                        errors != null -> {
+                            logger.warning(errors.toString())
+                            future.set(null)
+                        }
+                        else -> future.set(null)
+                    }
+                }
+                "Error" -> {
+                    foundError = true
+                    if (errors == null) {
+                        errors = StringBuilder()
+                    }
+                }
                 else -> {
                     if (errors == null) {
                         errors = StringBuilder()

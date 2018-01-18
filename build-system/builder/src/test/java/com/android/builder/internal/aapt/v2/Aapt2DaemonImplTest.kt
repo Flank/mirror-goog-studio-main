@@ -90,6 +90,25 @@ class Aapt2DaemonImplTest {
     }
 
     @Test
+    fun testWarningsDoNotFailBuild() {
+        val outDir = temporaryFolder.newFolder()
+        val request = CompileResourceRequest(
+                        inputFile = valuesFile(
+                                "strings",
+                                "<resources><string name=\"foo\">%s %d</string></resources>"),
+                        outputDirectory = outDir)
+
+        val daemon = createDaemon()
+        daemon.compile(request, logger)
+        assertThat(outDir.list()).asList()
+                .containsExactly(Aapt2RenamingConventions.compilationRename(request.inputFile))
+        assertThat(logger.messages).hasSize(2)
+        assertThat(logger.messages[1]).contains(
+                "warn: multiple substitutions specified in non-positional format")
+        logger.clear()
+    }
+
+    @Test
     fun testCompileInvalidFile() {
         val compiledDir = temporaryFolder.newFolder()
         val inputFile = resourceFile("values", "foo.txt", "content")
