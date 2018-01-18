@@ -43,8 +43,7 @@ public class DeviceConfigHelper {
 
         Hardware hw = state.getHardware();
 
-        FolderConfiguration config = new FolderConfiguration();
-        config.createDefault();
+        FolderConfiguration config = FolderConfiguration.createDefault();
         Screen screen = hw.getScreen();
         config.setDensityQualifier(new DensityQualifier(screen.getPixelDensity()));
         config.setNavigationMethodQualifier(new NavigationMethodQualifier(hw.getNav()));

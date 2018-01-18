@@ -73,8 +73,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
     static {
         // get the default qualifiers.
-        FolderConfiguration defaultConfig = new FolderConfiguration();
-        defaultConfig.createDefault();
+        FolderConfiguration defaultConfig = FolderConfiguration.createDefault();
         DEFAULT_QUALIFIERS = defaultConfig.mQualifiers;
         for (int i = 0; i < DEFAULT_QUALIFIERS.length; i++) {
             NULL_QUALIFIERS[i] = DEFAULT_QUALIFIERS[i].getNullQualifier();
@@ -1207,33 +1206,34 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     }
 
     /**
-     * Creates default qualifiers with no values for all indices.
+     * Creates a FolderConfiguration with default qualifiers with no values for all indices.
      */
-    public void createDefault() {
-        mQualifiers[INDEX_COUNTRY_CODE] = new CountryCodeQualifier();
-        mQualifiers[INDEX_NETWORK_CODE] = new NetworkCodeQualifier();
-        mQualifiers[INDEX_LOCALE] = new LocaleQualifier();
-        mQualifiers[INDEX_LAYOUT_DIR] = new LayoutDirectionQualifier();
-        mQualifiers[INDEX_SMALLEST_SCREEN_WIDTH] = new SmallestScreenWidthQualifier();
-        mQualifiers[INDEX_SCREEN_WIDTH] = new ScreenWidthQualifier();
-        mQualifiers[INDEX_SCREEN_HEIGHT] = new ScreenHeightQualifier();
-        mQualifiers[INDEX_SCREEN_LAYOUT_SIZE] = new ScreenSizeQualifier();
-        mQualifiers[INDEX_SCREEN_RATIO] = new ScreenRatioQualifier();
-        mQualifiers[INDEX_SCREEN_ROUND] = new ScreenRoundQualifier();
-        mQualifiers[INDEX_WIDE_COLOR_GAMUT] = new WideGamutColorQualifier();
-        mQualifiers[INDEX_HIGH_DYNAMIC_RANGE] = new HighDynamicRangeQualifier();
-        mQualifiers[INDEX_SCREEN_ORIENTATION] = new ScreenOrientationQualifier();
-        mQualifiers[INDEX_UI_MODE] = new UiModeQualifier();
-        mQualifiers[INDEX_NIGHT_MODE] = new NightModeQualifier();
-        mQualifiers[INDEX_PIXEL_DENSITY] = new DensityQualifier();
-        mQualifiers[INDEX_TOUCH_TYPE] = new TouchScreenQualifier();
-        mQualifiers[INDEX_KEYBOARD_STATE] = new KeyboardStateQualifier();
-        mQualifiers[INDEX_TEXT_INPUT_METHOD] = new TextInputMethodQualifier();
-        mQualifiers[INDEX_NAVIGATION_STATE] = new NavigationStateQualifier();
-        mQualifiers[INDEX_NAVIGATION_METHOD] = new NavigationMethodQualifier();
-        mQualifiers[INDEX_SCREEN_DIMENSION] = new ScreenDimensionQualifier();
-        mQualifiers[INDEX_VERSION] = new VersionQualifier();
-        mQualifierString = null;
+    public static FolderConfiguration createDefault() {
+        FolderConfiguration config = new FolderConfiguration();
+        config.mQualifiers[INDEX_COUNTRY_CODE] = new CountryCodeQualifier();
+        config.mQualifiers[INDEX_NETWORK_CODE] = new NetworkCodeQualifier();
+        config.mQualifiers[INDEX_LOCALE] = new LocaleQualifier();
+        config.mQualifiers[INDEX_LAYOUT_DIR] = new LayoutDirectionQualifier();
+        config.mQualifiers[INDEX_SMALLEST_SCREEN_WIDTH] = new SmallestScreenWidthQualifier();
+        config.mQualifiers[INDEX_SCREEN_WIDTH] = new ScreenWidthQualifier();
+        config.mQualifiers[INDEX_SCREEN_HEIGHT] = new ScreenHeightQualifier();
+        config.mQualifiers[INDEX_SCREEN_LAYOUT_SIZE] = new ScreenSizeQualifier();
+        config.mQualifiers[INDEX_SCREEN_RATIO] = new ScreenRatioQualifier();
+        config.mQualifiers[INDEX_SCREEN_ROUND] = new ScreenRoundQualifier();
+        config.mQualifiers[INDEX_WIDE_COLOR_GAMUT] = new WideGamutColorQualifier();
+        config.mQualifiers[INDEX_HIGH_DYNAMIC_RANGE] = new HighDynamicRangeQualifier();
+        config.mQualifiers[INDEX_SCREEN_ORIENTATION] = new ScreenOrientationQualifier();
+        config.mQualifiers[INDEX_UI_MODE] = new UiModeQualifier();
+        config.mQualifiers[INDEX_NIGHT_MODE] = new NightModeQualifier();
+        config.mQualifiers[INDEX_PIXEL_DENSITY] = new DensityQualifier();
+        config.mQualifiers[INDEX_TOUCH_TYPE] = new TouchScreenQualifier();
+        config.mQualifiers[INDEX_KEYBOARD_STATE] = new KeyboardStateQualifier();
+        config.mQualifiers[INDEX_TEXT_INPUT_METHOD] = new TextInputMethodQualifier();
+        config.mQualifiers[INDEX_NAVIGATION_STATE] = new NavigationStateQualifier();
+        config.mQualifiers[INDEX_NAVIGATION_METHOD] = new NavigationMethodQualifier();
+        config.mQualifiers[INDEX_SCREEN_DIMENSION] = new ScreenDimensionQualifier();
+        config.mQualifiers[INDEX_VERSION] = new VersionQualifier();
+        return config;
     }
 
     /**

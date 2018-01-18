@@ -43,8 +43,7 @@ public class FolderConfigurationTest extends TestCase {
      * Test createDefault creates all the qualifiers.
      */
     public void testCreateDefault() {
-        FolderConfiguration defaultConfig = new FolderConfiguration();
-        defaultConfig.createDefault();
+        FolderConfiguration defaultConfig = FolderConfiguration.createDefault();
 
         // this is always valid and up to date.
         final int count = FolderConfiguration.getQualifierCount();
@@ -101,8 +100,7 @@ public class FolderConfigurationTest extends TestCase {
 
     @SuppressWarnings("ConstantConditions")
     public void testAddQualifier() {
-        FolderConfiguration defaultConfig = new FolderConfiguration();
-        defaultConfig.createDefault();
+        FolderConfiguration defaultConfig = FolderConfiguration.createDefault();
 
         final int count = FolderConfiguration.getQualifierCount();
         for (int i = 0 ; i < count ; i++) {
@@ -212,8 +210,7 @@ public class FolderConfigurationTest extends TestCase {
 
     @SuppressWarnings("ConstantConditions")
     public void testConfigMatch() {
-        FolderConfiguration ref = new FolderConfiguration();
-        ref.createDefault();
+        FolderConfiguration ref = FolderConfiguration.createDefault();
         ref.setDensityQualifier(new DensityQualifier(Density.XHIGH));
         ref.addQualifier(new ScreenOrientationQualifier(ScreenOrientation.PORTRAIT));
         List<Configurable> configurables = getConfigurable(
