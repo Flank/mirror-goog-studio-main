@@ -16,22 +16,65 @@
 
 package com.android.tools.profiler.support.energy;
 
+import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import com.android.tools.profiler.support.util.StudioLog;
+import java.lang.reflect.Field;
 
 /**
- * Wrapper for Android WakeLock instrumentation.
+ * A set of helpers for Android Wake Lock instrumentation, used by the Energy profiler.
  *
- * <p>Both {@link android.os.PowerManager} and {@link WakeLock} are final classes so instead of
- * extending {@link WakeLock} we hook into each method.
+ * <p>Both {@link PowerManager} and {@link WakeLock} are final classes so instead of extending
+ * {@link WakeLock} we hook into each method.
  */
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class WakeLockWrapper {
+    /**
+     * Exit hook for {@link PowerManager#newWakeLock(int, String)}.
+     *
+     * @param wrapped the return value of the original method.
+     * @return the original return value.
+     */
+    public static WakeLock onNewWakeLockExit(WakeLock wrapped) {
+        // TODO: Send data via GRpc
+        Class<?> c = wrapped.getClass();
+        try {
+            // Uses reflection to access the fields that store the original parameter values.
+            // TODO(b/72337740): Use constructor entry hook once supported.
+            Field flagsField = c.getDeclaredField("mFlags");
+            Field tagField = c.getDeclaredField("mTag");
+            flagsField.setAccessible(true);
+            tagField.setAccessible(true);
+            StudioLog.v(
+                    String.format(
+                            "Created WakeLock: %s. Flags: %x. Tag: %s",
+                            System.identityHashCode(wrapped),
+                            flagsField.getInt(wrapped),
+                            tagField.get(wrapped)));
+        } catch (NoSuchFieldException e) {
+            StudioLog.e(e.getMessage());
+        } catch (IllegalAccessException e) {
+            StudioLog.e(e.getMessage());
+        }
+        return wrapped;
+    }
+
+    /**
+     * Wraps {@link WakeLock#acquire()}.
+     *
+     * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
+     */
     public static void wrapAcquire(WakeLock wrapped) {
         // TODO: Send data via GRpc
         StudioLog.v(String.format("Acquiring WakeLock: %s", System.identityHashCode(wrapped)));
     }
 
+    /**
+     * Wraps {@link WakeLock#release(int)}.
+     *
+     * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
+     * @param timeout the timeout parameter passed to the original method.
+     */
     public static void wrapRelease(WakeLock wrapped, int timeout) {
         // TODO: Send data via GRpc
         StudioLog.v(String.format("Releasing WakeLock: %s", System.identityHashCode(wrapped)));
