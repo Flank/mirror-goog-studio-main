@@ -24,7 +24,7 @@ import com.android.annotations.Nullable;
 public enum GpuMode {
     AUTO("auto"),
     HOST("host"),
-    SWIFT("guest"),
+    SWIFT("software"),
     OFF("off");
 
     private String mySetting;
