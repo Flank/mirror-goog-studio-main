@@ -15,13 +15,14 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.ide.common.vectordrawable.SvgColor.colorSvg2Vd;
 import static com.android.ide.common.vectordrawable.SvgNode.CONTINUATION_INDENT;
 import static com.android.ide.common.vectordrawable.SvgNode.INDENT_UNIT;
+import static com.android.utils.XmlUtils.formatFloatAttribute;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.Pair;
-import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.awt.geom.AffineTransform;
@@ -368,7 +369,7 @@ public class Svg2Vector {
                     String attrValue = stopItem.getNodeValue();
                     switch (attrName) {
                         case "offset":
-                            // If a gradient's value is not greater than all pervious offset values,
+                            // If a gradient's value is not greater than all previous offset values,
                             // then the offset value is adjusted to be equal to the largest of all
                             // previous offset values.
                             greatestOffset = extractOffset(attrValue, greatestOffset);
@@ -395,6 +396,10 @@ public class Svg2Vector {
                     }
                 }
                 String offset = String.valueOf(greatestOffset);
+                String vdColor = colorSvg2Vd(color, "#000000", gradientNode);
+                if (vdColor != null) {
+                    color = vdColor;
+                }
                 gradientNode.addGradientStop(color, offset, opacity);
             }
         }
@@ -1056,8 +1061,8 @@ public class Svg2Vector {
                         path.fillPresentationAttributes(SVG_FILL_OPACITY, nameValue[1]);
                     }
 
-                    // We need to handle the clip path within the style in a different way than other
-                    // styles. We treat it as an attribute as clip-path = "#url(name)".
+                    // We need to handle the clip path within the style in a different way than
+                    // other styles. We treat it as an attribute as clip-path = "#url(name)".
                     if (attr.equals("clip-path")) {
                         SvgGroupNode parentNode = path.getTree().findParent(path);
                         if (parentNode != null) {
@@ -1083,23 +1088,23 @@ public class Svg2Vector {
 
         writer.write(CONTINUATION_INDENT);
         writer.write("android:width=\"");
-        writer.write(XmlUtils.formatFloatAttribute(svgTree.getWidth() * svgTree.getScaleFactor()));
+        writer.write(formatFloatAttribute(svgTree.getWidth() * svgTree.getScaleFactor()));
         writer.write("dp\"");
         writer.write(System.lineSeparator());
         writer.write(CONTINUATION_INDENT);
         writer.write("android:height=\"");
-        writer.write(XmlUtils.formatFloatAttribute(svgTree.getHeight() * svgTree.getScaleFactor()));
+        writer.write(formatFloatAttribute(svgTree.getHeight() * svgTree.getScaleFactor()));
         writer.write("dp\"");
         writer.write(System.lineSeparator());
 
         writer.write(CONTINUATION_INDENT);
         writer.write("android:viewportWidth=\"");
-        writer.write(XmlUtils.formatFloatAttribute(viewportWidth));
+        writer.write(formatFloatAttribute(viewportWidth));
         writer.write("\"");
         writer.write(System.lineSeparator());
         writer.write(CONTINUATION_INDENT);
         writer.write("android:viewportHeight=\"");
-        writer.write(XmlUtils.formatFloatAttribute(viewportHeight));
+        writer.write(formatFloatAttribute(viewportHeight));
         writer.write("\">");
         writer.write(System.lineSeparator());
 

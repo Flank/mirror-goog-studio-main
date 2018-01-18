@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -37,7 +36,6 @@ abstract class SvgNode {
 
     protected static final String INDENT_UNIT = "  ";
     protected static final String CONTINUATION_INDENT = INDENT_UNIT + INDENT_UNIT;
-
     private static final String TRANSFORM_TAG = "transform";
 
     private static final String MATRIX_ATTRIBUTE = "matrix";
