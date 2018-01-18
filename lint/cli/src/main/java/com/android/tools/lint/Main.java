@@ -63,7 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -320,7 +319,7 @@ public class Main {
                             //   resolveMergeManifestSources(document, manifestReportFile)
                             // here since we don't have the merging log.
                             return XmlUtils.parseUtfXmlFile(manifest, true);
-                        } catch (IOException | SAXException | ParserConfigurationException e) {
+                        } catch (IOException | SAXException e) {
                             log(e, "Could not read/parse %1$s", manifest);
                         }
                     }

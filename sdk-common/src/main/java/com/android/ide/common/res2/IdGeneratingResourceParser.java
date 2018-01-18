@@ -98,13 +98,7 @@ class IdGeneratingResourceParser {
         try {
             return XmlUtils.parseUtfXmlFile(file, true /* namespaceAware */);
         }
-        catch (SAXException e) {
-            throw MergingException.wrapException(e).withFile(file).build();
-        }
-        catch (ParserConfigurationException e) {
-            throw MergingException.wrapException(e).withFile(file).build();
-        }
-        catch (IOException e) {
+        catch (SAXException | IOException e) {
             throw MergingException.wrapException(e).withFile(file).build();
         }
     }
