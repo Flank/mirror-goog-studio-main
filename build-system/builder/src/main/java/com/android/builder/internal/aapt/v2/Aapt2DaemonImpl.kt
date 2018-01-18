@@ -134,8 +134,8 @@ class Aapt2DaemonImpl(
                 val args = AaptV2CommandBuilder.makeCompile(request).joinToString(" \\\n        ")
                 throw Aapt2Exception(
                         "Android resource compilation failed ($displayName)\n" +
-                                "Command: $aaptPath compile $args\n" +
-                                "Output:  $error")
+                                "Command: $aaptPath compile $args\n",
+                        error)
             }
         } finally {
             processOutput.delegate = noOutputExpected
@@ -160,9 +160,9 @@ class Aapt2DaemonImpl(
                         AaptV2CommandBuilder.makeLink(configWithResourcesListed)
                                 .joinToString("\\\n        ")
                 throw Aapt2Exception(
-                        ("Android resource linking failed ($displayName)\n" +
-                                "Command: $aaptPath link $args\n" +
-                                "Output:  $errors"))
+                        "Android resource linking failed ($displayName)\n" +
+                                "Command: $aaptPath link $args\n",
+                        errors)
             }
         } finally {
             processOutput.delegate = noOutputExpected

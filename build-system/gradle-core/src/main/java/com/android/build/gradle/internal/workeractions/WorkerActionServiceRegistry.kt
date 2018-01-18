@@ -54,7 +54,17 @@ class WorkerActionServiceRegistry {
     @Synchronized
     fun <T : Any> getService(key: ServiceKey<T>): RegisteredService<T> {
         @Suppress("UNCHECKED_CAST") // Type matched when stored in service map.
-        return services[key] as RegisteredService<T>? ?: throw IllegalStateException("Service $key not registered.")
+        return services[key] as RegisteredService<T>? ?: serviceNotFoundError(key)
+    }
+
+    private fun serviceNotFoundError(key: ServiceKey<*>): Nothing {
+        if (services.isEmpty()) {
+            throw IllegalStateException("No services are registered. " +
+                    "Ensure the worker actions use IsolationMode.NONE.")
+        }
+        throw IllegalStateException(
+                "Service $key not registered. Available services: " +
+                        "[${services.keys.joinToString(separator = ", ")}].")
     }
 
     /**

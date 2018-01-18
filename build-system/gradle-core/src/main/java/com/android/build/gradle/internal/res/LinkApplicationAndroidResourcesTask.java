@@ -64,6 +64,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.v2.Aapt2DaemonManager;
+import com.android.builder.internal.aapt.v2.Aapt2Exception;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -495,6 +496,9 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                             Aapt2DaemonManagerService.getAaptDaemon(
                                     getBuilder().getBuildToolInfo().getRevision())) {
                         AndroidBuilder.processResources(aaptDaemon, config, getILogger());
+                    } catch (Aapt2Exception e) {
+                        throw Aapt2ErrorUtils.rewriteLinkException(
+                                e, new MergingLog(getMergeBlameLogFolder()));
                     }
                 } else {
                     Preconditions.checkNotNull(

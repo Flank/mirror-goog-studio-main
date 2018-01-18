@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.errors
 
-import com.android.build.gradle.options.ProjectOptions
-import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.options.SyncOptions.ErrorFormatMode
 import com.android.ide.common.blame.Message
 import com.android.ide.common.blame.MessageJsonSerializer
@@ -25,17 +23,14 @@ import com.android.ide.common.blame.MessageReceiver
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.ide.common.blame.parser.JsonEncodedGradleMessageParser.STDOUT_ERROR_TAG
 import com.google.common.base.Joiner
-import com.google.common.base.Preconditions
 import com.google.common.collect.Iterables
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import org.gradle.api.logging.Logger
 
-class MessageReceiverImpl(
-        projectOptions: ProjectOptions,
+class MessageReceiverImpl constructor(
+    private val errorFormatMode: ErrorFormatMode,
         private val logger: Logger): MessageReceiver {
-
-    private val errorFormatMode = SyncOptions.getErrorFormatMode(projectOptions)
 
     private val mGson: Gson?
 
@@ -76,7 +71,7 @@ class MessageReceiverImpl(
     }
 }
 
-private fun humanReadableMessage(message: Message): String {
+fun humanReadableMessage(message: Message): String {
     val errorStringBuilder = StringBuilder()
     val positions = message.sourceFilePositions
     if (positions.size != 1 || SourceFilePosition.UNKNOWN != Iterables.getOnlyElement(positions)) {

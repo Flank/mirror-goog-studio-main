@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.databinding;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -36,7 +35,7 @@ public class DataBindingMessageRewriteTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        project.execute("assembleDebug");
+        project.execute("processDebugResources");
     }
 
     @AfterClass
@@ -55,14 +54,14 @@ public class DataBindingMessageRewriteTest {
                             "<TextView android:id=\"fail\"");
 
                     GradleBuildResult result =
-                            project.executor().expectFailure().run("assembleDebug");
+                            project.executor().expectFailure().run("processDebugResources");
                     assertThat(result.getStderr())
                             .contains(
                                     FileUtils.join(
                                             "src", "main", "res", "layout", "activity_main.xml"));
                 });
 
-        project.execute("assembleDebug");
+        project.execute("processDebugResources");
     }
 
     @Test
@@ -76,13 +75,13 @@ public class DataBindingMessageRewriteTest {
                             "<TextView boop:id=\"fail\"");
 
                     GradleBuildResult result =
-                            project.executor().expectFailure().run("assembleDebug");
+                            project.executor().expectFailure().run("processDebugResources");
                     assertThat(result.getStderr())
                             .contains(
                                     FileUtils.join(
                                             "src", "main", "res", "layout", "activity_main.xml"));
                 });
 
-        project.execute("assembleDebug");
+        project.execute("processDebugResources");
     }
 }

@@ -77,7 +77,7 @@ data class AaptPackageConfig(
         private var customPackageForR: String? = null
         private var pseudoLocalize: Boolean = false
         private var preferredDensity: String? = null
-        private var androidTarget: IAndroidTarget? = null
+        private var androidJarPath: String? = null
         private var resourceConfigs: ImmutableSet<String> = ImmutableSet.of()
         private var isGenerateProtos: Boolean = false
         private var variantType: VariantType? = null
@@ -98,7 +98,7 @@ data class AaptPackageConfig(
             return AaptPackageConfig(
                     manifestFile = manifestFile!!,
                     options = options!!,
-                    androidJarPath = androidTarget!!.getPath(IAndroidTarget.ANDROID_JAR),
+                    androidJarPath = androidJarPath!!,
                     sourceOutputDir = sourceOutputDir,
                     resourceOutputApk = resourceOutputApk,
                     librarySymbolTableFiles = librarySymbolTableFiles,
@@ -211,8 +211,8 @@ data class AaptPackageConfig(
             return this
         }
 
-        fun setAndroidTarget(androidTarget: IAndroidTarget?): Builder {
-            this.androidTarget = androidTarget
+        fun setAndroidTarget(androidTarget: IAndroidTarget): Builder {
+            this.androidJarPath = androidTarget.getPath(IAndroidTarget.ANDROID_JAR)
             return this
         }
 
