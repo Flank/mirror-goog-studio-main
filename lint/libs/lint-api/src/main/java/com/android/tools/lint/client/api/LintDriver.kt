@@ -2453,11 +2453,41 @@ class LintDriver
             sb.append("\n\nYou can set environment variable `LINT_PRINT_STACKTRACE=true` to " +
                     "dump a full stacktrace to stdout.")
 
+            val throwableMessage = throwable.message
+            if (throwableMessage != null && throwableMessage.startsWith(
+                    "loader constraint violation: when resolving field \"QUALIFIER_SPLITTER\" the class loader")) {
+                // Rewrite error message
+                sb.setLength(0)
+                sb.append("""
+                    Lint crashed because it is being invoked with the wrong version of Guava
+                    (the Android version instead of the JRE version, which is required in the
+                    Gradle plugin).
+
+                    This usually happens when projects incorrectly install a dependency resolution
+                    strategy in **all** configurations instead of just the compile and run
+                    configurations.
+
+                    See https://issuetracker.google.com/71991293 for more information and the
+                    proper way to install a dependency resolution strategy.
+
+                    (Note that this breaks a lot of lint analysis so this report is incomplete.)
+                    """.trimIndent())
+            }
+
+            val project = when {
+                driver.currentProject != null -> driver.currentProject
+                driver.currentProjects?.isNotEmpty() == true -> driver.currentProjects?.last()
+                else -> null
+            }
             val message = sb.toString()
-            if (context != null) {
-                context.report(IssueRegistry.LINT_ERROR, Location.create(context.file), message)
-            } else {
-                driver.client.log(throwable, message)
+            when {
+                context != null -> context.report(IssueRegistry.LINT_ERROR, Location.create(context.file), message)
+                project != null -> {
+                    val projectDir = project.dir
+                    val projectContext = Context(driver, project, null, projectDir)
+                    projectContext.report(IssueRegistry.LINT_ERROR, Location.create(project.dir), message)
+                }
+                else -> driver.client.log(throwable, message)
             }
 
             if (VALUE_TRUE == System.getenv("LINT_PRINT_STACKTRACE")) {
