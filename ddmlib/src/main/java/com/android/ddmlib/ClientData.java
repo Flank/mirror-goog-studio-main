@@ -534,12 +534,13 @@ public class ClientData {
 
     /**
      * Returns the client description.
-     * <p>This is generally the name of the package defined in the
-     * <code>AndroidManifest.xml</code>.
      *
-     * @return the client description or <code>null</code> if not the description was not yet
-     * sent by the client.
+     * <p>This is generally the name of the package defined in the <code>AndroidManifest.xml</code>.
+     *
+     * @return the client description or <code>null</code> if not the description was not yet sent
+     *     by the client.
      */
+    @Nullable
     public String getClientDescription() {
         return mClientDescription;
     }
@@ -871,14 +872,15 @@ public class ClientData {
         return mPendingMethodProfiling;
     }
 
-    /**
-     * Returns the application's package name.
-     */
-    @NonNull
+    /** Returns the application's package name. */
+    @Nullable
     public String getPackageName() {
         // Check for multi-process app name that might have a following format - "$applicationId:$processName"
+        if (mClientDescription == null) {
+            return null;
+        }
         int colonPos = mClientDescription.indexOf(':');
-      return (colonPos == -1) ? mClientDescription : mClientDescription.substring(0, colonPos);
+        return (colonPos == -1) ? mClientDescription : mClientDescription.substring(0, colonPos);
     }
 
     /**
