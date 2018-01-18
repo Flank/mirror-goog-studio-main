@@ -53,6 +53,7 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.ILogger;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.UnsignedInts;
@@ -532,8 +533,18 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 nativeSourceFileValue.workingDirectory = new File(target.buildDirectory);
                 File sourceFile = new File(target.sourceDirectory, source);
                 nativeSourceFileValue.src = sourceFile;
-                nativeSourceFileValue.flags =
-                        getAndroidGradleFileLibFlags(abi, sourceFile.getAbsolutePath());
+                nativeSourceFileValue.flags = fileGroup.compileFlags;
+                if (Strings.isNullOrEmpty(nativeSourceFileValue.flags)) {
+                    // If flags weren't available in the CMake server model then fall back to using
+                    // compilation_database.json.
+                    // This is related to http://b/72065334 in which the compilation database did
+                    // not have flags for a particular file. Unclear why. I think the correct flags
+                    // to use is fileGroup.compileFlags and that compilation database should be
+                    // a fall-back case.
+
+                    nativeSourceFileValue.flags =
+                            getAndroidGradleFileLibFlags(abi, sourceFile.getAbsolutePath());
+                }
                 nativeLibraryValue.files.add(nativeSourceFileValue);
             }
         }
