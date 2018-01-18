@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.ide.common.vectordrawable.SvgColor.colorSvg2Vd;
 import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
 import static com.android.utils.XmlUtils.formatFloatAttribute;
 
@@ -29,7 +30,6 @@ import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -311,32 +311,34 @@ public class SvgGradientNode extends SvgNode {
             mVdAttributesMap.put("r", formatFloatAttribute(transformedRadius.distance(0, 0)));
         }
 
-        for (String key : mVdAttributesMap.keySet()) {
+        for (Map.Entry<String, String> entry : mVdAttributesMap.entrySet()) {
+            String key = entry.getKey();
             String gradientAttr = Svg2Vector.gradientMap.get(key);
-            String svgValue = mVdAttributesMap.get(key);
-            String vdValue = svgValue.trim();
-            if (vdValue.startsWith("rgb")) {
-                vdValue = vdValue.substring(3, vdValue.length());
-                String vdValueRGB = vdValue;
-                vdValue = SvgLeafNode.convertRGBToHex(vdValue.substring(3, vdValue.length()));
-                if (vdValue == null) {
-                    getTree().logErrorLine("Unsupported color format " + vdValueRGB,
-                            getDocumentNode(), SvgLogLevel.ERROR);
-                    vdValue = "#00000000";
+            String svgValue = entry.getValue().trim();
+            String vdValue;
+            vdValue = colorSvg2Vd(svgValue, "#000000", this);
+
+            if (vdValue == null) {
+                if (vectorCoordinateMap.containsKey(key)) {
+                    double x = transformedBounds[vectorCoordinateMap.get(key)];
+                    vdValue = formatFloatAttribute(x);
+                } else if (key.equals("spreadMethod")) {
+                    if (svgValue.equals("pad")) {
+                        vdValue = "clamp";
+                    } else if (svgValue.equals("reflect")) {
+                        vdValue = "mirror";
+                    } else if (svgValue.equals("repeat")) {
+                        vdValue = "repeat";
+                    } else {
+                        getTree().logErrorLine("Unsupported spreadMethod " + svgValue,
+                                               getDocumentNode(), SvgTree.SvgLogLevel.ERROR);
+                        vdValue = "clamp";
+                    }
+                } else if (svgValue.endsWith("%")) {
+                    vdValue = formatFloatAttribute(getGradientCoordinate(key, 0).getValue());
+                } else {
+                    vdValue = svgValue;
                 }
-            } else if (SvgLeafNode.colorMap.containsKey(vdValue.toLowerCase(Locale.ENGLISH))) {
-                vdValue = SvgLeafNode.colorMap.get(vdValue.toLowerCase(Locale.ENGLISH));
-            } else if (vectorCoordinateMap.containsKey(key)) {
-                double x = transformedBounds[vectorCoordinateMap.get(key)];
-                vdValue = formatFloatAttribute(x);
-            } else if (key.equals("spreadMethod")) {
-                if (vdValue.equals("pad")) {
-                    vdValue = "clamp";
-                } else if (vdValue.equals("reflect")) {
-                    vdValue = "mirror";
-                }
-            } else if (vdValue.endsWith("%")) {
-                vdValue = formatFloatAttribute(getGradientCoordinate(key, 0).getValue());
             }
 
             if (!gradientAttr.isEmpty()) {
@@ -365,7 +367,6 @@ public class SvgGradientNode extends SvgNode {
 
     private void writeGradientStops(OutputStreamWriter writer, String indent) throws IOException {
         for (GradientStop g : myGradientStops) {
-            g.formatStopAttributes();
             String color = g.getColor();
             float opacity;
             try {
