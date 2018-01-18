@@ -157,7 +157,10 @@ open class ZipModuleTask: DefaultTask() {
 }
 
 class Relocator(private val artifactType: AndroidArtifacts.ArtifactType): JarMerger.Relocator {
-    override fun relocate(entryPath: String) = "${artifactType.pathPrefix}/$entryPath"
+    override fun relocate(entryPath: String) = when(artifactType) {
+        AndroidArtifacts.ArtifactType.JNI -> entryPath
+        else -> "${artifactType.pathPrefix}/$entryPath"
+    }
 }
 
 class ResRelocator : JarMerger.Relocator {
