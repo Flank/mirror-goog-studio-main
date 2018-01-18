@@ -86,6 +86,29 @@ public class VectorDetectorTest extends AbstractCheckTest {
             + "\n"
             + "</vector>";
 
+    @Language("XML")
+    private static final String VECTOR_WITH_FILLTYPE = ""
+            + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "        android:height=\"76dp\"\n"
+            + "        android:width=\"76dp\"\n"
+            + "        android:viewportHeight=\"48\"\n"
+            + "        android:viewportWidth=\"48\"\n"
+            + "        android:autoMirrored=\"true\"\n"
+            + "        android:tint=\"?attr/colorControlActivated\">\n"
+            + "\n"
+            + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
+            + "\n"
+            + "    <group\n"
+            + "            android:name=\"root\"\n"
+            + "            android:translateX=\"24.0\"\n"
+            + "            android:translateY=\"24.0\" >\n"
+            + "        <path android:pathData=\"M10,10h40v30h-40z\""
+            + "                android:fillColor=\"#00FF00\"\n"
+            + "                android:fillType=\"oddEven\"/>\n"
+            + "    </group>\n"
+            + "\n"
+            + "</vector>";
+
     public void testWarn() {
         String expected = ""
                 + "res/drawable/foo.xml:6: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
@@ -212,7 +235,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
 
         //noinspection all // Sample code
         lint().files(
-                manifest().minSdk(20),
+                manifest().minSdk(23),
                 xml("res/drawable/foo.xml", VECTOR_WITH_GRADIENT),
                 gradle(""
                         + "buildscript {\n"
@@ -235,6 +258,64 @@ public class VectorDetectorTest extends AbstractCheckTest {
                         + "        classpath 'com.android.tools.build:gradle:3.1.0-alpha7'\n"
                         + "    }\n"
                         + "}\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void testWarnWithFillType() {
+        String expected = ""
+                + "res/drawable/foo.xml:6: Warning: This attribute is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                + "        android:autoMirrored=\"true\"\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/drawable/foo.xml:7: Warning: Resource references will not work correctly in images generated for this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                + "        android:tint=\"?attr/colorControlActivated\">\n"
+                + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/drawable/foo.xml:9: Warning: This tag is not supported in images generated from this vector icon for API < 24; check generated icon to make sure it looks acceptable [VectorRaster]\n"
+                + "    <clip-path android:pathData=\"M10,10h40v30h-40z\"/>\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 3 warnings\n";
+
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(23),
+                xml("res/drawable/foo.xml", VECTOR_WITH_FILLTYPE),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:3.1.0-alpha7'\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expect(expected);
+    }
+
+    public void testNoWarningsWithFillTypeAndMinSdk24() {
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(24),
+                xml("res/drawable/foo.xml", VECTOR_WITH_FILLTYPE),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:3.1.0-alpha7'\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void testNoWarningsWithFillTypeAndSupportLibrary() {
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(23),
+                xml("res/drawable/foo.xml", VECTOR_WITH_FILLTYPE),
+                gradle(""
+                        + "buildscript {\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:3.1.0-alpha7'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))
                 .run()
                 .expectClean();
     }

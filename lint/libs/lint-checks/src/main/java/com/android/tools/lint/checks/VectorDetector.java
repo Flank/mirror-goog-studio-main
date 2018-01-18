@@ -16,9 +16,11 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.NS_RESOURCES;
 import static com.android.SdkConstants.TAG_VECTOR;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.ide.common.repository.GradleVersion;
@@ -34,6 +36,7 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.function.Predicate;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -91,7 +94,7 @@ public class VectorDetector extends ResourceXmlDetector {
 
     /**
      * Returns true if the given Gradle project model supports raster image generation
-     * for vector drawables.
+     * for vector drawables with gradients.
      *
      * @param project the project to check
      * @return true if the plugin supports raster image generation
@@ -102,11 +105,26 @@ public class VectorDetector extends ResourceXmlDetector {
         return modelVersion != null && modelVersion.isAtLeastIncludingPreviews(3, 1, 0);
     }
 
+    /**
+     * Returns true if the given Gradle project model supports raster image generation
+     * for vector drawables with the android:fillType attribute.
+     *
+     * @param project the project to check
+     * @return true if the plugin supports raster image generation
+     */
+    public static boolean isVectorGenerationSupportedForFillType(@NonNull Project project) {
+        GradleVersion modelVersion = project.getGradleModelVersion();
+        // TODO Change to 3.2 when it becomes available.
+        // Requires 3.1.x or higher.
+        return modelVersion != null && modelVersion.isAtLeastIncludingPreviews(3, 1, 0);
+    }
+
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
         // If minSdkVersion >= 24, we're not generating compatibility bitmap icons.
+        int apiThreshold = 24;
         Project project = context.getMainProject();
-        if (project.getMinSdkVersion().getFeatureLevel() >= 24) {
+        if (project.getMinSdkVersion().getFeatureLevel() >= apiThreshold) {
             return;
         }
 
@@ -127,7 +145,7 @@ public class VectorDetector extends ResourceXmlDetector {
         }
 
         // If this vector asset is in a -v24 folder, we're not generating bitmap icons.
-        if (context.getFolderVersion() >= 24) {
+        if (context.getFolderVersion() >= apiThreshold) {
             return;
         }
 
@@ -138,33 +156,49 @@ public class VectorDetector extends ResourceXmlDetector {
                 containsGradient(document) && isVectorGenerationSupportedForGradient(project);
 
         if (!generationDueToGradient) {
-            // If minSdkVersion >= 21, we're not generating compatibility bitmap icons.
-            if (project.getMinSdkVersion().getFeatureLevel() >= 21) {
-                return;
-            }
-            // If this vector asset is in a -v21 folder, we're not generating bitmap icons.
-            if (context.getFolderVersion() >= 21) {
-                return;
-            }
             // TODO: When support library starts supporting gradients (http://b/62421666), this
             // check should be moved up.
             if (usingSupportLibVectors(project)) {
                 return;
             }
+            boolean generationDueToFillType =
+                    containsFillType(document) && isVectorGenerationSupportedForFillType(project);
+            if (!generationDueToFillType) {
+                apiThreshold = 21;
+                // If minSdkVersion >= 21, we're not generating compatibility bitmap icons.
+                if (project.getMinSdkVersion().getFeatureLevel() >= apiThreshold) {
+                    return;
+                }
+                // If this vector asset is in a -v21 folder, we're not generating bitmap icons.
+                if (context.getFolderVersion() >= apiThreshold) {
+                    return;
+                }
+            }
         }
 
-        checkSupported(context, root, generationDueToGradient);
+        checkSupported(context, root, apiThreshold);
     }
 
-    private static boolean containsGradient(Document document) {
+    private static boolean containsGradient(@NonNull Document document) {
+        return findElement(document,
+                element -> "gradient".equals(element.getTagName())) != null;
+    }
+
+    private static boolean containsFillType(Document document) {
+        return findElement(document,
+                element -> element.hasAttributeNS(NS_RESOURCES, "fillType")) != null;
+    }
+
+    @Nullable
+    private static Element findElement(@NonNull Document document,
+            @NonNull Predicate<Element> predicate) {
         Deque<Element> elements = new ArrayDeque<>();
         elements.add(document.getDocumentElement());
 
         Element element;
         while ((element = elements.poll()) != null) {
-            String tag = element.getTagName();
-            if ("gradient".equals(tag)) {
-                return true;
+            if (predicate.test(element)) {
+                return element;
             }
             NodeList children = element.getChildNodes();
             for (int i = 0, n = children.getLength(); i < n; i++) {
@@ -174,7 +208,7 @@ public class VectorDetector extends ResourceXmlDetector {
                 }
             }
         }
-        return false;
+        return null;
     }
 
     static boolean usingSupportLibVectors(@NonNull Project project) {
@@ -190,8 +224,7 @@ public class VectorDetector extends ResourceXmlDetector {
 
     /** Recursive element check for unsupported attributes and tags */
     private static void checkSupported(@NonNull XmlContext context, @NonNull Element element,
-                                       boolean generationDueToGradient) {
-        int apiThreshold = generationDueToGradient ? 24 : 21;
+            int apiThreshold) {
         // Unsupported tags
         String tag = element.getTagName();
         if ("clip-path".equals(tag)) {
@@ -239,7 +272,7 @@ public class VectorDetector extends ResourceXmlDetector {
         for (int i = 0, n = children.getLength(); i < n; i++) {
             Node child = children.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
-                checkSupported(context, (Element)child, generationDueToGradient);
+                checkSupported(context, (Element)child, apiThreshold);
             }
         }
     }

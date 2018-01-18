@@ -23,6 +23,7 @@ import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.android.utils.NullLogger;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,6 +50,13 @@ public class VectorDrawableRendererTest {
             "    </gradient>\n" +
             "    </aapt:attr>\n" +
             "  </path>\n" +
+            "</vector>";
+    private static final String VECTOR_WITH_FILLTYPE =
+            "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+            "    android:width=\"64dp\" android:height=\"64dp\" android:viewportWidth=\"64\" android:viewportHeight=\"64\">\n" +
+            "  <path android:pathData=\"M10,10h40v30h-40z\"" +
+            "       android:fillColor=\"#FF0000\"\n" +
+            "       android:fillType=\"oddEven\"/>\n" +
             "</vector>";
 
     @Rule
@@ -336,5 +344,48 @@ public class VectorDrawableRendererTest {
         writeToFile(input, VECTOR_WITH_GRADIENT);
 
         assertTrue(mRenderer.getFilesToBeGenerated(input).isEmpty());
+    }
+
+    @Test
+    public void fillTypeSdk23WithoutSupportLibrary() throws Exception {
+        mRenderer = new VectorDrawableRenderer(23, false, mOutput, mDensities, NullLogger::new);
+        File drawable = new File(mRes, "drawable");
+        File input = new File(drawable, "icon.xml");
+
+        writeToFile(input, VECTOR_WITH_FILLTYPE);
+
+        Collection<File> result = mRenderer.getFilesToBeGenerated(input);
+
+        Truth.assertThat(result).containsExactly(
+                FileUtils.join(mOutput, "drawable-ldpi", "icon.png"),
+                FileUtils.join(mOutput, "drawable-mdpi", "icon.png"),
+                FileUtils.join(mOutput, "drawable-hdpi", "icon.png"),
+                FileUtils.join(mOutput, "drawable-anydpi-v24", "icon.xml"));
+    }
+
+    @Test
+    public void fillTypeSdk23WithSupportLibrary() throws Exception {
+        mRenderer = new VectorDrawableRenderer(23, true, mOutput, mDensities, NullLogger::new);
+        File drawable = new File(mRes, "drawable");
+        File input = new File(drawable, "icon.xml");
+
+        writeToFile(input, VECTOR_WITH_FILLTYPE);
+
+        Truth.assertThat(mRenderer.getFilesToBeGenerated(input))
+                .named("getFilesToBeGenerated returned")
+                .isEmpty();
+    }
+
+    @Test
+    public void fillTypeSdk24() throws Exception {
+        mRenderer = new VectorDrawableRenderer(24, false, mOutput, mDensities, NullLogger::new);
+        File drawable = new File(mRes, "drawable");
+        File input = new File(drawable, "icon.xml");
+
+        writeToFile(input, VECTOR_WITH_FILLTYPE);
+
+        Truth.assertThat(mRenderer.getFilesToBeGenerated(input))
+                .named("getFilesToBeGenerated returned")
+                .isEmpty();
     }
 }
