@@ -47,6 +47,8 @@ java_library(
     srcs = glob(["**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
+        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
         "//tools/base/common:studio.common",
         "//tools/base/profiler:netty-grpc-jar",
         "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar",
@@ -58,16 +60,31 @@ java_library(
 )
 
 perf_test(
-    name = "HttpTest",
+    name = "BasicTest",
     srcs = [
         "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
-        "testSrcs/com/android/tools/profiler/network/HttpUrlTest.java",
-        "testSrcs/com/android/tools/profiler/network/OkHttpTest.java",
+        "testSrcs/com/android/tools/profiler/JvmtiAgentTest.java",
     ],
-    native_lib = "//tools/base/profiler/tests/test-app:libnativetest.so",
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
+        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
+        "//tools/base/profiler/tests/test-app:libjni.so",
+        "//tools/idea/.idea/libraries:truth",
+    ],
+)
+
+perf_test(
+    name = "HttpTest",
+    srcs = [
+        "testSrcs/com/android/tools/profiler/network/HttpUrlTest.java",
+        "testSrcs/com/android/tools/profiler/network/OkHttpTest.java",
+    ],
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
+    deps = [
+        ":tests",
+        "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],
 )
@@ -77,10 +94,10 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/memory/MemoryTest.java",
     ],
-    native_lib = "//tools/base/profiler/tests/test-app:libnativetest.so",
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
+        "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],
 )
@@ -90,10 +107,11 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/memory/JniTest.java",
     ],
-    native_lib = "//tools/base/profiler/tests/test-app:libnativetest.so",
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
+        "//tools/base/profiler/tests/test-app:libjni.so",
+        "//tools/base/profiler/tests/test-app:libmemorynativetest.so",
         "//tools/idea/.idea/libraries:truth",
     ],
 )
@@ -103,10 +121,10 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/EventProfilerTest.java",
     ],
-    native_lib = "//tools/base/profiler/tests/test-app:libnativetest.so",
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",
+        "//tools/base/profiler/tests/test-app:libjni.so",
         "//tools/idea/.idea/libraries:truth",
     ],
 )

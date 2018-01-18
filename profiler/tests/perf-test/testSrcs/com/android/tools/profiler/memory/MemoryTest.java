@@ -44,14 +44,9 @@ public class MemoryTest {
 
         // For Memory tests, we need to invoke beginSession and startMonitoringApp to properly
         // initialize the memory cache and establish the perfa->perfd connection
-        BeginSessionResponse response =
-                myGrpc.getProfilerStub()
-                        .beginSession(
-                                BeginSessionRequest.newBuilder()
-                                        .setDeviceId(1234)
-                                        .setProcessId(myGrpc.getProcessId())
-                                        .build());
-        mySession = response.getSession();
+        mySession =
+                myGrpc.beginSessionWithAgent(
+                        myPerfDriver.getPid(), myPerfDriver.getCommunicationPort());
         myGrpc.getMemoryStub()
                 .startMonitoringApp(MemoryStartRequest.newBuilder().setSession(mySession).build());
     }

@@ -16,10 +16,10 @@
 
 package com.activity.network;
 
-import android.app.Activity;
 import android.tools.SimpleWebServer;
 import android.tools.SimpleWebServer.QueryParam;
 import android.tools.SimpleWebServer.RequestHandler;
+import com.activity.PerfdTestActivity;
 import com.activity.network.NetworkUtils.ServerTest;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,7 +28,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 
-public final class HttpUrlActivity extends Activity {
+public final class HttpUrlActivity extends PerfdTestActivity {
     public HttpUrlActivity() {
         super("HttpUrl Activity");
     }

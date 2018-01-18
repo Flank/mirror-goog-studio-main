@@ -1,17 +1,17 @@
 package com.android.tools.profiler;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.EventProfiler.ActivityDataResponse;
 import com.android.tools.profiler.proto.EventProfiler.EventDataRequest;
 import com.android.tools.profiler.proto.EventServiceGrpc;
 import com.android.tools.profiler.proto.MemoryServiceGrpc;
 import com.android.tools.profiler.proto.NetworkServiceGrpc;
-import com.android.tools.profiler.proto.Profiler;
 import com.android.tools.profiler.proto.Profiler.*;
 import com.android.tools.profiler.proto.ProfilerServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import org.junit.Assert;
 
 /**
  * Test class for managing a connection to perfd.
@@ -23,16 +23,16 @@ public class GrpcUtils {
     private final EventServiceGrpc.EventServiceBlockingStub myEventServiceStub;
     private final NetworkServiceGrpc.NetworkServiceBlockingStub myNetworkServiceStub;
     private final MemoryServiceGrpc.MemoryServiceBlockingStub myMemoryServiceStub;
+    private final FakeAndroidDriver myMockApp;
 
-    /**
-     * Connect to perfd using a socket and port, currently abstract sockets are not supported.
-     */
-    public GrpcUtils(String socket, int port) {
+    /** Connect to perfd using a socket and port, currently abstract sockets are not supported. */
+    public GrpcUtils(String socket, int port, FakeAndroidDriver mockApp) {
         myChannel = connectGrpc(socket, port);
         myProfilerServiceStub = ProfilerServiceGrpc.newBlockingStub(myChannel);
         myEventServiceStub = EventServiceGrpc.newBlockingStub(myChannel);
         myNetworkServiceStub = NetworkServiceGrpc.newBlockingStub(myChannel);
         myMemoryServiceStub = MemoryServiceGrpc.newBlockingStub(myChannel);
+        myMockApp = mockApp;
     }
 
     public ProfilerServiceGrpc.ProfilerServiceBlockingStub getProfilerStub() {
@@ -61,18 +61,6 @@ public class GrpcUtils {
     }
 
     /**
-     * Support function to get the running process ID of the perfa application. If no process is
-     * running this function will assert.
-     */
-    public int getProcessId() {
-        Profiler.GetProcessesResponse process =
-            myProfilerServiceStub.getProcesses(
-                Profiler.GetProcessesRequest.getDefaultInstance());
-        Assert.assertEquals(1, process.getProcessCount());
-        return process.getProcess(0).getPid();
-    }
-
-    /**
      * Support function to get the main activity. This function checks for the activity name, if it
      * is not the default activity an assert will be thrown.
      */
@@ -83,24 +71,37 @@ public class GrpcUtils {
         return response;
     }
 
+    /** Begins the profiler session on the specified pid. */
+    public Session beginSession(int pid) {
+        BeginSessionRequest.Builder requestBuilder =
+                BeginSessionRequest.newBuilder().setDeviceId(1234).setPid(pid);
+        BeginSessionResponse response = myProfilerServiceStub.beginSession(requestBuilder.build());
+        return response.getSession();
+    }
+
     /**
-     * Begins the profiler session when perfa having one process running. There are some time gap
-     * between app activity started and perfa process running, need wait first.
+     * Begins the profiler session on the specified pid and attach the JVMTI agent via the
+     * agentAttachPort.
      */
-    public Session beginSession() {
-        while (true) {
-            Profiler.GetProcessesResponse process =
-                    myProfilerServiceStub.getProcesses(
-                            Profiler.GetProcessesRequest.getDefaultInstance());
-            if (process.getProcessCount() == 1) {
-                BeginSessionResponse response =
-                        myProfilerServiceStub.beginSession(
-                                BeginSessionRequest.newBuilder()
-                                        .setDeviceId(1234)
-                                        .setProcessId(process.getProcess(0).getPid())
+    public Session beginSessionWithAgent(int pid, int agentAttachPort) {
+        Session session = beginSession(pid);
+
+        // The test infra calls attach-agent via the communication port instead of the app's pid.
+        // So here we are making an extra beginSession call with the attachPid (aka communication port) to allow the
+        // agent to attach.
+        BeginSessionRequest.Builder requestBuilder =
+                BeginSessionRequest.newBuilder()
+                        .setDeviceId(1234)
+                        .setPid(agentAttachPort)
+                        .setJvmtiConfig(
+                                BeginSessionRequest.JvmtiConfig.newBuilder()
+                                        .setAttachAgent(true)
+                                        .setAgentLibFileName("libperfa.so")
                                         .build());
-                return response.getSession();
-            }
-        }
+        myProfilerServiceStub.beginSession(requestBuilder.build());
+        // Block until we can verify the agent was fully attached.
+        assertThat(myMockApp.waitForInput("StudioProfilers agent attached.")).isTrue();
+
+        return session;
     }
 }

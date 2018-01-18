@@ -25,6 +25,8 @@ service AgentService {
 }
 
 message HeartBeatRequest {
+  // The process' id. Note that the agent's pid is the same as the pid we use for
+  // the heartbeat because the agent resides within the process being profiled.
   int32 pid = 1;
 }
 

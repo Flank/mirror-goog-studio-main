@@ -13,12 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <jni.h>
 
-package com.activity;
+#include <sys/types.h>
+#include <unistd.h>
 
-public class MyActivity extends PerfdTestActivity {
-    public MyActivity() {
-        //TODO: Read this from config file shared with test.
-        super("My Activity");
-    }
+// A simple JNI library for printing out app-related info so the tests can
+// consumed these data.
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+  JNIEnv* env;
+  if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
+    return -1;
+  }
+
+  // The process' id.
+  int32_t pid = getpid();
+  printf("PID=%d\n", pid);
+
+  return JNI_VERSION_1_6;
 }

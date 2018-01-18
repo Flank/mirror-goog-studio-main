@@ -68,8 +68,10 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
   return (strcmp(sig_mutf8, "Ljava/net/URL;") == 0) ||
          (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
          (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0) ||
-         (strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 && energy_profiler_enabled) ||
-         (strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0 && energy_profiler_enabled);
+         (strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 &&
+          energy_profiler_enabled) ||
+         (strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0 &&
+          energy_profiler_enabled);
 }
 
 // ClassPrepare event callback to invoke transformation of selected
@@ -145,9 +147,11 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
 
     slicer::MethodInstrumenter mi(dex_ir);
     // Add Entry hook method with this argument passed as type Object.
-    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/network/okhttp/OkHttp3Wrapper;",
-        "setOkHttpClassLoader"), true);
+    mi.AddTransformation<slicer::EntryHook>(
+        ir::MethodId("Lcom/android/tools/profiler/support/network/okhttp/"
+                     "OkHttp3Wrapper;",
+                     "setOkHttpClassLoader"),
+        true);
     mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/network/okhttp/OkHttp3Wrapper;",
         "insertInterceptor"));
@@ -179,9 +183,11 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
 
     slicer::MethodInstrumenter mi(dex_ir);
     // Add Entry hook method with this argument passed as type Object.
-    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/network/okhttp/OkHttp2Wrapper;",
-        "setOkHttpClassLoader"), true);
+    mi.AddTransformation<slicer::EntryHook>(
+        ir::MethodId("Lcom/android/tools/profiler/support/network/okhttp/"
+                     "OkHttp2Wrapper;",
+                     "setOkHttpClassLoader"),
+        true);
     mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/network/okhttp/OkHttp2Wrapper;",
         "insertInterceptor"));
@@ -216,8 +222,8 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
         "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
         "onNewWakeLockExit"));
     if (!mi.InstrumentMethod(ir::MethodId(
-        desc.c_str(), "newWakeLock",
-        "(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;"))) {
+            desc.c_str(), "newWakeLock",
+            "(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;"))) {
       Log::E("Error instrumenting PowerManager.newWakeLock");
     }
 
@@ -247,12 +253,12 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     mi_acq.AddTransformation<slicer::EntryHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
         "wrapAcquire"));
-    if (!mi_acq.InstrumentMethod(ir::MethodId(
-        desc.c_str(), "acquire", "()V"))) {
+    if (!mi_acq.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "acquireLocked", "()V"))) {
       Log::E("Error instrumenting WakeLock.acquire");
     }
-    if (!mi_acq.InstrumentMethod(ir::MethodId(
-        desc.c_str(), "acquire", "(J)V"))) {
+    if (!mi_acq.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "acquire", "(J)V"))) {
       Log::E("Error instrumenting WakeLock.acquire(long)");
     }
 
@@ -261,9 +267,9 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     mi_rel.AddTransformation<slicer::EntryHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
         "wrapRelease"));
-    if (!mi_rel.InstrumentMethod(ir::MethodId(
-        desc.c_str(), "release", "(I)V"))) {
-      Log::E("Error instrumenting WakeLock.release(int)");
+    if (!mi_rel.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "release", "(I)V"))) {
+      Log::E("Error instrumenting WakeLock.release");
     }
 
     size_t new_image_size = 0;
@@ -320,12 +326,12 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
   }
 
   if (agent_config->energy_profiler_enabled()) {
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/WakeLockWrapper",
-        "sendWakeLockAcquired", "()V");
-    BindJNIMethod(
-        jni, "com/android/tools/profiler/support/energy/WakeLockWrapper",
-        "sendWakeLockReleased", "()V");
+    BindJNIMethod(jni,
+                  "com/android/tools/profiler/support/energy/WakeLockWrapper",
+                  "sendWakeLockAcquired", "()V");
+    BindJNIMethod(jni,
+                  "com/android/tools/profiler/support/energy/WakeLockWrapper",
+                  "sendWakeLockReleased", "()V");
   }
 
   BindJNIMethod(jni,
@@ -428,9 +434,10 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
       jni->FindClass("com/android/tools/profiler/support/ProfilerService");
   jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "(ZZ)V");
   bool log_live_alloc_count = agent_config->mem_config().use_live_alloc();
-  bool network_request_payload = agent_config->profiler_network_request_payload();
+  bool network_request_payload =
+      agent_config->profiler_network_request_payload();
   jni->CallStaticVoidMethod(service, initialize, !log_live_alloc_count,
-      network_request_payload);
+                            network_request_payload);
 }
 
 extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
@@ -449,7 +456,6 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
 
   // TODO: Update options to support more than one argument if needed.
   profiler::Config config(options);
-  Log::V("StudioProfilers agent attached.");
   auto agent_config = config.GetAgentConfig();
   Agent::Instance(&config);
 
@@ -503,10 +509,14 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   }
   jvmti_env->Deallocate(reinterpret_cast<unsigned char*>(loaded_classes));
 
-  MemoryTrackingEnv::Instance(vm,
-                            agent_config.mem_config().use_live_alloc(),
-                            agent_config.mem_config().max_stack_depth(),
-                            agent_config.mem_config().track_global_jni_refs());
+  MemoryTrackingEnv::Instance(
+      vm, agent_config.mem_config().use_live_alloc(),
+      agent_config.mem_config().max_stack_depth(),
+      agent_config.mem_config().track_global_jni_refs());
+
+  // Perf-test currently waits on this message to determine the attach process
+  // is completed.
+  Log::V("StudioProfilers agent attached.");
 
   return JNI_OK;
 }

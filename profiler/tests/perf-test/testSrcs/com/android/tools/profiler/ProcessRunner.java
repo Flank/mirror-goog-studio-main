@@ -79,8 +79,8 @@ public class ProcessRunner {
     }
 
     /**
-     * Wait for a specific string to be retrieved from the server. This function uses a
-     * default timeout and will return false if a string is not found in thst time.
+     * Wait for a specific string to be retrieved from the server. This function uses a default
+     * timeout and will return false if a string is not found in that time.
      */
     public boolean waitForInput(String statement) {
         return containsStatement(myInput, statement, DEFAULT_INPUT_TIMEOUT);

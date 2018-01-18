@@ -51,7 +51,11 @@ public class BasicPerfTest {
         myGrpc = myPerfDriver.getGrpc();
 
         // Invoke beginSession to establish a session we can use to query data
-        mySession = myGrpc.beginSession();
+        mySession =
+                myIsOPlusDevice
+                        ? myGrpc.beginSessionWithAgent(
+                                myPerfDriver.getPid(), myPerfDriver.getCommunicationPort())
+                        : myGrpc.beginSession(myPerfDriver.getPid());
     }
 
     @Test
