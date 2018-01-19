@@ -28,8 +28,10 @@ import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.ManifestAttributeSupplier;
+import com.android.builder.core.MergedFlavor;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.BuildType;
@@ -148,6 +150,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     /** For reading the attributes from the main manifest file in the default source set. */
     @NonNull private final ManifestAttributeSupplier mManifestAttributeSupplier;
 
+    /** For recording sync issues. */
+    @NonNull private final EvalIssueReporter mIssueReporter;
+
     /**
      * Creates the configuration with the base source sets for a given {@link VariantType}. Meant
      * for non-testing variants.
@@ -166,7 +171,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             @NonNull T buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type,
-            @Nullable SigningConfig signingConfigOverride) {
+            @Nullable SigningConfig signingConfigOverride,
+            @NonNull EvalIssueReporter issueReporter) {
         this(
                 defaultConfig,
                 defaultSourceProvider,
@@ -175,7 +181,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
                 buildTypeSourceProvider,
                 type,
                 null /*testedConfig*/,
-                signingConfigOverride);
+                signingConfigOverride,
+                issueReporter);
     }
 
     /**
@@ -198,7 +205,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type,
             @Nullable VariantConfiguration<T, D, F> testedConfig,
-            @Nullable SigningConfig signingConfigOverride) {
+            @Nullable SigningConfig signingConfigOverride,
+            @NonNull EvalIssueReporter issueReporter) {
         checkNotNull(defaultConfig);
         checkNotNull(defaultSourceProvider);
         checkNotNull(buildType);
@@ -221,7 +229,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         mType = checkNotNull(type);
         mTestedConfig = testedConfig;
         mSigningConfigOverride = signingConfigOverride;
-        mMergedFlavor = DefaultProductFlavor.clone(mDefaultConfig);
+        mIssueReporter = issueReporter;
+        mMergedFlavor = MergedFlavor.clone(mDefaultConfig, mIssueReporter);
     }
 
     /**
@@ -553,7 +562,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         mFlavors.add(productFlavor);
         mFlavorSourceProviders.add(sourceProvider);
         mFlavorDimensionNames.add(dimensionName);
-        mMergedFlavor = DefaultProductFlavor.mergeFlavors(getDefaultConfig(), mFlavors);
+        mMergedFlavor = MergedFlavor.mergeFlavors(mDefaultConfig, mFlavors, mIssueReporter);
 
         return this;
     }
@@ -1629,5 +1638,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     private ManifestAttributeSupplier getManifestAttributeSupplier(){
         return mManifestAttributeSupplier;
+    }
+
+    @NonNull
+    protected EvalIssueReporter getIssueReporter() {
+        return mIssueReporter;
     }
 }

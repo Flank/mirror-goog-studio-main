@@ -29,7 +29,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.Arrays;
@@ -741,6 +740,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
                 ImmutableList.copyOf(requestedValues.subList(1, requestedValues.size())));
     }
 
+    @NonNull
     public Map<String, DimensionRequest> getMissingDimensionStrategies() {
         if (missingDimensionSelections == null) {
             return ImmutableMap.of();
@@ -750,229 +750,96 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     }
 
     /**
-     * Merges the flavors by analyzing the specified one and the list. Flavors whose position in the
-     * list is higher will have their values overwritten by the lower-position flavors (in case they
-     * have non-null values for some properties). E.g. if flavor at position 1 specifies
-     * applicationId &quot;my.application&quot;, and flavor at position 0 specifies
-     * &quot;sample.app&quot;, merged flavor will have applicationId &quot;sampleapp&quot; (if there
-     * are no other flavors overwriting this value). Flavor {@code lowestPriority}, as the name
-     * says, has the lowest priority of them all, and will always be overwritten.
-     *
-     * @param lowestPriority flavor with the lowest priority
-     * @param flavors flavors to merge
-     * @return final merged product flavor
-     */
-    public static ProductFlavor mergeFlavors(
-            @NonNull ProductFlavor lowestPriority, @NonNull List<? extends ProductFlavor> flavors) {
-        DefaultProductFlavor mergedFlavor = DefaultProductFlavor.clone(lowestPriority);
-        for (ProductFlavor flavor : Lists.reverse(flavors)) {
-            mergedFlavor = DefaultProductFlavor.mergeFlavors(mergedFlavor, flavor);
-        }
-
-        /*
-         * For variants with product flavor dimensions d1, d2 and flavors f1 of d1 and f2 of d2, we
-         * will have final applicationSuffixId suffix(default).suffix(f2).suffix(f1). However, the
-         * previous implementation of product flavor merging would produce
-         * suffix(default).suffix(f1).suffix(f2). We match that behavior below as we do not want to
-         * change application id of developers' applications. The same applies to versionNameSuffix.
-         */
-        String applicationIdSuffix = lowestPriority.getApplicationIdSuffix();
-        String versionNameSuffix = lowestPriority.getVersionNameSuffix();
-        for (ProductFlavor mFlavor : flavors) {
-            applicationIdSuffix =
-                    DefaultProductFlavor.mergeApplicationIdSuffix(
-                            mFlavor.getApplicationIdSuffix(), applicationIdSuffix);
-            versionNameSuffix =
-                    DefaultProductFlavor.mergeVersionNameSuffix(
-                            mFlavor.getVersionNameSuffix(), versionNameSuffix);
-        }
-        mergedFlavor.setApplicationIdSuffix(applicationIdSuffix);
-        mergedFlavor.setVersionNameSuffix(versionNameSuffix);
-
-        return mergedFlavor;
-    }
-
-    /**
-     * Merges two flavors on top of one another and returns a new object with the result.
+     * Merges a higher-priority flavor (overlay) on top of this one.
      *
      * <p>The behavior is that if a value is present in the overlay, then it is used, otherwise we
-     * use the value from the base.
+     * use the existing value.
      *
-     * @param base the flavor to merge on top of
-     * @param overlay the flavor to apply on top of the base.
-     * @return a new ProductFlavor that represents the merge.
+     * @param overlay the higher-priority flavor to apply to this flavor
      */
-    @NonNull
-    private static DefaultProductFlavor mergeFlavors(
-            @NonNull ProductFlavor base, @NonNull ProductFlavor overlay) {
-        DefaultProductFlavor flavor = new DefaultProductFlavor("");
+    protected void mergeWithHigherPriorityFlavor(@NonNull ProductFlavor overlay) {
+        mMinSdkVersion = chooseNotNull(overlay.getMinSdkVersion(), mMinSdkVersion);
+        mTargetSdkVersion = chooseNotNull(overlay.getTargetSdkVersion(), mTargetSdkVersion);
+        mMaxSdkVersion = chooseNotNull(overlay.getMaxSdkVersion(), mMaxSdkVersion);
 
-        flavor.mMinSdkVersion = chooseNotNull(
-                overlay.getMinSdkVersion(),
-                base.getMinSdkVersion());
-        flavor.mTargetSdkVersion = chooseNotNull(
-                overlay.getTargetSdkVersion(),
-                base.getTargetSdkVersion());
-        flavor.mMaxSdkVersion = chooseNotNull(
-                overlay.getMaxSdkVersion(),
-                base.getMaxSdkVersion());
+        mRenderscriptTargetApi =
+                chooseNotNull(overlay.getRenderscriptTargetApi(), mRenderscriptTargetApi);
+        mRenderscriptSupportModeEnabled =
+                chooseNotNull(
+                        overlay.getRenderscriptSupportModeEnabled(),
+                        mRenderscriptSupportModeEnabled);
+        mRenderscriptSupportModeBlasEnabled =
+                chooseNotNull(
+                        overlay.getRenderscriptSupportModeBlasEnabled(),
+                        mRenderscriptSupportModeBlasEnabled);
+        mRenderscriptNdkModeEnabled =
+                chooseNotNull(overlay.getRenderscriptNdkModeEnabled(), mRenderscriptNdkModeEnabled);
 
-        flavor.mRenderscriptTargetApi = chooseNotNull(
-                overlay.getRenderscriptTargetApi(),
-                base.getRenderscriptTargetApi());
-        flavor.mRenderscriptSupportModeEnabled = chooseNotNull(
-                overlay.getRenderscriptSupportModeEnabled(),
-                base.getRenderscriptSupportModeEnabled());
-        flavor.mRenderscriptSupportModeBlasEnabled = chooseNotNull(
-                overlay.getRenderscriptSupportModeBlasEnabled(),
-                base.getRenderscriptSupportModeBlasEnabled());
-        flavor.mRenderscriptNdkModeEnabled = chooseNotNull(
-                overlay.getRenderscriptNdkModeEnabled(),
-                base.getRenderscriptNdkModeEnabled());
+        mVersionCode = chooseNotNull(overlay.getVersionCode(), mVersionCode);
+        mVersionName = chooseNotNull(overlay.getVersionName(), mVersionName);
 
-        flavor.mVersionCode = chooseNotNull(overlay.getVersionCode(), base.getVersionCode());
-        flavor.mVersionName = chooseNotNull(overlay.getVersionName(), base.getVersionName());
+        setVersionNameSuffix(
+                mergeVersionNameSuffix(overlay.getVersionNameSuffix(), getVersionNameSuffix()));
 
-        flavor.setVersionNameSuffix(
-                mergeVersionNameSuffix(
-                        overlay.getVersionNameSuffix(), base.getVersionNameSuffix()));
+        mApplicationId = chooseNotNull(overlay.getApplicationId(), mApplicationId);
 
-        flavor.mApplicationId = chooseNotNull(overlay.getApplicationId(), base.getApplicationId());
-
-        flavor.setApplicationIdSuffix(
+        setApplicationIdSuffix(
                 mergeApplicationIdSuffix(
-                        overlay.getApplicationIdSuffix(), base.getApplicationIdSuffix()));
+                        overlay.getApplicationIdSuffix(), getApplicationIdSuffix()));
 
-        flavor.mTestApplicationId = chooseNotNull(
-                overlay.getTestApplicationId(),
-                base.getTestApplicationId());
-        flavor.mTestInstrumentationRunner = chooseNotNull(
-                overlay.getTestInstrumentationRunner(),
-                base.getTestInstrumentationRunner());
+        mTestApplicationId = chooseNotNull(overlay.getTestApplicationId(), mTestApplicationId);
+        mTestInstrumentationRunner =
+                chooseNotNull(overlay.getTestInstrumentationRunner(), mTestInstrumentationRunner);
 
-        flavor.mTestInstrumentationRunnerArguments.putAll(
-                base.getTestInstrumentationRunnerArguments());
-        flavor.mTestInstrumentationRunnerArguments.putAll(
-                overlay.getTestInstrumentationRunnerArguments());
+        mTestInstrumentationRunnerArguments.putAll(overlay.getTestInstrumentationRunnerArguments());
 
-        flavor.mTestHandleProfiling = chooseNotNull(
-                overlay.getTestHandleProfiling(),
-                base.getTestHandleProfiling());
+        mTestHandleProfiling =
+                chooseNotNull(overlay.getTestHandleProfiling(), mTestHandleProfiling);
 
-        flavor.mTestFunctionalTest = chooseNotNull(
-                overlay.getTestFunctionalTest(),
-                base.getTestFunctionalTest());
+        mTestFunctionalTest = chooseNotNull(overlay.getTestFunctionalTest(), mTestFunctionalTest);
 
-        flavor.mSigningConfig = chooseNotNull(
-                overlay.getSigningConfig(),
-                base.getSigningConfig());
+        // should this be a copy instead?
+        mSigningConfig = chooseNotNull(overlay.getSigningConfig(), mSigningConfig);
 
-        flavor.mWearAppUnbundled = chooseNotNull(
-                overlay.getWearAppUnbundled(),
-                base.getWearAppUnbundled());
+        mWearAppUnbundled = chooseNotNull(overlay.getWearAppUnbundled(), mWearAppUnbundled);
 
-        flavor.addResourceConfigurations(base.getResourceConfigurations());
-        flavor.addResourceConfigurations(overlay.getResourceConfigurations());
+        addResourceConfigurations(overlay.getResourceConfigurations());
 
-        flavor.addManifestPlaceholders(base.getManifestPlaceholders());
-        flavor.addManifestPlaceholders(overlay.getManifestPlaceholders());
+        addManifestPlaceholders(overlay.getManifestPlaceholders());
 
-        flavor.addResValues(base.getResValues());
-        flavor.addResValues(overlay.getResValues());
+        addResValues(overlay.getResValues());
 
-        flavor.addBuildConfigFields(base.getBuildConfigFields());
-        flavor.addBuildConfigFields(overlay.getBuildConfigFields());
+        addBuildConfigFields(overlay.getBuildConfigFields());
 
-        flavor.setMultiDexEnabled(chooseNotNull(
-                overlay.getMultiDexEnabled(), base.getMultiDexEnabled()));
+        setMultiDexEnabled(chooseNotNull(overlay.getMultiDexEnabled(), getMultiDexEnabled()));
 
-        flavor.setMultiDexKeepFile(chooseNotNull(
-                overlay.getMultiDexKeepFile(), base.getMultiDexKeepFile()));
+        setMultiDexKeepFile(chooseNotNull(overlay.getMultiDexKeepFile(), getMultiDexKeepFile()));
 
-        flavor.setMultiDexKeepProguard(chooseNotNull(
-                overlay.getMultiDexKeepProguard(), base.getMultiDexKeepProguard()));
+        setMultiDexKeepProguard(
+                chooseNotNull(overlay.getMultiDexKeepProguard(), getMultiDexKeepProguard()));
 
-        flavor.getVectorDrawables().setGeneratedDensities(
-                chooseNotNull(
-                        overlay.getVectorDrawables().getGeneratedDensities(),
-                        base.getVectorDrawables().getGeneratedDensities()));
+        getVectorDrawables()
+                .setGeneratedDensities(
+                        chooseNotNull(
+                                overlay.getVectorDrawables().getGeneratedDensities(),
+                                getVectorDrawables().getGeneratedDensities()));
 
-        flavor.getVectorDrawables().setUseSupportLibrary(
-                chooseNotNull(
-                        overlay.getVectorDrawables().getUseSupportLibrary(),
-                        base.getVectorDrawables().getUseSupportLibrary()));
+        getVectorDrawables()
+                .setUseSupportLibrary(
+                        chooseNotNull(
+                                overlay.getVectorDrawables().getUseSupportLibrary(),
+                                getVectorDrawables().getUseSupportLibrary()));
 
-        flavor.missingDimensionSelections = Maps.newHashMap();
-        if (base instanceof DefaultProductFlavor) {
-            flavor.missingDimensionSelections.putAll(
-                    ((DefaultProductFlavor) base).getMissingDimensionStrategies());
-        }
         if (overlay instanceof DefaultProductFlavor) {
-            flavor.missingDimensionSelections.putAll(
+            if (missingDimensionSelections == null) {
+                missingDimensionSelections = Maps.newHashMap();
+            }
+            missingDimensionSelections.putAll(
                     ((DefaultProductFlavor) overlay).getMissingDimensionStrategies());
         }
 
         // no need to merge missingDimensionStrategies, it's not queried from the merged flavor.
         // TODO this should all be clean up with the new variant DSL/API in 3.1
-
-        return flavor;
-    }
-
-    /**
-     * Clone a given product flavor.
-     *
-     * @param productFlavor the flavor to clone.
-     * @return a new instance that is a clone of the flavor.
-     */
-    @NonNull
-    public static DefaultProductFlavor clone(@NonNull ProductFlavor productFlavor) {
-        DefaultProductFlavor flavor = new DefaultProductFlavor(productFlavor.getName());
-        flavor._initWith(productFlavor);
-        flavor.mDimension = productFlavor.getDimension();
-        flavor.mMinSdkVersion = productFlavor.getMinSdkVersion();
-        flavor.mTargetSdkVersion = productFlavor.getTargetSdkVersion();
-        flavor.mMaxSdkVersion = productFlavor.getMaxSdkVersion();
-        flavor.mRenderscriptTargetApi = productFlavor.getRenderscriptTargetApi();
-        flavor.mRenderscriptSupportModeEnabled = productFlavor.getRenderscriptSupportModeEnabled();
-        flavor.mRenderscriptSupportModeBlasEnabled = productFlavor.getRenderscriptSupportModeBlasEnabled();
-        flavor.mRenderscriptNdkModeEnabled = productFlavor.getRenderscriptNdkModeEnabled();
-
-        flavor.mVersionCode = productFlavor.getVersionCode();
-        flavor.mVersionName = productFlavor.getVersionName();
-        flavor.setVersionNameSuffix(productFlavor.getVersionNameSuffix());
-
-        flavor.mApplicationId = productFlavor.getApplicationId();
-
-        flavor.mTestApplicationId = productFlavor.getTestApplicationId();
-        flavor.mTestInstrumentationRunner = productFlavor.getTestInstrumentationRunner();
-        flavor.mTestInstrumentationRunnerArguments = productFlavor.getTestInstrumentationRunnerArguments();
-        flavor.mTestHandleProfiling = productFlavor.getTestHandleProfiling();
-        flavor.mTestFunctionalTest = productFlavor.getTestFunctionalTest();
-
-        flavor.mSigningConfig = productFlavor.getSigningConfig();
-
-        flavor.mVectorDrawablesOptions =
-                DefaultVectorDrawablesOptions.copyOf(productFlavor.getVectorDrawables());
-        flavor.mWearAppUnbundled = productFlavor.getWearAppUnbundled();
-
-        flavor.addResourceConfigurations(productFlavor.getResourceConfigurations());
-        flavor.addManifestPlaceholders(productFlavor.getManifestPlaceholders());
-
-        flavor.addResValues(productFlavor.getResValues());
-        flavor.addBuildConfigFields(productFlavor.getBuildConfigFields());
-
-        flavor.setMultiDexEnabled(productFlavor.getMultiDexEnabled());
-
-        flavor.setMultiDexKeepFile(productFlavor.getMultiDexKeepFile());
-        flavor.setMultiDexKeepProguard(productFlavor.getMultiDexKeepProguard());
-
-        if (productFlavor instanceof DefaultProductFlavor) {
-            final DefaultProductFlavor defaultProductFlavor = (DefaultProductFlavor) productFlavor;
-            flavor.missingDimensionSelections =
-                    Maps.newHashMap(defaultProductFlavor.getMissingDimensionStrategies());
-        }
-
-        return flavor;
     }
 
     protected void cloneFrom(@NonNull ProductFlavor flavor) {
@@ -982,12 +849,54 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     @Override
     protected void _initWith(@NonNull BaseConfig that) {
         super._initWith(that);
+        if (that instanceof ProductFlavor) {
+            ProductFlavor thatProductFlavor = (ProductFlavor) that;
+            mDimension = thatProductFlavor.getDimension();
+            mMinSdkVersion = thatProductFlavor.getMinSdkVersion();
+            mTargetSdkVersion = thatProductFlavor.getTargetSdkVersion();
+            mMaxSdkVersion = thatProductFlavor.getMaxSdkVersion();
+            mRenderscriptTargetApi = thatProductFlavor.getRenderscriptTargetApi();
+            mRenderscriptSupportModeEnabled = thatProductFlavor.getRenderscriptSupportModeEnabled();
+            mRenderscriptSupportModeBlasEnabled =
+                    thatProductFlavor.getRenderscriptSupportModeBlasEnabled();
+            mRenderscriptNdkModeEnabled = thatProductFlavor.getRenderscriptNdkModeEnabled();
+
+            mVersionCode = thatProductFlavor.getVersionCode();
+            mVersionName = thatProductFlavor.getVersionName();
+            setVersionNameSuffix(thatProductFlavor.getVersionNameSuffix());
+
+            mApplicationId = thatProductFlavor.getApplicationId();
+
+            mTestApplicationId = thatProductFlavor.getTestApplicationId();
+            mTestInstrumentationRunner = thatProductFlavor.getTestInstrumentationRunner();
+            mTestInstrumentationRunnerArguments =
+                    Maps.newHashMap(thatProductFlavor.getTestInstrumentationRunnerArguments());
+            mTestHandleProfiling = thatProductFlavor.getTestHandleProfiling();
+            mTestFunctionalTest = thatProductFlavor.getTestFunctionalTest();
+
+            // should this be a copy instead?
+            mSigningConfig = thatProductFlavor.getSigningConfig();
+
+            mVectorDrawablesOptions =
+                    DefaultVectorDrawablesOptions.copyOf(thatProductFlavor.getVectorDrawables());
+            mWearAppUnbundled = thatProductFlavor.getWearAppUnbundled();
+
+            addResourceConfigurations(thatProductFlavor.getResourceConfigurations());
+            addManifestPlaceholders(thatProductFlavor.getManifestPlaceholders());
+
+            addResValues(thatProductFlavor.getResValues());
+            addBuildConfigFields(thatProductFlavor.getBuildConfigFields());
+
+            setMultiDexEnabled(thatProductFlavor.getMultiDexEnabled());
+
+            setMultiDexKeepFile(thatProductFlavor.getMultiDexKeepFile());
+            setMultiDexKeepProguard(thatProductFlavor.getMultiDexKeepProguard());
+        }
         if (that instanceof DefaultProductFlavor) {
-            DefaultProductFlavor from = (DefaultProductFlavor) that;
-            if (from.missingDimensionSelections != null) {
-                // the objects inside the map are immutable, so it's fine to keep them.
-                missingDimensionSelections = Maps.newHashMap(from.missingDimensionSelections);
-            }
+            DefaultProductFlavor thatDefaultProductFlavor = (DefaultProductFlavor) that;
+            // the objects inside the map are immutable, so it's fine to keep them.
+            missingDimensionSelections =
+                    Maps.newHashMap(thatDefaultProductFlavor.getMissingDimensionStrategies());
         }
     }
 

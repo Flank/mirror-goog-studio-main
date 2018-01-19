@@ -861,7 +861,8 @@ public class VariantManager implements VariantModel {
                                 buildTypeData.getBuildType(),
                                 buildTypeData.getSourceSet(),
                                 variantType,
-                                signingOverride);
+                                signingOverride,
+                                globalScope.getErrorHandler());
 
         // sourceSetContainer in case we are creating variant specific sourceSets.
         NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer = extension
