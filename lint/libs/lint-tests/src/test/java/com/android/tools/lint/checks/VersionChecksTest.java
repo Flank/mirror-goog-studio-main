@@ -2309,6 +2309,39 @@ public class VersionChecksTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testApplyBlock() {
+        // Regression test for 71809249: False positive when using lambdas and higher-order functions
+        lint().files(
+                kotlin("" +
+                        "package com.example.lintexample\n" +
+                        "\n" +
+                        "import android.app.NotificationChannel\n" +
+                        "import android.app.NotificationManager\n" +
+                        "import android.content.Context\n" +
+                        "import android.os.Build\n" +
+                        "import android.app.Activity\n" +
+                        "\n" +
+                        "class MainActivity : Activity() {\n" +
+                        "\n" +
+                        "    fun test(notificationChannel: NotificationChannel) {\n" +
+                        "        val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager\n" +
+                        "        notificationManager.applyForOreoOrAbove {\n" +
+                        "            createNotificationChannel(notificationChannel)\n" +
+                        "        }\n" +
+                        "\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "inline fun <T> T.applyForOreoOrAbove(block: T.() -> Unit): T {\n" +
+                        "    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {\n" +
+                        "        block()\n" +
+                        "    }\n" +
+                        "    return this\n" +
+                        "}\n"))
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected Detector getDetector() {
         return new ApiDetector();
