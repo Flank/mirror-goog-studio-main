@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
-import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
+import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -428,8 +428,7 @@ public class ModelBuilderTest {
         final VariantType type = variantConfiguration.getType();
         //noinspection ConstantConditions
         if (type != null) {
-            when(variantScope.getPublishingSpec())
-                    .thenReturn(VariantPublishingSpec.getVariantSpec(type));
+            when(variantScope.getPublishingSpec()).thenReturn(PublishingSpecs.getVariantSpec(type));
         }
 
         return variantScope;

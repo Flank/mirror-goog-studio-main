@@ -497,6 +497,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/test/report/report.js",
                 "com/android/build/gradle/internal/test/report/style.css",
                 "com/android/build/gradle/internal/transforms/",
+                "com/android/build/gradle/internal/utils/",
                 "com/android/build/gradle/internal/variant/",
                 "com/android/build/gradle/internal/variant2/",
                 "com/android/build/gradle/internal/workeractions/",

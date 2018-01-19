@@ -68,8 +68,9 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
-import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
-import com.android.build.gradle.internal.publishing.VariantPublishingSpec.OutputPublishingSpec;
+import com.android.build.gradle.internal.publishing.PublishingSpecs;
+import com.android.build.gradle.internal.publishing.PublishingSpecs.OutputSpec;
+import com.android.build.gradle.internal.publishing.PublishingSpecs.VariantSpec;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -89,7 +90,6 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
-import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
@@ -153,7 +153,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private static final ILogger LOGGER = LoggerWrapper.getLogger(VariantScopeImpl.class);
 
-    @NonNull private final VariantPublishingSpec variantPublishingSpec;
+    @NonNull private final PublishingSpecs.VariantSpec variantPublishingSpec;
 
     @NonNull private final GlobalScope globalScope;
     @NonNull private final BaseVariantData variantData;
@@ -176,7 +176,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private RenderscriptCompile renderscriptCompileTask;
     private AidlCompile aidlCompileTask;
-    @Nullable private MergeResources mergeResourcesTask;
     @Nullable private MergeSourceSetFolders mergeAssetsTask;
     private GenerateBuildConfig generateBuildConfigTask;
 
@@ -220,7 +219,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.globalScope = globalScope;
         this.transformManager = transformManager;
         this.variantData = variantData;
-        this.variantPublishingSpec = VariantPublishingSpec.getVariantSpec(variantData.getType());
+        this.variantPublishingSpec = PublishingSpecs.getVariantSpec(variantData.getType());
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         this.instantRunBuildContext =
                 new InstantRunBuildContext(
@@ -274,7 +273,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public VariantPublishingSpec getPublishingSpec() {
+    public PublishingSpecs.VariantSpec getPublishingSpec() {
         return variantPublishingSpec;
     }
 
@@ -293,7 +292,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         if (file instanceof File) {
-            OutputPublishingSpec taskSpec = variantPublishingSpec.getSpec(outputType);
+            OutputSpec taskSpec = variantPublishingSpec.getSpec(outputType);
             if (taskSpec != null) {
                 publishIntermediateArtifact(
                         (File) file,
@@ -2050,11 +2049,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
             // we only add the tested component to the MODULE | ALL scopes.
             if (artifactScope == ArtifactScope.MODULE || artifactScope == ALL) {
-                VariantPublishingSpec testedSpec =
+                VariantSpec testedSpec =
                         testedScope.getPublishingSpec().getTestingSpec(variantType);
 
                 // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
-                OutputPublishingSpec taskOutputSpec = testedSpec.getSpec(artifactType);
+                OutputSpec taskOutputSpec = testedSpec.getSpec(artifactType);
 
                 if (taskOutputSpec != null) {
                     Collection<PublishedConfigType> publishedConfigs =

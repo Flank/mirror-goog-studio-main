@@ -95,7 +95,7 @@ import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
+import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask;
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
@@ -711,13 +711,13 @@ public abstract class TaskManager {
 
             VariantScope testedVariantScope = testedVariantData.getScope();
 
-            VariantPublishingSpec testedSpec =
+            PublishingSpecs.VariantSpec testedSpec =
                     testedVariantScope
                             .getPublishingSpec()
                             .getTestingSpec(variantScope.getVariantConfiguration().getType());
 
             // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
-            VariantPublishingSpec.OutputPublishingSpec taskOutputSpec =
+            PublishingSpecs.OutputSpec taskOutputSpec =
                     testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
             // now get the output type
             TaskOutputHolder.OutputType testedOutputType = taskOutputSpec.getOutputType();

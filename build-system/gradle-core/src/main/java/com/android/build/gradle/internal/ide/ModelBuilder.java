@@ -44,7 +44,7 @@ import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
+import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -785,7 +785,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                             //noinspection ConstantConditions
                             final VariantScope testedVariantScope = testedVariantData.getScope();
 
-                            VariantPublishingSpec testedSpec =
+                            PublishingSpecs.VariantSpec testedSpec =
                                     testedVariantScope
                                             .getPublishingSpec()
                                             .getTestingSpec(
@@ -794,7 +794,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                                                             .getType());
 
                             // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
-                            VariantPublishingSpec.OutputPublishingSpec taskOutputSpec =
+                            PublishingSpecs.OutputSpec taskOutputSpec =
                                     testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
                             // now get the output type
                             TaskOutputHolder.OutputType testedOutputType =
