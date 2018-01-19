@@ -76,16 +76,24 @@ public class VectorDrawableTest {
         project.executor().with(aaptGeneration).run("clean", "assembleDebug");
         Apk apk = project.getApk("debug");
         assertThat(apk).containsResource("drawable-anydpi-v21/heart.xml");
+        assertThat(apk).containsResource("drawable-anydpi-v24/gradient.xml");
         assertThat(apk).containsResource("drawable-hdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-hdpi-v22/gradient.png");
         assertThat(apk).containsResource("drawable-v22/no_need.xml");
         assertThat(apk).containsResource("drawable-xhdpi-v4/heart.png");
+        assertThat(apk).containsResource("drawable-xhdpi-v22/gradient.png");
         assertThat(apk).containsResource("drawable/icon.png");
         assertThat(apk).doesNotContainResource("drawable-hdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v22/gradient.xml");
         assertThat(apk).doesNotContainResource("drawable-hdpi-v22/no_need.png");
         assertThat(apk).doesNotContainResource("drawable-nodpi-v4/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-nodpi-v22/gradient.xml");
         assertThat(apk).doesNotContainResource("drawable-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-v22/gradient.xml");
         assertThat(apk).doesNotContainResource("drawable-xhdpi-v21/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v22/gradient.xml");
         assertThat(apk).doesNotContainResource("drawable/heart.xml");
+        assertThat(apk).doesNotContainResource("drawable/gradient.xml");
 
         // Check HDPI. Test project contains the hdpi png, it should be used instead of the
         // generated one.
