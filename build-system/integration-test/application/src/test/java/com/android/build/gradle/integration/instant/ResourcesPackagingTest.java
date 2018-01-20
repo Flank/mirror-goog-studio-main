@@ -32,6 +32,7 @@ import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.apk.Apk;
 import com.android.tools.ir.client.InstantRunArtifact;
 import com.android.tools.ir.client.InstantRunArtifactType;
@@ -80,7 +81,8 @@ public class ResourcesPackagingTest {
                 InstantRunTestUtils.getInstantRunModel(
                         mProject.model().fetchAndroidProjects().getOnlyModel());
 
-        AndroidVersion androidVersion = new AndroidVersion(separateResourcesApk ? 26 : 21, null);
+        AndroidVersion androidVersion = new AndroidVersion(
+                separateResourcesApk ? SdkVersionInfo.HIGHEST_KNOWN_STABLE_API : 21, null);
         mProject.executor()
                 .withInstantRun(androidVersion, OptionalCompilationStep.FULL_APK)
                 .with(BooleanOption.ENABLE_SEPARATE_APK_RESOURCES, separateResourcesApk)

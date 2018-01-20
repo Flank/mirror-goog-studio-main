@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.apk.Apk;
 import com.android.tools.ir.client.InstantRunArtifact;
 import com.android.tools.ir.client.InstantRunArtifactType;
@@ -55,7 +56,8 @@ public class JavaResourcesTest {
     @Parameterized.Parameters(name="{0}")
     public static Collection<Object[]> getParameters() {
         return Arrays.asList(
-                new Object[][] {{new AndroidVersion(21, null)}, {new AndroidVersion(26, null)}});
+                new Object[][]{{new AndroidVersion(21, null)},
+                        {new AndroidVersion(SdkVersionInfo.HIGHEST_KNOWN_STABLE_API, null)}});
     }
 
     @Parameterized.Parameter() public AndroidVersion androidVersion;

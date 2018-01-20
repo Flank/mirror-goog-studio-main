@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.instant
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.OptionalCompilationStep
 import com.android.sdklib.AndroidVersion
+import com.android.sdklib.SdkVersionInfo
 import org.junit.Rule
 import org.junit.Test
 
@@ -35,7 +36,8 @@ class InstantRunSeparateTestModuleTest {
     fun testFullAndIncrementalBuilds() {
 
         mProject.executor()
-                .withInstantRun(AndroidVersion(26), OptionalCompilationStep.FULL_APK)
+                .withInstantRun(AndroidVersion(SdkVersionInfo.HIGHEST_KNOWN_STABLE_API),
+                        OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug")
     }
 }
