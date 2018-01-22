@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
+import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
@@ -555,6 +556,18 @@ public abstract class ExternalNativeJsonGenerator {
         NativeBuildSystemVariantConfig nativeBuildVariantConfig =
                 new NativeBuildSystemVariantConfig(
                         buildSystem, variantData.getVariantConfiguration());
+
+        Splits splits = globalScope.getExtension().getSplits();
+
+        if (globalScope.getExtension().getGeneratePureSplits()
+                && splits.getAbi().isUniversalApk()) {
+            androidBuilder
+                    .getLogger()
+                    .warning(
+                            "ABI based configuration splits"
+                                    + " and universal APK cannot be both set, universal APK will not be build.");
+        }
+
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         AbiConfigurator abiConfigurator =
                 new AbiConfigurator(
@@ -564,7 +577,7 @@ public abstract class ExternalNativeJsonGenerator {
                         ndkHandler.getDefaultAbis(),
                         nativeBuildVariantConfig.getExternalNativeBuildAbiFilters(),
                         nativeBuildVariantConfig.getNdkAbiFilters(),
-                        globalScope.getExtension().getSplits().getAbiFilters(),
+                        splits.getAbiFilters(),
                         projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI),
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI));
 
