@@ -47,7 +47,7 @@ class ${className} : BottomSheetDialogFragment() {
 <#else>
         list.layoutManager = GridLayoutManager(context, ${columnCount})
 </#if>
-        list.adapter = ${objectKind}Adapter(arguments.getInt(ARG_ITEM_COUNT))
+        list.adapter = ${objectKind}Adapter(arguments?.getInt(ARG_ITEM_COUNT))
     }
 
     override fun onAttach(context: Context) {
