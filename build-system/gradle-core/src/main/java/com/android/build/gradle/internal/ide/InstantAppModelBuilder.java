@@ -54,6 +54,7 @@ import com.android.builder.model.Variant;
 import com.android.builder.model.Version;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.build.ApkInfo;
+import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -174,7 +175,7 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                 buildTypes,
                 productFlavors,
                 variants,
-                "android-26",
+                "android-" + SdkVersionInfo.HIGHEST_KNOWN_STABLE_API,
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
