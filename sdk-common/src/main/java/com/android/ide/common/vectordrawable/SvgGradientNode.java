@@ -162,7 +162,7 @@ public class SvgGradientNode extends SvgNode {
     public void writeXML(@NonNull OutputStreamWriter writer, boolean inClipPath,
             @NonNull String indent) throws IOException {
         if (myGradientStops.isEmpty()) {
-            getTree().logErrorLine("Gradient has no stop info.", getDocumentNode(),
+            getTree().logErrorLine("Gradient has no stop info", getDocumentNode(),
                     SvgLogLevel.ERROR);
             return;
         }

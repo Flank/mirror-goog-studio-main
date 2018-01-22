@@ -195,8 +195,8 @@ class SvgLeafNode extends SvgNode {
 
         if (mVdAttributesMap.containsKey(Svg2Vector.SVG_STROKE_WIDTH)
                 && ((mStackedTransform.getType() & AffineTransform.TYPE_MASK_SCALE) != 0)) {
-            getTree().logErrorLine("We don't scale the stroke width!",  getDocumentNode(),
-                    SvgTree.SvgLogLevel.WARNING);
+            getTree().logErrorLine("Scaling of the stroke width is ignored",
+                                   getDocumentNode(), SvgTree.SvgLogLevel.WARNING);
         }
     }
 
