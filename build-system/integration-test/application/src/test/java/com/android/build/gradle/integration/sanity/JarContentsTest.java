@@ -635,6 +635,8 @@ public class JarContentsTest {
                 "versions-offline/com/crashlytics/sdk/android/",
                 "versions-offline/com/crashlytics/sdk/android/group-index.xml",
                 "versions-offline/com/google/",
+                "versions-offline/com/google/ar/",
+                "versions-offline/com/google/ar/group-index.xml",
                 "versions-offline/com/google/android/",
                 "versions-offline/com/google/android/gms/",
                 "versions-offline/com/google/android/gms/group-index.xml",
