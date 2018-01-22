@@ -80,7 +80,7 @@ public class SvgClipPathNode extends SvgGroupNode {
                 && ((mStackedTransform.getType() & AffineTransform.TYPE_MASK_SCALE) != 0)) {
             getTree()
                     .logErrorLine(
-                            "We don't scale the stroke width!",
+                            "Scaling of the stroke width is ignored",
                             getDocumentNode(),
                             SvgTree.SvgLogLevel.WARNING);
         }

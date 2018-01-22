@@ -20,19 +20,17 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.utils.Pair;
 import com.android.utils.PositionXmlParser;
-import com.google.common.base.Strings;
 import java.awt.geom.AffineTransform;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -56,7 +54,7 @@ class SvgTree {
     private SvgGroupNode mRoot;
     private String mFileName;
 
-    private final ArrayList<String> mErrorLines = new ArrayList<>();
+    private final ArrayList<LogMessage> mLogMessages = new ArrayList<>();
 
     private boolean mHasLeafNode;
 
@@ -103,6 +101,44 @@ class SvgTree {
         WARNING
     }
 
+    private static class LogMessage implements Comparable<LogMessage> {
+        final SvgLogLevel level;
+        final int line;
+        final String message;
+
+        /**
+         * Initializes a log message.
+         *
+         * @param level the severity level
+         * @param line the line number of the SVG file the message applies to,
+         *     or zero if the message applies to the whole file
+         * @param message the text of the message
+         */
+        LogMessage(@NonNull SvgLogLevel level, int line, @NonNull String message) {
+            this.level = level;
+            this.line = line;
+            this.message = message;
+        }
+
+        @NonNull
+        String getFormattedMessage() {
+            return level.name() + (line == 0 ? "" : " @ line " + line) + ' ' + message;
+        }
+
+        @Override
+        public int compareTo(@NotNull LogMessage other) {
+            int cmp = level.compareTo(other.level);
+            if (cmp != 0) {
+                return cmp;
+            }
+            cmp = Integer.compare(line, other.line);
+            if (cmp != 0) {
+                return cmp;
+            }
+            return message.compareTo(other.message);
+        }
+    }
+
     public Document parse(File f) throws Exception {
         mFileName = f.getName();
         return PositionXmlParser.parse(new BufferedInputStream(new FileInputStream(f)), false);
@@ -134,31 +170,28 @@ class SvgTree {
         return mRoot;
     }
 
-    public void logErrorLine(String s, Node node, SvgLogLevel level) {
-        if (!Strings.isNullOrEmpty(s)) {
-            if (node != null) {
-                SourcePosition position = getPosition(node);
-                mErrorLines.add(level.name() + "@ line " + (position.getStartLine() + 1) +
-                                " " + s + "\n");
-            } else {
-                mErrorLines.add(s);
-            }
-        }
+    public void logErrorLine(@NonNull String s, @Nullable Node node, @NonNull SvgLogLevel level) {
+        Preconditions.checkArgument(!s.isEmpty());
+        int line = node == null ? 0 : getPosition(node).getStartLine() + 1;
+        mLogMessages.add(new LogMessage(level, line, s));
     }
 
     /**
-     * @return Error log. Empty string if there are no errors.
+     * Returns the error log. Empty string if there are no errors.
      */
     @NonNull
     public String getErrorLog() {
-        StringBuilder errorBuilder = new StringBuilder();
-        if (!mErrorLines.isEmpty()) {
-            errorBuilder.append("In ").append(mFileName).append(":\n");
+        if (mLogMessages.isEmpty()) {
+            return "";
         }
-        for (String log : mErrorLines) {
-            errorBuilder.append(log);
+        Collections.sort(mLogMessages); // Sort by severity and line number.
+        StringBuilder result = new StringBuilder();
+        result.append("In ").append(mFileName).append(':');
+        for (LogMessage message : mLogMessages) {
+            result.append('\n');
+            result.append(message.getFormattedMessage());
         }
-        return errorBuilder.toString();
+        return result.toString();
     }
 
     /**
