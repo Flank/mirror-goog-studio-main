@@ -48,6 +48,8 @@ public class AaptOptions {
 
     private int cruncherProcesses = 0;
 
+    @Nullable public String privateRDotJavaPackage;
+
     public void setIgnoreAssetsPattern(@Nullable String ignoreAssetsPattern) {
         this.ignoreAssetsPattern = ignoreAssetsPattern;
     }
@@ -72,6 +74,7 @@ public class AaptOptions {
      *
      * <p>See <code>aapt --help</code>
      */
+    @Nullable
     @Internal
     public String getIgnoreAssetsPattern() {
         return ignoreAssetsPattern;
@@ -110,12 +113,14 @@ public class AaptOptions {
         return noCompressList;
     }
 
+    @SuppressWarnings("MethodMayBeStatic")
     public void useNewCruncher(boolean value) {
         LoggerWrapper.getLogger(AaptOptions.class).warning("useNewCruncher has been deprecated. "
                 + "It will be removed in a future version of the gradle plugin. New cruncher is "
                 + "now always enabled.");
     }
 
+    @SuppressWarnings("MethodMayBeStatic")
     public void setUseNewCruncher(boolean value) {
         LoggerWrapper.getLogger(AaptOptions.class).warning("useNewCruncher has been deprecated. "
                 + "It will be removed in a future version of the gradle plugin. New cruncher is "
@@ -253,5 +258,17 @@ public class AaptOptions {
 
     public void namespaced(@Nullable Boolean namespaced) {
         this.namespaced = namespaced;
+    }
+
+    @Nullable
+    @Optional
+    @Internal
+    @Input
+    public String getPrivateRDotJavaPackage() {
+        return privateRDotJavaPackage;
+    }
+
+    public void setPrivateRDotJavaPackage(@Nullable String privateRDotJavaPackage) {
+        this.privateRDotJavaPackage = privateRDotJavaPackage;
     }
 }

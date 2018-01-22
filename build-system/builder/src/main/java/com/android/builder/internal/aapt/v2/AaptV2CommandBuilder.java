@@ -220,9 +220,15 @@ public final class AaptV2CommandBuilder {
                 builder.add("-0", noCompress);
             }
         }
+
         List<String> additionalParameters = config.getOptions().getAdditionalParameters();
         if (additionalParameters != null) {
             builder.addAll(additionalParameters);
+        }
+
+        String privateRDotJavaPackage = config.getOptions().getPrivateRDotJavaPackage();
+        if (privateRDotJavaPackage != null) {
+            builder.add("--private-symbols", privateRDotJavaPackage);
         }
 
         List<String> resourceConfigs = new ArrayList<>(config.getResourceConfigs());

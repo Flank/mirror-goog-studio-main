@@ -17,6 +17,7 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -42,9 +43,8 @@ public interface AaptOptions {
         // TODO: add more modes as implemented.
     }
 
-    /**
-     * Returns the value for the --ignore-assets option, or null
-     */
+    /** Returns the value for the --ignore-assets option, or null */
+    @Nullable
     String getIgnoreAssets();
 
     /**
@@ -65,4 +65,8 @@ public interface AaptOptions {
     /** Returns the resource namespacing strategy for this sub-project */
     @NonNull
     Namespacing getNamespacing();
+
+    /** Returns the package name to use when generating the R.java file for private symbols. */
+    @Nullable
+    String getPrivateRDotJavaPackage();
 }

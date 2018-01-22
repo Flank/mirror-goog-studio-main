@@ -100,10 +100,9 @@ public class AaptV1Test {
      * Creates the {@link Aapt} instance.
      *
      * @return the instance
-     * @throws Exception failed to create the {@link Aapt} instance
      */
     @NonNull
-    private Aapt makeAapt() throws Exception {
+    private Aapt makeAapt() {
         return makeAapt(AaptV1.PngProcessMode.ALL, Range.atLeast(AaptV1.VERSION_FOR_SERVER_AAPT));
     }
 
@@ -312,12 +311,11 @@ public class AaptV1Test {
             }
 
             File manifestFile = mTemporaryFolder.newFile("AndroidManifest.xml");
-            Files.write(
+            FileUtils.writeToFile(
+                    manifestFile,
                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\""
-                            + " package=\"com.example.aapt\"></manifest>",
-                    manifestFile,
-                    Charsets.US_ASCII);
+                            + " package=\"com.example.aapt\"></manifest>");
 
             IAndroidTarget target23 =
                     mTargetManager.getTargetOfAtLeastApiLevel(23, mProgressIndicator);
@@ -369,12 +367,11 @@ public class AaptV1Test {
             }
 
             File manifestFile = mTemporaryFolder.newFile("AndroidManifest.xml");
-            Files.write(
+            FileUtils.writeToFile(
+                    manifestFile,
                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\""
-                            + " package=\"com.example.aapt\"></manifest>",
-                    manifestFile,
-                    Charsets.US_ASCII);
+                            + " package=\"com.example.aapt\"></manifest>");
 
             IAndroidTarget target23 =
                     mTargetManager.getTargetOfAtLeastApiLevel(23, mProgressIndicator);

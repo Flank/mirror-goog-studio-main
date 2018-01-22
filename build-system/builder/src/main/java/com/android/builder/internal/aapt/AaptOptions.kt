@@ -18,7 +18,8 @@ package com.android.builder.internal.aapt
 
 import java.io.Serializable
 
-data class AaptOptions(
+data class AaptOptions @JvmOverloads constructor(
         val noCompress: Collection<String>? = null,
         val failOnMissingConfigEntry: Boolean = true,
-        val additionalParameters: List<String>? = null) : Serializable
+        val additionalParameters: List<String>? = null,
+        val privateRDotJavaPackage: String? = null) : Serializable
