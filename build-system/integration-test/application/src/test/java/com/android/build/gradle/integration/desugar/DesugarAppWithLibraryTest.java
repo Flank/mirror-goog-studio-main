@@ -17,10 +17,14 @@
 package com.android.build.gradle.integration.desugar;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.D8;
+import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.DESUGAR;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
@@ -30,9 +34,20 @@ import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Checks that app depending on library module using Java 8 language builds. */
+@RunWith(Parameterized.class)
 public class DesugarAppWithLibraryTest {
+
+    @Parameterized.Parameters
+    public static Object[] getParameters() {
+        // noinspection unchecked
+        return new Object[] {D8, DESUGAR};
+    }
+
+    @Parameterized.Parameter public VariantScope.Java8LangSupport java8LangSupport;
 
     @Rule
     public GradleTestProject project =
@@ -79,8 +94,10 @@ public class DesugarAppWithLibraryTest {
                         "         Runnable r = () -> {};",
                         "    }",
                         "}"));
-        project.executor().run(":app:assembleDebug");
-        Apk apk = project.getSubproject("app").getApk("debug");
+        project.executor()
+                .with(BooleanOption.ENABLE_D8_DESUGARING, java8LangSupport == D8)
+                .run(":app:assembleDebug");
+        Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsClass("Lcom/example/Data;");
     }
 }

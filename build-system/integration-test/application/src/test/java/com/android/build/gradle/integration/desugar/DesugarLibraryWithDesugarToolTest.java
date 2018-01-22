@@ -19,12 +19,12 @@ package com.android.build.gradle.integration.desugar;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 import static com.android.builder.core.DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
@@ -34,7 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /** Checks that we are able to build library modules using Java 8 language features. */
-public class DesugarLibraryTest {
+public class DesugarLibraryWithDesugarToolTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
@@ -61,7 +61,7 @@ public class DesugarLibraryTest {
                         "    }",
                         "    default void defaultMethod () {}",
                         "}"));
-        project.executor().run("assembleDebug");
+        project.executor().with(BooleanOption.ENABLE_D8_DESUGARING, false).run("assembleDebug");
         assertThatAar(project.getAar("debug")).containsClass("Lcom/example/helloworld/Data;");
     }
 
@@ -74,9 +74,11 @@ public class DesugarLibraryTest {
                 String.format(
                         "\n" + "android.defaultConfig.minSdkVersion %d\n",
                         MIN_SUPPORTED_API_TRY_WITH_RESOURCES - 1));
-        project.executor().run("assembleDebugAndroidTest");
+        project.executor()
+                .with(BooleanOption.ENABLE_D8_DESUGARING, false)
+                .run("assembleDebugAndroidTest");
         Apk testApk = project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG);
-        for (String klass : DesugarAppTest.TRY_WITH_RESOURCES_RUNTIME) {
+        for (String klass : DesugarAppWithDesugarToolTest.TRY_WITH_RESOURCES_RUNTIME) {
             assertThat(testApk).containsClass(klass);
         }
     }

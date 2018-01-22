@@ -2224,7 +2224,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 .getErrorHandler()
                 .reportError(
                         Type.GENERIC,
-                        "Please add 'android.enableDesugar=true' to your "
+                        "Please add 'android.enableD8.desugaring=true' to your "
                                 + "gradle.properties file to enable Java 8 "
                                 + "language support.",
                         getVariantConfiguration().getFullName());
