@@ -5,6 +5,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import java.io.IOException;
@@ -23,7 +24,7 @@ public class SeparateTestWithoutMinificationWithDependenciesTest {
 
     @Parameterized.Parameters(name = "codeShrinker = {0}")
     public static CodeShrinker[] getShrinkers() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
     }
 
     @Parameterized.Parameter public CodeShrinker codeShrinker;
@@ -50,7 +51,9 @@ public class SeparateTestWithoutMinificationWithDependenciesTest {
                         + "            targetVariant 'debug'\n"
                         + "        }\n");
         project.execute("clean");
-        project.executor().run("assemble");
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run("assemble");
     }
 
     @Test

@@ -57,6 +57,7 @@ public class MultiDexTest {
     enum MainDexListTool {
         DX,
         D8,
+        R8,
     }
 
     @Rule
@@ -72,7 +73,7 @@ public class MultiDexTest {
 
     @Test
     public void checkNormalBuild() throws Exception {
-        // D8 main dex list tool has a better understanding which classes should be kept
+        // D8/R8 main dex list tool has a better understanding which classes should be kept
         // so this test is overapproximation in D8 case.
         Assume.assumeTrue(tool == MainDexListTool.DX);
         checkNormalBuild(true);
@@ -173,10 +174,9 @@ public class MultiDexTest {
 
     @Test
     public void checkAdditionalParameters() throws Exception {
-        Assume.assumeFalse(
-                "D8 main dex list requires incremental dexing that does not "
-                        + "support additional parameters",
-                tool == MainDexListTool.D8);
+        Assume.assumeTrue(
+                "Only DX main dex list supports additional parameters.",
+                tool == MainDexListTool.DX);
         FileUtils.deletePath(
                 FileUtils.join(
                         project.getTestDir(),
@@ -277,6 +277,7 @@ public class MultiDexTest {
     @NonNull
     private GradleTaskExecutor executor() {
         return project.executor()
-                .with(BooleanOption.ENABLE_D8_MAIN_DEX_LIST, tool == MainDexListTool.D8);
+                .with(BooleanOption.ENABLE_D8_MAIN_DEX_LIST, tool == MainDexListTool.D8)
+                .with(BooleanOption.ENABLE_R8, tool == MainDexListTool.R8);
     }
 }

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
@@ -72,7 +73,10 @@ public class ShrinkResourcesTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "android.buildTypes.release.useProguard = " + useProguard);
 
-        project.execute("clean", "assembleRelease", "assembleDebug", "assembleMinifyDontShrink");
+        // resource shrinker and R8 support missing - http://b/72370175
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, false)
+                .run("clean", "assembleRelease", "assembleDebug", "assembleMinifyDontShrink");
 
         File intermediates = project.file("build/" + AndroidProject.FD_INTERMEDIATES);
 

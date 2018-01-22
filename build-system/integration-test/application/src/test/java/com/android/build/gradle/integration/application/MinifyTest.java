@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Version;
 import com.android.testutils.apk.Apk;
@@ -42,7 +43,7 @@ public class MinifyTest {
 
     @Parameterized.Parameters(name = "shrinker = {0}")
     public static CodeShrinker[] getConfigurations() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
     }
 
     @Parameterized.Parameter public CodeShrinker codeShrinker;
@@ -53,7 +54,10 @@ public class MinifyTest {
 
     @Test
     public void appApkIsMinified() throws Exception {
-        GradleBuildResult result = project.executor().run("assembleMinified");
+        GradleBuildResult result =
+                project.executor()
+                        .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                        .run("assembleMinified");
         assertThat(result.getStdout()).doesNotContain("Note");
         assertThat(result.getStdout()).doesNotContain("duplicate");
 
@@ -96,7 +100,9 @@ public class MinifyTest {
     @Test
     public void testApkIsNotMinified_butMappingsAreApplied() throws Exception {
         // Run just a single task, to make sure task dependencies are correct.
-        project.executor().run("assembleMinifiedAndroidTest");
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run("assembleMinifiedAndroidTest");
 
         GradleTestProject.ApkType testMinified =
                 GradleTestProject.ApkType.of("minified", "androidTest", true);

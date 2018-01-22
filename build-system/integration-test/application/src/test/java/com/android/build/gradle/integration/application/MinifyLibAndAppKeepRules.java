@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -41,6 +42,7 @@ public class MinifyLibAndAppKeepRules {
 
     @Parameterized.Parameters(name = "codeShrinker = {0}")
     public static CodeShrinker[] data() {
+        // enable for R8 once http://b/36847655 is fixed
         return new CodeShrinker[] {CodeShrinker.PROGUARD};
     }
 
@@ -82,7 +84,9 @@ public class MinifyLibAndAppKeepRules {
                         "    }\n" +
                         "}");
 
-        project.executor().run(":app:assembleRelease");
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run(":app:assembleRelease");
         assertThat(project.getSubproject("app").getApk("release"))
                 .containsClass("LNoPackage;");
     }

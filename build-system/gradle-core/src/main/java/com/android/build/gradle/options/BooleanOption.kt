@@ -57,6 +57,10 @@ enum class BooleanOption(
             true,
             DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
 
+    ENABLE_R8("android.enableR8", false),
+    /** Set to true by default, but has effect only if R8 is enabled. */
+    ENABLE_R8_DESUGARING("android.enableR8.desugaring", true),
+
     ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk"),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
     CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries"),

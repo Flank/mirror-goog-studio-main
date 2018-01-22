@@ -120,7 +120,7 @@ class R8TransformTest {
         val classes = tmp.root.toPath().resolve("classes.jar")
         TestInputsGenerator.pathWithClasses(
                 classes,
-                listOf(Animal::class.java, CarbonForm::class.java)
+                listOf(Animal::class.java, CarbonForm::class.java, Toy::class.java)
         )
         val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile()).build()
 
@@ -138,13 +138,20 @@ class R8TransformTest {
         }
         val mainDexRulesFileCollection = mockFileCollection(setOf(mainDexRuleFile))
 
-        val transform = getTransform(mainDexRulesFiles = mainDexRulesFileCollection)
+        val transform =
+                getTransform(mainDexRulesFiles = mainDexRulesFileCollection, minSdkVersion = 19)
         transform.keep("class **")
 
         transform.transform(invocation)
-        val dex = getDex()
-        assertThat(dex).containsClass(Type.getDescriptor(Animal::class.java))
-        assertThat(dex).containsClass(Type.getDescriptor(CarbonForm::class.java))
+        val mainDex = Dex(outputDir.resolve("main").resolve("classes.dex"))
+        assertThat(mainDex)
+            .containsExactlyClassesIn(
+                listOf(
+                        Type.getDescriptor(CarbonForm::class.java),
+                        Type.getDescriptor(Animal::class.java)))
+
+        val secondaryDex = Dex(outputDir.resolve("main").resolve("classes2.dex"))
+        assertThat(secondaryDex).containsExactlyClassesIn(listOf(Type.getDescriptor(Toy::class.java)))
     }
 
     @Test
@@ -163,7 +170,7 @@ class R8TransformTest {
                     .setContext(this.context)
                     .setTransformOutputProvider(outputProvider)
                     .build()
-        val transform = getTransform(java8Support = VariantScope.Java8LangSupport.D8)
+        val transform = getTransform(java8Support = VariantScope.Java8LangSupport.R8)
         transform.keep("class **")
 
         transform.transform(invocation)
@@ -199,7 +206,7 @@ class R8TransformTest {
         }
         val proguardConfigurationFileCollection = mockFileCollection(setOf(proguardConfiguration))
         val transform = getTransform(
-                java8Support = VariantScope.Java8LangSupport.D8,
+                java8Support = VariantScope.Java8LangSupport.R8,
                 proguardRulesFiles = proguardConfigurationFileCollection)
 
         transform.transform(invocation)
@@ -211,7 +218,7 @@ class R8TransformTest {
         assertThat(dex).containsClass(Type.getDescriptor(Toy::class.java))
         assertThat(dex.version).isEqualTo(35)
 
-        val transform2 = getTransform(java8Support = VariantScope.Java8LangSupport.D8)
+        val transform2 = getTransform(java8Support = VariantScope.Java8LangSupport.R8)
         transform2.keep("class " + CarbonForm::class.java.name)
 
         transform2.transform(invocation)
@@ -282,7 +289,8 @@ class R8TransformTest {
         proguardRulesFiles: ConfigurableFileCollection = emptyFileCollection,
         typesToOutput: MutableSet<QualifiedContent.ContentType> = TransformManager.CONTENT_DEX,
         outputProguardMapping: File = tmp.newFile(),
-            disableMinification: Boolean = true
+        disableMinification: Boolean = true,
+        minSdkVersion: Int = 21
     ): R8Transform {
         return R8Transform(
                 bootClasspath = lazy { bootClasspath },
@@ -304,7 +312,6 @@ class R8TransformTest {
     companion object {
         val bootClasspath = listOf(TestUtils.getPlatformFile("android.jar"))
         val emptyFileCollection: ConfigurableFileCollection = mockFileCollection()
-        val minSdkVersion = 21
 
         init {
             Mockito.`when`(emptyFileCollection.isEmpty).thenReturn(true)

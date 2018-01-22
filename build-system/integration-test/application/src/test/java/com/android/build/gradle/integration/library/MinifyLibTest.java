@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.library;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.ANDROIDTEST_DEBUG;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -29,6 +30,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.testutils.apk.Apk;
@@ -77,6 +79,7 @@ public class MinifyLibTest {
 
         AndroidProject model =
                 project.model()
+                        .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                         .ignoreSyncIssues()
                         .fetchAndroidProjects()
                         .getOnlyModelMap()
@@ -93,8 +96,14 @@ public class MinifyLibTest {
 
         GradleBuildResult result = getExecutor().run(":app:assembleDebug");
 
-        assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))
-                .wasExecuted();
+
+        if (codeShrinker == CodeShrinker.R8) {
+            assertThat(result.getTask(":app:transformClassesAndResourcesWithR8ForDebug"))
+                    .wasExecuted();
+        } else {
+            assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))
+                    .wasExecuted();
+        }
 
         Apk apk = project.getSubproject(":app").getApk(DEBUG);
         assertThat(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
@@ -122,12 +131,19 @@ public class MinifyLibTest {
                 "androidTestImplementation project\\(':lib'\\)");
         GradleBuildResult result = getExecutor().run(":app:assembleAndroidTest");
 
-        assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))
-                .wasExecuted();
-        assertThat(
-                        result.getTask(
-                                ":app:transformClassesAndResourcesWithProguardForDebugAndroidTest"))
-                .wasExecuted();
+        if (codeShrinker == CodeShrinker.R8) {
+            assertThat(result.getTask(":app:transformClassesAndResourcesWithR8ForDebug"))
+                    .wasExecuted();
+            assertThat(result.getTask(":app:transformClassesAndResourcesWithR8ForDebugAndroidTest"))
+                    .wasExecuted();
+        } else {
+            assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))
+                    .wasExecuted();
+            assertThat(
+                            result.getTask(
+                                    ":app:transformClassesAndResourcesWithProguardForDebugAndroidTest"))
+                    .wasExecuted();
+        }
 
 
         Apk apk = project.getSubproject(":app").getApk(ANDROIDTEST_DEBUG);
@@ -174,6 +190,6 @@ public class MinifyLibTest {
 
     @NonNull
     private GradleTaskExecutor getExecutor() {
-        return project.executor();
+        return project.executor().with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8);
     }
 }

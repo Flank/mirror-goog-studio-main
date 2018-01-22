@@ -21,19 +21,15 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.utils.FileUtils;
-import java.io.File;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.testutils.apk.Apk;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.FieldNode;
 
 /** Test for a separate test module run against the minified app. */
 @RunWith(FilterableParameterized.class)
@@ -41,7 +37,7 @@ public class SeparateTestModuleWithMinifiedAppTest {
 
     @Parameterized.Parameters(name = "codeShrinker = {0}")
     public static CodeShrinker[] getShrinkers() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
     }
 
     @Parameterized.Parameter public CodeShrinker codeShrinker;
@@ -67,7 +63,10 @@ public class SeparateTestModuleWithMinifiedAppTest {
                         + "}\n");
 
         GradleBuildResult result =
-                project.executor().expectFailure().run("clean", ":test:assembleDebug");
+                project.executor()
+                        .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                        .expectFailure()
+                        .run("clean", ":test:assembleDebug");
         assertThat(result.getFailureMessage())
                 .contains("Mapping file found in tested application.");
 
@@ -75,19 +74,22 @@ public class SeparateTestModuleWithMinifiedAppTest {
 
     @Test
     public void checkMappingsApplied() throws Exception {
-        project.executor().run("clean", ":test:assembleMinified");
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run("clean", ":test:assembleMinified");
 
         GradleTestProject testProject = project.getSubproject("test");
 
-        File outputDir =
-                FileUtils.join(
-                        testProject.getIntermediatesDir(), "transforms", "proguard", "minified");
-        TransformOutputContent content = new TransformOutputContent(outputDir);
-        File jarFile = content.getLocation(content.getSingleStream());
+        Apk minified = testProject.getApk("minified");
+        assertThat(minified)
+                .hasClass("Lcom/android/tests/basic/MainTest;")
+                .that()
+                .hasField("mUtility");
 
-        FieldNode stringProviderField = ZipHelper.checkClassFile(
-                jarFile, "com/android/tests/basic/MainTest.class", "mUtility");
-        assertThat(Type.getType(stringProviderField.desc).getClassName())
-                .isEqualTo("com.android.tests.a.a");
+        // assert that the field does not have the original type, as it should be remapped
+        assertThat(minified)
+                .hasClass("Lcom/android/tests/basic/MainTest;")
+                .that()
+                .doesNotHaveFieldWithType("mUtility", "Lcom/android/tests/utils/Utility;");
     }
 }

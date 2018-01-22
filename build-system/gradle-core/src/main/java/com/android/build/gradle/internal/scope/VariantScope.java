@@ -38,7 +38,6 @@ import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
-import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
@@ -441,6 +440,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
         D8,
         DESUGAR,
         RETROLAMBDA,
+        R8,
     }
 
     @NonNull
@@ -454,4 +454,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     ConfigurableFileCollection getTryWithResourceRuntimeSupportJar();
+
+    @NonNull
+    File getOutputProguardMappingFile();
 }

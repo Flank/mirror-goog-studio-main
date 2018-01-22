@@ -36,6 +36,12 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.scope.CodeShrinker.ANDROID_GRADLE;
 import static com.android.build.gradle.internal.scope.CodeShrinker.PROGUARD;
+import static com.android.build.gradle.internal.scope.CodeShrinker.R8;
+import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
+import static com.android.build.gradle.options.BooleanOption.ENABLE_D8_DESUGARING;
+import static com.android.build.gradle.options.BooleanOption.ENABLE_DEX_ARCHIVE;
+import static com.android.build.gradle.options.BooleanOption.ENABLE_R8;
+import static com.android.build.gradle.options.BooleanOption.ENABLE_R8_DESUGARING;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
@@ -116,6 +122,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.ArrayList;
@@ -552,7 +559,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
             //noinspection deprecation - this needs to use the old DSL methods.
             Boolean useProguard = coreBuildType.isUseProguard();
-            if (useProguard == null) {
+            if (globalScope.getProjectOptions().get(ENABLE_R8)) {
+                shrinkerForBuildType = R8;
+            } else if (useProguard == null) {
                 shrinkerForBuildType = getDefaultCodeShrinker();
             } else {
                 shrinkerForBuildType = useProguard ? PROGUARD : ANDROID_GRADLE;
@@ -561,31 +570,36 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             if (!isForTesting) {
                 return shrinkerForBuildType;
             } else {
-                if (shrinkerForBuildType == PROGUARD) {
-                    // ProGuard is used for main app code and we don't know if it gets
-                    // obfuscated, so we need to run ProGuard on test code just in case.
-                    return PROGUARD;
+                if (shrinkerForBuildType == PROGUARD || shrinkerForBuildType == R8) {
+                    // ProGuard or R8 is used for main app code and we don't know if it gets
+                    // obfuscated, so we need to run the same tool on test code just in case.
+                    return shrinkerForBuildType;
                 } else {
                     return null;
                 }
             }
         } else { // New DSL used:
             CodeShrinker chosenShrinker = postprocessingOptions.getCodeShrinkerEnum();
+            if (globalScope.getProjectOptions().get(ENABLE_R8)) {
+                chosenShrinker = R8;
+            }
             if (chosenShrinker == null) {
                 chosenShrinker = getDefaultCodeShrinker();
             }
 
             switch (chosenShrinker) {
+                case R8:
+                    // fall through
                 case PROGUARD:
                     if (!isForTesting) {
                         boolean somethingToDo =
                                 postprocessingOptions.isRemoveUnusedCode()
                                         || postprocessingOptions.isObfuscate()
                                         || postprocessingOptions.isOptimizeCode();
-                        return somethingToDo ? PROGUARD : null;
+                        return somethingToDo ? chosenShrinker : null;
                     } else {
-                        // For testing code, we only run ProGuard if main code is obfuscated.
-                        return postprocessingOptions.isObfuscate() ? PROGUARD : null;
+                        // For testing code, we only run ProGuard/R8 if main code is obfuscated.
+                        return postprocessingOptions.isObfuscate() ? chosenShrinker : null;
                     }
                 case ANDROID_GRADLE:
                     if (isForTesting) {
@@ -951,7 +965,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // only if target and source is explicitly specified to 1.8 (and above), we keep the
         // default bootclasspath with Desugar. Otherwise, we use android.jar.
         return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR
-                || java8LangSupport == VariantScope.Java8LangSupport.D8;
+                || java8LangSupport == VariantScope.Java8LangSupport.D8
+                || java8LangSupport == VariantScope.Java8LangSupport.R8;
     }
 
     @NonNull
@@ -2130,61 +2145,70 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return Java8LangSupport.UNUSED;
         }
 
-        boolean isD8Desugaring =
-                globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8_DESUGARING);
-        if (isD8Desugaring && !globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8)) {
-            globalScope
-                    .getErrorHandler()
-                    .reportError(
-                            Type.GENERIC,
-                            "Java 8 language support with D8 (as requested by '"
-                                    + BooleanOption.ENABLE_D8_DESUGARING.getPropertyName()
-                                    + " = true' in your gradle.properties file) is only supported when"
-                                    + " D8 dex compilation is enabled ('"
-                                    + BooleanOption.ENABLE_D8.getPropertyName()
-                                    + " = true').",
-                            getVariantConfiguration().getFullName());
-            return Java8LangSupport.INVALID;
-        }
-
-        if (isD8Desugaring
-                && !globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
-            globalScope
-                    .getErrorHandler()
-                    .reportError(
-                            Type.GENERIC,
-                            "Java 8 language support with D8 (as requested by '"
-                                    + BooleanOption.ENABLE_D8_DESUGARING.getPropertyName()
-                                    + " = true' in your gradle.properties file) is not supported when"
-                                    + " dex archive is disabled ('"
-                                    + BooleanOption.ENABLE_DEX_ARCHIVE.getPropertyName()
-                                    + " = false').",
-                            getVariantConfiguration().getFullName());
-            return Java8LangSupport.INVALID;
-        }
-
-
         if (globalScope.getProject().getPlugins().hasPlugin("me.tatarka.retrolambda")) {
             return Java8LangSupport.RETROLAMBDA;
         }
 
-        if (isD8Desugaring) {
-            return Java8LangSupport.D8;
+        CodeShrinker shrinker = getCodeShrinker();
+        if (shrinker == R8) {
+            if (globalScope.getProjectOptions().get(ENABLE_R8_DESUGARING)
+                    && isValidJava8Flag(ENABLE_R8_DESUGARING, ENABLE_R8, ENABLE_DEX_ARCHIVE)) {
+                return Java8LangSupport.R8;
+            }
+        } else {
+            // D8 cannot be used if R8 is used
+            if (globalScope.getProjectOptions().get(ENABLE_D8_DESUGARING)
+                    && isValidJava8Flag(ENABLE_D8_DESUGARING, ENABLE_D8, ENABLE_DEX_ARCHIVE)) {
+                return Java8LangSupport.D8;
+            }
         }
 
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DESUGAR)) {
             return Java8LangSupport.DESUGAR;
         }
 
+        BooleanOption missingFlag = shrinker == R8 ? ENABLE_R8_DESUGARING : ENABLE_D8_DESUGARING;
         globalScope
                 .getErrorHandler()
                 .reportError(
                         Type.GENERIC,
-                        "Please add 'android.enableD8.desugaring=true' to your "
-                                + "gradle.properties file to enable Java 8 "
-                                + "language support.",
+                        String.format(
+                                "Please add '%s=true' to your "
+                                        + "gradle.properties file to enable Java 8 "
+                                        + "language support.",
+                                missingFlag.name()),
                         getVariantConfiguration().getFullName());
         return Java8LangSupport.INVALID;
+    }
+
+    private boolean isValidJava8Flag(
+            @NonNull BooleanOption flag, @NonNull BooleanOption... dependsOn) {
+        List<String> invalid = null;
+        for (BooleanOption requiredFlag : dependsOn) {
+            if (!globalScope.getProjectOptions().get(requiredFlag)) {
+                if (invalid == null) {
+                    invalid = Lists.newArrayList();
+                }
+                invalid.add("'" + requiredFlag.getPropertyName() + "= false'");
+            }
+        }
+
+        if (invalid == null) {
+            return true;
+        } else {
+            String template =
+                    "Java 8 language support, as requested by '%s= true' in your "
+                            + "gradle.properties file, is not supported when %s.";
+            String msg =
+                    String.format(
+                            template,
+                            flag.getPropertyName(),
+                            invalid.stream().collect(Collectors.joining(",")));
+            globalScope
+                    .getErrorHandler()
+                    .reportError(Type.GENERIC, msg, getVariantConfiguration().getFullName());
+            return false;
+        }
     }
 
     @NonNull
@@ -2227,5 +2251,17 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         } else {
             return DexMergerTool.DX;
         }
+    }
+
+    @NonNull
+    @Override
+    public File getOutputProguardMappingFile() {
+        return FileUtils.join(
+                globalScope.getBuildDir(),
+                FD_OUTPUTS,
+                "mapping",
+                "r8",
+                getVariantConfiguration().getDirName(),
+                "mapping.txt");
     }
 }

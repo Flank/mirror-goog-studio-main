@@ -51,7 +51,7 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
 
 
     public BaseProguardAction(@NonNull VariantScope scope) {
-        super(scope);
+        super(scope.getGlobalScope().getProject().files(), scope.getVariantData().getType());
         configuration.useMixedCaseClassNames = false;
         configuration.programJars = new ClassPath();
         configuration.libraryJars = new ClassPath();

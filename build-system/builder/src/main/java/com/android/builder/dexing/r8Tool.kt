@@ -44,9 +44,16 @@ fun runR8(
 ) {
     val r8CommandBuilder = CompatProguardCommandBuilder()
 
-    r8CommandBuilder
-        .addMainDexRulesFiles(mainDexListConfig.mainDexRulesFiles)
-        .addMainDexListFiles(mainDexListConfig.mainDexListFiles)
+    if (toolConfig.minSdkVersion < 21) {
+        // specify main dex related options only when minSdkVersion is below 21
+        r8CommandBuilder
+            .addMainDexRulesFiles(mainDexListConfig.mainDexRulesFiles)
+            .addMainDexListFiles(mainDexListConfig.mainDexListFiles)
+
+        if (mainDexListConfig.mainDexRules.isNotEmpty()) {
+            r8CommandBuilder.addMainDexRules(mainDexListConfig.mainDexRules, Origin.unknown())
+        }
+    }
 
     r8CommandBuilder
         .addProguardConfigurationFiles(
@@ -122,7 +129,8 @@ enum class R8OutputType {
 /** Main dex related parameters for the R8 tool. */
 data class MainDexListConfig(
     val mainDexRulesFiles: Collection<Path> = listOf(),
-    val mainDexListFiles: Collection<Path> = listOf()
+    val mainDexListFiles: Collection<Path> = listOf(),
+    val mainDexRules: List<String> = listOf()
 )
 
 /** Proguard-related parameters for the R8 tool. */

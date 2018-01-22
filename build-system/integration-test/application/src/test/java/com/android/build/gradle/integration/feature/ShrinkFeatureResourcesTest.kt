@@ -20,6 +20,7 @@ import com.android.testutils.truth.PathSubject.assertThat
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import org.junit.Rule
 import org.junit.Test
 
@@ -45,7 +46,8 @@ class ShrinkFeatureResourcesTest {
                         + "    }\n"
                         + "}\n")
 
-        project.execute("clean", "assembleRelease")
+        // resource shrinker and R8 support missing - http://b/72370175
+        project.executor().with(BooleanOption.ENABLE_R8, false).run("clean", "assembleRelease")
         val releaseApk = project.getSubproject(":feature").getFeatureApk(GradleTestProject.ApkType.RELEASE)
         assertThat(releaseApk.file).isFile()
     }

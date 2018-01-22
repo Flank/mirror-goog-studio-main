@@ -109,7 +109,7 @@ class R8Transform(
                 "minSdkVersion" to minSdkVersion,
                 "isDebuggable" to isDebuggable,
                 "disableTreeShaking" to disableTreeShaking,
-                "java8Support" to (java8Support == VariantScope.Java8LangSupport.D8),
+                "java8Support" to (java8Support == VariantScope.Java8LangSupport.R8),
                 "disableMinification" to disableMinification,
                 "proguardConfiguration" to proguardConfigurations
         )
@@ -157,8 +157,7 @@ class R8Transform(
                 minSdkVersion = minSdkVersion,
                 isDebuggable = isDebuggable,
                 disableTreeShaking = disableTreeShaking,
-                // temporarily use D8 to specify R8 desugaring
-                disableDesugaring = java8Support != VariantScope.Java8LangSupport.D8,
+                disableDesugaring = java8Support != VariantScope.Java8LangSupport.R8,
                 disableMinification = disableMinification,
                 r8OutputType = r8OutputType
         )
@@ -174,7 +173,8 @@ class R8Transform(
 
         val mainDexListConfig = MainDexListConfig(
                 mainDexRulesFiles.files.map { it.toPath() },
-                mainDexListFiles.files.map { it.toPath() }
+                mainDexListFiles.files.map { it.toPath() },
+                MainDexListTransform.getPlatformRules().map { it -> "-keep " + it }
         )
 
         val allFiles = getAllFiles(transformInvocation.inputs).map { it.toPath() }

@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Zip;
@@ -423,9 +424,13 @@ public class MergeResourcesTest {
                         + "'\n"
                         + "}\n");
 
+        // resource shrinker and R8 support missing - http://b/72370175
         // Run a full build with shrinkResources enabled
         GradleBuildResult result =
-                project.executor().with(aaptGeneration).run(":app:clean", ":app:assembleDebug");
+                project.executor()
+                        .with(BooleanOption.ENABLE_R8, false)
+                        .with(aaptGeneration)
+                        .run(":app:clean", ":app:assembleDebug");
         assertThat(result.getTask(":app:mergeDebugResources")).wasNotUpToDate();
         long apkSizeWithShrinkResources =
                 appProject.getApk(GradleTestProject.ApkType.DEBUG).getContentsSize();
@@ -434,7 +439,11 @@ public class MergeResourcesTest {
         // not be UP-TO-DATE and the apk size should be larger
         TestFileUtils.searchAndReplace(
                 appBuildFile, "shrinkResources true", "shrinkResources false");
-        result = project.executor().with(aaptGeneration).run(":app:assembleDebug");
+        result =
+                project.executor()
+                        .with(BooleanOption.ENABLE_R8, false)
+                        .with(aaptGeneration)
+                        .run(":app:assembleDebug");
         assertThat(result.getTask(":app:mergeDebugResources")).wasNotUpToDate();
         long apkSizeWithoutShrinkResources =
                 appProject.getApk(GradleTestProject.ApkType.DEBUG).getContentsSize();
@@ -444,7 +453,11 @@ public class MergeResourcesTest {
         // again should not be UP-TO-DATE and the apk size must be exactly the same as the first
         TestFileUtils.searchAndReplace(
                 appBuildFile, "shrinkResources false", "shrinkResources true");
-        result = project.executor().with(aaptGeneration).run(":app:assembleDebug");
+        result =
+                project.executor()
+                        .with(BooleanOption.ENABLE_R8, false)
+                        .with(aaptGeneration)
+                        .run(":app:assembleDebug");
         assertThat(result.getTask(":app:mergeDebugResources")).wasNotUpToDate();
         long sameApkSizeShrinkResources =
                 appProject.getApk(GradleTestProject.ApkType.DEBUG).getContentsSize();
