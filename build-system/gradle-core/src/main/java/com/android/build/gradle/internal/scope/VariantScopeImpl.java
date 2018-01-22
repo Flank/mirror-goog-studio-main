@@ -1628,7 +1628,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public File getManifestOutputDirectory() {
         switch (getVariantConfiguration().getType()) {
-            case DEFAULT:
+            case APK:
             case FEATURE:
             case LIBRARY:
                 return FileUtils.join(

@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
-import com.android.build.api.dsl.variant.Variant
 import com.android.build.gradle.internal.api.dsl.extensions.AppExtensionImpl
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrVariantImpl
@@ -32,7 +31,7 @@ class AppAndroidTestVariantFactory : VariantFactory2<AppExtensionImpl> {
 
     override val generatedType: VariantType = VariantType.ANDROID_TEST
     override val testedBy: List<VariantType> = listOf()
-    override val testTarget: VariantType? = VariantType.DEFAULT
+    override val testTarget: VariantType? = VariantType.APK
 
     override fun createVariant(
             extension: AppExtensionImpl,

@@ -409,7 +409,7 @@ public class ApplicationTaskManager extends TaskManager {
     @Override
     protected DefaultTask createVariantPreBuildTask(@NonNull VariantScope scope) {
         switch (scope.getVariantConfiguration().getType()) {
-            case DEFAULT:
+            case APK:
                 return taskFactory.create(new AppPreBuildTask.ConfigAction(scope));
             case ANDROID_TEST:
                 return taskFactory.create(new TestPreBuildTask.ConfigAction(scope));

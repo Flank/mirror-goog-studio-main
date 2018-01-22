@@ -557,7 +557,7 @@ public class VariantManager implements VariantModel {
     @NonNull
     private AndroidTypeAttr getConsumeType(@NonNull VariantType type) {
         switch (type) {
-            case DEFAULT:
+            case APK:
                 if (variantFactory instanceof TestVariantFactory) {
                     return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.APK);
                 }
@@ -579,7 +579,7 @@ public class VariantManager implements VariantModel {
     @NonNull
     private AndroidTypeAttr getPublishingType(@NonNull VariantType type) {
         switch (type) {
-            case DEFAULT:
+            case APK:
                 return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.APK);
             case LIBRARY:
                 return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.AAR);
@@ -950,7 +950,7 @@ public class VariantManager implements VariantModel {
             final ConfigurableFileCollection fileCollection = project.files(renderScriptSupportJar);
             project.getDependencies()
                     .add(variantDep.getCompileClasspath().getName(), fileCollection);
-            if (variantType == VariantType.DEFAULT || variantType == VariantType.FEATURE) {
+            if (variantType == VariantType.APK || variantType == VariantType.FEATURE) {
                 project.getDependencies()
                         .add(variantDep.getRuntimeClasspath().getName(), fileCollection);
             }

@@ -99,7 +99,8 @@ class Aapt2DaemonTimeoutTest {
                 manifestFile = manifest,
                 resourceOutputApk = outputFile,
                 options = AaptOptions(),
-                variantType = VariantType.DEFAULT)
+                variantType = VariantType.APK
+        )
 
         val daemon = CompileLinkTimeoutAapt2Daemon(name = testName.methodName)
         val exception = assertFailsWith(Aapt2InternalException::class) {

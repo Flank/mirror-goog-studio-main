@@ -407,7 +407,7 @@ public class ModelBuilderTest {
     private static BaseVariantData createVariantData(
             VariantScope variantScope, GradleVariantConfiguration variantConfiguration) {
         BaseVariantData variantData = Mockito.mock(BaseVariantData.class);
-        when(variantData.getType()).thenReturn(VariantType.DEFAULT);
+        when(variantData.getType()).thenReturn(VariantType.APK);
         when(variantData.getScope()).thenReturn(variantScope);
         when(variantData.getVariantConfiguration()).thenReturn(variantConfiguration);
         when(variantScope.getVariantData()).thenReturn(variantData);

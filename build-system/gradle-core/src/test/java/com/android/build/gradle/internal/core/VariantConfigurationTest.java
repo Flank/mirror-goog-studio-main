@@ -182,7 +182,7 @@ public class VariantConfigurationTest {
                         null,
                         mBuildType,
                         new MockSourceProvider("debug"),
-                        VariantType.DEFAULT,
+                        VariantType.APK,
                         signingOverride,
                         mIssueReporter);
 
@@ -200,7 +200,7 @@ public class VariantConfigurationTest {
                         null,
                         mBuildType,
                         new MockSourceProvider("debug"),
-                        VariantType.DEFAULT,
+                        VariantType.APK,
                         null /*signingConfigOverride*/,
                         mIssueReporter) {
 
@@ -224,7 +224,7 @@ public class VariantConfigurationTest {
                         null,
                         mBuildType,
                         new MockSourceProvider("debug"),
-                        VariantType.DEFAULT,
+                        VariantType.APK,
                         null /*signingConfigOverride*/,
                         mIssueReporter) {
 
@@ -248,7 +248,7 @@ public class VariantConfigurationTest {
                         null,
                         mBuildType,
                         new MockSourceProvider(srcDir.getPath() + File.separatorChar + "debug"),
-                        VariantType.DEFAULT,
+                        VariantType.APK,
                         null,
                         mIssueReporter);
 

@@ -750,7 +750,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         final VariantScope variantScope = variantData.getScope();
 
         switch (variantData.getType()) {
-            case DEFAULT:
+            case APK:
             case FEATURE:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(
@@ -822,7 +822,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             BaseVariantData variantData) {
 
         switch (variantData.getType()) {
-            case DEFAULT:
+            case APK:
             case ANDROID_TEST:
             case FEATURE:
                 return new BuildOutputsSupplier(

@@ -236,7 +236,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
     @NonNull
     @Override
     public Collection<VariantType> getVariantConfigurationTypes() {
-        return ImmutableList.of(VariantType.DEFAULT);
+        return ImmutableList.of(VariantType.APK);
     }
 
     @Override

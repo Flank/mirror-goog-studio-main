@@ -2315,7 +2315,7 @@ public abstract class TaskManager {
         // ----- Android studio profiling transforms
         for (String jar : getAdvancedProfilingTransforms(projectOptions)) {
             if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()
-                    && variantData.getType().equals(VariantType.DEFAULT)
+                    && variantData.getType().equals(VariantType.APK)
                     && jar != null) {
                 transformManager.addTransform(
                         taskFactory, variantScope, new CustomClassTransform(jar));

@@ -189,7 +189,8 @@ class NamespacedAarWithSharedLibTest {
                     manifestFile = manifest,
                     options = AaptOptions(),
                     androidJarPath = androidTarget.getPath(IAndroidTarget.ANDROID_JAR),
-                    variantType = VariantType.DEFAULT)
+                    variantType = VariantType.APK
+            )
             QueueableAapt2(
                     LoggedProcessOutputHandler(StdLogger(StdLogger.Level.INFO)),
                     buildToolInfo,
