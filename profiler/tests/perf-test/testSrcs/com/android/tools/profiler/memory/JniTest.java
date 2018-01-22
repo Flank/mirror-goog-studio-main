@@ -81,6 +81,21 @@ public class JniTest {
         return 0;
     }
 
+    private void validateMemoryMap(MemoryMap map, NativeBacktrace backtrace) {
+        assertThat(backtrace.getAddressesList().isEmpty()).isFalse();
+        assertThat(map.getRegionsList().isEmpty()).isFalse();
+        for (long addr : backtrace.getAddressesList()) {
+            boolean found = false;
+            for (MemoryMap.MemoryRegion region : map.getRegionsList()) {
+                if (region.getStartAddress() <= addr && region.getEndAddress() > addr) {
+                    found = true;
+                    break;
+                }
+            }
+            assertThat(found).isTrue();
+        }
+    }
+
     // Just create native activity and see that it can load native library.
     @Test
     public void countCreatedAndDeleteRefEvents() throws Exception {
@@ -171,6 +186,7 @@ public class JniTest {
                             }
                         }
                     }
+                    validateMemoryMap(batch.getMemoryMap(), event.getBacktrace());
                 }
             }
 

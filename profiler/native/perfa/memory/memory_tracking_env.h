@@ -31,6 +31,8 @@
 #include "stats.h"
 #include "utils/clock.h"
 #include "utils/log.h"
+#include "utils/memory_map.h"
+#include "utils/procfs_files.h"
 #include "utils/producer_consumer_queue.h"
 #include "utils/trie.h"
 
@@ -182,6 +184,8 @@ class MemoryTrackingEnv : public GlobalRefListener {
   void FillThreadName(jvmtiEnv* jvmti, JNIEnv* jni, jthread thead,
                       std::string* thread_name);
 
+  void FillJniEventsModuleMap(BatchJNIGlobalRefEvent* batch);
+
   // For a particular class object, populate |klass_info| with the corresponding
   // values.
   static void GetClassInfo(MemoryTrackingEnv* env, jvmtiEnv* jvmti, JNIEnv* jni,
@@ -216,6 +220,8 @@ class MemoryTrackingEnv : public GlobalRefListener {
   ClassData class_data_;
   MethodIdMap known_methods_;
   ThreadIdMap thread_id_map_;
+  ProcfsFiles procfs_;
+  MemoryMap memory_map_;
 };
 
 }  // namespace profiler

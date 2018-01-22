@@ -459,6 +459,28 @@ message NativeBacktrace {
   repeated uint64 addresses = 1;
 }
 
+message NativeCallStack {
+  message NativeFrame {
+    string module_name = 1;
+    string symbol_name = 2;
+    string file_name = 3;
+    int32 line_number = 4;
+  }
+
+  repeated NativeFrame frames = 1;
+}
+
+message MemoryMap {
+  message MemoryRegion {
+    string name = 1;
+    uint64 start_address = 2;
+    uint64 end_address = 3;
+    uint64 file_offset = 4;
+  }
+
+  repeated MemoryRegion regions = 1;
+}
+
 // Proto format for handling O+ JNI global reference creation / deletion.
 message JNIGlobalReferenceEvent {
   enum Type {
@@ -480,6 +502,10 @@ message JNIGlobalReferenceEvent {
 
   // Same as in AllocationEvent.
   string thread_name = 7;
+
+  // Symbolized native callstack, populated by Android Studio
+  // from |backtrace| and MemoryMap.
+  NativeCallStack callstack = 8;
 }
 
 message JNIGlobalRefsEventsRequest {
@@ -496,6 +522,7 @@ message BatchJNIGlobalRefEvent {
   int32 pid = 1;
   int64 timestamp = 2;
   repeated JNIGlobalReferenceEvent events = 3;
+  MemoryMap memory_map = 4;
 }
 
 // Proto format for handling O+ allocation data.
