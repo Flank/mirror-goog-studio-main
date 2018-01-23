@@ -158,7 +158,8 @@ public class XmlDocument {
         getRootNode().mergeWithLowerPriorityNode(
                 lowerPriorityDocument.getRootNode(), mergingReportBuilder);
 
-        addImplicitElements(lowerPriorityDocument, mergingReportBuilder, addImplicitPermissions);
+        addImplicitElements(
+                lowerPriorityDocument, reparse(), mergingReportBuilder, addImplicitPermissions);
 
         // force re-parsing as new nodes may have appeared.
         return mergingReportBuilder.hasErrors()
@@ -385,13 +386,15 @@ public class XmlDocument {
     }
 
     /**
-     * Add all implicit elements from the passed lower priority document that are
-     * required in the target SDK.
+     * Add all implicit elements from the passed lower priority document that are required in the
+     * target SDK.
      */
     @SuppressWarnings("unchecked") // compiler confused about varargs and generics.
-    private void addImplicitElements(@NonNull XmlDocument lowerPriorityDocument,
-                                     @NonNull MergingReport.Builder mergingReport,
-                                     boolean addImplicitPermissions) {
+    private void addImplicitElements(
+            @NonNull XmlDocument lowerPriorityDocument,
+            @NonNull XmlDocument reparsedXmlDocument,
+            @NonNull MergingReport.Builder mergingReport,
+            boolean addImplicitPermissions) {
 
         // if this document is an overlay, tolerate the absence of uses-sdk and do not
         // assume implicit minimum versions.
@@ -504,13 +507,17 @@ public class XmlDocument {
                         USES_PERMISSION, permission("WRITE_EXTERNAL_STORAGE")).isPresent();
 
         if (libraryTargetSdk < 4) {
-            addIfAbsent(mergingReport.getActionRecorder(),
+            addIfAbsent(
+                    reparsedXmlDocument,
+                    mergingReport.getActionRecorder(),
                     USES_PERMISSION,
                     permission("WRITE_EXTERNAL_STORAGE"),
                     lowerPriorityDocument.getPackageName() + " has a targetSdkVersion < 4");
             hasWriteToExternalStoragePermission = true;
 
-            addIfAbsent(mergingReport.getActionRecorder(),
+            addIfAbsent(
+                    reparsedXmlDocument,
+                    mergingReport.getActionRecorder(),
                     USES_PERMISSION,
                     permission("READ_PHONE_STATE"),
                     lowerPriorityDocument.getPackageName() + " has a targetSdkVersion < 4");
@@ -522,7 +529,9 @@ public class XmlDocument {
         // an app with write permission but not read permission.
         if (hasWriteToExternalStoragePermission) {
 
-            addIfAbsent(mergingReport.getActionRecorder(),
+            addIfAbsent(
+                    reparsedXmlDocument,
+                    mergingReport.getActionRecorder(),
                     USES_PERMISSION,
                     permission("READ_EXTERNAL_STORAGE"),
                     lowerPriorityDocument.getPackageName() + " requested WRITE_EXTERNAL_STORAGE");
@@ -532,15 +541,21 @@ public class XmlDocument {
         if (thisTargetSdk >= 16 && libraryTargetSdk < 16) {
             if (lowerPriorityDocument.getByTypeAndKey(
                     USES_PERMISSION, permission("READ_CONTACTS")).isPresent()) {
-                addIfAbsent(mergingReport.getActionRecorder(),
-                        USES_PERMISSION, permission("READ_CALL_LOG"),
+                addIfAbsent(
+                        reparsedXmlDocument,
+                        mergingReport.getActionRecorder(),
+                        USES_PERMISSION,
+                        permission("READ_CALL_LOG"),
                         lowerPriorityDocument.getPackageName()
                                 + " has targetSdkVersion < 16 and requested READ_CONTACTS");
             }
             if (lowerPriorityDocument.getByTypeAndKey(
                     USES_PERMISSION, permission("WRITE_CONTACTS")).isPresent()) {
-                addIfAbsent(mergingReport.getActionRecorder(),
-                        USES_PERMISSION, permission("WRITE_CALL_LOG"),
+                addIfAbsent(
+                        reparsedXmlDocument,
+                        mergingReport.getActionRecorder(),
+                        USES_PERMISSION,
+                        permission("WRITE_CALL_LOG"),
                         lowerPriorityDocument.getPackageName()
                                 + " has targetSdkVersion < 16 and requested WRITE_CONTACTS");
             }
@@ -584,21 +599,25 @@ public class XmlDocument {
      * Adds a new element of type nodeType with a specific keyValue if the element is absent in this
      * document. Will also add attributes expressed through key value pairs.
      *
+     * @param reparsedXmlDocument an up-to-date version of this XmlDocument, we use this parameter
+     *     instead of calling reparse() because reparse() can be expensive
      * @param actionRecorder to records creation actions.
      * @param nodeType the node type to crete
      * @param keyValue the optional key for the element.
      * @param attributes the optional array of key value pairs for extra element attribute.
-     * @return the Xml element whether it was created or existed or {@link Optional#absent()} if
-     * it does not exist in this document.
+     * @return the Xml element whether it was created or existed or {@link Optional#absent()} if it
+     *     does not exist in this document.
      */
     private Optional<Element> addIfAbsent(
+            @NonNull XmlDocument reparsedXmlDocument,
             @NonNull ActionRecorder actionRecorder,
             @NonNull ManifestModel.NodeTypes nodeType,
             @Nullable String keyValue,
             @Nullable String reason,
             @Nullable Pair<String, String>... attributes) {
 
-        Optional<XmlElement> xmlElementOptional = getByTypeAndKey(nodeType, keyValue);
+        Optional<XmlElement> xmlElementOptional =
+                reparsedXmlDocument.getByTypeAndKey(nodeType, keyValue);
         if (xmlElementOptional.isPresent()) {
             return Optional.absent();
         }
