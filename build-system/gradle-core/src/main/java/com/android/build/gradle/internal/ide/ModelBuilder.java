@@ -121,7 +121,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilder;
  * Builder for the custom Android model.
  */
 public class ModelBuilder implements ToolingModelBuilder {
-    private static final String ROOT_BUILD_NAME = ":";
+    public static final String CURRENT_BUILD_NAME = "__current_build__";
 
     @NonNull
     static final DependenciesImpl EMPTY_DEPENDENCIES_IMPL =
@@ -1002,19 +1002,35 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     @NonNull
     public static ImmutableMap<String, String> computeBuildMapping(@NonNull Gradle gradle) {
-        // first, ensure we are starting from the root Gradle object.
-        //noinspection ConstantConditions
-        while (gradle.getParent() != null) {
-            gradle = gradle.getParent();
-        }
-
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
-        // get the root dir for the top project
-        builder.put(ROOT_BUILD_NAME, gradle.getRootProject().getProjectDir().getAbsolutePath());
+        // Get the root dir for current build.
+        // This is necessary to handle the case when dependency comes from the same build with consumer,
+        // i.e. when BuildIdentifier.isCurrentBuild returns true. In that case, BuildIdentifier.getName
+        // returns ":" instead of the actual build name.
+        String currentBuildPath = gradle.getRootProject().getProjectDir().getAbsolutePath();
+        builder.put(CURRENT_BUILD_NAME, currentBuildPath);
 
-        for (IncludedBuild includedBuild : gradle.getIncludedBuilds()) {
-            builder.put(includedBuild.getName(), includedBuild.getProjectDir().getAbsolutePath());
+        Gradle rootGradleProject = gradle;
+        // first, ensure we are starting from the root Gradle object.
+        //noinspection ConstantConditions
+        while (rootGradleProject.getParent() != null) {
+            rootGradleProject = rootGradleProject.getParent();
+        }
+
+        // get the root dir for the top project if different from current project.
+        if (rootGradleProject != gradle) {
+            builder.put(
+                    rootGradleProject.getRootProject().getName(),
+                    rootGradleProject.getRootProject().getProjectDir().getAbsolutePath());
+        }
+
+        for (IncludedBuild includedBuild : rootGradleProject.getIncludedBuilds()) {
+            String includedBuildPath = includedBuild.getProjectDir().getAbsolutePath();
+            // current build has been added with key CURRENT_BUIlD_NAME, avoid redundant entry.
+            if (!includedBuildPath.equals(currentBuildPath)) {
+                builder.put(includedBuild.getName(), includedBuildPath);
+            }
         }
 
         return builder.build();
