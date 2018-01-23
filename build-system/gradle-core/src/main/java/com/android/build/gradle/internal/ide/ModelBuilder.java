@@ -27,6 +27,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -797,8 +798,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                             PublishingSpecs.OutputSpec taskOutputSpec =
                                     testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
                             // now get the output type
-                            TaskOutputHolder.OutputType testedOutputType =
-                                    taskOutputSpec.getOutputType();
+                            ArtifactType testedOutputType = taskOutputSpec.getOutputType();
 
                             return ImmutableList.of(
                                     new EarlySyncBuildOutput(

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.ide
 import com.android.build.FilterData
 import com.android.build.OutputFile
 import com.android.build.VariantOutput
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskOutputHolder
@@ -40,7 +41,7 @@ import java.nio.file.Path
  * IDE only relies on minimalistic after build model.
  */
 data class EarlySyncBuildOutput(
-        val type: TaskOutputHolder.OutputType,
+        val type: ArtifactType,
         val apkType: VariantOutput.OutputType,
         val filtersData: Collection<FilterData>,
         val version: Int,
@@ -86,7 +87,8 @@ data class EarlySyncBuildOutput(
 
             // TODO : remove use of ApkInfo and replace with EarlySyncApkInfo.
             gsonBuilder.registerTypeAdapter(ApkInfo::class.java, ApkInfoAdapter())
-            gsonBuilder.registerTypeAdapter(TaskOutputHolder.OutputType::class.java,
+            gsonBuilder.registerTypeAdapter(
+                    ArtifactType::class.java,
                     OutputTypeTypeAdapter())
             val gson = gsonBuilder.create()
             val recordType = object : TypeToken<List<BuildOutput>>() {}.type
@@ -163,19 +165,19 @@ data class EarlySyncBuildOutput(
             }
         }
 
-        internal class OutputTypeTypeAdapter : TypeAdapter<TaskOutputHolder.OutputType>() {
-            override fun write(out: JsonWriter?, value: TaskOutputHolder.OutputType?) {
+        internal class OutputTypeTypeAdapter : TypeAdapter<ArtifactType>() {
+            override fun write(out: JsonWriter?, value: ArtifactType?) {
                 throw IOException("Unexpected call to write")
             }
 
             @Throws(IOException::class)
-            override fun read(`in`: JsonReader): TaskOutputHolder.OutputType {
+            override fun read(`in`: JsonReader): ArtifactType {
                 `in`.beginObject()
                 if (!`in`.nextName().endsWith("type")) {
                     throw IOException("Invalid format")
                 }
                 val nextString = `in`.nextString()
-                val outputType: TaskOutputHolder.OutputType = try {
+                val outputType: ArtifactType = try {
                     TaskOutputHolder.TaskOutputType.valueOf(nextString)
                 } catch (e: IllegalArgumentException) {
                     TaskOutputHolder.AnchorOutputType.valueOf(nextString)

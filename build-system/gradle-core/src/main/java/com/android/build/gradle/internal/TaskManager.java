@@ -69,6 +69,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
@@ -720,7 +721,7 @@ public abstract class TaskManager {
             PublishingSpecs.OutputSpec taskOutputSpec =
                     testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
             // now get the output type
-            TaskOutputHolder.OutputType testedOutputType = taskOutputSpec.getOutputType();
+            ArtifactType testedOutputType = taskOutputSpec.getOutputType();
 
             // create two streams of different types.
             transformManager.addStream(

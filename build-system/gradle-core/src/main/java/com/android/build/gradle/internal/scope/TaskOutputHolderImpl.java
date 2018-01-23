@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.ArtifactType;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Map;
@@ -31,14 +32,14 @@ import org.gradle.api.file.FileCollection;
 public abstract class TaskOutputHolderImpl implements TaskOutputHolder {
     private static final int OUTPUT_TYPE_SIZE =
             TaskOutputType.values().length + AnchorOutputType.values().length;
-    private final Map<OutputType, FileCollection> outputMap =
+    private final Map<ArtifactType, FileCollection> outputMap =
             Maps.newHashMapWithExpectedSize(OUTPUT_TYPE_SIZE);
 
     protected abstract Project getProject();
 
     @NonNull
     @Override
-    public FileCollection getOutput(@NonNull OutputType outputType)
+    public FileCollection getOutput(@NonNull ArtifactType outputType)
             throws MissingTaskOutputException {
         FileCollection fileCollection = outputMap.get(outputType);
         if (fileCollection == null) {
@@ -48,13 +49,13 @@ public abstract class TaskOutputHolderImpl implements TaskOutputHolder {
     }
 
     @Override
-    public boolean hasOutput(@NonNull OutputType outputType) {
+    public boolean hasOutput(@NonNull ArtifactType outputType) {
         return outputMap.containsKey(outputType);
     }
 
     @Override
     public ConfigurableFileCollection addTaskOutput(
-            @NonNull TaskOutputType outputType, @NonNull Object file, @Nullable String taskName)
+            @NonNull ArtifactType outputType, @NonNull Object file, @Nullable String taskName)
             throws TaskOutputAlreadyRegisteredException {
         if (outputMap.containsKey(outputType)) {
             throw new TaskOutputAlreadyRegisteredException(outputType);

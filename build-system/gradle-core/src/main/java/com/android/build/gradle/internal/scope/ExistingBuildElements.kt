@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.FilterData
 import com.android.build.VariantOutput
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.ide.FilterDataImpl
 import com.android.ide.common.build.ApkInfo
 import com.android.ide.common.internal.WaitableExecutor
@@ -48,7 +49,7 @@ class ExistingBuildElements {
          * @param from the file collection containing the metadata file.
          */
         @JvmStatic
-        fun from(elementType: TaskOutputHolder.OutputType, from: FileCollection): BuildElements {
+        fun from(elementType: ArtifactType, from: FileCollection): BuildElements {
             val metadataFile = getMetadataFileIfPresent(from)
             return _from(elementType, metadataFile)
         }
@@ -59,13 +60,13 @@ class ExistingBuildElements {
          * @param from the folder containing the metadata file.
          */
         @JvmStatic
-        fun from(elementType: TaskOutputHolder.OutputType, from: File): BuildElements {
+        fun from(elementType: ArtifactType, from: File): BuildElements {
 
             val metadataFile = getMetadataFileIfPresent(from)
             return _from(elementType, metadataFile)
         }
 
-        private fun _from(elementType: TaskOutputHolder.OutputType,
+        private fun _from(elementType: ArtifactType,
                 metadataFile: File?): BuildElements {
             if (metadataFile == null || !metadataFile.exists()) {
                 return BuildElements(ImmutableList.of())
@@ -109,7 +110,8 @@ class ExistingBuildElements {
         fun loadApkList(file: File): Collection<ApkInfo> {
             val gsonBuilder = GsonBuilder()
             gsonBuilder.registerTypeHierarchyAdapter(ApkInfo::class.java, ApkInfoAdapter())
-            gsonBuilder.registerTypeAdapter(TaskOutputHolder.OutputType::class.java,
+            gsonBuilder.registerTypeAdapter(
+                    ArtifactType::class.java,
                     OutputTypeTypeAdapter())
             val gson = gsonBuilder.create()
             val recordType = object : TypeToken<List<ApkInfo>>() {}.type
@@ -119,12 +121,13 @@ class ExistingBuildElements {
         @JvmStatic
         fun load(
                 projectPath: Path,
-                outputType: TaskOutputHolder.OutputType?,
+                outputType: ArtifactType?,
                 reader: Reader): Collection<BuildOutput> {
             val gsonBuilder = GsonBuilder()
 
             gsonBuilder.registerTypeAdapter(ApkInfo::class.java, ApkInfoAdapter())
-            gsonBuilder.registerTypeAdapter(TaskOutputHolder.OutputType::class.java,
+            gsonBuilder.registerTypeAdapter(
+                    ArtifactType::class.java,
                     OutputTypeTypeAdapter())
             val gson = gsonBuilder.create()
             val recordType = object : TypeToken<List<BuildOutput>>() {}.type
@@ -244,23 +247,23 @@ class ExistingBuildElements {
         }
     }
 
-    internal class OutputTypeTypeAdapter : TypeAdapter<TaskOutputHolder.OutputType>() {
+    internal class OutputTypeTypeAdapter : TypeAdapter<ArtifactType>() {
 
         @Throws(IOException::class)
-        override fun write(out: JsonWriter, value: TaskOutputHolder.OutputType) {
+        override fun write(out: JsonWriter, value: ArtifactType) {
             out.beginObject()
             out.name("type").value(value.name())
             out.endObject()
         }
 
         @Throws(IOException::class)
-        override fun read(reader: JsonReader): TaskOutputHolder.OutputType {
+        override fun read(reader: JsonReader): ArtifactType {
             reader.beginObject()
             if (!reader.nextName().endsWith("type")) {
                 throw IOException("Invalid format")
             }
             val nextString = reader.nextString()
-            val outputType: TaskOutputHolder.OutputType = try {
+            val outputType: ArtifactType = try {
                 TaskOutputHolder.TaskOutputType.valueOf(nextString)
             } catch (e: IllegalArgumentException) {
                 TaskOutputHolder.AnchorOutputType.valueOf(nextString)

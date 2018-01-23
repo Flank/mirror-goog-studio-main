@@ -16,15 +16,13 @@
 
 package com.android.build.gradle.internal.publishing
 
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.BUNDLE_ELEMENTS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
-import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType
 import com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.ALL_CLASSES
-import com.android.build.gradle.internal.scope.TaskOutputHolder.OutputType
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.AIDL_PARCELABLE
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK_MAPPING
@@ -102,14 +100,14 @@ class PublishingSpecs {
 
         fun getSpec(artifactType: ArtifactType): OutputSpec?
 
-        fun getSpec(taskOutputType: TaskOutputType): OutputSpec?
+        fun getSpec(taskOutputType: com.android.build.api.artifact.ArtifactType): OutputSpec?
     }
 
     /**
      * A published output
      */
     interface OutputSpec {
-        val outputType: OutputType
+        val outputType: com.android.build.api.artifact.ArtifactType
         val artifactType: ArtifactType
         val publishedConfigTypes: ImmutableList<PublishedConfigType>
     }
@@ -219,20 +217,20 @@ class PublishingSpecs {
 
         private fun variantSpec(
                 variantType: VariantType,
-                action: VariantSpecBuilder<TaskOutputType>.() -> Unit) {
-            val specBuilder = VariantSpecBuilderImpl<TaskOutputType>(
+                action: VariantSpecBuilder<com.android.build.api.artifact.ArtifactType>.() -> Unit) {
+            val specBuilder = VariantSpecBuilderImpl<com.android.build.api.artifact.ArtifactType>(
                     variantType)
             action(specBuilder)
             variantMap[variantType] = specBuilder.toSpec()
         }
 
         private fun variantSpec(variantType: VariantType) {
-            variantMap[variantType] = VariantSpecBuilderImpl<TaskOutputType>(
+            variantMap[variantType] = VariantSpecBuilderImpl<com.android.build.api.artifact.ArtifactType>(
                     variantType).toSpec()
         }
     }
 
-    interface VariantSpecBuilder<in T : OutputType> {
+    interface VariantSpecBuilder<in T : com.android.build.api.artifact.ArtifactType> {
         val variantType: VariantType
 
         fun output(taskOutputType: T, action: OutputSpecBuilder.() -> Unit)
@@ -242,7 +240,7 @@ class PublishingSpecs {
         fun metadata(taskOutputType: T, artifactType: ArtifactType)
         fun bundle(taskOutputType: T, artifactType: ArtifactType)
 
-        fun testSpec(variantType: VariantType, action: VariantSpecBuilder<OutputType>.() -> Unit)
+        fun testSpec(variantType: VariantType, action: VariantSpecBuilder<com.android.build.api.artifact.ArtifactType>.() -> Unit)
     }
 
     interface OutputSpecBuilder: OutputSpec {
@@ -264,12 +262,12 @@ private class VariantPublishingSpecImpl(
         override val variantType: VariantType,
         private val parentSpec: PublishingSpecs.VariantSpec?,
         override val outputs: Set<PublishingSpecs.OutputSpec>,
-        testingSpecBuilders: Map<VariantType, VariantSpecBuilderImpl<OutputType>>
+        testingSpecBuilders: Map<VariantType, VariantSpecBuilderImpl<com.android.build.api.artifact.ArtifactType>>
 ) : PublishingSpecs.VariantSpec {
 
     override val testingSpecs: Map<VariantType, PublishingSpecs.VariantSpec>
     private var _artifactMap: Map<ArtifactType, PublishingSpecs.OutputSpec>? = null
-    private var _outputMap: Map<OutputType, PublishingSpecs.OutputSpec>? = null
+    private var _outputMap: Map<com.android.build.api.artifact.ArtifactType, PublishingSpecs.OutputSpec>? = null
 
     private val artifactMap: Map<ArtifactType, PublishingSpecs.OutputSpec>
         get() {
@@ -283,7 +281,7 @@ private class VariantPublishingSpecImpl(
             }
         }
 
-    private val outputMap: Map<OutputType, PublishingSpecs.OutputSpec>
+    private val outputMap: Map<com.android.build.api.artifact.ArtifactType, PublishingSpecs.OutputSpec>
         get() {
             val map = _outputMap
             return if (map == null) {
@@ -312,24 +310,24 @@ private class VariantPublishingSpecImpl(
         return spec ?: parentSpec?.getSpec(artifactType)
     }
 
-    override fun getSpec(taskOutputType: TaskOutputType): PublishingSpecs.OutputSpec? {
+    override fun getSpec(taskOutputType: com.android.build.api.artifact.ArtifactType): PublishingSpecs.OutputSpec? {
         val spec = outputMap[taskOutputType]
         return spec ?: parentSpec?.getSpec(taskOutputType)
     }
 }
 
 private data class OutputSpecImpl(
-        override val outputType: OutputType,
+        override val outputType: com.android.build.api.artifact.ArtifactType,
         override val artifactType: ArtifactType,
         override val publishedConfigTypes: ImmutableList<PublishedConfigType>) : PublishingSpecs.OutputSpec
 
 // -- Implementation of the internal Spec Builder interfaces
 
-private class VariantSpecBuilderImpl<in T : OutputType>(
+private class VariantSpecBuilderImpl<in T : com.android.build.api.artifact.ArtifactType>(
         override val variantType: VariantType): PublishingSpecs.VariantSpecBuilder<T> {
 
     private val outputs = mutableSetOf<PublishingSpecs.OutputSpec>()
-    private val testingSpecs = mutableMapOf<VariantType, VariantSpecBuilderImpl<OutputType>>()
+    private val testingSpecs = mutableMapOf<VariantType, VariantSpecBuilderImpl<com.android.build.api.artifact.ArtifactType>>()
 
     override fun output(
             taskOutputType: T,
@@ -382,12 +380,12 @@ private class VariantSpecBuilderImpl<in T : OutputType>(
 
     override fun testSpec(
             variantType: VariantType,
-            action: PublishingSpecs.VariantSpecBuilder<OutputType>.() -> Unit) {
+            action: PublishingSpecs.VariantSpecBuilder<com.android.build.api.artifact.ArtifactType>.() -> Unit) {
         Preconditions.checkState(!this.variantType.isForTesting)
         Preconditions.checkState(variantType.isForTesting)
         Preconditions.checkState(!testingSpecs.containsKey(variantType))
 
-        val specBuilder = VariantSpecBuilderImpl<OutputType>(
+        val specBuilder = VariantSpecBuilderImpl<com.android.build.api.artifact.ArtifactType>(
                 variantType)
         action(specBuilder)
 
@@ -403,7 +401,7 @@ private class VariantSpecBuilderImpl<in T : OutputType>(
     }
 }
 
-private class OutputSpecBuilderImpl(override val outputType: OutputType) : PublishingSpecs.OutputSpecBuilder {
+private class OutputSpecBuilderImpl(override val outputType: com.android.build.api.artifact.ArtifactType) : PublishingSpecs.OutputSpecBuilder {
     override lateinit var artifactType: ArtifactType
     override var publishedConfigTypes: ImmutableList<PublishedConfigType> = API_AND_RUNTIME_ELEMENTS
 

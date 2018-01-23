@@ -279,7 +279,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     public ConfigurableFileCollection addTaskOutput(
-            @NonNull TaskOutputType outputType, @NonNull Object file, @Nullable String taskName) {
+            @NonNull com.android.build.api.artifact.ArtifactType outputType,
+            @NonNull Object file,
+            @Nullable String taskName) {
         ConfigurableFileCollection fileCollection;
         try {
             fileCollection = super.addTaskOutput(outputType, file, taskName);
@@ -306,7 +308,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public FileCollection getOutput(@NonNull OutputType outputType)
+    public FileCollection getOutput(@NonNull com.android.build.api.artifact.ArtifactType outputType)
             throws MissingTaskOutputException {
         try {
             return super.getOutput(outputType);
@@ -2066,7 +2068,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     // was published to.
                     if (publishedConfigs.contains(configType.getPublishedTo())) {
                         // if it's the case then we add the tested artifact.
-                        final OutputType taskOutputType = taskOutputSpec.getOutputType();
+                        final com.android.build.api.artifact.ArtifactType taskOutputType =
+                                taskOutputSpec.getOutputType();
                         if (testedScope.hasOutput(taskOutputType)) {
                             result =
                                     plusFunction.apply(
