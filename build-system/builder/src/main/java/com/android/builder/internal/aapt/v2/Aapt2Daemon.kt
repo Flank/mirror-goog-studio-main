@@ -48,7 +48,7 @@ abstract class Aapt2Daemon(
     private fun checkStarted() {
         when (state) {
             State.NEW -> {
-                logger.info("%1\$s: starting", displayName)
+                logger.verbose("%1\$s: starting", displayName)
                 try {
                     startProcess()
                 } catch (e: TimeoutException) {
@@ -113,7 +113,7 @@ abstract class Aapt2Daemon(
         state = when (state) {
             State.NEW -> State.SHUTDOWN // Never started, nothing to do.
             State.RUNNING -> {
-                logger.info("%1\$s: shutdown", displayName)
+                logger.verbose("%1\$s: shutdown", displayName)
                 try {
                     stopProcess()
                 } catch (e: TimeoutException) {
