@@ -23,6 +23,7 @@ import static com.android.SdkConstants.FD_AAR_LIBS;
 import static com.android.SdkConstants.FD_JARS;
 import static com.android.build.gradle.internal.ide.ArtifactDependencyGraph.DependencyType.ANDROID;
 import static com.android.build.gradle.internal.ide.ArtifactDependencyGraph.DependencyType.JAVA;
+import static com.android.build.gradle.internal.ide.ModelBuilder.CURRENT_BUILD_NAME;
 import static com.android.build.gradle.internal.ide.ModelBuilder.EMPTY_DEPENDENCIES_IMPL;
 import static com.android.build.gradle.internal.ide.ModelBuilder.EMPTY_DEPENDENCY_GRAPH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
@@ -652,7 +653,10 @@ public class ArtifactDependencyGraph {
     private static String getBuildId(
             @NonNull ProjectComponentIdentifier projectId,
             @NonNull ImmutableMap<String, String> buildMapping) {
-        return buildMapping.get(projectId.getBuild().getName());
+        return buildMapping.get(
+                projectId.getBuild().isCurrentBuild()
+                        ? CURRENT_BUILD_NAME
+                        : projectId.getBuild().getName());
     }
 
     @NonNull
