@@ -34,6 +34,9 @@ class PrivateResourcesTest {
 
     @Test
     fun noPrivateJavaForNonNamespacedCase() {
+        // Private resources are only supported in the namespaced case for now until we stop using
+        // the resource merger in the non-namespaced case as well.
+
         TestFileUtils.appendToFile(
                 project.getSubproject("app").buildFile,
                 "android.aaptOptions.privateRDotJavaPackage \"com.foo.bar.symbols\"\n"
@@ -51,6 +54,12 @@ class PrivateResourcesTest {
     @Test
     @Throws(IOException::class, InterruptedException::class)
     fun checkPrivateRDotJavaGenerated() {
+        // When private and public resources are present and the flag for the private R.java package
+        // is present, the public R.java should only contain resources that were marked as 'public'
+        // and the private R.java should contain both 'public' and 'java-symbol' ('private')
+        // resources. Resources that were not marked 'public' not 'java-symbol' are only accessible
+        // from XML resources and should not be present in neither R.java file.
+
         TestFileUtils.appendToFile(
                 project.getSubproject("app").buildFile,
                 "android.aaptOptions.privateRDotJavaPackage \"com.foo.bar.symbols\"\n"
@@ -108,6 +117,68 @@ class PrivateResourcesTest {
         assertTrue(privateLines.any { it.contains("public_string")})
         assertTrue(privateLines.any { it.contains("private_string")})
         assertTrue(privateLines.none { it.contains("default_string")})
+
+    }
+
+    @Test
+    @Throws(IOException::class, InterruptedException::class)
+    fun noFlagNoPrivateJava() {
+        // Even if 'public' and 'java-symbol' resources are present, but the flag for the private
+        // R.java package is not present, then ALL resources should be present in the PUBLIC R.java.
+        // PRIVATE R.java should not be generated at all.
+
+        // Note: no package for private R.java specified.
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").buildFile,
+                "android.aaptOptions.namespaced = true\n")
+
+        val stringsXml = FileUtils.join(
+                project.getSubproject("app").mainSrcDir.parentFile,
+                "res", "values", "strings.xml")
+        TestFileUtils.searchAndReplace(
+                stringsXml,
+                "</resources>",
+                "    <string name=\"public_string\">s1</string>\n" +
+                        "    <string name=\"private_string\">s2</string>\n" +
+                        "    <string name=\"default_string\">s3</string>\n" +
+                        "</resources>"
+        )
+
+        val publicXml = FileUtils.join(
+                project.getSubproject("app").mainSrcDir.parentFile,
+                "res", "values", "public.xml")
+        FileUtils.writeToFile(
+                publicXml,
+                "<resources>\n" +
+                        "    <public type=\"layout\" name=\"main\"/>\n" +
+                        "    <public type=\"string\" name=\"public_string\"/>\n" +
+                        "</resources>")
+
+        val privateXml = FileUtils.join(
+                project.getSubproject("app").mainSrcDir.parentFile,
+                "res", "values", "symbols.xml")
+        FileUtils.writeToFile(
+                privateXml,
+                "<resources>\n" +
+                        "    <java-symbol type=\"string\" name=\"private_string\"/>\n" +
+                        "</resources>")
+
+        project.executor().run(":app:assembleDebug")
+
+        val publicR = FileUtils.join(
+                project.getSubproject("app").generatedDir,
+                "source", "final-r", "debug", "com", "example", "android", "multiproject", "R.java")
+        assertThat(publicR).exists()
+
+        val publicLines = Files.readAllLines(publicR.toPath())
+        assertTrue(publicLines.any { it.contains("public_string")})
+        assertTrue(publicLines.any { it.contains("private_string")})
+        assertTrue(publicLines.any { it.contains("default_string")})
+
+        val privateR = FileUtils.join(
+                project.getSubproject("app").generatedDir,
+                "source", "final-r", "debug", "com", "foo", "bar", "symbols", "R.java")
+        assertThat(privateR).doesNotExist()
 
     }
 }

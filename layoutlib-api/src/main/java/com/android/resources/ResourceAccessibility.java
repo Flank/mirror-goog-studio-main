@@ -47,6 +47,26 @@ import com.android.annotations.NonNull;
  *
  * <p>All resources that were not marked as {@code public} or {@code private} have the {@code
  * default} accessibility.
+ *
+ * <p>Usage.
+ *
+ * <p>In order to generate a public R.java containing only the public resources and a private R.java
+ * containing both public and private resources, specify the package for the private R.java in the
+ * {@code build.gradle} file. For example, if the application's package (or the custom package) is
+ * {@code com.foo.bar} you could use {@code com.foo.bar.symbols} for the private R.java:
+ *
+ * <pre>
+ *     android {
+ *         ...
+ *         aaptOptions {
+ *             privateRDotJavaPackage "com.foo.bar.symbols"
+ *         }
+ *     }
+ * </pre>
+ *
+ * <p>Without the package for the private R.java specified, only the public R.java will be generated
+ * and it will contain all resources (ones marked as public, java-symbol and those not marked as
+ * either).
  */
 public enum ResourceAccessibility {
     DEFAULT("default"),
