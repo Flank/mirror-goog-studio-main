@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.res2;
 
 import static com.android.ide.common.res2.ResourceFile.ATTR_QUALIFIER;
@@ -66,6 +65,8 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     private boolean mShouldParseResourceIds;
     private boolean mDontNormalizeQualifiers;
     private boolean mTrackSourcePositions = true;
+    private boolean mCheckDuplicates = true;
+    private boolean mAllowUnspecifiedAttrFormat;
 
     public ResourceSet(
             String name,
@@ -100,6 +101,25 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
 
     public void setTrackSourcePositions(boolean shouldTrack) {
         mTrackSourcePositions = shouldTrack;
+    }
+
+    /**
+     * Tells the resource set whether to check for duplicate resource items or not.
+     *
+     * <p>Checking for duplicate items has to be turned off when loading resources of the Android
+     * framework to avoid bogus errors. See, for example,
+     * prebuilts/studio/layoutlib/data/res/values/attrs.xml.
+     */
+    public void setCheckDuplicates(boolean value) {
+        mCheckDuplicates = value;
+    }
+
+    /**
+     * Tells the resource set whether to allow "attr" items without a "format" attribute or
+     * children.
+     */
+    public void setAllowUnspecifiedAttrFormat(boolean value) {
+        mAllowUnspecifiedAttrFormat = value;
     }
 
     @Override
@@ -192,7 +212,13 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                         // Need to also create ATTR items for its children
                         try {
                             ValueResourceParser2.addStyleableItems(
-                                    resNode, resourceList, null, file, mNamespace, mLibraryName);
+                                    resNode,
+                                    resourceList,
+                                    null,
+                                    file,
+                                    mNamespace,
+                                    mLibraryName,
+                                    false);
                         } catch (MergingException ignored) {
                             // since we are not passing a dup map, this will never be thrown
                             assert false : file + ": " + ignored.getMessage();
@@ -202,7 +228,6 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
             }
 
             return new ResourceFile(file, resourceList, qualifier, folderConfiguration);
-
         } else {
             // single res file
             ResourceType type = ResourceType.getEnum(typeAttr);
@@ -345,6 +370,8 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                 ValueResourceParser2 parser =
                         new ValueResourceParser2(changedFile, mNamespace, mLibraryName);
                 parser.setTrackSourcePositions(mTrackSourcePositions);
+                parser.setCheckDuplicates(mCheckDuplicates);
+                parser.setAllowUnspecifiedAttrFormat(mAllowUnspecifiedAttrFormat);
 
                 List<ResourceItem> parsedItems = parser.parseFile();
                 handleChangedItems(resourceFile, parsedItems);
@@ -495,6 +522,8 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                 ValueResourceParser2 parser =
                         new ValueResourceParser2(file, mNamespace, mLibraryName);
                 parser.setTrackSourcePositions(mTrackSourcePositions);
+                parser.setCheckDuplicates(mCheckDuplicates);
+                parser.setAllowUnspecifiedAttrFormat(mAllowUnspecifiedAttrFormat);
                 List<ResourceItem> items = parser.parseFile();
 
                 return new ResourceFile(file, items, folderData.qualifiers, folderData.folderConfiguration);

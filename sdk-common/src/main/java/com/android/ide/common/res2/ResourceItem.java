@@ -73,7 +73,6 @@ import org.w3c.dom.NodeList;
  */
 public class ResourceItem extends DataItem<ResourceFile>
         implements Configurable, Comparable<ResourceItem> {
-
     @NonNull private final ResourceType mType;
 
     /**
@@ -369,23 +368,18 @@ public class ResourceItem extends DataItem<ResourceFile>
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
         if (!super.equals(o)) {
             return false;
         }
 
-        ResourceItem that = (ResourceItem) o;
+        ResourceItem other = (ResourceItem) o;
 
-        return mType == that.mType;
+        return mType == other.mType && mNamespace.equals(other.mNamespace);
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + mType.hashCode();
-        return result;
+        return (31 * super.hashCode() + mType.hashCode()) * 31 + mNamespace.hashCode();
     }
 
     @Nullable
@@ -675,9 +669,14 @@ public class ResourceItem extends DataItem<ResourceFile>
 
     @NonNull
     private static String getTextNode(@NonNull NodeList children) {
+        int n = children.getLength();
+        if (n == 0) {
+            return "";
+        }
+
         StringBuilder sb = new StringBuilder();
 
-        for (int i = 0, n = children.getLength(); i < n; i++) {
+        for (int i = 0; i < n; i++) {
             Node child = children.item(i);
 
             short nodeType = child.getNodeType();
@@ -705,9 +704,7 @@ public class ResourceItem extends DataItem<ResourceFile>
                         }
 
                         NodeList childNodes = child.getChildNodes();
-                        if (childNodes.getLength() > 0) {
-                            sb.append(getTextNode(childNodes));
-                        }
+                        sb.append(getTextNode(childNodes));
                         break;
                     }
                 case Node.TEXT_NODE:
@@ -807,13 +804,16 @@ public class ResourceItem extends DataItem<ResourceFile>
     }
 
     @Override
-    public int compareTo(@NonNull ResourceItem resourceItem) {
-        int comp = mType.compareTo(resourceItem.getType());
-        if (comp == 0) {
-            comp = getName().compareTo(resourceItem.getName());
+    public int compareTo(@NonNull ResourceItem other) {
+        int comp = mType.compareTo(other.mType);
+        if (comp != 0) {
+            return comp;
         }
-
-        return comp;
+        comp = mNamespace.compareTo(other.mNamespace);
+        if (comp != 0) {
+            return comp;
+        }
+        return getName().compareTo(other.getName());
     }
 
     private boolean mIgnoredFromDiskMerge = false;

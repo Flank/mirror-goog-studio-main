@@ -19,7 +19,6 @@ package com.android.ide.common.res2;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.Serializable;
@@ -103,6 +102,7 @@ abstract class DataItem<F extends DataFile> implements Serializable {
      * Resets the state of the item be nothing.
      * @return this
      */
+    @NonNull
     DataItem<F> resetStatus() {
         mStatus = 0;
         return this;
@@ -113,6 +113,7 @@ abstract class DataItem<F extends DataFile> implements Serializable {
      * @return this
      * @see #isWritten()
      */
+    @NonNull
     DataItem<F> resetStatusToWritten() {
         mStatus = MASK_WRITTEN;
         return this;
@@ -123,6 +124,7 @@ abstract class DataItem<F extends DataFile> implements Serializable {
      * @return this
      * @see #isWritten()
      */
+    @NonNull
     DataItem<F> resetStatusToTouched() {
         boolean wasNotTouched = !isTouched();
         mStatus = MASK_TOUCHED;
@@ -139,6 +141,7 @@ abstract class DataItem<F extends DataFile> implements Serializable {
      * @return this
      * @see #isWritten()
      */
+    @NonNull
     DataItem<F> setWritten() {
         mStatus |= MASK_WRITTEN;
         return this;
@@ -149,6 +152,7 @@ abstract class DataItem<F extends DataFile> implements Serializable {
      * @return this
      * @see #isRemoved()
      */
+    @NonNull
     DataItem<F> setRemoved() {
         mStatus |= MASK_REMOVED;
         return this;
@@ -159,6 +163,7 @@ abstract class DataItem<F extends DataFile> implements Serializable {
      * @return this
      * @see #isTouched()
      */
+    @NonNull
     DataItem<F> setTouched() {
         if (!isTouched()) {
             mStatus |= MASK_TOUCHED;
@@ -224,6 +229,7 @@ abstract class DataItem<F extends DataFile> implements Serializable {
      *
      * <p>The default implementation returns <code>null</code>.</p>
      */
+    @Nullable
     Node getDetailsXml(Document document) {
         return null;
     }
@@ -237,15 +243,25 @@ abstract class DataItem<F extends DataFile> implements Serializable {
             return false;
         }
 
-        DataItem dataItem = (DataItem) o;
+        DataItem other = (DataItem) o;
 
-        return Objects.equal(mName, dataItem.mName)
-                && Objects.equal(mSource, dataItem.mSource);
+        if (!mName.equals(other.mName)) {
+            return false;
+        }
+        DataFile source = getSource();
+        DataFile otherSource = other.getSource();
+        if (source == otherSource) {
+            return true;
+        }
+        if ((source == null) != (otherSource == null)) {
+            return false;
+        }
+        return source.getFile().equals(otherSource.getFile());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(mName, mSource);
+        return mName.hashCode();
     }
 
     /**
@@ -257,8 +273,10 @@ abstract class DataItem<F extends DataFile> implements Serializable {
      * For non-values resources, this is the original source file.
      * This method is here as {@link GeneratedResourceItem} overrides it.
      */
+    @Nullable
     public File getFile() {
-        return getSource().getFile();
+        F source = getSource();
+        return source == null ? null : source.getFile();
     }
 
     @Override
