@@ -20,6 +20,7 @@ import org.gradle.api.Named
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.internal.reflect.JavaReflectionUtil
 import java.lang.reflect.Constructor
 
@@ -56,6 +57,10 @@ class FakeObjectFactory : ObjectFactory {
 
     override fun <T : Any?> listProperty(p0: Class<T>?): ListProperty<T> {
         TODO("not implemented")
+    }
+
+    override fun <T : Any?> setProperty(p0: Class<T>?): SetProperty<T> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     private fun getParamTypes(params: Array<out Any?>): Array<Class<*>?> {
