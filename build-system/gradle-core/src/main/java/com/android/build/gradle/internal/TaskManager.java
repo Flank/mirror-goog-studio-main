@@ -226,8 +226,8 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -3402,7 +3402,7 @@ public abstract class TaskManager {
 
         Supplier<Collection<File>> proguardConfigFiles =
                 () -> {
-                    Set<File> proguardFiles = Sets.newHashSet(scope.getProguardFiles());
+                    List<File> proguardFiles = new ArrayList<>(scope.getProguardFiles());
 
                     // Use the first output when looking for the proguard rule output of
                     // the aapt task. The different outputs are not different in a way that
