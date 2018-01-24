@@ -21,7 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
@@ -89,7 +89,7 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Earl
             ArtifactType taskOutputType,
             File file,
             ImmutableList.Builder<EarlySyncBuildOutput> outputs) {
-        if (taskOutputType == TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS) {
+        if (taskOutputType == InternalArtifactType.MERGED_MANIFESTS) {
             if (file.getName().equals(SdkConstants.ANDROID_MANIFEST_XML)) {
                 outputs.add(
                         new EarlySyncBuildOutput(
@@ -101,8 +101,8 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Earl
             }
         } else {
             VariantOutput.OutputType fileOutputType =
-                    taskOutputType == TaskOutputHolder.TaskOutputType.AAR
-                                    || taskOutputType == TaskOutputHolder.TaskOutputType.APK
+                    taskOutputType == InternalArtifactType.AAR
+                                    || taskOutputType == InternalArtifactType.APK
                             ? VariantOutput.OutputType.MAIN
                             : VariantOutput.OutputType.SPLIT;
             outputs.add(

@@ -853,9 +853,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (Boolean.TRUE.equals(globalScope.getExtension().getAaptOptions().getNamespaced())) {
             mainCollection =
                     mainCollection.plus(
-                            getOutput(
-                                    VariantScope.TaskOutputType
-                                            .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
+                            getOutput(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             mainCollection =
                     mainCollection.plus(
                             getArtifactFileCollection(
@@ -868,23 +866,25 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         mainCollection.plus(
                                 tested.getScope()
                                         .getOutput(
-                                                VariantScope.TaskOutputType
+                                                InternalArtifactType
                                                         .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             }
         } else {
-            if (hasOutput(
-                    TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+            if (hasOutput(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
                 FileCollection rJar =
-                        getOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                        getOutput(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
                 mainCollection = mainCollection.plus(rJar);
             }
             BaseVariantData tested = getTestedVariantData();
             if (tested != null
                     && tested.getScope()
-                            .hasOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+                            .hasOutput(
+                                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
                 FileCollection rJar =
                         tested.getScope()
-                                .getOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                                .getOutput(
+                                        InternalArtifactType
+                                                .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
                 mainCollection = mainCollection.plus(rJar);
             }
         }
@@ -1589,7 +1589,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getIntermediateDir(@NonNull TaskOutputType taskOutputType) {
+    public File getIntermediateDir(@NonNull InternalArtifactType taskOutputType) {
         return intermediate(taskOutputType.name().toLowerCase(Locale.US));
     }
 

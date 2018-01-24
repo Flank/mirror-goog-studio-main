@@ -22,8 +22,8 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.testing.ConnectedDevice;
@@ -134,7 +134,7 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
                     for (File apkDirectory : outputScope.getApkDirectories()) {
                         for (BuildOutput buildOutput :
                                 ExistingBuildElements.from(
-                                        TaskOutputHolder.TaskOutputType.APK, apkDirectory)) {
+                                        InternalArtifactType.APK, apkDirectory)) {
                             apks.add(buildOutput.getOutputFile());
                         }
                     }
@@ -193,7 +193,7 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
                                 SdkInfo info = scope.getGlobalScope().getSdkHandler().getSdkInfo();
                                 return (info == null ? null : info.getAdb());
                             });
-            task.bundleDir = scope.getOutput(TaskOutputHolder.TaskOutputType.INSTANTAPP_BUNDLE);
+            task.bundleDir = scope.getOutput(InternalArtifactType.INSTANTAPP_BUNDLE);
         }
     }
 }

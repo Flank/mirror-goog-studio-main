@@ -48,8 +48,7 @@ public class BuildOutputTest {
     @Test
     public void testGetFilterTypes() {
         BuildOutput buildOutput =
-                new BuildOutput(
-                        TaskOutputHolder.TaskOutputType.APK, apkInfo, new File("/tmp/bar/output"));
+                new BuildOutput(InternalArtifactType.APK, apkInfo, new File("/tmp/bar/output"));
         when(apkInfo.getFilters())
                 .thenReturn(
                         ImmutableList.of(

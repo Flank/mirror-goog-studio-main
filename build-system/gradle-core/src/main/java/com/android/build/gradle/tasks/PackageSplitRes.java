@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
@@ -68,7 +69,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
     protected void doFullTaskAction() throws IOException {
 
         ExistingBuildElements.from(
-                        VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
+                        InternalArtifactType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
                         processedResources)
                 .transform(
                         (split, output) -> {
@@ -106,7 +107,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
                             return outFile;
                         })
                 .into(
-                        VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                        InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
                         splitResApkOutputDirectory);
     }
 
@@ -146,7 +147,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
             final VariantConfiguration config = variantData.getVariantConfiguration();
 
             packageSplitResourcesTask.processedResources =
-                    scope.getOutput(VariantScope.TaskOutputType.PROCESSED_RES);
+                    scope.getOutput(InternalArtifactType.PROCESSED_RES);
             packageSplitResourcesTask.signingConfig = config.getSigningConfig();
             packageSplitResourcesTask.splitResApkOutputDirectory = outputDirectory;
             packageSplitResourcesTask.incrementalDir = scope.getIncrementalDir(getName());

@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.scope.BuildElementActionScheduler;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.PackagerException;
@@ -129,14 +129,11 @@ public class InstantRunResourcesApkBuilderTest {
 
         InstantRunResourcesApkBuilder.ConfigAction configAction =
                 new InstantRunResourcesApkBuilder.ConfigAction(
-                        TaskOutputHolder.TaskOutputType.PROCESSED_RES,
-                        fileCollection,
-                        variantScope);
+                        InternalArtifactType.PROCESSED_RES, fileCollection, variantScope);
 
         configAction.execute(task);
 
-        assertThat(task.getResInputType())
-                .isEqualTo(TaskOutputHolder.TaskOutputType.PROCESSED_RES.name());
+        assertThat(task.getResInputType()).isEqualTo(InternalArtifactType.PROCESSED_RES.name());
         assertThat(task.getResourcesFile()).isEqualTo(fileCollection);
         assertThat(task.getOutputDirectory()).isEqualTo(outputFolder);
         assertThat(task.getSigningConf()).isEqualTo(signingConfig);
@@ -148,9 +145,7 @@ public class InstantRunResourcesApkBuilderTest {
 
         InstantRunResourcesApkBuilder.ConfigAction configAction =
                 new InstantRunResourcesApkBuilder.ConfigAction(
-                        TaskOutputHolder.TaskOutputType.PROCESSED_RES,
-                        fileCollection,
-                        variantScope);
+                        InternalArtifactType.PROCESSED_RES, fileCollection, variantScope);
 
         configAction.execute(task);
 
@@ -181,9 +176,7 @@ public class InstantRunResourcesApkBuilderTest {
 
         InstantRunResourcesApkBuilder.ConfigAction configAction =
                 new InstantRunResourcesApkBuilder.ConfigAction(
-                        TaskOutputHolder.TaskOutputType.PROCESSED_RES,
-                        fileCollection,
-                        variantScope);
+                        InternalArtifactType.PROCESSED_RES, fileCollection, variantScope);
 
         configAction.execute(task);
 
@@ -202,8 +195,7 @@ public class InstantRunResourcesApkBuilderTest {
 
             resourcesFiles.add(resourcesFile);
             resources.add(
-                    new BuildOutput(
-                            TaskOutputHolder.TaskOutputType.PROCESSED_RES, apkData, resourcesFile));
+                    new BuildOutput(InternalArtifactType.PROCESSED_RES, apkData, resourcesFile));
         }
         new BuildElements(resources.build()).save(temporaryFolder.getRoot());
 

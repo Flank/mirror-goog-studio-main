@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.TaskOutputHolder
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.TaskContainer
 import com.android.build.gradle.options.BooleanOption
@@ -96,7 +96,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
     @Throws(IOException::class)
     override fun doFullTaskAction() {
         val manifest = Iterables.getOnlyElement(
-                ExistingBuildElements.from(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, manifestFiles))
+                ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifestFiles))
                 .outputFile
 
         val androidAttrSymbol = getAndroidAttrSymbols(platformAttrRTxt.singleFile)
@@ -150,7 +150,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
             task.platformAttrRTxt = variantScope
                     .globalScope
-                    .getOutput(TaskOutputHolder.TaskOutputType.PLATFORM_R_TXT)
+                    .getOutput(InternalArtifactType.PLATFORM_R_TXT)
 
             task.applicationId = variantScope.variantData.variantConfiguration.applicationId
 
@@ -159,17 +159,17 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
             if (variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
-                val rJar = File(variantScope.getIntermediateDir(TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR), "R.jar")
+                val rJar = File(variantScope.getIntermediateDir(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR), "R.jar")
                 task.rClassOutputJar = rJar
                 variantScope.addTaskOutput(
-                        TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
+                        InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
                         rJar,
                         task.name)
             } else {
                 val sourceOutputDirectory = variantScope.rClassSourceOutputDir
                 task.sourceOutputDirectory = sourceOutputDirectory
                 variantScope.addTaskOutput(
-                        TaskOutputHolder.TaskOutputType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                        InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
                         sourceOutputDirectory,
                         task.name)
             }
@@ -182,9 +182,9 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
             task.packageForR = Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
 
-            task.manifestFiles = variantScope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS)
+            task.manifestFiles = variantScope.getOutput(InternalArtifactType.MERGED_MANIFESTS)
 
-            task.inputResourcesDir = variantScope.getOutput(TaskOutputHolder.TaskOutputType.PACKAGED_RES)
+            task.inputResourcesDir = variantScope.getOutput(InternalArtifactType.PACKAGED_RES)
         }
     }
 }

@@ -34,27 +34,27 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.ANNOTATION_PROCESSOR_LIST;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK_MAPPING;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_MANIFEST;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LINKED_RES_FOR_BUNDLE;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LINT_JAR;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MANIFEST_MERGE_REPORT;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_NOT_COMPILED_RES;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MOCKABLE_JAR;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PLATFORM_R_TXT;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLISHED_DEX;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLISHED_JAVA_RES;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLISHED_NATIVE_LIBS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.LINKED_RES_FOR_BUNDLE;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MOCKABLE_JAR;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.PLATFORM_R_TXT;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_DEX;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_JAVA_RES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_NATIVE_LIBS;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
@@ -104,8 +104,8 @@ import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskM
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
@@ -751,7 +751,7 @@ public abstract class TaskManager {
                 taskFactory.create(
                         new CompatibleScreensManifest.ConfigAction(variantScope, screenSizes));
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST,
+                InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
                 variantScope.getCompatibleScreensManifestDirectory(),
                 csmTask.getName());
 
@@ -785,7 +785,7 @@ public abstract class TaskManager {
                 processManifestTask.getName());
 
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.MANIFEST_METADATA,
+                InternalArtifactType.MANIFEST_METADATA,
                 ExistingBuildElements.getMetadataFile(variantScope.getManifestOutputDirectory()),
                 processManifestTask.getName());
 
@@ -947,8 +947,8 @@ public abstract class TaskManager {
          */
         MERGE {
             @Override
-            public VariantScope.TaskOutputType getOutputType() {
-                return VariantScope.TaskOutputType.MERGED_RES;
+            public InternalArtifactType getOutputType() {
+                return InternalArtifactType.MERGED_RES;
             }
         },
         /**
@@ -956,12 +956,12 @@ public abstract class TaskManager {
          */
         PACKAGE {
             @Override
-            public VariantScope.TaskOutputType getOutputType() {
-                return VariantScope.TaskOutputType.PACKAGED_RES;
+            public InternalArtifactType getOutputType() {
+                return InternalArtifactType.PACKAGED_RES;
             }
         };
 
-        public abstract VariantScope.TaskOutputType getOutputType();
+        public abstract InternalArtifactType getOutputType();
     }
 
     public MergeResources basicCreateMergeResourcesTask(
@@ -1202,7 +1202,7 @@ public abstract class TaskManager {
             @NonNull VariantScope scope,
             @NonNull File symbolLocation,
             @NonNull File resPackageOutputFolder,
-            @Nullable TaskOutputHolder.TaskOutputType packageOutputType,
+            @Nullable InternalArtifactType packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
         BaseVariantData variantData = scope.getVariantData();
@@ -1238,7 +1238,7 @@ public abstract class TaskManager {
             @NonNull VariantScope scope,
             @NonNull File symbolDirectory,
             @NonNull File resPackageOutputFolder,
-            TaskOutputHolder.TaskOutputType packageOutputType,
+            InternalArtifactType packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
@@ -1276,7 +1276,7 @@ public abstract class TaskManager {
 
             taskName = processAndroidResources.getName();
             scope.addTaskOutput(
-                    VariantScope.TaskOutputType.PROCESSED_RES, resPackageOutputFolder, taskName);
+                    InternalArtifactType.PROCESSED_RES, resPackageOutputFolder, taskName);
             if (packageOutputType != null) {
                 scope.addTaskOutput(
                         packageOutputType,
@@ -1303,7 +1303,7 @@ public abstract class TaskManager {
             scope.addTaskOutput(
                     LINKED_RES_FOR_BUNDLE, resourcesAsProtosFile, linkResForBundle.getName());
         }
-        scope.addTaskOutput(VariantScope.TaskOutputType.SYMBOL_LIST, symbolFile, taskName);
+        scope.addTaskOutput(InternalArtifactType.SYMBOL_LIST, symbolFile, taskName);
 
         // Needed for the IDE
         scope.getSourceGenTask().dependsOn(taskName);
@@ -1311,7 +1311,7 @@ public abstract class TaskManager {
         // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
         // process resources for local subprojects.
         scope.addTaskOutput(
-                VariantScope.TaskOutputType.SYMBOL_LIST_WITH_PACKAGE_NAME,
+                InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
                 symbolTableWithPackageName,
                 taskName);
 
@@ -1329,7 +1329,7 @@ public abstract class TaskManager {
                     @NonNull File symbolWithPackageName,
                     @NonNull File resPackageOutputFolder,
                     boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                    @NonNull MergeType sourceTaskOutputType,
+                    @NonNull MergeType sourceArtifactType,
                     @NonNull String baseName) {
         checkState(
                 globalScope.getExtension().getAaptOptions().getPrivateRDotJavaPackage() == null,
@@ -1342,7 +1342,7 @@ public abstract class TaskManager {
                 symbolWithPackageName,
                 resPackageOutputFolder,
                 useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                sourceTaskOutputType,
+                sourceArtifactType,
                 baseName,
                 isLibrary());
     }
@@ -1366,7 +1366,7 @@ public abstract class TaskManager {
                         new PackageSplitRes.ConfigAction(scope, densityOrLanguagesPackages));
         variantData.packageSplitResourcesTask = packageSplitRes;
         scope.addTaskOutput(
-                VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
                 densityOrLanguagesPackages,
                 packageSplitRes.getName());
 
@@ -1408,7 +1408,7 @@ public abstract class TaskManager {
                         new GenerateSplitAbiRes.ConfigAction(
                                 scope, generateSplitAbiResOutputDirectory));
         scope.addTaskOutput(
-                VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES,
+                InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
                 generateSplitAbiResOutputDirectory,
                 generateSplitAbiRes.getName());
 
@@ -1419,10 +1419,9 @@ public abstract class TaskManager {
                         new PackageSplitAbi.ConfigAction(
                                 scope,
                                 generateSplitAbiPackagesOutputDirectory,
-                                scope.getOutput(
-                                        VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES)));
+                                scope.getOutput(InternalArtifactType.ABI_PROCESSED_SPLIT_RES)));
         scope.addTaskOutput(
-                VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
+                InternalArtifactType.ABI_PACKAGED_SPLIT,
                 generateSplitAbiPackagesOutputDirectory,
                 packageSplitAbiTask.getName());
         variantData.packageSplitAbiTask = packageSplitAbiTask;
@@ -1490,7 +1489,7 @@ public abstract class TaskManager {
         // create the task outputs for others to consume
         FileCollection collection =
                 variantScope.addTaskOutput(
-                        VariantScope.TaskOutputType.JAVA_RES,
+                        InternalArtifactType.JAVA_RES,
                         destinationDir,
                         processJavaResourcesTask.getName());
 
@@ -1554,9 +1553,7 @@ public abstract class TaskManager {
         ShaderCompile shaderCompileTask =
                 taskFactory.create(new ShaderCompile.ConfigAction(scope, outputDir));
         scope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.SHADER_ASSETS,
-                outputDir,
-                shaderCompileTask.getName());
+                InternalArtifactType.SHADER_ASSETS, outputDir, shaderCompileTask.getName());
         shaderCompileTask.dependsOn(mergeShadersTask);
 
         scope.getAssetGenTask().dependsOn(shaderCompileTask);
@@ -1640,7 +1637,7 @@ public abstract class TaskManager {
                                         scope.getVariantData().getAllPostJavacGeneratedBytecode())
                                 .build());
 
-        if (scope.hasOutput(TaskOutputHolder.TaskOutputType.RUNTIME_R_CLASS_CLASSES)) {
+        if (scope.hasOutput(InternalArtifactType.RUNTIME_R_CLASS_CLASSES)) {
             scope.getTransformManager()
                     .addStream(
                             OriginalStream.builder(project, "final-r-classes")
@@ -1650,8 +1647,7 @@ public abstract class TaskManager {
                                     .addScope(Scope.PROJECT)
                                     .setFileCollection(
                                             scope.getOutput(
-                                                    TaskOutputHolder.TaskOutputType
-                                                            .RUNTIME_R_CLASS_CLASSES))
+                                                    InternalArtifactType.RUNTIME_R_CLASS_CLASSES))
                                     .build());
         }
     }
@@ -1829,7 +1825,7 @@ public abstract class TaskManager {
                     taskFactory.create(
                             new GenerateTestConfig.ConfigAction(variantScope, unitTestConfigDir));
             variantScope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY,
+                    InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY,
                     unitTestConfigDir,
                     generateTestConfig.getName());
             variantScope.getCompileTask().dependsOn(generateTestConfig);
@@ -1849,9 +1845,7 @@ public abstract class TaskManager {
 
         // Empty R class jar. TODO: Resources support for unit tests?
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
-                project.files(),
-                null);
+                InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR, project.files(), null);
 
         JavaCompile javacTask = createJavacTask(variantScope);
         addJavacClassesStream(variantScope);
@@ -1881,7 +1875,7 @@ public abstract class TaskManager {
                             new SplitsDiscovery.ConfigAction(variantScope, splitListOutputFile));
 
             variantScope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.SPLIT_LIST,
+                    InternalArtifactType.SPLIT_LIST,
                     splitListOutputFile,
                     splitsDiscoveryAndroidTask.getName());
         }
@@ -2133,13 +2127,13 @@ public abstract class TaskManager {
         TestDataImpl testData =
                 new TestDataImpl(
                         testVariantData,
-                        variantScope.getOutput(VariantScope.TaskOutputType.APK),
+                        variantScope.getOutput(InternalArtifactType.APK),
                         isLibrary
                                 ? null
                                 : testVariantData
                                         .getTestedVariantData()
                                         .getScope()
-                                        .getOutput(VariantScope.TaskOutputType.APK));
+                                        .getOutput(InternalArtifactType.APK));
         testData.setExtraInstrumentationTestRunnerArgs(
                 projectOptions.getExtraInstrumentationTestRunnerArgs());
 
@@ -2409,7 +2403,7 @@ public abstract class TaskManager {
             @NonNull VariantScope variantScope,
             @NonNull FileCollection fileCollection,
             @NonNull File outputFile,
-            @NonNull TaskOutputHolder.TaskOutputType outputType) {
+            @NonNull InternalArtifactType outputType) {
         PipelineToPublicationTask task =
                 taskFactory.create(
                         new PipelineToPublicationTask.ConfigAction(
@@ -2840,7 +2834,7 @@ public abstract class TaskManager {
         dataBindingMergeTask.ifPresent(
                 task ->
                         variantScope.addTaskOutput(
-                                TaskOutputHolder.TaskOutputType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
+                                InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
                                 outFolder,
                                 task.getName()));
     }
@@ -2910,8 +2904,7 @@ public abstract class TaskManager {
                         "source/dataBinding/baseClasses/"
                                 + scope.getVariantConfiguration().getDirName());
         File baseClassLogFolder =
-                scope.getIntermediateDir(
-                        TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT);
+                scope.getIntermediateDir(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT);
 
         DataBindingGenBaseClassesTask.ConfigAction genBaseClassConfigAction =
                 new DataBindingGenBaseClassesTask.ConfigAction(
@@ -2924,7 +2917,7 @@ public abstract class TaskManager {
                 baseClassOutFolder,
                 generateBaseClasses.getName());
         scope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
+                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
                 baseClassLogFolder,
                 generateBaseClasses.getName());
         generateBaseClasses.dependsOn(scope.getVariantData().mergeResourcesTask);
@@ -2969,9 +2962,7 @@ public abstract class TaskManager {
             }
             int minApi = variantConfiguration.getMinSdkVersion().getApiLevel();
             File classLogDir =
-                    scope.getOutput(
-                                    TaskOutputHolder.TaskOutputType
-                                            .DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
+                    scope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
                             .getSingleFile();
             DataBindingCompilerArgs args =
                     DataBindingCompilerArgs.builder()
@@ -3025,7 +3016,7 @@ public abstract class TaskManager {
          * forcing a cold swap is triggered, the main FULL_APK must be rebuilt (even if the
          * resources were changed in a previous build).
          */
-        VariantScope.TaskOutputType manifestType =
+        InternalArtifactType manifestType =
                 variantScope.getInstantRunBuildContext().isInInstantRunMode()
                         ? INSTANT_RUN_MERGED_MANIFESTS
                         : MERGED_MANIFESTS;
@@ -3043,18 +3034,16 @@ public abstract class TaskManager {
                         ? variantScope.getFullApkPackagesOutputDirectory()
                         : finalApkLocation;
 
-        TaskOutputHolder.TaskOutputType taskOutputType =
-                splitsArePossible
-                        ? TaskOutputHolder.TaskOutputType.FULL_APK
-                        : TaskOutputHolder.TaskOutputType.APK;
+        InternalArtifactType taskOutputType =
+                splitsArePossible ? InternalArtifactType.FULL_APK : InternalArtifactType.APK;
 
         boolean useSeparateApkForResources =
                 variantScope.getInstantRunBuildContext().useSeparateApkForResources();
 
-        VariantScope.TaskOutputType resourceFilesInputType =
+        InternalArtifactType resourceFilesInputType =
                 variantScope.useResourceShrinker()
-                        ? VariantScope.TaskOutputType.SHRUNK_PROCESSED_RES
-                        : VariantScope.TaskOutputType.PROCESSED_RES;
+                        ? InternalArtifactType.SHRUNK_PROCESSED_RES
+                        : InternalArtifactType.PROCESSED_RES;
 
         PackageApplication packageApp =
                 taskFactory.create(
@@ -3157,9 +3146,7 @@ public abstract class TaskManager {
                     taskFactory.create(
                             new CopyOutputs.ConfigAction(variantScope, finalApkLocation));
             variantScope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.APK,
-                    finalApkLocation,
-                    copyOutputsTask.getName());
+                    InternalArtifactType.APK, finalApkLocation, copyOutputsTask.getName());
             variantScope.getAssembleTask().dependsOn(copyOutputsTask);
         }
 
@@ -3333,7 +3320,7 @@ public abstract class TaskManager {
         task.ifPresent(
                 t -> {
                     variantScope.addTaskOutput(
-                            TaskOutputHolder.TaskOutputType.APK_MAPPING,
+                            InternalArtifactType.APK_MAPPING,
                             checkNotNull(transform.getMappingFile()),
                             t.getName());
 
@@ -3381,7 +3368,7 @@ public abstract class TaskManager {
         ShrinkResourcesTransform shrinkResTransform =
                 new ShrinkResourcesTransform(
                         scope.getVariantData(),
-                        scope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
+                        scope.getOutput(InternalArtifactType.PROCESSED_RES),
                         shrinkerOutput,
                         AaptGeneration.fromProjectOptions(projectOptions),
                         logger);
@@ -3391,7 +3378,7 @@ public abstract class TaskManager {
 
         if (shrinkTask.isPresent()) {
             scope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.SHRUNK_PROCESSED_RES,
+                    InternalArtifactType.SHRUNK_PROCESSED_RES,
                     shrinkerOutput,
                     shrinkTask.get().getName());
         } else {
@@ -3696,12 +3683,11 @@ public abstract class TaskManager {
                     .withPathSensitivity(PathSensitivity.RELATIVE)
                     .withPropertyName("dataBindingDependencyArtifacts");
         }
-        if (scope.hasOutput(TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)) {
+        if (scope.hasOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)) {
             kaptTask.getInputs()
                     .files(
                             scope.getOutput(
-                                    TaskOutputHolder.TaskOutputType
-                                            .DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
+                                    InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT))
                     .withPathSensitivity(PathSensitivity.RELATIVE)
                     .withPropertyName("dataBindingClassLogDir");
         }
@@ -3710,9 +3696,9 @@ public abstract class TaskManager {
         kaptTask.getOutputs()
                 .files(scope.getBundleArtifactFolderForDataBinding())
                 .withPropertyName("dataBindingArtifactOutputDir");
-        if (!scope.hasOutput(TaskOutputHolder.TaskOutputType.DATA_BINDING_ARTIFACT)) {
+        if (!scope.hasOutput(InternalArtifactType.DATA_BINDING_ARTIFACT)) {
             scope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.DATA_BINDING_ARTIFACT,
+                    InternalArtifactType.DATA_BINDING_ARTIFACT,
                     scope.getBundleArtifactFolderForDataBinding(),
                     kaptTask.getName());
         }

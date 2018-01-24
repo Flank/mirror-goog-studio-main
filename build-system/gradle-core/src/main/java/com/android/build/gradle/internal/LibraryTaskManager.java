@@ -21,7 +21,7 @@ import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_INTERMEDIATE_FULL_JAR;
 import static com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -35,8 +35,8 @@ import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
-import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.MergeFileTask;
@@ -259,14 +259,15 @@ public class LibraryTaskManager extends TaskManager {
                 variantName,
                 () -> {
                     File rsFolder =
-                            variantScope.getIntermediateDir(TaskOutputType.RENDERSCRIPT_HEADERS);
+                            variantScope.getIntermediateDir(
+                                    InternalArtifactType.RENDERSCRIPT_HEADERS);
                     Sync task =
                             taskFactory.create(
                                     new PackageRenderscriptConfigAction(variantScope, rsFolder));
 
                     // publish the renderscript intermediate files
                     variantScope.addTaskOutput(
-                            TaskOutputType.RENDERSCRIPT_HEADERS, rsFolder, task.getName());
+                            InternalArtifactType.RENDERSCRIPT_HEADERS, rsFolder, task.getName());
                 });
 
         // merge consumer proguard files from different build types and flavors
@@ -368,12 +369,12 @@ public class LibraryTaskManager extends TaskManager {
                                 t -> {
                                     // publish the intermediate classes.jar.
                                     variantScope.addTaskOutput(
-                                            TaskOutputType.LIBRARY_CLASSES,
+                                            InternalArtifactType.LIBRARY_CLASSES,
                                             mainClassJar,
                                             t.getName());
                                     // publish the res jar
                                     variantScope.addTaskOutput(
-                                            TaskOutputType.LIBRARY_JAVA_RES,
+                                            InternalArtifactType.LIBRARY_JAVA_RES,
                                             mainResJar,
                                             t.getName());
                                 });
@@ -388,7 +389,7 @@ public class LibraryTaskManager extends TaskManager {
                                         new ZipMergingTask.ConfigAction(variantScope, mainFullJar));
 
                         variantScope.addTaskOutput(
-                                TaskOutputType.FULL_JAR, mainFullJar, zipMerger.getName());
+                                InternalArtifactType.FULL_JAR, mainFullJar, zipMerger.getName());
 
                         // now add a transform that will take all the native libs and package
                         // them into an intermediary folder. This processes only the PROJECT
@@ -407,7 +408,7 @@ public class LibraryTaskManager extends TaskManager {
                                 t -> {
                                     // publish the jni folder as intermediate
                                     variantScope.addTaskOutput(
-                                            TaskOutputType.LIBRARY_JNI,
+                                            InternalArtifactType.LIBRARY_JNI,
                                             intermediateJniLibsFolder,
                                             t.getName());
                                 });
@@ -438,9 +439,11 @@ public class LibraryTaskManager extends TaskManager {
                                         classesJar,
                                         libsDirectory,
                                         variantScope.hasOutput(
-                                                        TaskOutputType.ANNOTATIONS_TYPEDEF_FILE)
+                                                        InternalArtifactType
+                                                                .ANNOTATIONS_TYPEDEF_FILE)
                                                 ? variantScope.getOutput(
-                                                        TaskOutputType.ANNOTATIONS_TYPEDEF_FILE)
+                                                        InternalArtifactType
+                                                                .ANNOTATIONS_TYPEDEF_FILE)
                                                 : null,
                                         packageName,
                                         extension.getPackageBuildConfig());
@@ -452,9 +455,11 @@ public class LibraryTaskManager extends TaskManager {
                         libraryJarTransformTask.ifPresent(
                                 t -> {
                                     variantScope.addTaskOutput(
-                                            TaskOutputType.AAR_MAIN_JAR, classesJar, t.getName());
+                                            InternalArtifactType.AAR_MAIN_JAR,
+                                            classesJar,
+                                            t.getName());
                                     variantScope.addTaskOutput(
-                                            TaskOutputType.AAR_LIBS_DIRECTORY,
+                                            InternalArtifactType.AAR_LIBS_DIRECTORY,
                                             libsDirectory,
                                             t.getName());
                                 });
@@ -464,7 +469,7 @@ public class LibraryTaskManager extends TaskManager {
                         // and the LOCAL_PROJECT scopes
                         final File jniLibsFolder =
                                 variantScope.getIntermediateDir(
-                                        TaskOutputType.LIBRARY_AND_LOCAL_JARS_JNI);
+                                        InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI);
                         LibraryJniLibsTransform jniTransform =
                                 new LibraryJniLibsTransform(
                                         "syncJniLibs",
@@ -476,7 +481,7 @@ public class LibraryTaskManager extends TaskManager {
                         jniPackagingTask.ifPresent(
                                 t ->
                                         variantScope.addTaskOutput(
-                                                TaskOutputType.LIBRARY_AND_LOCAL_JARS_JNI,
+                                                InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI,
                                                 jniLibsFolder,
                                                 t.getName()));
                         return null;
@@ -550,7 +555,7 @@ public class LibraryTaskManager extends TaskManager {
                                 project, variantScope, outputFile));
 
         variantScope.addTaskOutput(
-                TaskOutputType.CONSUMER_PROGUARD_FILE, outputFile, task.getName());
+                InternalArtifactType.CONSUMER_PROGUARD_FILE, outputFile, task.getName());
 
         return task;
     }
@@ -570,7 +575,7 @@ public class LibraryTaskManager extends TaskManager {
                 basicCreateMergeResourcesTask(
                         variantScope,
                         MergeType.PACKAGE,
-                        variantScope.getIntermediateDir(TaskOutputType.PACKAGED_RES),
+                        variantScope.getIntermediateDir(InternalArtifactType.PACKAGED_RES),
                         false,
                         false,
                         false,
@@ -582,10 +587,12 @@ public class LibraryTaskManager extends TaskManager {
         createMergeResourcesTask(variantScope, false /*processResources*/);
 
         File publicTxt =
-                new File(variantScope.getIntermediateDir(TaskOutputType.PUBLIC_RES), FN_PUBLIC_TXT);
+                new File(
+                        variantScope.getIntermediateDir(InternalArtifactType.PUBLIC_RES),
+                        FN_PUBLIC_TXT);
         mergeResourceTask.setPublicFile(publicTxt);
         variantScope.addTaskOutput(
-                TaskOutputType.PUBLIC_RES, publicTxt, mergeResourceTask.getName());
+                InternalArtifactType.PUBLIC_RES, publicTxt, mergeResourceTask.getName());
     }
 
     @Override
@@ -630,7 +637,8 @@ public class LibraryTaskManager extends TaskManager {
                         new MergeSourceSetFolders.LibraryAssetConfigAction(scope, outputDir));
 
         // register the output
-        scope.addTaskOutput(TaskOutputType.LIBRARY_ASSETS, outputDir, mergeAssetsTask.getName());
+        scope.addTaskOutput(
+                InternalArtifactType.LIBRARY_ASSETS, outputDir, mergeAssetsTask.getName());
 
         mergeAssetsTask.dependsOn(scope.getAssetGenTask());
         scope.setMergeAssetsTask(mergeAssetsTask);

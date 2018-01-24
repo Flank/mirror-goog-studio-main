@@ -44,11 +44,11 @@ import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerServic
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
@@ -152,12 +152,12 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     private String projectBaseName;
 
-    private TaskOutputHolder.TaskOutputType taskInputType;
+    private InternalArtifactType taskInputType;
 
     private boolean isNamespaced = false;
 
     @Input
-    public TaskOutputHolder.TaskOutputType getTaskInputType() {
+    public InternalArtifactType getTaskInputType() {
         return taskInputType;
     }
 
@@ -337,7 +337,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                                 packagedResForSplit.getName());
                                         buildOutputs.add(
                                                 new BuildOutput(
-                                                        VariantScope.TaskOutputType
+                                                        InternalArtifactType
                                                                 .DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
                                                         configurationApkData,
                                                         packagedResForSplit));
@@ -369,8 +369,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         ImmutableList.Builder<File> featurePackagesBuilder = ImmutableList.builder();
         for (File featurePackage : featureResourcePackages) {
             BuildElements buildElements =
-                    ExistingBuildElements.from(
-                            VariantScope.TaskOutputType.PROCESSED_RES, featurePackage);
+                    ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, featurePackage);
             if (!buildElements.isEmpty()) {
                 BuildOutput mainBuildOutput =
                         buildElements.element(variantScope.getOutputScope().getMainSplit());
@@ -513,7 +512,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             }
 
             return new BuildOutput(
-                    VariantScope.TaskOutputType.PROCESSED_RES,
+                    InternalArtifactType.PROCESSED_RES,
                     apkData,
                     resOutBaseNameFile,
                     manifestOutput.getProperties());
@@ -626,7 +625,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         private final File symbolsWithPackageNameOutputFile;
         @NonNull private final File resPackageOutputFolder;
         private final boolean generateLegacyMultidexMainDexProguardRules;
-        private final TaskManager.MergeType sourceTaskOutputType;
+        private final TaskManager.MergeType sourceArtifactType;
         private final String baseName;
         private final boolean isLibrary;
 
@@ -636,7 +635,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 @NonNull File symbolsWithPackageNameOutputFile,
                 @NonNull File resPackageOutputFolder,
                 boolean generateLegacyMultidexMainDexProguardRules,
-                @NonNull TaskManager.MergeType sourceTaskOutputType,
+                @NonNull TaskManager.MergeType sourceArtifactType,
                 @NonNull String baseName,
                 boolean isLibrary) {
             this.variantScope = scope;
@@ -646,7 +645,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             this.generateLegacyMultidexMainDexProguardRules =
                     generateLegacyMultidexMainDexProguardRules;
             this.baseName = baseName;
-            this.sourceTaskOutputType = sourceTaskOutputType;
+            this.sourceArtifactType = sourceArtifactType;
             this.isLibrary = isLibrary;
         }
 
@@ -681,9 +680,9 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 throw new IllegalArgumentException("Use GenerateLibraryRFileTask");
             } else {
                 Preconditions.checkState(
-                        sourceTaskOutputType == TaskManager.MergeType.MERGE,
+                        sourceArtifactType == TaskManager.MergeType.MERGE,
                         "source output type should be MERGE",
-                        sourceTaskOutputType);
+                        sourceArtifactType);
             }
 
             processResources.setEnableAapt2(projectOptions.get(BooleanOption.ENABLE_AAPT2));
@@ -695,11 +694,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             if (variantData.getType().getCanHaveSplits()) {
                 processResources.splitListInput =
-                        variantScope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
+                        variantScope.getOutput(InternalArtifactType.SPLIT_LIST);
             }
 
-            processResources.apkList =
-                    variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST);
+            processResources.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
 
             processResources.multiOutputPolicy = variantData.getMultiOutputPolicy();
 
@@ -713,9 +711,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             File sourceOut = variantScope.getRClassSourceOutputDir();
             processResources.setSourceOutputDir(sourceOut);
             variantScope.addTaskOutput(
-                    VariantScope.TaskOutputType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                    sourceOut,
-                    getName());
+                    InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES, sourceOut, getName());
 
             processResources.textSymbolOutputDir = symbolLocation;
             processResources.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
@@ -737,19 +733,18 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                     variantScope.getVariantConfiguration().getOriginalApplicationId();
 
             boolean aaptFriendlyManifestsFilePresent =
-                    variantScope.hasOutput(
-                            TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS);
+                    variantScope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
             processResources.taskInputType =
                     aaptFriendlyManifestsFilePresent
-                            ? VariantScope.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS
+                            ? InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
                             : variantScope.getInstantRunBuildContext().isInInstantRunMode()
-                                    ? VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS
-                                    : VariantScope.TaskOutputType.MERGED_MANIFESTS;
+                                    ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
+                                    : InternalArtifactType.MERGED_MANIFESTS;
             processResources.setManifestFiles(
                     variantScope.getOutput(processResources.taskInputType));
 
             processResources.inputResourcesDir =
-                    variantScope.getOutput(sourceTaskOutputType.getOutputType());
+                    variantScope.getOutput(sourceArtifactType.getOutputType());
 
             processResources.setType(config.getType());
             processResources.setDebuggable(config.getBuildType().isDebuggable());
@@ -865,11 +860,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             // per exec
             task.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
             if (variantData.getType().getCanHaveSplits()) {
-                task.splitListInput =
-                        variantScope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
+                task.splitListInput = variantScope.getOutput(InternalArtifactType.SPLIT_LIST);
             }
             task.multiOutputPolicy = variantData.getMultiOutputPolicy();
-            task.apkList = variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST);
+            task.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
 
             task.sourceOutputDir = sourceOutputDir;
 
@@ -890,19 +884,17 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                     variantScope.getVariantConfiguration().getOriginalApplicationId();
 
             boolean aaptFriendlyManifestsFilePresent =
-                    variantScope.hasOutput(
-                            TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS);
+                    variantScope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
             task.taskInputType =
                     aaptFriendlyManifestsFilePresent
-                            ? VariantScope.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS
+                            ? InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
                             : variantScope.getInstantRunBuildContext().isInInstantRunMode()
-                                    ? VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS
-                                    : VariantScope.TaskOutputType.MERGED_MANIFESTS;
+                                    ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
+                                    : InternalArtifactType.MERGED_MANIFESTS;
             task.setManifestFiles(variantScope.getOutput(task.taskInputType));
 
             List<FileCollection> dependencies = new ArrayList<>(2);
-            dependencies.add(
-                    variantScope.getOutput(TaskOutputHolder.TaskOutputType.RES_STATIC_LIBRARY));
+            dependencies.add(variantScope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY));
             dependencies.add(
                     variantScope.getArtifactFileCollection(
                             RUNTIME_CLASSPATH,

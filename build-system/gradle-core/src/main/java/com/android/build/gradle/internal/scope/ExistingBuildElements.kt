@@ -264,7 +264,7 @@ class ExistingBuildElements {
             }
             val nextString = reader.nextString()
             val outputType: ArtifactType = try {
-                TaskOutputHolder.TaskOutputType.valueOf(nextString)
+                InternalArtifactType.valueOf(nextString)
             } catch (e: IllegalArgumentException) {
                 TaskOutputHolder.AnchorOutputType.valueOf(nextString)
             }

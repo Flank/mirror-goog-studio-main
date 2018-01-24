@@ -23,8 +23,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
-import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConfigProvider;
@@ -63,8 +62,7 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
     public void loadFromMetadataFile(File metadataFile) {
         BuildElements testedManifests =
                 ExistingBuildElements.from(
-                        TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                        metadataFile.getParentFile());
+                        InternalArtifactType.MERGED_MANIFESTS, metadataFile.getParentFile());
         // all published manifests have the same package so first one will do.
         Optional<BuildOutput> splitOutput = testedManifests.stream().findFirst();
 
@@ -105,7 +103,7 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
         ImmutableList.Builder<File> selectedApks = ImmutableList.builder();
         // retrieve all the published files.
         BuildElements testedApkFiles =
-                ExistingBuildElements.from(VariantScope.TaskOutputType.APK, testedApksDir);
+                ExistingBuildElements.from(InternalArtifactType.APK, testedApksDir);
 
         // if we have more than one, that means pure splits are in the equation.
         if (testedApkFiles.size() > 1 && splitSelectExe != null) {

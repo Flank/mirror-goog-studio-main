@@ -29,8 +29,8 @@ import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable;
 import com.android.build.gradle.internal.res.namespaced.Aapt2CompileRunnable;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -84,7 +84,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
     private File compiledDirectory;
     private FileCollection inputDirectory;
     private File mergeBlameLogFolder;
-    private TaskOutputHolder.TaskOutputType taskInputType;
+    private InternalArtifactType taskInputType;
     private FileCollection manifestFiles;
 
     private AaptGeneration aaptGeneration;
@@ -317,12 +317,12 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
 
     public static class ConfigAction implements TaskConfigAction<VerifyLibraryResourcesTask> {
         protected final VariantScope scope;
-        private final TaskManager.MergeType sourceTaskOutputType;
+        private final TaskManager.MergeType sourceArtifactType;
 
         public ConfigAction(
-                @NonNull VariantScope scope, @NonNull TaskManager.MergeType sourceTaskOutputType) {
+                @NonNull VariantScope scope, @NonNull TaskManager.MergeType sourceArtifactType) {
             this.scope = scope;
-            this.sourceTaskOutputType = sourceTaskOutputType;
+            this.sourceArtifactType = sourceArtifactType;
         }
 
         /** Return the name of the task to be configured. */
@@ -354,22 +354,22 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
             verifyLibraryResources.setIncrementalFolder(scope.getIncrementalDir(getName()));
 
             Preconditions.checkState(
-                    sourceTaskOutputType == TaskManager.MergeType.MERGE,
+                    sourceArtifactType == TaskManager.MergeType.MERGE,
                     "Support for not merging resources in libraries not implemented yet.");
             verifyLibraryResources.inputDirectory =
-                    scope.getOutput(sourceTaskOutputType.getOutputType());
+                    scope.getOutput(sourceArtifactType.getOutputType());
 
             verifyLibraryResources.compiledDirectory = scope.getCompiledResourcesOutputDir();
             verifyLibraryResources.mergeBlameLogFolder = scope.getResourceBlameLogDir();
 
             boolean aaptFriendlyManifestsFilePresent =
-                    scope.hasOutput(TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS);
+                    scope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
             verifyLibraryResources.taskInputType =
                     aaptFriendlyManifestsFilePresent
-                            ? VariantScope.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS
+                            ? InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
                             : scope.getInstantRunBuildContext().isInInstantRunMode()
-                                    ? VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS
-                                    : VariantScope.TaskOutputType.MERGED_MANIFESTS;
+                                    ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
+                                    : InternalArtifactType.MERGED_MANIFESTS;
             verifyLibraryResources.manifestFiles =
                     scope.getOutput(verifyLibraryResources.taskInputType);
         }
@@ -388,7 +388,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
 
     @NonNull
     @Input
-    public TaskOutputHolder.TaskOutputType getTaskInputType() {
+    public InternalArtifactType getTaskInputType() {
         return taskInputType;
     }
 

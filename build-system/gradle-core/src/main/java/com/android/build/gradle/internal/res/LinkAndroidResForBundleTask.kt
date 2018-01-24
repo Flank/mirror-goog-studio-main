@@ -23,8 +23,8 @@ import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.res.namespaced.Aapt2LinkRunnable
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.TaskOutputHolder
-import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.options.StringOption
@@ -228,7 +228,7 @@ open class LinkAndroidResForBundleTask
 
             processResources.manifestFiles = variantScope.getOutput(MERGED_MANIFESTS)
 
-            processResources.inputResourcesDir = variantScope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_RES)
+            processResources.inputResourcesDir = variantScope.getOutput(InternalArtifactType.MERGED_RES)
 
             processResources.debuggable = config.buildType.isDebuggable
             processResources.aaptOptions = variantScope.globalScope.extension.aaptOptions

@@ -24,8 +24,8 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOut
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -129,11 +129,13 @@ public class AndroidUnitTest extends Test {
             // changes to them trigger a new run of the tasks
             VariantScope testedScope = testedVariantData.getScope();
             if (includeAndroidResources) {
-                runTestsTask.assetsCollection = testedScope.getOutput(TaskOutputType.MERGED_ASSETS);
+                runTestsTask.assetsCollection =
+                        testedScope.getOutput(InternalArtifactType.MERGED_ASSETS);
                 runTestsTask.resCollection =
-                        testedScope.getOutput(TaskOutputType.MERGED_NOT_COMPILED_RES);
+                        testedScope.getOutput(InternalArtifactType.MERGED_NOT_COMPILED_RES);
             }
-            runTestsTask.mergedManifest = testedScope.getOutput(TaskOutputType.MERGED_MANIFESTS);
+            runTestsTask.mergedManifest =
+                    testedScope.getOutput(InternalArtifactType.MERGED_MANIFESTS);
 
             // Put the variant name in the report path, so that different testing tasks don't
             // overwrite each other's reports. For component model plugin, the report tasks are not
@@ -166,12 +168,12 @@ public class AndroidUnitTest extends Test {
             // the test classpath is made up of:
             // - the config file
             if (includeAndroidResources) {
-                collection.from(scope.getOutput(TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY));
+                collection.from(scope.getOutput(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY));
             }
             // - the test component classes and java_res
             collection.from(scope.getOutput(ALL_CLASSES));
             // TODO is this the right thing? this doesn't include the res merging via transform AFAIK
-            collection.from(scope.getOutput(TaskOutputType.JAVA_RES));
+            collection.from(scope.getOutput(InternalArtifactType.JAVA_RES));
 
             // - the runtime dependencies for both CLASSES and JAVA_RES type
             collection.from(
@@ -185,10 +187,11 @@ public class AndroidUnitTest extends Test {
             // The separately compile R class, if applicable.
             VariantScope testedScope =
                     Objects.requireNonNull(scope.getTestedVariantData()).getScope();
-            if (testedScope.hasOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+            if (testedScope.hasOutput(
+                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
                 collection.from(
                         testedScope.getOutput(
-                                TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
+                                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
             }
 
             // Any additional or requested optional libraries
@@ -203,7 +206,7 @@ public class AndroidUnitTest extends Test {
 
             // Mockable JAR is last, to make sure you can shadow the classes with
             // dependencies.
-            collection.from(scope.getGlobalScope().getOutput(TaskOutputType.MOCKABLE_JAR));
+            collection.from(scope.getGlobalScope().getOutput(InternalArtifactType.MOCKABLE_JAR));
             return collection;
         }
     }

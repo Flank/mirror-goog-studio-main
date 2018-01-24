@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.SdkConstants;
@@ -41,9 +41,9 @@ import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
@@ -130,10 +130,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     // ----- PRIVATE TASK API -----
 
-    protected VariantScope.TaskOutputType manifestType;
+    protected InternalArtifactType manifestType;
 
     @Input
-    public VariantScope.TaskOutputType getManifestType() {
+    public InternalArtifactType getManifestType() {
         return manifestType;
     }
 
@@ -308,10 +308,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         File getOutputFile(@NonNull ApkInfo apkData);
     }
 
-    VariantScope.TaskOutputType taskInputType;
+    InternalArtifactType taskInputType;
 
     @Input
-    public VariantScope.TaskOutputType getTaskInputType() {
+    public InternalArtifactType getTaskInputType() {
         return taskInputType;
     }
 
@@ -359,11 +359,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 outputFileProvider != null
                         ? outputFileProvider.getOutputFile(apkInfo)
                         : new File(outputDirectory, apkInfo.getOutputFileName());
-        return new BuildOutput(getTaskOutputType(), apkInfo, outputFile);
+        return new BuildOutput(getInternalArtifactType(), apkInfo, outputFile);
     }
 
 
-    protected abstract VariantScope.TaskOutputType getTaskOutputType();
+    protected abstract InternalArtifactType getInternalArtifactType();
 
     @Input
     public String getAaptGeneration() {
@@ -390,7 +390,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                                 throw new BuildException(e.getMessage(), e);
                             }
                         })
-                .into(getTaskOutputType(), outputDirectory);
+                .into(getInternalArtifactType(), outputDirectory);
     }
 
     private void checkFileNameUniqueness() {
@@ -716,7 +716,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                                 throw new BuildException(e.getMessage(), e);
                             }
                         })
-                .into(getTaskOutputType(), outputDirectory);
+                .into(getInternalArtifactType(), outputDirectory);
     }
 
     private File splitIncrementalAction(
@@ -857,18 +857,18 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         protected final Project project;
         protected final VariantScope variantScope;
         @NonNull protected final FileCollection manifests;
-        @NonNull protected final VariantScope.TaskOutputType inputResourceFilesType;
+        @NonNull protected final InternalArtifactType inputResourceFilesType;
         @NonNull protected final File outputDirectory;
         @NonNull protected final OutputScope outputScope;
         @Nullable private final FileCache fileCache;
-        @NonNull private final VariantScope.TaskOutputType manifestType;
+        @NonNull private final InternalArtifactType manifestType;
 
         public ConfigAction(
                 @NonNull VariantScope variantScope,
                 @NonNull File outputDirectory,
-                @NonNull VariantScope.TaskOutputType inputResourceFilesType,
+                @NonNull InternalArtifactType inputResourceFilesType,
                 @NonNull FileCollection manifests,
-                @NonNull VariantScope.TaskOutputType manifestType,
+                @NonNull InternalArtifactType manifestType,
                 @Nullable FileCache fileCache,
                 @NonNull OutputScope outputScope) {
             this.project = variantScope.getGlobalScope().getProject();
@@ -967,7 +967,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 task.jniFolders = filters.isEmpty() ? getJniFolders() : project.files();
             }
 
-            task.apkList = variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST);
+            task.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
 
             // Don't sign.
             task.setSigningConfig(variantConfiguration.getSigningConfig());

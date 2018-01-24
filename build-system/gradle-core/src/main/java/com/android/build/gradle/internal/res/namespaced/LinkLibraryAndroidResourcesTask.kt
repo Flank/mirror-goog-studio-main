@@ -19,7 +19,7 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.builder.core.VariantType
@@ -80,7 +80,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
         featureDependencies?.let {
             imports.addAll(
                     it.files
-                            .map { ExistingBuildElements.from(TaskOutputType.PROCESSED_RES, it) }
+                            .map { ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, it) }
                             .filterNot { it.isEmpty() }
                             .map { splitOutputs -> splitOutputs.single().outputFile })
         }
@@ -120,12 +120,12 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
         override fun execute(task: LinkLibraryAndroidResourcesTask) {
             task.variantName = scope.fullVariantName
             task.manifestFileDirectory =
-                    if (scope.hasOutput(TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
-                        scope.getOutput(TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+                    if (scope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
+                        scope.getOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
                     } else {
-                        scope.getOutput(TaskOutputType.MERGED_MANIFESTS)
+                        scope.getOutput(InternalArtifactType.MERGED_MANIFESTS)
                     }
-            task.inputResourcesDirectories = scope.getOutput(TaskOutputType.RES_COMPILED_FLAT_FILES)
+            task.inputResourcesDirectories = scope.getOutput(InternalArtifactType.RES_COMPILED_FLAT_FILES)
             task.libraryDependencies =
                     scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
@@ -147,7 +147,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
             val testedScope = scope.testedVariantData?.scope
             if (testedScope != null) {
-                task.tested = testedScope.getOutput(TaskOutputType.RES_STATIC_LIBRARY)
+                task.tested = testedScope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY)
             }
 
             task.aaptIntermediateDir =

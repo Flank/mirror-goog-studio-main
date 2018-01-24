@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks;
 
 import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.FD_RES_RAW;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.APK;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 
 import com.android.annotations.NonNull;

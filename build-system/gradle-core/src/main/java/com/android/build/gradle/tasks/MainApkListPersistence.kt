@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.TaskOutputHolder
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.ide.common.build.ApkData
@@ -31,7 +31,7 @@ import java.io.File
 
 /**
  * Task to persist the {@see OutputScope#apkdatas} which allows downstream tasks to depend
- * on the {@see TaskOutputType#APK_LIST} rather than on various complicated data structures.
+ * on the {@see InternalArtifactType#APK_LIST} rather than on various complicated data structures.
  * This also allow to record the choices made during configuration time about what APKs will be
  * produced and which ones are enabled. 
  */
@@ -64,7 +64,7 @@ open class MainApkListPersistence : AndroidVariantTask() {
             task.outputFile = File(
                     File(scope.splitSupportDirectory, "apk-list"),
                     SdkConstants.FN_APK_LIST)
-            scope.addTaskOutput(TaskOutputHolder.TaskOutputType.APK_LIST,
+            scope.addTaskOutput(InternalArtifactType.APK_LIST,
                     task.outputFile,
                     name)
 

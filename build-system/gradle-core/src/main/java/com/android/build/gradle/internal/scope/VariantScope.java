@@ -468,7 +468,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getInstantRunResourceApkFolder();
 
     @NonNull
-    File getIntermediateDir(@NonNull TaskOutputType taskOutputType);
+    File getIntermediateDir(@NonNull InternalArtifactType taskOutputType);
 
     enum Java8LangSupport {
         INVALID,

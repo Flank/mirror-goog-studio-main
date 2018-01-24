@@ -20,7 +20,7 @@ import com.android.build.FilterData
 import com.android.build.OutputFile
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
-import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.*
+import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.ide.common.build.ApkInfo
 import com.android.utils.Pair
 import com.google.common.base.Charsets

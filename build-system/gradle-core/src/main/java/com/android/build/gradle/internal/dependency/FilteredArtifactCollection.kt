@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.build.gradle.internal.scope.TaskOutputHolder
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.featuresplit.compIdToString
 import com.google.common.collect.ImmutableList
@@ -33,7 +33,7 @@ import java.util.stream.Collectors
 
 /**
  * Implementation of a [ArtifactCollection] on top of a main collection, and a component
- * filter, coming from a list of files published by sub-modules as [TaskOutputHolder.TaskOutputType.FEATURE_TRANSITIVE_DEPS]
+ * filter, coming from a list of files published by sub-modules as [InternalArtifactType.FEATURE_TRANSITIVE_DEPS]
 
  *
  * The main use case for this is building an ArtifactCollection that represents the runtime

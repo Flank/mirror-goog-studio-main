@@ -31,7 +31,7 @@ import org.gradle.api.file.FileCollection;
  */
 public abstract class TaskOutputHolderImpl implements TaskOutputHolder {
     private static final int OUTPUT_TYPE_SIZE =
-            TaskOutputType.values().length + AnchorOutputType.values().length;
+            InternalArtifactType.values().length + AnchorOutputType.values().length;
     private final Map<ArtifactType, FileCollection> outputMap =
             Maps.newHashMapWithExpectedSize(OUTPUT_TYPE_SIZE);
 

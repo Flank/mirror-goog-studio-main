@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
@@ -117,12 +117,12 @@ public class ShrinkResourcesTransform extends Transform {
         this.logger = logger;
 
         this.sourceDir = variantScope.getRClassSourceOutputDir();
-        this.resourceDir = variantScope.getOutput(TaskOutputType.MERGED_NOT_COMPILED_RES);
+        this.resourceDir = variantScope.getOutput(InternalArtifactType.MERGED_NOT_COMPILED_RES);
         this.mappingFileSrc =
-                variantScope.hasOutput(TaskOutputType.APK_MAPPING)
-                        ? variantScope.getOutput(TaskOutputType.APK_MAPPING)
+                variantScope.hasOutput(InternalArtifactType.APK_MAPPING)
+                        ? variantScope.getOutput(InternalArtifactType.APK_MAPPING)
                         : null;
-        this.mergedManifests = variantScope.getOutput(TaskOutputType.MERGED_MANIFESTS);
+        this.mergedManifests = variantScope.getOutput(InternalArtifactType.MERGED_MANIFESTS);
         this.uncompressedResources = uncompressedResources;
 
         this.aaptGeneration = aaptGeneration;
@@ -231,14 +231,14 @@ public class ShrinkResourcesTransform extends Transform {
             throws IOException, TransformException, InterruptedException {
 
         BuildElements mergedManifestsOutputs =
-                ExistingBuildElements.from(TaskOutputType.MERGED_MANIFESTS, mergedManifests);
+                ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, mergedManifests);
 
-        ExistingBuildElements.from(TaskOutputType.PROCESSED_RES, uncompressedResources)
+        ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, uncompressedResources)
                 .transform(
                         (ApkInfo apkInfo, File buildInput) ->
                                 splitAction(
                                         apkInfo, buildInput, mergedManifestsOutputs, invocation))
-                .into(TaskOutputType.SHRUNK_PROCESSED_RES, compressedResources);
+                .into(InternalArtifactType.SHRUNK_PROCESSED_RES, compressedResources);
 
     }
 

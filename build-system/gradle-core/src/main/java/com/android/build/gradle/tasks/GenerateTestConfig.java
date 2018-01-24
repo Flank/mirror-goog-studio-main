@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_NOT_COMPILED_RES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -25,8 +25,8 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Preconditions;
@@ -77,8 +77,7 @@ public class GenerateTestConfig extends DefaultTask {
         checkNotNull(sdkHome);
 
         BuildOutput output =
-                ExistingBuildElements.from(
-                                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, manifests)
+                ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifests)
                         .element(mainApkInfo);
         generateTestConfigForOutput(
                 assetsDirectory.getSingleFile().toPath().toAbsolutePath(),
@@ -180,8 +179,7 @@ public class GenerateTestConfig extends DefaultTask {
             task.dependsOn(task.resourcesDirectory);
             task.assetsDirectory = testedScope.getOutput(MERGED_ASSETS);
             task.dependsOn(task.assetsDirectory);
-            task.manifests =
-                    testedScope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
+            task.manifests = testedScope.getOutput(InternalArtifactType.MERGED_MANIFESTS);
             task.mainApkInfo = testedScope.getOutputScope().getMainSplit();
             task.sdkHome =
                     Paths.get(scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation());

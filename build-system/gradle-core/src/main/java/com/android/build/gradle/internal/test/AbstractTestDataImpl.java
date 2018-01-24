@@ -23,7 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
-import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.testing.TestData;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.base.Joiner;
@@ -139,7 +139,7 @@ public abstract class AbstractTestDataImpl implements TestData {
 
 
         BuildElements testApkOutputs =
-                ExistingBuildElements.from(VariantScope.TaskOutputType.APK, testApkDir);
+                ExistingBuildElements.from(InternalArtifactType.APK, testApkDir);
         if (testApkOutputs.size() != 1) {
             throw new RuntimeException(
                     "Unexpected number of main APKs, expected 1, got  "

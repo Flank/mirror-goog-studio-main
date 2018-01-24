@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.ide;
 
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_DATA_BINDING_V2;
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
 import static com.android.builder.model.AndroidProject.PROJECT_TYPE_FEATURE;
@@ -47,7 +47,7 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -512,20 +512,17 @@ public class ModelBuilder implements ToolingModelBuilder {
         Set<File> additionalTestClasses = new HashSet<>();
         additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
         additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
-        if (scope.hasOutput(TaskOutputHolder.TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY)) {
+        if (scope.hasOutput(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)) {
             additionalTestClasses.add(
-                    scope.getOutput(TaskOutputHolder.TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY)
+                    scope.getOutput(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)
                             .getSingleFile());
         }
         // The separately compile R class, if applicable.
         VariantScope testedScope = Objects.requireNonNull(scope.getTestedVariantData()).getScope();
-        if (testedScope.hasOutput(
-                TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+        if (testedScope.hasOutput(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
             additionalTestClasses.add(
                     testedScope
-                            .getOutput(
-                                    TaskOutputHolder.TaskOutputType
-                                            .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)
+                            .getOutput(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)
                             .getSingleFile());
         }
 
@@ -757,9 +754,9 @@ public class ModelBuilder implements ToolingModelBuilder {
             case FEATURE:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(
-                                VariantScope.TaskOutputType.APK,
-                                VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
-                                VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
+                                InternalArtifactType.APK,
+                                InternalArtifactType.ABI_PACKAGED_SPLIT,
+                                InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
                         ImmutableList.of(variantScope.getApkLocation()));
             case LIBRARY:
                 ApkInfo mainApkInfo =
@@ -767,16 +764,16 @@ public class ModelBuilder implements ToolingModelBuilder {
                 return BuildOutputSupplier.of(
                         ImmutableList.of(
                                 new EarlySyncBuildOutput(
-                                        VariantScope.TaskOutputType.AAR,
+                                        InternalArtifactType.AAR,
                                         mainApkInfo.getType(),
                                         mainApkInfo.getFilters(),
                                         mainApkInfo.getVersionCode(),
                                         variantScope
-                                                .getOutput(TaskOutputHolder.TaskOutputType.AAR)
+                                                .getOutput(InternalArtifactType.AAR)
                                                 .getSingleFile())));
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
-                        ImmutableList.of(VariantScope.TaskOutputType.APK),
+                        ImmutableList.of(InternalArtifactType.APK),
                         ImmutableList.of(variantScope.getApkLocation()));
             case UNIT_TEST:
                 return (BuildOutputSupplier<Collection<EarlySyncBuildOutput>>)
@@ -829,7 +826,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             case ANDROID_TEST:
             case FEATURE:
                 return new BuildOutputsSupplier(
-                        ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
+                        ImmutableList.of(InternalArtifactType.MERGED_MANIFESTS),
                         ImmutableList.of(variantData.getScope().getManifestOutputDirectory()));
             case LIBRARY:
                 ApkInfo mainApkInfo =
@@ -837,7 +834,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 return BuildOutputSupplier.of(
                         ImmutableList.of(
                                 new EarlySyncBuildOutput(
-                                        VariantScope.TaskOutputType.MERGED_MANIFESTS,
+                                        InternalArtifactType.MERGED_MANIFESTS,
                                         mainApkInfo.getType(),
                                         mainApkInfo.getFilters(),
                                         mainApkInfo.getVersionCode(),

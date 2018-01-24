@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.TaskOutputHolder
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.builder.core.VariantType
@@ -108,12 +108,12 @@ open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
         override fun execute(task: ProcessAndroidAppResourcesTask) {
             task.variantName = scope.fullVariantName
             task.manifestFileDirectory =
-                    if (scope.hasOutput(TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
-                        scope.getOutput(TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+                    if (scope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
+                        scope.getOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
                     } else {
-                        scope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS)
+                        scope.getOutput(InternalArtifactType.MERGED_MANIFESTS)
                     }
-            task.thisSubProjectStaticLibrary = scope.getOutput(TaskOutputHolder.TaskOutputType.RES_STATIC_LIBRARY)
+            task.thisSubProjectStaticLibrary = scope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY)
             task.libraryDependencies =
                     scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

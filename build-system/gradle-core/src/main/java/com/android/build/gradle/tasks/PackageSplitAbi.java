@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
@@ -118,7 +119,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
         FileUtils.cleanOutputDir(incrementalDir);
 
         ExistingBuildElements.from(
-                        VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, processedAbiResources)
+                        InternalArtifactType.ABI_PROCESSED_SPLIT_RES, processedAbiResources)
                 .transform(
                         (split, output) -> {
                             String apkName = getApkName(split);
@@ -152,7 +153,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
                             }
                             return outFile;
                         })
-                .into(VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT, outputDirectory);
+                .into(InternalArtifactType.ABI_PACKAGED_SPLIT, outputDirectory);
     }
 
     private String getApkName(final ApkInfo apkData) {

@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.ide.common.build.ApkInfo;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
@@ -99,8 +99,7 @@ public class GenerateInstantRunAppInfoTaskTest {
         new BuildElements(
                         ImmutableList.of(
                                 new BuildOutput(
-                                        TaskOutputHolder.TaskOutputType
-                                                .INSTANT_RUN_MERGED_MANIFESTS,
+                                        InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
                                         apkInfo,
                                         androidManifest)))
                 .save(buildOutputs);

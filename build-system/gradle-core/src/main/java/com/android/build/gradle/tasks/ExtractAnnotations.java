@@ -18,8 +18,8 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.INT_DEF_ANNOTATION;
-import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
 import static com.android.SdkConstants.LONG_DEF_ANNOTATION;
+import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
@@ -29,6 +29,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -319,14 +320,12 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             task.setOutput(annotationsZip);
             // publish intermediate annotation data
             variantScope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.ANNOTATIONS_ZIP, annotationsZip, getName());
+                    InternalArtifactType.ANNOTATIONS_ZIP, annotationsZip, getName());
 
             File typeDefFile = variantScope.getTypedefFile();
             task.typedefFile = typeDefFile;
             variantScope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.ANNOTATIONS_TYPEDEF_FILE,
-                    typeDefFile,
-                    getName());
+                    InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE, typeDefFile, getName());
 
             task.setClassDir(variantScope.getOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES));
 

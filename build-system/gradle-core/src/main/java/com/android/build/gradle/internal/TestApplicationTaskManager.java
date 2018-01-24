@@ -26,6 +26,7 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
@@ -90,7 +91,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                 variantScope.getVariantDependencies().getRuntimeClasspath();
         final ResolvableDependencies incomingRuntimeClasspath = runtimeClasspath.getIncoming();
 
-        FileCollection testingApk = variantScope.getOutput(VariantScope.TaskOutputType.APK);
+        FileCollection testingApk = variantScope.getOutput(InternalArtifactType.APK);
 
         // create a FileCollection that will contain the APKs to be tested.
         // FULL_APK is published only to the runtime configuration

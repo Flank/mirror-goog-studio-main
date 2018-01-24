@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -107,8 +108,7 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
 
         BuildElements buildElements =
                 ExistingBuildElements.from(
-                        VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
-                        getMergedManifests());
+                        InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS, getMergedManifests());
 
         if (buildElements.isEmpty()) {
             throw new RuntimeException(

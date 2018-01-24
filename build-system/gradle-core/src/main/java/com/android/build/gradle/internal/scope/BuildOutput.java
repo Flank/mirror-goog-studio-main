@@ -82,8 +82,8 @@ public final class BuildOutput implements OutputFile, Serializable {
     }
     /**
      * Returns information about the APK that will package this build output. If the {@link
-     * #getType()} is {@link TaskOutputHolder.TaskOutputType#APK}, this build output is an APK and
-     * this will provide metadata information about that APK.
+     * #getType()} is {@link InternalArtifactType#APK}, this build output is an APK and this will
+     * provide metadata information about that APK.
      *
      * @return APK information about the APK in which this build output will be packaged into.
      */
@@ -110,7 +110,7 @@ public final class BuildOutput implements OutputFile, Serializable {
 
     /**
      * Return the final APK type this build output will be packaged in. If the {@link #getType()} is
-     * {@link TaskOutputHolder.TaskOutputType#APK}, this will return the nature of this APK.
+     * {@link InternalArtifactType#APK}, this will return the nature of this APK.
      *
      * @return the apk in which this build output will be packaged in.
      */

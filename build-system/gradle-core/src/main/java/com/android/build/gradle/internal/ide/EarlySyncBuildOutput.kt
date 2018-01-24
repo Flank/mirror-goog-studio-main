@@ -22,6 +22,7 @@ import com.android.build.VariantOutput
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.ide.common.build.ApkInfo
 import com.google.common.collect.ImmutableList
@@ -178,7 +179,7 @@ data class EarlySyncBuildOutput(
                 }
                 val nextString = `in`.nextString()
                 val outputType: ArtifactType = try {
-                    TaskOutputHolder.TaskOutputType.valueOf(nextString)
+                    InternalArtifactType.valueOf(nextString)
                 } catch (e: IllegalArgumentException) {
                     TaskOutputHolder.AnchorOutputType.valueOf(nextString)
                 }

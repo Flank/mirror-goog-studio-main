@@ -34,9 +34,9 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
@@ -172,7 +172,7 @@ public class ModelBuilderTest {
         new BuildElements(
                         ImmutableList.of(
                                 new BuildOutput(
-                                        TaskOutputHolder.TaskOutputType.APK,
+                                        InternalArtifactType.APK,
                                         outputFactory.addMainApk(),
                                         apkOutput)))
                 .save(variantOutputFolder);
@@ -221,17 +221,14 @@ public class ModelBuilderTest {
 
         ImmutableList.Builder<BuildOutput> buildOutputBuilder = ImmutableList.builder();
         buildOutputBuilder.add(
-                new BuildOutput(
-                        TaskOutputHolder.TaskOutputType.APK,
-                        outputFactory.addMainApk(),
-                        apkOutput));
+                new BuildOutput(InternalArtifactType.APK, outputFactory.addMainApk(), apkOutput));
 
         for (int i = 0; i < 5; i++) {
             apkOutput = createApk(variantOutputFolder, "split_" + i + ".apk");
 
             buildOutputBuilder.add(
                     new BuildOutput(
-                            TaskOutputHolder.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                            InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
                             outputFactory.addConfigurationSplit(
                                     VariantOutput.FilterType.DENSITY, "hdpi", apkOutput.getName()),
                             apkOutput));
@@ -299,7 +296,7 @@ public class ModelBuilderTest {
             new BuildElements(
                             ImmutableList.of(
                                     new BuildOutput(
-                                            TaskOutputHolder.TaskOutputType.APK,
+                                            InternalArtifactType.APK,
                                             outputFactory.addMainApk(),
                                             apkOutput)))
                     .save(variantOutputFolder);
@@ -379,7 +376,7 @@ public class ModelBuilderTest {
         new BuildElements(
                         ImmutableList.of(
                                 new BuildOutput(
-                                        TaskOutputHolder.TaskOutputType.APK,
+                                        InternalArtifactType.APK,
                                         outputFactory.addMainApk(),
                                         apkOutput)))
                 .save(variantOutputFolder);

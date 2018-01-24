@@ -24,8 +24,8 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.ide.common.build.ApkInfo;
@@ -52,10 +52,10 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
     private File manifestCheckerDir;
     private FileCollection instantRunManifests;
     private FileCollection processedRes;
-    private TaskOutputType resInputType;
+    private InternalArtifactType resInputType;
 
     @Input
-    TaskOutputType getResourcesInputType() {
+    InternalArtifactType getResourcesInputType() {
         return resInputType;
     }
 
@@ -104,7 +104,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
 
         for (BuildOutput buildOutput :
                 ExistingBuildElements.from(
-                        TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS, instantRunManifests)) {
+                        InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS, instantRunManifests)) {
             ApkInfo apkInfo = buildOutput.getApkInfo();
             File mergedManifest = buildOutput.getOutputFile();
 
@@ -222,11 +222,11 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
         public void execute(@NonNull CheckManifestInInstantRunMode task) {
 
             task.instantRunManifests =
-                    variantScope.getOutput(TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS);
+                    variantScope.getOutput(InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS);
             task.resInputType =
                     variantScope.getInstantRunBuildContext().useSeparateApkForResources()
-                            ? TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES
-                            : TaskOutputType.PROCESSED_RES;
+                            ? InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES
+                            : InternalArtifactType.PROCESSED_RES;
             task.processedRes = variantScope.getOutput(task.resInputType);
             task.buildContext = variantScope.getInstantRunBuildContext();
             task.manifestCheckerDir = variantScope.getManifestCheckerDir();

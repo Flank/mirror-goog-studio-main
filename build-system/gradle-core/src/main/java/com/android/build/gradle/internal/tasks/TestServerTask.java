@@ -20,8 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.testing.api.TestServer;
@@ -52,8 +52,7 @@ public class TestServerTask extends AndroidVariantTask {
 
         List<File> testedApkFiles =
                 testedApks != null
-                        ? ExistingBuildElements.from(
-                                        TaskOutputHolder.TaskOutputType.APK, testedApks)
+                        ? ExistingBuildElements.from(InternalArtifactType.APK, testedApks)
                                 .stream()
                                 .map(BuildOutput::getOutputFile)
                                 .collect(Collectors.toList())
@@ -64,7 +63,7 @@ public class TestServerTask extends AndroidVariantTask {
         }
         File testedApkFile = testedApkFiles.isEmpty() ? null : testedApkFiles.get(0);
         List<File> testApkFiles =
-                ExistingBuildElements.from(TaskOutputHolder.TaskOutputType.APK, testApks)
+                ExistingBuildElements.from(InternalArtifactType.APK, testApks)
                         .stream()
                         .map(BuildOutput::getOutputFile)
                         .collect(Collectors.toList());
@@ -154,16 +153,12 @@ public class TestServerTask extends AndroidVariantTask {
             serverTask.setTestServer(testServer);
 
             if (testedVariantData != null
-                    && testedVariantData
-                            .getScope()
-                            .hasOutput(TaskOutputHolder.TaskOutputType.APK)) {
+                    && testedVariantData.getScope().hasOutput(InternalArtifactType.APK)) {
                 serverTask.setTestedApks(
-                        testedVariantData
-                                .getScope()
-                                .getOutput(TaskOutputHolder.TaskOutputType.APK));
+                        testedVariantData.getScope().getOutput(InternalArtifactType.APK));
             }
 
-            serverTask.setTestApks(scope.getOutput(TaskOutputHolder.TaskOutputType.APK));
+            serverTask.setTestApks(scope.getOutput(InternalArtifactType.APK));
 
             if (!testServer.isConfigured()) {
                 serverTask.setEnabled(false);

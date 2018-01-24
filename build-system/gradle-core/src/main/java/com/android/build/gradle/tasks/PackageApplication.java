@@ -19,8 +19,8 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.incremental.FileType;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.utils.FileCache;
@@ -33,11 +33,11 @@ import org.gradle.api.tasks.Internal;
 /** Task to package an Android application (APK). */
 public class PackageApplication extends PackageAndroidArtifact {
 
-    TaskOutputHolder.TaskOutputType expectedOutputType;
+    InternalArtifactType expectedOutputType;
 
     @Override
     @Internal
-    protected VariantScope.TaskOutputType getTaskOutputType() {
+    protected InternalArtifactType getInternalArtifactType() {
         return expectedOutputType;
     }
 
@@ -89,17 +89,17 @@ public class PackageApplication extends PackageAndroidArtifact {
     public static class StandardConfigAction
             extends PackageAndroidArtifact.ConfigAction<PackageApplication> {
 
-        private final TaskOutputHolder.TaskOutputType expectedOutputType;
+        private final InternalArtifactType expectedOutputType;
 
         public StandardConfigAction(
                 @NonNull VariantScope packagingScope,
                 @NonNull File outputDirectory,
-                @NonNull VariantScope.TaskOutputType inputResourceFilesType,
+                @NonNull InternalArtifactType inputResourceFilesType,
                 @NonNull FileCollection manifests,
-                @NonNull VariantScope.TaskOutputType manifestType,
+                @NonNull InternalArtifactType manifestType,
                 @NonNull OutputScope outputScope,
                 @Nullable FileCache fileCache,
-                @NonNull TaskOutputHolder.TaskOutputType expectedOutputType) {
+                @NonNull InternalArtifactType expectedOutputType) {
             super(
                     packagingScope,
                     outputDirectory,
@@ -142,9 +142,9 @@ public class PackageApplication extends PackageAndroidArtifact {
         public InstantRunResourcesConfigAction(
                 @NonNull File outputFile,
                 @NonNull VariantScope scope,
-                @NonNull VariantScope.TaskOutputType inputResourceFilesType,
+                @NonNull InternalArtifactType inputResourceFilesType,
                 @NonNull FileCollection manifests,
-                @NonNull VariantScope.TaskOutputType manifestType,
+                @NonNull InternalArtifactType manifestType,
                 @Nullable FileCache fileCache,
                 @NonNull OutputScope outputScope) {
             super(
@@ -173,7 +173,7 @@ public class PackageApplication extends PackageAndroidArtifact {
         @Override
         protected void configure(@NonNull PackageApplication packageApplication) {
             packageApplication.expectedOutputType =
-                    TaskOutputHolder.TaskOutputType.INSTANT_RUN_PACKAGED_RESOURCES;
+                    InternalArtifactType.INSTANT_RUN_PACKAGED_RESOURCES;
             packageApplication.instantRunFileType = FileType.RESOURCES;
 
             // Skip files which are not needed for hot/cold swap.
@@ -182,8 +182,7 @@ public class PackageApplication extends PackageAndroidArtifact {
             packageApplication.dexFolders = emptyCollection;
             packageApplication.jniFolders = emptyCollection;
             packageApplication.javaResourceFiles = emptyCollection;
-            packageApplication.apkList =
-                    variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST);
+            packageApplication.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
 
             // Don't sign.
             packageApplication.setSigningConfig(null);

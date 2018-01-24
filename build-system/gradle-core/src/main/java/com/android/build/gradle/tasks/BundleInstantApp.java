@@ -23,8 +23,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.ApplicationId;
@@ -59,8 +59,7 @@ public class BundleInstantApp extends AndroidVariantTask {
                 new ZipOutputStream(new FileOutputStream(bundleFile))) {
             for (File apkDirectory : apkDirectories) {
                 for (BuildOutput buildOutput :
-                        ExistingBuildElements.from(
-                                TaskOutputHolder.TaskOutputType.APK, apkDirectory)) {
+                        ExistingBuildElements.from(InternalArtifactType.APK, apkDirectory)) {
                     File apkFile = buildOutput.getOutputFile();
                     try (FileInputStream fileInputStream = new FileInputStream(apkFile)) {
                         byte[] inputBuffer = IOUtils.toByteArray(fileInputStream);

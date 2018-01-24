@@ -25,10 +25,10 @@ import java.io.File
  */
 abstract class BuildElementActionScheduler {
     @Throws(BuildException::class)
-    abstract fun into(type : TaskOutputHolder.TaskOutputType) : BuildElements
+    abstract fun into(type : InternalArtifactType) : BuildElements
 
     @Throws(BuildException::class)
-    fun into(type : TaskOutputHolder.TaskOutputType, folder: File) : BuildElements {
+    fun into(type : InternalArtifactType, folder: File) : BuildElements {
         return into(type).save(folder)
     }
 
@@ -36,7 +36,7 @@ abstract class BuildElementActionScheduler {
             val elements: BuildElements,
             val action : (apkInfo: ApkInfo, input: File) -> File?) : BuildElementActionScheduler() {
 
-        override fun into(type: TaskOutputHolder.TaskOutputType): BuildElements {
+        override fun into(type: InternalArtifactType): BuildElements {
             return BuildElements(elements
                     .asSequence()
                     .map({ input ->

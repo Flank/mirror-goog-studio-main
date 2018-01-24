@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -200,7 +201,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
             buildOutputs.add(
                     new BuildOutput(
-                            VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES,
+                            InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
                             abiApkData,
                             resPackageFile));
         }
