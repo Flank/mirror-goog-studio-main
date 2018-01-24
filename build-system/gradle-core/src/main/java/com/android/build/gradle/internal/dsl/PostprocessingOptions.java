@@ -30,9 +30,21 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
+import org.gradle.api.Incubating;
 import org.gradle.api.Project;
 
-/** DSL object for configuring postProcessing: removing dead code, obfuscating etc. */
+/**
+ * DSL object for configuring postProcessing: removing dead code, obfuscating etc.
+ *
+ * <p>This DSL is incubating and subject to change. To configure code and resource shrinkers,
+ * Instead use the properties already available in the <a
+ * href="com.android.build.gradle.internal.dsl.BuildType.html"><code>buildType</code></a> block.
+ *
+ * <p>To learn more, read <a
+ * href="https://developer.android.com/studio/build/shrink-code.html">Shrink Your Code and
+ * Resources</a>.
+ */
+@Incubating
 public class PostprocessingOptions {
     private static final String AUTO = "auto";
     private static final HelpfulEnumConverter<CodeShrinker> SHRINKER_CONVERTER =
