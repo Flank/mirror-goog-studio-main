@@ -315,6 +315,15 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
                   "nextId", "()J");
   }
 
+  if (agent_config->energy_profiler_enabled()) {
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/WakeLockWrapper",
+        "sendWakeLockAcquired", "()V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/WakeLockWrapper",
+        "sendWakeLockReleased", "()V");
+  }
+
   BindJNIMethod(jni,
                 "com/android/tools/profiler/support/network/"
                 "HttpTracker$InputStreamTracker",

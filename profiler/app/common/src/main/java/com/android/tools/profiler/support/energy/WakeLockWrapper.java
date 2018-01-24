@@ -29,6 +29,11 @@ import java.lang.reflect.Field;
  */
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class WakeLockWrapper {
+    // Native functions to send wake lock events to perfd.
+    private static native void sendWakeLockAcquired();
+
+    private static native void sendWakeLockReleased();
+
     /**
      * Exit hook for {@link PowerManager#newWakeLock(int, String)}.
      *
@@ -65,8 +70,7 @@ public final class WakeLockWrapper {
      * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
      */
     public static void wrapAcquire(WakeLock wrapped) {
-        // TODO: Send data via GRpc
-        StudioLog.v(String.format("Acquiring WakeLock: %s", System.identityHashCode(wrapped)));
+        sendWakeLockAcquired();
     }
 
     /**
@@ -76,7 +80,6 @@ public final class WakeLockWrapper {
      * @param timeout the timeout parameter passed to the original method.
      */
     public static void wrapRelease(WakeLock wrapped, int timeout) {
-        // TODO: Send data via GRpc
-        StudioLog.v(String.format("Releasing WakeLock: %s", System.identityHashCode(wrapped)));
+        sendWakeLockReleased();
     }
 }

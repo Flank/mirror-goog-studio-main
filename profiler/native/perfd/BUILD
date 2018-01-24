@@ -41,6 +41,7 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/profiler/native/perfd/cpu:profiler_cpu",
+        "//tools/base/profiler/native/perfd/energy:profiler_energy",
         "//tools/base/profiler/native/perfd/event:profiler_event",
         "//tools/base/profiler/native/perfd/graphics:profiler_graphics",
         "//tools/base/profiler/native/perfd/io:profiler_io",
