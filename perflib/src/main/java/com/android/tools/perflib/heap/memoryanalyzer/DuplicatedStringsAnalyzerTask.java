@@ -23,7 +23,6 @@ import com.android.tools.perflib.heap.Heap;
 import com.android.tools.perflib.heap.Instance;
 import com.android.tools.perflib.heap.Snapshot;
 import com.google.common.collect.HashMultimap;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,10 +48,9 @@ public class DuplicatedStringsAnalyzerTask extends MemoryAnalyzerTask {
                 assert instance instanceof ClassInstance;
                 ClassInstance stringInstance = (ClassInstance) instance;
                 if (stringInstance.getDistanceToGcRoot() != Integer.MAX_VALUE) {
-                    char[] characters = stringInstance.getStringChars();
-                    if (characters != null) {
-                        String string = new String(characters);
-                        stringIndex.put(string, stringInstance);
+                    String text = stringInstance.getAsString();
+                    if (text != null) {
+                        stringIndex.put(text, stringInstance);
                     }
                 }
             }

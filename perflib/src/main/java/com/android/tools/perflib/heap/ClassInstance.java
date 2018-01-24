@@ -19,7 +19,7 @@ package com.android.tools.perflib.heap;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -98,20 +98,25 @@ public class ClassInstance extends Instance {
     }
 
     @Nullable
-    public final char[] getStringChars() {
-        return getStringChars(Integer.MAX_VALUE);
+    public final String getAsString() {
+        return getAsString(Integer.MAX_VALUE);
     }
 
     @Nullable
-    public final char[] getStringChars(int maxDecodeStringLength) {
+    public final String getAsString(int maxDecodeStringLength) {
         int count = -1;
         int offset = 0;
         ArrayInstance charBufferArray = null;
+        // In later versions of Android, the underlying storage format changed to byte buffers.
+        ArrayInstance byteBufferArray = null;
         for (ClassInstance.FieldValue entry : getValues()) {
             if (charBufferArray == null && "value".equals(entry.getField().getName())) {
-                if (entry.getValue() instanceof ArrayInstance
-                        && ((ArrayInstance) entry.getValue()).getArrayType() == Type.CHAR) {
-                    charBufferArray = (ArrayInstance) entry.getValue();
+                if (entry.getValue() instanceof ArrayInstance) {
+                    if (((ArrayInstance) entry.getValue()).getArrayType() == Type.CHAR) {
+                        charBufferArray = (ArrayInstance) entry.getValue();
+                    } else if (((ArrayInstance) entry.getValue()).getArrayType() == Type.BYTE) {
+                        byteBufferArray = (ArrayInstance) entry.getValue();
+                    }
                 }
             } else if ("count".equals(entry.getField().getName())) {
                 if (entry.getValue() instanceof Integer) {
@@ -124,9 +129,23 @@ public class ClassInstance extends Instance {
             }
         }
 
-        return charBufferArray == null ? null : charBufferArray
-                .asCharArray(offset >= 0 ? offset : 0,
-                        Math.max(Math.min(count, maxDecodeStringLength), 0));
+        if (byteBufferArray != null) {
+            try {
+                return new String(
+                        byteBufferArray.asRawByteArray(
+                                offset >= 0 ? offset : 0,
+                                Math.max(Math.min(count, maxDecodeStringLength), 0)),
+                        "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                return null;
+            }
+        }
+        return charBufferArray == null
+                ? null
+                : new String(
+                        charBufferArray.asCharArray(
+                                offset >= 0 ? offset : 0,
+                                Math.max(Math.min(count, maxDecodeStringLength), 0)));
     }
 
     public static class FieldValue {
