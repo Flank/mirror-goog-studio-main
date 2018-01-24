@@ -81,12 +81,22 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
       const profiler::proto::ProfilingStateRequest* request,
       profiler::proto::ProfilingStateResponse* response) override;
 
+  grpc::Status StartStartupProfiling(
+      grpc::ServerContext* context,
+      const profiler::proto::StartupProfilingRequest* request,
+      profiler::proto::StartupProfilingResponse* response) override;
+
  private:
   // Stops profiling process of |pid|, regardless of whether it is alive or
   // dead. If |response| is not null, populate it with the capture data (trace);
   // otherwise, discard any capture result.
   void DoStopProfilingApp(
       int32_t pid, profiler::proto::CpuProfilingAppStopResponse* response);
+
+  // Returns application's |ProfilingApp| with the given |pid|.
+  // Looks from |profiling_apps_|, if not found then from
+  // |startup_profiling_apps_|, otherwise returns null.
+  ProfilingApp* GetProfilingApp(int32_t pid);
 
   // Data cache that will be queried to serve requests.
   CpuCache& cache_;
@@ -102,6 +112,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   AtraceManager atrace_manager_;
   // Map from pid to its corresponding data.
   std::map<int32_t, ProfilingApp> profiling_apps_;
+  std::map<std::string, ProfilingApp> startup_profiling_apps_;
 };
 
 }  // namespace profiler

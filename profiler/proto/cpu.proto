@@ -70,6 +70,9 @@ service CpuService {
   rpc CheckAppProfilingState(ProfilingStateRequest)
       returns (ProfilingStateResponse) {
   }
+
+  rpc StartStartupProfiling(StartupProfilingRequest) returns (StartupProfilingResponse) {
+  }
 }
 
 enum CpuProfilerType {
@@ -159,6 +162,16 @@ message CpuStartResponse {
     FAILURE = 4;
   }
   Status status = 1;
+}
+
+message StartupProfilingRequest {
+  string app_package = 1;
+  int64 device_id = 2;
+  CpuProfilerConfiguration configuration = 3;
+}
+
+message StartupProfilingResponse {
+  string file_path = 1;
 }
 
 message CpuStopRequest {

@@ -16,8 +16,6 @@
 #ifndef PERFD_CPU_PROFILING_APP_H_
 #define PERFD_CPU_PROFILING_APP_H_
 
-#include <vector>
-
 #include "proto/cpu.grpc.pb.h"
 
 namespace profiler {
@@ -32,6 +30,7 @@ struct ProfilingApp {
   int64_t start_timestamp;
   // The last start profiling requests processed successfully.
   profiler::proto::CpuProfilerConfiguration configuration;
+  bool is_startup_profiling = false;
 };
 
 }  // namespace profiler

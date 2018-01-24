@@ -209,32 +209,31 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
 
 void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
                                         CpuProfilingAppStopResponse* response) {
-  const auto& app_iterator = profiling_apps_.find(pid);
-  if (app_iterator == profiling_apps_.end()) {
+  ProfilingApp* app = GetProfilingApp(pid);
+  if (app == nullptr) {
     return;
   }
-  ProfilingApp app = app_iterator->second;
-  CpuProfilerType profiler_type = app.configuration.profiler_type();
+  CpuProfilerType profiler_type = app->configuration.profiler_type();
   string error;
   bool success = false;
   bool need_trace = response != nullptr;
-
   if (profiler_type == CpuProfilerType::SIMPLEPERF) {
-    success =
-        simpleperf_manager_.StopProfiling(app.app_pkg_name, need_trace, &error);
+    success = simpleperf_manager_.StopProfiling(app->app_pkg_name, need_trace,
+                                                &error);
   } else if (profiler_type == CpuProfilerType::ATRACE) {
     success =
-        atrace_manager_.StopProfiling(app.app_pkg_name, need_trace, &error);
+        atrace_manager_.StopProfiling(app->app_pkg_name, need_trace, &error);
   } else {  // Profiler is ART
     ActivityManager* manager = ActivityManager::Instance();
-    success = manager->StopProfiling(app.app_pkg_name, need_trace, &error);
+    success = manager->StopProfiling(app->app_pkg_name, need_trace, &error,
+                                     app->is_startup_profiling);
   }
 
   if (need_trace) {
     if (success) {
       response->set_status(CpuProfilingAppStopResponse::SUCCESS);
       string trace_content;
-      FileReader::Read(app.trace_path, &trace_content);
+      FileReader::Read(app->trace_path, &trace_content);
       response->set_trace(trace_content);
       // Set the trace id to a random integer
       // TODO: Change to something more predictable/robust
@@ -246,9 +245,28 @@ void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
     }
   }
 
-  remove(app.trace_path.c_str());  // No more use of this file. Delete it.
-  app.trace_path.clear();
+  remove(app->trace_path.c_str());  // No more use of this file. Delete it.
+  app->trace_path.clear();
   profiling_apps_.erase(pid);
+  startup_profiling_apps_.erase(app->app_pkg_name);
+}
+
+ProfilingApp* CpuServiceImpl::GetProfilingApp(int32_t pid) {
+  const auto& app_iterator = profiling_apps_.find(pid);
+  if (app_iterator != profiling_apps_.end()) {
+    return &app_iterator->second;
+  }
+  // Try to find in |startup_profiling_apps_|
+  string app_pkg_name = ProcessManager::GetCmdlineForPid(pid);
+  if (app_pkg_name.empty()) {
+    return nullptr;
+  }
+  const auto& startup_app_iterator = startup_profiling_apps_.find(app_pkg_name);
+  if (startup_app_iterator != startup_profiling_apps_.end()) {
+    return &startup_app_iterator->second;
+  }
+
+  return nullptr;
 }
 
 grpc::Status CpuServiceImpl::CheckAppProfilingState(
@@ -258,20 +276,50 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
   ProcessManager process_manager;
   string app_pkg_name = process_manager.GetCmdlineForPid(pid);
 
+  ProfilingApp* app = GetProfilingApp(pid);
   // Whether the app is being profiled (there is a stored start profiling
   // request corresponding to the app)
-  const auto& app_iterator = profiling_apps_.find(pid);
-  bool is_being_profiled = app_iterator != profiling_apps_.end();
-  response->set_being_profiled(is_being_profiled);
   response->set_check_timestamp(clock_.GetCurrentTime());
+  bool is_being_profiled = app != nullptr;
+  response->set_being_profiled(is_being_profiled);
+
   if (is_being_profiled) {
-    ProfilingApp app = app_iterator->second;
     // App is being profiled. Include the start profiling request and its
     // timestamp in the response.
-    response->set_start_timestamp(app.start_timestamp);
-    *(response->mutable_configuration()) = app.configuration;
+    response->set_start_timestamp(app->start_timestamp);
+    *(response->mutable_configuration()) = app->configuration;
   }
 
+  return Status::OK;
+}
+
+grpc::Status CpuServiceImpl::StartStartupProfiling(
+    grpc::ServerContext* context,
+    const profiler::proto::StartupProfilingRequest* request,
+    profiler::proto::StartupProfilingResponse* response) {
+  ProfilingApp app;
+  app.app_pkg_name = request->app_package();
+  app.start_timestamp = clock_.GetCurrentTime();
+  app.configuration = request->configuration();
+  app.is_startup_profiling = true;
+
+  CpuProfilerType profiler_type = app.configuration.profiler_type();
+  string error;
+  // TODO: Art should be handled by Debug.startMethodTracing and
+  // Debug.stopMethodTracing APIs instrumentation instead. Once our codebase
+  // supports instrumenting them, this code should be removed.
+  if (profiler_type == CpuProfilerType::ART) {
+    ActivityManager* manager = ActivityManager::Instance();
+    auto mode = ActivityManager::SAMPLING;
+    if (app.configuration.mode() == CpuProfilerConfiguration::INSTRUMENTED) {
+      mode = ActivityManager::INSTRUMENTED;
+    }
+    manager->StartProfiling(mode, app.app_pkg_name,
+                            app.configuration.sampling_interval_us(),
+                            &app.trace_path, &error, true);
+  }
+  startup_profiling_apps_[app.app_pkg_name] = app;
+  response->set_file_path(app.trace_path);
   return Status::OK;
 }
 
