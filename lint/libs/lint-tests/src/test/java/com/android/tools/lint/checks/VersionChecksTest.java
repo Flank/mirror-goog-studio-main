@@ -1531,6 +1531,7 @@ public class VersionChecksTest extends AbstractCheckTest {
                         + "        if (BuildCompat.isAtLeastNMR1()) { methodN_MR1(); } // OK\n"
                         + "        if (isAtLeastN()) { methodN(); } // OK\n"
                         + "        if (BuildCompat.isAtLeastNMR1()) { methodN(); } // OK\n"
+                        + "        if (BuildCompat.isAtLeastP()) { methodP(); } // OK\n"
                         + "    }\n"
                         + "\n"
                         + "    // Data-binding adds this method\n"
@@ -1565,18 +1566,27 @@ public class VersionChecksTest extends AbstractCheckTest {
                         + "    public boolean methodN_MR1() {\n"
                         + "        return true;\n"
                         + "    }\n"
+                        + "\n"
+                        + "    @RequiresApi(28)\n"
+                        + "    public boolean methodP() {\n"
+                        + "        return true;\n"
+                        + "    }\n"
                         + "}\n"),
                 jar("libs/build-compat.jar",
-                        base64gzip("android/support/v4/os/BuildCompat.class", ""
-                                + "H4sIAAAAAAAAAIWSy07CQBSG/ymFCpaLeANvCdGFurAhutMYFTUhcknAsHBj"
-                                + "Bmh0sLRNL7yPKzdudGPiwgfwoYynFZAYjbPoucz//T3tzPvH6xuAXawlICMb"
-                                + "xyzmFMwrWGCIHQhTeIcMkc2tFoNcsro6Q7oiTL3m99u6c8nbBnWyFavDjRZ3"
-                                + "RFAPm7J3K1yG9Qo3u44luprr27bleNpgT7Nc7cQXRrdk9W3u7TMkhHvsVXTu"
-                                + "erXwbVcMyabHO3dVbg/9kt+SaqNISNPynY5+LoLNzITdTo8PuIooYgpyKpax"
-                                + "wlD4dwjyCDjN4OaNVm/39I6nYJUhNyJH8o3WWaNZrtOcyjhTy6apOyWDu65O"
-                                + "36w0Ty+uy7VLBlYm358OKCBC/zpYEUjBoCAmPAQiKEa3X8CeKJEwRc8ERZBI"
-                                + "JlGcMvVLRP1pinGqk0ODYqgEUs+QMrl7KPID5Mjj2CkWkgmkQl5Sjxjh6d/x"
-                                + "/F94ahKXkAm3Z7AUOjO6P4vII/4Jinenz1gCAAA=")),
+                        base64gzip("android/support/v4/os/BuildCompat.class", "" +
+                                "H4sIAAAAAAAAAIWUS28SURTH/xemDODQYrWVhy9sVVq1Y2N3GCMCJqQ8GmhY" +
+                                "6MJc4KbeOszgzKXfx5UbN3ahiQs/gB/KeGagBUkJs7ivc87vf+45N/Pn76/f" +
+                                "AF7geRw6sjHcxh1/uBvFvTjuI6fjgY4thshLaUv1iiGc3+kwaCWnLxjWatIW" +
+                                "jdGgK9xj3rXoZL3m9LjV4a7095NDTX2UHsNWjdt915F90xsNh46rzLMD0/HM" +
+                                "NyNp9UvOYMhVgSEuvaKqCe6pRqD2jiHRVrz3qc6HE168LIau6HEl+gzp1shW" +
+                                "ciA60pNkLdq2o7iSjk2Km7VTfsZNi9sn5jSGRBJTkXprf1a0OWtszhmPaNN2" +
+                                "Rm5PvJV+IsmZ1Pd8KQNRxHQ8NJDHjoFdPGFgRzqeGniGPYbc0goQdJpzs3sq" +
+                                "ekqHyZC6iLxw3+5UWu1qk4qkX66Mqm0Lt2RxzxN0fb1dPvxQbRxTDlWGaKlZ" +
+                                "rjSK9YrfpalGW7nSPin8pzs+o66LzyNuEWkjX5vPquB3JjmfFXKI0EvyvwhC" +
+                                "fjVANQueGGVB88ruT7DvtAjhGo1xmoEMNGRh0MoYOyGBVZpjWEMS4QCwH3gC" +
+                                "q+cIJVNfoGtfoYW/XZIiQeRjXA/iQ8ZrumYQcGNivBkAN64GphcBD5YBN68G" +
+                                "ZhYBi8uAt64GZhcBG8uAKQKOm5CbAGPnCK9rP7Dis9gM6z05pAN+hkrpt4fR" +
+                                "32AbjxD7B/l3JZMrBAAA")),
                 mSupportJar)
                 .run().expect(""
                         + "src/test/pkg/VersionConditionals4.java:16: Error: Call requires API level 24 (current min is 4): methodN [NewApi]\n"
