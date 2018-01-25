@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.build.api.artifact;
+@file:JvmName("BuildableArtifactUtil")
+package com.android.build.gradle.internal.api.artifact
 
-import org.gradle.api.Incubating;
+import com.android.build.api.artifact.BuildableArtifact
+import java.io.File
 
-/** Artifact type use for transform */
-@Incubating
-public enum BuildArtifactType implements ArtifactType {
-    JAVAC_CLASSES,
-    JAVA_COMPILE_CLASSPATH,
+/**
+ * Returns the first file in the [BuildableArtifact] by name if it exists, or null otherwise.
+ *
+ * @name the file name
+ */
+fun BuildableArtifact.forName(name: String) : File? {
+    return files.find { it.name == name }
 }

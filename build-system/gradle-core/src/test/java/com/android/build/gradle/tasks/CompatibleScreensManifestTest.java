@@ -17,12 +17,16 @@
 package com.android.build.gradle.tasks;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -35,8 +39,8 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,6 +60,7 @@ public class CompatibleScreensManifestTest {
     @Mock OutputScope outputScope;
     @Mock GradleVariantConfiguration variantConfiguration;
     @Mock ProductFlavor productFlavor;
+    @Mock BuildArtifactsHolder buildArtifactsHolder;
 
     CompatibleScreensManifest task;
 
@@ -65,8 +70,11 @@ public class CompatibleScreensManifestTest {
         when(scope.getFullVariantName()).thenReturn("fullVariantName");
         when(scope.getVariantConfiguration()).thenReturn(variantConfiguration);
         when(scope.getOutputScope()).thenReturn(outputScope);
+        when(scope.getBuildArtifactsHolder()).thenReturn(buildArtifactsHolder);
+        when(buildArtifactsHolder.createFirstArtifactFiles(
+                        any(ArtifactType.class), any(Task.class), eq("out")))
+                .thenReturn(temporaryFolder.getRoot());
         when(productFlavor.getMinSdkVersion()).thenReturn(new DefaultApiVersion(21, null));
-        when(scope.getCompatibleScreensManifestDirectory()).thenReturn(temporaryFolder.getRoot());
         when(variantConfiguration.getMergedFlavor()).thenReturn(productFlavor);
         when(variantConfiguration.getBaseName()).thenReturn("baseName");
         when(variantConfiguration.getFullName()).thenReturn("fullName");
@@ -78,7 +86,7 @@ public class CompatibleScreensManifestTest {
     }
 
     @Test
-    public void testConfigAction() throws IOException, ParserConfigurationException {
+    public void testConfigAction() {
 
         CompatibleScreensManifest.ConfigAction configAction =
                 new CompatibleScreensManifest.ConfigAction(
@@ -95,7 +103,7 @@ public class CompatibleScreensManifestTest {
     }
 
     @Test
-    public void testNoSplit() throws IOException {
+    public void testNoSplit() {
 
         OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
         ApkData mainApk = outputFactory.addMainApk();

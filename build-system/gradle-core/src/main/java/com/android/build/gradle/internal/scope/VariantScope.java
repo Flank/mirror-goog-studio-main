@@ -156,7 +156,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     boolean keepDefaultBootstrap();
 
     @NonNull
-    BuildArtifactHolder getBuildArtifactHolder();
+    BuildArtifactsHolder getBuildArtifactsHolder();
 
     @NonNull
     FileCollection getArtifactFileCollection(

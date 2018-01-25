@@ -21,8 +21,8 @@ import com.android.build.api.artifact.BuildArtifactType.JAVA_COMPILE_CLASSPATH
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
-import com.android.build.gradle.internal.scope.BuildArtifactHolder
 import com.android.build.gradle.internal.variant2.DslScopeImpl
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.ide.common.util.multimapOf
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
@@ -38,6 +38,7 @@ import kotlin.test.assertFailsWith
 class OutputFileProviderImplTest {
 
     private val project = ProjectBuilder.builder().build()
+    private val task = project.task("task")
 
     private val dslScope = DslScopeImpl(
             FakeEvalIssueReporter(throwOnError = true),
@@ -63,7 +64,7 @@ class OutputFileProviderImplTest {
                         listOf(),
                         "task",
                         dslScope)
-        holder.createFirstArtifactFiles(JAVAC_CLASSES, "bar", "task")
+        holder.createFirstArtifactFiles(JAVAC_CLASSES, task, "bar")
         assertThat(output.file).hasName("foo")
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES).single()).hasName("foo")
     }
@@ -80,7 +81,7 @@ class OutputFileProviderImplTest {
                         listOf(),
                         "task",
                         dslScope)
-        holder.createFirstArtifactFiles(JAVAC_CLASSES, "bar", "task")
+        holder.createFirstArtifactFiles(JAVAC_CLASSES, task, "bar")
         BuildableArtifactImpl.enableResolution()
         assertThat(output.file).hasName("foo")
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES).map(File::getName)).containsExactly("foo", "bar")
@@ -101,8 +102,8 @@ class OutputFileProviderImplTest {
                         listOf(),
                         "task",
                         dslScope)
-        holder.createFirstArtifactFiles(JAVAC_CLASSES, "javac", "task")
-        holder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, "classpath", "task")
+        holder.createFirstArtifactFiles(JAVAC_CLASSES, task, "javac")
+        holder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, task, "classpath")
         BuildableArtifactImpl.enableResolution()
 
         assertThat(output.getFile("foo")).hasName("foo")
@@ -115,7 +116,7 @@ class OutputFileProviderImplTest {
     }
 
     private fun newTaskOutputHolder() =
-            BuildArtifactHolder(
+            BuildArtifactsHolder(
                     project,
                     "debug",
                     project.file("root"),

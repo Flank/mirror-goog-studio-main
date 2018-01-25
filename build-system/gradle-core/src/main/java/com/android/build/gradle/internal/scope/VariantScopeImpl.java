@@ -197,7 +197,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Nullable private CodeShrinker defaultCodeShrinker;
 
-    @NonNull private BuildArtifactHolder buildArtifactHolder;
+    @NonNull private BuildArtifactsHolder buildArtifactsHolder;
 
     /**
      * This is an instance of {@link JacocoReportTask} in android test variants, an umbrella {@link
@@ -229,13 +229,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI),
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY),
                         projectOptions.get(BooleanOption.ENABLE_SEPARATE_APK_RESOURCES));
-        this.buildArtifactHolder =
-                new BuildArtifactHolder(
+        this.buildArtifactsHolder =
+                new BuildArtifactsHolder(
                         getProject(),
                         getFullVariantName(),
                         intermediate("artifact_transform"),
                         getVariantConfiguration().getDirName(),
-                        ImmutableList.of(),
+                        ImmutableList.of(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST),
                         globalScope.getDslScope());
 
         validatePostprocessingOptions();
@@ -960,8 +960,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public BuildArtifactHolder getBuildArtifactHolder() {
-        return buildArtifactHolder;
+    public BuildArtifactsHolder getBuildArtifactsHolder() {
+        return buildArtifactsHolder;
     }
 
     @Override

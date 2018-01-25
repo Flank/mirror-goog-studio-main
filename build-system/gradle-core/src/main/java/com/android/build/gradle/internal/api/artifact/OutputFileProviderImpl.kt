@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.api.artifact
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.OutputFileProvider
 import com.android.build.gradle.internal.api.dsl.DslScope
-import com.android.build.gradle.internal.scope.BuildArtifactHolder
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.Multimap
 import java.io.File
@@ -27,7 +27,7 @@ import java.io.File
 /**
  * Implementation for [OutputFileProvider]
  *
- * @param artifactHolder the [BuildArtifactHolder] for the variant
+ * @param artifactsHolder the [BuildArtifactsHolder] for the variant
  * @param replacedArtifacts artifacts which the output of the task will replace
  * @param appendedArtifacts artifacts which the output of the task append to
  * @param filenamesMap map artifact types to the names of the files the task will create
@@ -36,7 +36,7 @@ import java.io.File
  * @param taskName name of the task to be created.
  */
 class OutputFileProviderImpl(
-        artifactHolder: BuildArtifactHolder,
+        artifactsHolder: BuildArtifactsHolder,
         replacedArtifacts: Collection<ArtifactType>,
         appendedArtifacts: Collection<ArtifactType>,
         filenamesMap : Multimap<ArtifactType, String>,
@@ -47,7 +47,7 @@ class OutputFileProviderImpl(
     // map from filename to actual File.
     private val fileMap =
             filenamesMap.values().union(unassociatedFilenames)
-                    .associate { it to artifactHolder.createFile(taskName, it) }
+                    .associate { it to artifactsHolder.createFile(taskName, it) }
 
     init{
         for (artifactType in replacedArtifacts) {
@@ -60,11 +60,11 @@ class OutputFileProviderImpl(
                             "An output file must be created for OutputType '$artifactType'.")
                 }
             }
-            artifactHolder.replaceArtifact(artifactType, files, taskName)
+            artifactsHolder.replaceArtifact(artifactType, files, taskName)
         }
 
         for (artifactType in appendedArtifacts) {
-            artifactHolder.appendArtifact(artifactType, filenamesMap[artifactType], taskName)
+            artifactsHolder.appendArtifact(artifactType, filenamesMap[artifactType], taskName)
         }
     }
 

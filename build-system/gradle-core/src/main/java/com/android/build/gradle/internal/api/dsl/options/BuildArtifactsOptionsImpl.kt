@@ -25,7 +25,8 @@ import com.android.build.api.dsl.options.BuildArtifactsOptions
 import com.android.build.gradle.internal.api.artifact.BuildArtifactTransformBuilderImpl
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.NestedSealable
-import com.android.build.gradle.internal.scope.BuildArtifactHolder
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Project
 import org.gradle.api.Task
 import java.io.File
@@ -35,7 +36,7 @@ import java.io.File
  */
 class BuildArtifactsOptionsImpl(
         private val project: Project,
-        private val artifactHolder: BuildArtifactHolder,
+        private val artifactsHolder: BuildArtifactsHolder,
         dslScope: DslScope)
     : BuildArtifactsOptions, NestedSealable(dslScope) {
 
@@ -84,7 +85,7 @@ class BuildArtifactsOptionsImpl(
         val builder =
         BuildArtifactTransformBuilderImpl(
                 project,
-                artifactHolder,
+                artifactsHolder,
                 taskName,
                 taskType,
                 dslScope)
@@ -121,7 +122,7 @@ class BuildArtifactsOptionsImpl(
             function : (T.(BuildableArtifact, File) -> Unit)?) {
         val builder = BuildArtifactTransformBuilderImpl(
                 project,
-                artifactHolder,
+                artifactsHolder,
                 taskName,
                 taskType,
                 dslScope)
@@ -140,7 +141,7 @@ class BuildArtifactsOptionsImpl(
             handleSealableSubItem(
                     BuildArtifactTransformBuilderImpl(
                             project,
-                            artifactHolder,
+                            artifactsHolder,
                             taskName,
                             taskType,
                             dslScope))

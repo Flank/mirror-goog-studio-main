@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactType
 import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.scope.BuildArtifactHolder
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
@@ -44,7 +44,7 @@ import java.io.FileWriter
 private typealias Report = Map<ArtifactType, List<BuildArtifactReportTask.BuildableArtifactData>>
 
 open class BuildArtifactReportTask : AndroidBuilderTask() {
-    private lateinit var buildArtifactHolder : BuildArtifactHolder
+    private lateinit var buildArtifactsHolder: BuildArtifactsHolder
 
     @get:Input
     private lateinit var types : Collection<ArtifactType>
@@ -59,10 +59,10 @@ open class BuildArtifactReportTask : AndroidBuilderTask() {
 
     //FIXME: VisibleForTesting.  Make this internal when bazel supports it for tests (b/71602857)
     fun init(
-            buildArtifactHolder : BuildArtifactHolder,
+            buildArtifactsHolder: BuildArtifactsHolder,
             types : Collection<ArtifactType>,
             outputFile : File? = null) {
-        this.buildArtifactHolder = buildArtifactHolder
+        this.buildArtifactsHolder = buildArtifactsHolder
         this.types = types
         this.outputFile = outputFile
     }
@@ -71,7 +71,7 @@ open class BuildArtifactReportTask : AndroidBuilderTask() {
     fun report() {
         val reports : Report =
                 types.associate {
-                    it to buildArtifactHolder.getHistory(it).map(this::newArtifact) }
+                    it to buildArtifactsHolder.getHistory(it).map(this::newArtifact) }
 
         if (outputFile != null) {
             val gson = GsonBuilder().setPrettyPrinting().create()
@@ -105,9 +105,9 @@ open class BuildArtifactReportTask : AndroidBuilderTask() {
                     if (outputFileName == null) null
                     else scope.globalScope.project.file(outputFileName)
 
-             // TODO: populate 'types' with all ArtifactType in buildArtifactHolder.
+             // TODO: populate 'types' with all ArtifactType in buildArtifactsHolder.
             task.init(
-                    buildArtifactHolder = scope.buildArtifactHolder,
+                    buildArtifactsHolder = scope.buildArtifactsHolder,
                     types = listOf(),
                     outputFile = outputFile)
         }

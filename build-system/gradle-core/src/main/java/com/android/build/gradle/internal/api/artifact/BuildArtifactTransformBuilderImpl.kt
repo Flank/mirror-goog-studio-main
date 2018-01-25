@@ -23,7 +23,7 @@ import com.android.build.api.artifact.InputArtifactProvider
 import com.android.build.api.artifact.OutputFileProvider
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.build.gradle.internal.scope.BuildArtifactHolder
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.HashMultimap
 import org.gradle.api.Project
@@ -34,7 +34,7 @@ import org.gradle.api.Task
  */
 class BuildArtifactTransformBuilderImpl<out T : Task>(
         private val project: Project,
-        private val artifactHolder: BuildArtifactHolder,
+        private val artifactsHolder: BuildArtifactsHolder,
         private val taskNamePrefix: String,
         private val taskType: Class<T>,
         dslScope: DslScope)
@@ -134,15 +134,15 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
     private fun create(
             action : BuildArtifactTransformBuilder.ConfigurationAction<T>?,
             function : ((T, InputArtifactProvider, OutputFileProvider) -> Unit)?) : T {
-        val taskName = artifactHolder.getTaskName(taskNamePrefix)
+        val taskName = artifactsHolder.getTaskName(taskNamePrefix)
         val task = project.tasks.create(taskName, taskType)
         if (!checkSeal()) {
             return task
         }
-        val inputProvider = InputArtifactProviderImpl(artifactHolder, inputs, dslScope)
+        val inputProvider = InputArtifactProviderImpl(artifactsHolder, inputs, dslScope)
         val outputProvider =
                 OutputFileProviderImpl(
-                        artifactHolder,
+                        artifactsHolder,
                         replacedOutput,
                         appendedOutput,
                         outputFiles,

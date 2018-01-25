@@ -156,7 +156,7 @@ public class CompatibleScreensManifest extends AndroidVariantTask {
         File manifestFile = new File(splitFolder, SdkConstants.ANDROID_MANIFEST_XML);
 
         try {
-            Files.write(content.toString(), manifestFile, Charsets.UTF_8);
+            Files.asCharSink(manifestFile, Charsets.UTF_8).write(content.toString());
         } catch (IOException e) {
             throw new BuildException(e.getMessage(), e);
         }
@@ -199,7 +199,13 @@ public class CompatibleScreensManifest extends AndroidVariantTask {
             csmTask.outputScope = scope.getOutputScope();
             csmTask.setVariantName(scope.getFullVariantName());
             csmTask.setScreenSizes(screenSizes);
-            csmTask.setOutputFolder(scope.getCompatibleScreensManifestDirectory());
+            csmTask.setOutputFolder(
+                    scope.getBuildArtifactsHolder()
+                            .createFirstArtifactFiles(
+                                    InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
+                                    csmTask,
+                                    "out"));
+
             GradleVariantConfiguration config = scope.getVariantConfiguration();
             csmTask.minSdkVersion =
                     TaskInputHelper.memoize(

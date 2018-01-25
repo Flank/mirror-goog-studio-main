@@ -21,8 +21,8 @@ import com.android.build.api.artifact.BuildArtifactType.JAVA_COMPILE_CLASSPATH
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
-import com.android.build.gradle.internal.scope.BuildArtifactHolder
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
@@ -41,7 +41,7 @@ class BuildArtifactReportTaskTest {
     val temporaryFolder = TemporaryFolder()
     private lateinit var project : Project
     private val artifactTypes = listOf(JAVAC_CLASSES, JAVA_COMPILE_CLASSPATH)
-    private lateinit var artifactHolder : BuildArtifactHolder
+    private lateinit var artifactsHolder: BuildArtifactsHolder
     private val dslScope = DslScopeImpl(
             FakeEvalIssueReporter(throwOnError = true),
             FakeDeprecationReporter(),
@@ -49,25 +49,25 @@ class BuildArtifactReportTaskTest {
     @Before
     fun setUp() {
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()
-        artifactHolder =
-                BuildArtifactHolder(
+        artifactsHolder =
+                BuildArtifactsHolder(
                 project,
                 "debug",
                 project.file("root"),
                 "debug",
                 artifactTypes,
                 dslScope)
-        project.tasks.create("task0")
-        project.tasks.create("task1")
-        artifactHolder.createFirstArtifactFiles(JAVAC_CLASSES, "javac_classes", "task0")
-        artifactHolder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, "java_compile_classpath", "task1")
+        val task0 = project.tasks.create("task0")
+        val task1 = project.tasks.create("task1")
+        artifactsHolder.createFirstArtifactFiles(JAVAC_CLASSES, task0, "javac_classes")
+        artifactsHolder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, task1, "java_compile_classpath")
         BuildableArtifactImpl.enableResolution()
     }
 
     @Test
     fun report() {
         val task = project.tasks.create("report", BuildArtifactReportTask::class.java)
-        task.init(artifactHolder, artifactTypes)
+        task.init(artifactsHolder, artifactTypes)
         task.report()
     }
 
@@ -75,9 +75,9 @@ class BuildArtifactReportTaskTest {
     fun reportToFile() {
         val task = project.tasks.create("report", BuildArtifactReportTask::class.java)
         val outputFile = project.file("report.txt")
-        task.init(artifactHolder, artifactTypes, outputFile)
+        task.init(artifactsHolder, artifactTypes, outputFile)
 
-        artifactHolder.replaceArtifact(JAVAC_CLASSES, listOf("classes"), "task1")
+        artifactsHolder.replaceArtifact(JAVAC_CLASSES, listOf("classes"), "task1")
 
         task.report()
 

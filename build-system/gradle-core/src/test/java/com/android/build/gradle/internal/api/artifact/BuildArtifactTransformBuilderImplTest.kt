@@ -27,7 +27,7 @@ import com.android.build.api.artifact.OutputFileProvider
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
-import com.android.build.gradle.internal.scope.BuildArtifactHolder
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
@@ -52,13 +52,13 @@ class BuildArtifactTransformBuilderImplTest {
             FakeDeprecationReporter(),
             FakeObjectFactory())
     lateinit private var builder : BuildArtifactTransformBuilder<TestTask>
-    lateinit private var taskHolder : BuildArtifactHolder
+    lateinit private var taskHolder : BuildArtifactsHolder
 
     @Before
     fun setUp() {
         BuildableArtifactImpl.disableResolution()
         taskHolder =
-                BuildArtifactHolder(
+                BuildArtifactsHolder(
                         project,
                         "debug",
                         project.file("root"),
@@ -113,7 +113,7 @@ class BuildArtifactTransformBuilderImplTest {
     @Test
     fun singleInput() {
         var input : InputArtifactProvider? = null
-        builder
+        val task = builder
                 .input(JAVAC_CLASSES)
                 .create { i ,o ->
                     input = i
@@ -121,7 +121,7 @@ class BuildArtifactTransformBuilderImplTest {
                     assertThat(i.getArtifact(JAVAC_CLASSES)).isSameAs(i.artifact)
                     assertFailsWith<RuntimeException> { o.file }
                 }
-        taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, "javac", "task")
+        taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, task, "javac")
         BuildableArtifactImpl.enableResolution()
         assertThat(input!!.artifact.map(File::getName)).containsExactly("javac")
     }
@@ -130,17 +130,17 @@ class BuildArtifactTransformBuilderImplTest {
     fun multiInput() {
         var input : InputArtifactProvider? = null
         BuildableArtifactImpl.enableResolution()
-        builder
-                .input(JAVAC_CLASSES)
-                .input(JAVA_COMPILE_CLASSPATH)
-                .create { i , o ->
-                    input = i
-                    assertThat(this).isInstanceOf(TestTask::class.java)
-                    assertFailsWith<RuntimeException> { i.artifact }
-                    assertFailsWith<RuntimeException> { o.file }
-                }
-        taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, "javac", "task")
-        taskHolder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, "classpath", "task")
+        val task = builder
+            .input(JAVAC_CLASSES)
+            .input(JAVA_COMPILE_CLASSPATH)
+            .create { i, o ->
+                input = i
+                assertThat(this).isInstanceOf(TestTask::class.java)
+                assertFailsWith<RuntimeException> { i.artifact }
+                assertFailsWith<RuntimeException> { o.file }
+            }
+        taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, task ,"javac")
+        taskHolder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, task,"classpath")
         BuildableArtifactImpl.enableResolution()
 
         assertThat(input!!.getArtifact(JAVAC_CLASSES).map(File::getName))
@@ -153,7 +153,7 @@ class BuildArtifactTransformBuilderImplTest {
     fun output() {
         var output : OutputFileProvider? = null
         BuildableArtifactImpl.enableResolution()
-        builder
+        val task = builder
                 .output(JAVAC_CLASSES, REPLACE)
                 .output(JAVA_COMPILE_CLASSPATH, APPEND)
                 .outputFile("foo", JAVAC_CLASSES)
@@ -166,8 +166,8 @@ class BuildArtifactTransformBuilderImplTest {
                     assertFailsWith<RuntimeException> { i.getArtifact(JAVAC_CLASSES) }
                     assertFailsWith<RuntimeException> { o.file }
                 }
-        taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, "javac", "task")
-        taskHolder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, "classpath", "task")
+        taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, task, "javac")
+        taskHolder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, task, "classpath")
         BuildableArtifactImpl.enableResolution()
 
         assertThat(output!!.getFile("foo")).hasName("foo")

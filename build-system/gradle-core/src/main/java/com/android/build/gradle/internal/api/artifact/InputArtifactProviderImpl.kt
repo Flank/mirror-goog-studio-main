@@ -21,17 +21,17 @@ import com.android.build.api.artifact.BuildArtifactType
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.artifact.InputArtifactProvider
 import com.android.build.gradle.internal.api.dsl.DslScope
-import com.android.build.gradle.internal.scope.BuildArtifactHolder
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.builder.errors.EvalIssueReporter
 
 /**
  * Implementation for InputProvider
  */
 class InputArtifactProviderImpl(
-        private var artifactHolder: BuildArtifactHolder,
+        private var artifactsHolder: BuildArtifactsHolder,
         private var inputTypes : Collection<ArtifactType>,
         private val dslScope: DslScope) : InputArtifactProvider {
-    private val collections = inputTypes.map { artifactHolder.getArtifactFiles(it) }
+    private val collections = inputTypes.map { artifactsHolder.getArtifactFiles(it) }
 
     override val artifact: BuildableArtifact
         get() = when {

@@ -26,8 +26,8 @@ import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
-import com.android.build.gradle.internal.scope.BuildArtifactHolder
 import com.android.build.gradle.internal.variant2.DslScopeImpl
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.DefaultTask
@@ -56,7 +56,7 @@ class BuildArtifactsOptionsImplTest {
     private val issueReporter = FakeEvalIssueReporter(throwOnError = true)
     private val dslScope = DslScopeImpl(issueReporter, FakeDeprecationReporter(), FakeObjectFactory())
     lateinit private var project : Project
-    lateinit private var taskHolder : BuildArtifactHolder
+    lateinit private var taskHolder : BuildArtifactsHolder
     lateinit private var options : BuildArtifactsOptions
     lateinit private var task0 : Task
 
@@ -65,7 +65,7 @@ class BuildArtifactsOptionsImplTest {
         project = ProjectBuilder().build()!!
         BuildableArtifactImpl.disableResolution()
         taskHolder =
-                BuildArtifactHolder(
+                BuildArtifactsHolder(
                         project,
                         "debug",
                         project.file("root"),
@@ -82,13 +82,13 @@ class BuildArtifactsOptionsImplTest {
             inputFiles = input
             outputFile = output
         }
-        taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, "foo", "task0")
+        taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, task0)
         BuildableArtifactImpl.enableResolution()
 
         project.tasks.getByName("task1Debug") { t ->
             assertThat(t).isInstanceOf(TestTask::class.java)
             val task = t as TestTask
-            assertThat(task.inputFiles.single()).hasName("foo")
+            assertThat(task.inputFiles.single()).hasName("out")
             assertThat(task.outputFile).hasName(JAVAC_CLASSES.name)
             // TaskDependency.getDependencies accepts null.
             @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -96,7 +96,7 @@ class BuildArtifactsOptionsImplTest {
                     .containsExactly(task0)
         }
         assertThat(taskHolder.getArtifactFiles(JAVAC_CLASSES).files.map(File::getName))
-                .containsExactly("foo", JAVAC_CLASSES.name)
+                .containsExactly("out", JAVAC_CLASSES.name)
     }
 
     @Test
@@ -114,20 +114,20 @@ class BuildArtifactsOptionsImplTest {
                         task.outputFile = output
                     }
                 })
-        taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, "foo", "task0")
+        taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, task0)
         BuildableArtifactImpl.enableResolution()
 
         project.tasks.getByName("task1Debug") { t ->
             assertThat(t).isInstanceOf(TestTask::class.java)
             val task = t as TestTask
-            assertThat(task.inputFiles.single()).hasName("foo")
+            assertThat(task.inputFiles.single()).hasName("out")
             assertThat(task.outputFile).hasName(JAVAC_CLASSES.name)
             @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
             assertThat(task.inputFiles.buildDependencies.getDependencies(null))
                     .containsExactly(task0)
         }
         assertThat(taskHolder.getArtifactFiles(JAVAC_CLASSES).files.map(File::getName))
-                .containsExactly("foo", JAVAC_CLASSES.name)
+                .containsExactly("out", JAVAC_CLASSES.name)
     }
 
     @Test
@@ -145,13 +145,13 @@ class BuildArtifactsOptionsImplTest {
                         task.outputFile = output
                     }
                 })
-        taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, "foo", "task0")
+        taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, task0)
         BuildableArtifactImpl.enableResolution()
 
         project.tasks.getByName("task1Debug") { t ->
             assertThat(t).isInstanceOf(TestTask::class.java)
             val task = t as TestTask
-            assertThat(task.inputFiles.single()).hasName("foo")
+            assertThat(task.inputFiles.single()).hasName("out")
             assertThat(task.outputFile).hasName(JAVAC_CLASSES.name)
             @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
             assertThat(task.inputFiles.buildDependencies.getDependencies(null))

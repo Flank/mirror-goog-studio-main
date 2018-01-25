@@ -69,7 +69,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
-import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
@@ -721,7 +720,8 @@ public abstract class TaskManager {
             PublishingSpecs.OutputSpec taskOutputSpec =
                     testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
             // now get the output type
-            ArtifactType testedOutputType = taskOutputSpec.getOutputType();
+            com.android.build.api.artifact.ArtifactType testedOutputType =
+                    taskOutputSpec.getOutputType();
 
             // create two streams of different types.
             transformManager.addStream(
@@ -747,13 +747,7 @@ public abstract class TaskManager {
                 (AndroidArtifactVariantData) variantScope.getVariantData();
         Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
 
-        CompatibleScreensManifest csmTask =
-                taskFactory.create(
-                        new CompatibleScreensManifest.ConfigAction(variantScope, screenSizes));
-        variantScope.addTaskOutput(
-                InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
-                variantScope.getCompatibleScreensManifestDirectory(),
-                csmTask.getName());
+        taskFactory.create(new CompatibleScreensManifest.ConfigAction(variantScope, screenSizes));
 
         ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures =
                 ImmutableList.builder();

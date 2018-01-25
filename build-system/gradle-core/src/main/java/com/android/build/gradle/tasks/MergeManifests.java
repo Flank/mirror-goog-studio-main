@@ -28,6 +28,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
@@ -94,7 +95,7 @@ public class MergeManifests extends ManifestProcessorTask {
     private ArtifactCollection manifests;
     private ArtifactCollection featureManifests;
     private FileCollection microApkManifest;
-    private FileCollection compatibleScreensManifest;
+    private BuildableArtifact compatibleScreensManifest;
     private FileCollection packageManifest;
     private FileCollection apkList;
     private List<Feature> optionalFeatures;
@@ -403,7 +404,7 @@ public class MergeManifests extends ManifestProcessorTask {
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getCompatibleScreensManifest() {
+    public BuildableArtifact getCompatibleScreensManifest() {
         return compatibleScreensManifest;
     }
 
@@ -479,7 +480,9 @@ public class MergeManifests extends ManifestProcessorTask {
                         variantScope.getMicroApkManifestFile());
             }
             processManifestTask.compatibleScreensManifest =
-                    variantScope.getOutput(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST);
+                    variantScope
+                            .getBuildArtifactsHolder()
+                            .getArtifactFiles(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST);
 
             processManifestTask.minSdkVersion =
                     TaskInputHelper.memoize(

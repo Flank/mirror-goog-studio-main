@@ -34,9 +34,9 @@ import java.io.File
 import kotlin.test.assertFailsWith
 
 /**
- * Test for [BuildArtifactHolder]
+ * Test for [BuildArtifactsHolder]
  */
-class BuildArtifactHolderTest {
+class BuildArtifactsHolderTest {
 
     private val variantDir = "debug"
     lateinit private var project : Project
@@ -45,7 +45,7 @@ class BuildArtifactHolderTest {
             FakeEvalIssueReporter(throwOnError = true),
             FakeDeprecationReporter(),
             FakeObjectFactory())
-    lateinit private var holder : BuildArtifactHolder
+    lateinit private var holder : BuildArtifactsHolder
     lateinit private var task0 : Task
     lateinit private var task1 : Task
     lateinit private var task2 : Task
@@ -55,7 +55,7 @@ class BuildArtifactHolderTest {
         BuildableArtifactImpl.enableResolution()
         project = ProjectBuilder.builder().build()
         root = project.file("root")
-        holder = BuildArtifactHolder(
+        holder = BuildArtifactsHolder(
                 project,
                 "debug",
                 root,
@@ -88,7 +88,7 @@ class BuildArtifactHolderTest {
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES)).isSameAs(files1)
         val files2 = holder.replaceArtifact(JAVAC_CLASSES, listOf("bar"), "task2")
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES)).isSameAs(files2)
-        holder.createFirstArtifactFiles(JAVAC_CLASSES, "baz", "task0")
+        holder.createFirstArtifactFiles(JAVAC_CLASSES, task0, "baz")
 
         assertThat(files1.single()).isEqualTo(file("task1", "foo"))
         // TaskDependency.getDependencies accepts null.

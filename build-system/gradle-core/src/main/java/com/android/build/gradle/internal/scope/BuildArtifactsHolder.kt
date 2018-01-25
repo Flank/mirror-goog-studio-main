@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.utils.FileUtils
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import java.io.File
 
@@ -45,12 +46,12 @@ import java.io.File
  * @param initialArtifactTypes the list of artifact types to initialize the holder with.  This list
  *         determines all artifact types available to an external user.
  */
-class BuildArtifactHolder(
+class BuildArtifactsHolder(
         private val project : Project,
         private val variantName : String,
         private val rootOutputDir : File,
         private val variantDirName : String,
-        initialArtifactTypes: List<BuildArtifactType>,
+        initialArtifactTypes: List<ArtifactType>,
         private val dslScope: DslScope) {
 
     private val artifactRecordMap =
@@ -175,7 +176,7 @@ class BuildArtifactHolder(
     /**
      * Create Files and modify the first [BuildableArtifact] for the artifactType.
      *
-     * When a [BuildArtifactHolder], a set of [BuildableArtifact] are created, but not populated.
+     * When a [BuildArtifactsHolder], a set of [BuildableArtifact] are created, but not populated.
      * The content of the [BuildableArtifact] should come from a source from the Android Gradle plugin.
      * This method modifies the initial [BuildableArtifact] with the appropriate files.
      *
@@ -196,22 +197,27 @@ class BuildArtifactHolder(
      * Same as the other [createFirstArtifactFiles], but for the a single file.
      *
      * @artifactType type of the artifact.
-     * @filename name of the file to be created.
-     * @taskName name of the Task that will generate the output file.
-     * @return the initial [BuildableArtifact] that is now populated with the new file.
+     * @task Task that will generate the output.
+     * @fileName name of the file to be created, or null if "out" should be used.
+     * @return the [File] for the output location to used.
      */
-    fun createFirstArtifactFiles(artifactType: ArtifactType, filename : String, taskName : String)
-            : BuildableArtifact {
-        val collection = project.files(createFile(artifactType.name(), filename))
-        collection.builtBy(taskName)
-        return initializeFirstArtifactFiles(artifactType, collection)
+    fun createFirstArtifactFiles(artifactType: ArtifactType,
+        task: Task,
+        fileName: String = "out"): File {
+
+        val output = createFile(artifactType.name(), fileName)
+        val collection = project.files(output)
+        collection.builtBy(task)
+        initializeFirstArtifactFiles(artifactType, collection)
+        return output
     }
+
 
     /**
      * Initialize the first output with the specified FileCollection.
      *
      * Similar to createFirstArtifactFiles, this method modifies the content of the
-     * [BuildableArtifact] that were created during construction of [BuildArtifactHolder].  Unlike
+     * [BuildableArtifact] that were created during construction of [BuildArtifactsHolder].  Unlike
      * createFirstOutput, this methods does not determine the location of the generated files.
      * Instead, a FileCollection has to be supplied.  This allows outputs not created from a task to
      * be added (e.g. Configuration, SourceSet, etc).
