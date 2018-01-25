@@ -22,7 +22,6 @@ import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * A class containing all the resources needed to do a rendering.
@@ -321,7 +320,7 @@ public class RenderResources {
      * @see #resolveValue(ResourceType, String, String, boolean)
      */
     @Deprecated
-    private static final Function<String, String> TOOLS_NS_CONTEXT =
+    private static final ResourceNamespace.Resolver LEGACY_TOOLS_RESOLVER =
             Collections.singletonMap(SdkConstants.TOOLS_NS_NAME, SdkConstants.TOOLS_URI)::get;
 
     /**
@@ -334,7 +333,7 @@ public class RenderResources {
     public ResourceValue resolveValue(
             ResourceType type, String name, String value, boolean isFrameworkValue) {
         ResourceValue resourceValue = new ResourceValue(type, name, value, isFrameworkValue);
-        resourceValue.setNamespaceLookup(TOOLS_NS_CONTEXT);
+        resourceValue.setNamespaceLookup(LEGACY_TOOLS_RESOLVER);
         return resolveResValue(resourceValue);
     }
 

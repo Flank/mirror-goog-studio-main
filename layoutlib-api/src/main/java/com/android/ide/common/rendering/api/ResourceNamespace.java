@@ -19,7 +19,6 @@ import com.android.annotations.Nullable;
 import com.google.common.base.Strings;
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.function.Function;
 
 /**
  * Represents a namespace used by aapt when processing resources.
@@ -49,7 +48,19 @@ public class ResourceNamespace implements Serializable {
      */
     public static final ResourceNamespace TODO = RES_AUTO;
 
-    public static final Function<String, String> EMPTY_NAMESPACE_CONTEXT = s -> null;
+    /**
+     * Logic for looking up namespace prefixes defined in some context.
+     *
+     * @see ResourceNamespace#fromNamespacePrefix(String, ResourceNamespace, Resolver)
+     */
+    @FunctionalInterface
+    public interface Resolver {
+        /** Returns the full URI of an XML namespace for a given prefix, if defined. */
+        @Nullable
+        String prefixToUri(@NonNull String namespacePrefix);
+
+        Resolver EMPTY_RESOLVER = prefix -> null;
+    }
 
     @Nullable private final String packageName;
 
@@ -62,7 +73,7 @@ public class ResourceNamespace implements Serializable {
      * code most likely needs to resolve the short namespace prefix against XML namespaces defined
      * in the given context.
      *
-     * @see #fromNamespacePrefix(String, ResourceNamespace, Function)
+     * @see #fromNamespacePrefix(String, ResourceNamespace, Resolver)
      */
     @NonNull
     public static ResourceNamespace fromPackageName(@NonNull String packageName) {
@@ -94,24 +105,23 @@ public class ResourceNamespace implements Serializable {
      *     null), this is the namespace that will be returned. For example, if an XML file inside
      *     libA (com.lib.a) references "@string/foo", it means the "foo" resource from libA, so the
      *     "com.lib.a" namespace should be passed as the {@code defaultNamespace}.
-     * @param namespaceLookup strategy for mapping short namespace prefixes to namespace URIs as
-     *     used in XML resource files. This should be provided by the XML parser used. For example,
-     *     if the source XML document contained snippet such as {@code
-     *     xmlns:foo="http://schemas.android.com/apk/res/com.foo"}, this {@link Function} should
-     *     return {@code "http://schemas.android.com/apk/res/com.foo"} when applied to argument
-     *     {@code "foo"}.
+     * @param resolver strategy for mapping short namespace prefixes to namespace URIs as used in
+     *     XML resource files. This should be provided by the XML parser used. For example, if the
+     *     source XML document contained snippet such as {@code
+     *     xmlns:foo="http://schemas.android.com/apk/res/com.foo"}, it should return {@code
+     *     "http://schemas.android.com/apk/res/com.foo"} when applied to argument {@code "foo"}.
      * @see com.android.resources.ResourceUrl#namespace
      */
     @Nullable
     public static ResourceNamespace fromNamespacePrefix(
             @Nullable String prefix,
             @NonNull ResourceNamespace defaultNamespace,
-            @NonNull Function<String, String> namespaceLookup) {
+            @NonNull Resolver resolver) {
         if (Strings.isNullOrEmpty(prefix)) {
             return defaultNamespace;
         }
 
-        String uri = namespaceLookup.apply(prefix);
+        String uri = resolver.prefixToUri(prefix);
         if (uri != null) {
             if (uri.equals(SdkConstants.AUTO_URI)) {
                 return RES_AUTO;

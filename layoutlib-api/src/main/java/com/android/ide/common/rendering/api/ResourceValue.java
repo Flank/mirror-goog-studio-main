@@ -22,7 +22,6 @@ import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
-import java.util.function.Function;
 
 /**
  * Represents an android resource with a name and a string value.
@@ -32,7 +31,8 @@ public class ResourceValue extends ResourceReference {
     @Nullable protected String mValue;
 
     @NonNull
-    private Function<String, String> mNamespaceLookup = ResourceNamespace.EMPTY_NAMESPACE_CONTEXT;
+    private ResourceNamespace.Resolver mNamespaceResolver =
+            ResourceNamespace.Resolver.EMPTY_RESOLVER;
 
     /**
      * Constructor still used by layoutlib. Remove ASAP.
@@ -125,7 +125,7 @@ public class ResourceValue extends ResourceReference {
             return null;
         }
 
-        return url.resolve(getNamespace(), mNamespaceLookup);
+        return url.resolve(getNamespace(), mNamespaceResolver);
     }
 
     /**
@@ -162,8 +162,8 @@ public class ResourceValue extends ResourceReference {
      * <p>This method is meant to be called by the XML parser that created this {@link
      * ResourceValue}.
      */
-    public void setNamespaceLookup(@NonNull Function<String, String> namespaceLookup) {
-        this.mNamespaceLookup = namespaceLookup;
+    public void setNamespaceLookup(@NonNull ResourceNamespace.Resolver resolver) {
+        this.mNamespaceResolver = resolver;
     }
 
     @Override
