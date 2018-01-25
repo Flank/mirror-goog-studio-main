@@ -186,7 +186,7 @@ public class ResourceNamespace implements Serializable {
 
     @Override
     public String toString() {
-        return packageName;
+        return "/res/apk/" + packageName;
     }
 
     private static class ResAutoNamespace extends ResourceNamespace {
@@ -202,7 +202,7 @@ public class ResourceNamespace implements Serializable {
 
         @Override
         public String toString() {
-            return "res-auto";
+            return "/apk/res-auto";
         }
 
     }
@@ -220,7 +220,7 @@ public class ResourceNamespace implements Serializable {
 
         @Override
         public String toString() {
-            return "tools";
+            return "/tools";
         }
 
         @Override

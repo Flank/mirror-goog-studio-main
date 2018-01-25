@@ -129,28 +129,47 @@ public abstract class AbstractResourceRepository {
         }
     }
 
-    // TODO: Rename to getResourceItemList?
-    // TODO: namespaces
+    /**
+     * @deprecated
+     * @see #getResourceItems(ResourceNamespace, ResourceType, String)
+     */
     @Nullable
+    @Deprecated // TODO: namespaces
     public List<ResourceItem> getResourceItem(
             @NonNull ResourceType resourceType, @NonNull String resourceName) {
+        List<ResourceItem> items =
+                getResourceItems(ResourceNamespace.TODO, resourceType, resourceName);
+        // That's what the method used to return, let's keep it this way for now.
+        return items.isEmpty() ? null : items;
+    }
+
+    @NonNull
+    public List<ResourceItem> getResourceItems(
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType resourceType,
+            @NonNull String resourceName) {
         synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> map =
-                    getMap(ResourceNamespace.TODO, resourceType, false);
+            ListMultimap<String, ResourceItem> map = getMap(namespace, resourceType, false);
 
             if (map != null) {
                 return map.get(resourceName);
             }
         }
 
-        return null;
+        return Collections.emptyList();
     }
 
     @NonNull
     // TODO: namespaces
     public Collection<String> getItemsOfType(@NonNull ResourceType type) {
+        return getItemsOfType(ResourceNamespace.TODO, type);
+    }
+
+    @NonNull
+    public Collection<String> getItemsOfType(
+            ResourceNamespace namespace, @NonNull ResourceType type) {
         synchronized (ITEM_MAP_LOCK) {
-            Multimap<String, ResourceItem> map = getMap(ResourceNamespace.TODO, type, false);
+            Multimap<String, ResourceItem> map = getMap(namespace, type, false);
             if (map == null) {
                 return Collections.emptyList();
             }
@@ -386,7 +405,10 @@ public abstract class AbstractResourceRepository {
 
                 for (ResourceType type : ResourceType.values()) {
                     // get the local results and put them in the map
-                    table.put(namespace, type, getConfiguredResources(type, referenceConfig));
+                    table.put(
+                            namespace,
+                            type,
+                            getConfiguredResources(namespace, type, referenceConfig));
                 }
             }
             return table;
@@ -399,33 +421,30 @@ public abstract class AbstractResourceRepository {
      * <p>The values returned are taken from the resource files best matching a given {@link
      * FolderConfiguration}.
      *
+     * @param namespace namespaces of the resources
      * @param type the type of the resources.
      * @param referenceConfig the configuration to best match.
      */
     @NonNull
     // TODO: namespaces
     public ResourceValueMap getConfiguredResources(
-            @NonNull ResourceType type, @NonNull FolderConfiguration referenceConfig) {
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType type,
+            @NonNull FolderConfiguration referenceConfig) {
         synchronized (ITEM_MAP_LOCK) {
-            // get the resource item for the given type
-            ListMultimap<String, ResourceItem> items =
-                    getFullTable().get(ResourceNamespace.TODO, type);
+            ListMultimap<String, ResourceItem> items = getFullTable().get(namespace, type);
             if (items == null) {
                 return ResourceValueMap.create();
             }
 
             Set<String> keys = items.keySet();
-
-            // create the map
             ResourceValueMap map = ResourceValueMap.createWithExpectedSize(keys.size());
 
             for (String key : keys) {
                 List<ResourceItem> keyItems = items.get(key);
 
-                // look for the best match for the given configuration
-                // the match has to be of type ResourceFile since that's what the input list contains
-                ResourceItem match =
-                        (ResourceItem) referenceConfig.findMatchingConfigurable(keyItems);
+                // Look for the best match for the given configuration.
+                ResourceItem match = referenceConfig.findMatchingConfigurable(keyItems);
                 if (match != null) {
                     ResourceValue value = match.getResourceValue(isFramework());
                     if (value != null) {
