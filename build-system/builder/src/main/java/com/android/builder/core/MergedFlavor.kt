@@ -103,17 +103,23 @@ class MergedFlavor(
 
     private fun reportErrorWithWorkaround(
             fieldName: String, outputFieldName: String, fieldValue: Any?) {
-        issueReporter.reportError(
-                EvalIssueReporter.Type.GENERIC,
-                """
+        val formattedFieldValue = if (fieldValue is String) {
+            "\"" + fieldValue + "\""
+        } else {
+            fieldValue.toString()
+        }
+
+        val message = """
 $fieldName cannot be set on a mergedFlavor directly.
 $outputFieldName can instead be set for variant outputs using the following syntax:
 android {
     applicationVariants.all { variant ->
         variant.outputs.each { output ->
-            output.$outputFieldName = $fieldValue
+            output.$outputFieldName = $formattedFieldValue
         }
     }
-}""")
+}"""
+
+        issueReporter.reportError(EvalIssueReporter.Type.GENERIC, message)
     }
 }
