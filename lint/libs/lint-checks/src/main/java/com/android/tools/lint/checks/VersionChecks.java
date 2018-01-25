@@ -503,7 +503,7 @@ public class VersionChecks {
                 } else if (name.equals("isAtLeastO")) {
                     return api <= 26;
                 } else if (name.startsWith("isAtLeastP")) {
-                    return api <= 27; // could be higher if there's an OMR1 etc
+                    return api <= 28;
                 }
             }
         }
