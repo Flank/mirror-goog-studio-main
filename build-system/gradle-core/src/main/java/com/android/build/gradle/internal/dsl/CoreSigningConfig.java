@@ -25,6 +25,9 @@ import org.gradle.api.tasks.Optional;
 
 /**
  * A SigningConfig with added annotations to be used with @Nested in a Gradle task.
+ *
+ * <p>Annotations not included for {@link #getKeyPassword()} or {@link #getStorePassword()} in order
+ * to avoid placing users' passwords in the Gradle input cache.
  */
 public interface CoreSigningConfig extends SigningConfig {
 
@@ -33,11 +36,6 @@ public interface CoreSigningConfig extends SigningConfig {
     @InputFile
     @Optional
     File getStoreFile();
-
-    @Override
-    @Nullable
-    @Input
-    String getStorePassword();
 
     @Override
     @Nullable
