@@ -51,7 +51,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
@@ -66,7 +65,6 @@ import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.bundling.Jar;
-import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
@@ -227,7 +225,7 @@ public class ApplicationTaskManager extends TaskManager {
                 ExecutionType.APP_TASK_MANAGER_CREATE_COMPILE_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> addCompileTask(variantScope));
+                () -> createCompileTask(variantScope));
 
         createStripNativeLibraryTask(taskFactory, variantScope);
 
@@ -260,40 +258,6 @@ public class ApplicationTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> createLintTasks(variantScope));
-    }
-
-    private void addCompileTask(@NonNull VariantScope variantScope) {
-        JavaCompile javacTask = createJavacTask(variantScope);
-        VariantScope.Java8LangSupport java8LangSupport = variantScope.getJava8LangSupportType();
-        if (java8LangSupport == VariantScope.Java8LangSupport.INVALID) {
-            return;
-        }
-        // Only warn for users of retrolambda
-        String pluginName = null;
-        if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
-            pluginName = "me.tatarka.retrolambda";
-        }
-
-        if (pluginName != null) {
-            String warningMsg =
-                    String.format(
-                            "One of the plugins you are using supports Java 8 "
-                                    + "language features. To try the support built into"
-                                    + " the Android plugin, remove the following from "
-                                    + "your build.gradle:\n"
-                                    + "    apply plugin: '%s'\n"
-                                    + "To learn more, go to https://d.android.com/r/"
-                                    + "tools/java-8-support-message.html\n",
-                            pluginName);
-
-            androidBuilder
-                    .getIssueReporter()
-                    .reportWarning(EvalIssueReporter.Type.GENERIC, warningMsg);
-        }
-
-        addJavacClassesStream(variantScope);
-        setJavaCompilerTask(javacTask, variantScope);
-        createPostCompilationTasks(variantScope);
     }
 
     /** Create tasks related to creating pure split APKs containing sharded dex files. */

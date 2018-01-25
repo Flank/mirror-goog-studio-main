@@ -207,6 +207,7 @@ import com.android.builder.core.DesugarProcessArgs;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.SyncIssue;
@@ -1659,6 +1660,41 @@ public abstract class TaskManager {
             compileTask.dependsOn(scope.getSourceGenTask());
         }
     }
+
+    protected void createCompileTask(@NonNull VariantScope variantScope) {
+        JavaCompile javacTask = createJavacTask(variantScope);
+        VariantScope.Java8LangSupport java8LangSupport = variantScope.getJava8LangSupportType();
+        if (java8LangSupport == VariantScope.Java8LangSupport.INVALID) {
+            return;
+        }
+        // Only warn for users of retrolambda
+        String pluginName = null;
+        if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
+            pluginName = "me.tatarka.retrolambda";
+        }
+
+        if (pluginName != null) {
+            String warningMsg =
+                    String.format(
+                            "One of the plugins you are using supports Java 8 "
+                                    + "language features. To try the support built into"
+                                    + " the Android plugin, remove the following from "
+                                    + "your build.gradle:\n"
+                                    + "    apply plugin: '%s'\n"
+                                    + "To learn more, go to https://d.android.com/r/"
+                                    + "tools/java-8-support-message.html\n",
+                            pluginName);
+
+            androidBuilder
+                    .getIssueReporter()
+                    .reportWarning(EvalIssueReporter.Type.GENERIC, warningMsg);
+        }
+
+        addJavacClassesStream(variantScope);
+        setJavaCompilerTask(javacTask, variantScope);
+        createPostCompilationTasks(variantScope);
+    }
+
 
     /** Makes the given task the one used by top-level "compile" task. */
     public static void setJavaCompilerTask(

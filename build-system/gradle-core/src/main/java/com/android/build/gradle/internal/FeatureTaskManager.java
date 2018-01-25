@@ -59,7 +59,6 @@ import java.io.File;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.Project;
-import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** TaskManager for creating tasks for feature variants in an Android feature project. */
@@ -286,7 +285,7 @@ public class FeatureTaskManager extends TaskManager {
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_COMPILE_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> addCompileTask(variantScope));
+                () -> createCompileTask(variantScope));
 
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_STRIP_NATIVE_LIBRARY_TASK,
@@ -443,38 +442,6 @@ public class FeatureTaskManager extends TaskManager {
                 mergeManifestsAndroidTask.getName());
 
         return mergeManifestsAndroidTask;
-    }
-
-    private void addCompileTask(@NonNull VariantScope variantScope) {
-        JavaCompile javacTask = createJavacTask(variantScope);
-        VariantScope.Java8LangSupport java8LangSupport = variantScope.getJava8LangSupportType();
-        if (java8LangSupport == VariantScope.Java8LangSupport.INVALID) {
-            return;
-        }
-        // Only warn for users of retrolambda
-        String pluginName = null;
-        if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
-            pluginName = "me.tatarka.retrolambda";
-        }
-
-        if (pluginName != null) {
-            String warningMsg =
-                    String.format(
-                            "One of the plugins you are using supports Java 8 "
-                                    + "language features. To try the support built into"
-                                    + " the Android plugin, remove the following from "
-                                    + "your build.gradle:\n"
-                                    + "    apply plugin: '%s'\n"
-                                    + "To learn more, go to https://d.android.com/r/"
-                                    + "tools/java-8-support-message.html\n",
-                            pluginName);
-
-            androidBuilder.getIssueReporter().reportWarning(Type.GENERIC, warningMsg);
-        }
-
-        addJavacClassesStream(variantScope);
-        setJavaCompilerTask(javacTask, variantScope);
-        createPostCompilationTasks(variantScope);
     }
 
     @Override
