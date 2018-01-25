@@ -42,8 +42,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 /**
@@ -123,47 +121,6 @@ final class Device implements IDevice {
     private int mApiLevel;
     @Nullable private AndroidVersion mVersion;
     private String mName;
-
-    /**
-     * Output receiver for "pm install package.apk" command line.
-     */
-    static final class InstallReceiver extends MultiLineReceiver {
-
-        private static final String SUCCESS_OUTPUT = "Success"; //$NON-NLS-1$
-        private static final Pattern FAILURE_PATTERN = Pattern.compile("Failure\\s+\\[(.*)\\]"); //$NON-NLS-1$
-
-        private String mErrorMessage = null;
-
-        public InstallReceiver() {
-        }
-
-        @Override
-        public void processNewLines(String[] lines) {
-            for (String line : lines) {
-                if (!line.isEmpty()) {
-                    if (line.startsWith(SUCCESS_OUTPUT)) {
-                        mErrorMessage = null;
-                    } else {
-                        Matcher m = FAILURE_PATTERN.matcher(line);
-                        if (m.matches()) {
-                            mErrorMessage = m.group(1);
-                        } else {
-                            mErrorMessage = "Unknown failure (" + line + ")";
-                        }
-                    }
-                }
-            }
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return false;
-        }
-
-        public String getErrorMessage() {
-            return mErrorMessage;
-        }
-    }
 
     /*
      * (non-Javadoc)
@@ -906,9 +863,48 @@ final class Device implements IDevice {
     public void installPackage(String packageFilePath, boolean reinstall,
             String... extraArgs)
             throws InstallException {
+        // Use default basic installReceiver
+        installPackage(packageFilePath, reinstall, new InstallReceiver(), extraArgs);
+    }
+
+    @Override
+    public void installPackage(
+            String packageFilePath,
+            boolean reinstall,
+            InstallReceiver receiver,
+            String... extraArgs)
+            throws InstallException {
+        // Use default values for some timeouts.
+        installPackage(
+                packageFilePath,
+                reinstall,
+                receiver,
+                0L,
+                INSTALL_TIMEOUT_MINUTES,
+                TimeUnit.MINUTES,
+                extraArgs);
+    }
+
+    @Override
+    public void installPackage(
+            String packageFilePath,
+            boolean reinstall,
+            InstallReceiver receiver,
+            long maxTimeout,
+            long maxTimeToOutputResponse,
+            TimeUnit maxTimeUnits,
+            String... extraArgs)
+            throws InstallException {
         try {
             String remoteFilePath = syncPackageToDevice(packageFilePath);
-            installRemotePackage(remoteFilePath, reinstall, extraArgs);
+            installRemotePackage(
+                    remoteFilePath,
+                    reinstall,
+                    receiver,
+                    maxTimeout,
+                    maxTimeToOutputResponse,
+                    maxTimeUnits,
+                    extraArgs);
             removeRemotePackage(remoteFilePath);
         } catch (IOException e) {
             throw new InstallException(e);
@@ -987,8 +983,37 @@ final class Device implements IDevice {
     @Override
     public void installRemotePackage(String remoteFilePath, boolean reinstall,
             String... extraArgs) throws InstallException {
+        installRemotePackage(remoteFilePath, reinstall, new InstallReceiver(), extraArgs);
+    }
+
+    @Override
+    public void installRemotePackage(
+            String remoteFilePath,
+            boolean reinstall,
+            @NonNull InstallReceiver receiver,
+            String... extraArgs)
+            throws InstallException {
+        installRemotePackage(
+                remoteFilePath,
+                reinstall,
+                receiver,
+                0L,
+                INSTALL_TIMEOUT_MINUTES,
+                TimeUnit.MINUTES,
+                extraArgs);
+    }
+
+    @Override
+    public void installRemotePackage(
+            String remoteFilePath,
+            boolean reinstall,
+            @NonNull InstallReceiver receiver,
+            long maxTimeout,
+            long maxTimeToOutputResponse,
+            TimeUnit maxTimeUnits,
+            String... extraArgs)
+            throws InstallException {
         try {
-            InstallReceiver receiver = new InstallReceiver();
             StringBuilder optionString = new StringBuilder();
             if (reinstall) {
                 optionString.append("-r ");
@@ -998,7 +1023,7 @@ final class Device implements IDevice {
             }
             String cmd = String.format("pm install %1$s \"%2$s\"", optionString.toString(),
                     remoteFilePath);
-            executeShellCommand(cmd, receiver, INSTALL_TIMEOUT_MINUTES, TimeUnit.MINUTES);
+            executeShellCommand(cmd, receiver, maxTimeout, maxTimeToOutputResponse, maxTimeUnits);
             String error = receiver.getErrorMessage();
             if (error != null) {
                 throw new InstallException(error);

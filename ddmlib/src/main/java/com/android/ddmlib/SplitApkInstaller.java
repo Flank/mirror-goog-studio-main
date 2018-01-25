@@ -82,7 +82,7 @@ public class SplitApkInstaller {
             String command = mPrefix + " install-" +
                     (allUploadSucceeded ? "commit " : "abandon ") +
                     sessionId;
-            Device.InstallReceiver receiver = new Device.InstallReceiver();
+            InstallReceiver receiver = new InstallReceiver();
             mDevice.executeShellCommand(command, receiver, timeout, unit);
             String errorMessage = receiver.getErrorMessage();
             if (errorMessage != null) {

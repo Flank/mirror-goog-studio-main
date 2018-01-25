@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.log.LogReceiver;
 import com.android.sdklib.AndroidVersion;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -501,6 +500,54 @@ public interface IDevice extends IShellEnabledDevice {
             throws InstallException;
 
     /**
+     * Installs an Android application on device. This is a helper method that combines the
+     * syncPackageToDevice, installRemotePackage, and removePackage steps
+     *
+     * @param packageFilePath the absolute file system path to file on local host to install
+     * @param reinstall set to <code>true</code> if re-install of app should be performed
+     * @param receiver The {@link InstallReceiver} to be used to monitor the install and get final
+     *     status.
+     * @param extraArgs optional extra arguments to pass. See 'adb shell pm install --help' for
+     *     available options.
+     * @throws InstallException if the installation fails.
+     */
+    void installPackage(
+            String packageFilePath,
+            boolean reinstall,
+            InstallReceiver receiver,
+            String... extraArgs)
+            throws InstallException;
+
+    /**
+     * Installs an Android application on device. This is a helper method that combines the
+     * syncPackageToDevice, installRemotePackage, and removePackage steps
+     *
+     * @param packageFilePath the absolute file system path to file on local host to install
+     * @param reinstall set to <code>true</code> if re-install of app should be performed
+     * @param receiver The {@link InstallReceiver} to be used to monitor the install and get final
+     *     status.
+     * @param maxTimeout the maximum timeout for the command to return. A value of 0 means no max
+     *     timeout will be applied.
+     * @param maxTimeToOutputResponse the maximum amount of time during which the command is allowed
+     *     to not output any response. A value of 0 means the method will wait forever (until the
+     *     <var>receiver</var> cancels the execution) for command output and never throw.
+     * @param maxTimeUnits Units for non-zero {@code maxTimeout} and {@code maxTimeToOutputResponse}
+     *     values.
+     * @param extraArgs optional extra arguments to pass. See 'adb shell pm install --help' for
+     *     available options.
+     * @throws InstallException if the installation fails.
+     */
+    void installPackage(
+            String packageFilePath,
+            boolean reinstall,
+            InstallReceiver receiver,
+            long maxTimeout,
+            long maxTimeToOutputResponse,
+            TimeUnit maxTimeUnits,
+            String... extraArgs)
+            throws InstallException;
+
+    /**
      * Installs an Android application made of several APK files (one main and 0..n split packages)
      *
      * @param apks list of apks to install (1 main APK + 0..n split apks)
@@ -534,11 +581,56 @@ public interface IDevice extends IShellEnabledDevice {
      * @param remoteFilePath absolute file path to package file on device
      * @param reinstall set to <code>true</code> if re-install of app should be performed
      * @param extraArgs optional extra arguments to pass. See 'adb shell pm install --help' for
-     *            available options.
+     *     available options.
+     * @throws InstallException if the installation fails.
+     * @see #installRemotePackage(String, boolean, InstallReceiver, long, long, TimeUnit, String...)
+     */
+    void installRemotePackage(String remoteFilePath, boolean reinstall, String... extraArgs)
+            throws InstallException;
+
+    /**
+     * Installs the application package that was pushed to a temporary location on the device.
+     *
+     * @param remoteFilePath absolute file path to package file on device
+     * @param reinstall set to <code>true</code> if re-install of app should be performed
+     * @param receiver The {@link InstallReceiver} to be used to monitor the install and get final
+     *     status.
+     * @param extraArgs optional extra arguments to pass. See 'adb shell pm install --help' for
+     *     available options.
+     * @throws InstallException if the installation fails.
+     * @see #installRemotePackage(String, boolean, InstallReceiver, long, long, TimeUnit, String...)
+     */
+    void installRemotePackage(
+            String remoteFilePath, boolean reinstall, InstallReceiver receiver, String... extraArgs)
+            throws InstallException;
+
+    /**
+     * Installs the application package that was pushed to a temporary location on the device.
+     *
+     * @param remoteFilePath absolute file path to package file on device
+     * @param reinstall set to <code>true</code> if re-install of app should be performed
+     * @param receiver The {@link InstallReceiver} to be used to monitor the install and get final
+     *     status.
+     * @param maxTimeout the maximum timeout for the command to return. A value of 0 means no max
+     *     timeout will be applied.
+     * @param maxTimeToOutputResponse the maximum amount of time during which the command is allowed
+     *     to not output any response. A value of 0 means the method will wait forever (until the
+     *     <var>receiver</var> cancels the execution) for command output and never throw.
+     * @param maxTimeUnits Units for non-zero {@code maxTimeout} and {@code maxTimeToOutputResponse}
+     *     values.
+     * @param extraArgs optional extra arguments to pass. See 'adb shell pm install --help' for
+     *     available options.
      * @throws InstallException if the installation fails.
      */
-    void installRemotePackage(String remoteFilePath, boolean reinstall,
-            String... extraArgs) throws InstallException;
+    void installRemotePackage(
+            String remoteFilePath,
+            boolean reinstall,
+            InstallReceiver receiver,
+            long maxTimeout,
+            long maxTimeToOutputResponse,
+            TimeUnit maxTimeUnits,
+            String... extraArgs)
+            throws InstallException;
 
     /**
      * Removes a file from device.
