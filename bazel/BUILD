@@ -1,5 +1,3 @@
-load("//tools/base/bazel:maven.bzl", "maven_repo")
-
 java_library(
     name = "utils",
     srcs = glob(["src/com/android/tools/utils/*.java"]),
