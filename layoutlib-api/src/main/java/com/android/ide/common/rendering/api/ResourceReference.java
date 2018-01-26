@@ -44,6 +44,16 @@ public class ResourceReference implements Serializable {
         this.mName = name;
     }
 
+    /**
+     * Used by layoutlib still. TODO(namespaces): remove this.
+     *
+     * @deprecated
+     */
+    @Deprecated
+    public ResourceReference(@NonNull String name, boolean isFramework) {
+        this(ResourceNamespace.fromBoolean(isFramework), ResourceType.LAYOUT, name);
+    }
+
     @Deprecated
     public ResourceReference(
             @NonNull ResourceType type, @NonNull String name, boolean isFramework) {
