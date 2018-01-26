@@ -174,10 +174,13 @@ TEST(AtraceManagerTest, ProfilingStartTwice) {
   FakeAtraceManager atrace(test_data.fake_clock);
   EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000,
                                     &test_data.trace_path, &test_data.error));
-  EXPECT_THAT(atrace.GetDumpCount(), Ge(0));
+  atrace.BlockForXTraces(1);
+  EXPECT_THAT(atrace.GetDumpCount(), Ge(1));
   EXPECT_TRUE(atrace.IsProfiling());
   EXPECT_FALSE(atrace.StartProfiling(test_data.app_name, 1000,
                                      &test_data.trace_path, &test_data.error));
+
+  EXPECT_THAT(atrace.GetDumpCount(), Ge(1));
   EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
 }
 

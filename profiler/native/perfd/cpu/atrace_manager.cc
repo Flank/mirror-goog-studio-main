@@ -57,11 +57,12 @@ bool AtraceManager::StartProfiling(const std::string &app_name,
                                    int sampling_interval_us,
                                    std::string *trace_path,
                                    std::string *error) {
-  dumps_created_ = 0;
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   if (is_profiling_) {
     return false;
   }
+
+  dumps_created_ = 0;
   Trace trace("CPU: StartProfiling atrace");
   Log::D("Profiler:Received query to profile %s", app_name.c_str());
 
