@@ -21,6 +21,7 @@ import static java.util.Locale.US;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.ResourceItem;
 import com.android.ide.common.res2.ResourceRepository;
@@ -411,7 +412,7 @@ public class LocaleManager {
                 synchronized (AbstractResourceRepository.ITEM_MAP_LOCK) {
                     // TODO: namespaces
                     ListMultimap<String, ResourceItem> strings =
-                            resources.getItems().get(null, ResourceType.STRING);
+                            resources.getItems().get(ResourceNamespace.TODO, ResourceType.STRING);
                     if (strings != null) {
                         Set<String> specified = Sets.newHashSet();
                         for (ResourceItem item : strings.values()) {

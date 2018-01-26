@@ -16,9 +16,8 @@
 
 package com.android.ide.common.rendering.api;
 
-/**
- * Log class for actions executed through {@link Bridge} and {@link RenderSession}.
- */
+/** Log class for actions executed through {@link Bridge} and {@link RenderSession}. */
+@SuppressWarnings("unused") // Tags are used by layoutlib.
 public class LayoutLog implements ILayoutLog {
     /**
      * Prefix for resource warnings/errors. This is not meant to be used as-is by the Layout
@@ -166,7 +165,8 @@ public class LayoutLog implements ILayoutLog {
      *
      * @deprecated use {@link #fidelityWarning(String, String, Throwable, Object, Object)}
      */
-    public void fidelityWarning(String tag, String message, Throwable throwable, Object data) {
+    public final void fidelityWarning(
+            String tag, String message, Throwable throwable, Object data) {
         fidelityWarning(tag, message, throwable, null, data);
     }
 
@@ -184,6 +184,7 @@ public class LayoutLog implements ILayoutLog {
      *
      * @deprecated use {@link #error(String, String, Throwable, Object, Object)}
      */
+    @SuppressWarnings("MethodOverloadsMethodOfSuperclass")
     public void error(String tag, String message, Throwable throwable, Object data) {
         error(tag, message, throwable, null, data);
     }

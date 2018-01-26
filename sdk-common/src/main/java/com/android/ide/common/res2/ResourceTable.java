@@ -18,21 +18,24 @@ package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ForwardingTable;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
 import java.util.HashMap;
+import java.util.List;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * Mutable, three-dimensional table for storing {@link ResourceItem}, indexed by components of a
- * {@link ResourceUrl}.
+ * {@link ResourceReference}.
  *
- * <p>The first dimension is namespace. Can be taken straight from {@link ResourceUrl}.
+ * <p>The first dimension is namespace. Can be taken straight from {@link ResourceReference}.
  *
  * <p>The second dimension is the type of resources in question.
  *
@@ -40,15 +43,22 @@ import javax.xml.parsers.DocumentBuilderFactory;
  * ResourceItem}s. There can be multiple items defined under the same name with different resource
  * qualifiers.
  *
- * @see NamespaceAwareTable
  * @see com.android.ide.common.resources.configuration.FolderConfiguration
  * @see com.android.ide.common.resources.configuration.ResourceQualifier
  */
 public final class ResourceTable
-        extends NamespaceAwareTable<ResourceType, ListMultimap<String, ResourceItem>> {
+        extends ForwardingTable<
+                ResourceNamespace, ResourceType, ListMultimap<String, ResourceItem>> {
 
-    public ResourceTable() {
-        super(Tables.newCustomTable(new HashMap<>(), () -> Maps.newEnumMap(ResourceType.class)));
+    private final Table<ResourceNamespace, ResourceType, ListMultimap<String, ResourceItem>>
+            delegate =
+                    Tables.newCustomTable(
+                            new HashMap<>(), () -> Maps.newEnumMap(ResourceType.class));
+
+    @Override
+    protected Table<ResourceNamespace, ResourceType, ListMultimap<String, ResourceItem>>
+            delegate() {
+        return delegate;
     }
 
     /**
@@ -57,7 +67,7 @@ public final class ResourceTable
      * Table} reflects reality.
      */
     public void remove(ResourceItem resourceItem) {
-        String namespace = resourceItem.getNamespace();
+        ResourceNamespace namespace = resourceItem.getNamespace();
         ResourceType type = resourceItem.getType();
         String name = resourceItem.getName();
 
@@ -76,7 +86,7 @@ public final class ResourceTable
      */
     @NonNull
     public ListMultimap<String, ResourceItem> getOrPutEmpty(
-            @Nullable String namespace, @NonNull ResourceType resourceType) {
+            @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType) {
         ListMultimap<String, ResourceItem> multimap = get(namespace, resourceType);
         if (multimap == null) {
             multimap = ArrayListMultimap.create();
@@ -96,14 +106,13 @@ public final class ResourceTable
         MergeConsumer<ResourceItem> mergeConsumer =
                 new MergeConsumer<ResourceItem>() {
                     @Override
-                    public void start(@NonNull DocumentBuilderFactory factory)
-                            throws ConsumerException {}
+                    public void start(@NonNull DocumentBuilderFactory factory) {}
 
                     @Override
-                    public void end() throws ConsumerException {}
+                    public void end() {}
 
                     @Override
-                    public void addItem(@NonNull ResourceItem item) throws ConsumerException {
+                    public void addItem(@NonNull ResourceItem item) {
                         if (item.isTouched()) {
                             ListMultimap<String, ResourceItem> multimap =
                                     ResourceTable.this.getOrPutEmpty(
@@ -117,8 +126,7 @@ public final class ResourceTable
 
                     @Override
                     public void removeItem(
-                            @NonNull ResourceItem removedItem, @Nullable ResourceItem replacedBy)
-                            throws ConsumerException {
+                            @NonNull ResourceItem removedItem, @Nullable ResourceItem replacedBy) {
                         ResourceTable.this.remove(removedItem);
                     }
 
@@ -133,5 +141,16 @@ public final class ResourceTable
         } catch (MergingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Nullable
+    public List<ResourceItem> get(@NonNull ResourceReference reference) {
+        ListMultimap<String, ResourceItem> multimap =
+                get(reference.getNamespace(), reference.getResourceType());
+        if (multimap == null) {
+            return null;
+        }
+
+        return multimap.get(reference.getName());
     }
 }

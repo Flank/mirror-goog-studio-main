@@ -46,6 +46,7 @@ import com.android.ide.common.blame.parser.ToolOutputParser;
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser;
 import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
 import com.android.ide.common.process.ProcessOutputHandler;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.res2.CopyToOutputDirectoryResourceCompilationService;
 import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.res2.FileValidity;
@@ -709,7 +710,7 @@ public class MergeResources extends IncrementalTask {
                 ResourceSet resourceSet =
                         new ResourceSet(
                                 MergeManifests.getArtifactName(artifact),
-                                null,
+                                ResourceNamespace.RES_AUTO,
                                 null,
                                 validateEnabled);
                 resourceSet.setFromDependency(true);

@@ -16,28 +16,18 @@
 
 package com.android.ide.common.res2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
+import static org.junit.Assert.*;
 
-import com.android.ide.common.rendering.api.AttrResourceValue;
-import com.android.ide.common.rendering.api.ItemResourceValue;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.rendering.api.*;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Table;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -50,19 +40,19 @@ public class ResourceRepositoryTest extends BaseTestCase {
 
         ResourceTable items = repo.getItems();
 
-        assertEquals(6, items.get(null, ResourceType.DRAWABLE).size());
-        assertEquals(1, items.get(null, ResourceType.RAW).size());
-        assertEquals(4, items.get(null, ResourceType.LAYOUT).size());
-        assertEquals(1, items.get(null, ResourceType.COLOR).size());
-        assertEquals(7, items.get(null, ResourceType.STRING).size());
-        assertEquals(1, items.get(null, ResourceType.STYLE).size());
-        assertEquals(3, items.get(null, ResourceType.ARRAY).size());
-        assertEquals(7, items.get(null, ResourceType.ATTR).size());
-        assertEquals(1, items.get(null, ResourceType.DECLARE_STYLEABLE).size());
-        assertEquals(2, items.get(null, ResourceType.DIMEN).size());
-        assertEquals(1, items.get(null, ResourceType.ID).size());
-        assertEquals(1, items.get(null, ResourceType.INTEGER).size());
-        assertEquals(2, items.get(null, ResourceType.PLURALS).size());
+        assertEquals(6, items.get(RES_AUTO, ResourceType.DRAWABLE).size());
+        assertEquals(1, items.get(RES_AUTO, ResourceType.RAW).size());
+        assertEquals(4, items.get(RES_AUTO, ResourceType.LAYOUT).size());
+        assertEquals(1, items.get(RES_AUTO, ResourceType.COLOR).size());
+        assertEquals(7, items.get(RES_AUTO, ResourceType.STRING).size());
+        assertEquals(1, items.get(RES_AUTO, ResourceType.STYLE).size());
+        assertEquals(3, items.get(RES_AUTO, ResourceType.ARRAY).size());
+        assertEquals(7, items.get(RES_AUTO, ResourceType.ATTR).size());
+        assertEquals(1, items.get(RES_AUTO, ResourceType.DECLARE_STYLEABLE).size());
+        assertEquals(2, items.get(RES_AUTO, ResourceType.DIMEN).size());
+        assertEquals(1, items.get(RES_AUTO, ResourceType.ID).size());
+        assertEquals(1, items.get(RES_AUTO, ResourceType.INTEGER).size());
+        assertEquals(2, items.get(RES_AUTO, ResourceType.PLURALS).size());
     }
 
     @Test
@@ -265,7 +255,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
 
         // checks the initial state of the repo
         ResourceTable items = repo.getItems();
-        ListMultimap<String, ResourceItem> drawables = items.get(null, ResourceType.DRAWABLE);
+        ListMultimap<String, ResourceItem> drawables = items.get(RES_AUTO, ResourceType.DRAWABLE);
         assertNotNull("Drawable null check", drawables);
         assertEquals("Drawable size check", 6, drawables.size());
         verifyResourceExists(repo,
@@ -326,7 +316,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
         // check the new content.
         repo.getItems().update(resourceMerger);
 
-        drawables = items.get(null, ResourceType.DRAWABLE);
+        drawables = items.get(RES_AUTO, ResourceType.DRAWABLE);
         assertNotNull("Drawable null check", drawables);
         assertEquals("Drawable size check", 5, drawables.size());
         verifyResourceExists(repo,
@@ -355,7 +345,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
 
         // checks the initial state of the repo
         ResourceTable items = repo.getItems();
-        ListMultimap<String, ResourceItem> strings = items.get(null, ResourceType.STRING);
+        ListMultimap<String, ResourceItem> strings = items.get(RES_AUTO, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 5, strings.size());
         verifyResourceExists(repo,
@@ -407,7 +397,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
         // check the new content.
         repo.getItems().update(resourceMerger);
 
-        strings = items.get(null, ResourceType.STRING);
+        strings = items.get(RES_AUTO, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 4, strings.size());
         verifyResourceExists(repo,
@@ -435,7 +425,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
 
         // checks the initial state of the repo
         ResourceTable items = repo.getItems();
-        ListMultimap<String, ResourceItem> strings = items.get(null, ResourceType.STRING);
+        ListMultimap<String, ResourceItem> strings = items.get(RES_AUTO, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 2, strings.size());
         verifyResourceExists(repo,
@@ -465,7 +455,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
         // check the new content.
         repo.getItems().update(resourceMerger);
 
-        strings = items.get(null, ResourceType.STRING);
+        strings = items.get(RES_AUTO, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 2, strings.size());
         verifyResourceExists(repo,
@@ -491,7 +481,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
 
         // checks the initial state of the repo
         ResourceTable items = repo.getItems();
-        ListMultimap<String, ResourceItem> layouts = items.get(null, ResourceType.LAYOUT);
+        ListMultimap<String, ResourceItem> layouts = items.get(RES_AUTO, ResourceType.LAYOUT);
         assertNotNull("String null check", layouts);
         assertEquals("String size check", 3, layouts.size());
         verifyResourceExists(repo,
@@ -530,7 +520,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
         // check the new content.
         repo.getItems().update(resourceMerger);
 
-        layouts = items.get(null, ResourceType.LAYOUT);
+        layouts = items.get(RES_AUTO, ResourceType.LAYOUT);
         assertNotNull("String null check", layouts);
         assertEquals("String size check", 3, layouts.size());
         verifyResourceExists(repo,
@@ -557,27 +547,6 @@ public class ResourceRepositoryTest extends BaseTestCase {
     }
 
     /**
-     * Creates a fake merge with given sets.
-     *
-     * the data is an array of sets.
-     *
-     * Each set is [ setName, folder1, folder2, ...]
-     *
-     */
-    private static ResourceMerger createMerger(String[][] data) {
-        ResourceMerger merger = new ResourceMerger(0);
-        for (String[] setData : data) {
-            ResourceSet set = new ResourceSet(setData[0], null, null, true);
-            merger.addDataSet(set);
-            for (int i = 1, n = setData.length; i < n; i++) {
-                set.addSource(new File(setData[i]));
-            }
-        }
-
-        return merger;
-    }
-
-    /**
      * Returns a merger with the baseSet and baseMerge content.
      */
     private static ResourceMerger getBaseResourceMerger()
@@ -589,7 +558,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
 
         RecordingLogger logger = new RecordingLogger();
 
-        ResourceSet overlay = new ResourceSet("overlay", null, null, true);
+        ResourceSet overlay = new ResourceSet("overlay", RES_AUTO, null, true);
         overlay.addSource(new File(root, "overlay"));
         overlay.loadFromFiles(logger);
 
@@ -598,30 +567,6 @@ public class ResourceRepositoryTest extends BaseTestCase {
         ResourceMerger resourceMerger = new ResourceMerger(0);
         resourceMerger.addDataSet(res);
         resourceMerger.addDataSet(overlay);
-
-        return resourceMerger;
-    }
-
-    /**
-     * Returns a merger from incMergeData initialized from the files, not from the merger
-     * state blog.
-     */
-    private static ResourceMerger getIncResourceMerger(String rootName, String... sets)
-            throws MergingException, IOException {
-
-        File root = getIncMergeRoot(rootName);
-        RecordingLogger logger = new RecordingLogger();
-
-        ResourceMerger resourceMerger = new ResourceMerger(0);
-
-        for (String setName : sets) {
-            ResourceSet resourceSet = new ResourceSet(setName, null, null, true);
-            resourceSet.addSource(new File(root, setName));
-            resourceSet.loadFromFiles(logger);
-            checkLogger(logger);
-
-            resourceMerger.addDataSet(resourceSet);
-        }
 
         return resourceMerger;
     }
@@ -669,7 +614,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
             ResourceType resourceType = ResourceType.getEnum(type);
             assertNotNull("Type check for " + resKey, resourceType);
 
-            Multimap<String, ResourceItem> map = items.get(null, resourceType);
+            Multimap<String, ResourceItem> map = items.get(RES_AUTO, resourceType);
             assertNotNull("Map check for " + resKey, map);
 
             Collection<ResourceItem> list = map.get(name);
@@ -687,113 +632,5 @@ public class ResourceRepositoryTest extends BaseTestCase {
 
             assertEquals("Match for " + resKey, 1, found);
         }
-    }
-
-    // This utility method has been pretty handy in tracking down resource repository bugs
-    // so keeping it for future potential use, but in unit test code so no runtime overhead
-    @SuppressWarnings({"deprecation", "ConstantConditions"})
-    public static String dumpRepository(ResourceRepository repository) {
-        ResourceTable table = repository.getItems();
-        Comparator<ResourceItem> comparator =
-                (item1, item2) -> {
-                    assert item1.getType() == item2.getType();
-                    String qualifiers = item2.getSource().getQualifiers();
-                    return item1.getSource().getQualifiers().compareTo(qualifiers);
-                };
-
-        StringBuilder sb = new StringBuilder(5000);
-        sb.append("Resource Map Dump For Repository ").append(repository)
-                .append("\n------------------------------------------------\n");
-        for (Table.Cell<String, ResourceType, ListMultimap<String, ResourceItem>> cell :
-                table.cellSet()) {
-            ResourceType type = cell.getColumnKey();
-            ListMultimap<String, ResourceItem> map = cell.getValue();
-
-            sb.append(type.getName()).append(':').append('\n');
-
-            List<String> keys = new ArrayList<String>(map.keySet());
-            Collections.sort(keys);
-            for (String key : keys) {
-                List<ResourceItem> items = map.get(key);
-                List<ResourceItem> sorted = new ArrayList<ResourceItem>(items);
-                Collections.sort(sorted, comparator);
-                sb.append("  ").append(type.getName()).append(" ").append(key).append(": ");
-                boolean first = true;
-                for (ResourceItem item : sorted) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        sb.append(", ");
-                    }
-                    String qualifiers = item.getSource().getQualifiers();
-                    if (qualifiers.isEmpty()) {
-                        qualifiers = "default";
-                    }
-                    sb.append(qualifiers);
-                }
-
-                if (!sorted.isEmpty()) {
-                    ResourceItem item = sorted.get(0);
-                    ResourceValue resourceValue = item.getResourceValue(repository.isFramework());
-                    if (resourceValue == null) {
-                        sb.append(" <no value found>");
-                    } else {
-                        String value = resourceValue.getValue();
-                        if (value == null || value.isEmpty()) {
-                            if (resourceValue instanceof StyleResourceValue) {
-                                StyleResourceValue srv = (StyleResourceValue) resourceValue;
-                                sb.append("  parentStyle=").append(srv.getParentStyle())
-                                        .append("\n");
-                                for (String name : srv.getNames()) {
-                                    ItemResourceValue value1 = srv.getItem(name, false);
-                                    ItemResourceValue value2 = srv.getItem(name, true);
-                                    if (value1 != null) {
-                                        Boolean framework = false;
-                                        sb.append("    ");
-                                        sb.append(name).append(" ").append(framework).append(" ");
-                                        sb.append(" = ");
-                                        sb.append('"');
-                                        String strValue = value1.getValue();
-                                        if (strValue != null) {
-                                            sb.append(strValue.replace("\n", "\\n"));
-                                        } else {
-                                            sb.append("???");
-                                        }
-                                        sb.append('"');
-                                    }
-                                    if (value2 != null) {
-                                        Boolean framework = true;
-                                        sb.append("    ");
-                                        sb.append(name).append(" ").append(framework).append(" ");
-                                        sb.append(" = ");
-                                        sb.append('"');
-                                        String strValue = value2.getValue();
-                                        if (strValue != null) {
-                                            sb.append(strValue.replace("\n", "\\n"));
-                                        } else {
-                                            sb.append("???");
-                                        }
-                                        sb.append('"');
-                                    }
-                                }
-                            } else {
-                                sb.append(" = \"\"");
-                            }
-                        } else {
-                            sb.append(" = ");
-                            sb.append('"');
-                            sb.append(value.replace("\n", "\\n"));
-                            sb.append('"');
-                        }
-                    }
-                }
-
-                sb.append("\n");
-            }
-
-            sb.append("\n\n");
-        }
-
-        return sb.toString();
     }
 }

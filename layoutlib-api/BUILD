@@ -54,6 +54,8 @@ java_test(
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
         ":tools.layoutlib-api",
+        "//tools/base/common:tools.common",
+        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
     ],
 )

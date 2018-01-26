@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.res2.MergingException;
 import com.android.ide.common.res2.RecordingLogger;
 import com.android.ide.common.res2.ResourceMerger;
@@ -130,7 +131,7 @@ public class TestResourceRepository extends ResourceRepository {
         File resFolder = new File(dir, FD_RES);
 
         ResourceMerger merger = new ResourceMerger(0);
-        ResourceSet resourceSet = new ResourceSet("main", null, null, true);
+        ResourceSet resourceSet = new ResourceSet("main", ResourceNamespace.TODO, null, true);
         resourceSet.addSource(resFolder);
         resourceSet.loadFromFiles(new RecordingLogger());
         merger.addDataSet(resourceSet);

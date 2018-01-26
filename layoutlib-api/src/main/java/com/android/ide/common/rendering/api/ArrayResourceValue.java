@@ -19,7 +19,6 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -32,9 +31,9 @@ public class ArrayResourceValue extends ResourceValue implements Iterable<String
 
     private final List<String> mItems = new ArrayList<>();
 
-    public ArrayResourceValue(@NonNull ResourceUrl url, @Nullable String libraryName) {
-        super(url, null, libraryName);
-        assert url.type == ResourceType.ARRAY;
+    public ArrayResourceValue(@NonNull ResourceReference reference, @Nullable String libraryName) {
+        super(reference, null, libraryName);
+        assert reference.getResourceType() == ResourceType.ARRAY;
     }
 
 

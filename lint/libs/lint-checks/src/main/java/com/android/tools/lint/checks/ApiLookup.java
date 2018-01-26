@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 /**
@@ -696,8 +697,16 @@ public class ApiLookup {
             boolean deleted = file.delete();
             assert deleted : file;
         }
-        ByteSink sink = Files.asByteSink(file);
-        sink.write(b);
+
+        // Write to a different file and swap it in last minute.
+        // This helps in scenarios where multiple simultaneous Gradle
+        // threads are attempting to access the file before it's ready.
+        File tmp = new File(file.getPath() + "." + new Random().nextInt());
+        Files.asByteSink(tmp).write(b);
+        if (!tmp.renameTo(file)) {
+            //noinspection ResultOfMethodCallIgnored
+            tmp.delete();
+        }
     }
 
     private static void writeSinceDeprecatedInRemovedIn(

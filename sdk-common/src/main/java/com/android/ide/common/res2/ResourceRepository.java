@@ -18,6 +18,7 @@ package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.resources.ResourceType;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -35,7 +36,7 @@ public final class ResourceRepository extends AbstractResourceRepository {
     @Nullable
     @Override
     protected ListMultimap<String, ResourceItem> getMap(
-            @Nullable String namespace, @NonNull ResourceType type, boolean create) {
+            @NonNull ResourceNamespace namespace, @NonNull ResourceType type, boolean create) {
         ListMultimap<String, ResourceItem> multimap = resourceTable.get(namespace, type);
         if (multimap == null && create) {
             multimap = ArrayListMultimap.create();
@@ -46,7 +47,7 @@ public final class ResourceRepository extends AbstractResourceRepository {
 
     @NonNull
     @Override
-    public Set<String> getNamespaces() {
+    public Set<ResourceNamespace> getNamespaces() {
         return resourceTable.rowKeySet();
     }
 }

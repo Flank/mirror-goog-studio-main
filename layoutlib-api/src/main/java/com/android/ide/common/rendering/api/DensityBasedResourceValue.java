@@ -19,24 +19,25 @@ package com.android.ide.common.rendering.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.Density;
-import com.android.resources.ResourceUrl;
 
 public class DensityBasedResourceValue extends ResourceValue {
 
     private final Density mDensity;
 
     public DensityBasedResourceValue(
-            @NonNull ResourceUrl url, @Nullable String value, @NonNull Density mDensity) {
-        super(url, value);
+            @NonNull ResourceReference reference,
+            @Nullable String value,
+            @NonNull Density mDensity) {
+        super(reference, value);
         this.mDensity = mDensity;
     }
 
     public DensityBasedResourceValue(
-            @NonNull ResourceUrl url,
+            @NonNull ResourceReference reference,
             @Nullable String value,
             @NonNull Density mDensity,
             @Nullable String libraryName) {
-        super(url, value, libraryName);
+        super(reference, value, libraryName);
         this.mDensity = mDensity;
     }
 

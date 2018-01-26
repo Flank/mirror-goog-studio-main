@@ -39,6 +39,7 @@ import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.MergingException;
 import com.android.ide.common.res2.ResourceFile;
@@ -823,7 +824,11 @@ public class TestLintClient extends LintCliClient {
         ResourceMerger merger = new ResourceMerger(0);
 
         ResourceSet resourceSet =
-                new ResourceSet(project.getName(), null, getProjectResourceLibraryName(), true) {
+                new ResourceSet(
+                        project.getName(),
+                        ResourceNamespace.RES_AUTO,
+                        getProjectResourceLibraryName(),
+                        true) {
                     @Override
                     protected void checkItems() {
                         // No checking in ProjectResources; duplicates can happen, but
@@ -851,7 +856,7 @@ public class TestLintClient extends LintCliClient {
             // to do that here.
             // TODO: namespaces
             Map<ResourceType, ListMultimap<String, ResourceItem>> items =
-                    repository.getItems().row(null);
+                    repository.getItems().row(ResourceNamespace.TODO);
             ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
             if (layouts != null) {
                 for (ResourceItem item : layouts.values()) {
@@ -872,7 +877,12 @@ public class TestLintClient extends LintCliClient {
                                             k -> ArrayListMultimap.create());
                             for (String id : ids) {
                                 ResourceItem idItem =
-                                        new ResourceItem(id, null, ResourceType.ID, null, null);
+                                        new ResourceItem(
+                                                id,
+                                                ResourceNamespace.TODO,
+                                                ResourceType.ID,
+                                                null,
+                                                null);
                                 String qualifiers = file.getParentFile().getName();
                                 if (qualifiers.startsWith("layout-")) {
                                     qualifiers = qualifiers.substring("layout-".length());

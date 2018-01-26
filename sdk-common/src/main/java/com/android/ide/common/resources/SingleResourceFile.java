@@ -19,13 +19,13 @@ package com.android.ide.common.resources;
 import static com.android.SdkConstants.DOT_XML;
 
 import com.android.ide.common.rendering.api.DensityBasedResourceValue;
+import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.io.IAbstractFile;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import com.android.utils.SdkUtils;
 import java.util.Collection;
 import java.util.List;
@@ -65,12 +65,12 @@ public class SingleResourceFile extends ResourceFile {
         if (!ResourceQualifier.isValid(qualifier)) {
             mValue =
                     new ResourceValue(
-                            ResourceUrl.create(mType, getResourceName(mType), isFramework()),
+                            new ResourceReference(mType, getResourceName(mType), isFramework()),
                             file.getOsLocation());
         } else {
             mValue =
                     new DensityBasedResourceValue(
-                            ResourceUrl.create(mType, getResourceName(mType), isFramework()),
+                            new ResourceReference(mType, getResourceName(mType), isFramework()),
                             file.getOsLocation(),
                             qualifier.getValue());
         }

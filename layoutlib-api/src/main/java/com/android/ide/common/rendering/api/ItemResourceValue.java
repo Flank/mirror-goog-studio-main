@@ -16,7 +16,6 @@
 package com.android.ide.common.rendering.api;
 
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 
 /**
  * Represents each item in the android style resource.
@@ -55,7 +54,7 @@ public class ItemResourceValue extends ResourceValue {
         // be reworked, as currently the namespace doesn't match isFramework(). It seems that this
         // should not be represented as a ResourceValue at all.
         super(
-                ResourceUrl.create(ResourceType.STYLE_ITEM, attributeName, isFrameworkStyle),
+                new ResourceReference(ResourceType.STYLE_ITEM, attributeName, isFrameworkStyle),
                 value,
                 libraryName);
         mIsFrameworkAttr = isFrameworkAttr;

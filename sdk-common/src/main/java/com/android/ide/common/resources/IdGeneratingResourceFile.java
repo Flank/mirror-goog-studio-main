@@ -17,6 +17,7 @@
 package com.android.ide.common.resources;
 
 import com.android.ide.common.rendering.api.DensityBasedResourceValue;
+import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ValueResourceParser.IValueResourceRepository;
 import com.android.ide.common.resources.configuration.DensityQualifier;
@@ -24,7 +25,6 @@ import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -193,12 +193,12 @@ public final class IdGeneratingResourceFile extends ResourceFile
         if (!ResourceQualifier.isValid(qualifier)) {
             value =
                     new ResourceValue(
-                            ResourceUrl.create(mFileType, mFileName, isFramework()),
+                            new ResourceReference(mFileType, mFileName, isFramework()),
                             file.getOsLocation());
         } else {
             value =
                     new DensityBasedResourceValue(
-                            ResourceUrl.create(mFileType, mFileName, isFramework()),
+                            new ResourceReference(mFileType, mFileName, isFramework()),
                             file.getOsLocation(),
                             qualifier.getValue());
         }

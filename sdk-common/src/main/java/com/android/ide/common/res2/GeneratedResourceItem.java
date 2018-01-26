@@ -19,6 +19,7 @@ package com.android.ide.common.res2;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.resources.ResourceType;
 import java.io.File;
 import org.w3c.dom.Document;
@@ -37,7 +38,7 @@ public class GeneratedResourceItem extends SourcelessResourceItem {
 
     public GeneratedResourceItem(
             @NonNull String name,
-            @Nullable String namespace,
+            @NonNull ResourceNamespace namespace,
             @NonNull File generatedFile,
             @NonNull ResourceType type,
             @NonNull String qualifiers,

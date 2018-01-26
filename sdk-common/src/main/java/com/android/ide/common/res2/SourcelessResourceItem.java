@@ -17,6 +17,7 @@ package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.ResourceType;
 import org.w3c.dom.Node;
@@ -28,7 +29,7 @@ public abstract class SourcelessResourceItem extends ResourceItem {
 
     public SourcelessResourceItem(
             @NonNull String name,
-            @Nullable String namespace,
+            @NonNull ResourceNamespace namespace,
             @NonNull ResourceType type,
             @Nullable Node value,
             @Nullable String libraryName) {

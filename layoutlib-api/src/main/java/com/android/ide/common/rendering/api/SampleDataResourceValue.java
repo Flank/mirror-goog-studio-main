@@ -17,7 +17,6 @@ package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.resources.ResourceUrl;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -36,8 +35,8 @@ public class SampleDataResourceValue extends ResourceValue {
 
     private final ImmutableList<String> myLines;
 
-    public SampleDataResourceValue(@NonNull ResourceUrl url, @Nullable byte[] content) {
-        super(url, null);
+    public SampleDataResourceValue(@NonNull ResourceReference reference, @Nullable byte[] content) {
+        super(reference, null);
 
         myLines =
                 content != null

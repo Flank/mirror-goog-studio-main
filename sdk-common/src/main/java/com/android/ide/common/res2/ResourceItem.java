@@ -43,6 +43,8 @@ import com.android.ide.common.rendering.api.DeclareStyleableResourceValue;
 import com.android.ide.common.rendering.api.DensityBasedResourceValue;
 import com.android.ide.common.rendering.api.ItemResourceValue;
 import com.android.ide.common.rendering.api.PluralsResourceValue;
+import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.rendering.api.TextResourceValue;
@@ -51,8 +53,8 @@ import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.Density;
 import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import com.android.utils.XmlUtils;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import java.nio.file.Paths;
@@ -84,7 +86,7 @@ public class ResourceItem extends DataItem<ResourceFile>
      * <p>TODO: Make {@link ResourceValue} {@link Configurable} and switch the whole repository
      * system to deal only with {@link ResourceValue} instances.
      */
-    @Nullable private final String mNamespace;
+    @NonNull private final ResourceNamespace mNamespace;
 
     @Nullable private Node mValue;
 
@@ -104,7 +106,7 @@ public class ResourceItem extends DataItem<ResourceFile>
      */
     public ResourceItem(
             @NonNull String name,
-            @Nullable String namespace,
+            @NonNull ResourceNamespace namespace,
             @NonNull ResourceType type,
             @Nullable Node value,
             @Nullable String libraryName) {
@@ -167,8 +169,8 @@ public class ResourceItem extends DataItem<ResourceFile>
      *
      * @return the library name or null.
      */
-    @Nullable
-    public String getNamespace() {
+    @NonNull
+    public ResourceNamespace getNamespace() {
         return mNamespace;
     }
 
@@ -198,18 +200,18 @@ public class ResourceItem extends DataItem<ResourceFile>
     }
 
     /**
-     * Builds a {@link ResourceUrl} that points to this {@link ResourceItem}.
+     * Builds a {@link ResourceReference} that points to this {@link ResourceItem}.
      *
      * <p>For now we pass the "framework" flag like before, but soon we'll start relying only on the
      * namespace. Framework resources are not handled by the res2 system, so this shouldn't matter,
      * but let's take it one step at a time.
      */
     @NonNull
-    public ResourceUrl getResourceUrl(boolean forceFramework) {
+    public ResourceReference getReferenceToSelf(boolean forceFramework) {
         if (forceFramework) {
-            return ResourceUrl.create(mType, getName(), true);
+            return new ResourceReference(mType, getName(), true);
         } else {
-            return ResourceUrl.create(mNamespace, mType, getName());
+            return new ResourceReference(mNamespace, mType, getName());
         }
     }
 
@@ -287,14 +289,14 @@ public class ResourceItem extends DataItem<ResourceFile>
                 if (density != null) {
                     mResourceValue =
                             new DensityBasedResourceValue(
-                                    getResourceUrl(isFrameworks),
+                                    getReferenceToSelf(isFrameworks),
                                     source.getFile().getAbsolutePath(),
                                     density,
                                     mLibraryName);
                 } else {
                     mResourceValue =
                             new ResourceValue(
-                                    getResourceUrl(isFrameworks),
+                                    getReferenceToSelf(isFrameworks),
                                     source.getFile().getAbsolutePath(),
                                     mLibraryName);
                 }
@@ -354,15 +356,12 @@ public class ResourceItem extends DataItem<ResourceFile>
 
     @Override
     public String toString() {
-        return "ResourceItem{"
-                + "mName='"
-                + getName()
-                + '\''
-                + ", mType="
-                + mType
-                + ", mStatus="
-                + getStatus()
-                + '}';
+        return MoreObjects.toStringHelper(this)
+                .add("name", getName())
+                .add("namespace", getNamespace())
+                .add("type", getType())
+                .add("status", getStatus())
+                .toString();
     }
 
     @Override
@@ -396,7 +395,6 @@ public class ResourceItem extends DataItem<ResourceFile>
         final NamedNodeMap attributes = mValue.getAttributes();
 
         ResourceValue value;
-        String name = getName();
 
         switch (mType) {
             case STYLE:
@@ -405,7 +403,9 @@ public class ResourceItem extends DataItem<ResourceFile>
                     value =
                             parseStyleValue(
                                     new StyleResourceValue(
-                                            getResourceUrl(isFrameworks), parent, mLibraryName));
+                                            getReferenceToSelf(isFrameworks),
+                                            parent,
+                                            mLibraryName));
                 } catch (Exception ignored) {
                     return null;
                 }
@@ -414,11 +414,11 @@ public class ResourceItem extends DataItem<ResourceFile>
                 value =
                         parseDeclareStyleable(
                                 new DeclareStyleableResourceValue(
-                                        getResourceUrl(isFrameworks), null, mLibraryName));
+                                        getReferenceToSelf(isFrameworks), null, mLibraryName));
                 break;
             case ARRAY:
                 ArrayResourceValue arrayValue =
-                        new ArrayResourceValue(getResourceUrl(isFrameworks), mLibraryName) {
+                        new ArrayResourceValue(getReferenceToSelf(isFrameworks), mLibraryName) {
                             @Override
                             protected int getDefaultIndex() {
                                 // Allow the user to specify a specific element to use via tools:index
@@ -438,7 +438,8 @@ public class ResourceItem extends DataItem<ResourceFile>
                 break;
             case PLURALS:
                 PluralsResourceValue pluralsResourceValue =
-                        new PluralsResourceValue(getResourceUrl(isFrameworks), null, mLibraryName) {
+                        new PluralsResourceValue(
+                                getReferenceToSelf(isFrameworks), null, mLibraryName) {
                             @Override
                             public String getValue() {
                                 // Allow the user to specify tools:quantity.
@@ -458,13 +459,17 @@ public class ResourceItem extends DataItem<ResourceFile>
             case ATTR:
                 value =
                         parseAttrValue(
-                                new AttrResourceValue(getResourceUrl(isFrameworks), mLibraryName));
+                                new AttrResourceValue(
+                                        getReferenceToSelf(isFrameworks), mLibraryName));
                 break;
             case STRING:
                 value =
                         parseTextValue(
                                 new TextResourceValue(
-                                        getResourceUrl(isFrameworks), null, null, mLibraryName));
+                                        getReferenceToSelf(isFrameworks),
+                                        null,
+                                        null,
+                                        mLibraryName));
                 break;
             case ANIMATOR:
             case DRAWABLE:
@@ -475,16 +480,18 @@ public class ResourceItem extends DataItem<ResourceFile>
             case TRANSITION:
                 value =
                         parseFileName(
-                                new ResourceValue(getResourceUrl(isFrameworks), mLibraryName));
+                                new ResourceValue(getReferenceToSelf(isFrameworks), mLibraryName));
                 break;
             default:
                 value =
                         parseValue(
                                 new ResourceValue(
-                                        getResourceUrl(isFrameworks), null, mLibraryName));
+                                        getReferenceToSelf(isFrameworks), null, mLibraryName));
                 break;
         }
 
+        // TODO(namespaces): precompute this?
+        value.setNamespaceLookup(mValue::lookupNamespaceURI);
         return value;
     }
 
@@ -634,7 +641,7 @@ public class ResourceItem extends DataItem<ResourceFile>
                             parseAttrValue(
                                     child,
                                     new AttrResourceValue(
-                                            ResourceUrl.create(
+                                            new ResourceReference(
                                                     ResourceType.ATTR, name, isFrameworkAttr),
                                             mLibraryName));
                     declareStyleable.addValue(attr);
