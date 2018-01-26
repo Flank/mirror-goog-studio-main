@@ -123,11 +123,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     void setNdkSoFolder(@NonNull Collection<File> ndkSoFolder);
 
     @Nullable
-    File getNdkObjFolder();
-
-    void setNdkObjFolder(@NonNull File ndkObjFolder);
-
-    @Nullable
     File getNdkDebuggableLibraryFolders(@NonNull Abi abi);
 
     void addNdkDebuggableLibraryFolders(@NonNull Abi abi, @NonNull File searchPath);
@@ -159,9 +154,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
             @Nullable Object generatedBytecodeKey);
 
     boolean keepDefaultBootstrap();
-
-    @NonNull
-    File getJavaOutputDir();
 
     @NonNull
     BuildArtifactHolder getBuildArtifactHolder();
@@ -205,18 +197,10 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getRenderscriptLibOutputDir();
 
-    @NonNull
-    File getFinalResourcesDir();
-
     void setResourceOutputDir(@NonNull File resourceOutputDir);
 
     @NonNull
     File getDefaultMergeResourcesOutputDir();
-
-    @NonNull
-    File getMergeResourcesOutputDir();
-
-    void setMergeResourceOutputDir(@Nullable File mergeResourceOutputDir);
 
     @NonNull
     File getCompiledResourcesOutputDir();
@@ -250,9 +234,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getSourceFoldersJavaResDestinationDir();
-
-    @NonNull
-    File getJavaResourcesDestinationDir();
 
     @NonNull
     File getRClassSourceOutputDir();
@@ -297,12 +278,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getLayoutInfoOutputForDataBinding();
 
     @NonNull
-    File getLayoutFolderOutputForDataBinding();
-
-    @NonNull
-    File getLayoutInputFolderForDataBinding();
-
-    @NonNull
     File getBuildFolderForDataBindingCompiler();
 
     @NonNull
@@ -310,9 +285,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getBundleArtifactFolderForDataBinding();
-
-    @NonNull
-    File getProguardOutputFolder();
 
     @NonNull
     File getProcessAndroidResourcesProguardOutputFile();
@@ -349,9 +321,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getAnnotationProcessorOutputDir();
-
-    @NonNull
-    File getMainJarOutputDir();
 
     @NonNull
     File getCompatibleScreensManifestDirectory();
@@ -412,8 +381,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     void setProcessJavaResourcesTask(Sync processJavaResourcesTask);
 
     void setMergeJavaResourcesTask(TransformTask mergeJavaResourcesTask);
-
-    TransformTask getMergeJavaResourcesTask();
 
     @Nullable
     JavaCompile getJavacTask();

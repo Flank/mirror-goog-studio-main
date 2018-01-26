@@ -370,7 +370,6 @@ public abstract class TaskManager {
                 "ndk/" + variantData.getVariantConfiguration().getDirName() + "/lib")));
         File objFolder = new File(scope.getGlobalScope().getIntermediatesDir(),
                 "ndk/" + variantData.getVariantConfiguration().getDirName() + "/obj");
-        scope.setNdkObjFolder(objFolder);
         for (Abi abi : NdkHandler.getAbiList()) {
             scope.addNdkDebuggableLibraryFolders(abi,
                     new File(objFolder, "local/" + abi.getName()));
@@ -1016,7 +1015,6 @@ public abstract class TaskManager {
         }
 
         scope.setResourceOutputDir(mergedOutputDir);
-        scope.setMergeResourceOutputDir(outputLocation);
         return mergeResourcesTask;
     }
 

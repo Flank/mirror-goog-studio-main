@@ -761,17 +761,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.ndkSoFolder = ndkSoFolder;
     }
 
-    @Override
-    @Nullable
-    public File getNdkObjFolder() {
-        return ndkObjFolder;
-    }
-
-    @Override
-    public void setNdkObjFolder(@NonNull File ndkObjFolder) {
-        this.ndkObjFolder = ndkObjFolder;
-    }
-
     /**
      * Return the folder containing the shared object with debugging symbol for the specified ABI.
      */
@@ -921,13 +910,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // default bootclasspath with Desugar. Otherwise, we use android.jar.
         return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR
                 || java8LangSupport == VariantScope.Java8LangSupport.D8;
-    }
-
-    @Override
-    @NonNull
-    public File getJavaOutputDir() {
-        return new File(globalScope.getIntermediatesDir(), "/classes/" +
-                variantData.getVariantConfiguration().getDirName());
     }
 
     @NonNull
@@ -1243,12 +1225,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @Override
-    @NonNull
-    public File getFinalResourcesDir() {
-        return MoreObjects.firstNonNull(resourceOutputDir, getDefaultMergeResourcesOutputDir());
-    }
-
-    @Override
     public void setResourceOutputDir(@NonNull File resourceOutputDir) {
         this.resourceOutputDir = resourceOutputDir;
     }
@@ -1261,20 +1237,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 FD_RES,
                 FD_MERGED,
                 getVariantConfiguration().getDirName());
-    }
-
-    @Override
-    @NonNull
-    public File getMergeResourcesOutputDir() {
-        if (mergeResourceOutputDir == null) {
-            return getDefaultMergeResourcesOutputDir();
-        }
-        return mergeResourceOutputDir;
-    }
-
-    @Override
-    public void setMergeResourceOutputDir(@Nullable File mergeResourceOutputDir) {
-        this.mergeResourceOutputDir = mergeResourceOutputDir;
     }
 
     @Override
@@ -1376,13 +1338,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getJavaResourcesDestinationDir() {
-        return new File(globalScope.getIntermediatesDir(),
-                "javaResources/" + getVariantConfiguration().getDirName());
-    }
-
-    @Override
-    @NonNull
     public File getRClassSourceOutputDir() {
         return new File(globalScope.getGeneratedDir(),
                 "source/r/" + getVariantConfiguration().getDirName());
@@ -1465,18 +1420,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getLayoutFolderOutputForDataBinding() {
-        return dataBindingIntermediate("layout-out");
-    }
-
-    @Override
-    @NonNull
-    public File getLayoutInputFolderForDataBinding() {
-        return dataBindingIntermediate("layout-in");
-    }
-
-    @Override
-    @NonNull
     public File getBuildFolderForDataBindingCompiler() {
         return dataBindingIntermediate("compiler");
     }
@@ -1495,13 +1438,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private File dataBindingIntermediate(String name) {
         return intermediate("data-binding", name);
-    }
-
-    @Override
-    @NonNull
-    public File getProguardOutputFolder() {
-        return new File(globalScope.getBuildDir(), "/" + FD_OUTPUTS + "/mapping/" +
-                getVariantConfiguration().getDirName());
     }
 
     @Override
@@ -1707,14 +1643,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 getVariantConfiguration().getDirName());
     }
 
-    @Override
-    @NonNull
-    public File getMainJarOutputDir() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "packaged",
-                getVariantConfiguration().getDirName());
-    }
     // Tasks getters/setters.
 
     @Override
@@ -1831,17 +1759,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public void setMergeJavaResourcesTask(TransformTask mergeJavaResourcesTask) {
         this.mergeJavaResourcesTask = mergeJavaResourcesTask;
-    }
-
-    /**
-     * Returns the task extracting java resources from libraries and merging those with java
-     * resources coming from the variant's source folders.
-     *
-     * @return the task merging resources.
-     */
-    @Override
-    public TransformTask getMergeJavaResourcesTask() {
-        return mergeJavaResourcesTask;
     }
 
     @Override
