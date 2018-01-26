@@ -55,4 +55,9 @@ public class OptionalLibraryWithProguardTest {
     public void testThatProguardCompilesWithOptionalClasses() throws Exception {
         project.execute("clean", "app:assembleDebug");
     }
+
+    @Test
+    public void testUnitTestWithOptionalClasses() throws Exception {
+        project.execute("clean", "mylibrary:test");
+    }
 }

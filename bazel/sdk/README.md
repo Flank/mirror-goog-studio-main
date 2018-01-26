@@ -180,6 +180,27 @@ $ cd /path/to/studio-master-dev/
 $ bazel run //tools/base/bazel/sdk:dev-sdk-updater
 ```
 
+If this fails with a message like this:
+...
+Continue installing the remaining packages? (y/N): ERROR: Non-zero return code '1' from command: Process exited with status 1.
+
+you can use the following hack to get the SDK installer to skip license acceptance for this operation:
+
+$ diff --git a/sdklib/src/main/java/com/android/sdklib/tool/sdkmanager/InstallAction.java b/sdklib/src/main/java/com/android/sdklib/tool/sdkmanager/InstallAction.java
+index 135593aa56..349cd3f03a 100644
+--- a/sdklib/src/main/java/com/android/sdklib/tool/sdkmanager/InstallAction.java
++++ b/sdklib/src/main/java/com/android/sdklib/tool/sdkmanager/InstallAction.java
+@@ -135,7 +135,7 @@ class InstallAction extends SdkPackagesAction {
+                 l.setAccepted(getRepoManager().getLocalPath(), getSdkHandler().getFileOp());
+             }
+         }
+-        if (!unacceptedLicenses.isEmpty()) {
++        if (false && !unacceptedLicenses.isEmpty()) {
+             List<RemotePackage> acceptedPackages = new ArrayList<>(remotes);
+             Set<RemotePackage> problemPackages = new HashSet<>(unacceptedLicenses.values());
+             getOutputStream()
+
+
 ### Add a new filegroup rule
 
 Open `prebuilts.studio.sdk.BUILD`. Once checked in, this will automatically get copied to

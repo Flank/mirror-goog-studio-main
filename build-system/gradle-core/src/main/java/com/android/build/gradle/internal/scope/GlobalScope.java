@@ -25,6 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
@@ -267,7 +268,7 @@ public class GlobalScope extends TaskOutputHolderImpl
 
     @Override
     public ConfigurableFileCollection addTaskOutput(
-            @NonNull TaskOutputType outputType, @NonNull Object file, @Nullable String taskName)
+            @NonNull ArtifactType outputType, @NonNull Object file, @Nullable String taskName)
             throws TaskOutputAlreadyRegisteredException {
         try {
             return super.addTaskOutput(outputType, file, taskName);

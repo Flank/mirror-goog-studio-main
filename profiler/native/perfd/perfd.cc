@@ -80,8 +80,7 @@ int main(int argc, char** argv) {
   profiler::CpuProfilerComponent cpu_component{&daemon.utilities()};
   daemon.RegisterComponent(&cpu_component);
 
-  profiler::MemoryProfilerComponent memory_component{daemon.sessions(),
-                                                     &daemon.utilities()};
+  profiler::MemoryProfilerComponent memory_component{&daemon.utilities()};
   daemon.RegisterComponent(&memory_component);
 
   profiler::EventProfilerComponent event_component{daemon.utilities()};

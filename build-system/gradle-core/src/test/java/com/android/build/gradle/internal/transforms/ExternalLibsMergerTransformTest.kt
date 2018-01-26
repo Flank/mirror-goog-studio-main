@@ -31,6 +31,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.ArgumentCaptor
+import org.mockito.Captor
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
@@ -41,10 +42,17 @@ import java.util.concurrent.ForkJoinPool
 open class ExternalLibsMergerTransformTest {
 
     @Mock lateinit var context : Context
-    @Mock lateinit var callable : DexMergerTransformCallable
+    @Mock private lateinit var callable : DexMergerTransformCallable
     @Mock lateinit var factory : DexMergerTransformCallable.Factory
     @Rule @JvmField val folder : TemporaryFolder = TemporaryFolder()
-    val messageReceiver = NoOpMessageReceiver()
+    private val messageReceiver = NoOpMessageReceiver()
+
+    @Captor
+    private lateinit var processOutputCaptor : ArgumentCaptor<ProcessOutput>
+    @Captor
+    private lateinit var outputDirCaptor : ArgumentCaptor<File>
+    @Captor
+    private lateinit var outputListCaptor : ArgumentCaptor<MutableIterable<Path>>
 
     @Before
     fun setUp() = MockitoAnnotations.initMocks(this)
@@ -116,11 +124,11 @@ open class ExternalLibsMergerTransformTest {
         Mockito.verifyZeroInteractions(factory)
     }
 
-    internal fun testTransformCall(transformInvocation : TransformInvocation) : List<Path> {
+    private fun testTransformCall(transformInvocation : TransformInvocation) : List<Path> {
 
         val transform = ExternalLibsMergerTransform(DexingType.MONO_DEX,
                 DexMergerTool.D8, 21, true, messageReceiver, factory)
-        
+
         Mockito.`when`(factory.create(
                 Mockito.any(),
                 Mockito.eq(DexingType.MONO_DEX),
@@ -135,10 +143,6 @@ open class ExternalLibsMergerTransformTest {
 
         transform.transform(transformInvocation)
 
-        val processOutputCaptor = ArgumentCaptor.forClass(ProcessOutput::class.java)
-        val outputDirCaptor = ArgumentCaptor.forClass(File::class.java)
-        val outputListCaptor: ArgumentCaptor<MutableIterable<Path>> =
-                ArgumentCaptor.forClass(MutableIterable::class.java) as ArgumentCaptor<MutableIterable<Path>>
         Mockito.verify(factory).create(Mockito.any(),
                 Mockito.eq(DexingType.MONO_DEX),
                 processOutputCaptor.capture(),
@@ -153,11 +157,11 @@ open class ExternalLibsMergerTransformTest {
         return outputListCaptor.allValues.flatten()
     }
 
-    internal fun createJarInput(numberOfJars : Int) : ImmutableList<TransformInput> {
+    private fun createJarInput(numberOfJars : Int) : ImmutableList<TransformInput> {
         return createJarInput(numberOfJars, Status.ADDED)
     }
 
-    internal fun createJarInput(numberOfJars: Int, status : Status) : ImmutableList<TransformInput> {
+    private fun createJarInput(numberOfJars: Int, status : Status) : ImmutableList<TransformInput> {
         val builder = ImmutableList.builder<TransformInput>()
         for (i in 1..numberOfJars) {
             builder.add(TransformTestHelper.SingleJarInputBuilder(folder.newFile())

@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;

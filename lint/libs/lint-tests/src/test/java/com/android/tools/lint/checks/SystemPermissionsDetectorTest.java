@@ -16,7 +16,10 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.SystemPermissionsDetector.SYSTEM_PERMISSIONS;
+
 import com.android.tools.lint.detector.api.Detector;
+import java.util.List;
 
 @SuppressWarnings("javadoc")
 public class SystemPermissionsDetectorTest extends AbstractCheckTest {
@@ -446,5 +449,44 @@ public class SystemPermissionsDetectorTest extends AbstractCheckTest {
                             + "    </application>\n"
                             + "\n"
                             + "</manifest>\n")));
+    }
+
+    public void testMaxVersion() {
+        // Regresion test for 71701793: android.permission.SYSTEM_ALERT_WINDOW causing lint failure
+        lint().files(
+                manifest("" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"com.example.lintbugs\">\n" +
+                        "    <uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\" android:maxSdkVersion=\"21\"/><!-- OK -->\n" +
+                        "    <uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\" android:maxSdkVersion=\"22\"/><!-- OK -->\n" +
+                        "    <uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\" android:maxSdkVersion=\"23\"/><!-- ERROR -->\n" +
+                        "</manifest>"))
+                .run()
+                .expect("" +
+                        "AndroidManifest.xml:6: Error: Permission is only granted to system apps [ProtectedPermissions]\n" +
+                        "    <uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\" android:maxSdkVersion=\"23\"/><!-- ERROR -->\n" +
+                        "                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "1 errors, 0 warnings");
+    }
+
+    public void testDbUpToDate() {
+        PermissionDataGenerator generator = new PermissionDataGenerator();
+        List<Permission> permissions = generator.getSignaturePermissions(false);
+        if (permissions.isEmpty()) {
+            return;
+        }
+        String[] names = generator.getPermissionNames(permissions);
+        generator.assertSamePermissions(SYSTEM_PERMISSIONS, names);
+
+        /*
+        System.out.println("Switch statement for handling signature permissions that " +
+                "weren't signature permissions until a given API level:");
+        System.out.println(generator.getLastNonSignatureApiLevelSwitch());
+
+        System.out.println("Switch statement for handling signature permissions that " +
+                "were signature permissions up until a given version:");
+        System.out.println(generator.getRemovedSignaturePermissionSwitch());
+        */
     }
 }

@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -46,7 +47,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
-import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -108,8 +108,7 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
 
         BuildElements buildElements =
                 ExistingBuildElements.from(
-                        VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
-                        getMergedManifests());
+                        InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS, getMergedManifests());
 
         if (buildElements.isEmpty()) {
             throw new RuntimeException(
@@ -133,7 +132,7 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
                         writeAppInfoClass(applicationId, getSecretToken());
                     }
                 }
-            } catch (ParserConfigurationException | IOException | SAXException e) {
+            } catch (IOException | SAXException e) {
                 throw new BuildException("Failed to inject bootstrapping application", e);
             }
         } else {

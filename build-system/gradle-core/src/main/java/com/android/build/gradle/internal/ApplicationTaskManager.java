@@ -18,7 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import android.databinding.tool.DataBindingBuilder;
@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -310,10 +311,10 @@ public class ApplicationTaskManager extends TaskManager {
         variantScope.getInstantRunTaskManager()
                         .configureBuildInfoWriterTask(buildInfoGeneratorTask);
 
-        TaskOutputHolder.TaskOutputType resourcesWithMainManifest =
+        InternalArtifactType resourcesWithMainManifest =
                 variantScope.getInstantRunBuildContext().useSeparateApkForResources()
-                        ? TaskOutputHolder.TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES
-                        : TaskOutputHolder.TaskOutputType.PROCESSED_RES;
+                        ? InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES
+                        : InternalArtifactType.PROCESSED_RES;
 
         // create the transforms that will create the dependencies apk.
         InstantRunDependenciesApkBuilder dependenciesApkBuilder =
@@ -334,9 +335,9 @@ public class ApplicationTaskManager extends TaskManager {
                                 getIncrementalFolder(
                                         variantScope, "InstantRunDependenciesApkBuilder"),
                                 "aapt-temp"),
-                        variantScope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
+                        variantScope.getOutput(InternalArtifactType.PROCESSED_RES),
                         variantScope.getOutput(resourcesWithMainManifest),
-                        variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST),
+                        variantScope.getOutput(InternalArtifactType.APK_LIST),
                         variantScope.getOutputScope().getMainSplit());
 
         Optional<TransformTask> dependenciesApkBuilderTask =
@@ -365,9 +366,9 @@ public class ApplicationTaskManager extends TaskManager {
                                         variantScope, "InstantRunSliceSplitApkBuilder"),
                                 "aapt-temp"),
                         globalScope.getProjectOptions().get(OptionalBooleanOption.SERIAL_AAPT2),
-                        variantScope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
+                        variantScope.getOutput(InternalArtifactType.PROCESSED_RES),
                         variantScope.getOutput(resourcesWithMainManifest),
-                        variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST),
+                        variantScope.getOutput(InternalArtifactType.APK_LIST),
                         variantScope.getOutputScope().getMainSplit());
 
         Optional<TransformTask> transformTaskAndroidTask =
@@ -431,9 +432,7 @@ public class ApplicationTaskManager extends TaskManager {
                         });
 
         scope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.APP_CLASSES,
-                new File(dest, "classes.jar"),
-                task.getName());
+                InternalArtifactType.APP_CLASSES, new File(dest, "classes.jar"), task.getName());
 
         // create a lighter weight version for usage inside the same module (unit tests basically)
         ConfigurableFileCollection fileCollection =
@@ -501,7 +500,7 @@ public class ApplicationTaskManager extends TaskManager {
                                 variantScope, applicationIdOutputDirectory));
 
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.METADATA_APP_ID_DECLARATION,
+                InternalArtifactType.METADATA_APP_ID_DECLARATION,
                 ApplicationId.getOutputFile(applicationIdOutputDirectory),
                 writeTask.getName());
     }

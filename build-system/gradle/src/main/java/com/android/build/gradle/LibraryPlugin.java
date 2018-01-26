@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.LibraryTaskManager;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.dsl.extensions.LibraryExtensionImpl;
+import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -61,6 +62,7 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> {
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
+            @NonNull SourceSetManager sourceSetManager,
             @NonNull ExtraModelInfo extraModelInfo) {
         return project.getExtensions()
                 .create(
@@ -74,6 +76,7 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> {
                         productFlavorContainer,
                         signingConfigContainer,
                         buildOutputs,
+                        sourceSetManager,
                         extraModelInfo);
     }
 
@@ -138,5 +141,10 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> {
     @Override
     protected TypedPluginDelegate<LibraryExtensionImpl> getTypedDelegate() {
         return new LibPluginDelegate();
+    }
+
+    @Override
+    protected boolean isPackagePublished() {
+        return true;
     }
 }

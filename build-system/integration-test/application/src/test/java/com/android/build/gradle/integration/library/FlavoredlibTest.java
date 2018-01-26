@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.VARIANT;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;

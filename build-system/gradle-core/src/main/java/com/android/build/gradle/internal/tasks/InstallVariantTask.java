@@ -24,8 +24,8 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -100,8 +100,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
 
         List<OutputFile> outputs =
                 ImmutableList.copyOf(
-                        ExistingBuildElements.from(
-                                VariantScope.TaskOutputType.APK, getApkDirectory()));
+                        ExistingBuildElements.from(InternalArtifactType.APK, getApkDirectory()));
 
         install(
                 getProjectName(),
@@ -277,7 +276,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
             installTask.setGroup(TaskManager.INSTALL_GROUP);
             installTask.setProjectName(scope.getGlobalScope().getProject().getName());
             installTask.setVariantData(scope.getVariantData());
-            installTask.setApkDirectory(scope.getOutput(TaskOutputHolder.TaskOutputType.APK));
+            installTask.setApkDirectory(scope.getOutput(InternalArtifactType.APK));
             installTask.setTimeOutInMs(
                     scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
             installTask.setInstallOptions(

@@ -20,11 +20,15 @@ import com.android.build.gradle.internal.dsl.BundleExtensionImpl
 import com.android.tools.build.bundletool.BuildBundleCommand
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
+import java.io.File
+import java.nio.file.Path
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
@@ -46,6 +50,14 @@ open class BundleTask: DefaultTask() {
     val inputModules: Collection<FileCollection>
         get() = extension.modules.values
 
+    @get:Optional
+    @get:InputFile
+    val configFile: File?
+    get() {
+      val file = project.file("BundleConfig.xml")
+      return if (file.exists()) file else null
+    }
+
     @TaskAction
     fun bundle() {
         val bundleFile = outputFile.get().asFile
@@ -63,8 +75,10 @@ open class BundleTask: DefaultTask() {
         val command = BuildBundleCommand.builder()
                 .setOutputPath(bundleFile.toPath())
                 .setModulesPaths(modules)
-                .build()
+        configFile?.let {
+            command.setBundleConfigPath(it.toPath())
+        }
 
-        command.execute()
+        command.build().execute()
     }
 }

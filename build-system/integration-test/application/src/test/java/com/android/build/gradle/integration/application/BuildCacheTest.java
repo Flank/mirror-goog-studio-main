@@ -15,9 +15,9 @@
  */
 
 package com.android.build.gradle.integration.application;
-
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.base.Verify.verifyNotNull;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -57,9 +57,14 @@ public class BuildCacheTest {
 
     @Test
     public void testBuildCacheEnabled() throws Exception {
-        File sharedBuildCacheDir = new File(project.getTestDir(), "build-cache");
+        File sharedBuildCacheDir = FileUtils.join(project.getTestDir(), "shared", "build-cache");
         File privateBuildCacheDir =
                 new File(sharedBuildCacheDir, Version.ANDROID_GRADLE_PLUGIN_VERSION);
+
+        // Make sure the parent directory of the shared build cache directory does not yet exist.
+        // This is to test that the locking mechanism used by the build cache can work with
+        // non-existent directories (and parent directories).
+        assertThat(sharedBuildCacheDir.getParentFile()).doesNotExist();
 
         GradleTaskExecutor executor =
                 project.executor()
@@ -135,9 +140,10 @@ public class BuildCacheTest {
                         + "    compile \"com.android.support:support-v13:${rootProject.supportLibVersion}\"\n"
                         + "}\n");
 
-        File sharedBuildCacheDir = new File(project.getTestDir(), "build-cache");
+        File sharedBuildCacheDir = FileUtils.join(project.getTestDir(), "shared", "build-cache");
         File privateBuildCacheDir =
                 new File(sharedBuildCacheDir, Version.ANDROID_GRADLE_PLUGIN_VERSION);
+        assertThat(sharedBuildCacheDir.getParentFile()).doesNotExist();
 
         project.executor()
                 .with(BooleanOption.ENABLE_BUILD_CACHE, false)

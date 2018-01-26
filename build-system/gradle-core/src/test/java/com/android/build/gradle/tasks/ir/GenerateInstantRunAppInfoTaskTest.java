@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks.ir;
 
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
@@ -26,9 +27,8 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.ide.common.build.ApkInfo;
-import com.android.testutils.truth.MoreTruth;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -99,8 +99,7 @@ public class GenerateInstantRunAppInfoTaskTest {
         new BuildElements(
                         ImmutableList.of(
                                 new BuildOutput(
-                                        TaskOutputHolder.TaskOutputType
-                                                .INSTANT_RUN_MERGED_MANIFESTS,
+                                        InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
                                         apkInfo,
                                         androidManifest)))
                 .save(buildOutputs);
@@ -110,7 +109,7 @@ public class GenerateInstantRunAppInfoTaskTest {
 
         task.generateInfoTask();
 
-        MoreTruth.assertThat(task.getOutputFile()).exists();
+        assertThat(task.getOutputFile()).exists();
         AsmUtils.JarBasedClassReader reader =
                 new AsmUtils.JarBasedClassReader(task.getOutputFile());
         ClassNode classNode = reader.loadClassNode("com.android.tools.ir.server.AppInfo", logger);
@@ -137,7 +136,7 @@ public class GenerateInstantRunAppInfoTaskTest {
         } catch (RuntimeException expected) {
             assertThat(expected.getMessage()).contains("clean");
         }
-        MoreTruth.assertThat(task.getOutputFile()).doesNotExist();
+        assertThat(task.getOutputFile()).doesNotExist();
     }
 
     private static boolean hasField(List<FieldNode> fields, String fieldName) {

@@ -28,8 +28,8 @@ import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ApplicationId;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
@@ -231,7 +231,7 @@ public class FeatureTaskManager extends TaskManager {
                                             .getVariantConfiguration()
                                             .getDirName()),
                             variantScope.getProcessResourcePackageOutputDirectory(),
-                            TaskOutputHolder.TaskOutputType.FEATURE_RESOURCE_PKG,
+                            InternalArtifactType.FEATURE_RESOURCE_PKG,
                             MergeType.MERGE,
                             variantScope.getGlobalScope().getProjectBaseName());
 
@@ -342,7 +342,7 @@ public class FeatureTaskManager extends TaskManager {
                                 variantScope, featureSplitDeclarationOutputDirectory));
 
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.METADATA_FEATURE_DECLARATION,
+                InternalArtifactType.METADATA_FEATURE_DECLARATION,
                 FeatureSplitDeclaration.getOutputFile(featureSplitDeclarationOutputDirectory),
                 featureSplitWriterTaskAndroidTask.getName());
     }
@@ -362,7 +362,7 @@ public class FeatureTaskManager extends TaskManager {
                                 variantScope, applicationIdOutputDirectory));
 
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.FEATURE_APPLICATION_ID_DECLARATION,
+                InternalArtifactType.FEATURE_APPLICATION_ID_DECLARATION,
                 ApplicationId.getOutputFile(applicationIdOutputDirectory),
                 writeTask.getName());
     }
@@ -381,7 +381,7 @@ public class FeatureTaskManager extends TaskManager {
                                 variantScope, featureIdsOutputDirectory));
 
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.FEATURE_IDS_DECLARATION,
+                InternalArtifactType.FEATURE_IDS_DECLARATION,
                 FeatureSplitPackageIds.getOutputFile(featureIdsOutputDirectory),
                 writeTask.getName());
     }
@@ -400,8 +400,7 @@ public class FeatureTaskManager extends TaskManager {
                 taskFactory.create(
                         new FeatureSplitTransitiveDepsWriterTask.ConfigAction(scope, textFile));
 
-        scope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.FEATURE_TRANSITIVE_DEPS, textFile, task.getName());
+        scope.addTaskOutput(InternalArtifactType.FEATURE_TRANSITIVE_DEPS, textFile, task.getName());
     }
 
     /** Creates the merge manifests task. */
@@ -433,13 +432,13 @@ public class FeatureTaskManager extends TaskManager {
                                     variantScope, optionalFeatures.build()));
 
             variantScope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.METADADA_FEATURE_MANIFEST,
+                    InternalArtifactType.METADADA_FEATURE_MANIFEST,
                     variantScope.getManifestOutputDirectory(),
                     mergeManifestsAndroidTask.getName());
         }
 
         variantScope.addTaskOutput(
-                VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
                 variantScope.getInstantRunManifestOutputDirectory(),
                 mergeManifestsAndroidTask.getName());
 
@@ -493,8 +492,7 @@ public class FeatureTaskManager extends TaskManager {
         BundleFeatureClasses task =
                 taskFactory.create(new BundleFeatureClasses.ConfigAction(scope, classesJar));
 
-        scope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.FEATURE_CLASSES, classesJar, task.getName());
+        scope.addTaskOutput(InternalArtifactType.FEATURE_CLASSES, classesJar, task.getName());
     }
 
     @NonNull
@@ -512,7 +510,7 @@ public class FeatureTaskManager extends TaskManager {
                     @NonNull File symbolsWithPackageName,
                     @NonNull File resPackageOutputFolder,
                     boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                    @NonNull MergeType sourceTaskOutputType,
+                    @NonNull MergeType sourceArtifactType,
                     @NonNull String baseName) {
         if (scope.isBaseFeature()) {
             return super.createProcessAndroidResourcesConfigAction(
@@ -521,7 +519,7 @@ public class FeatureTaskManager extends TaskManager {
                     symbolsWithPackageName,
                     resPackageOutputFolder,
                     useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                    sourceTaskOutputType,
+                    sourceArtifactType,
                     baseName);
         } else {
             return new LinkApplicationAndroidResourcesTask.FeatureSplitConfigAction(
@@ -530,7 +528,7 @@ public class FeatureTaskManager extends TaskManager {
                     symbolsWithPackageName,
                     resPackageOutputFolder,
                     useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                    sourceTaskOutputType,
+                    sourceArtifactType,
                     baseName);
         }
     }

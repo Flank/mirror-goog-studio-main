@@ -24,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.DefaultApiVersion;
@@ -91,11 +92,13 @@ public class GradleVariantConfigurationTest {
                 buildType,
                 null,
                 VariantType.DEFAULT,
-                null);
+                null,
+                new FakeEvalIssueReporter());
     }
 
     private CoreProductFlavor mockCoreProductFlavor() {
         CoreProductFlavor coreProductFlavor = mock(CoreProductFlavor.class);
+        when(coreProductFlavor.getName()).thenReturn("mockCoreProductFlavor");
         when(coreProductFlavor.getVectorDrawables())
                 .thenReturn(new DefaultVectorDrawablesOptions());
         when(coreProductFlavor.getMinSdkVersion()).thenReturn(new DefaultApiVersion(16));

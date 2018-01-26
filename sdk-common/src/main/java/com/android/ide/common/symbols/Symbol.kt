@@ -19,6 +19,7 @@ package com.android.ide.common.symbols
 import com.android.annotations.concurrency.Immutable
 import com.android.ide.common.res2.MergingException
 import com.android.ide.common.res2.ValueResourceNameValidator
+import com.android.resources.ResourceAccessibility
 import com.android.resources.ResourceType
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
@@ -56,6 +57,7 @@ import com.google.common.collect.ImmutableList
 @Immutable
 abstract class Symbol protected constructor() {
 
+    abstract val resourceAccessibility : ResourceAccessibility
     abstract val resourceType: ResourceType
     abstract val value:String
     abstract val name:String
@@ -96,7 +98,8 @@ abstract class Symbol protected constructor() {
                 value: String,
                 children: List<String> = ImmutableList.of()): Symbol {
             validateSymbol(name, resourceType)
-            return createSymbol(resourceType,
+            return createSymbol(
+                    resourceType,
                     name,
                     javaType,
                     value,
@@ -106,6 +109,7 @@ abstract class Symbol protected constructor() {
         /**
          * Creates a new symbol without validation. The `name` of the symbol should to be a valid
          * sanitized resource name.
+         * The created resource will have the DEFAULT resource accessibility qualifier.
          *
          * @param resourceType the resource type of the symbol
          * @param name the sanitized name of the symbol
@@ -119,7 +123,38 @@ abstract class Symbol protected constructor() {
                 value: String,
                 children: List<String> = ImmutableList.of()): Symbol {
             return SymbolImpl(
-                    resourceType, value, name, javaType, ImmutableList.copyOf(children))
+                    ResourceAccessibility.DEFAULT,
+                    resourceType,
+                    value,
+                    name,
+                    javaType,
+                    ImmutableList.copyOf(children))
+        }
+
+        /**
+         * Creates a new symbol without validation. The `name` of the symbol should to be a valid
+         * sanitized resource name.
+         *
+         * @param resourceAccessibility the resource accessibility qualifier (e.g. public)
+         * @param resourceType the resource type of the symbol
+         * @param name the sanitized name of the symbol
+         * @param javaType the java type of the symbol
+         * @param value the value of the symbol
+         */
+        @JvmStatic fun createSymbol(
+                resourceAccessibility: ResourceAccessibility,
+                resourceType: ResourceType,
+                name: String,
+                javaType: SymbolJavaType,
+                value: String,
+                children: List<String> = ImmutableList.of()): Symbol {
+            return SymbolImpl(
+                    resourceAccessibility,
+                    resourceType,
+                    value,
+                    name,
+                    javaType,
+                    ImmutableList.copyOf(children))
         }
 
         /**
@@ -142,6 +177,7 @@ abstract class Symbol protected constructor() {
     }
 
     private data class SymbolImpl(
+            override val resourceAccessibility: ResourceAccessibility,
             override val resourceType: ResourceType,
             override val value: String,
             override val name: String,

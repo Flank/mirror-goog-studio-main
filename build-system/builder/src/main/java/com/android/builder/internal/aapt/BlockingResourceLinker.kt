@@ -16,6 +16,7 @@
 
 package com.android.builder.internal.aapt
 
+import com.android.utils.ILogger
 import java.util.concurrent.ExecutionException
 
 interface BlockingResourceLinker {
@@ -28,5 +29,5 @@ interface BlockingResourceLinker {
      * @throws ExecutionException if the command starts successfully but execution fails.
      */
     @Throws(AaptException::class, InterruptedException::class, ExecutionException::class)
-    fun link(request: AaptPackageConfig)
+    fun link(request: AaptPackageConfig, logger: ILogger)
 }

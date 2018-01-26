@@ -126,7 +126,6 @@ MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count,
       track_global_jni_refs_(track_global_jni_refs),
       is_first_tracking_(true),
       is_live_tracking_(false),
-      is_suspended_(false),
       app_id_(getpid()),
       class_class_tag_(-1),
       current_capture_time_ns_(-1),
@@ -135,7 +134,8 @@ MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count,
       total_live_count_(0),
       total_free_count_(0),
       current_class_tag_(kClassStartTag),
-      current_object_tag_(kObjectStartTag) {
+      current_object_tag_(kObjectStartTag),
+      memory_map_(procfs_, getpid()) {
   // Preallocate space for ClassTagMap to avoid rehashing.
   // Rationale: our logic in VMObjectAlloc depends on the map's iterator not
   // getting invalidated, which can happen if a ClassPrepare from a different
@@ -283,7 +283,6 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   }
   Stopwatch stopwatch;
   is_live_tracking_ = true;
-  is_suspended_ = false;
   current_capture_time_ns_ = timestamp;
   total_live_count_ = 0;
   total_free_count_ = 0;
@@ -340,25 +339,6 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
          (long long)stopwatch.GetElapsed());
 }
 
-void MemoryTrackingEnv::ResumeLiveTracking() {
-  std::lock_guard<std::mutex> data_lock(tracking_data_mutex_);
-  std::lock_guard<std::mutex> count_lock(tracking_count_mutex_);
-  if (!is_live_tracking_ || !is_suspended_) {
-    return;
-  }
-  Stopwatch stopwatch;
-  is_suspended_ = false;
-  allocation_event_queue_.Reset();
-  jni_ref_event_queue_.Reset();
-  SendBackClassData();
-  SetAllocationCallbacksStatus(true);
-  if (track_global_jni_refs_) {
-    SetJNIRefCallbacksStatus(true);
-  }
-
-  Log::V("Resuming Tracking took: %lldns", (long long)stopwatch.GetElapsed());
-}
-
 /**
  * Stops live allocation tracking.
  * - Disable allocation callbacks and clear the queued allocation events.
@@ -386,22 +366,6 @@ void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
   }
   known_methods_.clear();
   thread_id_map_.clear();
-}
-
-void MemoryTrackingEnv::SuspendLiveTracking() {
-  std::lock_guard<std::mutex> data_lock(tracking_data_mutex_);
-  std::lock_guard<std::mutex> count_lock(tracking_count_mutex_);
-  if (!is_live_tracking_ || is_suspended_) {
-    return;
-  }
-  is_suspended_ = true;
-  SetAllocationCallbacksStatus(false);
-  if (track_global_jni_refs_) {
-    SetJNIRefCallbacksStatus(false);
-  }
-
-  allocation_event_queue_.Reset();
-  jni_ref_event_queue_.Reset();
 }
 
 /**
@@ -523,14 +487,6 @@ void MemoryTrackingEnv::HandleControlSignal(
     case MemoryControlRequest::kDisableRequest:
       Log::V("Live memory tracking disabled.");
       StopLiveTracking(request->disable_request().timestamp());
-      break;
-    case MemoryControlRequest::kSuspendRequest:
-      Log::V("Live memory tracking suspended.");
-      SuspendLiveTracking();
-      break;
-    case MemoryControlRequest::kResumeRequest:
-      Log::V("Live memory tracking resumed.");
-      ResumeLiveTracking();
       break;
     default:
       Log::V("Unknown memory control signal.");
@@ -678,7 +634,7 @@ void MemoryTrackingEnv::AllocCountWorker(jvmtiEnv* jvmti, JNIEnv* jni,
     int64_t start_time_ns = stopwatch.GetElapsed();
     {
       std::lock_guard<std::mutex> lock(env->tracking_count_mutex_);
-      if (env->is_live_tracking_ && !env->is_suspended_) {
+      if (env->is_live_tracking_) {
         profiler::EnqueueAllocStats(env->total_live_count_,
                                     env->total_free_count_);
       }
@@ -720,7 +676,7 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
 // Drain allocation_event_queue_ and send events to perfd
 void MemoryTrackingEnv::DrainAllocationEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
   std::lock_guard<std::mutex> lock(tracking_data_mutex_);
-  if (!is_live_tracking_ || is_suspended_) {
+  if (!is_live_tracking_) {
     return;
   }
 
@@ -813,9 +769,52 @@ void MemoryTrackingEnv::DrainAllocationEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
   }
 }
 
+void MemoryTrackingEnv::FillJniEventsModuleMap(BatchJNIGlobalRefEvent* batch) {
+  bool memory_map_is_updated = false;
+  std::unordered_set<uintptr_t> reported_regions;
+  MemoryMap::MemoryRegion last_seen_region{"", 0, 0, 0};
+  for (auto& event : batch->events()) {
+    for (uint64_t address : event.backtrace().addresses()) {
+      auto addr = static_cast<uintptr_t>(address);
+      if (last_seen_region.contains(addr)) {
+        // This address belongs to the region we just added to the proto
+        // memory map, no need to go any further.
+        continue;
+      }
+      const MemoryMap::MemoryRegion* region = memory_map_.LookupRegion(addr);
+      if (region == nullptr) {
+        // If the address is not found in the memory map, try to refresh it,
+        // because new module might be loaded, but don't do it more than
+        // once per batch.
+        if (!memory_map_is_updated) {
+          if (!memory_map_.Update()) {
+            // Reading memory map has failed. Report it and keep going,
+            // because the old map is still intact and can still be used.
+            Log::E("Failed reading memory map from: /proc/%d/maps", getpid());
+          }
+          memory_map_is_updated = true;
+        }
+        region = memory_map_.LookupRegion(addr);
+      }
+      if (region != nullptr) {
+        if (reported_regions.insert(region->start_address).second) {
+          // This region hasn't been reported before, we need to add it
+          // to the region map in the batch.
+          auto proto_region = batch->mutable_memory_map()->add_regions();
+          proto_region->set_name(region->name);
+          proto_region->set_start_address(region->start_address);
+          proto_region->set_end_address(region->end_address);
+          proto_region->set_file_offset(region->file_offset);
+        }
+        last_seen_region = *region;
+      }
+    }
+  }
+}
+
 void MemoryTrackingEnv::DrainJNIRefEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
   std::lock_guard<std::mutex> lock(tracking_data_mutex_);
-  if (!is_live_tracking_ || is_suspended_) {
+  if (!is_live_tracking_) {
     return;
   }
 
@@ -831,12 +830,14 @@ void MemoryTrackingEnv::DrainJNIRefEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
     // TODO: populate thread ID here.
 
     if (batch.events_size() >= kDataBatchSize) {
+      FillJniEventsModuleMap(&batch);
       profiler::EnqueueJNIGlobalRefEvents(batch);
       batch.Clear();
     }
   }
 
   if (batch.events_size() > 0) {
+    FillJniEventsModuleMap(&batch);
     profiler::EnqueueJNIGlobalRefEvents(batch);
   }
 }

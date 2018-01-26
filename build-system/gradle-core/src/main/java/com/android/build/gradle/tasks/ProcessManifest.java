@@ -23,9 +23,9 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.TaskContainer;
@@ -104,14 +104,14 @@ public class ProcessManifest extends ManifestProcessorTask {
 
         try {
             new BuildOutput(
-                            TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
+                            InternalArtifactType.MERGED_MANIFESTS,
                             outputScope.getMainSplit(),
                             manifestOutputFile,
                             properties)
                     .save(getManifestOutputDirectory());
 
             new BuildOutput(
-                            TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                            InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
                             outputScope.getMainSplit(),
                             aaptFriendlyManifestOutputFile,
                             properties)

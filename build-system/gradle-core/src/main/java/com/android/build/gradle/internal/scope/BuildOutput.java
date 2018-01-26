@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Joiner;
@@ -45,7 +46,7 @@ import java.util.stream.Collectors;
 // TODO : rename to BuildElement and make it a data class if possible.
 public final class BuildOutput implements OutputFile, Serializable {
 
-    @NonNull private final VariantScope.OutputType outputType;
+    @NonNull private final ArtifactType outputType;
     @NonNull private final ApkInfo apkInfo;
     // the right abstraction would be Path but it's not serializable so reconstruct the Path
     // instance from its String representation.
@@ -53,14 +54,12 @@ public final class BuildOutput implements OutputFile, Serializable {
     @NonNull private final Map<String, String> properties;
 
     public BuildOutput(
-            @NonNull VariantScope.OutputType outputType,
-            @NonNull ApkInfo apkInfo,
-            @NonNull File outputFile) {
+            @NonNull ArtifactType outputType, @NonNull ApkInfo apkInfo, @NonNull File outputFile) {
         this(outputType, apkInfo, outputFile, ImmutableMap.of());
     }
 
     public BuildOutput(
-            @NonNull VariantScope.OutputType outputType,
+            @NonNull ArtifactType outputType,
             @NonNull ApkInfo apkInfo,
             @NonNull File outputFile,
             @NonNull Map<String, String> properties) {
@@ -68,7 +67,7 @@ public final class BuildOutput implements OutputFile, Serializable {
     }
 
     public BuildOutput(
-            @NonNull VariantScope.OutputType outputType,
+            @NonNull ArtifactType outputType,
             @NonNull ApkInfo apkInfo,
             @NonNull Path outputPath,
             @NonNull Map<String, String> properties) {
@@ -83,8 +82,8 @@ public final class BuildOutput implements OutputFile, Serializable {
     }
     /**
      * Returns information about the APK that will package this build output. If the {@link
-     * #getType()} is {@link TaskOutputHolder.TaskOutputType#APK}, this build output is an APK and
-     * this will provide metadata information about that APK.
+     * #getType()} is {@link InternalArtifactType#APK}, this build output is an APK and this will
+     * provide metadata information about that APK.
      *
      * @return APK information about the APK in which this build output will be packaged into.
      */
@@ -105,13 +104,13 @@ public final class BuildOutput implements OutputFile, Serializable {
      * @return the build output type.
      */
     @NonNull
-    public VariantScope.OutputType getType() {
+    public ArtifactType getType() {
         return outputType;
     }
 
     /**
      * Return the final APK type this build output will be packaged in. If the {@link #getType()} is
-     * {@link TaskOutputHolder.TaskOutputType#APK}, this will return the nature of this APK.
+     * {@link InternalArtifactType#APK}, this will return the nature of this APK.
      *
      * @return the apk in which this build output will be packaged in.
      */

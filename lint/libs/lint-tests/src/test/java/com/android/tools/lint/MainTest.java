@@ -556,6 +556,8 @@ public class MainTest extends AbstractCheckTest {
 
                 // Args
                 new String[]{
+                        "--sdk-home", // SDK is needed to get version number for the baseline
+                        TestUtils.getSdk().getPath(),
                         "--text",
                         new File(outputDir, "foo2.text").getPath(),
                         project.getPath(),

@@ -31,7 +31,7 @@ void GraphicsCache::SaveGraphicsDataVector(
   std::lock_guard<std::mutex> graphics_lock(graphics_samples_mutex_);
   for (auto &data : data_vector) {
     GraphicsData *new_sample = graphics_samples_.Add(data);
-    new_sample->mutable_basic_info()->set_end_timestamp(current_time);
+    new_sample->set_end_timestamp(current_time);
   }
 }
 
@@ -41,7 +41,7 @@ void GraphicsCache::LoadGraphicsData(int64_t start_time_exl,
   std::lock_guard<std::mutex> graphics_lock(graphics_samples_mutex_);
   for (size_t i = 0; i < graphics_samples_.size(); ++i) {
     const auto &data = graphics_samples_.Get(i);
-    int64_t timestamp = data.basic_info().end_timestamp();
+    int64_t timestamp = data.end_timestamp();
     // TODO add optimization to skip past already-queried entries if the array
     // gets large.
     if (timestamp > start_time_exl && timestamp <= end_time_inc) {

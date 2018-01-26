@@ -18,6 +18,7 @@ package com.android.build.gradle.options;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.builder.model.AndroidProject;
 
 public enum OptionalBooleanOption implements Option<Boolean> {
@@ -28,9 +29,17 @@ public enum OptionalBooleanOption implements Option<Boolean> {
     ;
 
     @NonNull private final String propertyName;
+    @Nullable private final DeprecationReporter.DeprecationTarget deprecationTarget;
 
     OptionalBooleanOption(@NonNull String propertyName) {
+        this(propertyName, null);
+    }
+
+    OptionalBooleanOption(
+            @NonNull String propertyName,
+            @Nullable DeprecationReporter.DeprecationTarget deprecationTarget) {
         this.propertyName = propertyName;
+        this.deprecationTarget = deprecationTarget;
     }
 
     @Override
@@ -65,5 +74,16 @@ public enum OptionalBooleanOption implements Option<Boolean> {
                         + "' of type '"
                         + value.getClass()
                         + "' as boolean.");
+    }
+
+    @Override
+    public boolean isDeprecated() {
+        return (deprecationTarget != null);
+    }
+
+    @Nullable
+    @Override
+    public DeprecationReporter.DeprecationTarget getDeprecationTarget() {
+        return deprecationTarget;
     }
 }

@@ -21,6 +21,7 @@ import static com.android.ide.common.resources.ResourceResolver.MAX_RESOURCE_IND
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.GuardedBy;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceValueMap;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -54,17 +55,26 @@ public abstract class AbstractResourceRepository {
         return false;
     }
 
+    /**
+     * Returns the fully computed {@link ResourceTable} for this repository.
+     *
+     * <p>The returned object should be accessed only while holding {@link #ITEM_MAP_LOCK}.
+     */
     @NonNull
+    @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
     protected abstract ResourceTable getFullTable();
 
     @Nullable
+    @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
     protected abstract ListMultimap<String, ResourceItem> getMap(
             @Nullable String namespace, @NonNull ResourceType type, boolean create);
 
     @NonNull
+    @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
     public abstract Set<String> getNamespaces();
 
     @NonNull
+    @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
     protected final ListMultimap<String, ResourceItem> getMap(
             @Nullable String namespace, @NonNull ResourceType type) {
         //noinspection ConstantConditions - won't return null if create is false.
@@ -72,12 +82,19 @@ public abstract class AbstractResourceRepository {
     }
 
     @NonNull
+    @GuardedBy("AbstractResourceRepository.ITEM_MAP_LOCK")
     public ResourceTable getItems() {
         return getFullTable();
     }
 
-    /** Lock used to protect map access */
-    protected static final Object ITEM_MAP_LOCK = new Object();
+    /**
+     * The lock used to protect map access.
+     *
+     * <p>In the IDE, this needs to be obtained <b>AFTER</b> the IDE read/write lock, to avoid
+     * deadlocks (most readers of the repository system execute in a read action, so obtaining the
+     * locks in opposite order results in deadlocks).
+     */
+    public static final Object ITEM_MAP_LOCK = new Object();
 
     @NonNull
     public final List<ResourceItem> getAllResourceItems() {
@@ -350,32 +367,35 @@ public abstract class AbstractResourceRepository {
     // TODO: namespaces
     public ResourceValueMap getConfiguredResources(
             @NonNull ResourceType type, @NonNull FolderConfiguration referenceConfig) {
-        // get the resource item for the given type
-        ListMultimap<String, ResourceItem> items = getFullTable().get(null, type);
-        if (items == null) {
-            return ResourceValueMap.create();
-        }
+        synchronized (ITEM_MAP_LOCK) {
+            // get the resource item for the given type
+            ListMultimap<String, ResourceItem> items = getFullTable().get(null, type);
+            if (items == null) {
+                return ResourceValueMap.create();
+            }
 
-        Set<String> keys = items.keySet();
+            Set<String> keys = items.keySet();
 
-        // create the map
-        ResourceValueMap map = ResourceValueMap.createWithExpectedSize(keys.size());
+            // create the map
+            ResourceValueMap map = ResourceValueMap.createWithExpectedSize(keys.size());
 
-        for (String key : keys) {
-            List<ResourceItem> keyItems = items.get(key);
+            for (String key : keys) {
+                List<ResourceItem> keyItems = items.get(key);
 
-            // look for the best match for the given configuration
-            // the match has to be of type ResourceFile since that's what the input list contains
-            ResourceItem match = (ResourceItem) referenceConfig.findMatchingConfigurable(keyItems);
-            if (match != null) {
-                ResourceValue value = match.getResourceValue(isFramework());
-                if (value != null) {
-                    map.put(match.getName(), value);
+                // look for the best match for the given configuration
+                // the match has to be of type ResourceFile since that's what the input list contains
+                ResourceItem match =
+                        (ResourceItem) referenceConfig.findMatchingConfigurable(keyItems);
+                if (match != null) {
+                    ResourceValue value = match.getResourceValue(isFramework());
+                    if (value != null) {
+                        map.put(match.getName(), value);
+                    }
                 }
             }
-        }
 
-        return map;
+            return map;
+        }
     }
 
     @Nullable
@@ -384,21 +404,23 @@ public abstract class AbstractResourceRepository {
             @NonNull ResourceType type,
             @NonNull String name,
             @NonNull FolderConfiguration referenceConfig) {
-        // get the resource item for the given type
-        ListMultimap<String, ResourceItem> items = getMap(null, type, false);
-        if (items == null) {
-            return null;
-        }
+        synchronized (ITEM_MAP_LOCK) {
+            // get the resource item for the given type
+            ListMultimap<String, ResourceItem> items = getMap(null, type, false);
+            if (items == null) {
+                return null;
+            }
 
-        List<ResourceItem> keyItems = items.get(name);
-        if (keyItems == null) {
-            return null;
-        }
+            List<ResourceItem> keyItems = items.get(name);
+            if (keyItems == null) {
+                return null;
+            }
 
-        // look for the best match for the given configuration
-        // the match has to be of type ResourceFile since that's what the input list contains
-        ResourceItem match = (ResourceItem) referenceConfig.findMatchingConfigurable(keyItems);
-        return match != null ? match.getResourceValue(isFramework()) : null;
+            // look for the best match for the given configuration
+            // the match has to be of type ResourceFile since that's what the input list contains
+            ResourceItem match = (ResourceItem) referenceConfig.findMatchingConfigurable(keyItems);
+            return match != null ? match.getResourceValue(isFramework()) : null;
+        }
     }
 
     /** Returns the sorted list of languages used in the resources. */

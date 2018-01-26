@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.transforms.InstantRunDex;
@@ -149,10 +150,10 @@ public class InstantRunTaskManager {
                 transformManager.addTransform(
                         taskFactory, transformVariantScope, instantRunTransform);
 
-        VariantScope.TaskOutputType resourceFilesInputType =
+        InternalArtifactType resourceFilesInputType =
                 variantScope.useResourceShrinker()
-                        ? VariantScope.TaskOutputType.SHRUNK_PROCESSED_RES
-                        : VariantScope.TaskOutputType.PROCESSED_RES;
+                        ? InternalArtifactType.SHRUNK_PROCESSED_RES
+                        : InternalArtifactType.PROCESSED_RES;
 
         if (variantScope.getInstantRunBuildContext().useSeparateApkForResources()) {
             // add a task to create an empty resource with the merged manifest file that

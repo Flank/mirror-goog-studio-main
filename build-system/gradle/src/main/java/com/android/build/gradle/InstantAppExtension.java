@@ -18,10 +18,12 @@ package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -41,6 +43,7 @@ class InstantAppExtension extends BaseExtension {
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
+            @NonNull SourceSetManager sourceSetManager,
             @NonNull ExtraModelInfo extraModelInfo) {
         super(
                 project,
@@ -51,8 +54,8 @@ class InstantAppExtension extends BaseExtension {
                 productFlavors,
                 signingConfigs,
                 buildOutputs,
-                extraModelInfo,
-                false);
+                sourceSetManager,
+                extraModelInfo);
     }
 
     @Override
@@ -61,8 +64,10 @@ class InstantAppExtension extends BaseExtension {
     // FIXME: Remove this dummy when we have simplified the extension.
     @Override
     public String getCompileSdkVersion() {
-        return "android-26";
+        return ANDROID_PLATFORM;
     }
+
+    @VisibleForTesting static final String ANDROID_PLATFORM = "android-27";
 
     @Nullable
     @Override

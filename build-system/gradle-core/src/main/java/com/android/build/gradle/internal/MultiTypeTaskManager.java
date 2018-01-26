@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;

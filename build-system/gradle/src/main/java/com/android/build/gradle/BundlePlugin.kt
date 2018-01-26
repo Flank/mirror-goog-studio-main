@@ -35,6 +35,6 @@ class BundlePlugin: Plugin<Project> {
         // create the single task
         val task = project.tasks.create("bundle", BundleTask::class.java)
         task.extension = extension
-        task.outputFile = project.layout.buildDirectory.file("bundle.zip")
+        task.outputFile = project.layout.buildDirectory.file("bundle.aab")
     }
 }

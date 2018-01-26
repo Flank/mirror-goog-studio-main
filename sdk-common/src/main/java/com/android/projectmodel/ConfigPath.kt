@@ -108,11 +108,13 @@ data class ConfigPath internal constructor(
     /**
      * Returns true iff this filter matches all artifacts in the [ConfigTable].
      */
+    @get:JvmName("matchesEverything")
     val matchesEverything: Boolean = segments == emptyList<String?>()
 
     /**
      * Returns true if this object identifies a non-empty region in the [ConfigTable].
      */
+    @get:JvmName("matchesAnything")
     val matchesAnything: Boolean = segments != null
 
     override fun toString(): String {

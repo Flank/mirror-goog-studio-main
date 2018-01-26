@@ -19,12 +19,17 @@ package com.android.build.gradle.integration.dsl;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.utils.XmlUtils;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
 import org.w3c.dom.Document;
@@ -36,6 +41,62 @@ public class DslTest {
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .create();
+
+    @Test
+    public void autoResConfigDeprecation() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        versionName 'foo'\n"
+                        + "        resConfig 'auto'\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    buildTypes {\n"
+                        + "        debug {\n"
+                        + "            versionNameSuffix '-suffix'\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+        // no need to do a full build. Let's just run the manifest task.
+        ModelContainer<AndroidProject> model =
+                project.model().ignoreSyncIssues().fetchAndroidProjects();
+
+        Collection<SyncIssue> syncIssues = model.getOnlyModel().getSyncIssues();
+        assertThat(syncIssues).isNotEmpty();
+        assertThat(syncIssues).hasSize(1);
+        assertThat(Iterables.getOnlyElement(syncIssues).getMessage())
+                .contains("'ProductFlavor.resConfig' has a value 'auto'");
+    }
+
+    @Test
+    public void autoResConfigsDeprecation() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    defaultConfig {\n"
+                        + "        versionName 'foo'\n"
+                        + "        resConfigs 'xxhdpi', 'auto', 'xhdpi'\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    buildTypes {\n"
+                        + "        debug {\n"
+                        + "            versionNameSuffix '-suffix'\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+        // no need to do a full build. Let's just run the manifest task.
+        ModelContainer<AndroidProject> model =
+                project.model().ignoreSyncIssues().fetchAndroidProjects();
+
+        Collection<SyncIssue> syncIssues = model.getOnlyModel().getSyncIssues();
+        assertThat(syncIssues).isNotEmpty();
+        assertThat(syncIssues).hasSize(1);
+        assertThat(Iterables.getOnlyElement(syncIssues).getMessage())
+                .contains("'ProductFlavor.resConfigs' has a value 'auto'");
+    }
 
     @Test
     public void versionNameSuffix() throws Exception {
@@ -60,7 +121,8 @@ public class DslTest {
                 project.file("build/intermediates/manifests/full/debug/AndroidManifest.xml");
 
         Document document =
-                XmlUtils.parseDocument(Files.toString(manifestFile, StandardCharsets.UTF_8), false);
+                XmlUtils.parseDocument(
+                        Files.asCharSource(manifestFile, StandardCharsets.UTF_8).read(), false);
 
         String versionName =
                 document.getFirstChild()
@@ -130,10 +192,11 @@ public class DslTest {
                         + "}\n";
 
         String actual =
-                Files.toString(
-                        project.file(
-                                "build/generated/source/buildConfig/debug/com/example/helloworld/BuildConfig.java"),
-                        StandardCharsets.UTF_8);
+                Files.asCharSource(
+                                project.file(
+                                        "build/generated/source/buildConfig/debug/com/example/helloworld/BuildConfig.java"),
+                                StandardCharsets.UTF_8)
+                        .read();
 
         assertThat(actual).named("BuildConfig.java").isEqualTo(expected);
     }

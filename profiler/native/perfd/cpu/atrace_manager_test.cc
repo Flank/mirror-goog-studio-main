@@ -15,16 +15,16 @@
  */
 #include "perfd/cpu/atrace_manager.h"
 #include "utils/fake_clock.h"
-
+#include "utils/tokenizer.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <condition_variable>
 #include <queue>
 
 using std::string;
+using testing::EndsWith;
 using testing::Ge;
 using testing::Lt;
-using testing::EndsWith;
 
 namespace profiler {
 
@@ -70,6 +70,26 @@ class FakeAtraceManager final : public AtraceManager {
       write_data_callback_(path, profiling_dumps_captured_);
       profiling_dumps_captured_++;
     }
+  }
+
+  virtual std::string BuildSupportedCategoriesString() override {
+    std::string atrace_output(
+        "gfx - Graphics\n"
+        "    input - Input\n"
+        "     view - View System\n"
+        "  webview - WebView\n"
+        "       wm - Window Manager\n"
+        "       am - Activity Manager\n"
+        "       sm - Sync Manager");
+    std::set<std::string> categories = ParseListCategoriesOutput(atrace_output);
+    EXPECT_THAT(categories, testing::Contains("gfx"));
+    EXPECT_THAT(categories, testing::Contains("wm"));
+    EXPECT_THAT(categories, testing::Contains("am"));
+    EXPECT_THAT(categories, testing::Contains("sm"));
+    EXPECT_THAT(categories, testing::Contains("webview"));
+    EXPECT_THAT(categories, testing::Contains("view"));
+    EXPECT_THAT(categories.find("video"), testing::Eq(categories.end()));
+    return " gfx input view webview wm am sm";
   }
 
   // This function blocks until we have at minimum [count] traces, it is
@@ -127,7 +147,7 @@ TEST(AtraceManagerTest, ProfilingStartStop) {
   EXPECT_TRUE(atrace.IsProfiling());
   atrace.BlockForXTraces(dump_count);
   EXPECT_THAT(atrace.GetDumpCount(), Ge(dump_count));
-  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, &test_data.error));
+  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
   EXPECT_FALSE(atrace.IsProfiling());
 }
 
@@ -142,7 +162,8 @@ TEST(AtraceManagerTest, ProfilerReentrant) {
     EXPECT_TRUE(atrace.IsProfiling());
     atrace.BlockForXTraces(dump_count);
     EXPECT_THAT(atrace.GetDumpCount(), Ge(dump_count));
-    EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, &test_data.error));
+    EXPECT_TRUE(
+        atrace.StopProfiling(test_data.app_name, false, &test_data.error));
     EXPECT_FALSE(atrace.IsProfiling());
     atrace.ResetState();
   }
@@ -157,7 +178,7 @@ TEST(AtraceManagerTest, ProfilingStartTwice) {
   EXPECT_TRUE(atrace.IsProfiling());
   EXPECT_FALSE(atrace.StartProfiling(test_data.app_name, 1000,
                                      &test_data.trace_path, &test_data.error));
-  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, &test_data.error));
+  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
 }
 
 TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
@@ -167,15 +188,15 @@ TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
   // file and write how many dumps have been created to this point to the file.
   FakeAtraceManager atrace(test_data.fake_clock,
                            [](const std::string& path, int count) {
-                             FILE* file = fopen(path.c_str(), "wb");
-                             fwrite(&count, sizeof(int), 1, file);
-                             fclose(file);
-                           });
+    FILE* file = fopen(path.c_str(), "wb");
+    fwrite(&count, sizeof(int), 1, file);
+    fclose(file);
+  });
   EXPECT_TRUE(atrace.StartProfiling(test_data.app_name, 1000,
                                     &test_data.trace_path, &test_data.error));
   EXPECT_THAT(atrace.GetDumpCount(), Ge(0));
   atrace.BlockForXTraces(dump_count);
-  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, &test_data.error));
+  EXPECT_TRUE(atrace.StopProfiling(test_data.app_name, true, &test_data.error));
 
   // On stop profiling get the dump count (this is incremented by stop
   // profiling)

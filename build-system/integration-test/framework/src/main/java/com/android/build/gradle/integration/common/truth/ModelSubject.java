@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.truth.Truth.assert_;
+
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.google.common.truth.FailureStrategy;
@@ -50,6 +53,11 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
             @NonNull FailureStrategy failureStrategy,
             @NonNull AndroidProject subject) {
         super(failureStrategy, subject);
+    }
+
+    @NonNull
+    public static ModelSubject assertThat(@Nullable AndroidProject androidProject) {
+        return assert_().about(ModelSubject.Factory.get()).that(androidProject);
     }
 
     public void hasIssueSize(int size) {

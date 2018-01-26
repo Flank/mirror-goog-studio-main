@@ -712,6 +712,7 @@ public final class AndroidSdkHandler {
                 // mark the cached packages invalid if the sources change.
                 userProvider.setRepoManager(result);
             }
+            result.setFallbackRemoteRepoLoader(new LegacyRemoteRepoLoader());
 
             result.setLocalPath(localLocation);
 
@@ -725,7 +726,6 @@ public final class AndroidSdkHandler {
                 result.loadSynchronously(0, progress, null, null);
             }
 
-            result.setFallbackRemoteRepoLoader(new LegacyRemoteRepoLoader());
             return result;
         }
     }

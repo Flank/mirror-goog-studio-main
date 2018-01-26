@@ -1811,7 +1811,7 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
-            if (name.equals("forEach") && owner.equals("java.lang.Iterable")) {
+            if (name.equals("forEach")) {
                 List<UExpression> arguments = expression.getValueArguments();
                 if (arguments.size() == 1) {
                     PsiType expressionType = arguments.get(0).getExpressionType();
@@ -1871,7 +1871,7 @@ public class ApiDetector extends ResourceXmlDetector
                         int target = getTargetApi(expression);
                         if (target == -1 || api > target) {
                             if (isWithinVersionCheckConditional(
-                                    expression, api)) {
+                                    mContext.getEvaluator(), expression, api)) {
                                 return true;
                             }
                             if (isPrecededByVersionCheckExit(
@@ -2209,7 +2209,7 @@ public class ApiDetector extends ResourceXmlDetector
         LintDriver driver = context.getDriver();
         return driver.isSuppressed(context, UNSUPPORTED, element)
                 || driver.isSuppressed(context, INLINED, element)
-                || isWithinVersionCheckConditional(element, api)
+                || isWithinVersionCheckConditional(context.getEvaluator(), element, api)
                 || isPrecededByVersionCheckExit(element, api);
 
     }

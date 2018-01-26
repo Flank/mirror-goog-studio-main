@@ -18,6 +18,5 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.builder.internal.aapt.AaptOptions
 
-fun com.android.build.gradle.internal.dsl.AaptOptions.convert(): AaptOptions {
-    return AaptOptions(noCompress, failOnMissingConfigEntry, additionalParameters)
-}
+fun com.android.build.gradle.internal.dsl.AaptOptions.convert(): AaptOptions =
+    AaptOptions(noCompress, failOnMissingConfigEntry, additionalParameters, privateRDotJavaPackage)

@@ -23,6 +23,7 @@ import com.android.build.FilterData;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -105,7 +106,7 @@ public class CompatibleScreensManifest extends AndroidVariantTask {
                                             File generatedManifest = generate(apkInfo);
                                             return generatedManifest != null
                                                     ? new BuildOutput(
-                                                            VariantScope.TaskOutputType
+                                                            InternalArtifactType
                                                                     .COMPATIBLE_SCREEN_MANIFEST,
                                                             apkInfo,
                                                             generatedManifest)
@@ -127,7 +128,7 @@ public class CompatibleScreensManifest extends AndroidVariantTask {
         StringBuilder content = new StringBuilder();
         content.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
                 .append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
-                .append("    package=\"\">\n")
+                .append("    package=\"${packageName}\">\n")
                 .append("\n");
         if (minSdkVersion.get() != null) {
             content.append("    <uses-sdk android:minSdkVersion=\"")

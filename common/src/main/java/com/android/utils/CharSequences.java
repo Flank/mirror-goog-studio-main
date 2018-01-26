@@ -320,7 +320,7 @@ public class CharSequences {
         try {
             Reader reader = getReader(xml, true);
             return XmlUtils.parseDocument(reader, namespaceAware);
-        } catch (ParserConfigurationException | SAXException | IOException e) {
+        } catch (SAXException | IOException e) {
             // This method is deliberately silent; will return null.
         }
 

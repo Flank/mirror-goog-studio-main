@@ -16,6 +16,8 @@
 
 package com.android.builder.internal.aapt.v2
 
+import com.android.builder.core.VariantType
+import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.res2.CompileResourceRequest
 import com.android.testutils.NoErrorsOrWarningsLogger
@@ -29,7 +31,6 @@ import org.junit.rules.Timeout
 import java.io.File
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertFailsWith
 
@@ -91,7 +92,13 @@ class Aapt2DaemonManagerTest {
         manager.leaseDaemon().use { process ->
             manager.maintain()
             process.link(
-                    AaptPackageConfig.Builder().build())
+                    AaptPackageConfig(
+                            manifestFile = File(""),
+                            androidJarPath = "",
+                            options = AaptOptions(),
+                            variantType = VariantType.DEFAULT),
+                    NoErrorsOrWarningsLogger()
+            )
             manager.maintain()
         }
         assertThat(daemon.compileRequests).hasSize(1)
@@ -211,7 +218,7 @@ class Aapt2DaemonManagerTest {
 
     @Test
     fun testTimeoutHandling() {
-        val manager = createManager { TimeoutAapt2Daemon() }
+        val manager = createManager { CompileLinkTimeoutAapt2Daemon() }
         manager.leaseDaemon().use { daemon ->
             val exception = assertFailsWith(Aapt2InternalException::class) {
                 daemon.compile(CompileResourceRequest(
@@ -242,24 +249,8 @@ class Aapt2DaemonManagerTest {
             compileRequests.add(request)
         }
 
-        override fun doLink(request: AaptPackageConfig) {
+        override fun doLink(request: AaptPackageConfig, logger: ILogger) {
             linkRequests.add(request)
-        }
-
-        override fun stopProcess() {
-        }
-    }
-
-    class TimeoutAapt2Daemon : Aapt2Daemon("Test Timeout AAPT Daemon", NoErrorsOrWarningsLogger()) {
-        override fun startProcess() {
-        }
-
-        override fun doCompile(request: CompileResourceRequest, logger: ILogger) {
-            throw TimeoutException("Compile timed out")
-        }
-
-        override fun doLink(request: AaptPackageConfig) {
-            throw TimeoutException("Link timed out")
         }
 
         override fun stopProcess() {

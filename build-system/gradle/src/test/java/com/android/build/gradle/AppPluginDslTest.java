@@ -40,7 +40,6 @@ import org.junit.rules.TemporaryFolder;
 
 /** Tests for the public DSL of the App plugin ("com.android.application") */
 public class AppPluginDslTest {
-
     public static final String PROGUARD_DEBUG = "transformClassesAndResourcesWithProguardForDebug";
     public static final String SHRINKER_DEBUG =
             "transformClassesWithAndroidGradleClassShrinkerForDebug";
@@ -125,7 +124,8 @@ public class AppPluginDslTest {
     public void testUseSupportLibrary_default() throws Exception {
         plugin.createAndroidTasks(false);
 
-        assertThat(getTask("mergeDebugResources", MergeResources.class).isDisableVectorDrawables())
+        assertThat(getTask("mergeDebugResources", MergeResources.class)
+                        .isVectorSupportLibraryUsed())
                 .isFalse();
     }
 
@@ -160,15 +160,15 @@ public class AppPluginDslTest {
 
         assertThat(
                         getTask("mergeF1DebugResources", MergeResources.class)
-                                .isDisableVectorDrawables())
+                                .isVectorSupportLibraryUsed())
                 .isFalse();
         assertThat(
                         getTask("mergeF2DebugResources", MergeResources.class)
-                                .isDisableVectorDrawables())
+                                .isVectorSupportLibraryUsed())
                 .isTrue();
         assertThat(
                         getTask("mergeF3DebugResources", MergeResources.class)
-                                .isDisableVectorDrawables())
+                                .isVectorSupportLibraryUsed())
                 .isFalse();
     }
 

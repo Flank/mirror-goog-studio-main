@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <android.arch.paging>
-  <runtime versions="1.0.0-alpha4"/>
-  <common versions="1.0.0-alpha4"/>
+  <runtime versions="1.0.0-alpha4-1"/>
+  <common versions="1.0.0-alpha4-1"/>
 </android.arch.paging>
 

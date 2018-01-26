@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.testing;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.model.AndroidProject.ARTIFACT_UNIT_TEST;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static java.util.stream.Collectors.toList;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;

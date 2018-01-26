@@ -1,5 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:maven.bzl", "maven_pom")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 iml_module(
     name = "studio.testutils",
@@ -23,9 +24,9 @@ iml_module(
     ],
 )
 
-maven_java_library(
+kotlin_library(
     name = "tools.testutils",
-    srcs = glob(["src/main/java/**"]),
+    srcs = ["src/main/java"],
     pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
@@ -48,9 +49,9 @@ maven_pom(
     source = "//tools/buildSrc/base:base_version",
 )
 
-java_test(
+kotlin_test(
     name = "tools.tests",
-    srcs = glob(["src/test/java/**"]),
+    srcs = ["src/test/java"],
     data = ["//prebuilts/studio/sdk:platforms/latest"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
@@ -60,6 +61,8 @@ java_test(
         "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib-jre8",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
         "//tools/base/third_party:org.smali_dexlib2",
     ],
 )

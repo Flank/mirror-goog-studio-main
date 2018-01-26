@@ -15,7 +15,7 @@ buildDir = new File(System.getenv("BUILD_DIR"))
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 27
 
     lintOptions {
         abortOnError false
@@ -42,6 +42,6 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support:appcompat-v7:+'
     testImplementation 'junit:junit:4.12'
 }

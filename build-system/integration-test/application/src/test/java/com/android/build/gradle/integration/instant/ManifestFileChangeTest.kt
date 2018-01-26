@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.OptionalCompilationStep
 import com.android.sdklib.AndroidVersion
+import com.android.sdklib.SdkVersionInfo
 import com.android.tools.ir.client.InstantRunArtifactType
 import com.google.common.truth.Truth.*
 import org.junit.Rule
@@ -60,7 +61,7 @@ class ManifestFileChangeTest(val separateResourcesApk: Boolean) {
 
         val instantRunModel = InstantRunTestUtils.getInstantRunModel(mProject.model().fetchAndroidProjects().onlyModel)
 
-        val androidVersion = AndroidVersion(if (separateResourcesApk) 26 else 21, null)
+        val androidVersion = AndroidVersion(if (separateResourcesApk) SdkVersionInfo.HIGHEST_KNOWN_STABLE_API else 21, null)
         mProject.executor()
                 .withInstantRun(androidVersion, OptionalCompilationStep.FULL_APK)
                 .with(BooleanOption.ENABLE_SEPARATE_APK_RESOURCES, separateResourcesApk)

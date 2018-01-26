@@ -23,12 +23,10 @@ import com.android.ddmlib.FileListingService.FileEntry;
 import com.android.ddmlib.SyncException.SyncError;
 import com.android.ddmlib.utils.ArrayHelper;
 import com.android.ddmlib.utils.FilePermissionUtil;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -515,32 +513,25 @@ public class SyncService {
         byte[] pullResult = new byte[8];
 
         final int timeOut = DdmPreferences.getTimeOut();
+        byte[] remotePathContent = remotePath.getBytes(AdbHelper.DEFAULT_CHARSET);
 
-        try {
-            byte[] remotePathContent = remotePath.getBytes(AdbHelper.DEFAULT_ENCODING);
+        if (remotePathContent.length > REMOTE_PATH_MAX_LENGTH) {
+            throw new SyncException(SyncError.REMOTE_PATH_LENGTH);
+        }
 
-            if (remotePathContent.length > REMOTE_PATH_MAX_LENGTH) {
-                throw new SyncException(SyncError.REMOTE_PATH_LENGTH);
-            }
+        // create the full request message
+        msg = createFileReq(ID_RECV, remotePathContent);
 
-            // create the full request message
-            msg = createFileReq(ID_RECV, remotePathContent);
+        // and send it.
+        AdbHelper.write(mChannel, msg, -1, timeOut);
 
-            // and send it.
-            AdbHelper.write(mChannel, msg, -1, timeOut);
+        // read the result, in a byte array containing 2 ints (id, size)
+        AdbHelper.read(mChannel, pullResult, -1, timeOut);
 
-            // read the result, in a byte array containing 2 ints
-            // (id, size)
-            AdbHelper.read(mChannel, pullResult, -1, timeOut);
-
-            // check we have the proper data back
-            if (!checkResult(pullResult, ID_DATA) &&
-                    !checkResult(pullResult, ID_DONE)) {
-                throw new SyncException(SyncError.TRANSFER_PROTOCOL_ERROR,
-                        readErrorMessage(pullResult, timeOut));
-            }
-        } catch (UnsupportedEncodingException e) {
-            throw new SyncException(SyncError.REMOTE_PATH_ENCODING, e);
+        // check we have the proper data back
+        if (!checkResult(pullResult, ID_DATA) && !checkResult(pullResult, ID_DONE)) {
+            throw new SyncException(
+                    SyncError.TRANSFER_PROTOCOL_ERROR, readErrorMessage(pullResult, timeOut));
         }
 
         // access the destination file
@@ -657,7 +648,7 @@ public class SyncService {
         File f = new File(localPath);
 
         try {
-            byte[] remotePathContent = remotePath.getBytes(AdbHelper.DEFAULT_ENCODING);
+            byte[] remotePathContent = remotePath.getBytes(AdbHelper.DEFAULT_CHARSET);
 
             if (remotePathContent.length > REMOTE_PATH_MAX_LENGTH) {
                 throw new SyncException(SyncError.REMOTE_PATH_LENGTH);
@@ -701,8 +692,6 @@ public class SyncService {
                 // and advance the monitor
                 monitor.advance(readCount);
             }
-        } catch (UnsupportedEncodingException e) {
-            throw new SyncException(SyncError.REMOTE_PATH_ENCODING, e);
         } finally {
             // close the local file
             if (fis != null) {
@@ -807,14 +796,7 @@ public class SyncService {
      * @return the byte[] to send to the device through adb
      */
     private static byte[] createFileReq(byte[] command, String path) {
-        byte[] pathContent = null;
-        try {
-            pathContent = path.getBytes(AdbHelper.DEFAULT_ENCODING);
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
-
-        return createFileReq(command, pathContent);
+        return createFileReq(command, path.getBytes(AdbHelper.DEFAULT_CHARSET));
     }
 
     /**
@@ -838,13 +820,7 @@ public class SyncService {
     private static byte[] createSendFileReq(byte[] command, byte[] path, int mode) {
         // make the mode into a string
         String modeStr = "," + (mode & 0777); // $NON-NLS-1S
-        byte[] modeContent = null;
-        try {
-            modeContent = modeStr.getBytes(AdbHelper.DEFAULT_ENCODING);
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
-
+        byte[] modeContent = modeStr.getBytes(AdbHelper.DEFAULT_CHARSET);
         byte[] array = new byte[8 + path.length + modeContent.length];
 
         System.arraycopy(command, 0, array, 0, 4);

@@ -18,9 +18,10 @@ package com.android.build.gradle.integration.feature;
 
 import static com.android.SdkConstants.FD_RES_CLASS;
 import static com.android.SdkConstants.FD_SOURCE_GEN;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.build.OutputFile;
@@ -85,7 +86,7 @@ public class FeatureTest {
         File featureSplit =
                 featureProject.getIntermediateFile(
                         "feature-split", "declaration", "feature", "release", "feature-split.json");
-        assertThat(featureSplit.exists());
+        assertThat(featureSplit).exists();
         FeatureSplitDeclaration featureSplitDeclaration =
                 FeatureSplitDeclaration.load(featureSplit);
         assertThat(featureSplitDeclaration).isNotNull();
@@ -95,7 +96,7 @@ public class FeatureTest {
         File featureManifest =
                 featureProject.getIntermediateFile(
                         "manifests", "full", "feature", "release", "AndroidManifest.xml");
-        assertThat(featureManifest.exists());
+        assertThat(featureManifest).exists();
 
         assertThat(featureManifest)
                 .containsAllOf(
@@ -148,7 +149,7 @@ public class FeatureTest {
         File idsList =
                 baseProject.getIntermediateFile(
                         "feature-split", "ids", "feature", "debug", "package_ids.json");
-        assertThat(idsList.exists());
+        assertThat(idsList).exists();
         FeatureSplitPackageIds packageIds = FeatureSplitPackageIds.load(idsList);
         assertThat(packageIds).isNotNull();
         assertThat(packageIds.getIdFor(":feature")).isEqualTo(FeatureSplitPackageIds.BASE_ID);
@@ -157,7 +158,7 @@ public class FeatureTest {
         File baseFeatureManifest =
                 baseProject.getIntermediateFile(
                         "manifests", "full", "feature", "release", "AndroidManifest.xml");
-        assertThat(baseFeatureManifest.exists());
+        assertThat(baseFeatureManifest).exists();
         assertThat(baseFeatureManifest)
                 .containsAllOf(
                         "<meta-data",
@@ -327,7 +328,6 @@ public class FeatureTest {
         multi = sProject.model().fetchMulti(ProjectBuildOutput.class);
 
         assertThat(assembleDebug.getNotUpToDateTasks()).contains(":feature:assembleDebug");
-        assertThat(assembleDebug.getUpToDateTasks().contains(":feature:assembleRelease"));
         assertThat(assembleDebug.getNotUpToDateTasks()).contains(":baseFeature:assembleDebug");
 
         Map<String, File> modifiedApks =

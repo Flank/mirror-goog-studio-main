@@ -50,6 +50,8 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
 
     @NonNull private final AaptOptions.Namespacing namespacing;
 
+    @Nullable private final String privateRDotJavaPackage;
+
     public static AaptOptions create(
             @NonNull com.android.build.gradle.internal.dsl.AaptOptions aaptOptions) {
         return new AaptOptionsImpl(
@@ -59,12 +61,18 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
                 aaptOptions.getAdditionalParameters(),
                 Boolean.TRUE.equals(aaptOptions.getNamespaced())
                         ? Namespacing.REQUIRED
-                        : Namespacing.DISABLED);
+                        : Namespacing.DISABLED,
+                aaptOptions.getPrivateRDotJavaPackage());
     }
 
     public static AaptOptions createDummy() {
         return new AaptOptionsImpl(
-                "", Collections.emptyList(), false, Collections.emptyList(), Namespacing.DISABLED);
+                "",
+                Collections.emptyList(),
+                false,
+                Collections.emptyList(),
+                Namespacing.DISABLED,
+                null);
     }
 
     public AaptOptionsImpl(
@@ -72,7 +80,8 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
             @Nullable Collection<String> noCompress,
             boolean failOnMissingConfigEntry,
             @Nullable List<String> additionalParameters,
-            @NonNull Namespacing namespacing) {
+            @NonNull Namespacing namespacing,
+            @Nullable String privateRDotJavaPackage) {
         this.ignoreAssets = ignoreAssets;
         this.failOnMissingConfigEntry = failOnMissingConfigEntry;
         this.noCompress =
@@ -80,6 +89,7 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
         this.additionalParameters =
                 additionalParameters == null ? ImmutableList.of() : additionalParameters;
         this.namespacing = namespacing;
+        this.privateRDotJavaPackage = privateRDotJavaPackage;
     }
 
     @Nullable
@@ -111,6 +121,12 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
         return namespacing;
     }
 
+    @Nullable
+    @Override
+    public String getPrivateRDotJavaPackage() {
+        return privateRDotJavaPackage;
+    }
+
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("ignoreAssets", ignoreAssets)
@@ -118,6 +134,7 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
                 .add("failOnMissingConfigEntry", failOnMissingConfigEntry)
                 .add("additionalParameters", additionalParameters)
                 .add("namespacing", namespacing)
+                .add("privateRDotJavaPackage", privateRDotJavaPackage)
                 .toString();
     }
 
@@ -134,7 +151,8 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
                 && Objects.equals(ignoreAssets, that.ignoreAssets)
                 && Objects.equals(noCompress, that.noCompress)
                 && Objects.equals(additionalParameters, that.additionalParameters)
-                && namespacing == that.namespacing;
+                && namespacing == that.namespacing
+                && Objects.equals(privateRDotJavaPackage, that.privateRDotJavaPackage);
     }
 
     @Override
@@ -144,6 +162,7 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
                 noCompress,
                 failOnMissingConfigEntry,
                 additionalParameters,
-                namespacing);
+                namespacing,
+                privateRDotJavaPackage);
     }
 }

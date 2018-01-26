@@ -1,9 +1,9 @@
 package com.android.build.gradle.integration.testing;
 
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
@@ -49,9 +49,7 @@ public class SeparateTestModuleWithVariantsTest {
         addInstrumentationToManifest();
         project.execute("clean", ":test:assembleDebug");
 
-        TruthHelper.assertThat(
-                        testProject.file(
-                                "build/intermediates/manifests/full/debug/AndroidManifest.xml"))
+        assertThat(testProject.file("build/intermediates/manifests/full/debug/AndroidManifest.xml"))
                 .containsAllOf(
                         "package=\"com.example.android.testing.blueprint.test\"",
                         "android:name=\"android.support.test.runner.AndroidJUnitRunner\"",
@@ -63,9 +61,7 @@ public class SeparateTestModuleWithVariantsTest {
         GradleTestProject testProject = project.getSubproject("test");
         project.execute("clean", ":test:assembleDebug");
 
-        TruthHelper.assertThat(
-                        testProject.file(
-                                "build/intermediates/manifests/full/debug/AndroidManifest.xml"))
+        assertThat(testProject.file("build/intermediates/manifests/full/debug/AndroidManifest.xml"))
                 .containsAllOf(
                         "package=\"com.example.android.testing.blueprint.test\"",
                         "<instrumentation",

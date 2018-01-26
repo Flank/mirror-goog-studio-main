@@ -73,7 +73,7 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
         val gsonBuilder = GsonBuilder()
         gsonBuilder.registerTypeAdapter(ApkInfo::class.java, ExistingBuildElements.ApkInfoAdapter())
         gsonBuilder.registerTypeAdapter(
-                TaskOutputHolder.TaskOutputType::class.java, ExistingBuildElements.OutputTypeTypeAdapter())
+                InternalArtifactType::class.java, ExistingBuildElements.OutputTypeTypeAdapter())
         gsonBuilder.registerTypeAdapter(
                 TaskOutputHolder.AnchorOutputType::class.java,
                 ExistingBuildElements.OutputTypeTypeAdapter())
@@ -94,26 +94,22 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
     @Throws(IOException::class)
     fun save(folder: File) : BuildElements {
         val persistedOutput = persist(folder.toPath())
-        FileWriter(getMetadataFile(folder)).use { writer ->
+        FileWriter(ExistingBuildElements.getMetadataFile(folder)).use { writer ->
             writer.append(persistedOutput)
         }
         return this
-    }
-
-    private fun getMetadataFile(folder: File): File {
-        return File(folder, "output.json")
     }
 
     private data class ExecutorBasedScheduler(val input : BuildElements,
             val action : (apkInfo: ApkInfo, input: File) -> File?) : BuildElementActionScheduler() {
 
         @Throws(BuildException::class)
-        override fun into(type : TaskOutputHolder.TaskOutputType) : BuildElements {
+        override fun into(type : InternalArtifactType) : BuildElements {
             return transform(type, action)
         }
 
         @Throws(BuildException::class)
-        private fun transform(to: TaskOutputHolder.TaskOutputType, action : (apkInfo: ApkInfo, input: File) -> File?) : BuildElements {
+        private fun transform(to: InternalArtifactType, action : (apkInfo: ApkInfo, input: File) -> File?) : BuildElements {
             input.elements.forEach { input.executor.execute {
                 ActionItem(it.apkInfo, action(it.apkInfo, it.outputFile)) }
             }

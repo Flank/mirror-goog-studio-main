@@ -32,9 +32,8 @@ class InternalMemoryServiceImpl final
     : public proto::InternalMemoryService::Service {
  public:
   explicit InternalMemoryServiceImpl(
-      const SessionsManager &sessions,
-      std::unordered_map<int64_t, MemoryCollector> *collectors)
-      : sessions_(sessions), collectors_(*collectors) {}
+      std::unordered_map<int32_t, MemoryCollector> *collectors)
+      : collectors_(*collectors) {}
   virtual ~InternalMemoryServiceImpl() = default;
 
   grpc::Status RegisterMemoryAgent(
@@ -78,12 +77,8 @@ class InternalMemoryServiceImpl final
   std::mutex control_mutex_;
   std::condition_variable control_cv_;
 
-  // Used for converting pid's received from perfa to session id's which
-  // are what used to identify profiling sessions in perfd and studio.
-  const SessionsManager &sessions_;
-
-  // Maps session id to MemoryCollector
-  std::unordered_map<int64_t, MemoryCollector> &collectors_;
+  // Maps pid to MemoryCollector
+  std::unordered_map<int32_t, MemoryCollector> &collectors_;
 
   // Per-app flag which indicates whether a perfd->perfa grpc streaming
   // call (RegisterMemoryAgent) has been established. Value is true if a stream

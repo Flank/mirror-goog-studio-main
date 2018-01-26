@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.transforms;
 import static com.android.build.gradle.internal.transforms.DexMergerTransform.ANDROID_L_MAX_DEX_FILES;
 import static com.android.build.gradle.internal.transforms.DexMergerTransform.EXTERNAL_DEPS_DEX_FILES;
 import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.mockito.Mockito.when;
 
 import android.databinding.tool.util.Preconditions;

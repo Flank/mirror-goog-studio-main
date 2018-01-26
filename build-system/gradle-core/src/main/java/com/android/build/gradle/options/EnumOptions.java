@@ -19,6 +19,7 @@ package com.android.build.gradle.options;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.builder.model.AaptOptions;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
@@ -87,9 +88,17 @@ public final class EnumOptions {
         ;
 
         @NonNull private final String propertyName;
+        @Nullable private final DeprecationReporter.DeprecationTarget deprecationTarget;
 
         EnumOption(@NonNull String propertyName) {
+            this(propertyName, null);
+        }
+
+        EnumOption(
+                @NonNull String propertyName,
+                @Nullable DeprecationReporter.DeprecationTarget deprecationTarget) {
             this.propertyName = propertyName;
+            this.deprecationTarget = deprecationTarget;
         }
 
         @Override
@@ -118,6 +127,17 @@ public final class EnumOptions {
                             + "' of type '"
                             + value.getClass()
                             + "' as string to be interpreted as an enum constant.");
+        }
+
+        @Override
+        public boolean isDeprecated() {
+            return (deprecationTarget != null);
+        }
+
+        @Nullable
+        @Override
+        public DeprecationReporter.DeprecationTarget getDeprecationTarget() {
+            return deprecationTarget;
         }
     }
 }

@@ -81,7 +81,7 @@ public class ShrinkResourcesTest {
         // The debug target has neither proguard nor shrinking enabled.
 
         Apk apkRelease = project.getApk(ApkType.RELEASE);
-        Apk apkDebug = project.getApk("debug");
+        Apk apkDebug = project.getApk(ApkType.DEBUG);
         Apk apkProguardOnly = project.getApk(ApkType.of("minifyDontShrink", false));
 
         assertTrue(apkDebug.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()));

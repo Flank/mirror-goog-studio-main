@@ -15,9 +15,13 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.ide.common.vectordrawable.SvgColor.colorSvg2Vd;
 import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
 import static com.android.utils.XmlUtils.formatFloatAttribute;
 
+import com.android.annotations.NonNull;
+import com.android.ide.common.vectordrawable.SvgTree.SvgLogLevel;
+import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableMap;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
@@ -26,7 +30,6 @@ import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -130,60 +133,50 @@ public class SvgGradientNode extends SvgNode {
     }
 
     /** Parses the gradient coordinate value given as a percentage or a length. Returns a double. */
-    private GradientCoordResult getGradientCoordinate(String x, double defaultValue) {
-        boolean isPercentage = false;
+    private GradientCoordResult getGradientCoordinate(@NonNull String x, double defaultValue) {
         if (!mVdAttributesMap.containsKey(x)) {
-            return new GradientCoordResult(defaultValue, isPercentage);
+            return new GradientCoordResult(defaultValue, false);
         }
         double val = defaultValue;
         String vdValue = mVdAttributesMap.get(x).trim();
         if (x.equals("r") && vdValue.startsWith("-")) {
-            return new GradientCoordResult(defaultValue, isPercentage);
+            return new GradientCoordResult(defaultValue, false);
         }
-        if (vdValue.endsWith("%")) {
-            isPercentage = true;
-            try {
-                val = Double.parseDouble(vdValue.substring(0, vdValue.length() - 1));
-            } catch (NumberFormatException e) {
-                getTree()
-                        .logErrorLine(
-                                "Unsupported coordinate percentage value",
-                                getDocumentNode(),
-                                SvgTree.SvgLogLevel.ERROR);
-            }
-            val /= 100;
-        } else {
-            try {
+
+        boolean isPercentage = false;
+        try {
+            if (vdValue.endsWith("%")) {
+                val = Double.parseDouble(vdValue.substring(0, vdValue.length() - 1)) / 100;
+                isPercentage = true;
+            } else {
                 val = Double.parseDouble(vdValue);
-            } catch (NumberFormatException e) {
-                getTree()
-                        .logErrorLine(
-                                "Unsupported coordinate value",
-                                getDocumentNode(),
-                                SvgTree.SvgLogLevel.ERROR);
             }
+        } catch (NumberFormatException e) {
+            getTree().logErrorLine("Unsupported coordinate value", getDocumentNode(),
+                    SvgLogLevel.ERROR);
         }
         return new GradientCoordResult(val, isPercentage);
     }
 
-    /** Writes the XML defining the gradient within a path. */
     @Override
-    public void writeXML(OutputStreamWriter writer, boolean inClipPath) throws IOException {
+    public void writeXML(@NonNull OutputStreamWriter writer, boolean inClipPath,
+            @NonNull String indent) throws IOException {
         if (myGradientStops.isEmpty()) {
-            getTree()
-                    .logErrorLine(
-                            "Gradient has no stop info.",
-                            getDocumentNode(),
-                            SvgTree.SvgLogLevel.ERROR);
+            getTree().logErrorLine("Gradient has no stop info", getDocumentNode(),
+                    SvgLogLevel.ERROR);
             return;
         }
+
+        writer.write(indent);
         if (mGradientUsage == GradientUsage.FILL) {
-            writer.write("        <aapt:attr name=\"android:fillColor\">");
+            writer.write("<aapt:attr name=\"android:fillColor\">");
             writer.write(System.lineSeparator());
         } else {
-            writer.write("        <aapt:attr name=\"android:strokeColor\">");
+            writer.write("<aapt:attr name=\"android:strokeColor\">");
             writer.write(System.lineSeparator());
         }
+        writer.write(indent);
+        writer.write(INDENT_UNIT);
         writer.write("<gradient ");
 
         // By default, the dimensions of the gradient is the bounding box of the path.
@@ -318,82 +311,91 @@ public class SvgGradientNode extends SvgNode {
             mVdAttributesMap.put("r", formatFloatAttribute(transformedRadius.distance(0, 0)));
         }
 
-        for (String key : mVdAttributesMap.keySet()) {
+        for (Map.Entry<String, String> entry : mVdAttributesMap.entrySet()) {
+            String key = entry.getKey();
             String gradientAttr = Svg2Vector.gradientMap.get(key);
-            String svgValue = mVdAttributesMap.get(key);
-            String vdValue = svgValue.trim();
-            if (vdValue.startsWith("rgb")) {
-                vdValue = vdValue.substring(3, vdValue.length());
-                String vdValueRGB = vdValue;
-                vdValue = SvgLeafNode.convertRGBToHex(vdValue.substring(3, vdValue.length()));
-                if (vdValue == null) {
-                    getTree()
-                            .logErrorLine(
-                                    "Unsupported Color format " + vdValueRGB,
-                                    getDocumentNode(),
-                                    SvgTree.SvgLogLevel.ERROR);
+            String svgValue = entry.getValue().trim();
+            String vdValue;
+            vdValue = colorSvg2Vd(svgValue, "#000000", this);
+
+            if (vdValue == null) {
+                if (vectorCoordinateMap.containsKey(key)) {
+                    double x = transformedBounds[vectorCoordinateMap.get(key)];
+                    vdValue = formatFloatAttribute(x);
+                } else if (key.equals("spreadMethod")) {
+                    if (svgValue.equals("pad")) {
+                        vdValue = "clamp";
+                    } else if (svgValue.equals("reflect")) {
+                        vdValue = "mirror";
+                    } else if (svgValue.equals("repeat")) {
+                        vdValue = "repeat";
+                    } else {
+                        getTree().logErrorLine("Unsupported spreadMethod " + svgValue,
+                                               getDocumentNode(), SvgTree.SvgLogLevel.ERROR);
+                        vdValue = "clamp";
+                    }
+                } else if (svgValue.endsWith("%")) {
+                    vdValue = formatFloatAttribute(getGradientCoordinate(key, 0).getValue());
+                } else {
+                    vdValue = svgValue;
                 }
-            } else if (SvgLeafNode.colorMap.containsKey(vdValue.toLowerCase(Locale.ENGLISH))) {
-                vdValue = SvgLeafNode.colorMap.get(vdValue.toLowerCase(Locale.ENGLISH));
-            } else if (vectorCoordinateMap.containsKey(key)) {
-                double x = transformedBounds[vectorCoordinateMap.get(key)];
-                vdValue = formatFloatAttribute(x);
-            } else if (key.equals("spreadMethod")) {
-                if (vdValue.equals("pad")) {
-                    vdValue = "clamp";
-                } else if (vdValue.equals("reflect")) {
-                    vdValue = "mirror";
-                }
-            } else if (vdValue.endsWith("%")) {
-                vdValue = formatFloatAttribute(getGradientCoordinate(key, 0).getValue());
             }
+
             if (!gradientAttr.isEmpty()) {
                 writer.write(System.lineSeparator());
-                writer.write("        " + gradientAttr + "=\"" + vdValue + "\"");
+                writer.write(indent);
+                writer.write(INDENT_UNIT);
+                writer.write(CONTINUATION_INDENT);
+                writer.write(gradientAttr);
+                writer.write("=\"");
+                writer.write(vdValue);
+                writer.write("\"");
             }
         }
         writer.write('>');
         writer.write(System.lineSeparator());
 
-        writeGradientStops(writer);
-        writer.write("            </gradient>");
+        writeGradientStops(writer, indent + INDENT_UNIT + INDENT_UNIT);
+        writer.write(indent);
+        writer.write(INDENT_UNIT);
+        writer.write("</gradient>");
+        writer.write(System.lineSeparator());
+        writer.write(indent);
         writer.write("</aapt:attr>");
+        writer.write(System.lineSeparator());
     }
 
-    private void writeGradientStops(OutputStreamWriter writer) throws IOException {
+    private void writeGradientStops(OutputStreamWriter writer, String indent) throws IOException {
         for (GradientStop g : myGradientStops) {
-            g.formatStopAttributes();
             String color = g.getColor();
-            float opacity = 1;
+            float opacity;
             try {
                 opacity = Float.parseFloat(g.getOpacity());
             } catch (NumberFormatException e) {
-                getTree()
-                        .logErrorLine(
-                                "Unsupported opacity value",
-                                getDocumentNode(),
-                                SvgTree.SvgLogLevel.WARNING);
+                getTree().logErrorLine("Unsupported opacity value", getDocumentNode(),
+                        SvgLogLevel.WARNING);
+                opacity = 1;
             }
             int color1 = VdPath.applyAlpha(parseColorValue(color), opacity);
-            StringBuilder hex =
-                    new StringBuilder(Integer.toHexString(color1).toUpperCase(Locale.ENGLISH));
-            while (hex.length() < 8) {
-                hex.insert(0, "0");
-            }
-            color = "#" + hex;
+            color = String.format("#%08X", color1);
 
-            writer.write("<item android:offset=\"" + g.getOffset() + "\"");
-            writer.write(" android:color=\"" + color + "\" />");
+            writer.write(indent);
+            writer.write("<item android:offset=\"");
+            writer.write(XmlUtils.trimInsignificantZeros(g.getOffset()));
+            writer.write("\"");
+            writer.write(" android:color=\"");
+            writer.write(color);
+            writer.write("\"/>");
             writer.write(System.lineSeparator());
 
             if (myGradientStops.size() == 1) {
-                getTree()
-                        .logErrorLine(
-                                "Gradient only have one color stops",
-                                getDocumentNode(),
-                                SvgTree.SvgLogLevel.WARNING);
-                writer.write("<item android:offset=\"1.0\"");
-                writer.write(" android:color=\"" + color + "\" />");
+                getTree().logErrorLine("Gradient has only one color stop", getDocumentNode(),
+                        SvgLogLevel.WARNING);
+                writer.write(indent);
+                writer.write("<item android:offset=\"1\"");
+                writer.write(" android:color=\"");
+                writer.write(color);
+                writer.write("\"/>");
                 writer.write(System.lineSeparator());
             }
         }

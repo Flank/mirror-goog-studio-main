@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.res2;
 
 import static org.junit.Assert.assertFalse;
@@ -25,11 +24,10 @@ import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.resources.ResourceType;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -39,52 +37,42 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class MergeResourceWriterWithCompilerTest {
-
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
-
-    private File mRoot;
 
     private Map<String, ResourceItem> mResourceItems;
 
     private ResourcePreprocessor mEmptyPreprocessor;
 
-    private QueueableResourceCompiler mSimpleCompiler;
+    private ResourceCompilationService mSimpleCompiler;
 
     @Before
     public final void before() throws Exception {
         mEmptyPreprocessor =
                 new ResourcePreprocessor() {
-                    @Override
-                    public boolean needsPreprocessing(@NonNull File file) {
-                        return false;
-                    }
-
                     @NonNull
                     @Override
                     public Collection<File> getFilesToBeGenerated(@NonNull File original) {
-                        return null;
+                        return Collections.emptySet();
                     }
 
                     @Override
-                    public void generateFile(@NonNull File toBeGenerated, @NonNull File original)
-                            throws IOException {}
+                    public void generateFile(@NonNull File toBeGenerated, @NonNull File original) {}
                 };
 
         mSimpleCompiler =
-                new QueueableResourceCompiler() {
-                    @NonNull
+                new ResourceCompilationService() {
                     @Override
-                    public ListenableFuture<File> compile(@NonNull CompileResourceRequest request)
-                            throws Exception {
+                    public void submitCompile(@NonNull CompileResourceRequest request)
+                            throws IOException {
                         File outputPath = compileOutputFor(request);
                         Files.copy(request.getInputFile(), outputPath);
-                        return Futures.immediateFuture(outputPath);
                     }
 
                     @Override
                     public void close() {}
 
+                    @NonNull
                     @Override
                     public File compileOutputFor(@NonNull CompileResourceRequest request) {
                         return new File(
@@ -150,13 +138,13 @@ public class MergeResourceWriterWithCompilerTest {
             };
 
     public void addAndDeleteFile(@NonNull String name) throws Exception {
-        mRoot = mTemporaryFolder.newFolder();
+        File root = mTemporaryFolder.newFolder();
         File tmpFolder = mTemporaryFolder.newFolder();
 
         MergedResourceWriter writer =
                 new MergedResourceWriter(
                         facade,
-                        mRoot,
+                        root,
                         null,
                         null,
                         mEmptyPreprocessor,
@@ -177,7 +165,7 @@ public class MergeResourceWriterWithCompilerTest {
         writer.postWriteAction();
         writer.end();
 
-        File f1Compiled = new File(mRoot, name + "-c");
+        File f1Compiled = new File(root, name + "-c");
         assertTrue(f1Compiled.exists());
 
 
@@ -187,7 +175,7 @@ public class MergeResourceWriterWithCompilerTest {
         writer =
                 new MergedResourceWriter(
                         facade,
-                        mRoot,
+                        root,
                         null,
                         null,
                         mEmptyPreprocessor,

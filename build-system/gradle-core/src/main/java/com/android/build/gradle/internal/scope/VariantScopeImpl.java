@@ -24,6 +24,7 @@ import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConfiguration.POSTPROCESSING_BLOCK;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SHARED_CLASSES;
@@ -67,8 +68,9 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
-import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
-import com.android.build.gradle.internal.publishing.VariantPublishingSpec.OutputPublishingSpec;
+import com.android.build.gradle.internal.publishing.PublishingSpecs;
+import com.android.build.gradle.internal.publishing.PublishingSpecs.OutputSpec;
+import com.android.build.gradle.internal.publishing.PublishingSpecs.VariantSpec;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -88,7 +90,6 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
-import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
@@ -152,7 +153,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private static final ILogger LOGGER = LoggerWrapper.getLogger(VariantScopeImpl.class);
 
-    @NonNull private final VariantPublishingSpec variantPublishingSpec;
+    @NonNull private final PublishingSpecs.VariantSpec variantPublishingSpec;
 
     @NonNull private final GlobalScope globalScope;
     @NonNull private final BaseVariantData variantData;
@@ -175,7 +176,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private RenderscriptCompile renderscriptCompileTask;
     private AidlCompile aidlCompileTask;
-    @Nullable private MergeResources mergeResourcesTask;
     @Nullable private MergeSourceSetFolders mergeAssetsTask;
     private GenerateBuildConfig generateBuildConfigTask;
 
@@ -219,7 +219,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.globalScope = globalScope;
         this.transformManager = transformManager;
         this.variantData = variantData;
-        this.variantPublishingSpec = VariantPublishingSpec.getVariantSpec(variantData.getType());
+        this.variantPublishingSpec = PublishingSpecs.getVariantSpec(variantData.getType());
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         this.instantRunBuildContext =
                 new InstantRunBuildContext(
@@ -273,13 +273,15 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public VariantPublishingSpec getPublishingSpec() {
+    public PublishingSpecs.VariantSpec getPublishingSpec() {
         return variantPublishingSpec;
     }
 
     @Override
     public ConfigurableFileCollection addTaskOutput(
-            @NonNull TaskOutputType outputType, @NonNull Object file, @Nullable String taskName) {
+            @NonNull com.android.build.api.artifact.ArtifactType outputType,
+            @NonNull Object file,
+            @Nullable String taskName) {
         ConfigurableFileCollection fileCollection;
         try {
             fileCollection = super.addTaskOutput(outputType, file, taskName);
@@ -292,7 +294,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         if (file instanceof File) {
-            OutputPublishingSpec taskSpec = variantPublishingSpec.getSpec(outputType);
+            OutputSpec taskSpec = variantPublishingSpec.getSpec(outputType);
             if (taskSpec != null) {
                 publishIntermediateArtifact(
                         (File) file,
@@ -306,7 +308,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public FileCollection getOutput(@NonNull OutputType outputType)
+    public FileCollection getOutput(@NonNull com.android.build.api.artifact.ArtifactType outputType)
             throws MissingTaskOutputException {
         try {
             return super.getOutput(outputType);
@@ -444,9 +446,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         if (variantData.getType() == VariantType.LIBRARY) {
-            globalScope
-                    .getErrorHandler()
-                    .reportError(Type.GENERIC, "Resource shrinker cannot be used for libraries.");
+            if (!getProject().getPlugins().hasPlugin("com.android.feature")) {
+                globalScope
+                        .getErrorHandler()
+                        .reportError(
+                                Type.GENERIC, "Resource shrinker cannot be used for libraries.");
+            }
             return false;
         }
 
@@ -848,9 +853,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (Boolean.TRUE.equals(globalScope.getExtension().getAaptOptions().getNamespaced())) {
             mainCollection =
                     mainCollection.plus(
-                            getOutput(
-                                    VariantScope.TaskOutputType
-                                            .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
+                            getOutput(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             mainCollection =
                     mainCollection.plus(
                             getArtifactFileCollection(
@@ -863,23 +866,25 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         mainCollection.plus(
                                 tested.getScope()
                                         .getOutput(
-                                                VariantScope.TaskOutputType
+                                                InternalArtifactType
                                                         .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             }
         } else {
-            if (hasOutput(
-                    TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+            if (hasOutput(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
                 FileCollection rJar =
-                        getOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                        getOutput(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
                 mainCollection = mainCollection.plus(rJar);
             }
             BaseVariantData tested = getTestedVariantData();
             if (tested != null
                     && tested.getScope()
-                            .hasOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+                            .hasOutput(
+                                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
                 FileCollection rJar =
                         tested.getScope()
-                                .getOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                                .getOutput(
+                                        InternalArtifactType
+                                                .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
                 mainCollection = mainCollection.plus(rJar);
             }
         }
@@ -996,7 +1001,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                     artifacts,
                                     computeArtifactCollection(
                                                     RUNTIME_CLASSPATH,
-                                                    scope,
+                                                    MODULE,
                                                     ArtifactType.FEATURE_TRANSITIVE_DEPS)
                                             .getArtifactFiles())
                             .getArtifactFiles();
@@ -1040,7 +1045,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                             artifacts,
                             computeArtifactCollection(
                                             RUNTIME_CLASSPATH,
-                                            scope,
+                                            MODULE,
                                             ArtifactType.FEATURE_TRANSITIVE_DEPS)
                                     .getArtifactFiles());
         }
@@ -1584,7 +1589,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getIntermediateDir(@NonNull TaskOutputType taskOutputType) {
+    public File getIntermediateDir(@NonNull InternalArtifactType taskOutputType) {
         return intermediate(taskOutputType.name().toLowerCase(Locale.US));
     }
 
@@ -2049,11 +2054,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
             // we only add the tested component to the MODULE | ALL scopes.
             if (artifactScope == ArtifactScope.MODULE || artifactScope == ALL) {
-                VariantPublishingSpec testedSpec =
+                VariantSpec testedSpec =
                         testedScope.getPublishingSpec().getTestingSpec(variantType);
 
                 // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
-                OutputPublishingSpec taskOutputSpec = testedSpec.getSpec(artifactType);
+                OutputSpec taskOutputSpec = testedSpec.getSpec(artifactType);
 
                 if (taskOutputSpec != null) {
                     Collection<PublishedConfigType> publishedConfigs =
@@ -2063,7 +2068,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     // was published to.
                     if (publishedConfigs.contains(configType.getPublishedTo())) {
                         // if it's the case then we add the tested artifact.
-                        final OutputType taskOutputType = taskOutputSpec.getOutputType();
+                        final com.android.build.api.artifact.ArtifactType taskOutputType =
+                                taskOutputSpec.getOutputType();
                         if (testedScope.hasOutput(taskOutputType)) {
                             result =
                                     plusFunction.apply(
@@ -2221,7 +2227,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 .getErrorHandler()
                 .reportError(
                         Type.GENERIC,
-                        "Please add 'android.enableDesugar=true' to your "
+                        "Please add 'android.enableD8.desugaring=true' to your "
                                 + "gradle.properties file to enable Java 8 "
                                 + "language support.",
                         getVariantConfiguration().getFullName());

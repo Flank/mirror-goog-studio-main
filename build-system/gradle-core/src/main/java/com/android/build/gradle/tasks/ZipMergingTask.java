@@ -18,8 +18,8 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.google.common.collect.Sets;
@@ -132,8 +132,8 @@ public class ZipMergingTask extends AndroidVariantTask {
         @Override
         public void execute(@NonNull ZipMergingTask task) {
             task.init(
-                    scope.getOutput(TaskOutputType.LIBRARY_CLASSES)
-                            .plus(scope.getOutput(TaskOutputType.LIBRARY_JAVA_RES)),
+                    scope.getOutput(InternalArtifactType.LIBRARY_CLASSES)
+                            .plus(scope.getOutput(InternalArtifactType.LIBRARY_JAVA_RES)),
                     outputFile);
             task.setVariantName(scope.getFullVariantName());
         }

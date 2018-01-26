@@ -22,6 +22,11 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.options.IntegerOption;
+import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.Dex;
+import com.google.common.collect.ImmutableSet;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,6 +74,30 @@ public class DeploymentApiOverrideTest {
                         .run("clean", "assembleIcsRelease");
         assertThat(lastBuild).isNotNull();
         assertThat(lastBuild.getStdout()).contains("Multidexlist");
+    }
 
+    /** Regression test for https://issuetracker.google.com/72085541. */
+    @Test
+    public void testSwitchingDevices() throws Exception {
+        project.executor().with(IntegerOption.IDE_TARGET_DEVICE_API, 19).run("assembleIcsDebug");
+
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG, "ics");
+        List<String> userClasses = new ArrayList<>();
+        for (Dex dex : apk.getAllDexes()) {
+            ImmutableSet<String> classNames = dex.getClasses().keySet();
+            for (String className : classNames) {
+                if (className.startsWith("Lcom/android/tests/basic")) {
+                    userClasses.add(className);
+                }
+            }
+        }
+
+        project.executor().with(IntegerOption.IDE_TARGET_DEVICE_API, 27).run("assembleIcsDebug");
+
+        // make sure all user classes are still there
+        apk = project.getApk(GradleTestProject.ApkType.DEBUG, "ics");
+        for (String userClass : userClasses) {
+            assertThat(apk).containsClass(userClass);
+        }
     }
 }

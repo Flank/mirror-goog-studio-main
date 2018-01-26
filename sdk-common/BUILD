@@ -44,9 +44,8 @@ iml_module(
         "//tools/base/annotations:studio.android-annotations[module]",
         "//tools/base/ddmlib:studio.ddmlib[module]",
         "//tools/idea/.idea/libraries:Guava",
-        "//tools/base/sdk-common/lib:aia-manifest-proto-1.0-jarjar",
         "//tools/idea/.idea/libraries:equalsverifier[test]",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
+        "//tools/idea/.idea/libraries:aia-manifest-proto-1.0-jarjar",
     ],
 )
 

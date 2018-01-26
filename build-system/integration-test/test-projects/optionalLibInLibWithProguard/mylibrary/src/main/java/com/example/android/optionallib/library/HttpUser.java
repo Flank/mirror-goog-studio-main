@@ -1,13 +1,12 @@
 package com.example.android.optionallib.library;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 
 public class HttpUser {
 
@@ -32,5 +31,9 @@ public class HttpUser {
         } catch (IOException e) {
             return e.getMessage();
         }
+    }
+
+    public static long getHttpEntityContentLength(HttpEntity httpEntity) {
+        return httpEntity.getContentLength();
     }
 }

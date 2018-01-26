@@ -28,7 +28,6 @@ import com.android.tools.profiler.proto.Profiler.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,14 +58,7 @@ public class HttpUrlTest {
         myGrpc = myPerfDriver.getGrpc();
 
         // Invoke beginSession to establish a session we can use to query data
-        BeginSessionResponse response =
-                myGrpc.getProfilerStub()
-                        .beginSession(
-                                BeginSessionRequest.newBuilder()
-                                        .setDeviceId(1234)
-                                        .setProcessId(myGrpc.getProcessId())
-                                        .build());
-        mySession = response.getSession();
+        mySession = myGrpc.beginSession();
     }
 
     @Test
@@ -119,4 +111,29 @@ public class HttpUrlTest {
                         ());
         assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("TestRequestBody");
     }
+
+    @Test
+    public void testHttpGet_CallResposeMethodBeforeConnect() throws IOException {
+        final String getSuccess = "HttpUrlGet SUCCESS";
+        myPerfDriver
+                .getFakeAndroidDriver()
+                .triggerMethod(ACTIVITY_CLASS, "runGet_CallResponseMethodBeforeConnect");
+        assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(getSuccess)).isTrue();
+
+        final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        NetworkProfiler.HttpRangeResponse httpRangeResponse =
+                stubWrapper.getAllHttpRange(mySession);
+        assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
+
+        final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
+        HttpDetailsResponse requestDetails;
+        stubWrapper.waitFor(
+                () -> {
+                    HttpDetailsResponse details =
+                            stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
+                    return details.getResponse().getFields().contains("HTTP/1.0 200 OK");
+                });
+        // If we got here, we're done - our response completed as expected
+    }
+
 }

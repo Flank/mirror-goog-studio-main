@@ -52,15 +52,22 @@ fun main(args : Array<String>) {
                 .ignoreSyncIssues()
                 .fetchAndroidProjects()
 
+        val action: (Map<String, AndroidProject>) -> Unit = { map ->
+            map.keys.forEach {
+                println("  project: $it")
+            }
+        }
+
         // TODO print the model
         models.modelMaps.keys.forEach {
             println("buildId: $it")
 
-            val projects = models.modelMaps[it]!!
-            projects.keys.forEach {
-                println("  project: $it")
-            }
+            val map = models.modelMaps[it]!!
+            action.invoke(map)
         }
+
+        println("rootBuild")
+        action.invoke(models.rootBuildModelMap)
 
     } catch (t: Throwable) {
         t.printStackTrace()

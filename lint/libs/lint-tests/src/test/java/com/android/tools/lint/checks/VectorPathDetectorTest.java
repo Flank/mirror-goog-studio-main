@@ -260,7 +260,7 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                         + "Fix for res/drawable/my_vector.xml line 8: Replace with 0.9:\n"
                         + "@@ -9 +9\n"
                         + "-         android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
-                        + "+         android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.10.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
+                        + "+         android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1 0.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
                         + "Fix for res/drawable/my_vector.xml line 8: Replace with 0.9:\n"
                         + "@@ -9 +9\n"
                         + "-         android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
@@ -359,5 +359,38 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                         "        android:pathData=\"M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2”\" />\n" +
                         "                                                                                                   ~~\n" +
                         "6 errors, 0 warnings");
+    }
+
+    public void testReplaceCorrectInstance() {
+        // Regression test for https://issuetracker.google.com/issues/68839132
+        lint().files(
+                xml("res/drawable/my_vector.xml", "" +
+                        "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    android:width=\"22dp\"\n" +
+                        "    android:height=\"22dp\"\n" +
+                        "    android:viewportHeight=\"22.0\"\n" +
+                        "    android:viewportWidth=\"22.0\">\n" +
+                        "    <path\n" +
+                        "        android:fillColor=\"@color/colorAccent\"\n" +
+                        "        android:pathData=\"M12 18l-5.878 3.09 1.123-6.545L2.489 9.91l6.572-.955L12 3l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z\" />\n" +
+                        "</vector>"))
+                .incremental("res/drawable/my_vector.xml")
+                .run()
+                .expect("res/drawable/my_vector.xml:8: Error: Use -0.955 instead of -.955 to avoid crashes on some devices [InvalidVectorPath]\n" +
+                        "        android:pathData=\"M12 18l-5.878 3.09 1.123-6.545L2.489 9.91l6.572-.955L12 3l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z\" />\n" +
+                        "                                                                         ~~~~~\n" +
+                        "res/drawable/my_vector.xml:8: Error: Use 0.955 instead of .955 to avoid crashes on some devices [InvalidVectorPath]\n" +
+                        "        android:pathData=\"M12 18l-5.878 3.09 1.123-6.545L2.489 9.91l6.572-.955L12 3l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z\" />\n" +
+                        "                                                                                                     ~~~~\n" +
+                        "2 errors, 0 warnings")
+                .expectFixDiffs("" +
+                        "Fix for res/drawable/my_vector.xml line 7: Replace with -0.955:\n" +
+                        "@@ -8 +8\n" +
+                        "-         android:pathData=\"M12 18l-5.878 3.09 1.123-6.545L2.489 9.91l6.572-.955L12 3l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z\" />\n" +
+                        "+         android:pathData=\"M12 18l-5.878 3.09 1.123-6.545L2.489 9.91l6.572-0.955L12 3l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z\" />\n" +
+                        "Fix for res/drawable/my_vector.xml line 7: Replace with 0.955:\n" +
+                        "@@ -8 +8\n" +
+                        "-         android:pathData=\"M12 18l-5.878 3.09 1.123-6.545L2.489 9.91l6.572-.955L12 3l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z\" />\n" +
+                        "+         android:pathData=\"M12 18l-5.878 3.09 1.123-6.545L2.489 9.91l6.572-.955L12 3l2.939 5.955 6.572 0.955-4.756 4.635 1.123 6.545z\" />");
     }
 }

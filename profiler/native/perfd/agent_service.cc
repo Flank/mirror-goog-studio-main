@@ -16,15 +16,15 @@
 #include "agent_service.h"
 
 using grpc::ServerContext;
-using profiler::proto::CommonData;
+using profiler::proto::HeartBeatRequest;
 using profiler::proto::HeartBeatResponse;
 
 namespace profiler {
 
 grpc::Status AgentServiceImpl::HeartBeat(ServerContext* context,
-                                         const CommonData* data,
+                                         const HeartBeatRequest* request,
                                          HeartBeatResponse* response) {
-  heartbeat_timestamp_map_[data->process_id()] = clock_.GetCurrentTime();
+  heartbeat_timestamp_map_[request->pid()] = clock_.GetCurrentTime();
   return grpc::Status::OK;
 }
 

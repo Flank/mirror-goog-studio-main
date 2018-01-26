@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.transforms;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 

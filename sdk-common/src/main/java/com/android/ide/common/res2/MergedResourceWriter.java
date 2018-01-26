@@ -48,14 +48,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -83,11 +81,8 @@ public class MergedResourceWriter
 
     private DocumentBuilderFactory mFactory;
 
-    /**
-     * Compiler for resources
-     */
-    @NonNull
-    private final QueueableResourceCompiler mResourceCompiler;
+    /** Compiler for resources */
+    @NonNull private final ResourceCompilationService mResourceCompiler;
 
     /**
      * map of XML values files to write after parsing all the files. the key is the qualifier.
@@ -146,7 +141,8 @@ public class MergedResourceWriter
      * @param publicFile File that we should write public.txt to
      * @param blameLog merging log for rewriting error messages
      * @param preprocessor preprocessor for merged resources, such as vector drawable rendering
-     * @param resourceCompiler resource compiler, i.e. AAPT
+     * @param resourceCompilationService such as AAPT. The service is responsible for ensuring all
+     *     compilation is complete before the task execution ends.
      * @param temporaryDirectory temporary directory for intermediate merged files
      * @param dataBindingExpressionRemover removes data binding expressions from layout files
      * @param notCompiledOutputDirectory for saved uncompiled resources for the resource shrinking
@@ -160,14 +156,14 @@ public class MergedResourceWriter
             @Nullable File publicFile,
             @Nullable MergingLog blameLog,
             @NonNull ResourcePreprocessor preprocessor,
-            @NonNull QueueableResourceCompiler resourceCompiler,
+            @NonNull ResourceCompilationService resourceCompilationService,
             @NonNull File temporaryDirectory,
             @Nullable SingleFileProcessor dataBindingExpressionRemover,
             @Nullable File notCompiledOutputDirectory,
             boolean pseudoLocalesEnabled,
             boolean crunchPng) {
         super(rootFolder, workerExecutor);
-        mResourceCompiler = resourceCompiler;
+        mResourceCompiler = resourceCompilationService;
         mPublicFile = publicFile;
         mMergingLog = blameLog;
         mPreprocessor = preprocessor;
@@ -216,7 +212,7 @@ public class MergedResourceWriter
                 publicFile,
                 blameLogFolder != null ? new MergingLog(blameLogFolder) : null,
                 preprocessor,
-                QueueableResourceCompiler.NONE,
+                CopyToOutputDirectoryResourceCompilationService.INSTANCE,
                 temporaryDirectory,
                 null,
                 null,
@@ -237,7 +233,6 @@ public class MergedResourceWriter
         // Make sure all PNGs are generated first.
         super.end();
         // now perform all the databinding, PNG crunching (AAPT1) and resources compilation (AAPT2).
-        Map<Future, String> outstandingRequests = new HashMap<>();
         try {
             File tmpDir = new File(mTemporaryDirectory, "stripped.dir");
             try {
@@ -295,20 +290,16 @@ public class MergedResourceWriter
                         FileUtils.copyFileToDirectory(fileToCompile, typeDir);
                     }
 
-                    result =
-                            mResourceCompiler.compile(
-                                    new CompileResourceRequest(
-                                            fileToCompile,
-                                            request.getOutputDirectory(),
-                                            request.getInputDirectoryName(),
-                                            pseudoLocalesEnabled,
-                                            crunchPng));
-
-                    outstandingRequests.put(result, request.getInputFile().getAbsolutePath());
-
-                    // adding to the mCompiling seems unnecessary at this point, the end() call will
-                    // take care of waiting for all requests to be processed.
-                    mCompiling.add(result);
+                    mResourceCompiler.submitCompile(
+                            new CompileResourceRequest(
+                                    fileToCompile,
+                                    request.getOutputDirectory(),
+                                    request.getInputDirectoryName(),
+                                    pseudoLocalesEnabled,
+                                    crunchPng));
+                    mCompiledFileMap.put(
+                            fileToCompile.getAbsolutePath(),
+                            mResourceCompiler.compileOutputFor(request).getAbsolutePath());
 
                 } catch (ResourceCompilationException | IOException e) {
                     throw MergingException.wrapException(e)
@@ -317,18 +308,6 @@ public class MergedResourceWriter
                 }
             }
         } catch (Exception e) {
-            throw new ConsumerException(e);
-        }
-        // now wait for all PNGs to be actually crunched.This seems to only be necessary to
-        // propagate exception at this point. There should be a simpler way to do this.
-        try {
-            Future<File> first;
-            while ((first = mCompiling.pollFirst()) != null) {
-                File outFile = first.get();
-                mCompiledFileMap.put(outstandingRequests.get(first), outFile.getAbsolutePath());
-            }
-
-        } catch (InterruptedException|ExecutionException e) {
             throw new ConsumerException(e);
         }
 
@@ -596,8 +575,7 @@ public class MergedResourceWriter
                         mMergingLog.logSource(new SourceFile(outFile), blame);
                     }
 
-                    mResourceCompiler.compile(request).get();
-
+                    mResourceCompiler.submitCompile(request);
 
                     if (publicNodes != null && mPublicFile != null) {
                         // Generate public.txt:

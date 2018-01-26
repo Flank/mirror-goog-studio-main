@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.TaskOutputHolder
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.builder.core.VariantType
@@ -28,6 +28,7 @@ import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.QueueableAapt2
 import com.android.ide.common.process.LoggedProcessOutputHandler
+import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
@@ -69,29 +70,24 @@ open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
         val staticLibraries = ImmutableList.builder<File>()
         staticLibraries.addAll(libraryDependencies.files)
         staticLibraries.add(thisSubProjectStaticLibrary.singleFile)
-        val config =
-                AaptPackageConfig.Builder()
-                        .setAndroidTarget(builder.target)
-                        .setManifestFile(File(manifestFileDirectory.singleFile,
-                                SdkConstants.ANDROID_MANIFEST_XML))
-                        .setOptions(AaptOptions(null, false, null))
-                        .setLibrarySymbolTableFiles(null)
-                        .setStaticLibraryDependencies(staticLibraries.build())
-                        .setImports(sharedLibraryDependencies.files)
-                        .setSourceOutputDir(rClassSource)
-                        .setResourceOutputApk(resourceApUnderscore)
-                        .setVariantType(VariantType.LIBRARY)
-                        .setLogger(iLogger)
-                        .setBuildToolInfo(builder.buildToolInfo)
-                        .setIntermediateDir(aaptIntermediateDir)
-                        .build()
+        val config = AaptPackageConfig(
+                androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
+                manifestFile = (File(manifestFileDirectory.singleFile,
+                        SdkConstants.ANDROID_MANIFEST_XML)),
+                options = AaptOptions(null, false, null),
+                staticLibraryDependencies = staticLibraries.build(),
+                imports = ImmutableList.copyOf(sharedLibraryDependencies.asIterable()),
+                sourceOutputDir = rClassSource,
+                resourceOutputApk = resourceApUnderscore,
+                variantType = VariantType.LIBRARY,
+                intermediateDir = aaptIntermediateDir)
 
         QueueableAapt2(
                 LoggedProcessOutputHandler(iLogger),
                 builder.targetInfo!!.buildTools,
                 AaptGradleFactory.FilteringLogger(builder.logger),
                 0 /* use default */).use { aapt ->
-            aapt.link(config)
+            aapt.link(config, iLogger)
         }
     }
 
@@ -112,12 +108,12 @@ open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
         override fun execute(task: ProcessAndroidAppResourcesTask) {
             task.variantName = scope.fullVariantName
             task.manifestFileDirectory =
-                    if (scope.hasOutput(TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
-                        scope.getOutput(TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+                    if (scope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
+                        scope.getOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
                     } else {
-                        scope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS)
+                        scope.getOutput(InternalArtifactType.MERGED_MANIFESTS)
                     }
-            task.thisSubProjectStaticLibrary = scope.getOutput(TaskOutputHolder.TaskOutputType.RES_STATIC_LIBRARY)
+            task.thisSubProjectStaticLibrary = scope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY)
             task.libraryDependencies =
                     scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

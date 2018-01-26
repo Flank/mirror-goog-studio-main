@@ -23,7 +23,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.ClassField;
@@ -203,14 +203,14 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         return ImmutableList.of(
                 new AndroidArtifactOutputImpl(
                         new EarlySyncBuildOutput(
-                                TaskOutputHolder.TaskOutputType.APK,
+                                InternalArtifactType.APK,
                                 mainApkInfo.getType(),
                                 mainApkInfo.getFilters(),
                                 mainApkInfo.getVersionCode(),
                                 splitOutputsSupplier.guessOutputFile(
                                         baseName + SdkConstants.DOT_ANDROID_PACKAGE)),
                         new EarlySyncBuildOutput(
-                                TaskOutputHolder.TaskOutputType.APK,
+                                InternalArtifactType.APK,
                                 mainApkInfo.getType(),
                                 mainApkInfo.getFilters(),
                                 mainApkInfo.getVersionCode(),
@@ -227,7 +227,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                         manifestOutput ->
                                 new AndroidArtifactOutputImpl(
                                         new EarlySyncBuildOutput(
-                                                TaskOutputHolder.TaskOutputType.APK,
+                                                InternalArtifactType.APK,
                                                 manifestOutput.getApkType(),
                                                 manifestOutput.getFiltersData(),
                                                 manifestOutput.getVersionCode(),

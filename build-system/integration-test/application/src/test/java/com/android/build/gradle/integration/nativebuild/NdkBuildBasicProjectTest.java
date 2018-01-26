@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
@@ -116,7 +118,7 @@ public class NdkBuildBasicProjectTest {
     }
 
     @Test
-    public void chekApkContentWithInjectedAbi() throws IOException, InterruptedException {
+    public void checkApkContentWithInjectedAbi() throws IOException, InterruptedException {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         // Pass invalid-abi, x86 and armeabi. The first (invalid-abi) should be ignored because
         // it is not valid for the build . The second (x86) should be the one chosen to build.

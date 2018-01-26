@@ -59,6 +59,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -527,6 +528,20 @@ public class ResourceUsageAnalyzer {
         zos.closeEntry();
     }
 
+    /** Writes the whitelist string to whitelist file specified by destination */
+    public void emitWhitelist(Path destination) throws IOException {
+        File destinationFile = destination.toFile();
+        if (!destinationFile.exists()) {
+            destinationFile.getParentFile().mkdirs();
+            boolean success = destinationFile.createNewFile();
+            if (!success) {
+                throw new IOException("Could not create " + destination);
+            }
+        }
+        Files.write(mModel.dumpWhitelistedResources(), destinationFile, UTF_8);
+    }
+
+
     /**
      * Remove resources (already identified by {@link #analyze()}).
      *
@@ -909,6 +924,7 @@ public class ResourceUsageAnalyzer {
                                         + "matches string pool constant " + string);
                             }
                             ResourceUsageModel.markReachable(resource);
+                            mModel.addResourceToWhitelist(resource);
                         }
                     }
                 }

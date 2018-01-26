@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.integration.databinding;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.AarSubject.assertThat;
+import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
+import static com.android.testutils.truth.Java8OptionalSubject.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;

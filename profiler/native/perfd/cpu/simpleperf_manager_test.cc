@@ -113,7 +113,7 @@ TEST(SimpleperfManagerTest, StopProfilingProfiledApp) {
                                     &error);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 
-  bool result = simpleperf_manager.StopProfiling(app_name, &error);
+  bool result = simpleperf_manager.StopProfiling(app_name, true, &error);
   EXPECT_TRUE(result);
   EXPECT_FALSE(simpleperf_manager.IsProfiling(app_name));
 }
@@ -125,7 +125,7 @@ TEST(SimpleperfManagerTest, StopProfilingNotProfiledApp) {
   string error;
   string app_name = "app";  // App that is not currently being profiled
 
-  bool result = simpleperf_manager.StopProfiling(app_name, &error);
+  bool result = simpleperf_manager.StopProfiling(app_name, true, &error);
   EXPECT_FALSE(result);
   EXPECT_THAT(error, HasSubstr("This app was not being profiled"));
 }
@@ -147,7 +147,7 @@ TEST(SimpleperfManagerTest, StopProfilingFailToKillSimpleperf) {
                                     &error);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 
-  bool result = simpleperf_manager.StopProfiling(app_name, &error);
+  bool result = simpleperf_manager.StopProfiling(app_name, true, &error);
   EXPECT_FALSE(result);
   EXPECT_THAT(error, HasSubstr("Failed to send SIGTERM to simpleperf"));
   // TODO (b/67630133): decide if we should keep profiling the app if we fail to
@@ -173,9 +173,54 @@ TEST(SimpleperfManagerTest, StopProfilingFailToConvertProto) {
                                     &error);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 
-  bool result = simpleperf_manager.StopProfiling(app_name, &error);
+  bool result = simpleperf_manager.StopProfiling(app_name, true, &error);
   EXPECT_FALSE(result);
   EXPECT_THAT(error, HasSubstr("Unable to generate simpleperf report"));
+  EXPECT_FALSE(simpleperf_manager.IsProfiling(app_name));
+}
+
+TEST(SimpleperfManagerTest, StopSimpleperfProfiledApp) {
+  FakeClock fake_clock(0);
+  FakeSimpleperf simpleperf;
+  SimpleperfManager simpleperf_manager(fake_clock, simpleperf);
+  string error;
+  string fake_trace_path = "/tmp/trace_path";
+  string app_name = "some_app_name";
+  string abi = "x86";
+
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+                                    &error);
+  EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
+
+  bool result = simpleperf_manager.StopProfiling(app_name, false, &error);
+  EXPECT_TRUE(result);
+  // App was being profiled when we stopped simpleperf. It shouldn't be on the
+  // list of profiled apps anymore.
+  EXPECT_FALSE(simpleperf_manager.IsProfiling(app_name));
+}
+
+TEST(SimpleperfManagerTest, StopSimpleperfFailToKillSimpleperf) {
+  FakeClock fake_clock(0);
+  FakeSimpleperf simpleperf;
+  // Simulate a failure when trying to kill simpleperf.
+  // That should cause |StopSimpleperf| to fail.
+  simpleperf.SetKillSimpleperfSuccess(false);
+  SimpleperfManager simpleperf_manager(fake_clock, simpleperf);
+
+  string error;
+  string fake_trace_path = "/tmp/trace_path";
+  string app_name = "some_app_name";
+  string abi = "x86_64";
+
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+                                    &error);
+  EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
+
+  bool result = simpleperf_manager.StopProfiling(app_name, false, &error);
+  EXPECT_FALSE(result);
+  // If something goes wrong when we try to kill simpleplerf, we write that to
+  // |error| and propagate it to the logs (CpuService will do the logging)
+  EXPECT_THAT(error, HasSubstr("Failed to send SIGTERM to simpleperf"));
   EXPECT_FALSE(simpleperf_manager.IsProfiling(app_name));
 }
 

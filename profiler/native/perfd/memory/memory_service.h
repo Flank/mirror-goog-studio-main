@@ -33,7 +33,7 @@ class MemoryServiceImpl final
  public:
   MemoryServiceImpl(InternalMemoryServiceImpl* private_service,
                     Daemon::Utilities* utilities,
-                    std::unordered_map<int64_t, MemoryCollector>* collectors)
+                    std::unordered_map<int32_t, MemoryCollector>* collectors)
       : private_service_(private_service),
         clock_(utilities->clock()),
         file_cache_(utilities->file_cache()),
@@ -72,16 +72,6 @@ class MemoryServiceImpl final
       ::grpc::ServerContext* context,
       const ::profiler::proto::TrackAllocationsRequest* request,
       ::profiler::proto::TrackAllocationsResponse* response) override;
-
-  ::grpc::Status SuspendTrackAllocations(
-      ::grpc::ServerContext* context,
-      const ::profiler::proto::SuspendTrackAllocationsRequest* request,
-      ::profiler::proto::SuspendTrackAllocationsResponse* response) override;
-
-  ::grpc::Status ResumeTrackAllocations(
-      ::grpc::ServerContext* context,
-      const ::profiler::proto::ResumeTrackAllocationsRequest* request,
-      ::profiler::proto::ResumeTrackAllocationsResponse* response) override;
 
   ::grpc::Status ListHeapDumpInfos(
       ::grpc::ServerContext* context,
@@ -129,8 +119,8 @@ class MemoryServiceImpl final
   InternalMemoryServiceImpl* private_service_;
   const Clock& clock_;
   FileCache* file_cache_;
-  // Maps session id to MemoryCollector
-  std::unordered_map<int64_t, MemoryCollector>& collectors_;
+  // Maps pid to MemoryCollector
+  std::unordered_map<int32_t, MemoryCollector>& collectors_;
 };
 }  // namespace profiler
 

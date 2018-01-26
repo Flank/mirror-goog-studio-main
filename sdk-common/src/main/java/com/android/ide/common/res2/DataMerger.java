@@ -452,13 +452,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
             }
 
             return true;
-        } catch (SAXParseException e) {
-            throw MergingException.wrapException(e).withFile(file).build();
-        } catch (IOException e) {
-            throw MergingException.wrapException(e).withFile(file).build();
-        } catch (ParserConfigurationException e) {
-            throw MergingException.wrapException(e).withFile(file).build();
-        } catch (SAXException e) {
+        } catch (IOException | SAXException e) {
             throw MergingException.wrapException(e).withFile(file).build();
         }
     }

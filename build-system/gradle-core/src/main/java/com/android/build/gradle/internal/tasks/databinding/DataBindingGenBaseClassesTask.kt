@@ -20,7 +20,7 @@ import android.databinding.tool.BaseDataBinder
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.store.LayoutInfoInput
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS
+import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils

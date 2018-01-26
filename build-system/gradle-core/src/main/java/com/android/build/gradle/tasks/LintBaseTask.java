@@ -21,11 +21,11 @@ import static com.android.build.VariantOutput.OutputType.MAIN;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.LINT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.ALL_CLASSES;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_MANIFEST;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LINT_JAR;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MANIFEST_MERGE_REPORT;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -34,8 +34,8 @@ import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.options.BooleanOption;
@@ -232,8 +232,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
             }
 
             BuildElements manifests =
-                    ExistingBuildElements.from(
-                            TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, file);
+                    ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, file);
 
             if (manifests.isEmpty()) {
                 throw new RuntimeException("Can't find any manifest in folder: " + file);

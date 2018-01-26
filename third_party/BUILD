@@ -17,14 +17,14 @@ maven_java_library(
 
 maven_java_library(
     name = "com.android.tools.build_aapt2-proto",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/aapt2-proto/0.1.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/aapt2-proto/0.2.0:jar",
     visibility = ["//visibility:public"],
     exports = [":com.google.protobuf_protobuf-java"],
 )
 
 maven_java_library(
     name = "com.android.tools.build_bundletool",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.1.0-alpha01:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.1.0-alpha04:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.android.tools.build_aapt2-proto",

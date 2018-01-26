@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.errors
 
+import com.google.common.collect.ImmutableTable
+
 /**
  * Reporter for issues during evaluation.
  *
@@ -32,7 +34,13 @@ interface DeprecationReporter {
         // deprecation due to the move to the new DSL.
         OLD_DSL("at the end of 2018"),
         // Obsolete Dex Options
-        DEX_OPTIONS("at the end of 2018")
+        DEX_OPTIONS("at the end of 2018"),
+        // "auto" in splits and resConfigs.
+        AUTO_SPLITS_OR_RES_CONFIG("at the end of 2018"),
+        // Deprecation of AAPT, replaced by AAPT2.
+        AAPT("at the end of 2018"),
+        // When legacy dexer will be removed and fully replaced by D8.
+        LEGACY_DEXER("in AGP version 3.2")
     }
 
     /**
@@ -62,6 +70,24 @@ interface DeprecationReporter {
             newDslElement: String,
             oldDslElement: String,
             url: String,
+            deprecationTarget: DeprecationTarget)
+
+    /**
+     * Reports a deprecated value usage for a DSL element in the DSL/API.
+     *
+     * @param dslElement name of DSL element containing the deprecated value, with the name of the
+     * class.
+     * @param oldValue value of the DSL element which has been deprecated.
+     * @param newValue optional new value replacing the deprecated value.
+     * @param url optional url for more context.
+     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
+     * timing is added to the message.
+     */
+    fun reportDeprecatedValue(
+            dslElement: String,
+            oldValue: String,
+            newValue: String?,
+            url: String?,
             deprecationTarget: DeprecationTarget)
 
     /**
@@ -102,4 +128,25 @@ interface DeprecationReporter {
             newConfiguration: String,
             oldConfiguration: String,
             deprecationTarget: DeprecationTarget)
+
+    /**
+     * Reports a deprecated option usage.
+     *
+     * @param option the deprecated option
+     * @param value the value for the flag which should be used to remove the warning
+     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
+     * timing is added to the message.
+     */
+    fun reportDeprecatedOption(
+            option: String,
+            value: String?,
+            deprecationTarget: DeprecationTarget)
+
+    /**
+     * Reports deprecated options usage.
+     *
+     * @param options a table containing the flag name, default value and the deprecation target of
+     * each deprecated option.
+     */
+    fun reportDeprecatedOptions(options: ImmutableTable<String, String, DeprecationTarget>)
 }

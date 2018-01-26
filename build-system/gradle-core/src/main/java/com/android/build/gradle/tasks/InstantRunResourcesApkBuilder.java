@@ -25,8 +25,8 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.builder.core.AndroidBuilder;
@@ -65,7 +65,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
 
     private FileCollection resources;
 
-    private TaskOutputHolder.TaskOutputType resInputType;
+    private InternalArtifactType resInputType;
 
     @Nested
     @Optional
@@ -132,9 +132,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
                                         "Exception while creating resources split APK", e);
                             }
                         })
-                .into(
-                        TaskOutputHolder.TaskOutputType.INSTANT_RUN_PACKAGED_RESOURCES,
-                        outputDirectory);
+                .into(InternalArtifactType.INSTANT_RUN_PACKAGED_RESOURCES, outputDirectory);
     }
 
     @VisibleForTesting
@@ -150,10 +148,10 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
 
         protected final VariantScope variantScope;
         private final FileCollection resources;
-        private final TaskOutputHolder.TaskOutputType resInputType;
+        private final InternalArtifactType resInputType;
 
         public ConfigAction(
-                @NonNull TaskOutputHolder.TaskOutputType resInputType,
+                @NonNull InternalArtifactType resInputType,
                 @NonNull FileCollection resources,
                 @NonNull VariantScope scope) {
             this.resInputType = resInputType;

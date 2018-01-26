@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
-import com.android.build.gradle.internal.scope.TaskOutputHolder
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.utils.FileCache
@@ -91,10 +91,10 @@ open class InstantRunMainApkResourcesBuilderTest {
         `when`(variantScope.getTaskName(any(String::class.java))).thenReturn("taskFoo")
         `when`(variantScope.globalScope).thenReturn(globalScope)
         `when`(variantScope.outputScope).thenReturn(outputScope)
-        `when`(variantScope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_RES))
+        `when`(variantScope.getOutput(InternalArtifactType.MERGED_RES))
                 .thenReturn(resources)
         manifestFiles = project.files(manifestFileFolder.root)
-        `when`(variantScope.getOutput(TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS))
+        `when`(variantScope.getOutput(InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS))
                 .thenReturn(manifestFiles)
         `when`(resources.asFileTree).thenReturn(fileTree)
     }
@@ -104,7 +104,7 @@ open class InstantRunMainApkResourcesBuilderTest {
         task = project.tasks.create("test", InstantRunMainApkResourcesBuilder::class.java)
         val configAction = InstantRunMainApkResourcesBuilder.ConfigAction(
                 variantScope,
-                TaskOutputHolder.TaskOutputType.MERGED_RES)
+                InternalArtifactType.MERGED_RES)
 
         val outDir = temporaryFolder.newFolder()
         `when`(variantScope.instantRunMainApkResourcesDir).thenReturn(outDir)
@@ -130,7 +130,7 @@ open class InstantRunMainApkResourcesBuilderTest {
 
         val configAction = InstantRunMainApkResourcesBuilder.ConfigAction(
                 variantScope,
-                TaskOutputHolder.TaskOutputType.MERGED_RES)
+                InternalArtifactType.MERGED_RES)
 
         val outDir = temporaryFolder.newFolder()
         `when`(variantScope.instantRunMainApkResourcesDir).thenReturn(outDir)
@@ -144,7 +144,7 @@ open class InstantRunMainApkResourcesBuilderTest {
                 "      android:versionName=\"1.0\">\n" +
                 "</manifest>\n")
 
-        BuildOutput(TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+        BuildOutput(InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
                 OutputFactory("test", variantConfiguration, outputScope).addMainApk(),
                 manifestFile)
                 .save(manifestFileFolder.root)
@@ -158,11 +158,11 @@ open class InstantRunMainApkResourcesBuilderTest {
         assertThat(resultingFiles).hasLength(1)
         assertThat(resultingFiles[0].name).isEqualTo("output.json")
         val buildArtifacts = ExistingBuildElements.from(
-                TaskOutputHolder.TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES, outDir)
+                InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES, outDir)
         assertThat(buildArtifacts.size()).isEqualTo(1)
         val buildArtifact = Iterables.getOnlyElement(buildArtifacts)
         assertThat(buildArtifact.type).isEqualTo(
-                TaskOutputHolder.TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES)
+                InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES)
         assertThat(buildArtifact.apkInfo.type.toString()).isEqualTo("MAIN")
     }
 }

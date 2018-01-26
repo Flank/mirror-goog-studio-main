@@ -17,18 +17,19 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.ArtifactType;
 
 public class MissingTaskOutputException extends RuntimeException {
 
-    @NonNull private final TaskOutputHolder.OutputType outputType;
+    @NonNull private final ArtifactType outputType;
 
-    public MissingTaskOutputException(@NonNull TaskOutputHolder.OutputType outputType) {
+    public MissingTaskOutputException(@NonNull ArtifactType outputType) {
         super("No output of type: " + outputType);
         this.outputType = outputType;
     }
 
     @NonNull
-    public TaskOutputHolder.OutputType getOutputType() {
+    public ArtifactType getOutputType() {
         return outputType;
     }
 }

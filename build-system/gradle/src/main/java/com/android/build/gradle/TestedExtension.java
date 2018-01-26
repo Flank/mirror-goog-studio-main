@@ -9,6 +9,7 @@ import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -45,8 +46,8 @@ public abstract class TestedExtension extends BaseExtension implements TestedAnd
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
-            @NonNull ExtraModelInfo extraModelInfo,
-            boolean isDependency) {
+            @NonNull SourceSetManager sourceSetManager,
+            @NonNull ExtraModelInfo extraModelInfo) {
         super(
                 project,
                 projectOptions,
@@ -56,11 +57,11 @@ public abstract class TestedExtension extends BaseExtension implements TestedAnd
                 productFlavors,
                 signingConfigs,
                 buildOutputs,
-                extraModelInfo,
-                isDependency);
+                sourceSetManager,
+                extraModelInfo);
 
-        getSourceSets().create(ANDROID_TEST.getPrefix());
-        getSourceSets().create(UNIT_TEST.getPrefix());
+        sourceSetManager.setUpTestSourceSet(ANDROID_TEST.getPrefix());
+        sourceSetManager.setUpTestSourceSet(UNIT_TEST.getPrefix());
     }
 
     /**

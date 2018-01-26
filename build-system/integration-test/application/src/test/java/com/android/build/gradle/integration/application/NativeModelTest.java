@@ -21,7 +21,10 @@ import static com.android.build.gradle.integration.common.fixture.app.HelloWorld
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.androidMkGoogleTest;
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.applicationMk;
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.cmakeLists;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat;
+import static com.android.build.gradle.integration.common.truth.NativeSettingsSubject.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;

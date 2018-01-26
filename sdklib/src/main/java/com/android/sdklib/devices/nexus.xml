@@ -1422,7 +1422,7 @@
             <d:screen>
                 <d:screen-size>normal</d:screen-size>
                 <d:diagonal-length>5.0</d:diagonal-length>
-                <d:pixel-density>xxhdpi</d:pixel-density>
+                <d:pixel-density>420dpi</d:pixel-density>
                 <d:screen-ratio>notlong</d:screen-ratio>
                 <d:dimensions>
                     <d:x-dimension>1080</d:x-dimension>

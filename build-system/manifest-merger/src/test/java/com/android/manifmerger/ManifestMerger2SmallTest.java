@@ -666,7 +666,6 @@ public class ManifestMerger2SmallTest {
                      + "         t:backupAgent=\"com.foo.example.myBackupAgent\"/>\n"
                      + "</manifest>";
 
-        // Overlays can't have a package
         String xmlToMerge = ""
                      + "<manifest\n"
                      + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
@@ -676,22 +675,16 @@ public class ManifestMerger2SmallTest {
                      + "</manifest>";
 
         File inputFile = TestUtils.inputAsFile("testOverlayMerge", xmlInput);
-        final File tempFile = new File(inputFile.getParentFile(), "nevercreated.xml");
+        File overlayFile = TestUtils.inputAsFile("testOverlayMerge", xmlToMerge);
 
         MockLog mockLog = new MockLog();
-        MergingReport mergingReport = ManifestMerger2
-          .newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-          .withFeatures(ManifestMerger2.Invoker.Feature.EXTRACT_FQCNS, ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)
-          .addLibraryManifest(tempFile)
-          .asType(XmlDocument.Type.OVERLAY)
-          .withFileStreamProvider(new ManifestMerger2.FileStreamProvider() {
-              @Override
-              protected InputStream getInputStream(@NonNull File file) throws FileNotFoundException {
-                  String text = (file == inputFile) ? xmlInput : xmlToMerge;
-                  return new ByteArrayInputStream(text.getBytes(Charsets.UTF_8));
-              }
-          })
-          .merge();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .withFeatures(
+                                ManifestMerger2.Invoker.Feature.EXTRACT_FQCNS,
+                                ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)
+                        .addFlavorAndBuildTypeManifest(overlayFile)
+                        .merge();
 
         assertTrue(mergingReport.getResult().isSuccess());
         Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));

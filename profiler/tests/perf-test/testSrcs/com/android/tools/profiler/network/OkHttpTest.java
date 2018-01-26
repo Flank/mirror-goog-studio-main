@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.tools.profiler.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
-
 import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpConnectionData;
@@ -65,14 +64,7 @@ public class OkHttpTest {
         myGrpc = myPerfDriver.getGrpc();
 
         // Invoke beginSession to establish a session we can use to query data
-        BeginSessionResponse response =
-                myGrpc.getProfilerStub()
-                        .beginSession(
-                                BeginSessionRequest.newBuilder()
-                                        .setDeviceId(1234)
-                                        .setProcessId(myGrpc.getProcessId())
-                                        .build());
-        mySession = response.getSession();
+        mySession = myGrpc.beginSession();
     }
 
     @Test

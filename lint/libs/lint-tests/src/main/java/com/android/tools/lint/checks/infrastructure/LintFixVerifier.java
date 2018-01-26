@@ -198,7 +198,7 @@ public class LintFixVerifier {
                                     XmlUtils.parseDocument(before, true), true);
                             after = XmlPrettyPrinter.prettyPrint(
                                     XmlUtils.parseDocument(after, true), true);
-                        } catch (ParserConfigurationException | SAXException | IOException e) {
+                        } catch (SAXException | IOException e) {
                             throw new RuntimeException(e);
                         }
                     }

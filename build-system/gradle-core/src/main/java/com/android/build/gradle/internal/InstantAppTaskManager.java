@@ -22,7 +22,7 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.InstantAppProvisionTask;
 import com.android.build.gradle.internal.tasks.InstantAppSideLoadTask;
@@ -77,7 +77,7 @@ public class InstantAppTaskManager extends TaskManager {
                     variantScope.getAssembleTask().dependsOn(bundleTask);
 
                     variantScope.addTaskOutput(
-                            TaskOutputHolder.TaskOutputType.INSTANTAPP_BUNDLE,
+                            InternalArtifactType.INSTANTAPP_BUNDLE,
                             bundleDir,
                             bundleTask.getName());
 

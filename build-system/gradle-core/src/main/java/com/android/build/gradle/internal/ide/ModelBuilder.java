@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.ide;
 
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_DATA_BINDING_V2;
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
 import static com.android.builder.model.AndroidProject.PROJECT_TYPE_FEATURE;
@@ -27,6 +27,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -44,9 +45,9 @@ import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
+import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -120,8 +121,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilder;
  * Builder for the custom Android model.
  */
 public class ModelBuilder implements ToolingModelBuilder {
-
-    public static final String ROOT_BUILD_NAME = "__root_build_name__";
+    public static final String CURRENT_BUILD_NAME = "__current_build__";
 
     @NonNull
     static final DependenciesImpl EMPTY_DEPENDENCIES_IMPL =
@@ -143,7 +143,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     private boolean modelWithFullDependency = false;
     /**
      * a map that goes from build name ({@link BuildIdentifier#getName()} to the root dir of the
-     * build. For the root build, there is no name so {@link #ROOT_BUILD_NAME} is used.
+     * build.
      */
     private ImmutableMap<String, String> buildMapping = null;
 
@@ -512,20 +512,17 @@ public class ModelBuilder implements ToolingModelBuilder {
         Set<File> additionalTestClasses = new HashSet<>();
         additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
         additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
-        if (scope.hasOutput(TaskOutputHolder.TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY)) {
+        if (scope.hasOutput(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)) {
             additionalTestClasses.add(
-                    scope.getOutput(TaskOutputHolder.TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY)
+                    scope.getOutput(InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY)
                             .getSingleFile());
         }
         // The separately compile R class, if applicable.
         VariantScope testedScope = Objects.requireNonNull(scope.getTestedVariantData()).getScope();
-        if (testedScope.hasOutput(
-                TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+        if (testedScope.hasOutput(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
             additionalTestClasses.add(
                     testedScope
-                            .getOutput(
-                                    TaskOutputHolder.TaskOutputType
-                                            .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)
+                            .getOutput(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)
                             .getSingleFile());
         }
 
@@ -757,9 +754,9 @@ public class ModelBuilder implements ToolingModelBuilder {
             case FEATURE:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(
-                                VariantScope.TaskOutputType.APK,
-                                VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
-                                VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
+                                InternalArtifactType.APK,
+                                InternalArtifactType.ABI_PACKAGED_SPLIT,
+                                InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
                         ImmutableList.of(variantScope.getApkLocation()));
             case LIBRARY:
                 ApkInfo mainApkInfo =
@@ -767,16 +764,16 @@ public class ModelBuilder implements ToolingModelBuilder {
                 return BuildOutputSupplier.of(
                         ImmutableList.of(
                                 new EarlySyncBuildOutput(
-                                        VariantScope.TaskOutputType.AAR,
+                                        InternalArtifactType.AAR,
                                         mainApkInfo.getType(),
                                         mainApkInfo.getFilters(),
                                         mainApkInfo.getVersionCode(),
                                         variantScope
-                                                .getOutput(TaskOutputHolder.TaskOutputType.AAR)
+                                                .getOutput(InternalArtifactType.AAR)
                                                 .getSingleFile())));
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
-                        ImmutableList.of(VariantScope.TaskOutputType.APK),
+                        ImmutableList.of(InternalArtifactType.APK),
                         ImmutableList.of(variantScope.getApkLocation()));
             case UNIT_TEST:
                 return (BuildOutputSupplier<Collection<EarlySyncBuildOutput>>)
@@ -786,7 +783,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                             //noinspection ConstantConditions
                             final VariantScope testedVariantScope = testedVariantData.getScope();
 
-                            VariantPublishingSpec testedSpec =
+                            PublishingSpecs.VariantSpec testedSpec =
                                     testedVariantScope
                                             .getPublishingSpec()
                                             .getTestingSpec(
@@ -795,11 +792,10 @@ public class ModelBuilder implements ToolingModelBuilder {
                                                             .getType());
 
                             // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
-                            VariantPublishingSpec.OutputPublishingSpec taskOutputSpec =
+                            PublishingSpecs.OutputSpec taskOutputSpec =
                                     testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
                             // now get the output type
-                            TaskOutputHolder.OutputType testedOutputType =
-                                    taskOutputSpec.getOutputType();
+                            ArtifactType testedOutputType = taskOutputSpec.getOutputType();
 
                             return ImmutableList.of(
                                     new EarlySyncBuildOutput(
@@ -830,7 +826,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             case ANDROID_TEST:
             case FEATURE:
                 return new BuildOutputsSupplier(
-                        ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
+                        ImmutableList.of(InternalArtifactType.MERGED_MANIFESTS),
                         ImmutableList.of(variantData.getScope().getManifestOutputDirectory()));
             case LIBRARY:
                 ApkInfo mainApkInfo =
@@ -838,7 +834,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 return BuildOutputSupplier.of(
                         ImmutableList.of(
                                 new EarlySyncBuildOutput(
-                                        VariantScope.TaskOutputType.MERGED_MANIFESTS,
+                                        InternalArtifactType.MERGED_MANIFESTS,
                                         mainApkInfo.getType(),
                                         mainApkInfo.getFilters(),
                                         mainApkInfo.getVersionCode(),
@@ -1003,19 +999,35 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     @NonNull
     public static ImmutableMap<String, String> computeBuildMapping(@NonNull Gradle gradle) {
-        // first, ensure we are starting from the root Gradle object.
-        //noinspection ConstantConditions
-        while (gradle.getParent() != null) {
-            gradle = gradle.getParent();
-        }
-
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
-        // get the roo dir for the top project
-        builder.put(ROOT_BUILD_NAME, gradle.getRootProject().getProjectDir().getAbsolutePath());
+        // Get the root dir for current build.
+        // This is necessary to handle the case when dependency comes from the same build with consumer,
+        // i.e. when BuildIdentifier.isCurrentBuild returns true. In that case, BuildIdentifier.getName
+        // returns ":" instead of the actual build name.
+        String currentBuildPath = gradle.getRootProject().getProjectDir().getAbsolutePath();
+        builder.put(CURRENT_BUILD_NAME, currentBuildPath);
 
-        for (IncludedBuild includedBuild : gradle.getIncludedBuilds()) {
-            builder.put(includedBuild.getName(), includedBuild.getProjectDir().getAbsolutePath());
+        Gradle rootGradleProject = gradle;
+        // first, ensure we are starting from the root Gradle object.
+        //noinspection ConstantConditions
+        while (rootGradleProject.getParent() != null) {
+            rootGradleProject = rootGradleProject.getParent();
+        }
+
+        // get the root dir for the top project if different from current project.
+        if (rootGradleProject != gradle) {
+            builder.put(
+                    rootGradleProject.getRootProject().getName(),
+                    rootGradleProject.getRootProject().getProjectDir().getAbsolutePath());
+        }
+
+        for (IncludedBuild includedBuild : rootGradleProject.getIncludedBuilds()) {
+            String includedBuildPath = includedBuild.getProjectDir().getAbsolutePath();
+            // current build has been added with key CURRENT_BUIlD_NAME, avoid redundant entry.
+            if (!includedBuildPath.equals(currentBuildPath)) {
+                builder.put(includedBuild.getName(), includedBuildPath);
+            }
         }
 
         return builder.build();

@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.android.resources.ResourceAccessibility;
 import com.android.resources.ResourceType;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -179,7 +180,8 @@ public class SymbolTableTest {
         } catch (IllegalArgumentException e) {
             assertThat(e)
                     .hasMessage(
-                            "Package 'com.example.int' from AndroidManifest.xml is not a valid Java package name as 'int' is a Java keyword.");
+                            "Package 'com.example.int' from AndroidManifest.xml is not a valid"
+                                    + " Java package name as 'int' is a Java keyword.");
         }
     }
 
@@ -191,7 +193,68 @@ public class SymbolTableTest {
         } catch (IllegalArgumentException e) {
             assertThat(e)
                     .hasMessage(
-                            "Package 'com.example.my-package' from AndroidManifest.xml is not a valid Java package name as 'my-package' is not a valid Java identifier.");
+                            "Package 'com.example.my-package' from AndroidManifest.xml is not a"
+                                    + " valid Java package name as 'my-package' is not a valid"
+                                    + " Java identifier.");
         }
+    }
+
+    @Test
+    public void filterByAccessibility() {
+        SymbolTable table =
+                SymbolTable.builder()
+                        .add(
+                                Symbol.createSymbol(
+                                        ResourceAccessibility.PUBLIC,
+                                        ResourceType.DRAWABLE,
+                                        "img",
+                                        SymbolJavaType.INT,
+                                        "0",
+                                        Symbol.NO_CHILDREN))
+                        .add(
+                                Symbol.createSymbol(
+                                        ResourceAccessibility.DEFAULT,
+                                        ResourceType.ID,
+                                        "bar",
+                                        SymbolJavaType.INT,
+                                        "0",
+                                        Symbol.NO_CHILDREN))
+                        .add(
+                                Symbol.createSymbol(
+                                        ResourceAccessibility.PRIVATE,
+                                        ResourceType.STRING,
+                                        "beep",
+                                        SymbolJavaType.INT,
+                                        "0",
+                                        Symbol.NO_CHILDREN))
+                        .add(
+                                Symbol.createSymbol(
+                                        ResourceAccessibility.DEFAULT,
+                                        ResourceType.STRING,
+                                        "foo",
+                                        SymbolJavaType.INT,
+                                        "0",
+                                        Symbol.NO_CHILDREN))
+                        .add(
+                                Symbol.createSymbol(
+                                        ResourceAccessibility.PUBLIC,
+                                        ResourceType.TRANSITION,
+                                        "t",
+                                        SymbolJavaType.INT,
+                                        "0",
+                                        Symbol.NO_CHILDREN))
+                        .add(
+                                Symbol.createSymbol(
+                                        ResourceAccessibility.PUBLIC,
+                                        ResourceType.XML,
+                                        "xml",
+                                        SymbolJavaType.INT,
+                                        "0",
+                                        Symbol.NO_CHILDREN))
+                        .build();
+
+        assertThat(table.getSymbolByAccessibility(ResourceAccessibility.DEFAULT)).hasSize(2);
+        assertThat(table.getSymbolByAccessibility(ResourceAccessibility.PRIVATE)).hasSize(1);
+        assertThat(table.getSymbolByAccessibility(ResourceAccessibility.PUBLIC)).hasSize(3);
     }
 }

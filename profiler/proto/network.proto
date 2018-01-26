@@ -266,6 +266,10 @@ message HttpDetailsResponse {
     //
     // Looks something like: "d652e629bcf87c998c614"
     string payload_id = 1;
+
+    // The size of the response payload.
+    // If the payload does not exist the length will be 0.
+    int32 payload_size = 2;
   }
 
   message AccessingThreads {

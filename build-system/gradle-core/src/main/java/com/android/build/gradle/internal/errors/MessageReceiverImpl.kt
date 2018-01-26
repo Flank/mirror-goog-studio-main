@@ -40,14 +40,13 @@ class MessageReceiverImpl(
     private val mGson: Gson?
 
     init {
-        if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {
+        mGson = if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {
             val gsonBuilder = GsonBuilder()
             MessageJsonSerializer.registerTypeAdapters(gsonBuilder)
-            mGson = gsonBuilder.create()
+            gsonBuilder.create()
         } else {
-            mGson = null
+            null
         }
-
     }
 
     override fun receiveMessage(message: Message) {
@@ -73,7 +72,6 @@ class MessageReceiverImpl(
      * Only call if errorFormatMode == [ErrorFormatMode.MACHINE_PARSABLE]
      */
     private fun machineReadableMessage(message: Message): String {
-        Preconditions.checkNotNull<Gson>(mGson)
         return STDOUT_ERROR_TAG + mGson!!.toJson(message)
     }
 }

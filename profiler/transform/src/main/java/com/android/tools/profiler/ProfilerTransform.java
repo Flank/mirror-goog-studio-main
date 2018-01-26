@@ -57,7 +57,7 @@ public final class ProfilerTransform implements BiConsumer<InputStream, OutputSt
 
     @Override
     public void accept(InputStream in, OutputStream out) {
-        ClassWriter writer = new ClassWriter(0);
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         ClassVisitor visitor = writer;
         visitor = new InitializerAdapter(visitor);
         visitor = new HttpURLAdapter(visitor);

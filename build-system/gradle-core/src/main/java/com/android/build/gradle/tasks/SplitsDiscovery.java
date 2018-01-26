@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -378,7 +379,7 @@ public class SplitsDiscovery extends AndroidBuilderTask {
             // Only consume the merged resources if auto is being used.
             if (task.densityAuto || task.languageAuto || task.resConfigAuto) {
                 task.mergedResourcesFolders =
-                        variantScope.getOutput(VariantScope.TaskOutputType.MERGED_RES);
+                        variantScope.getOutput(InternalArtifactType.MERGED_RES);
             }
 
             final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();

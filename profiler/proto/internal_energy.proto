@@ -1,0 +1,61 @@
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package profiler.proto;
+
+// RPC services to send data to perfd.
+service InternalEnergyService {
+  rpc SendWakeLockEvent(WakeLockEventRequest) returns (EmptyEnergyReply) {}
+}
+
+// Tracks the instrumented data of an Android Wake Lock event.
+// https://developer.android.com/reference/android/os/PowerManager.WakeLock.html
+message WakeLockEventRequest {
+  enum EventType {
+    UNSPECIFIED = 0;
+    // A wake lock is acquired, forcing the device to stay awake.
+    ACQUIRE = 1;
+    // A wake lock is released when it's not needed anymore.
+    RELEASE = 2;
+  }
+
+  // Timestamp of the event in nanoseconds.
+  int64 timestamp = 1;
+  // Type of the wake lock event.
+  EventType event_type = 2;
+  // Unique ID to identify a wake lock.
+  // Generated when a wake lock is instantiated using |app_id|next_int|.
+  int64 wake_lock_id = 3;
+  // Metadata of a wake lock.
+  WakeLockInfo wake_lock_info = 4;
+}
+
+message WakeLockInfo {
+  // Level and optional flags for the wake lock instance initialization.
+  // https://developer.android.com/reference/android/os/PowerManager.html#newWakeLock(int, java.lang.String)
+  int32 level_and_flags = 1;
+  // Tag of the wake lock (which users may have set for debugging purposes).
+  string tag = 2;
+  // An optional timeout in milliseconds given to the acquire call. The lock
+  // will be released after the given timeout expires.
+  int64 timeout = 3;
+  // Optional flags that modify the release behavior.
+  // https://developer.android.com/reference/android/os/PowerManager.WakeLock.html#release(int)
+  int32 release_flags = 4;
+}
+
+message EmptyEnergyReply {}

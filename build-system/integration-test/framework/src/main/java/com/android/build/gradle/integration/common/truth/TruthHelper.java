@@ -33,10 +33,6 @@ import com.android.builder.model.Variant;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
-import com.android.testutils.incremental.FileRecord;
-import com.android.testutils.truth.FileRecordSubject;
-import com.android.testutils.truth.FileSubject;
-import com.android.testutils.truth.FileSubjectFactory;
 import com.android.testutils.truth.Java8OptionalSubject;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Optional;
@@ -79,7 +75,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
-import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -88,20 +83,6 @@ import java.util.Map;
  * TODO: Remove methods that should be imported directly by statically importing Truth.assertThat
  */
 public class TruthHelper {
-    @NonNull
-    public static FileSubject assertThat(@Nullable File file) {
-        return assert_().about(FileSubjectFactory.factory()).that(file);
-    }
-
-    @NonNull
-    public static FileSubject assertThat(@NonNull Path path) {
-        return assertThat(path.toFile());
-    }
-
-    @NonNull
-    public static FileRecordSubject assertThat(@NonNull FileRecord fileRecord) {
-        return assert_().about(FileRecordSubject.FACTORY).that(fileRecord);
-    }
 
     @NonNull
     public static NativeLibrarySubject assertThatNativeLib(@Nullable File file) {

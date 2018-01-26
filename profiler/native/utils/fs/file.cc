@@ -80,6 +80,13 @@ void File::Close() {
   }
 }
 
+int32_t File::size() {
+  if (Exists()) {
+    return fs_->GetFileSize(path_);
+  }
+  return 0;
+}
+
 bool File::HandleCreate() { return fs_->CreateFile(path_); }
 
 bool File::HandleDelete() { return fs_->DeleteFile(path_); }

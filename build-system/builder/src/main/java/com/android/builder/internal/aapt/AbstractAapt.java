@@ -17,14 +17,8 @@
 package com.android.builder.internal.aapt;
 
 import com.android.annotations.NonNull;
-import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -34,19 +28,20 @@ import java.util.concurrent.ExecutionException;
 public abstract class AbstractAapt implements Aapt {
 
     @Override
-    public final void link(@NonNull AaptPackageConfig config)
+    public final void link(@NonNull AaptPackageConfig config, @NonNull ILogger logger)
             throws AaptException, ExecutionException, InterruptedException {
         validatePackageConfig(config);
         makeValidatedPackage(config).get();
     }
 
     /**
-     * Same as {@link #link(AaptPackageConfig)} but invoked only after validation has
-     * been performed.
+     * Same as {@link BlockingResourceLinker#link(AaptPackageConfig, ILogger)} but invoked only
+     * after validation has been performed.
      *
-     * @param config same as in {@link #link(AaptPackageConfig)}
-     * @return same as in {@link #link(AaptPackageConfig)}
-     * @throws AaptException same as in {@link #link(AaptPackageConfig)}
+     * @param config same as in {@link BlockingResourceLinker#link(AaptPackageConfig, ILogger)}
+     * @return same as in {@link BlockingResourceLinker#link(AaptPackageConfig, ILogger)}
+     * @throws AaptException same as in {@link BlockingResourceLinker#link(AaptPackageConfig,
+     *     ILogger)}
      */
     @NonNull
     protected abstract ListenableFuture<Void> makeValidatedPackage(
@@ -62,9 +57,7 @@ public abstract class AbstractAapt implements Aapt {
      * <ul>
      *   <li>The following fields must be defined:
      *       <ul>
-     *         <li>Android target (see {@link AaptPackageConfig#getAndroidTarget()});
-     *         <li>Build tools information (see {@link AaptPackageConfig#getBuildToolInfo()}};
-     *         <li>Logger (see {@link AaptPackageConfig#getLogger()});
+     *         <li>Android target (see {@link AaptPackageConfig#getAndroidJarPath()});
      *         <li>Manifest file (see {@link AaptPackageConfig#getManifestFile()});
      *         <li>{@code aapt} options (see {@link AaptPackageConfig#getOptions()});
      *         <li>Variant type (see {@link AaptPackageConfig#getVariantType()}};
@@ -85,11 +78,11 @@ public abstract class AbstractAapt implements Aapt {
      *         <li>Source output directory (see {@link AaptPackageConfig#getSourceOutputDir()});
      *         <li>Splits (see {@link AaptPackageConfig#getSplits()});
      *         <li>Symbol output directory (see {@link AaptPackageConfig#getSymbolOutputDir()});
-     *         <li>Debuggable (see {@link AaptPackageConfig#isDebuggable()}), {@code false} by
+     *         <li>Debuggable (see {@link AaptPackageConfig#getDebuggable()}), {@code false} by
      *             default;
-     *         <li>Pseudo localize (see {@link AaptPackageConfig#isPseudoLocalize()}), {@code false}
-     *             by default;
-     *         <li>Verbose (see {@link AaptPackageConfig#isVerbose()}), {@code false} by default;
+     *         <li>Pseudo localize (see {@link AaptPackageConfig#getPseudoLocalize()}), {@code
+     *             false} by default;
+     *         <li>Verbose (see {@link AaptPackageConfig#getVerbose()}), {@code false} by default;
      *       </ul>
      *   <li>Either the source output directory ({@link AaptPackageConfig#getSourceOutputDir()}) or
      *       the resource output APK ({@link AaptPackageConfig#getResourceOutputApk()}) must be
@@ -99,7 +92,7 @@ public abstract class AbstractAapt implements Aapt {
      *       ({@link AaptPackageConfig#getSymbolOutputDir()}) and the source output directory
      *       ({@link AaptPackageConfig#getSourceOutputDir()}) must <i>not</i> be defined; (*)
      *   <li>If the build tools' version is {@code < 21}, then pseudo-localization is not allowed
-     *       ({@link AaptPackageConfig#isPseudoLocalize()});
+     *       ({@link AaptPackageConfig#getPseudoLocalize()});
      *   <li>If the build tools' version is {@code < 21}, then fail on missing config entry ( {@code
      *       getOptions().getFailOnMissingConfigEntry()} must be {@code false};
      *   <li>If there are splits ({@link AaptPackageConfig#getSplits()}) configured and resource
@@ -118,34 +111,8 @@ public abstract class AbstractAapt implements Aapt {
      * @param packageConfig the package config to validate
      * @throws AaptException the package config is not valid
      */
-    protected void validatePackageConfig(@NonNull AaptPackageConfig packageConfig)
+    private static void validatePackageConfig(@NonNull AaptPackageConfig packageConfig)
             throws AaptException {
-        if (packageConfig.getManifestFile() == null) {
-            throw new AaptException("Manifest file not set.");
-        }
-
-        if (packageConfig.getOptions() == null) {
-            throw new AaptException("aapt options not set.");
-        }
-
-        if (packageConfig.getAndroidTarget() == null) {
-            throw new AaptException("Android target not set.");
-        }
-
-        ILogger logger = packageConfig.getLogger();
-        if (logger == null) {
-            throw new AaptException("Logger not set.");
-        }
-
-        BuildToolInfo buildToolInfo = packageConfig.getBuildToolInfo();
-        if (buildToolInfo == null) {
-            throw new AaptException("Build tools not set.");
-        }
-
-        if (packageConfig.getVariantType() == null) {
-            throw new AaptException("Variant type not set.");
-        }
-
         if ((packageConfig.getSymbolOutputDir() != null
                         || packageConfig.getSourceOutputDir() != null)
                 && packageConfig.getLibrarySymbolTableFiles().isEmpty()) {
@@ -156,57 +123,6 @@ public abstract class AbstractAapt implements Aapt {
              */
             // throw new AaptException("Symbol output directory and source output directory can "
             //        + "only be defined if there are libraries.");
-        }
-
-        Collection<String> splits = packageConfig.getSplits();
-        Collection<String> resourceConfigs = packageConfig.getResourceConfigs();
-        if (splits != null && !splits.isEmpty() && !resourceConfigs.isEmpty()) {
-            Collection<String> resConfigs = Lists.newArrayList(AaptUtils.getDensityResConfigs(
-                    resourceConfigs));
-            List<String> splitsNotInResConfig = new ArrayList<String>(splits);
-            splitsNotInResConfig.removeAll(resConfigs);
-
-            if (!splitsNotInResConfig.isEmpty()) {
-                /*
-                 * Some splits are required, yet the resConfigs do not contain the split density
-                 * value, which mean that the resulting split file would be empty.
-                 */
-                throw new AaptException(
-                        String.format(
-                                "Splits for densities \"%1$s\" were "
-                                + "configured, yet the resConfigs settings does  not include such "
-                                + "splits. The resulting split APKs would be empty.\n Suggestion: "
-                                + "exclude those splits in your build.gradle : \n"
-                                + "splits {\n"
-                                + "     density {\n"
-                                + "         enable true\n"
-                                + "         exclude \"%2$s\"\n"
-                                + "     }\n"
-                                + "}\n"
-                                + "OR add them to the resConfigs list.",
-                        Joiner.on(",").join(splitsNotInResConfig),
-                        Joiner.on("\",\"").join(splitsNotInResConfig)));
-            }
-
-            resConfigs.removeAll(splits);
-            if (!resConfigs.isEmpty()) {
-                /*
-                 * There are densities present in the resConfig but not in splits, which mean that
-                 * those densities will be packaged in the main APK.
-                 */
-                throw new AaptException(
-                        String.format(
-                                "Inconsistent density configuration, with "
-                                + "\"%1$s\" present on resConfig settings, while only \"%2$s\" "
-                                + "densities are requested in splits APK density settings.\n"
-                                + "Suggestion : remove extra densities from the resConfig : \n"
-                                + "defaultConfig {\n"
-                                + "     resConfigs \"%2$s\"\n"
-                                + "}\n"
-                                + "OR remove such densities from the split's exclude list.\n",
-                        Joiner.on(",").join(resConfigs),
-                        Joiner.on("\",\"").join(splits)));
-            }
         }
 
         if (!packageConfig.getDependentFeatures().isEmpty()

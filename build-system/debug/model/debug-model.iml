@@ -10,10 +10,11 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="build-system-integration-test-framework" />
-    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="module" module-name="framework" />
     <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="library" name="gradle-api" level="project" />
     <orderEntry type="module" module-name="builder-model" />
+    <orderEntry type="library" name="kotlin-stdlib-jre8" level="project" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

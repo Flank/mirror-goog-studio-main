@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.databinding;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;

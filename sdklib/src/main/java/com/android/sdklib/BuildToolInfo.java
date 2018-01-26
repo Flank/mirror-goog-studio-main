@@ -21,6 +21,7 @@ import static com.android.SdkConstants.FN_AAPT;
 import static com.android.SdkConstants.FN_AAPT2;
 import static com.android.SdkConstants.FN_AIDL;
 import static com.android.SdkConstants.FN_BCC_COMPAT;
+import static com.android.SdkConstants.FN_CORE_LAMBDA_STUBS;
 import static com.android.SdkConstants.FN_DEXDUMP;
 import static com.android.SdkConstants.FN_DX;
 import static com.android.SdkConstants.FN_DX_JAR;
@@ -44,6 +45,7 @@ import static com.android.sdklib.BuildToolInfo.PathId.AIDL;
 import static com.android.sdklib.BuildToolInfo.PathId.ANDROID_RS;
 import static com.android.sdklib.BuildToolInfo.PathId.ANDROID_RS_CLANG;
 import static com.android.sdklib.BuildToolInfo.PathId.BCC_COMPAT;
+import static com.android.sdklib.BuildToolInfo.PathId.CORE_LAMBDA_STUBS;
 import static com.android.sdklib.BuildToolInfo.PathId.DAEMON_AAPT2;
 import static com.android.sdklib.BuildToolInfo.PathId.DEXDUMP;
 import static com.android.sdklib.BuildToolInfo.PathId.DX;
@@ -73,7 +75,6 @@ import com.android.repository.api.LocalPackage;
 import com.android.utils.ILogger;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Range;
 import java.io.File;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -148,7 +149,9 @@ public class BuildToolInfo {
 
         /** OS Path to aapt2 that supports daemon mode. */
         // TODO(imorlowska): figure out which build tools will include the daemon mode.
-        DAEMON_AAPT2("26.0.2");
+        DAEMON_AAPT2("26.0.2"),
+        CORE_LAMBDA_STUBS("27.0.3"),
+        ;
 
         /**
          * min revision this element was introduced.
@@ -340,6 +343,7 @@ public class BuildToolInfo {
         add(JACK_JACOCO_REPORTER, FN_JACK_JACOCO_REPORTER);
         add(JACK_COVERAGE_PLUGIN, FN_JACK_COVERAGE_PLUGIN);
         add(SPLIT_SELECT, FN_SPLIT_SELECT);
+        add(CORE_LAMBDA_STUBS, FN_CORE_LAMBDA_STUBS);
     }
 
     private void add(PathId id, String leaf) {

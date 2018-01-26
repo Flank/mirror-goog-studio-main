@@ -52,17 +52,6 @@ service MemoryService {
   rpc TrackAllocations(TrackAllocationsRequest)
       returns (TrackAllocationsResponse) {}
 
-  // O+ only: Suspend allocation tracking when switching to another
-  // session to optimize the performance.
-  // This call will disable allocation callbacks and clear the event queue.
-  rpc SuspendTrackAllocations(SuspendTrackAllocationsRequest)
-      returns (SuspendTrackAllocationsResponse) {}
-  // O+ only: Resume allocation tracking when switching back.
-  // This call will retrieve class data from beginning and enable allocation
-  // callbacks.
-  rpc ResumeTrackAllocations(ResumeTrackAllocationsRequest)
-      returns (ResumeTrackAllocationsResponse) {}
-
   // Pre-O only: Returns all allocation data associated with a tracking session.
   rpc GetLegacyAllocationEvents(LegacyAllocationEventsRequest)
       returns (LegacyAllocationEventsResponse) {}
@@ -125,34 +114,6 @@ message MemoryStopResponse {
     UNSPECIFICED = 0;
     SUCCESS = 1;
     FAILURE_UNKNOWN = 2;
-  }
-  Status status = 1;
-}
-
-message SuspendTrackAllocationsRequest {
-  Session session = 1;
-}
-
-message SuspendTrackAllocationsResponse {
-  enum Status {
-    UNSPECIFIED = 0;
-    SUCCESS = 1;
-    NOT_PROFILING = 2;
-    FAILURE_UNKNOWN = 3;
-  }
-  Status status = 1;
-}
-
-message ResumeTrackAllocationsRequest {
-  Session session = 1;
-}
-
-message ResumeTrackAllocationsResponse {
-  enum Status {
-    UNSPECIFIED = 0;
-    SUCCESS = 1;
-    NOT_PROFILING = 2;
-    FAILURE_UNKNOWN = 3;
   }
   Status status = 1;
 }
@@ -498,6 +459,28 @@ message NativeBacktrace {
   repeated uint64 addresses = 1;
 }
 
+message NativeCallStack {
+  message NativeFrame {
+    string module_name = 1;
+    string symbol_name = 2;
+    string file_name = 3;
+    int32 line_number = 4;
+  }
+
+  repeated NativeFrame frames = 1;
+}
+
+message MemoryMap {
+  message MemoryRegion {
+    string name = 1;
+    uint64 start_address = 2;
+    uint64 end_address = 3;
+    uint64 file_offset = 4;
+  }
+
+  repeated MemoryRegion regions = 1;
+}
+
 // Proto format for handling O+ JNI global reference creation / deletion.
 message JNIGlobalReferenceEvent {
   enum Type {
@@ -519,6 +502,10 @@ message JNIGlobalReferenceEvent {
 
   // Same as in AllocationEvent.
   string thread_name = 7;
+
+  // Symbolized native callstack, populated by Android Studio
+  // from |backtrace| and MemoryMap.
+  NativeCallStack callstack = 8;
 }
 
 message JNIGlobalRefsEventsRequest {
@@ -535,6 +522,7 @@ message BatchJNIGlobalRefEvent {
   int32 pid = 1;
   int64 timestamp = 2;
   repeated JNIGlobalReferenceEvent events = 3;
+  MemoryMap memory_map = 4;
 }
 
 // Proto format for handling O+ allocation data.

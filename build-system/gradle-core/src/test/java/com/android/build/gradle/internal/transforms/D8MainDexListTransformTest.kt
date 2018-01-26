@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.transforms
 
 import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.transform.Transform
 import com.android.testutils.TestInputsGenerator
+import com.android.testutils.TestUtils
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
@@ -37,6 +37,7 @@ class D8MainDexListTransformTest {
 
     @Test
     fun testProguardRules() {
+
         val output = tmpDir.newFile().toPath()
 
         val inputJar = tmpDir.root.toPath().resolve("input.jar")
@@ -54,7 +55,7 @@ class D8MainDexListTransformTest {
                 D8MainDexListTransform(
                         manifestProguardRules = proguardRules,
                         outputMainDexList = output,
-                        bootClasspath = Supplier { listOf<Path>() })
+                        bootClasspath = Supplier { getBootClasspath() })
         transform.transform(invocation)
 
         Truth.assertThat(Files.readAllLines(output)).containsExactly("test/A.class")
@@ -80,7 +81,7 @@ class D8MainDexListTransformTest {
                         manifestProguardRules = tmpDir.newFile().toPath(),
                         userProguardRules = userProguardRules,
                         outputMainDexList = output,
-                        bootClasspath = Supplier { listOf<Path>() })
+                        bootClasspath = Supplier { getBootClasspath() })
         transform.transform(invocation)
 
         Truth.assertThat(Files.readAllLines(output)).containsExactly("test/A.class")
@@ -109,7 +110,7 @@ class D8MainDexListTransformTest {
                         manifestProguardRules = proguardRules,
                         userProguardRules = userProguardRules,
                         outputMainDexList = output,
-                        bootClasspath = Supplier { listOf<Path>() })
+                        bootClasspath = Supplier { getBootClasspath() })
         transform.transform(invocation)
 
         Truth.assertThat(Files.readAllLines(output))
@@ -134,7 +135,7 @@ class D8MainDexListTransformTest {
                         manifestProguardRules = tmpDir.newFile().toPath(),
                         userClasses = userClasses,
                         outputMainDexList = output,
-                        bootClasspath = Supplier { listOf<Path>() })
+                        bootClasspath = Supplier { getBootClasspath() })
         transform.transform(invocation)
 
         Truth.assertThat(Files.readAllLines(output))
@@ -155,9 +156,12 @@ class D8MainDexListTransformTest {
                 D8MainDexListTransform(
                         manifestProguardRules = tmpDir.newFile().toPath(),
                         outputMainDexList = output,
-                        bootClasspath = Supplier { listOf<Path>() })
+                        bootClasspath = Supplier { getBootClasspath() })
         transform.transform(invocation)
 
         Truth.assertThat(Files.readAllLines(output)).isEmpty()
     }
+
+    private fun getBootClasspath():
+            List<Path> = listOf(TestUtils.getPlatformFile("android.jar").toPath())
 }

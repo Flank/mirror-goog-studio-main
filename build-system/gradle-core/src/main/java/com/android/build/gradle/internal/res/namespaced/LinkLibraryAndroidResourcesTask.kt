@@ -19,12 +19,13 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
+import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
@@ -39,6 +40,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.function.Supplier
@@ -78,34 +80,30 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
         featureDependencies?.let {
             imports.addAll(
                     it.files
-                            .map { ExistingBuildElements.from(TaskOutputType.PROCESSED_RES, it) }
+                            .map { ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, it) }
                             .filterNot { it.isEmpty() }
                             .map { splitOutputs -> splitOutputs.single().outputFile })
         }
 
-        val config =
-                AaptPackageConfig.Builder()
-                        .setAndroidTarget(builder.target)
-                        .setManifestFile(File(manifestFileDirectory.singleFile, SdkConstants.ANDROID_MANIFEST_XML))
-                        .setOptions(AaptOptions(null, false, null))
-                        .setResourceDirs(inputResourcesDirectories.asIterable())
-                        .setLibrarySymbolTableFiles(null)
-                        .setIsStaticLibrary(true)
-                        .setImports(imports.build())
-                        //  TODO: Remove generating R.java once b/69956357 is fixed.
-                        .setSourceOutputDir(rClassSource)
-                        .setResourceOutputApk(staticLibApk)
-                        .setVariantType(VariantType.LIBRARY)
-                        .setCustomPackageForR(packageForR)
-                        .setSymbolOutputDir(rDotTxt.parentFile)
-                        .setLogger(iLogger)
-                        .setBuildToolInfo(builder.buildToolInfo)
-                        .setIntermediateDir(aaptIntermediateDir)
-                        .build()
+        val request = AaptPackageConfig(
+                androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
+                manifestFile = File(manifestFileDirectory.singleFile,
+                        SdkConstants.ANDROID_MANIFEST_XML),
+                options = AaptOptions(null, false, null),
+                resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.asIterable()),
+                staticLibrary = true,
+                imports = imports.build(),
+                // TODO: Remove generating R.java once b/69956357 is fixed.
+                sourceOutputDir = rClassSource,
+                resourceOutputApk = staticLibApk,
+                variantType = VariantType.LIBRARY,
+                customPackageForR = packageForR,
+                symbolOutputDir = rDotTxt.parentFile,
+                intermediateDir = aaptIntermediateDir)
 
-        // TODO: Make AaptPackageConfig serializable and use worker actions.
-        useAaptDaemon(buildTools.revision) { daemon ->
-            daemon.link(config)
+        workerExecutor.submit(Aapt2LinkRunnable::class.java) {
+            it.isolationMode = IsolationMode.NONE
+            it.setParams(Aapt2LinkRunnable.Params(buildTools.revision, request))
         }
     }
 
@@ -122,12 +120,12 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
         override fun execute(task: LinkLibraryAndroidResourcesTask) {
             task.variantName = scope.fullVariantName
             task.manifestFileDirectory =
-                    if (scope.hasOutput(TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
-                        scope.getOutput(TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+                    if (scope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
+                        scope.getOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
                     } else {
-                        scope.getOutput(TaskOutputType.MERGED_MANIFESTS)
+                        scope.getOutput(InternalArtifactType.MERGED_MANIFESTS)
                     }
-            task.inputResourcesDirectories = scope.getOutput(TaskOutputType.RES_COMPILED_FLAT_FILES)
+            task.inputResourcesDirectories = scope.getOutput(InternalArtifactType.RES_COMPILED_FLAT_FILES)
             task.libraryDependencies =
                     scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
@@ -149,7 +147,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
             val testedScope = scope.testedVariantData?.scope
             if (testedScope != null) {
-                task.tested = testedScope.getOutput(TaskOutputType.RES_STATIC_LIBRARY)
+                task.tested = testedScope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY)
             }
 
             task.aaptIntermediateDir =

@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.truth.Truth.assert_;
+
 import com.android.annotations.NonNull;
 import com.android.testutils.apk.Aar;
 import com.google.common.base.Charsets;
@@ -35,6 +37,11 @@ public class AarSubject extends AbstractAndroidSubject<AarSubject, Aar> {
     public AarSubject(@NonNull FailureStrategy failureStrategy, @NonNull Aar subject) {
         super(failureStrategy, subject);
         validateAar();
+    }
+
+    @NonNull
+    public static AarSubject assertThat(@NonNull Aar aar) {
+        return assert_().about(AarSubject.FACTORY).that(aar);
     }
 
     private void validateAar() {

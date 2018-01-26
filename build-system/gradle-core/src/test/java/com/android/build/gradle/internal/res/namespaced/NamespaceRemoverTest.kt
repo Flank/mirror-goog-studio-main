@@ -21,7 +21,7 @@ import org.junit.Test
 import java.nio.charset.StandardCharsets
 
 class NamespaceRemoverTest {
-    private val namespaceRemover = NamespaceRemover()
+    private val namespaceRemover = NamespaceRemover
 
     @Test
     fun noChange() {
@@ -124,6 +124,23 @@ class NamespaceRemoverTest {
                     |
                     |</resources>""".trimMargin()
         )
+    }
+
+    @Test
+    fun customNameForToolsNamespace() {
+        assertThat(
+                rewrite("""<?xml version="1.0" encoding="utf-8"?>
+                    |<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:bar="http://schemas.android.com/my/custom/uri"
+                    |    xmlns:foo="http://schemas.android.com/tools"
+                    |    foo:targetApi="14" />
+                    |""".trimMargin()))
+                .isEqualTo("""<?xml version="1.0" encoding="utf-8"?>
+                    |<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:bar="http://schemas.android.com/apk/res-auto"
+                    |    xmlns:foo="http://schemas.android.com/tools"
+                    |    foo:targetApi="14" />
+                    |""".trimMargin())
     }
 
     private fun assertUnchanged(original: String) {

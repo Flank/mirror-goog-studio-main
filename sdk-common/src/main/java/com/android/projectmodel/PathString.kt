@@ -144,6 +144,7 @@ class PathString private constructor(
     /**
      * Returns true if and only if this is an absolute path.
      */
+    @get:JvmName("isAbsolute")
     val isAbsolute: Boolean
         get() = prefixEndIndex != 0 && isSeparator(path[prefixEndIndex - 1])
 
@@ -351,6 +352,7 @@ class PathString private constructor(
      * Returns true iff this is the empty path (an empty path is a path with no names that always returns the other path when resolved against
      * any other path).
      */
+    @get:JvmName("isEmptyPath")
     val isEmptyPath: Boolean
         get() = prefixEndIndex == 0 && startIndex == suffixEndIndex
 

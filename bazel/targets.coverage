@@ -4,7 +4,7 @@
 //tools/base/apkparser/analyzer:tools.tests
 //tools/base/apkparser/cli:tools.tests
 //tools/base/apkparser:tools.tests
-//tools/base/apkzlib:apkzlib_tests
+//tools/apkzlib:apkzlib_tests
 //tools/base/bazel/test/kotlin:java_kotlin_tests.test
 //tools/base/bazel/test/kotlin:only_java_tests.test
 //tools/base/bazel/test/kotlin:only_kotlin_tests.test

@@ -18,6 +18,7 @@ package com.android.build.gradle.options;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.builder.model.AndroidProject;
 
 public enum StringOption implements Option<String> {
@@ -56,9 +57,17 @@ public enum StringOption implements Option<String> {
     ;
 
     @NonNull private final String propertyName;
+    @Nullable private final DeprecationReporter.DeprecationTarget deprecationTarget;
 
     StringOption(@NonNull String propertyName) {
+        this(propertyName, null);
+    }
+
+    StringOption(
+            @NonNull String propertyName,
+            @Nullable DeprecationReporter.DeprecationTarget deprecationTarget) {
         this.propertyName = propertyName;
+        this.deprecationTarget = deprecationTarget;
     }
 
     @Override
@@ -87,5 +96,16 @@ public enum StringOption implements Option<String> {
                         + "' of type '"
                         + value.getClass()
                         + "' as string.");
+    }
+
+    @Override
+    public boolean isDeprecated() {
+        return (deprecationTarget != null);
+    }
+
+    @Nullable
+    @Override
+    public DeprecationReporter.DeprecationTarget getDeprecationTarget() {
+        return deprecationTarget;
     }
 }

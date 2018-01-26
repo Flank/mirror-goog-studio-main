@@ -17,18 +17,19 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.ArtifactType;
 
 public class TaskOutputAlreadyRegisteredException extends RuntimeException {
 
-    @NonNull private final TaskOutputHolder.OutputType outputType;
+    @NonNull private final ArtifactType outputType;
 
-    public TaskOutputAlreadyRegisteredException(@NonNull TaskOutputHolder.OutputType outputType) {
+    public TaskOutputAlreadyRegisteredException(@NonNull ArtifactType outputType) {
         super("Output already registered for type: " + outputType);
         this.outputType = outputType;
     }
 
     @NonNull
-    public TaskOutputHolder.OutputType getOutputType() {
+    public ArtifactType getOutputType() {
         return outputType;
     }
 }

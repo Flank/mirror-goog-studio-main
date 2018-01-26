@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.TaskOutputHolder
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.ProjectOptions
 import com.android.utils.FileUtils
@@ -85,7 +85,7 @@ open class PipelineToPublicationTask : DefaultTask() {
             private val variantScope: VariantScope,
             private val inputCollection: FileCollection,
             private val outputFile: File,
-            private val outputType: TaskOutputHolder.TaskOutputType):
+            private val outputType: InternalArtifactType):
             TaskConfigAction<PipelineToPublicationTask> {
 
         override fun getName() = variantScope.getTaskName("prepare$outputType", "ForPublishing")

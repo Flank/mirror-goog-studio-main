@@ -23,9 +23,11 @@ import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegist
 import com.android.builder.internal.aapt.v2.Aapt2DaemonImpl
 import com.android.builder.internal.aapt.v2.Aapt2DaemonManager
 import com.android.builder.internal.aapt.v2.Aapt2DaemonTimeouts
+import com.android.ide.common.process.ProcessException
 import com.android.repository.Revision
 import com.android.sdklib.BuildToolInfo
 import com.android.utils.ILogger
+import java.io.IOException
 import java.nio.file.Paths
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -52,13 +54,23 @@ private class RegisteredAaptService(override val service: Aapt2DaemonManager)
     }
 }
 
-/** Use from worker actions. */
-fun useAaptDaemon(
+/** Intended for use from worker actions. */
+@Throws(ProcessException::class, IOException::class)
+fun <T: Any>useAaptDaemon(
         aapt2Version: Revision,
         serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE,
-        block: (Aapt2DaemonManager.LeasedAaptDaemon) -> Unit) {
-    serviceRegistry.getService(AaptServiceKey(aapt2Version)).service.leaseDaemon().use(block)
+        block: (Aapt2DaemonManager.LeasedAaptDaemon) -> T) : T {
+    return getAaptDaemon(aapt2Version, serviceRegistry).use(block)
 }
+
+/** Intended for use from java worker actions. */
+@JvmOverloads
+fun getAaptDaemon(
+        aapt2Version: Revision,
+        serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE) : Aapt2DaemonManager.LeasedAaptDaemon =
+        serviceRegistry.getService(AaptServiceKey(aapt2Version)).service.leaseDaemon()
+
+
 
 /** Registers an AAPT2 daemon manager for the given build tools, keyed from version. Idempotent. */
 fun registerAaptService(

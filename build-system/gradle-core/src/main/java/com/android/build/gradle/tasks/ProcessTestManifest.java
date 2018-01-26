@@ -31,9 +31,9 @@ import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputProperty;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.TaskContainer;
@@ -109,7 +109,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         if (!onlyTestApk && testTargetMetadata != null) {
             BuildElements manifestOutputs =
                     ExistingBuildElements.from(
-                            TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, testTargetMetadata);
+                            InternalArtifactType.MERGED_MANIFESTS, testTargetMetadata);
 
             java.util.Optional<BuildOutput> mainSplit =
                     manifestOutputs
@@ -163,7 +163,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         new BuildElements(
                         ImmutableList.of(
                                 new BuildOutput(
-                                        VariantScope.TaskOutputType.MERGED_MANIFESTS,
+                                        InternalArtifactType.MERGED_MANIFESTS,
                                         mainApkData,
                                         manifestOutputFile)))
                 .save(getManifestOutputDirectory());

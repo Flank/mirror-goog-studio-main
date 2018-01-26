@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.truth.Truth.assert_;
+
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.NativeSettings;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
@@ -52,6 +55,11 @@ public class NativeSettingsSubject
             @NonNull NativeSettings subject) {
         super(failureStrategy, subject);
 
+    }
+
+    @NonNull
+    public static NativeSettingsSubject assertThat(@Nullable NativeSettings settings) {
+        return assert_().about(NativeSettingsSubject.Factory.get()).that(settings);
     }
 
     public void doesNotContainCompilerFlagStartingWith(@NonNull String prefix) {

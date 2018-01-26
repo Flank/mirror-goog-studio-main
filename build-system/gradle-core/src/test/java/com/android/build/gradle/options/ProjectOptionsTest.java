@@ -114,14 +114,44 @@ public class ProjectOptionsTest {
     }
 
     @Test
-    public void deprecatedOptionUse() {
+    public void removedOptionUse() {
         ProjectOptions projectOptions =
                 new ProjectOptions(ImmutableMap.of("android.incrementalJavaCompile", ""));
 
-        assertThat(projectOptions.hasDeprecatedOptions()).isTrue();
+        assertThat(projectOptions.hasRemovedOptions()).isTrue();
 
-        assertThat(projectOptions.getDeprecatedOptionsErrorMessage())
+        assertThat(projectOptions.getRemovedOptionsErrorMessage())
                 .contains("android.incrementalJavaCompile");
+    }
+
+    @Test
+    public void deprecatedOptionsUse() {
+        ProjectOptions projectOptions =
+                new ProjectOptions(
+                        ImmutableMap.of(
+                                "android.enableAapt2", "false",
+                                "android.enableD8", "false"));
+
+        assertThat(projectOptions.hasDeprecatedOptions()).isTrue();
+        assertThat(projectOptions.getDeprecatedOptions()).hasSize(2);
+
+        projectOptions =
+                new ProjectOptions(
+                        ImmutableMap.of(
+                                "android.enableAapt2", "true",
+                                "android.enableD8", "false"));
+
+        assertThat(projectOptions.hasDeprecatedOptions()).isTrue();
+        assertThat(projectOptions.getDeprecatedOptions()).hasSize(1);
+
+        projectOptions =
+                new ProjectOptions(
+                        ImmutableMap.of(
+                                "android.enableAapt2", "true",
+                                "android.enableD8", "true"));
+
+        assertThat(projectOptions.hasDeprecatedOptions()).isFalse();
+        assertThat(projectOptions.getDeprecatedOptions()).isEmpty();
     }
 
     @Test

@@ -2275,6 +2275,73 @@ public class VersionChecksTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testNestedIfs() {
+        // Regression test for issue 67553351
+        lint().files(
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.os.Build;\n" +
+                        "import android.support.annotation.RequiresApi;\n" +
+                        "\n" +
+                        "@SuppressWarnings({\"unused\", ClassNameDiffersFromFileName})\n" +
+                        "public class NestedIfs {\n" +
+                        "    @RequiresApi(20)\n" +
+                        "    private void requires20() {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresApi(23)\n" +
+                        "    private void requires23() {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    void test() {\n" +
+                        "        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {\n" +
+                        "            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {\n" +
+                        "                requires23();\n" +
+                        "            } else {\n" +
+                        "                requires20();\n" +
+                        "            }\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "}\n"),
+                mSupportJar)
+                .run()
+                .expectClean();
+    }
+
+    public void testApplyBlock() {
+        // Regression test for 71809249: False positive when using lambdas and higher-order functions
+        lint().files(
+                kotlin("" +
+                        "package com.example.lintexample\n" +
+                        "\n" +
+                        "import android.app.NotificationChannel\n" +
+                        "import android.app.NotificationManager\n" +
+                        "import android.content.Context\n" +
+                        "import android.os.Build\n" +
+                        "import android.app.Activity\n" +
+                        "\n" +
+                        "class MainActivity : Activity() {\n" +
+                        "\n" +
+                        "    fun test(notificationChannel: NotificationChannel) {\n" +
+                        "        val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager\n" +
+                        "        notificationManager.applyForOreoOrAbove {\n" +
+                        "            createNotificationChannel(notificationChannel)\n" +
+                        "        }\n" +
+                        "\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "inline fun <T> T.applyForOreoOrAbove(block: T.() -> Unit): T {\n" +
+                        "    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {\n" +
+                        "        block()\n" +
+                        "    }\n" +
+                        "    return this\n" +
+                        "}\n"))
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected Detector getDetector() {
         return new ApiDetector();

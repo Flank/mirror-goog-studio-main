@@ -16,7 +16,7 @@
 
 package com.android.utils.concurrency;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 

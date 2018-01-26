@@ -17,22 +17,35 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.google.common.collect.Sets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 
 /**
- * DSL object for configuring per-language splits options.
+ * Encapsulates settings for <a
+ * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split">
+ * building per-language (or locale) APKs</a>.
  *
- * <p>See <a href="https://developer.android.com/studio/build/configure-apk-splits.html">APK Splits</a>.
+ * <p><b>Note:</b> Building per-language APKs is supported only when <a
+ * href="https://developer.android.com/topic/instant-apps/guides/config-splits.html">building
+ * configuration APKs</a> for <a
+ * href="https://developer.android.com/topic/instant-apps/index.html">Android Instant Apps</a>.
  */
 public class LanguageSplitOptions {
 
     private boolean enable = false;
     private boolean auto = false;
     private Set<String> include;
+    private final DeprecationReporter deprecationReporter;
+
+    @Inject
+    public LanguageSplitOptions(@NonNull DeprecationReporter deprecationReporter) {
+        this.deprecationReporter = deprecationReporter;
+    }
 
     /**
      * Collection of include patterns.
@@ -90,6 +103,9 @@ public class LanguageSplitOptions {
      *     use the include list.
      */
     public void setAuto(boolean auto) {
+        deprecationReporter.reportObsoleteUsage(
+                "LanguageSplitOptions.auto",
+                DeprecationReporter.DeprecationTarget.AUTO_SPLITS_OR_RES_CONFIG);
         this.auto = auto;
     }
 

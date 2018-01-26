@@ -25,4 +25,4 @@ import com.android.ide.common.res2.QueueableResourceCompiler;
  * com.android.builder.internal.aapt.v1.AaptV1} can be used to create implementations that use
  * version 1 of the {@code aapt} tool.
  */
-public interface Aapt extends QueueableResourceCompiler, BlockingResourceLinker {}
+public interface Aapt extends QueueableResourceCompiler, CloseableBlockingResourceLinker {}

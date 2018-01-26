@@ -17,8 +17,11 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
+import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
+import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -43,7 +46,10 @@ public class MergeResourcesTest {
 
     @Parameterized.Parameters(name = "aaptGeneration=\"{0}\"")
     public static Collection<AaptGeneration> expected() {
-        return Arrays.asList(AaptGeneration.AAPT_V1, AaptGeneration.AAPT_V2_DAEMON_MODE);
+        return Arrays.asList(
+                AaptGeneration.AAPT_V1,
+                AaptGeneration.AAPT_V2_DAEMON_MODE,
+                AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL);
     }
 
     @Parameterized.Parameter public AaptGeneration aaptGeneration;

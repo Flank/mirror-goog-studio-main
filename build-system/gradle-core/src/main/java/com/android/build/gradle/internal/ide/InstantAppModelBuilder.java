@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
@@ -54,6 +54,7 @@ import com.android.builder.model.Variant;
 import com.android.builder.model.Version;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.build.ApkInfo;
+import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -174,7 +175,7 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                 buildTypes,
                 productFlavors,
                 variants,
-                "android-26",
+                "android-" + SdkVersionInfo.HIGHEST_KNOWN_STABLE_API,
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -211,7 +212,7 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                                 variantScope.getFullVariantName(),
                                 instantAppOutputScope.getApplicationId(),
                                 new BuildOutput(
-                                        VariantScope.TaskOutputType.INSTANTAPP_BUNDLE,
+                                        InternalArtifactType.INSTANTAPP_BUNDLE,
                                         ApkInfo.of(
                                                 VariantOutput.OutputType.MAIN,
                                                 ImmutableList.of(),
@@ -219,10 +220,9 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                                         instantAppOutputScope.getInstantAppBundle()),
                                 new BuildOutputsSupplier(
                                                 ImmutableList.of(
-                                                        VariantScope.TaskOutputType.APK,
-                                                        VariantScope.TaskOutputType
-                                                                .ABI_PACKAGED_SPLIT,
-                                                        VariantScope.TaskOutputType
+                                                        InternalArtifactType.APK,
+                                                        InternalArtifactType.ABI_PACKAGED_SPLIT,
+                                                        InternalArtifactType
                                                                 .DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
                                                 instantAppOutputScope.getApkDirectories())
                                         .get()));
@@ -287,8 +287,7 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                                 () ->
                                         ImmutableList.of(
                                                 new EarlySyncBuildOutput(
-                                                        TaskOutputHolder.TaskOutputType
-                                                                .INSTANTAPP_BUNDLE,
+                                                        InternalArtifactType.INSTANTAPP_BUNDLE,
                                                         OutputFile.OutputType.MAIN,
                                                         ImmutableList.of(),
                                                         -1,

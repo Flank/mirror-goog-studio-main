@@ -35,7 +35,6 @@ import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.repository.Revision;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.BuildToolInfo;
-import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -184,7 +183,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         builder.setExecutable(getAaptExecutablePath());
         builder.addArgs("package");
 
-        if (config.isVerbose()) {
+        if (config.getVerbose()) {
             builder.addArgs("-v");
         }
 
@@ -192,9 +191,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         builder.addArgs("--no-crunch");
 
         // inputs
-        IAndroidTarget target = config.getAndroidTarget();
-        Preconditions.checkNotNull(target);
-        builder.addArgs("-I", target.getPath(IAndroidTarget.ANDROID_JAR));
+        builder.addArgs("-I", Preconditions.checkNotNull(config.getAndroidJarPath()));
 
         File manifestFile = config.getManifestFile();
         Preconditions.checkNotNull(manifestFile);
@@ -236,15 +233,12 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         }
 
         // options controlled by build variants
-        ILogger logger = config.getLogger();
-        Preconditions.checkNotNull(logger);
         if (config.getVariantType() != VariantType.ANDROID_TEST
                 && config.getCustomPackageForR() != null) {
             builder.addArgs("--custom-package", config.getCustomPackageForR());
-            logger.verbose("Custom package for R class: '%s'", config.getCustomPackageForR());
         }
 
-        if (config.isPseudoLocalize()) {
+        if (config.getPseudoLocalize()) {
             builder.addArgs("--pseudo-localize");
         }
 

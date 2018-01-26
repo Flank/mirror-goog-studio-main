@@ -17,7 +17,9 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.google.common.collect.ImmutableTable;
 
 public class NoOpDeprecationReporter implements DeprecationReporter {
 
@@ -57,6 +59,30 @@ public class NoOpDeprecationReporter implements DeprecationReporter {
             @NonNull String newConfiguration,
             @NonNull String oldConfiguration,
             @NonNull DeprecationTarget deprecationTarget) {
+        // do nothing
+    }
+
+    @Override
+    public void reportDeprecatedValue(
+            @NonNull String dslElement,
+            @NonNull String oldValue,
+            @Nullable String newValue,
+            @Nullable String url,
+            @NonNull DeprecationTarget deprecationTarget) {
+        // do nothing.
+    }
+
+    @Override
+    public void reportDeprecatedOption(
+            @NonNull String option,
+            @Nullable String value,
+            @NonNull DeprecationTarget deprecationTarget) {
+        // do nothing
+    }
+
+    @Override
+    public void reportDeprecatedOptions(
+            @NonNull ImmutableTable<String, String, DeprecationTarget> options) {
         // do nothing
     }
 }

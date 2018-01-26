@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus
 import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder
 import com.android.sdklib.AndroidVersion
+import com.android.sdklib.SdkVersionInfo
 import com.android.tools.ir.client.InstantRunArtifactType
 import com.google.common.collect.Iterables
 import org.junit.Rule
@@ -50,7 +51,7 @@ class ResourcesAccessInManifest {
 
         val instantRunModel = InstantRunTestUtils.getInstantRunModel(project.model().fetchAndroidProjects().onlyModel)
 
-        InstantRunTestUtils.doInitialBuild(project, AndroidVersion(26, null))
+        InstantRunTestUtils.doInitialBuild(project, AndroidVersion(SdkVersionInfo.HIGHEST_KNOWN_STABLE_API, null))
 
         var context = InstantRunTestUtils.loadContext(instantRunModel)
         TruthHelper.assertThat(context.verifierStatus)
@@ -62,7 +63,7 @@ class ResourcesAccessInManifest {
                 "<string name=\"app_version\">2.7.0</string>")
 
         project.executor()
-                .withInstantRun(AndroidVersion(26, null))
+                .withInstantRun(AndroidVersion(SdkVersionInfo.HIGHEST_KNOWN_STABLE_API, null))
                 .run("assembleDebug")
 
         context = InstantRunTestUtils.loadContext(instantRunModel)

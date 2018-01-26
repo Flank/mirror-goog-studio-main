@@ -22,10 +22,14 @@ import com.android.build.gradle.options.ProjectOptions;
 
 public enum AaptGeneration {
     AAPT_V1,
-    AAPT_V2_DAEMON_MODE;
+    AAPT_V2_DAEMON_MODE,
+    AAPT_V2_DAEMON_SHARED_POOL,
+    ;
 
     public static AaptGeneration fromProjectOptions(@NonNull ProjectOptions projectOptions) {
-        if (projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
+        if (projectOptions.get(BooleanOption.ENABLE_AAPT2_WORKER_ACTIONS)) {
+            return AAPT_V2_DAEMON_SHARED_POOL;
+        } else if (projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
             return AAPT_V2_DAEMON_MODE;
         } else {
             return AAPT_V1;

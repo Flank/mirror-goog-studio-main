@@ -18,7 +18,6 @@ repositories {
 dependencies {
     compile project(':analytics-library:protos')
     compile project(':apksig')
-    compile project(':base:apkzlib')
     compile project(':base:builder')
     compile project(':base:builder-model')
     compile project(':base:gradle')

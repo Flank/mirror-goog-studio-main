@@ -37,9 +37,9 @@ import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ApplicationId;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -107,8 +107,7 @@ public class MergeManifests extends ManifestProcessorTask {
         // read the output of the compatible screen manifest.
         BuildElements compatibleScreenManifests =
                 ExistingBuildElements.from(
-                        VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST,
-                        compatibleScreensManifest);
+                        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, compatibleScreensManifest);
 
         String packageOverride;
         if (packageManifest != null && !packageManifest.isEmpty()) {
@@ -177,13 +176,13 @@ public class MergeManifests extends ManifestProcessorTask {
 
             mergedManifestOutputs.add(
                     new BuildOutput(
-                            VariantScope.TaskOutputType.MERGED_MANIFESTS,
+                            InternalArtifactType.MERGED_MANIFESTS,
                             apkData,
                             manifestOutputFile,
                             properties));
             irMergedManifestOutputs.add(
                     new BuildOutput(
-                            VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                            InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
                             apkData,
                             instantRunManifestOutputFile,
                             properties));
@@ -294,7 +293,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
                 BuildElements splitOutputs =
                         ExistingBuildElements.from(
-                                VariantScope.TaskOutputType.MERGED_MANIFESTS, directory);
+                                InternalArtifactType.MERGED_MANIFESTS, directory);
                 if (splitOutputs.isEmpty()) {
                     throw new GradleException("Could not load manifest from " + directory);
                 }
@@ -480,7 +479,7 @@ public class MergeManifests extends ManifestProcessorTask {
                         variantScope.getMicroApkManifestFile());
             }
             processManifestTask.compatibleScreensManifest =
-                    variantScope.getOutput(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST);
+                    variantScope.getOutput(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST);
 
             processManifestTask.minSdkVersion =
                     TaskInputHelper.memoize(
@@ -509,8 +508,7 @@ public class MergeManifests extends ManifestProcessorTask {
             processManifestTask.setReportFile(reportFile);
             processManifestTask.optionalFeatures = optionalFeatures;
 
-            processManifestTask.apkList =
-                    variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST);
+            processManifestTask.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
 
             variantScope
                     .getVariantData()

@@ -15,36 +15,35 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import com.android.annotations.NonNull;
+
 /** Represents an SVG gradient stop or Android's GradientColorItem. */
 public class GradientStop {
     private String color;
     private String offset;
     private String opacity = "";
 
-    GradientStop(String color, String offset) {
+    GradientStop(@NonNull String color, @NonNull String offset) {
         this.color = color;
         this.offset = offset;
     }
 
-    void formatStopAttributes() {
-        if (color.startsWith("rgb")) {
-            color = SvgLeafNode.convertRGBToHex(color.substring(3));
-        }
-    }
-
+    @NonNull
     String getColor() {
         return color;
     }
 
+    @NonNull
     String getOffset() {
         return offset;
     }
 
+    @NonNull
     String getOpacity() {
         return opacity;
     }
 
-    protected void setOpacity(String opacity) {
+    protected void setOpacity(@NonNull String opacity) {
         this.opacity = opacity;
     }
 }

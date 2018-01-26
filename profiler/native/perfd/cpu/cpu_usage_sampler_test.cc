@@ -21,9 +21,9 @@
 #include <string>
 #include <vector>
 #include "perfd/cpu/cpu_cache.h"
-#include "perfd/cpu/procfs_files.h"
 #include "perfd/daemon.h"
 #include "test/utils.h"
+#include "utils/procfs_files.h"
 
 using std::vector;
 using std::string;

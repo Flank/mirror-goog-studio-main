@@ -145,10 +145,16 @@ public interface SyncIssue {
 
     int TYPE_DEPRECATED_CONFIGURATION = 29;
 
+    /**
+     * Indicates that the project uses a deprecated DSL, the Data payload is a URL giving context to
+     * the user on how to remove the deprecated element or value.
+     */
+    int TYPE_DEPRECATED_DSL_VALUE = 29;
+
     // WHEN ADDING NEW VALUES HERE, UPDATE EvalIssueReporter.Type
 
     /** Highest number assigned to types of {@link SyncIssue}s. */
-    int TYPE_MAX = 29; // increment when adding new types.
+    int TYPE_MAX = 30; // increment when adding new types.
 
     /** Returns the severity of the issue. */
     int getSeverity();

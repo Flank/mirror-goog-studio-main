@@ -243,14 +243,19 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
     }
 
     /** Makes the project execute with AAPT2 flag set to {@param enableAapt2}. */
-    @SuppressWarnings("deprecation") // AAPT_V2 should not be used, but if it is, we handle it.
     public GradleTaskExecutor with(@NonNull AaptGeneration aaptGeneration) {
         switch (aaptGeneration) {
             case AAPT_V1:
                 with(BooleanOption.ENABLE_AAPT2, false);
+                with(BooleanOption.ENABLE_AAPT2_WORKER_ACTIONS, false);
                 break;
             case AAPT_V2_DAEMON_MODE:
                 with(BooleanOption.ENABLE_AAPT2, true);
+                with(BooleanOption.ENABLE_AAPT2_WORKER_ACTIONS, false);
+                break;
+            case AAPT_V2_DAEMON_SHARED_POOL:
+                with(BooleanOption.ENABLE_AAPT2, true);
+                with(BooleanOption.ENABLE_AAPT2_WORKER_ACTIONS, true);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown AAPT Generation");

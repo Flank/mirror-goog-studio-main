@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.packaging;
 import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.io.Files.write;
 
 import com.android.annotations.NonNull;

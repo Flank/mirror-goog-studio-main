@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.utils;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -33,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -43,12 +43,11 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("WeakerAccess") // These are utility methods, meant to be public.
 public final class FileUtils {
-
-    private FileUtils() {}
-
     private static final Joiner PATH_JOINER = Joiner.on(File.separatorChar);
     private static final Joiner COMMA_SEPARATED_JOINER = Joiner.on(", ");
     private static final Joiner UNIX_NEW_LINE_JOINER = Joiner.on('\n');
+
+    private FileUtils() {}
 
     /**
      * Recursively deletes a path.
@@ -342,6 +341,7 @@ public final class FileUtils {
 
     /**
      * Converts a /-based path into a path using the system dependent separator.
+     *
      * @param path the system independent path to convert
      * @return the system dependent path
      */
@@ -355,6 +355,7 @@ public final class FileUtils {
 
     /**
      * Converts a system-dependent path into a /-based path.
+     *
      * @param path the system dependent path
      * @return the system independent path
      */
@@ -420,11 +421,28 @@ public final class FileUtils {
         return name;
     }
 
+    /**
+     * Creates a new text file with the given content. The file should not exist when this method
+     * is called.
+     *
+     * @param file the file to write to
+     * @param content the new content of the file
+     */
     public static void createFile(@NonNull File file, @NonNull String content) throws IOException {
         checkArgument(!file.exists(), "%s exists already.", file);
 
+        writeToFile(file, content);
+    }
+
+    /**
+     * Creates a new text file or replaces content of an existing file.
+     *
+     * @param file the file to write to
+     * @param content the new content of the file
+     */
+    public static void writeToFile(@NonNull File file, @NonNull String content) throws IOException {
         Files.createParentDirs(file);
-        Files.write(content, file, Charsets.UTF_8);
+        Files.asCharSink(file, StandardCharsets.UTF_8).write(content);
     }
 
     /**

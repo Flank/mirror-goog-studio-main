@@ -5,24 +5,25 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.ANNOTATION_PROCESSOR_LIST;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import java.io.File;
 import java.util.Map;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 
@@ -68,22 +69,39 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             javacTask.source(fileTree);
         }
 
-        final boolean keepDefaultBootstrap = scope.keepDefaultBootstrap();
-
-        if (!keepDefaultBootstrap) {
-            // Set boot classpath if we don't need to keep the default.  Otherwise, this is added as
-            // normal classpath.
+        FileCollection classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_CORE_LAMBDA_STUBS)) {
+            File coreLambdaStubsJar =
+                    new File(
+                            globalScope
+                                    .getAndroidBuilder()
+                                    .getBuildToolInfo()
+                                    .getPath(BuildToolInfo.PathId.CORE_LAMBDA_STUBS));
             javacTask
                     .getOptions()
                     .setBootstrapClasspath(
-                            project.files(globalScope.getAndroidBuilder().getBootClasspath(false)));
-        }
+                            project.files(
+                                    globalScope.getAndroidBuilder().getBootClasspath(false),
+                                    coreLambdaStubsJar));
+        } else {
+            final boolean keepDefaultBootstrap = scope.keepDefaultBootstrap();
 
-        FileCollection classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
-        if (keepDefaultBootstrap) {
-            classpath =
-                    classpath.plus(
-                            project.files(globalScope.getAndroidBuilder().getBootClasspath(false)));
+            if (!keepDefaultBootstrap) {
+                // Set boot classpath if we don't need to keep the default.  Otherwise, this is
+                // added as
+                // normal classpath.
+                javacTask
+                        .getOptions()
+                        .setBootstrapClasspath(
+                                project.files(
+                                        globalScope.getAndroidBuilder().getBootClasspath(false)));
+            }
+            if (keepDefaultBootstrap) {
+                classpath =
+                        classpath.plus(
+                                project.files(
+                                        globalScope.getAndroidBuilder().getBootClasspath(false)));
+            }
         }
         javacTask.setClasspath(classpath);
 
@@ -98,9 +116,6 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 scope.getJava8LangSupportType());
 
         javacTask.getOptions().setEncoding(compileOptions.getEncoding());
-
-        Configuration annotationProcessorConfiguration =
-                scope.getVariantDependencies().getAnnotationProcessorConfiguration();
 
         Boolean includeCompileClasspath =
                 scope.getVariantConfiguration()
@@ -174,7 +189,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             javacTask.dataBindingArtifactOutputDirectory =
                     scope.getBundleArtifactFolderForDataBinding();
             scope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.DATA_BINDING_ARTIFACT,
+                    InternalArtifactType.DATA_BINDING_ARTIFACT,
                     javacTask.dataBindingArtifactOutputDirectory,
                     javacTask.getName());
         }

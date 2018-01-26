@@ -46,7 +46,6 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.base.Charsets;
-import com.google.common.base.Verify;
 import com.google.common.collect.Range;
 import com.google.common.io.Files;
 import java.io.File;
@@ -97,42 +96,24 @@ public class AaptV1Test {
     private final AndroidTargetManager mTargetManager =
             new AndroidTargetManager(mSdkHandler, new FileOpImpl());
 
-    @NonNull
-    private final BuildToolInfo buildToolInfo =
-            BuildToolInfo.fromLocalPackage(
-                    Verify.verifyNotNull(
-                            mSdkHandler.getPackageInRange(
-                                    SdkConstants.FD_BUILD_TOOLS,
-                                    Range.atLeast(AaptV1.VERSION_FOR_SERVER_AAPT),
-                                    mProgressIndicator),
-                            "Build tools above %s not found",
-                            AaptV1.VERSION_FOR_SERVER_AAPT.toShortString()));
-
-
     /**
      * Creates the {@link Aapt} instance.
      *
      * @return the instance
-     * @throws Exception failed to create the {@link Aapt} instance
      */
     @NonNull
-    private Aapt makeAapt() throws Exception {
+    private Aapt makeAapt() {
         return makeAapt(AaptV1.PngProcessMode.ALL, Range.atLeast(AaptV1.VERSION_FOR_SERVER_AAPT));
     }
 
     /**
      * Creates the {@link Aapt} instance.
      *
-     * @param mode the PNG processing mode
      * @param revisionRange range of revisions of the build tools that can be used
-     * @return the instance
-     * @throws Exception failed to create the {@link Aapt} instance
      */
     @NonNull
     private Aapt makeAapt(
-            @NonNull AaptV1.PngProcessMode mode,
-            @NonNull Range<Revision> revisionRange)
-            throws Exception {
+            @NonNull AaptV1.PngProcessMode mode, @NonNull Range<Revision> revisionRange) {
         return new AaptV1(
                 new DefaultProcessExecutor(mLogger),
                 new LoggedProcessOutputHandler(mLogger),
@@ -330,12 +311,11 @@ public class AaptV1Test {
             }
 
             File manifestFile = mTemporaryFolder.newFile("AndroidManifest.xml");
-            Files.write(
+            FileUtils.writeToFile(
+                    manifestFile,
                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\""
-                            + " package=\"com.example.aapt\"></manifest>",
-                    manifestFile,
-                    Charsets.US_ASCII);
+                            + " package=\"com.example.aapt\"></manifest>");
 
             IAndroidTarget target23 =
                     mTargetManager.getTargetOfAtLeastApiLevel(23, mProgressIndicator);
@@ -345,15 +325,13 @@ public class AaptV1Test {
             AaptPackageConfig config =
                     new AaptPackageConfig.Builder()
                             .setAndroidTarget(target23)
-                            .setBuildToolInfo(buildToolInfo)
-                            .setLogger(mLogger)
                             .setManifestFile(manifestFile)
                             .setOptions(new AaptOptions(null, false, null))
                             .setSourceOutputDir(sourceOutput)
                             .setVariantType(VariantType.DEFAULT)
                             .setResourceDir(outputDir)
                             .build();
-            aapt.link(config);
+            aapt.link(config, mLogger);
 
             File rJava = FileUtils.join(sourceOutput, "com", "example", "aapt", "R.java");
             assertTrue(rJava.isFile());
@@ -377,7 +355,6 @@ public class AaptV1Test {
     @Test
     public void generateRJavaInLibrary() throws Exception {
         try (Aapt aapt = makeAapt()) {
-
             File outputDir = AaptTestUtils.getOutputDir(mTemporaryFolder);
 
             File originalFile = AaptTestUtils.getTestPng(mTemporaryFolder);
@@ -390,12 +367,11 @@ public class AaptV1Test {
             }
 
             File manifestFile = mTemporaryFolder.newFile("AndroidManifest.xml");
-            Files.write(
+            FileUtils.writeToFile(
+                    manifestFile,
                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\""
-                            + " package=\"com.example.aapt\"></manifest>",
-                    manifestFile,
-                    Charsets.US_ASCII);
+                            + " package=\"com.example.aapt\"></manifest>");
 
             IAndroidTarget target23 =
                     mTargetManager.getTargetOfAtLeastApiLevel(23, mProgressIndicator);
@@ -405,15 +381,13 @@ public class AaptV1Test {
             AaptPackageConfig config =
                     new AaptPackageConfig.Builder()
                             .setAndroidTarget(target23)
-                            .setBuildToolInfo(buildToolInfo)
-                            .setLogger(mLogger)
                             .setManifestFile(manifestFile)
                             .setOptions(new AaptOptions(null, false, null))
                             .setSourceOutputDir(sourceOutput)
                             .setVariantType(VariantType.LIBRARY)
                             .setResourceDir(outputDir)
                             .build();
-            aapt.link(config);
+            aapt.link(config, mLogger);
 
             File rJava = FileUtils.join(sourceOutput, "com", "example", "aapt", "R.java");
             assertTrue(rJava.isFile());

@@ -19,9 +19,11 @@ package com.android.build.gradle.internal.core;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter;
 import com.android.builder.core.DefaultBuildType;
 import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.VariantType;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.signing.DefaultSigningConfig;
 import com.google.common.collect.Iterables;
@@ -38,6 +40,7 @@ public class VariantConfigurationTest {
     private DefaultProductFlavor mDefaultConfig;
     private DefaultProductFlavor mFlavorConfig;
     private DefaultBuildType mBuildType;
+    private EvalIssueReporter mIssueReporter;
 
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
     private File srcDir;
@@ -48,6 +51,7 @@ public class VariantConfigurationTest {
         mFlavorConfig = new DefaultProductFlavor("flavor");
         mBuildType = new DefaultBuildType("debug");
         srcDir = tmp.newFolder("src");
+        mIssueReporter = new FakeEvalIssueReporter();
     }
 
     @Test
@@ -179,7 +183,8 @@ public class VariantConfigurationTest {
                         mBuildType,
                         new MockSourceProvider("debug"),
                         VariantType.DEFAULT,
-                        signingOverride);
+                        signingOverride,
+                        mIssueReporter);
 
         variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
 
@@ -196,7 +201,8 @@ public class VariantConfigurationTest {
                         mBuildType,
                         new MockSourceProvider("debug"),
                         VariantType.DEFAULT,
-                        null /*signingConfigOverride*/) {
+                        null /*signingConfigOverride*/,
+                        mIssueReporter) {
 
                     @NonNull
                     @Override
@@ -219,7 +225,8 @@ public class VariantConfigurationTest {
                         mBuildType,
                         new MockSourceProvider("debug"),
                         VariantType.DEFAULT,
-                        null /*signingConfigOverride*/) {
+                        null /*signingConfigOverride*/,
+                        mIssueReporter) {
 
                     @Override
                     public String getVersionNameFromManifest() {
@@ -242,7 +249,8 @@ public class VariantConfigurationTest {
                         mBuildType,
                         new MockSourceProvider(srcDir.getPath() + File.separatorChar + "debug"),
                         VariantType.DEFAULT,
-                        null);
+                        null,
+                        mIssueReporter);
 
         variant.addProductFlavor(
                 mFlavorConfig,

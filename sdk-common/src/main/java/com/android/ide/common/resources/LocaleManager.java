@@ -21,6 +21,8 @@ import static java.util.Locale.US;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.ide.common.res2.AbstractResourceRepository;
+import com.android.ide.common.res2.ResourceItem;
 import com.android.ide.common.res2.ResourceRepository;
 import com.android.resources.ResourceType;
 import com.android.utils.SdkUtils;
@@ -28,12 +30,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * The {@linkplain LocaleManager} provides access to locale information such as
@@ -411,25 +408,28 @@ public class LocaleManager {
             //     (since that's a region specific overlay) so pick for example GB
             //     instead.
             if (resources != null) {
-                // TODO: namespaces
-                ListMultimap<String, com.android.ide.common.res2.ResourceItem> strings =
-                        resources.getItems().get(null, ResourceType.STRING);
-                if (strings != null) {
-                    Set<String> specified = Sets.newHashSet();
-                    for (com.android.ide.common.res2.ResourceItem item : strings.values()) {
-                        String qualifiers = item.getQualifiers();
-                        if (qualifiers.startsWith(languageCode) && qualifiers.length() == 6
-                                && qualifiers.charAt(3) == 'r') {
-                            specified.add(qualifiers.substring(4));
+                synchronized (AbstractResourceRepository.ITEM_MAP_LOCK) {
+                    // TODO: namespaces
+                    ListMultimap<String, ResourceItem> strings =
+                            resources.getItems().get(null, ResourceType.STRING);
+                    if (strings != null) {
+                        Set<String> specified = Sets.newHashSet();
+                        for (ResourceItem item : strings.values()) {
+                            String qualifiers = item.getQualifiers();
+                            if (qualifiers.startsWith(languageCode)
+                                    && qualifiers.length() == 6
+                                    && qualifiers.charAt(3) == 'r') {
+                                specified.add(qualifiers.substring(4));
+                            }
                         }
-                    }
-                    if (!specified.isEmpty()) {
-                        // Remove the specified locales from consideration
-                        Set<String> all = Sets.newHashSet(regions);
-                        all.removeAll(specified);
-                        // Only one left?
-                        if (all.size() == 1) {
-                            return all.iterator().next();
+                        if (!specified.isEmpty()) {
+                            // Remove the specified locales from consideration
+                            Set<String> all = Sets.newHashSet(regions);
+                            all.removeAll(specified);
+                            // Only one left?
+                            if (all.size() == 1) {
+                                return all.iterator().next();
+                            }
                         }
                     }
                 }

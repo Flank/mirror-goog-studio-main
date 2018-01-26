@@ -54,8 +54,7 @@ class JvmtiAllocator : public dex::Writer::Allocator {
   jvmtiEnv* jvmti_env_;
 };
 
-// TODO: Move the flag to the agent config to be set by Studio.
-const bool is_io_profiling_enabled = false;
+bool energy_profiler_enabled = false;
 
 // Retrieve the app's data directory path
 static std::string GetAppDataPath() {
@@ -68,7 +67,9 @@ static std::string GetAppDataPath() {
 static bool IsRetransformClassSignature(const char* sig_mutf8) {
   return (strcmp(sig_mutf8, "Ljava/net/URL;") == 0) ||
          (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
-         (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0);
+         (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0) ||
+         (strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 && energy_profiler_enabled) ||
+         (strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0 && energy_profiler_enabled);
 }
 
 // ClassPrepare event callback to invoke transformation of selected
@@ -198,6 +199,78 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
 
     *new_class_data_len = new_image_size;
     *new_class_data = new_image;
+  } else if (strcmp(name, "android/os/PowerManager") == 0) {
+    dex::Reader reader(class_data, class_data_len);
+    std::string desc = "L" + std::string(name) + ";";
+    auto class_index = reader.FindClassIndex(desc.c_str());
+    if (class_index == dex::kNoIndex) {
+      Log::V("Could not find class index for %s", name);
+      return;
+    }
+
+    reader.CreateClassIr(class_index);
+    auto dex_ir = reader.GetIr();
+
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
+        "onNewWakeLockExit"));
+    if (!mi.InstrumentMethod(ir::MethodId(
+        desc.c_str(), "newWakeLock",
+        "(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;"))) {
+      Log::E("Error instrumenting PowerManager.newWakeLock");
+    }
+
+    size_t new_image_size = 0;
+    dex::u1* new_image = nullptr;
+    dex::Writer writer(dex_ir);
+
+    JvmtiAllocator allocator(jvmti_env);
+    new_image = writer.CreateImage(&allocator, &new_image_size);
+
+    *new_class_data_len = new_image_size;
+    *new_class_data = new_image;
+  } else if (strcmp(name, "android/os/PowerManager$WakeLock") == 0) {
+    dex::Reader reader(class_data, class_data_len);
+    std::string desc = "L" + std::string(name) + ";";
+    auto class_index = reader.FindClassIndex(desc.c_str());
+    if (class_index == dex::kNoIndex) {
+      Log::V("Could not find class index for %s", name);
+      return;
+    }
+
+    reader.CreateClassIr(class_index);
+    auto dex_ir = reader.GetIr();
+
+    // Instrument acquire().
+    slicer::MethodInstrumenter mi_acq(dex_ir);
+    mi_acq.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
+        "wrapAcquire"));
+    if (!mi_acq.InstrumentMethod(ir::MethodId(
+        desc.c_str(), "acquireLocked", "()V"))) {
+      Log::E("Error instrumenting WakeLock.acquire");
+    }
+
+    // Instrument release().
+    slicer::MethodInstrumenter mi_rel(dex_ir);
+    mi_rel.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
+        "wrapRelease"));
+    if (!mi_rel.InstrumentMethod(ir::MethodId(
+        desc.c_str(), "release", "(I)V"))) {
+      Log::E("Error instrumenting WakeLock.release");
+    }
+
+    size_t new_image_size = 0;
+    dex::u1* new_image = nullptr;
+    dex::Writer writer(dex_ir);
+
+    JvmtiAllocator allocator(jvmti_env);
+    new_image = writer.CreateImage(&allocator, &new_image_size);
+
+    *new_class_data_len = new_image_size;
+    *new_class_data = new_image;
   } else {
     transformed = false;
   }
@@ -231,7 +304,7 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
 
   // TODO: Removed these once the auto-JNI-binding feature becomes
   // available in all published O system images.
-  if (is_io_profiling_enabled) {
+  if (agent_config->profiler_io_enabled()) {
     BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
                   "trackIoCall", "(JIJZ)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
@@ -366,6 +439,8 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   Log::V("StudioProfilers agent attached.");
   auto agent_config = config.GetAgentConfig();
   Agent::Instance(&config);
+
+  energy_profiler_enabled = agent_config.energy_profiler_enabled();
 
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
   LoadDex(jvmti_env, jni_env, &agent_config);

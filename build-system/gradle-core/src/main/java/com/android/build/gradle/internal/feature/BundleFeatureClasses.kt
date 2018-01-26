@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.scope.TaskConfigAction
-import com.android.build.gradle.internal.scope.TaskOutputHolder
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
@@ -85,14 +85,14 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
 
         override fun execute(task: BundleFeatureClasses) {
             task.outputJar = classesJar
-            task.javacClasses = scope.getOutput(TaskOutputHolder.TaskOutputType.JAVAC)
+            task.javacClasses = scope.getOutput(InternalArtifactType.JAVAC)
             task.preJavacClasses = scope.variantData.allPreJavacGeneratedBytecode
             task.postJavacClasses = scope.variantData.allPostJavacGeneratedBytecode
             val globalScope = scope.globalScope
             if (java.lang.Boolean.TRUE == globalScope.extension.aaptOptions.namespaced) {
                 task.thisRClassClasses =
                         scope.getOutput(
-                                TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
+                                InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
                 task.dependencyRClassClasses = scope.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         ALL,

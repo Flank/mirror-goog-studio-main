@@ -170,11 +170,11 @@ public class XmlUtils {
             return XMLNS;
         }
 
-        HashSet<String> visited = new HashSet<String>();
+        HashSet<String> visited = new HashSet<>();
         Document doc = node == null ? null : node.getOwnerDocument();
 
         // Ask the document about it. This method may not be implemented by the Document.
-        String nsPrefix = null;
+        String nsPrefix;
         try {
             nsPrefix = doc != null ? doc.lookupPrefix(nsUri) : null;
             if (nsPrefix != null) {
@@ -417,6 +417,7 @@ public class XmlUtils {
      * full in one shot and the resulting array is then wrapped in a byte array input stream,
      * which does not need to be closed.)
      */
+    @NonNull
     public static Reader getUtfReader(@NonNull File file) throws IOException {
         byte[] bytes = Files.toByteArray(file);
         int length = bytes.length;
@@ -489,7 +490,7 @@ public class XmlUtils {
      */
     @NonNull
     public static Document parseDocument(@NonNull String xml, boolean namespaceAware)
-            throws ParserConfigurationException, IOException, SAXException {
+            throws IOException, SAXException {
         xml = stripBom(xml);
         return parseDocument(new StringReader(xml), namespaceAware);
     }
@@ -504,7 +505,7 @@ public class XmlUtils {
      */
     @NonNull
     public static Document parseDocument(@NonNull Reader xml, boolean namespaceAware)
-            throws ParserConfigurationException, IOException, SAXException {
+            throws IOException, SAXException {
         InputSource is = new InputSource(xml);
         return createDocumentBuilder(namespaceAware).parse(is);
     }
@@ -519,7 +520,7 @@ public class XmlUtils {
      */
     @NonNull
     public static Document parseUtfXmlFile(@NonNull File file, boolean namespaceAware)
-            throws ParserConfigurationException, IOException, SAXException {
+            throws IOException, SAXException {
         try (Reader reader = getUtfReader(file)) {
             return parseDocument(reader, namespaceAware);
         }
@@ -624,6 +625,7 @@ public class XmlUtils {
     public static String toXml(@NonNull Node node) {
         return toXml(node, null);
     }
+
     public static String toXml(
             @NonNull Node node,
             @Nullable Map<SourcePosition, SourceFilePosition> blame) {
@@ -774,11 +776,12 @@ public class XmlUtils {
         }
     }
 
-    public static void attachSourceFile(Node node, SourceFile sourceFile) {
+    public static void attachSourceFile(@NonNull Node node, @NonNull SourceFile sourceFile) {
         node.setUserData(SOURCE_FILE_USER_DATA_KEY, sourceFile, null);
     }
 
-    public static SourceFilePosition getSourceFilePosition(Node node) {
+    @NonNull
+    public static SourceFilePosition getSourceFilePosition(@NonNull Node node) {
         SourceFile sourceFile = (SourceFile) node.getUserData(SOURCE_FILE_USER_DATA_KEY);
         if (sourceFile == null) {
             sourceFile = SourceFile.UNKNOWN;
@@ -793,6 +796,7 @@ public class XmlUtils {
      * @param value the value to be formatted
      * @return the corresponding XML string for the value
      */
+    @NonNull
     public static String formatFloatAttribute(double value) {
         if (!Double.isFinite(value)) {
             throw new IllegalArgumentException("Invalid number: " + value);
@@ -811,7 +815,8 @@ public class XmlUtils {
      * @param floatingPointNumber the string representing a floating point number
      * @return the original number with trailing zeros removed
      */
-    public static String trimInsignificantZeros(String floatingPointNumber) {
+    @NonNull
+    public static String trimInsignificantZeros(@NonNull String floatingPointNumber) {
         int pos = floatingPointNumber.lastIndexOf('.');
         if (pos < 0) {
             return floatingPointNumber;

@@ -57,8 +57,7 @@ service IoService {
 }
 
 message IoStartRequest {
-  int32 process_id = 1;
-  Session session = 2;
+  Session session = 1;
 }
 
 message IoStartResponse {
@@ -72,8 +71,7 @@ message IoStartResponse {
 }
 
 message IoStopRequest {
-  int32 process_id = 1;
-  Session session = 2;
+  Session session = 1;
 }
 
 message IoStopResponse {
@@ -86,10 +84,9 @@ message IoStopResponse {
 }
 
 message FileDataRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 start_timestamp = 3;  // exclusive
-  int64 end_timestamp = 4;    // inclusive
+  Session session = 1;
+  int64 start_timestamp = 2;  // exclusive
+  int64 end_timestamp = 3;    // inclusive
 }
 
 // Corresponds to a single write/read call
@@ -139,19 +136,18 @@ message SpeedDataRequest {
     WRITE_SPEED_DATA = 2;
     ALL_SPEED_DATA = 3;
   }
-  int32 process_id = 1;
-  Session session = 2;
-  Type type = 3;
-  int64 start_timestamp = 4;  // exclusive
-  int64 end_timestamp = 5;    // inclusive
+  Session session = 1;
+  Type type = 2;
+  int64 start_timestamp = 3;  // exclusive
+  int64 end_timestamp = 4;    // inclusive
 }
 
 // Contains the current overall speed of writing/reading
 message IoSpeedData {
-  IoType type = 1;
+  int64 end_timestamp = 1;
+  IoType type = 2;
   // The speed of writing/reading in bytes/second
-  int64 speed = 2;
-  CommonData basic_info = 3;
+  int64 speed = 3;
 }
 
 message SpeedDataResponse {

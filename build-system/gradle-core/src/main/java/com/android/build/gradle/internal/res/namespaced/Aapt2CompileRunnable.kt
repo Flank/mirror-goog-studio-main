@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.ide.common.res2.CompileResourceRequest
 import com.android.repository.Revision
 import org.gradle.api.logging.Logging
-import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -36,6 +35,5 @@ class Aapt2CompileRunnable @Inject constructor(
 
     class Params(
             val revision: Revision,
-            val requests: List<CompileResourceRequest>,
-            val outputDirectory: File) : Serializable
+            val requests: List<CompileResourceRequest>) : Serializable
 }

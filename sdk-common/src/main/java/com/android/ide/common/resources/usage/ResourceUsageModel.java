@@ -53,9 +53,12 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.android.utils.SdkUtils;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -63,8 +66,10 @@ import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -86,6 +91,8 @@ public class ResourceUsageModel {
     /** Map from R field value to corresponding resource */
     private final Map<Integer, Resource> mValueToResource =
             Maps.newHashMapWithExpectedSize(TYPICAL_RESOURCE_COUNT);
+    /** Set of resource names that are explicitly whitelisted as used */
+    private Set<String> mWhitelistedResources = Sets.newHashSet();
     /**
      * Next id suffix to be appended for the {@code <aapt:attr>} inlined resources created by
      * aapt
@@ -408,6 +415,11 @@ public class ResourceUsageModel {
         return findUnused(mResources);
     }
 
+    public String dumpWhitelistedResources() {
+        return Joiner.on(",")
+                .join(mWhitelistedResources.stream().sorted().collect(Collectors.toList()));
+    }
+
     public String dumpReferences() {
         StringBuilder sb = new StringBuilder(1000);
         sb.append("Resource Reference Graph:\n");
@@ -506,6 +518,13 @@ public class ResourceUsageModel {
         return resource;
     }
 
+    public boolean addResourceToWhitelist(@Nullable Resource resource) {
+        if (resource == null || Strings.isNullOrEmpty(resource.name)) {
+            return false;
+        }
+        return mWhitelistedResources.add(resource.name);
+    }
+
     @NonNull
     public Resource addResource(@NonNull ResourceType type, @NonNull String name,
             @Nullable String value) {
@@ -571,6 +590,7 @@ public class ResourceUsageModel {
         Resource resource = getResource(url.type, url.name);
         if (resource != null) {
             markReachable(resource);
+            addResourceToWhitelist(resource);
         } else if (url.name.contains("*") || url.name.contains("?")) {
             // Look for globbing patterns
             String regexp = globToRegexp(SdkUtils.getResourceFieldName(url.name));
@@ -581,6 +601,7 @@ public class ResourceUsageModel {
                     for (Resource r : nameMap.values()) {
                         if (pattern.matcher(r.name).matches()) {
                             markReachable(r);
+                            addResourceToWhitelist(r);
                         }
                     }
                 }

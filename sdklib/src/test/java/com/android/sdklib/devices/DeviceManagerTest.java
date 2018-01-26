@@ -403,7 +403,7 @@ public class DeviceManagerTest {
         final Device pixelDevice = dm.getDevice("pixel", "Google");
 
         Map<String, String> devProperties = DeviceManager.getHardwareProperties(pixelDevice);
-        assertThat(devProperties.get("hw.lcd.density")).isEqualTo("480");
+        assertThat(devProperties.get("hw.lcd.density")).isEqualTo("420");
         assertThat(devProperties.get("hw.lcd.width")).isEqualTo("1080");
     }
 

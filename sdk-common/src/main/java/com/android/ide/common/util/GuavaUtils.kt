@@ -17,11 +17,11 @@
 
 package com.android.ide.common.util
 
-import com.google.common.collect.ImmutableListMultimap
+import com.google.common.collect.ImmutableSetMultimap
 
 /** Creates a multimap for the given value pairs. */
-fun <K, V> multimapOf(vararg pairs: Pair<K, V>): ImmutableListMultimap<K, V> =
-    ImmutableListMultimap.builder<K, V>()
+fun <K, V> multimapOf(vararg pairs: Pair<K, V>): ImmutableSetMultimap<K, V> =
+        ImmutableSetMultimap.builder<K, V>()
             .apply { pairs.forEach { (k, v) -> put(k, v) } }
             .build()
 
@@ -30,7 +30,7 @@ fun <K, V> multimapOf(vararg pairs: Pair<K, V>): ImmutableListMultimap<K, V> =
  *
  * The first value is the key, and all subsequent values are values associated with the key.
  */
-fun <K, V> multimapWithSingleKeyOf(key: K, vararg values: V): ImmutableListMultimap<K, V> =
-        ImmutableListMultimap.builder<K, V>()
+fun <K, V> multimapWithSingleKeyOf(key: K, vararg values: V): ImmutableSetMultimap<K, V> =
+        ImmutableSetMultimap.builder<K, V>()
                 .apply { putAll(key, values.asIterable()) }
                 .build()
