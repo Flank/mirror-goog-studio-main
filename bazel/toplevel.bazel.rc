@@ -24,6 +24,10 @@ build --javacopt=-Xep:FallThrough:OFF  # enforcing Google style, essentially
 build --cxxopt=-std=c++11
 build --copt=-fvisibility=hidden
 
+# Forwards the system $SHELL environment variable so remote execution of bazel
+# finds make in the ndk-build script (see b/72179674).
+build --test_env=SHELL
+
 build:release --copt=-fdata-sections
 build:release --cxxopt=-fdata-sections
 build:release --copt=-fno-exceptions
