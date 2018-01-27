@@ -19,6 +19,9 @@ package com.android.ddmlib.logcat;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.Log.LogLevel;
+import java.time.Instant;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 
 /**
  * Data class for message header information which gets reported by logcat.
@@ -38,20 +41,45 @@ public final class LogCatHeader {
     @NonNull
     private final String mTag;
 
-    @NonNull
-    private final LogCatTimestamp mTimestamp;
+    @Nullable private final Instant mTimestampInstant;
+    @Nullable private final LogCatTimestamp mTimestamp;
+
+    public LogCatHeader(
+            @NonNull LogLevel logLevel,
+            int pid,
+            int tid,
+            @NonNull String appName,
+            @NonNull String tag,
+            @NonNull Instant timestampInstant) {
+        mLogLevel = logLevel;
+        mPid = pid;
+        mTid = tid;
+        mAppName = appName;
+        mTag = tag;
+        mTimestampInstant = timestampInstant;
+        mTimestamp = null;
+    }
 
     /**
      * Construct an immutable log message object.
+     *
+     * @deprecated Use {@link #LogCatHeader(LogLevel, int, int, String, String, Instant)}
      */
-    public LogCatHeader(@NonNull LogLevel logLevel, int pid, int tid, @NonNull String appName,
-            @NonNull String tag, @NonNull LogCatTimestamp timestamp) {
+    @Deprecated
+    public LogCatHeader(
+            @NonNull LogLevel logLevel,
+            int pid,
+            int tid,
+            @NonNull String appName,
+            @NonNull String tag,
+            @NonNull LogCatTimestamp timestamp) {
         mLogLevel = logLevel;
-        mAppName = appName;
-        mTag = tag;
-        mTimestamp = timestamp;
         mPid = pid;
         mTid = tid;
+        mAppName = appName;
+        mTag = tag;
+        mTimestampInstant = null;
+        mTimestamp = timestamp;
     }
 
     @NonNull
@@ -78,7 +106,25 @@ public final class LogCatHeader {
     }
 
     @NonNull
+    public Instant getTimestampInstant() {
+        if (mTimestampInstant == null) {
+            throw new NoSuchElementException();
+        }
+
+        return mTimestampInstant;
+    }
+
+    /**
+     * @deprecated Construct a LogCatHeader instance with {@link #LogCatHeader(LogLevel, int, int,
+     *     String, String, Instant)} and use {@link #getTimestampInstant()}
+     */
+    @Deprecated
+    @NonNull
     public LogCatTimestamp getTimestamp() {
+        if (mTimestamp == null) {
+            throw new NoSuchElementException();
+        }
+
         return mTimestamp;
     }
 
@@ -95,7 +141,8 @@ public final class LogCatHeader {
                 && mTid == header.mTid
                 && mAppName.equals(header.mAppName)
                 && mTag.equals(header.mTag)
-                && mTimestamp.equals(header.mTimestamp);
+                && Objects.equals(mTimestampInstant, header.mTimestampInstant)
+                && Objects.equals(mTimestamp, header.mTimestamp);
     }
 
     @Override
@@ -107,14 +154,30 @@ public final class LogCatHeader {
         hashCode = 31 * hashCode + mTid;
         hashCode = 31 * hashCode + mAppName.hashCode();
         hashCode = 31 * hashCode + mTag.hashCode();
-        hashCode = 31 * hashCode + mTimestamp.hashCode();
+        hashCode = 31 * hashCode + Objects.hashCode(mTimestampInstant);
+        hashCode = 31 * hashCode + Objects.hashCode(mTimestamp);
 
         return hashCode;
     }
 
     @Override
     public String toString() {
-        return String.format("%s: %s/%s(%s)", mTimestamp, mLogLevel.getPriorityLetter(), mTag,
-                mPid);
+        StringBuilder builder = new StringBuilder();
+
+        if (mTimestampInstant == null) {
+            builder.append(mTimestamp);
+        } else {
+            LogCatLongEpochMessageParser.FORMATTER.formatTo(mTimestampInstant, builder);
+        }
+
+        builder.append(": ")
+                .append(mLogLevel.getPriorityLetter())
+                .append('/')
+                .append(mTag)
+                .append('(')
+                .append(mPid)
+                .append(')');
+
+        return builder.toString();
     }
 }
