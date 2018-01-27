@@ -94,6 +94,7 @@ public class SymbolWriter {
             writer.write("package ");
             writer.write(mPackageName);
             writer.write(";\n\npublic final class R {\n");
+            writer.write("\tprivate R() {}\n\n");
 
             Table<String, String, SymbolEntry> symbols = getAllSymbols();
             Table<String, String, SymbolEntry> values = mValues.getSymbols();
@@ -106,6 +107,10 @@ public class SymbolWriter {
                 writer.write("\tpublic static final class ");
                 writer.write(row);
                 writer.write(" {\n");
+
+                writer.write("\t\tprivate ");
+                writer.write(row);
+                writer.write("() {}\n\n");
 
                 Map<String, SymbolEntry> rowMap = symbols.row(row);
                 Set<String> symbolSet = rowMap.keySet();
