@@ -1,16 +1,17 @@
 package android.com.java.profilertester;
 
 import android.app.Activity;
+import android.com.java.profilertester.asic.BluetoothTaskCategory;
 import android.com.java.profilertester.cpu.CpuTaskCategory;
-import android.com.java.profilertester.event.EventConfigurations;
 import android.com.java.profilertester.event.EventTaskCategory;
 import android.com.java.profilertester.memory.MemoryTaskCategory;
 import android.com.java.profilertester.network.NetworkTaskCategory;
 import android.com.java.profilertester.profiletask.TaskCategory;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +20,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -34,6 +34,7 @@ public class MainActivityFragment extends Fragment {
     final static String TAG = MainActivityFragment.class.getName();
     private View mFragmentView;
     private Spinner mCategorySpinner, mTaskSpinner;
+    private TaskCategory[] mTaskCategories;
     private List<ArrayAdapter<? extends TaskCategory.Task>> mTaskAdapters;
 
     private final List<TaskCategory.Task.SelectionListener> mSelectionListeners = new ArrayList<>();
@@ -45,26 +46,33 @@ public class MainActivityFragment extends Fragment {
 
         mCategorySpinner = (Spinner) mFragmentView.findViewById(R.id.category_spinner);
 
-        TaskCategory[] categories = new TaskCategory[]{
-                new CpuTaskCategory(getActivity().getFilesDir()),
-                new MemoryTaskCategory(),
-                new NetworkTaskCategory(),
-                new EventTaskCategory(new Callable<Activity>() {
-                    @Override
-                    public Activity call() {
-                        return getActivity();
-                    }
-                }, (EditText) mFragmentView.findViewById(R.id.section_editor))
-        };
-        ArrayAdapter<TaskCategory> categoryAdapters = new ArrayAdapter<>(
-                mFragmentView.getContext(), android.R.layout.simple_spinner_item, categories);
+        mTaskCategories =
+                new TaskCategory[] {
+                    new CpuTaskCategory(getActivity().getFilesDir()),
+                    new MemoryTaskCategory(),
+                    new NetworkTaskCategory(),
+                    new EventTaskCategory(
+                            new Callable<Activity>() {
+                                @Override
+                                public Activity call() {
+                                    return getActivity();
+                                }
+                            },
+                            (EditText) mFragmentView.findViewById(R.id.section_editor)),
+                    new BluetoothTaskCategory(getActivity())
+                };
+        ArrayAdapter<TaskCategory> categoryAdapters =
+                new ArrayAdapter<>(
+                        mFragmentView.getContext(),
+                        android.R.layout.simple_spinner_item,
+                        mTaskCategories);
         categoryAdapters.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mCategorySpinner.setAdapter(categoryAdapters);
 
         mTaskSpinner = (Spinner) mFragmentView.findViewById(R.id.task_spinner);
         // create an adaptor for each category
         mTaskAdapters = new ArrayList<>();
-        for (TaskCategory taskCategory : categories) {
+        for (TaskCategory taskCategory : mTaskCategories) {
             ArrayAdapter<? extends TaskCategory.Task> taskAdapter = new ArrayAdapter<>(
                     mFragmentView.getContext(),
                     android.R.layout.simple_spinner_item,
@@ -171,14 +179,25 @@ public class MainActivityFragment extends Fragment {
             return;
         }
 
-        ((TaskCategory) categoryObject).executeTask((TaskCategory.Task) taskObject, new TaskCategory.PostExecuteRunner() {
-            @Override
-            public void accept(@Nullable String s) {
-                View view = getView();
-                if (view != null && s != null) {
-                    Snackbar.make(getView(), s, Snackbar.LENGTH_LONG);
-                }
-            }
-        });
+        ((TaskCategory) categoryObject)
+                .executeTask(
+                        (TaskCategory) categoryObject,
+                        (TaskCategory.Task) taskObject,
+                        new TaskCategory.PostExecuteRunner() {
+                            @Override
+                            public void accept(@Nullable String s) {
+                                View view = getView();
+                                if (view != null && s != null) {
+                                    Snackbar.make(getView(), s, Snackbar.LENGTH_LONG);
+                                }
+                            }
+                        });
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        for (TaskCategory taskCategory : mTaskCategories) {
+            taskCategory.onActivityResult(requestCode, resultCode, data);
+        }
     }
 }
