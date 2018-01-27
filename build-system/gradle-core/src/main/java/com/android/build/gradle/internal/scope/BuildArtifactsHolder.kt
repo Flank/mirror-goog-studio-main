@@ -44,8 +44,8 @@ import java.util.Locale
  * @param variantName name of the Variant
  * @param rootOutputDir the intermediate directories to place output files.
  * @param variantDirName the subdirectory where outputs should be placed for the variant
- * @param initialArtifactTypes the list of artifact types to initialize the holder with.  This list
- *         determines all artifact types available to an external user.
+ * @param initialArtifactTypes the list of external artifact types to initialize the holder with.
+ *         This list determines all artifact types available to an external user.
  */
 class BuildArtifactsHolder(
         private val project : Project,
@@ -56,7 +56,7 @@ class BuildArtifactsHolder(
         private val dslScope: DslScope) {
 
     private val artifactRecordMap =
-            initialArtifactTypes.associate{
+            initialArtifactTypes.associateTo(mutableMapOf()){
                 it to ArtifactRecord(BuildableArtifactImpl(null, dslScope))
             }
 
@@ -228,8 +228,9 @@ class BuildArtifactsHolder(
     fun initializeFirstArtifactFiles(
             artifactType: ArtifactType, collection : FileCollection)
             : BuildableArtifact {
-        val output = artifactRecordMap[artifactType]
-                ?: throw MissingBuildableArtifactException(artifactType)
+        val output = artifactRecordMap.getOrPut(artifactType) {
+            ArtifactRecord((BuildableArtifactImpl(null, dslScope)))
+        }
         if (output.initialized) {
             throw RuntimeException("Artifact already registered for type: $artifactType")
         }

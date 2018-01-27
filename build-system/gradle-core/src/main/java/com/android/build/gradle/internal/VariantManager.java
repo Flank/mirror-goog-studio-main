@@ -24,6 +24,7 @@ import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORM
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.attributes.BuildTypeAttr;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.gradle.AndroidConfig;
@@ -32,6 +33,7 @@ import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
+import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.AarTransform;
 import com.android.build.gradle.internal.dependency.AlternateCompatibilityRule;
@@ -52,6 +54,8 @@ import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
+import com.android.build.gradle.internal.publishing.PublishingSpecs;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -529,6 +533,36 @@ public class VariantManager implements VariantModel {
             }
         } else {
             taskManager.createTasksForVariantScope(variantScope);
+            publishBuildArtifacts(variantScope);
+        }
+    }
+
+    /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs. */
+    private void publishBuildArtifacts(VariantScope variantScope) {
+        BuildArtifactsHolder buildArtifactsHolder = variantScope.getBuildArtifactsHolder();
+        for (PublishingSpecs.OutputSpec outputSpec :
+                variantScope.getPublishingSpec().getOutputs()) {
+            com.android.build.api.artifact.ArtifactType buildArtifactType =
+                    outputSpec.getOutputType();
+            if (buildArtifactsHolder.hasArtifact(buildArtifactType)) {
+                BuildableArtifact artifact =
+                        buildArtifactsHolder.getArtifactFiles(buildArtifactType);
+
+                // Gradle only support publishing single file.  Therefore, unless Gradle starts
+                // supporting publishing multiple files, PublishingSpecs should not contain any
+                // OutputSpec with an appendable ArtifactType.
+                if (BuildArtifactSpec.Companion.has(buildArtifactType)
+                        && BuildArtifactSpec.Companion.get(buildArtifactType).getAppendable()) {
+                    throw new RuntimeException(
+                            String.format(
+                                    "Appendable ArtifactType '%1s' cannot be published.",
+                                    buildArtifactType.name()));
+                }
+                variantScope.publishIntermediateArtifact(
+                        artifact,
+                        outputSpec.getArtifactType(),
+                        outputSpec.getPublishedConfigTypes());
+            }
         }
     }
 
