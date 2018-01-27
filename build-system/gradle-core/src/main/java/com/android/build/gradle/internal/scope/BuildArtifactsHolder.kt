@@ -160,12 +160,11 @@ class BuildArtifactsHolder(
             filenames : Collection<String>,
             taskName : String)
             : BuildableArtifact {
-        val originalOutput = getArtifactFiles(artifactType)
         val collection =
                 project.files(
                         filenames.map{ createFile(taskName, it) },
-                        originalOutput)
-                        .builtBy(taskName, originalOutput)
+                        getArtifactFiles(artifactType))
+                    .builtBy(taskName)
         val files = BuildableArtifactImpl(collection, dslScope)
         createOutput(artifactType, files)
         return files
@@ -192,8 +191,8 @@ class BuildArtifactsHolder(
     fun createFirstArtifactFiles(
             artifactType: ArtifactType, filenames : Collection<String>, taskName : String)
             : BuildableArtifact {
-        val collection = project.files(filenames.map{ createFile(artifactType.name(), it)})
-        collection.builtBy(taskName)
+        val collection =
+                project.files(filenames.map{ createFile(artifactType.name(), it)}).builtBy(taskName)
         return initializeFirstArtifactFiles(artifactType, collection)
     }
 
@@ -241,13 +240,15 @@ class BuildArtifactsHolder(
     /**
      * Creates a File for a task.
      *
-     * @param taskName taskName
+     * @param identifier identifier for the file.  This should be the task name prefix when creating
+     *                   a file for external user, and the artifact type name when creating for
+     *                   internal task.
      * @param filename name of the file.
      */
-    internal fun createFile(taskName: String, filename : String) =
+    internal fun createFile(identifier: String, filename : String) =
             FileUtils.join(
                     rootOutputDir,
-                    taskName,
+                    identifier,
                     variantDirName,
                     filename)
 
