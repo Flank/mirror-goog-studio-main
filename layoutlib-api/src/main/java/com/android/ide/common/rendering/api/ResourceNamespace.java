@@ -36,9 +36,9 @@ import java.util.Objects;
  *
  * <p>This class is serializable to allow passing between Gradle workers.
  */
-public class ResourceNamespace implements Serializable {
+public class ResourceNamespace implements Comparable<ResourceNamespace>, Serializable {
     public static final ResourceNamespace ANDROID =
-            new ResourceNamespace(SdkConstants.ANDROID_NS_NAME);
+            new ResourceNamespace(SdkConstants.ANDROID_URI, SdkConstants.ANDROID_NS_NAME);
     public static final ResourceNamespace RES_AUTO = new ResAutoNamespace();
     public static final ResourceNamespace TOOLS = new ToolsNamespace();
 
@@ -62,6 +62,7 @@ public class ResourceNamespace implements Serializable {
         Resolver EMPTY_RESOLVER = prefix -> null;
     }
 
+    @NonNull private final String uri;
     @Nullable private final String packageName;
 
     /**
@@ -82,7 +83,7 @@ public class ResourceNamespace implements Serializable {
             // Make sure ANDROID is a singleton, so we can use object identity to check for it.
             return ANDROID;
         } else {
-            return new ResourceNamespace(packageName);
+            return new ResourceNamespace(SdkConstants.URI_PREFIX + packageName, packageName);
         }
     }
 
@@ -133,9 +134,8 @@ public class ResourceNamespace implements Serializable {
                 // TODO(namespaces): What is considered a good package name by aapt?
                 String packageName = uri.substring(SdkConstants.URI_PREFIX.length());
                 if (!packageName.isEmpty()) {
-                    return new ResourceNamespace(packageName);
-                } else {
-                    return null;
+                    return new ResourceNamespace(
+                            SdkConstants.URI_PREFIX + packageName, packageName);
                 }
             }
 
@@ -147,12 +147,13 @@ public class ResourceNamespace implements Serializable {
         }
     }
 
-    private ResourceNamespace(@Nullable String packageName) {
+    private ResourceNamespace(@NonNull String uri, @Nullable String packageName) {
+        this.uri = uri;
         this.packageName = packageName;
     }
 
     /**
-     * Returns namespace associated with this namespace, or null in the case of {@link #RES_AUTO}.
+     * Returns the package associated with this namespace, or null in the case of {@link #RES_AUTO}.
      *
      * <p>The result value can be used as the namespace part of a {@link
      * com.android.resources.ResourceUrl}.
@@ -164,7 +165,7 @@ public class ResourceNamespace implements Serializable {
 
     @NonNull
     public String getXmlNamespaceUri() {
-        return SdkConstants.URI_PREFIX + packageName;
+        return uri;
     }
 
     @Override
@@ -181,52 +182,28 @@ public class ResourceNamespace implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(packageName);
+        return uri.hashCode();
     }
 
     @Override
     public String toString() {
-        return "/res/apk/" + packageName;
+        return uri.substring("http://schemas.android.com/".length());
+    }
+
+    @Override
+    public int compareTo(@NonNull ResourceNamespace other) {
+        return uri.compareTo(other.uri);
     }
 
     private static class ResAutoNamespace extends ResourceNamespace {
         private ResAutoNamespace() {
-            super(null);
+            super(SdkConstants.AUTO_URI, null);
         }
-
-        @NonNull
-        @Override
-        public String getXmlNamespaceUri() {
-            return SdkConstants.AUTO_URI;
-        }
-
-        @Override
-        public String toString() {
-            return "/apk/res-auto";
-        }
-
     }
 
     private static class ToolsNamespace extends ResourceNamespace {
         private ToolsNamespace() {
-            super(null);
-        }
-
-        @NonNull
-        @Override
-        public String getXmlNamespaceUri() {
-            return SdkConstants.TOOLS_URI;
-        }
-
-        @Override
-        public String toString() {
-            return "/tools";
-        }
-
-        @Override
-        public int hashCode() {
-            // Try to hit a different bucket from res-auto.
-            return 1;
+            super(SdkConstants.TOOLS_URI, null);
         }
     }
 }
