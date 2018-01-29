@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.detector.api.Detector
 
 class AutoRevokeDetectorTest : AbstractCheckTest() {

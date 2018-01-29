@@ -72,11 +72,19 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
         object : UElementHandler() {
             override fun visitMethod(node: UMethod) {
                 val superMethod = getRequiredSuperMethod(context, node) ?: return
-                if (!callsSuper(node, superMethod)) {
+                val visitor = SuperCallVisitor(superMethod)
+                node.accept(visitor)
+                val count = visitor.callsSuperCount
+                if (count == 0) {
                     val message = "Overriding method should call `super.${node.name}`"
                     val location = context.getNameLocation(node)
                     val fix = fix().map().put(PsiMethod::class.java, superMethod).build()
                     context.report(ISSUE, node, location, message, fix)
+                } else if (count > 1 && node.name == "onCreate") {
+                    val overlap = visitor.findFirstOverlap(node) ?: return
+                    val message = "Calling `super.${node.name}` more than once can lead to crashes"
+                    val location = context.getNameLocation(overlap)
+                    context.report(ISSUE, node, location, message)
                 }
             }
         }
@@ -133,19 +141,11 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
         return null
     }
 
-    private fun callsSuper(
-        method: UMethod,
-        superMethod: PsiMethod
-    ): Boolean {
-        val visitor = SuperCallVisitor(superMethod)
-        method.accept(visitor)
-        return visitor.callsSuper
-    }
-
     /** Visits a method and determines whether the method calls its super method  */
     private class SuperCallVisitor constructor(private val targetMethod: PsiMethod) :
         AbstractUastVisitor() {
-        var callsSuper: Boolean = false
+        val superCalls = mutableListOf<USuperExpression>()
+        val callsSuperCount: Int get() = superCalls.size
 
         override fun visitSuperExpression(node: USuperExpression): Boolean {
             val parent = com.android.tools.lint.detector.api.skipParentheses(node.uastParent)
@@ -154,11 +154,23 @@ class CallSuperDetector : Detector(), SourceCodeScanner {
                 if (resolved == null || // Avoid false positives for type resolution problems
                     targetMethod.isEquivalentTo(resolved)
                 ) {
-                    callsSuper = true
+                    superCalls.add(node)
                 }
             }
 
             return super.visitSuperExpression(node)
+        }
+
+        fun findFirstOverlap(method: UMethod): USuperExpression? {
+            for (i in 0 until superCalls.size) {
+                for (j in i + 1 until superCalls.size) {
+                    if (CutPasteDetector.isReachableFrom(method, superCalls[i], superCalls[j])) {
+                        return superCalls[j]
+                    }
+                }
+            }
+
+            return null
         }
     }
 }
