@@ -20,15 +20,11 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.feature.BundleFeatureClasses;
-import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -39,8 +35,6 @@ import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import java.io.File;
-import java.util.Set;
-import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -72,7 +66,6 @@ public class FeatureTaskManager extends ApplicationTaskManager {
     @Override
     public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
         super.createTasksForVariantScope(variantScope);
-
         // Ensure the compile SDK is at least 26 (O).
         final AndroidVersion androidVersion =
                 AndroidTargetHash.getVersionFromHash(
@@ -96,13 +89,29 @@ public class FeatureTaskManager extends ApplicationTaskManager {
 
         // FIXME: This is currently disabled due to b/62301277.
         if (extension.getDataBinding().isEnabled() && !extension.getBaseFeature()) {
+            String bindingV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName();
+            String experimentalBinding =
+                    BooleanOption.ENABLE_EXPERIMENTAL_FEATURE_DATABINDING.getPropertyName();
             if (projectOptions.get(BooleanOption.ENABLE_EXPERIMENTAL_FEATURE_DATABINDING)) {
-                androidBuilder
-                        .getIssueReporter()
-                        .reportWarning(
-                                Type.GENERIC,
-                                "Data binding support for non-base features is experimental "
-                                        + "and is not supported.");
+                if (projectOptions.get(BooleanOption.ENABLE_DATA_BINDING_V2)) {
+                    androidBuilder
+                            .getIssueReporter()
+                            .reportWarning(
+                                    Type.GENERIC,
+                                    "Data binding support for non-base features is experimental "
+                                            + "and is not supported.");
+                } else {
+
+                    androidBuilder
+                            .getIssueReporter()
+                            .reportError(
+                                    Type.GENERIC,
+                                    "To use data binding in non-base features, you must"
+                                            + " enable data binding v2 by adding "
+                                            + bindingV2
+                                            + "=true to your gradle.properties file.");
+                }
+
             } else {
                 androidBuilder
                         .getIssueReporter()
@@ -112,7 +121,10 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                                         + "Move data binding code to the base feature module.\n"
                                         + "See https://issuetracker.google.com/63814741.\n"
                                         + "To enable data binding with non-base features, set the "
-                                        + "android.enableExperimentalFeatureDatabinding property "
+                                        + experimentalBinding
+                                        + " and "
+                                        + bindingV2
+                                        + " properties "
                                         + "to true.");
             }
         }

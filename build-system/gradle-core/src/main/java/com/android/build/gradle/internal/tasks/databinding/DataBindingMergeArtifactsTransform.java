@@ -209,8 +209,10 @@ public class DataBindingMergeArtifactsTransform extends Transform {
     @NonNull
     @Override
     public Set<QualifiedContent.Scope> getReferencedScopes() {
-        return Sets.immutableEnumSet(QualifiedContent.Scope.SUB_PROJECTS,
-                QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+        return Sets.immutableEnumSet(
+                QualifiedContent.Scope.SUB_PROJECTS,
+                QualifiedContent.Scope.EXTERNAL_LIBRARIES,
+                QualifiedContent.Scope.PROVIDED_ONLY);
     }
 
     @NonNull

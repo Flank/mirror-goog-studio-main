@@ -109,6 +109,7 @@ public class CheckAll {
                     "databindingAndDagger",
                     "databinding",
                     "databindingAndKotlin",
+                    "databindingWithFeatures",
 
                     // These are all right:
                     "genFolderApi", // Has a required injectable property

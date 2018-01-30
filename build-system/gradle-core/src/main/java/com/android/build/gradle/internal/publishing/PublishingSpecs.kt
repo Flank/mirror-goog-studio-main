@@ -126,6 +126,8 @@ class PublishingSpecs {
                 api(APP_CLASSES, ArtifactType.JAR)
                 api(APK_MAPPING, ArtifactType.APK_MAPPING)
 
+                // FIXME: need data binding artifacts as well for Dynamic apps.
+
                 runtime(APK, ArtifactType.APK)
 
                 metadata(METADATA_APP_ID_DECLARATION, ArtifactType.METADATA_APP_ID_DECLARATION)
@@ -198,6 +200,10 @@ class PublishingSpecs {
 
                 runtime(FEATURE_TRANSITIVE_DEPS, ArtifactType.FEATURE_TRANSITIVE_DEPS)
                 runtime(APK, ArtifactType.APK)
+
+                api(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
+                api(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
+                        ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
             }
 
 

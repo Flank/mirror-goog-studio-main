@@ -33,7 +33,7 @@ enum class VariantType {
             exportsDataBindingClassList = true,
             canHaveSplits = false,
             analyticsVariantType = GradleBuildVariant.VariantType.LIBRARY),
-    FEATURE(exportsDataBindingClassList = true,
+    FEATURE(exportsDataBindingClassList = false,
             canHaveSplits =  true,
             analyticsVariantType = GradleBuildVariant.VariantType.FEATURE),
     INSTANTAPP(

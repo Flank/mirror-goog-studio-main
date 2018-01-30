@@ -40,7 +40,7 @@ import javax.inject.Inject
 /**
  * Generates base classes from data binding info files.
  *
- * This class takes the output of XML processor which generates binding info files (binding
+ * This class takes the output of XML processor whiech generates binding info files (binding
  * information in layout files). Then it generates base classes which are the classes accessed
  * by the user code.
  *

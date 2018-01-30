@@ -176,6 +176,15 @@ public enum InternalArtifactType implements ArtifactType {
     FEATURE_APPLICATION_ID_DECLARATION,
     FEATURE_RESOURCE_PKG,
     FEATURE_TRANSITIVE_DEPS,
+    // The information about the features in the app that is necessary for the data binding
+    // annotation processor (for base feature compilation). Created by the
+    // DataBindingExportFeatureApplicationIdsTask and passed down to the annotation processor via
+    // processor args.
+    FEATURE_DATA_BINDING_BASE_FEATURE_INFO,
+    // The information about the feature that is necessary for the data binding annotation
+    // processor (for feature compilation). Created by DataBindingExportFeatureInfoTask and passed
+    // into the annotation processor via processor args.
+    FEATURE_DATA_BINDING_FEATURE_INFO,
 
     // Project metadata
     METADATA_FEATURE_DECLARATION,

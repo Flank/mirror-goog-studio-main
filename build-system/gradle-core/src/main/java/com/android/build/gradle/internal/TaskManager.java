@@ -2945,8 +2945,6 @@ public abstract class TaskManager {
             }
             String packageName = variantConfiguration.getOriginalApplicationId();
 
-            final DataBindingCompilerArgs.Type type;
-
             final BaseVariantData artifactVariantData;
             final boolean isTest;
             if (variantData.getType() == VariantType.ANDROID_TEST) {
@@ -2956,15 +2954,40 @@ public abstract class TaskManager {
                 artifactVariantData = variantData;
                 isTest = false;
             }
-            if (artifactVariantData.getType() == VariantType.LIBRARY) {
-                type = DataBindingCompilerArgs.Type.LIBRARY;
-            } else {
-                type = DataBindingCompilerArgs.Type.APPLICATION;
+
+            final DataBindingCompilerArgs.Type type;
+            switch (artifactVariantData.getType()) {
+                case LIBRARY:
+                    type = DataBindingCompilerArgs.Type.LIBRARY;
+                    break;
+                case FEATURE:
+                    if (scope.isBaseFeature()) {
+                        type = DataBindingCompilerArgs.Type.APPLICATION;
+                    } else {
+                        type = DataBindingCompilerArgs.Type.FEATURE;
+                    }
+                    break;
+                    // FIXME: dynamic apps will use APK but will have isBaseFeature
+                default:
+                    type = DataBindingCompilerArgs.Type.APPLICATION;
             }
             int minApi = variantConfiguration.getMinSdkVersion().getApiLevel();
             File classLogDir =
                     scope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
                             .getSingleFile();
+            File baseFeatureInfoFolder = null;
+            if (scope.hasOutput(InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO)) {
+                baseFeatureInfoFolder =
+                        scope.getIntermediateDir(
+                                InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO);
+            }
+            File featureInfoFile = null;
+            if (scope.hasOutput(InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO)) {
+                featureInfoFile =
+                        scope.getIntermediateDir(
+                                InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO);
+            }
+            // FIXME: Use the new Gradle 4.5 annotation processor inputs API when we integrate.
             DataBindingCompilerArgs args =
                     DataBindingCompilerArgs.builder()
                             .bundleFolder(scope.getBundleArtifactFolderForDataBinding())
@@ -2973,6 +2996,8 @@ public abstract class TaskManager {
                             .buildFolder(scope.getBuildFolderForDataBindingCompiler())
                             .sdkDir(scope.getGlobalScope().getSdkHandler().getSdkFolder())
                             .xmlOutDir(scope.getLayoutInfoOutputForDataBinding())
+                            .baseFeatureInfoFolder(baseFeatureInfoFolder)
+                            .featureInfoFolder(featureInfoFile)
                             .classLogDir(classLogDir)
                             .exportClassListTo(
                                     variantData.getType().isExportDataBindingClassList()
@@ -3656,17 +3681,22 @@ public abstract class TaskManager {
                         SdkConstants.DATA_BINDING_BASELIB_ARTIFACT
                                 + ":"
                                 + dataBindingBuilder.getBaseLibraryVersion(version));
-
-        // TODO load config name from source sets
         project.getDependencies()
                 .add(
                         "annotationProcessor",
                         SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" + version);
-        if (options.isEnabledForTests() || this instanceof LibraryTaskManager) {
-            project.getDependencies().add("androidTestAnnotationProcessor",
-                    SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" +
-                            version);
+        // TODO load config name from source sets
+        if (options.isEnabledForTests()
+                || this instanceof LibraryTaskManager
+                || this instanceof MultiTypeTaskManager) {
+            project.getDependencies()
+                    .add(
+                            "androidTestAnnotationProcessor",
+                            SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT
+                                    + ":"
+                                    + version);
         }
+
         if (options.getAddDefaultAdapters()) {
             project.getDependencies()
                     .add(
@@ -3754,6 +3784,7 @@ public abstract class TaskManager {
                                 });
     }
 
+    // TODO we should merge this w/ JavaCompileConfigAction
     private static void configureKaptTaskInScope(VariantScope scope, Task kaptTask) {
         if (scope.hasOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
             // if data binding is enabled and this variant has merged dependency artifacts, then
@@ -3775,13 +3806,27 @@ public abstract class TaskManager {
         // the data binding artifact is created by the annotation processor, so we register this
         // task output (which also publishes it) with javac as the generating task.
         kaptTask.getOutputs()
-                .files(scope.getBundleArtifactFolderForDataBinding())
+                .file(scope.getBundleArtifactFolderForDataBinding())
                 .withPropertyName("dataBindingArtifactOutputDir");
         if (!scope.hasOutput(InternalArtifactType.DATA_BINDING_ARTIFACT)) {
             scope.addTaskOutput(
                     InternalArtifactType.DATA_BINDING_ARTIFACT,
                     scope.getBundleArtifactFolderForDataBinding(),
                     kaptTask.getName());
+        }
+        if (scope.getVariantData().getType() == VariantType.FEATURE) {
+            if (scope.isBaseFeature()) {
+                kaptTask.getInputs()
+                        .file(
+                                scope.getOutput(
+                                        InternalArtifactType
+                                                .FEATURE_DATA_BINDING_BASE_FEATURE_INFO));
+            } else {
+                kaptTask.getInputs()
+                        .file(
+                                scope.getOutput(
+                                        InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO));
+            }
         }
     }
 
