@@ -20,7 +20,6 @@ import com.android.annotations.concurrency.Immutable
 import com.android.resources.ResourceAccessibility
 import com.android.resources.ResourceType
 import com.google.common.base.Splitter
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableTable
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
