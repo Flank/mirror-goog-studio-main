@@ -115,10 +115,6 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
         String appId = outputScope.getApplicationId();
 
         File bundleFile = outputScope.getInstantAppBundle();
-        // FIXME: due to http://b/64504250, bundleFile.getAbsolutePath() is returning
-        // the wrong value, then the bellow hack is necessary
-        bundleFile = new File(bundleFile.getPath());
-
         deviceProvider.init();
 
         List<? extends DeviceConnector> devices = deviceProvider.getDevices();
