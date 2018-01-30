@@ -10,7 +10,6 @@ import android.com.java.profilertester.profiletask.TaskCategory;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -188,7 +188,7 @@ public class MainActivityFragment extends Fragment {
                             public void accept(@Nullable String s) {
                                 View view = getView();
                                 if (view != null && s != null) {
-                                    Snackbar.make(getView(), s, Snackbar.LENGTH_LONG);
+                                    Toast.makeText(getActivity(), s, Toast.LENGTH_LONG).show();
                                 }
                             }
                         });
@@ -196,6 +196,10 @@ public class MainActivityFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (mTaskCategories == null) {
+            return;
+        }
+
         for (TaskCategory taskCategory : mTaskCategories) {
             taskCategory.onActivityResult(requestCode, resultCode, data);
         }
