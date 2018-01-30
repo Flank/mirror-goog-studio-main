@@ -525,7 +525,7 @@ public class LibraryTaskManager extends TaskManager {
                         OriginalStream.builder(project, "local-deps-classes")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
                                 .addScope(InternalScope.LOCAL_DEPS)
-                                .setJars(variantScope.getLocalPackagedJars())
+                                .setFileCollection(variantScope.getLocalPackagedJars())
                                 .build());
 
         variantScope
@@ -536,7 +536,7 @@ public class LibraryTaskManager extends TaskManager {
                                         DefaultContentType.RESOURCES,
                                         ExtendedContentType.NATIVE_LIBS)
                                 .addScope(InternalScope.LOCAL_DEPS)
-                                .setJars(variantScope.getLocalPackagedJars())
+                                .setFileCollection(variantScope.getLocalPackagedJars())
                                 .build());
     }
 

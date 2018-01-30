@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertNotNull;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -41,10 +42,11 @@ public class LocalJarsTest {
             GradleTestProject.builder().fromTestProject("localJars").create();
 
     private static ModelContainer<AndroidProject> models;
+    private static GradleBuildResult result = null;
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        project.executor().allowStderr(false).run("clean", "assembleDebug");
+        result = project.executor().allowStderr(false).run("clean", "assembleDebug");
         models = project.model().fetchAndroidProjects();
     }
 
@@ -57,6 +59,12 @@ public class LocalJarsTest {
     @Test
     public void lint() throws IOException, InterruptedException {
         project.execute("lint");
+    }
+
+    @Test
+    public void checkBuildResult() {
+        assertThat(result.getTask(":baseLibrary:noop"))
+                .ranBefore(":baseLibrary:transformNativeLibsWithSyncJniLibsForDebug");
     }
 
     @Test
