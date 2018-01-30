@@ -122,9 +122,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.JavaVersion;
@@ -134,7 +135,6 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationVariant;
-import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -1135,10 +1135,37 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
      */
     @NonNull
     @Override
-    public Supplier<Collection<File>> getLocalPackagedJars() {
+    public FileCollection getLocalPackagedJars() {
+        Configuration configuration = getVariantData().getVariantDependency().getRuntimeClasspath();
 
-        return TaskInputHelper.bypassFileSupplier(
-                getLocalJarLambda(getVariantData().getVariantDependency().getRuntimeClasspath()));
+        // Get a list of local Jars dependencies.
+        Callable<Collection<SelfResolvingDependency>> dependencies =
+                () ->
+                        configuration
+                                .getAllDependencies()
+                                .stream()
+                                .filter((it) -> it instanceof SelfResolvingDependency)
+                                .filter((it) -> !(it instanceof ProjectDependency))
+                                .map((it) -> (SelfResolvingDependency) it)
+                                .collect(ImmutableList.toImmutableList());
+
+        // Create a file collection builtBy the dependencies.  The files are resolved later.
+        return getGlobalScope()
+                .getProject()
+                .files(
+                        TaskInputHelper.bypassFileCallable(
+                                () -> {
+                                    try {
+                                        return dependencies
+                                                .call()
+                                                .stream()
+                                                .flatMap((it) -> it.resolve().stream())
+                                                .collect(Collectors.toList());
+                                    } catch (Exception e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }))
+                .builtBy(dependencies);
     }
 
     @NonNull
@@ -2024,21 +2051,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         return result;
-    }
-
-    @NonNull
-    private static Supplier<Collection<File>> getLocalJarLambda(
-            @NonNull Configuration configuration) {
-        return () -> {
-            List<File> files = new ArrayList<>();
-            for (Dependency dependency : configuration.getAllDependencies()) {
-                if (dependency instanceof SelfResolvingDependency
-                        && !(dependency instanceof ProjectDependency)) {
-                    files.addAll(((SelfResolvingDependency) dependency).resolve());
-                }
-            }
-            return files;
-        };
     }
 
     @NonNull
