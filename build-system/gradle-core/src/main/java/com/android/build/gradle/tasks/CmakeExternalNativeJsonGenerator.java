@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
@@ -35,7 +36,6 @@ import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -56,7 +56,7 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
             @NonNull NdkHandler ndkHandler,
             int minSdkVersion,
             @NonNull String variantName,
-            @NonNull Collection<Abi> abis,
+            @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File sdkFolder,
             @NonNull File ndkFolder,
