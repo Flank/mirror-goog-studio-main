@@ -160,6 +160,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     }
 
     @Input
+    public InstantRunPatchingPolicy getPatchingPolicy() {
+        return buildContext.getPatchingPolicy();
+    }
+
+    @Input
     public String getProjectBaseName() {
         return projectBaseName;
     }
