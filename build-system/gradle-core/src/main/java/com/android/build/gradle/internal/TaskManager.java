@@ -3107,16 +3107,19 @@ public abstract class TaskManager {
         Task packageInstantRunResources = null;
 
         if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
-            if (useSeparateApkForResources) {
-                packageInstantRunResources =
-                        taskFactory.create(
-                                new InstantRunResourcesApkBuilder.ConfigAction(
-                                        resourceFilesInputType,
-                                        variantScope.getOutput(resourceFilesInputType),
-                                        variantScope));
-                packageInstantRunResources.dependsOn(getValidateSigningTask(variantScope));
-            } else {
-                // in instantRunMode, there is no user configured splits, only  one apk.
+            packageInstantRunResources =
+                    taskFactory.create(
+                            new InstantRunResourcesApkBuilder.ConfigAction(
+                                    resourceFilesInputType,
+                                    variantScope.getOutput(resourceFilesInputType),
+                                    variantScope));
+            packageInstantRunResources.dependsOn(getValidateSigningTask(variantScope));
+            // make sure the task run even if none of the files we consume are available,
+            // this is necessary so we can clean up output.
+            packageApp.dependsOn(packageInstantRunResources);
+
+            if (!useSeparateApkForResources) {
+                // in instantRunMode, there is no user configured splits, only one apk.
                 packageInstantRunResources =
                         taskFactory.create(
                                 new PackageApplication.InstantRunResourcesConfigAction(

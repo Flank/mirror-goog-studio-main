@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -30,6 +31,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.scope.BuildElementActionScheduler;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -41,6 +43,7 @@ import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.signing.KeytoolException;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -109,6 +112,7 @@ public class InstantRunResourcesApkBuilderTest {
         when(variantConfiguration.getSigningConfig()).thenReturn(signingConfig);
         when(globalScope.getAndroidBuilder()).thenReturn(androidBuilder);
         when(variantScope.getInstantRunBuildContext()).thenReturn(buildContext);
+        when(buildContext.getPatchingPolicy()).thenReturn(MULTI_APK_SEPARATE_RESOURCES);
 
         File incrementalDir = temporaryFolder.newFolder("test-incremental");
 
@@ -154,8 +158,53 @@ public class InstantRunResourcesApkBuilderTest {
         when(fileCollection.getAsFileTree()).thenReturn(fileTree);
 
         task.doFullTaskAction();
+        verify(buildContext).getPatchingPolicy();
 
         verifyNoMoreInteractions(androidBuilder, buildContext);
+    }
+
+    @Test
+    public void testOtherPatchingPolicy() throws IOException {
+        InstantRunResourcesApkBuilder.ConfigAction configAction =
+                new InstantRunResourcesApkBuilder.ConfigAction(
+                        InternalArtifactType.PROCESSED_RES, fileCollection, variantScope);
+
+        when(buildContext.getPatchingPolicy()).thenReturn(InstantRunPatchingPolicy.MULTI_APK);
+
+        configAction.execute(task);
+
+        List<ApkData> apkDatas = new ArrayList<>();
+        List<File> resourcesFiles = new ArrayList<>();
+        ImmutableList<BuildOutput> inputResources =
+                createApkDataInputs(apkDatas, resourcesFiles, 3);
+        new BuildElements(inputResources).save(temporaryFolder.getRoot());
+
+        File[] inputFiles = temporaryFolder.getRoot().listFiles();
+        assertThat(inputFiles).isNotNull();
+        when(fileTree.getFiles()).thenReturn(ImmutableSet.copyOf(inputFiles));
+
+        // create dummy output files
+        List<File> expectedOutputFiles = new ArrayList<>();
+        apkDatas.forEach(
+                apkData -> {
+                    File expectedOutputFile =
+                            new File(
+                                    outputFolder,
+                                    InstantRunResourcesApkBuilder.mangleApkName(apkData)
+                                            + SdkConstants.DOT_ANDROID_PACKAGE);
+                    try {
+                        FileUtils.createFile(expectedOutputFile, "dummy apk");
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    expectedOutputFiles.add(expectedOutputFile);
+                });
+        expectedOutputFiles.forEach(outputFile -> assertThat(outputFile.exists()).isTrue());
+
+        task.doFullTaskAction();
+
+        // assert that all output files have been cleaned.
+        expectedOutputFiles.forEach(outputFile -> assertThat(outputFile.exists()).isFalse());
     }
 
     @Test
@@ -171,7 +220,7 @@ public class InstantRunResourcesApkBuilderTest {
     }
 
     @SuppressWarnings("unchecked")
-    private void testExecution(int splitNumber)
+    private void testExecution(int numberOfSplits)
             throws IOException, PackagerException, KeytoolException {
 
         InstantRunResourcesApkBuilder.ConfigAction configAction =
@@ -182,22 +231,9 @@ public class InstantRunResourcesApkBuilderTest {
 
         List<ApkData> apkDatas = new ArrayList<>();
         List<File> resourcesFiles = new ArrayList<>();
-        ImmutableList.Builder<BuildOutput> resources = ImmutableList.builder();
-
-        for (int i = 0; i < splitNumber; i++) {
-            // invoke per split action with one split.
-            ApkData apkData = Mockito.mock(ApkData.class);
-            apkDatas.add(apkData);
-            when(apkData.getBaseName()).thenReturn("feature-" + i);
-            when(apkData.getType()).thenReturn(VariantOutput.OutputType.SPLIT);
-
-            File resourcesFile = temporaryFolder.newFile("fake-resources-" + i + ".apk");
-
-            resourcesFiles.add(resourcesFile);
-            resources.add(
-                    new BuildOutput(InternalArtifactType.PROCESSED_RES, apkData, resourcesFile));
-        }
-        new BuildElements(resources.build()).save(temporaryFolder.getRoot());
+        ImmutableList<BuildOutput> resources =
+                createApkDataInputs(apkDatas, resourcesFiles, numberOfSplits);
+        new BuildElements(resources).save(temporaryFolder.getRoot());
 
         File[] inputFiles = temporaryFolder.getRoot().listFiles();
         assertThat(inputFiles).isNotNull();
@@ -205,7 +241,7 @@ public class InstantRunResourcesApkBuilderTest {
 
         task.doFullTaskAction();
 
-        for (int i = 0; i < splitNumber; i++) {
+        for (int i = 0; i < numberOfSplits; i++) {
             File expectedOutputFile =
                     new File(
                             outputFolder,
@@ -222,5 +258,27 @@ public class InstantRunResourcesApkBuilderTest {
 
             verify(buildContext).addChangedFile(FileType.SPLIT, expectedOutputFile);
         }
+    }
+
+    private ImmutableList<BuildOutput> createApkDataInputs(
+            List<ApkData> apkDatas, List<File> resourcesFiles, int numberOfSplits)
+            throws IOException {
+
+        ImmutableList.Builder<BuildOutput> resources = ImmutableList.builder();
+
+        for (int i = 0; i < numberOfSplits; i++) {
+            // invoke per split action with one split.
+            ApkData apkData = Mockito.mock(ApkData.class);
+            apkDatas.add(apkData);
+            when(apkData.getBaseName()).thenReturn("feature-" + i);
+            when(apkData.getType()).thenReturn(VariantOutput.OutputType.SPLIT);
+
+            File resourcesFile = temporaryFolder.newFile("fake-resources-" + i + ".apk");
+
+            resourcesFiles.add(resourcesFile);
+            resources.add(
+                    new BuildOutput(InternalArtifactType.PROCESSED_RES, apkData, resourcesFile));
+        }
+        return resources.build();
     }
 }

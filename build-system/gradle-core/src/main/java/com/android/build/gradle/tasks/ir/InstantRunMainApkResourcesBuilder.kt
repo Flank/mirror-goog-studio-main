@@ -89,7 +89,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
 
         try {
             return if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
-                useAaptDaemon(builder.buildToolInfo.revision) { aapt ->
+                useAaptDaemon<File>(builder.buildToolInfo.revision) { aapt ->
                     processSplit(manifestFile, aapt)
                 }
             } else {
