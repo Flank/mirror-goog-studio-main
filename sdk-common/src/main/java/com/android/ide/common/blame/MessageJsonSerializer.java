@@ -16,7 +16,6 @@
 
 package com.android.ide.common.blame;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.EnumHashBiMap;
 import com.google.common.collect.ImmutableList;
@@ -25,7 +24,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -147,8 +145,8 @@ public class MessageJsonSerializer extends TypeAdapter<Message> {
         if (!message.getRawMessage().equals(message.getText())) {
             out.name(RAW_MESSAGE).value(message.getRawMessage());
         }
-        if (message.getToolName().isPresent()) {
-            out.name(TOOL_NAME).value(message.getToolName().get());
+        if (message.getToolName() != null) {
+            out.name(TOOL_NAME).value(message.getToolName());
         }
         out.endObject();
     }
@@ -159,7 +157,7 @@ public class MessageJsonSerializer extends TypeAdapter<Message> {
         Message.Kind kind = Message.Kind.UNKNOWN;
         String text = "";
         String rawMessage = null;
-        Optional<String> toolName = Optional.absent();
+        String toolName = null;
         ImmutableList.Builder<SourceFilePosition> positions =
                 new ImmutableList.Builder<SourceFilePosition>();
         SourceFile legacyFile = SourceFile.UNKNOWN;
@@ -176,7 +174,7 @@ public class MessageJsonSerializer extends TypeAdapter<Message> {
             } else if (name.equals(RAW_MESSAGE)) {
                 rawMessage = in.nextString();
             } else if (name.equals(TOOL_NAME)) {
-                toolName = Optional.of(in.nextString());
+                toolName = in.nextString();
             } else if (name.equals(SOURCE_FILE_POSITIONS)) {
                 switch (in.peek()) {
                     case BEGIN_ARRAY:

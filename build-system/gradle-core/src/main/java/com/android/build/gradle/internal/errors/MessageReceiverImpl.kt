@@ -85,8 +85,8 @@ private fun humanReadableMessage(message: Message): String {
     if (errorStringBuilder.isNotEmpty()) {
         errorStringBuilder.append(": ")
     }
-    if (message.toolName.isPresent) {
-        errorStringBuilder.append(message.toolName.get()).append(": ")
+    if (message.toolName != null) {
+        errorStringBuilder.append(message.toolName).append(": ")
     }
     errorStringBuilder.append(message.text)
 

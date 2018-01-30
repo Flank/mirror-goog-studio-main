@@ -21,7 +21,6 @@ import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.parser.util.OutputLineReader;
 import com.android.utils.ILogger;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -106,12 +105,13 @@ public class DexParser implements PatternAwareOutputParser {
                 }
                 nextLine = reader.readLine();
             }
-            messages.add(new Message(
-                    Message.Kind.WARNING,
-                    original1.toString(),
-                    original1.toString(),
-                    Optional.of(DEX_TOOL_NAME),
-                    ImmutableList.of(SourceFilePosition.UNKNOWN)));
+            messages.add(
+                    new Message(
+                            Message.Kind.WARNING,
+                            original1.toString(),
+                            original1.toString(),
+                            DEX_TOOL_NAME,
+                            ImmutableList.of(SourceFilePosition.UNKNOWN)));
             return true;
         }
 
@@ -127,7 +127,7 @@ public class DexParser implements PatternAwareOutputParser {
                             Message.Kind.ERROR,
                             DEX_LIMIT_EXCEEDED_ERROR,
                             original1.toString(),
-                            Optional.of(DEX_TOOL_NAME),
+                            DEX_TOOL_NAME,
                             ImmutableList.of(SourceFilePosition.UNKNOWN)));
             return true;
         }
@@ -150,12 +150,13 @@ public class DexParser implements PatternAwareOutputParser {
                             + "\n" + locations.trim();
                 }
             }
-            messages.add(new Message(
-                    Message.Kind.ERROR,
-                    String.format(COULD_NOT_CONVERT_BYTECODE_TO_DEX, cause),
-                    originalMessage,
-                    Optional.of(DEX_TOOL_NAME),
-                    ImmutableList.of(SourceFilePosition.UNKNOWN)));
+            messages.add(
+                    new Message(
+                            Message.Kind.ERROR,
+                            String.format(COULD_NOT_CONVERT_BYTECODE_TO_DEX, cause),
+                            originalMessage,
+                            DEX_TOOL_NAME,
+                            ImmutableList.of(SourceFilePosition.UNKNOWN)));
             return true;
         }
 
@@ -174,12 +175,13 @@ public class DexParser implements PatternAwareOutputParser {
 
         if (exception.startsWith(
                 "com.android.dex.DexIndexOverflowException: method ID not in [0, 0xffff]: ")) {
-            messages.add(new Message(
-                    Message.Kind.ERROR,
-                    DEX_LIMIT_EXCEEDED_ERROR,
-                    exceptionWithStacktrace,
-                    Optional.of(DEX_TOOL_NAME),
-                    ImmutableList.of(SourceFilePosition.UNKNOWN)));
+            messages.add(
+                    new Message(
+                            Message.Kind.ERROR,
+                            DEX_LIMIT_EXCEEDED_ERROR,
+                            exceptionWithStacktrace,
+                            DEX_TOOL_NAME,
+                            ImmutableList.of(SourceFilePosition.UNKNOWN)));
             return true;
         } else if (exception.startsWith(
                 "com.android.dx.cf.code.SimException: " + ERROR_INVOKE_DYNAMIC)) {
@@ -188,7 +190,7 @@ public class DexParser implements PatternAwareOutputParser {
                             Message.Kind.ERROR,
                             ENABLE_DESUGARING,
                             exceptionWithStacktrace,
-                            Optional.of(DEX_TOOL_NAME),
+                            DEX_TOOL_NAME,
                             ImmutableList.of(SourceFilePosition.UNKNOWN)));
             return true;
         } else {
@@ -199,12 +201,13 @@ public class DexParser implements PatternAwareOutputParser {
                 int bytecodeVersion = Integer.valueOf(invalidByteCodeVersion.group(1), 16);
                 cause = String.format(INVALID_BYTE_CODE_VERSION, bytecodeVersion);
             }
-            messages.add(new Message(
-                    Message.Kind.ERROR,
-                    String.format(COULD_NOT_CONVERT_BYTECODE_TO_DEX, cause),
-                    exceptionWithStacktrace,
-                    Optional.of(DEX_TOOL_NAME),
-                    ImmutableList.of(SourceFilePosition.UNKNOWN)));
+            messages.add(
+                    new Message(
+                            Message.Kind.ERROR,
+                            String.format(COULD_NOT_CONVERT_BYTECODE_TO_DEX, cause),
+                            exceptionWithStacktrace,
+                            DEX_TOOL_NAME,
+                            ImmutableList.of(SourceFilePosition.UNKNOWN)));
             return true;
         }
     }

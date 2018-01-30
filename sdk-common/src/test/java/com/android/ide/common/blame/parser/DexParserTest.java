@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.utils.StdLogger;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.util.List;
@@ -64,7 +63,7 @@ public class DexParserTest {
         assertEquals(stderr.trim(), message.getRawMessage().trim());
         assertEquals(ImmutableList.of(SourceFilePosition.UNKNOWN),
                 message.getSourceFilePositions());
-        assertEquals(Optional.of(DexParser.DEX_TOOL_NAME), message.getToolName());
+        assertEquals(DexParser.DEX_TOOL_NAME, message.getToolName());
     }
 
     @Test
@@ -87,7 +86,7 @@ public class DexParserTest {
         assertEquals(stderr.trim(), message.getRawMessage().trim());
         assertEquals(ImmutableList.of(SourceFilePosition.UNKNOWN),
                 message.getSourceFilePositions());
-        assertEquals(Optional.of(DexParser.DEX_TOOL_NAME), message.getToolName());
+        assertEquals(DexParser.DEX_TOOL_NAME, message.getToolName());
     }
 
 
@@ -128,7 +127,7 @@ public class DexParserTest {
         assertEquals(stderr.trim(), message.getRawMessage().trim());
         assertEquals(ImmutableList.of(SourceFilePosition.UNKNOWN),
                 message.getSourceFilePositions());
-        assertEquals(Optional.of(DexParser.DEX_TOOL_NAME), message.getToolName());
+        assertEquals(DexParser.DEX_TOOL_NAME, message.getToolName());
     }
 
     @Test
@@ -146,7 +145,7 @@ public class DexParserTest {
         assertEquals(stderr.trim(), message.getRawMessage().trim());
         assertEquals(ImmutableList.of(SourceFilePosition.UNKNOWN),
                 message.getSourceFilePositions());
-        assertEquals(Optional.of(DexParser.DEX_TOOL_NAME), message.getToolName());
+        assertEquals(DexParser.DEX_TOOL_NAME, message.getToolName());
     }
 
 
@@ -174,11 +173,11 @@ public class DexParserTest {
         Message message = messages.get(0);
         assertEquals(Message.Kind.WARNING, message.getKind());
         assertEquals(stderr.trim(), message.getRawMessage().trim());
-        assertEquals(Optional.of(DexParser.DEX_TOOL_NAME), message.getToolName());
+        assertEquals(DexParser.DEX_TOOL_NAME, message.getToolName());
 
         Message message2 = messages.get(1);
         assertEquals(Message.Kind.WARNING, message2.getKind());
         assertEquals(stderr2.trim(), message2.getRawMessage().trim());
-        assertEquals(Optional.of(DexParser.DEX_TOOL_NAME), message2.getToolName());
+        assertEquals(DexParser.DEX_TOOL_NAME, message2.getToolName());
     }
 }
