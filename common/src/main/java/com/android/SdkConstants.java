@@ -356,8 +356,6 @@ public final class SdkConstants {
     public static final String FD_SYMBOLS = "symbols"; //$NON-NLS-1$
     /** resource blame output folder */
     public static final String FD_BLAME = "blame"; //$NON-NLS-1$
-    /** atom files output folder */
-    public static final String FD_ATOMS = "atoms"; //$NON-NLS-1$
 
     /** rs Libs output folder for support mode */
     public static final String FD_RS_LIBS = "rsLibs"; //$NON-NLS-1$
@@ -1708,8 +1706,6 @@ public final class SdkConstants {
     public static final String EXT_AAR = "aar"; //$NON-NLS-1$
     /** Extension for Android atom files. */
     public static final String EXT_ATOM = "atom"; //$NON-NLS-1$
-    /** Extension for Android atombundle files. */
-    public static final String EXT_ATOMBUNDLE = "atombundle"; //$NON-NLS-1$
     /** Extension of java files, i.e. "java" */
     public static final String EXT_JAVA = "java"; //$NON-NLS-1$
     /** Extension of compiled java files, i.e. "class" */
@@ -1756,8 +1752,6 @@ public final class SdkConstants {
     public static final String DOT_ANDROID_PACKAGE = DOT + EXT_ANDROID_PACKAGE;
     /** Dot-Extension for Android archive files */
     public static final String DOT_AAR = DOT + EXT_AAR; //$NON-NLS-1$
-    /** Dot-Extension for Android atombundle files. */
-    public static final String DOT_ATOMBUNDLE = DOT + EXT_ATOMBUNDLE; //$NON-NLS-1$
     /** Dot-Extension of zip files, i.e. ".zip" */
     public static final String DOT_ZIP = DOT + EXT_ZIP;
     /** Dot-Extension of aidl files, i.e. ".aidl" */

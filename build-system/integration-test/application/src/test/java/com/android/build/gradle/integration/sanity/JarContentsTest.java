@@ -411,7 +411,6 @@ public class JarContentsTest {
                 "META-INF/gradle-plugins/android.properties",
                 "META-INF/gradle-plugins/android-reporting.properties",
                 "META-INF/gradle-plugins/com.android.application.properties",
-                "META-INF/gradle-plugins/com.android.atom.properties",
                 "META-INF/gradle-plugins/com.android.debug.structure.properties",
                 "META-INF/gradle-plugins/com.android.feature.properties",
                 "META-INF/gradle-plugins/com.android.instantapp.properties",
