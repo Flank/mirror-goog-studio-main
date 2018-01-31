@@ -77,6 +77,7 @@ public class MainActivityFragment extends Fragment {
                     mFragmentView.getContext(),
                     android.R.layout.simple_spinner_item,
                     taskCategory.getTasks());
+            taskAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             mTaskAdapters.add(taskAdapter);
             mSelectionListeners.addAll(taskCategory.getTaskSelectionListeners());
         }

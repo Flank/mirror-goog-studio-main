@@ -12,45 +12,41 @@
         android:id="@+id/category_spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:gravity="center"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toRightOf="parent"
+        app:layout_constraintRight_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintVertical_bias="0.027" />
-    />
+        app:layout_constraintVertical_bias="0.0" />
 
     <Spinner
         android:id="@+id/task_spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
         android:gravity="center"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="@id/category_spinner"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintVertical_bias="0.406"
-        android:layout_marginBottom="360dp" />
-    />
+        app:layout_constraintLeft_toRightOf="parent"
+        app:layout_constraintRight_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/category_spinner" />
 
     <TextView
         android:id="@+id/instruction_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Please Follow Instructions"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="@id/task_spinner"
-        app:layout_constraintVertical_bias="0.141" />
+        android:layout_marginTop="32dp"
+        android:text="@string/follow_instructions"
+        app:layout_constraintLeft_toRightOf="parent"
+        app:layout_constraintRight_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/task_spinner" />
 
     <EditText android:id="@+id/section_editor"
         android:hint=""
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/instruction_text" tools:layout_constraintLeft_creator="1"
-        android:layout_marginTop="44dp"
+        app:layout_constraintLeft_toRightOf="parent"
+        app:layout_constraintRight_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/instruction_text" tools:layout_constraintLeft_creator="1"
+        android:layout_marginTop="32dp"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:textSize="22sp"
