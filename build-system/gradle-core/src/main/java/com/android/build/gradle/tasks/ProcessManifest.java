@@ -208,6 +208,13 @@ public class ProcessManifest extends ManifestProcessorTask {
         return serializeMap(variantConfiguration.getManifestPlaceholders());
     }
 
+    @Input
+    public String getMainSplitFullName() {
+        // This information is written to the build output's metadata file, so it needs to be
+        // annotated as @Input
+        return outputScope.getMainSplit().getFullName();
+    }
+
     public static class ConfigAction implements TaskConfigAction<ProcessManifest> {
 
         private final VariantScope scope;
