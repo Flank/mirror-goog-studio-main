@@ -155,11 +155,15 @@ public class ConnectedDeviceProvider extends DeviceProvider {
             if (device.getState() == IDevice.DeviceState.ONLINE) {
                 localDevices.add(new ConnectedDevice(device, iLogger, timeOut, timeOutUnit));
             } else {
-                iLogger.info(
+                iLogger.lifecycle(
                         "Skipping device '%s' (%s): Device is %s%s.",
-                        device.getName(), device.getSerialNumber(), device.getState(),
-                        device.getState() == IDevice.DeviceState.UNAUTHORIZED ? ",\n"
-                                + "    see http://d.android.com/tools/help/adb.html#Enabling" : "");
+                        device.getName(),
+                        device.getSerialNumber(),
+                        device.getState(),
+                        device.getState() == IDevice.DeviceState.UNAUTHORIZED
+                                ? ",\n"
+                                        + "    see http://d.android.com/tools/help/adb.html#Enabling"
+                                : "");
             }
         }
 
@@ -237,8 +241,7 @@ public class ConnectedDeviceProvider extends DeviceProvider {
                 case DEBUG:
                     break;
                 case INFO:
-                    // ILogger verbose is printed at info level in gradle currently.
-                    logger.verbose("[%1$s]: %2$s", tag, message);
+                    logger.info("[%1$s]: %2$s", tag, message);
                     break;
                 case WARN:
                     logger.warning("[%1$s]: %2$s", tag, message);

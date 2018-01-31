@@ -992,7 +992,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 try {
                     port = Integer.parseInt(maybePort);
                 } catch (NumberFormatException e) {
-                    logger.info("Invalid https.proxyPort '" + maybePort + "', using default 443");
+                    logger.lifecycle(
+                            "Invalid https.proxyPort '" + maybePort + "', using default 443");
                 }
             }
         }
@@ -1006,7 +1007,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     try {
                         port = Integer.parseInt(maybePort);
                     } catch (NumberFormatException e) {
-                        logger.info("Invalid http.proxyPort '" + maybePort + "', using default 80");
+                        logger.lifecycle(
+                                "Invalid http.proxyPort '" + maybePort + "', using default 80");
                     }
                 }
             }

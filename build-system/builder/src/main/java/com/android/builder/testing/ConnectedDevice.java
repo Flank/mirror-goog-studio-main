@@ -286,8 +286,10 @@ public class ConnectedDevice extends DeviceConnector {
         try {
             return Integer.parseInt(densityValue);
         } catch (NumberFormatException e) {
-            mLogger.info("Unable to get density for device %1$s. "
-                    + "Density value %2$s could not be parsed.", getName(), densityValue);
+            mLogger.lifecycle(
+                    "Unable to get density for device %1$s. "
+                            + "Density value %2$s could not be parsed.",
+                    getName(), densityValue);
             return -1;
         }
     }

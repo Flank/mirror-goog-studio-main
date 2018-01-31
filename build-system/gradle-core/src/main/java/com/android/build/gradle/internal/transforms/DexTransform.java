@@ -179,7 +179,8 @@ public class DexTransform extends Transform {
                 "Missing output object for transform " + getName());
 
         if (!dexOptions.getKeepRuntimeAnnotatedClasses() && mainDexListFile == null) {
-            logger.info("DexOptions.keepRuntimeAnnotatedClasses has no affect in native multidex.");
+            logger.lifecycle(
+                    "DexOptions.keepRuntimeAnnotatedClasses has no affect in native multidex.");
         }
 
         ProcessOutputHandler outputHandler =

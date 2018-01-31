@@ -42,7 +42,8 @@ public class InstallUtils {
             @NonNull String variantName) {
         int deviceApiLevel = device.getApiLevel();
         if (deviceApiLevel == 0) {
-            logger.info("Skipping device '%1$s' for '%2$s:%3$s': Unknown API Level",
+            logger.lifecycle(
+                    "Skipping device '%1$s' for '%2$s:%3$s': Unknown API Level",
                     device.getName(), projectName, variantName);
             return false;
         }
@@ -54,7 +55,7 @@ public class InstallUtils {
             String deviceCodeName = device.getApiCodeName();
             if (deviceCodeName != null) {
                 if (!deviceCodeName.equals(appMinSdkVersion.getCodename())) {
-                    logger.info(
+                    logger.lifecycle(
                             "Skipping device '%1$s', due to different API preview '%2$s' and '%3$s'",
                             device.getName(), deviceCodeName, appMinSdkVersion.getCodename());
                     return false;
@@ -66,9 +67,12 @@ public class InstallUtils {
         }
 
         if (minSdkVersion > deviceApiLevel) {
-            logger.info(
+            logger.lifecycle(
                     "Skipping device '%s' for '%s:%s': minSdkVersion [%s] > deviceApiLevel [%d]",
-                    device.getName(), projectName, variantName, appMinSdkVersion.getApiString(),
+                    device.getName(),
+                    projectName,
+                    variantName,
+                    appMinSdkVersion.getApiString(),
                     deviceApiLevel);
 
             return false;

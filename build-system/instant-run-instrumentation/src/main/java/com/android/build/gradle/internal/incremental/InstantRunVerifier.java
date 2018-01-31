@@ -202,7 +202,7 @@ public class InstantRunVerifier {
                     // potentially, we could try to see if anything has really changed between
                     // the two classes but the fact that we got an updated class means so far that
                     // we have a new version and should restart.
-                    logger.info(
+                    logger.lifecycle(
                             "Class %s$1 annotated with %s$2.",
                             updatedClass.name,
                             IncrementalVisitor.DISABLE_ANNOTATION_TYPE.getClassName());

@@ -87,7 +87,7 @@ public class CustomTestRunListener extends XmlTestRunListener {
     @Override
     public void testRunStarted(String runName, int testCount) {
         if (mLogger != null) {
-            mLogger.info("Starting %1$d tests on %2$s", testCount, mDeviceName);
+            mLogger.lifecycle("Starting %1$d tests on %2$s", testCount, mDeviceName);
         }
         super.testRunStarted(runName, testCount);
     }
