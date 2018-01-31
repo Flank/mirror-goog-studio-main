@@ -27,7 +27,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Version;
 import com.android.io.StreamException;
@@ -101,10 +100,8 @@ public final class GradleTestProject implements TestRule {
     public static final int LATEST_GOOGLE_APIS_VERSION = 24;
 
     public static final String DEFAULT_BUILD_TOOL_VERSION;
-    public static final String REMOTE_TEST_PROVIDER = System.getenv().get("REMOTE_TEST_PROVIDER");
-
-    public static final String DEVICE_PROVIDER_NAME =
-            REMOTE_TEST_PROVIDER != null ? REMOTE_TEST_PROVIDER : BuilderConstants.CONNECTED;
+    public static final boolean APPLY_DEVICEPOOL_PLUGIN =
+            Boolean.parseBoolean(System.getenv().getOrDefault("APPLY_DEVICEPOOL_PLUGIN", "false"));
 
     public static final boolean USE_LATEST_NIGHTLY_GRADLE_VERSION =
             Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"));
@@ -549,23 +546,11 @@ public final class GradleTestProject implements TestRule {
     private String generateCommonHeader() {
         String result =
                 String.format(
-                        "ext {\n"
+                        "\n"
+                                + "ext {\n"
                                 + "    buildToolsVersion = '%1$s'\n"
                                 + "    latestCompileSdk = %2$s\n"
                                 + "    kotlinVersion = '%4$s'\n"
-                                + "\n"
-                                + "    plugins.withId('com.android.application') {\n"
-                                + "        apply plugin: 'devicepool'\n"
-                                + "    }\n"
-                                + "    plugins.withId('com.android.library') {\n"
-                                + "        apply plugin: 'devicepool'\n"
-                                + "    }\n"
-                                + "    plugins.withId('com.android.model.application') {\n"
-                                + "        apply plugin: 'devicepool'\n"
-                                + "    }\n"
-                                + "    plugins.withId('com.android.model.library') {\n"
-                                + "        apply plugin: 'devicepool'\n"
-                                + "    }\n"
                                 + "}\n"
                                 + "allprojects {\n"
                                 + "    "
@@ -577,6 +562,25 @@ public final class GradleTestProject implements TestRule {
                         DEFAULT_COMPILE_SDK_VERSION,
                         false,
                         TestUtils.getKotlinVersionForTests());
+
+        if (APPLY_DEVICEPOOL_PLUGIN) {
+            result +=
+                    "\n"
+                            + "allprojects { proj ->\n"
+                            + "    proj.plugins.withId('com.android.application') {\n"
+                            + "        proj.apply plugin: 'devicepool'\n"
+                            + "    }\n"
+                            + "    proj.plugins.withId('com.android.library') {\n"
+                            + "        proj.apply plugin: 'devicepool'\n"
+                            + "    }\n"
+                            + "    proj.plugins.withId('com.android.model.application') {\n"
+                            + "        proj.apply plugin: 'devicepool'\n"
+                            + "    }\n"
+                            + "    proj.plugins.withId('com.android.model.library') {\n"
+                            + "        proj.apply plugin: 'devicepool'\n"
+                            + "    }\n"
+                            + "}\n";
+        }
 
         if (withDependencyChecker) {
             result =

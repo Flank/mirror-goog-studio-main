@@ -179,7 +179,7 @@ configure(allConnectedTestTasks) {
     systemProperties['jar.path'] = jar.archivePath
     systemProperties['java.io.tmpdir'] = tempFile.absolutePath
 
-    environment testEnvironment
+    environment testEnvironment + ["APPLY_DEVICEPOOL_PLUGIN": true]
 
     // Always run the task, when requested.
     outputs.upToDateWhen { false }
