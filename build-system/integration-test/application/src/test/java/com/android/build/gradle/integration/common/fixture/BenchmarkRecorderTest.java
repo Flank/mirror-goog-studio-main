@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
+import com.android.build.gradle.integration.performance.BuildbotClient;
 import com.android.build.gradle.integration.performance.ProjectScenario;
 import com.android.testutils.TestUtils;
 import com.google.protobuf.Timestamp;
@@ -35,6 +36,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
@@ -58,7 +60,9 @@ public class BenchmarkRecorderTest {
     public void setUp() throws Exception {
         recorder =
                 new BenchmarkRecorder(
-                        new ProfileCapturer(project), Arrays.asList(benchmarkResults::addAll));
+                        new ProfileCapturer(project),
+                        Arrays.asList(benchmarkResults::addAll),
+                        BuildbotClient.forTesting(Collections.emptyList()));
     }
 
     @Test

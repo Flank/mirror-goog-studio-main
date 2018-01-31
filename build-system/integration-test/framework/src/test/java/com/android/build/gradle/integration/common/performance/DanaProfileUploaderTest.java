@@ -17,25 +17,22 @@
 package com.android.build.gradle.integration.common.performance;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.*;
 
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.RandomGradleBenchmark;
+import com.android.build.gradle.integration.performance.BuildbotClient;
 import com.android.build.gradle.integration.performance.DanaProfileUploader;
-import com.android.build.gradle.integration.performance.DanaProfileUploader.BuildbotResponse;
 import com.android.build.gradle.integration.performance.DanaProfileUploader.Infos;
 import com.android.build.gradle.integration.performance.DanaProfileUploader.SampleRequest;
 import com.android.build.gradle.integration.performance.DanaProfileUploader.SerieRequest;
+import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.io.IOException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,28 +43,42 @@ public class DanaProfileUploaderTest {
     private final String buildbotBuilderName = "fred";
 
     private DanaProfileUploader uploader;
+    private BuildbotClient client;
+
+    private static class FakeBuildbotClient extends BuildbotClient {
+        private final List<Change> changes;
+
+        public FakeBuildbotClient(List<Change> changes) {
+            super("", "");
+            this.changes = changes;
+        }
+
+        @Override
+        public List<Change> getChanges(long buildId) {
+            return this.changes;
+        }
+    }
 
     @Before
     public void setUp() throws IOException {
-        BuildbotResponse buildInfo = new BuildbotResponse();
-        buildInfo.sourceStamp.changes =
-                new DanaProfileUploader.Change[] {new DanaProfileUploader.Change()};
-        buildInfo.sourceStamp.changes[0].comments = "comments";
-        buildInfo.sourceStamp.changes[0].rev = "00000000000000000000000000000000000000";
-        buildInfo.sourceStamp.changes[0].revlink = "http://example.com";
-        buildInfo.sourceStamp.changes[0].who = "you@google.com";
+        BuildbotClient.Change change = new BuildbotClient.Change();
+        change.who = "samwho@google.com";
+        change.at = "Fri 26 Jan 2018 05:34:29";
+        change.revision = "ad751a1a723307f54f3f50ab3a1e61c685dbd124";
+        change.revlink =
+                "https://googleplex-android-review.git.corp.google.com/#/q/ad751a1a723307f54f3f50ab3a1e61c685dbd124";
+        change.comments = "Be the change you want to see.";
+
+        client = new FakeBuildbotClient(ImmutableList.of(change));
 
         uploader =
-                spy(
-                        DanaProfileUploader.create(
-                                danaBaseUrl,
-                                danaProjectId,
-                                buildbotMasterUrl,
-                                buildbotBuilderName,
-                                DanaProfileUploader.Mode.NORMAL));
-
-        doReturn(buildInfo).when(uploader).jsonGet(anyString(), eq(BuildbotResponse.class));
-        DanaProfileUploader.clearCache();
+                DanaProfileUploader.create(
+                        danaBaseUrl,
+                        danaProjectId,
+                        buildbotMasterUrl,
+                        buildbotBuilderName,
+                        DanaProfileUploader.Mode.NORMAL,
+                        client);
     }
 
     private static void assertValidInfos(@Nullable Infos infos) {
@@ -95,42 +106,6 @@ public class DanaProfileUploaderTest {
     @Test
     public void infos() throws ExecutionException {
         assertValidInfos(uploader.infos(1));
-    }
-
-    @Test
-    public void infosManualTrigger() throws IOException, ExecutionException {
-        doReturn(new BuildbotResponse())
-                .when(uploader)
-                .jsonGet(anyString(), eq(BuildbotResponse.class));
-        assertValidInfos(uploader.infos(1));
-    }
-
-    @Test
-    public void infosTransientNetworkProblem() throws IOException {
-        /*
-         * Note that doing the throw on jsonGet bypasses the retry mechanisms. This is a bit of a
-         * trade-off: we don't want the tests to go through the steps of sleeping and retrying
-         * for multiple minutes, but we do want to make sure that these errors propagate.
-         */
-        doThrow(SocketException.class)
-                .when(uploader)
-                .jsonGet(anyString(), eq(BuildbotResponse.class));
-        try {
-            uploader.infos(1);
-            fail("uploader.infos(1) should have thrown an exception");
-        } catch (ExecutionException e) {
-            assertThat(e.getCause()).isInstanceOf(SocketException.class);
-        }
-
-        doThrow(SocketTimeoutException.class)
-                .when(uploader)
-                .jsonGet(anyString(), eq(BuildbotResponse.class));
-        try {
-            uploader.infos(1);
-            fail("uploader.infos(1) should have thrown an exception");
-        } catch (ExecutionException e) {
-            assertThat(e.getCause()).isInstanceOf(SocketTimeoutException.class);
-        }
     }
 
     @Test
@@ -190,7 +165,7 @@ public class DanaProfileUploaderTest {
 
     @Test
     public void sampleRequestsEmpty() {
-        Collection<SampleRequest> reqs = uploader.sampleRequests(Arrays.asList());
+        Collection<SampleRequest> reqs = uploader.sampleRequests(Collections.emptyList());
         assertThat(reqs).isEmpty();
     }
 
@@ -219,12 +194,7 @@ public class DanaProfileUploaderTest {
             assertThat(serieRequest.serieId).isNotEmpty();
         }
 
-        long numIds =
-                serieRequests
-                        .stream()
-                        .map(s -> s.serieId)
-                        .distinct()
-                        .collect(Collectors.counting());
+        long numIds = serieRequests.stream().map(s -> s.serieId).distinct().count();
         assertThat(numIds).isEqualTo(serieRequests.size()); // all series should have a unique id
     }
 }

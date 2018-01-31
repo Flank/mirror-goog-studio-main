@@ -129,7 +129,17 @@ message GradleBenchmarkResult {
   string hostname = 7;
   string username = 9;
 
-  // NEXT TAG: 11
+
+  message Commit {
+    string author = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    string comment = 3;
+    string hash = 4;
+    string link = 5;
+  }
+  Commit commit = 11;
+
+  // NEXT TAG: 12
 }
 
 enum Benchmark {

@@ -161,6 +161,8 @@ public final class BenchmarkRecorder {
 
     @NonNull private final ProfileCapturer capturer;
 
+    @NonNull private final BuildbotClient client;
+
 
     public BenchmarkRecorder(@NonNull ProfileCapturer capturer) {
         this(capturer, defaultUploaders());
@@ -168,8 +170,16 @@ public final class BenchmarkRecorder {
 
     public BenchmarkRecorder(
             @NonNull ProfileCapturer capturer, @NonNull List<ProfileUploader> uploaders) {
+        this(capturer, uploaders, BuildbotClient.fromEnvironment());
+    }
+
+    public BenchmarkRecorder(
+            @NonNull ProfileCapturer capturer,
+            @NonNull List<ProfileUploader> uploaders,
+            @NonNull BuildbotClient client) {
         this.uploaders = uploaders;
         this.capturer = capturer;
+        this.client = client;
     }
 
     /**
@@ -230,6 +240,41 @@ public final class BenchmarkRecorder {
                     scheduledBuild.setBuildbotBuildNumber(buildNumber);
                 }
                 result.setScheduledBuild(scheduledBuild);
+
+                try {
+                    List<BuildbotClient.Change> changes = client.getChanges(buildNumber);
+                    if (changes.isEmpty()) {
+                        // couldn't find a change for this build, no big deal, silently move on
+                    } else if (changes.size() != 1) {
+                        System.out.println(
+                                "expected 1 change for build ID "
+                                        + buildNumber
+                                        + " but found "
+                                        + changes.size());
+                    } else {
+                        BuildbotClient.Change change = changes.get(0);
+                        Timestamp timestamp =
+                                Timestamps.fromMillis(
+                                        BuildbotClient.dateFromChange(change)
+                                                .toInstant()
+                                                .toEpochMilli());
+
+                        result.setCommit(
+                                GradleBenchmarkResult.Commit.newBuilder()
+                                        .setAuthor(change.who)
+                                        .setHash(change.revision)
+                                        .setLink(change.revlink)
+                                        .setTimestamp(timestamp)
+                                        .setComment(change.comments));
+                    }
+                } catch (ExecutionException e) {
+                    // We tried to get changes but failed, no big deal, log and move on
+                    System.out.println(
+                            "failed to get change details from buildbot using build ID "
+                                    + buildNumber
+                                    + ": "
+                                    + e);
+                }
             } else {
                 GradleBenchmarkResult.Experiment.Builder experiment =
                         GradleBenchmarkResult.Experiment.newBuilder();

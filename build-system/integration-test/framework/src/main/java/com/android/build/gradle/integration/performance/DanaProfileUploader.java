@@ -34,8 +34,6 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.Preconditions;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -75,13 +73,6 @@ public class DanaProfileUploader implements ProfileUploader {
      * down it counts as a 100% regression/improvement. These are noisy, and we want to ignore them.
      */
     public static final long BENCHMARK_VALUE_THRESHOLD_MILLIS = 50;
-
-    /**
-     * Caches the responses we get back from buildbot. They should never change once produced, so
-     * this should be a safe thing to do.
-     */
-    private static final Cache<String, BuildbotResponse> BUILD_CACHE =
-            CacheBuilder.newBuilder().initialCapacity(16).maximumSize(16).build();
 
     @NonNull private static final String DANA_PROJECT_ID = "SamProjectTest3";
     @NonNull private static final String DANA_ADD_BUILD_URL = "/apis/addBuild";
@@ -127,18 +118,21 @@ public class DanaProfileUploader implements ProfileUploader {
     @NonNull private final String buildbotMasterUrl;
     @NonNull private final String buildbotBuilderName;
     private final Mode mode;
+    private final BuildbotClient client;
 
     private DanaProfileUploader(
             @NonNull String danaBaseUrl,
             @NonNull String danaProjectId,
             @NonNull String buildbotMasterUrl,
             @NonNull String buildbotBuilderName,
-            @NonNull Mode mode) {
+            @NonNull Mode mode,
+            @NonNull BuildbotClient client) {
         this.danaBaseUrl = danaBaseUrl;
         this.danaProjectId = danaProjectId;
         this.buildbotMasterUrl = buildbotMasterUrl;
         this.buildbotBuilderName = buildbotBuilderName;
         this.mode = mode;
+        this.client = client;
     }
 
     /**
@@ -152,9 +146,10 @@ public class DanaProfileUploader implements ProfileUploader {
             @NonNull String danaProjectId,
             @NonNull String buildbotMasterUrl,
             @NonNull String buildbotBuilderName,
-            @NonNull Mode mode) {
+            @NonNull Mode mode,
+            @NonNull BuildbotClient client) {
         return new DanaProfileUploader(
-                danaBaseUrl, danaProjectId, buildbotMasterUrl, buildbotBuilderName, mode);
+                danaBaseUrl, danaProjectId, buildbotMasterUrl, buildbotBuilderName, mode, client);
     }
 
     /**
@@ -194,7 +189,8 @@ public class DanaProfileUploader implements ProfileUploader {
                 danaProjectId,
                 envRequired("DANA_BUILDBOT_MASTER_URL"),
                 envRequired("DANA_BUILDBOT_BUILDER_NAME"),
-                Mode.NORMAL);
+                Mode.NORMAL,
+                BuildbotClient.fromEnvironment());
     }
 
     /**
@@ -278,7 +274,7 @@ public class DanaProfileUploader implements ProfileUploader {
             return infos;
         }
 
-        Change change = getChange(buildId);
+        BuildbotClient.Change change = getChange(buildId);
 
         if (change == null) {
             infos.hash = "0000000000000000000000000000000000000000";
@@ -287,7 +283,7 @@ public class DanaProfileUploader implements ProfileUploader {
             infos.authorEmail = "nobody@google.com";
             infos.subject = "Manually triggered build; no commit information";
         } else {
-            infos.hash = change.rev;
+            infos.hash = change.revision;
             infos.abbrevHash = infos.hash.substring(0, 7);
             infos.authorName = change.who;
             infos.authorEmail = change.who;
@@ -318,37 +314,21 @@ public class DanaProfileUploader implements ProfileUploader {
         }
     }
 
-    @NonNull
-    private String buildbotBuildInfoUrl(long buildId) {
-        return buildbotMasterUrl + "/json/builders/" + buildbotBuilderName + "/builds/" + buildId;
-    }
-
-    @NonNull
-    private BuildbotResponse getBuildInfo(long buildId) throws ExecutionException {
-        String url = buildbotBuildInfoUrl(buildId);
-        return BUILD_CACHE.get(url, () -> jsonGet(url, BuildbotResponse.class));
-    }
-
-    @VisibleForTesting
-    public static void clearCache() {
-        BUILD_CACHE.invalidateAll();
-    }
-
     /**
      * Gets the change for the current buildId.
      *
      * <p>If the build was triggered manually, this method will return null.
      */
     @Nullable
-    private Change getChange(long buildId) throws ExecutionException {
-        BuildbotResponse res = getBuildInfo(buildId);
+    private BuildbotClient.Change getChange(long buildId) throws ExecutionException {
+        List<BuildbotClient.Change> changes = client.getChanges(buildId);
 
         // When a build is manually triggered, there is no source stamp and thus no changes.
-        if (res.sourceStamp.changes.length == 0) {
+        if (changes.isEmpty()) {
             return null;
         }
 
-        return res.sourceStamp.changes[0];
+        return changes.get(0);
     }
 
     /**
@@ -411,7 +391,7 @@ public class DanaProfileUploader implements ProfileUploader {
     private static HttpRequest attachRetryHandlers(@NonNull HttpRequest request) {
         HttpBackOffUnsuccessfulResponseHandler unsuccessfulResponseHandler =
                 new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff())
-                        .setBackOffRequired(BackOffRequired.ALWAYS);
+                        .setBackOffRequired(BackOffRequired.ON_SERVER_ERROR);
 
         HttpIOExceptionHandler ioExceptionHandler =
                 new HttpBackOffIOExceptionHandler(new ExponentialBackOff());
@@ -498,7 +478,7 @@ public class DanaProfileUploader implements ProfileUploader {
                                                                     .getBuildbotBuildNumber();
                                                     sample.value = span.getDurationInMs();
 
-                                                    Change change;
+                                                    BuildbotClient.Change change;
                                                     try {
                                                         change = getChange(sample.buildId);
                                                     } catch (ExecutionException e) {
@@ -595,7 +575,7 @@ public class DanaProfileUploader implements ProfileUploader {
         if (mode == Mode.BACKFILL) {
             buildReq.build.infos.url = "";
         } else {
-            Change change = getChange(buildId);
+            BuildbotClient.Change change = getChange(buildId);
             buildReq.build.infos.url = change == null ? "" : change.revlink;
         }
 
@@ -813,24 +793,5 @@ public class DanaProfileUploader implements ProfileUploader {
         public String serieId;
         public Analyse analyse = new Analyse();
         public boolean override = true;
-    }
-
-    /** The following are objects designed to hold a buildbot build info object. */
-    @VisibleForTesting
-    public static final class BuildbotResponse {
-        public SourceStamp sourceStamp = new SourceStamp();
-    }
-
-    @VisibleForTesting
-    public static final class SourceStamp {
-        public Change[] changes = new Change[] {};
-    }
-
-    @VisibleForTesting
-    public static final class Change {
-        public String comments;
-        public String rev;
-        public String revlink;
-        public String who;
     }
 }
