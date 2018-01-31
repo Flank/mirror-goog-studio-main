@@ -242,24 +242,28 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     reader.CreateClassIr(class_index);
     auto dex_ir = reader.GetIr();
 
-    // Instrument acquire().
+    // Instrument acquire() and acquire(long).
     slicer::MethodInstrumenter mi_acq(dex_ir);
     mi_acq.AddTransformation<slicer::EntryHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
         "wrapAcquire"));
     if (!mi_acq.InstrumentMethod(ir::MethodId(
-        desc.c_str(), "acquireLocked", "()V"))) {
+        desc.c_str(), "acquire", "()V"))) {
       Log::E("Error instrumenting WakeLock.acquire");
     }
+    if (!mi_acq.InstrumentMethod(ir::MethodId(
+        desc.c_str(), "acquire", "(J)V"))) {
+      Log::E("Error instrumenting WakeLock.acquire(long)");
+    }
 
-    // Instrument release().
+    // Instrument release(int).
     slicer::MethodInstrumenter mi_rel(dex_ir);
     mi_rel.AddTransformation<slicer::EntryHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
         "wrapRelease"));
     if (!mi_rel.InstrumentMethod(ir::MethodId(
         desc.c_str(), "release", "(I)V"))) {
-      Log::E("Error instrumenting WakeLock.release");
+      Log::E("Error instrumenting WakeLock.release(int)");
     }
 
     size_t new_image_size = 0;

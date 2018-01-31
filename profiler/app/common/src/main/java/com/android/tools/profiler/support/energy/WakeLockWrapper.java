@@ -74,12 +74,25 @@ public final class WakeLockWrapper {
     }
 
     /**
-     * Wraps {@link WakeLock#release(int)}.
+     * Wraps {@link WakeLock#acquire(long)}.
+     *
+     * <p>Since {@link WakeLock#acquire(long)} does not call {@link WakeLock#acquire()} (vice
+     * versa), this will not cause double-instrumentation.
      *
      * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
      * @param timeout the timeout parameter passed to the original method.
      */
-    public static void wrapRelease(WakeLock wrapped, int timeout) {
+    public static void wrapAcquire(WakeLock wrapped, long timeout) {
+        sendWakeLockAcquired();
+    }
+
+    /**
+     * Wraps {@link WakeLock#release(int)}.
+     *
+     * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
+     * @param flags the flags parameter passed to the original method.
+     */
+    public static void wrapRelease(WakeLock wrapped, int flags) {
         sendWakeLockReleased();
     }
 }
