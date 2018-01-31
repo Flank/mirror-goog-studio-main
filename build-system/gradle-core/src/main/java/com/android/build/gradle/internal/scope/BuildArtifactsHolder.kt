@@ -20,14 +20,20 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactTransformBuilder
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
+import com.android.build.gradle.internal.api.artifact.toArtifactType
 import com.android.build.gradle.internal.api.dsl.DslScope
-import com.android.build.gradle.tasks.BuildArtifactReportTask
 import com.android.utils.FileUtils
+import com.google.gson.JsonElement
+import com.google.gson.JsonParser
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import java.io.File
 import java.util.Locale
+import com.google.gson.annotations.SerializedName
+import java.io.FileReader
+
+typealias Report = Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifactData>>
 
 /**
  * Buildable artifact holder.
@@ -238,6 +244,11 @@ class BuildArtifactsHolder(
         return output.first
     }
 
+    fun createReport() : Report =
+            artifactRecordMap.entries.associate {
+                it.key to it.value.history.map(this::newArtifact)
+            }
+
     /**
      * Creates a File for a task.
      *
@@ -262,10 +273,45 @@ class BuildArtifactsHolder(
     /**
      * Return history of all [BuildableArtifact] for an [ArtifactType].
      */
-    //FIXME: VisibleForTesting.  Make this internal when bazel supports it for tests (b/71602857)
-    fun getHistory(artifactType: ArtifactType) : List<BuildableArtifact> {
+    internal fun getHistory(artifactType: ArtifactType) : List<BuildableArtifact> {
         val record = artifactRecordMap[artifactType]
                 ?: throw MissingBuildableArtifactException(artifactType)
         return record.history
+    }
+
+    /** A data class for use with GSON. */
+    data class BuildableArtifactData(
+        @SerializedName("files") var files : Collection<File>,
+        @SerializedName("builtBy") var builtBy : List<String>)
+
+    /** Create [BuildableArtifactData] from [BuildableArtifact]. */
+    private fun newArtifact(artifact : BuildableArtifact) =
+            // getDependencies accepts null.
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+        BuildableArtifactData(
+                artifact.files,
+                artifact.buildDependencies.getDependencies(null).map(Task::getPath))
+
+    companion object {
+        fun parseReport(file : File) : Report {
+            val result = mutableMapOf<ArtifactType, List<BuildableArtifactData>>()
+            val parser = JsonParser()
+            FileReader(file).use { reader ->
+                for ((key, value) in parser.parse(reader).asJsonObject.entrySet()) {
+                    val history =
+                            value.asJsonArray.map {
+                                val obj = it.asJsonObject
+                                BuildableArtifactData(
+                                        obj.getAsJsonArray("files").map {
+                                            File(it.asJsonObject.get("path").asString)
+                                        },
+                                        obj.getAsJsonArray("builtBy").map(
+                                                JsonElement::getAsString))
+                            }
+                    result.put(key.toArtifactType(), history)
+                }
+            }
+            return result
+        }
     }
 }

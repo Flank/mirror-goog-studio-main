@@ -20,8 +20,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.internal.api.artifact.SourceArtifactType
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.options.StringOption
-import com.android.build.gradle.tasks.BuildArtifactReportTask
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -79,7 +79,7 @@ gradle.taskGraph.whenReady { taskGraph ->
         assertThat(result.getTask(":generateCustomResource2Main")).wasExecuted()
         assertThat(result.getTask(":generateCustomResource2Main")).ranBefore(":mergeDebugResources")
 
-        val debugReport = BuildArtifactReportTask.parseReport(project.file("debugReport.txt"))
+        val debugReport = BuildArtifactsHolder.parseReport(project.file("debugReport.txt"))
         assertThat(debugReport).containsKey(SourceArtifactType.ANDROID_RESOURCES)
 
         val debugArtifacts = debugReport[SourceArtifactType.ANDROID_RESOURCES]!!
@@ -88,7 +88,7 @@ gradle.taskGraph.whenReady { taskGraph ->
         project.executor()
                 .with(StringOption.BUILD_ARTIFACT_REPORT_FILE, "mainReport.txt")
                 .run("reportSourceSetTransformMain")
-        val mainReport = BuildArtifactReportTask.parseReport(project.file("mainReport.txt"))
+        val mainReport = BuildArtifactsHolder.parseReport(project.file("mainReport.txt"))
         val mainArtifacts = mainReport[SourceArtifactType.ANDROID_RESOURCES]!!
         assertThat(mainArtifacts[1].files.map(File::getName))
                 .containsExactly("android_resources1", "res")
