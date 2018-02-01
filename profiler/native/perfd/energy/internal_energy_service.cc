@@ -21,16 +21,17 @@ namespace profiler {
 
 using grpc::ServerContext;
 using grpc::Status;
-using profiler::proto::WakeLockEventRequest;
+using profiler::proto::AddEnergyEventRequest;
 using profiler::proto::EmptyEnergyReply;
 
 InternalEnergyServiceImpl::InternalEnergyServiceImpl() {}
 
-Status InternalEnergyServiceImpl::SendWakeLockEvent(
-    ServerContext *context,
-    const WakeLockEventRequest *request,
+Status InternalEnergyServiceImpl::AddEnergyEvent(
+    ServerContext *context, const AddEnergyEventRequest *request,
     EmptyEnergyReply *reply) {
-  Log::V("SendWakeLockEvent (timestamp=%lld)", request->timestamp());
+  auto energy_event = request->energy_event();
+  Log::V("AddEnergyEvent (type=%d, timestamp=%lld)", energy_event.event_type(),
+         energy_event.timestamp());
   return Status::OK;
 }
 

@@ -28,12 +28,11 @@ class InternalEnergyServiceImpl final
   InternalEnergyServiceImpl();
 
   // RPC to send a wake lock acquire or release event.
-  grpc::Status SendWakeLockEvent(
-      grpc::ServerContext* context,
-      const proto::WakeLockEventRequest* request,
-      proto::EmptyEnergyReply* reply) override;
+  grpc::Status AddEnergyEvent(grpc::ServerContext* context,
+                              const proto::AddEnergyEventRequest* request,
+                              proto::EmptyEnergyReply* reply) override;
 };
 
 }  // namespace profiler
 
-#endif //PERFD_ENERGY_INTERNAL_ENERGY_SERVICE_H_
+#endif  // PERFD_ENERGY_INTERNAL_ENERGY_SERVICE_H_

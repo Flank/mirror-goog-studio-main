@@ -19,12 +19,12 @@
 #include "agent/support/jni_wrappers.h"
 
 using grpc::ClientContext;
-using grpc::Status;
 using profiler::Agent;
 using profiler::SteadyClock;
+using profiler::proto::AddEnergyEventRequest;
 using profiler::proto::EmptyEnergyReply;
+using profiler::proto::EnergyEvent;
 using profiler::proto::InternalEnergyService;
-using profiler::proto::WakeLockEventRequest;
 
 namespace {
 
@@ -33,15 +33,21 @@ const SteadyClock& GetClock() {
   return clock;
 }
 
-void EnqueueWakeLockEvent() {
+// Enqueue and submit the target |energy_event|. The event's timestamp will be
+// set as a side-effect of calling this method, but all other fields and
+// appropriate metadata must be set by the caller.
+void SubmitEnergyEvent(const EnergyEvent& energy_event) {
   int64_t timestamp = GetClock().GetCurrentTime();
-  Agent::Instance().SubmitEnergyTasks({[timestamp](
-      InternalEnergyService::Stub& stub, ClientContext& ctx) {
-    WakeLockEventRequest request;
-    request.set_timestamp(timestamp);
-    EmptyEnergyReply response;
-    return stub.SendWakeLockEvent(&ctx, request, &response);
-  }});
+  Agent::Instance().SubmitEnergyTasks(
+      {[&energy_event, timestamp](InternalEnergyService::Stub& stub,
+                                  ClientContext& ctx) {
+        AddEnergyEventRequest request;
+        request.mutable_energy_event()->CopyFrom(energy_event);
+        request.mutable_energy_event()->set_timestamp(timestamp);
+
+        EmptyEnergyReply response;
+        return stub.AddEnergyEvent(&ctx, request, &response);
+      }});
 }
 }  // namespace
 
@@ -49,14 +55,20 @@ extern "C" {
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockAcquired(
     JNIEnv* env, jobject thiz) {
-  // TODO: Pass wake lock info.
-  EnqueueWakeLockEvent();
+  EnergyEvent energy_event;
+  energy_event.set_event_type(EnergyEvent::WAKE_LOCK_ACQUIRED);
+  // TODO: Set metadata here
+  // energy_event.mutable_wake_lock_acquired_info()->...
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockReleased(
     JNIEnv* env, jobject thiz) {
-  // TODO: Pass wake lock info.
-  EnqueueWakeLockEvent();
+  EnergyEvent energy_event;
+  energy_event.set_event_type(EnergyEvent::WAKE_LOCK_RELEASED);
+  // TODO: Set metadata here
+  // energy_event.mutable_wake_lock_released_info()->...
+  SubmitEnergyEvent(energy_event);
 }
 };

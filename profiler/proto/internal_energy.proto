@@ -21,21 +21,11 @@ import "energy.proto";
 
 // RPC services to send data to perfd.
 service InternalEnergyService {
-  rpc SendWakeLockEvent(WakeLockEventRequest) returns (EmptyEnergyReply) {}
+  rpc AddEnergyEvent(AddEnergyEventRequest) returns (EmptyEnergyReply) {}
 }
 
-// Tracks the instrumented data of an Android Wake Lock event.
-// https://developer.android.com/reference/android/os/PowerManager.WakeLock.html
-message WakeLockEventRequest {
-  // Timestamp of the event in nanoseconds.
-  int64 timestamp = 1;
-  // Type of the wake lock event.
-  EnergyEvent.EventType event_type = 2;
-  // Unique ID to identify a wake lock.
-  // Generated when a wake lock is instantiated using |app_id|next_int|.
-  int64 wake_lock_id = 3;
-  // Metadata of a wake lock.
-  WakeLockInfo wake_lock_info = 4;
+message AddEnergyEventRequest {
+  EnergyEvent energy_event = 1;
 }
 
 message EmptyEnergyReply {}

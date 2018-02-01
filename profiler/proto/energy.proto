@@ -65,10 +65,11 @@ message EnergyEventsResponse {
 message EnergyEvent {
   enum EventType {
     UNSPECIFIED = 0;
-    // A wake lock is acquired, forcing the device to stay awake.
-    WAKE_LOCK_ACQUIRE = 1;
+
+    // A wake lock was acquired, forcing the device to stay awake.
+    WAKE_LOCK_ACQUIRED = 1; // |wake_lock_acquired_info| will be set
     // A wake lock is released when it's not needed anymore.
-    WAKE_LOCK_RELEASE = 2;
+    WAKE_LOCK_RELEASED = 2; // |wake_lock_released_info| will be set
   }
 
   // Timestamp of the event in nanoseconds.
@@ -79,12 +80,12 @@ message EnergyEvent {
   int64 id = 3;
   // Optional event metadata.
   oneof metadata {
-    // Information of a wake lock such as flags.
-    WakeLockInfo wake_lock_info = 4;
+    WakeLockAcquiredInfo wake_lock_acquired_info = 4;
+    WakeLockReleasedInfo wake_lock_released_info = 5;
   }
 }
 
-message WakeLockInfo {
+message WakeLockAcquiredInfo {
   // Level and optional flags for the wake lock instance initialization.
   // https://developer.android.com/reference/android/os/PowerManager.html#newWakeLock(int, java.lang.String)
   int32 level_and_flags = 1;
@@ -93,7 +94,10 @@ message WakeLockInfo {
   // An optional timeout in milliseconds given to the acquire call. The lock
   // will be released after the given timeout expires.
   int64 timeout = 3;
+}
+
+message WakeLockReleasedInfo {
   // Optional flags that modify the release behavior.
   // https://developer.android.com/reference/android/os/PowerManager.WakeLock.html#release(int)
-  int32 release_flags = 4;
+  int32 flags = 1;
 }
