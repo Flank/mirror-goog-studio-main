@@ -79,7 +79,7 @@ data class Benchmark(
                                 .with(BooleanOption.ENABLE_D8, scenario.useD8())
                                 .withUseDexArchive(scenario.useDexArchive())
 
-                        val recorder = BenchmarkRecorder(BenchmarkTest.getProfileCapturer())
+                        val recorder = BenchmarkTest.getBenchmarkRecorder()
                         val recordCalled = AtomicBoolean(false)
                         val record = { r: () -> Unit ->
                             recordStart = System.nanoTime()

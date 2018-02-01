@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -104,7 +103,7 @@ public class DanaProfileUploaderTest {
     }
 
     @Test
-    public void infos() throws ExecutionException {
+    public void infos() throws IOException {
         assertValidInfos(uploader.infos(1));
     }
 
@@ -170,7 +169,7 @@ public class DanaProfileUploaderTest {
     }
 
     @Test
-    public void buildRequest() throws ExecutionException {
+    public void buildRequest() throws IOException {
         DanaProfileUploader.BuildRequest buildRequest = uploader.buildRequest(1);
 
         assertThat(buildRequest.build).isNotNull();

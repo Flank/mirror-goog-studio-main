@@ -55,7 +55,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -262,7 +261,7 @@ public class DanaProfileUploader implements ProfileUploader {
      */
     @VisibleForTesting
     @NonNull
-    public Infos infos(long buildId) throws ExecutionException {
+    public Infos infos(long buildId) throws IOException {
         Infos infos = new Infos();
 
         if (mode == Mode.BACKFILL) {
@@ -320,7 +319,7 @@ public class DanaProfileUploader implements ProfileUploader {
      * <p>If the build was triggered manually, this method will return null.
      */
     @Nullable
-    private BuildbotClient.Change getChange(long buildId) throws ExecutionException {
+    private BuildbotClient.Change getChange(long buildId) throws IOException {
         List<BuildbotClient.Change> changes = client.getChanges(buildId);
 
         // When a build is manually triggered, there is no source stamp and thus no changes.
@@ -481,7 +480,7 @@ public class DanaProfileUploader implements ProfileUploader {
                                                     BuildbotClient.Change change;
                                                     try {
                                                         change = getChange(sample.buildId);
-                                                    } catch (ExecutionException e) {
+                                                    } catch (IOException e) {
                                                         throw new RuntimeException(e);
                                                     }
                                                     sample.url =
@@ -566,7 +565,7 @@ public class DanaProfileUploader implements ProfileUploader {
 
     @VisibleForTesting
     @NonNull
-    public BuildRequest buildRequest(long buildId) throws ExecutionException {
+    public BuildRequest buildRequest(long buildId) throws IOException {
         BuildRequest buildReq = new BuildRequest();
         buildReq.projectId = danaProjectId;
         buildReq.build.infos = infos(buildId);
@@ -623,7 +622,7 @@ public class DanaProfileUploader implements ProfileUploader {
                         buildId -> {
                             try {
                                 return buildRequest(buildId);
-                            } catch (ExecutionException e) {
+                            } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
                         })

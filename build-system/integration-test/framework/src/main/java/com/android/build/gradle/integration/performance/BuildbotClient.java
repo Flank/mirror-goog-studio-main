@@ -162,7 +162,7 @@ public class BuildbotClient {
      * <p>If the build was triggered manually, this method will return null.
      */
     @Nullable
-    public List<Change> getChanges(long buildId) throws ExecutionException {
+    public List<Change> getChanges(long buildId) throws IOException {
         BuildbotResponse res = getBuildInfo(buildId);
 
         // When a build is manually triggered, there is no source stamp and thus no changes.
@@ -174,10 +174,13 @@ public class BuildbotClient {
     }
 
     @NonNull
-    private BuildbotResponse getBuildInfo(long buildId) throws ExecutionException {
+    private BuildbotResponse getBuildInfo(long buildId) throws IOException {
         String url = buildbotBuildInfoUrl(buildId);
-        System.out.println(url);
-        return BUILD_CACHE.get(url, () -> jsonGet(url, BuildbotResponse.class));
+        try {
+            return BUILD_CACHE.get(url, () -> jsonGet(url, BuildbotResponse.class));
+        } catch (ExecutionException e) {
+            throw (IOException) e.getCause();
+        }
     }
 
     @NonNull

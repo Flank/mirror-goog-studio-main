@@ -65,6 +65,7 @@ def testEnvironment =
             key.startsWith("CUSTOM_") ||
                     key.startsWith("ACTD_") || // environment variables for uploading to Dana
                     key.startsWith("PERF_") || // environment variables for controlling perf tests
+                    key == "RUNS_PER_BENCHMARK" || // part of perf test controls
                     key == "USE_GRADLE_NIGHTLY" ||
                     key == "BENCHMARK_EXPERIMENT" ||
                     key == "DEBUG_INNER_TEST" ||
@@ -80,8 +81,7 @@ def testEnvironment =
                     key.startsWith("LANG") ||
                     key.startsWith("BUILDBOT_") ||
                     // For local benchmarking
-                    key == "LOCAL_BENCHMARK_LOCATION" ||
-                    key == "LOCAL_PROTO_BENCHMARK_LOCATION"
+                    key == "LOCAL_BENCHMARK_LOCATION"
         }
 
 testEnvironment << [

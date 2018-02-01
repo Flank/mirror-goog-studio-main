@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
 import com.android.builder.utils.ExceptionRunnable;
 import com.google.common.base.Joiner;
@@ -36,12 +37,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -57,38 +55,6 @@ import javax.annotation.concurrent.NotThreadSafe;
 /** */
 @NotThreadSafe
 public final class BenchmarkRecorder {
-    public enum UploadStrategy {
-        /*
-         * Instructs BenchmarkRecorder to upload all of the GradleBenchmarkResults that it records.
-         */
-        ALL {
-            @Override
-            public List<GradleBenchmarkResult> filter(List<GradleBenchmarkResult> results) {
-                return results;
-            }
-        },
-
-        /*
-         * Instructs BenchmarkRecorder to upload all only the fastest of the GradleBenchmarkResults
-         * that has been recorded. Useful if you want to run a benchmark a number of times in order
-         * to get a more stable result.
-         */
-        FASTEST {
-            @Override
-            public List<GradleBenchmarkResult> filter(List<GradleBenchmarkResult> results) {
-                Optional<GradleBenchmarkResult> result =
-                        results.stream()
-                                .min(Comparator.comparingLong(r -> r.getProfile().getBuildTime()));
-
-                Preconditions.checkArgument(
-                        result.isPresent(), "empty list of benchmarkResults found");
-                return Arrays.asList(result.get());
-            }
-        };
-
-        public abstract List<GradleBenchmarkResult> filter(List<GradleBenchmarkResult> results);
-    }
-
     /** Variables for asynchronously uploading profiles. */
     private static final int WORK_QUEUE_SIZE = 64;
 
@@ -120,15 +86,17 @@ public final class BenchmarkRecorder {
                     } catch (Exception e) {
                         System.out.println(
                                 "couldn't add GoogleStorageProfileUploader to the list of default uploaders, reason: "
-                                        + e);
+                                        + e
+                                        + ", this means that benchmark results will not be uploaded to GCS");
                     }
 
                     try {
                         uploaders.add(DanaProfileUploader.fromEnvironment());
                     } catch (Exception e) {
                         System.out.println(
-                                "couldn't add ActdProfileUploader to the list of default uploaders, reason: "
-                                        + e);
+                                "couldn't add DanaProfileUploader to the list of default uploaders, reason: "
+                                        + e
+                                        + ", this means that benchmark results will not be uploaded to Dana");
                     }
 
                     try {
@@ -136,15 +104,8 @@ public final class BenchmarkRecorder {
                     } catch (Exception e) {
                         System.out.println(
                                 "couldn't add LocalCSVProfileUploader to the list of default uploaders, reason: "
-                                        + e);
-                    }
-
-                    try {
-                        uploaders.add(LocalProtoProfileUploader.fromEnvironment());
-                    } catch (Exception e) {
-                        System.out.println(
-                                "couldn't add LocalProtoProfileUploader to the list of default uploaders, reason: "
-                                        + e);
+                                        + e
+                                        + ", this means that benchmark results will not be saved locally as CSVs");
                     }
 
                     UPLOADERS = Collections.unmodifiableList(uploaders);
@@ -155,13 +116,26 @@ public final class BenchmarkRecorder {
         return UPLOADERS;
     }
 
+    @Nullable
+    private static BuildbotClient defaultBuildbotClient() {
+        try {
+            return BuildbotClient.fromEnvironment();
+        } catch (IllegalArgumentException e) {
+            System.out.println(
+                    "unable to create a buildbot client from current environment: "
+                            + e.getMessage()
+                            + ", this means that your benchmark results will not have commit information attached to them");
+            return null;
+        }
+    }
+
     @NonNull private final List<ProfileUploader> uploaders;
 
     @NonNull private final List<GradleBenchmarkResult.Builder> benchmarkResults = new ArrayList<>();
 
     @NonNull private final ProfileCapturer capturer;
 
-    @NonNull private final BuildbotClient client;
+    @Nullable private final BuildbotClient client;
 
 
     public BenchmarkRecorder(@NonNull ProfileCapturer capturer) {
@@ -170,13 +144,13 @@ public final class BenchmarkRecorder {
 
     public BenchmarkRecorder(
             @NonNull ProfileCapturer capturer, @NonNull List<ProfileUploader> uploaders) {
-        this(capturer, uploaders, BuildbotClient.fromEnvironment());
+        this(capturer, uploaders, defaultBuildbotClient());
     }
 
     public BenchmarkRecorder(
             @NonNull ProfileCapturer capturer,
             @NonNull List<ProfileUploader> uploaders,
-            @NonNull BuildbotClient client) {
+            @Nullable BuildbotClient client) {
         this.uploaders = uploaders;
         this.capturer = capturer;
         this.client = client;
@@ -238,43 +212,15 @@ public final class BenchmarkRecorder {
                 Long buildNumber = Longs.tryParse(buildBotBuildNumber);
                 if (buildNumber != null) {
                     scheduledBuild.setBuildbotBuildNumber(buildNumber);
+
+                    try {
+                        setCommitInfo(result, buildNumber);
+                    } catch (IllegalStateException e) {
+                        System.out.println(e.getMessage());
+                    }
                 }
                 result.setScheduledBuild(scheduledBuild);
 
-                try {
-                    List<BuildbotClient.Change> changes = client.getChanges(buildNumber);
-                    if (changes.isEmpty()) {
-                        // couldn't find a change for this build, no big deal, silently move on
-                    } else if (changes.size() != 1) {
-                        System.out.println(
-                                "expected 1 change for build ID "
-                                        + buildNumber
-                                        + " but found "
-                                        + changes.size());
-                    } else {
-                        BuildbotClient.Change change = changes.get(0);
-                        Timestamp timestamp =
-                                Timestamps.fromMillis(
-                                        BuildbotClient.dateFromChange(change)
-                                                .toInstant()
-                                                .toEpochMilli());
-
-                        result.setCommit(
-                                GradleBenchmarkResult.Commit.newBuilder()
-                                        .setAuthor(change.who)
-                                        .setHash(change.revision)
-                                        .setLink(change.revlink)
-                                        .setTimestamp(timestamp)
-                                        .setComment(change.comments));
-                    }
-                } catch (ExecutionException e) {
-                    // We tried to get changes but failed, no big deal, log and move on
-                    System.out.println(
-                            "failed to get change details from buildbot using build ID "
-                                    + buildNumber
-                                    + ": "
-                                    + e);
-                }
             } else {
                 GradleBenchmarkResult.Experiment.Builder experiment =
                         GradleBenchmarkResult.Experiment.newBuilder();
@@ -292,10 +238,6 @@ public final class BenchmarkRecorder {
     }
 
     public void uploadAsync() {
-        uploadAsync(UploadStrategy.ALL);
-    }
-
-    public void uploadAsync(UploadStrategy strategy) {
         // If a benchmark failed or was skipped for whatever reason, there will be no results. In
         // this case, there's no uploading to do so we just break early.
         if (benchmarkResults.isEmpty()) {
@@ -313,23 +255,65 @@ public final class BenchmarkRecorder {
 
         validateResults(results);
 
-        List<GradleBenchmarkResult> filteredResults = strategy.filter(results);
-        Preconditions.checkArgument(
-                !filteredResults.isEmpty(), "UploadStrategy returned no results");
-
         for (ProfileUploader uploader : uploaders) {
             synchronized (BenchmarkRecorder.class) {
                 OUTSTANDING_UPLOADS.add(
                         EXECUTOR.submit(
                                 () -> {
                                     try {
-                                        uploader.uploadData(filteredResults);
+                                        uploader.uploadData(results);
                                     } catch (IOException e) {
                                         throw new UncheckedIOException(e);
                                     }
                                 }));
             }
         }
+    }
+
+    /**
+     * Attempts to find commit information about a result and attach it as a Commit proto.
+     *
+     * @throws IllegalStateException if it gets an unexpected buildbot result.
+     */
+    private void setCommitInfo(GradleBenchmarkResult.Builder result, long buildNumber)
+            throws IOException {
+        if (client == null) {
+            return;
+        }
+
+        List<BuildbotClient.Change> changes = client.getChanges(buildNumber);
+        if (changes == null) {
+            result.setCommit(
+                    GradleBenchmarkResult.Commit.newBuilder()
+                            .setAuthor("nobody")
+                            .setComment("manually triggered")
+                            .setHash("")
+                            .setLink("")
+                            .build());
+            return;
+        }
+
+        /*
+         * This shouldn't be possible, as getChanges() returns null when it gets an empty list of
+         * changes from buildbot. It doesn't hurt to be defensive, though.
+         */
+        Preconditions.checkState(!changes.isEmpty(), "got an empty list of changes from buildbot");
+        Preconditions.checkState(
+                changes.size() == 1,
+                "expected 1 change for build ID " + buildNumber + " but found " + changes.size());
+
+        BuildbotClient.Change change = changes.get(0);
+        Timestamp timestamp =
+                Timestamps.fromMillis(
+                        BuildbotClient.dateFromChange(change).toInstant().toEpochMilli());
+
+        result.setCommit(
+                GradleBenchmarkResult.Commit.newBuilder()
+                        .setAuthor(change.who)
+                        .setHash(change.revision)
+                        .setLink(change.revlink)
+                        .setTimestamp(timestamp)
+                        .setComment(change.comments));
     }
 
     public static void awaitUploads(long timeout, @NonNull TimeUnit unit)
