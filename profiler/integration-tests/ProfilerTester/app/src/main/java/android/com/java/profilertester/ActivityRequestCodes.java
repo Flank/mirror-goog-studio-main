@@ -11,4 +11,5 @@ import android.content.Intent;
 public enum ActivityRequestCodes {
     NO_REQUEST_CODE, // Reserved for 0.
     REQUEST_ENABLE_BT, // Request code for enabling Bluetooth.
+    ACTION_REQUEST_SCAN_ALWAYS_AVAILABLE, // Request code for making Wifi scanning always available.
 }

@@ -50,7 +50,7 @@ public class MainActivityFragment extends Fragment {
                 new TaskCategory[] {
                     new CpuTaskCategory(getActivity().getFilesDir()),
                     new MemoryTaskCategory(),
-                    new NetworkTaskCategory(),
+                    new NetworkTaskCategory(getActivity()),
                     new EventTaskCategory(
                             new Callable<Activity>() {
                                 @Override

@@ -1,26 +1,38 @@
 package android.com.java.profilertester.network;
 
-import android.com.java.profilertester.R;
+import android.Manifest;
+import android.app.Activity;
+import android.com.java.profilertester.ActivityRequestCodes;
 import android.com.java.profilertester.profiletask.TaskCategory;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NetworkTaskCategory extends TaskCategory {
     private static final String URL_STRING =
@@ -42,8 +54,18 @@ public class NetworkTaskCategory extends TaskCategory {
             new HttpPostJsonTask(),
             new OkHttpPostJsonTask(),
             new HttpPostFormDataTask(),
-            new OkHttpPostFormDataTask()
+            new OkHttpPostFormDataTask(),
+            new WifiScanningTask(),
+            new WifiHighPerformanceModeTask(),
+            new WifiFullModeTask(),
+            new WifiScanModeTask()
     );
+    @NonNull
+    private final Activity mHostActivity;
+
+    public NetworkTaskCategory(@NonNull Activity host) {
+        mHostActivity = host;
+    }
 
     @NonNull
     @Override
@@ -55,6 +77,179 @@ public class NetworkTaskCategory extends TaskCategory {
     @Override
     protected String getCategoryName() {
         return "Network";
+    }
+
+    private abstract class WifiTask extends Task {
+        private final long WIFI_ENABLE_WAIT_TIME_S = 10;
+
+        @Nullable
+        @Override
+        protected final String execute() throws Exception {
+            ActivityCompat.requestPermissions(
+                    mHostActivity,
+                    new String[]{
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                    },
+                    1);
+
+            final WifiManager manager = (WifiManager) mHostActivity.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            if (manager == null) {
+                return "Could not find WifiManager!";
+            }
+            if (manager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
+                final CountDownLatch enabledLatch = new CountDownLatch(1);
+                BroadcastReceiver receiver = new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        enabledLatch.countDown();
+                    }
+                };
+                mHostActivity.registerReceiver(receiver, new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION));
+                manager.setWifiEnabled(true);
+                if (manager.getWifiState() == WifiManager.WIFI_STATE_ENABLED) {
+                    enabledLatch.countDown();
+                }
+                enabledLatch.await(WIFI_ENABLE_WAIT_TIME_S, TimeUnit.SECONDS);
+                mHostActivity.unregisterReceiver(receiver);
+                if (enabledLatch.getCount() > 0) {
+                    return "Could not enable Wifi!";
+                }
+            }
+            return wifiExecute(manager);
+        }
+
+        @Nullable
+        protected abstract String wifiExecute(@NonNull final WifiManager manager) throws Exception;
+    }
+
+    private class WifiScanningTask extends WifiTask {
+        private static final int WIFI_SCAN_TIME_S = 10;
+
+        @Nullable
+        @Override
+        protected String wifiExecute(@NonNull final WifiManager manager) {
+            final List<ScanResult> scanResults = new ArrayList<>();
+            final AtomicBoolean gotResults = new AtomicBoolean(false);
+
+            if (!manager.isScanAlwaysAvailable()) {
+                mHostActivity.startActivityForResult(
+                        new Intent(WifiManager.ACTION_REQUEST_SCAN_ALWAYS_AVAILABLE),
+                        ActivityRequestCodes.ACTION_REQUEST_SCAN_ALWAYS_AVAILABLE.ordinal());
+                if (manager.isScanAlwaysAvailable()) {
+                    return "Scan is not always available!";
+                }
+            }
+
+            BroadcastReceiver receiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    scanResults.addAll(manager.getScanResults());
+                    gotResults.set(true);
+                }
+            };
+            mHostActivity.registerReceiver(receiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+            try {
+                if (!manager.startScan()) {
+                    return "Could not start Wifi scan!";
+                }
+
+                // Since scanning is an asynchronous process, just let the scan persist for
+                // 10 seconds, and then stop.
+                Thread.sleep(TimeUnit.SECONDS.toMillis(WIFI_SCAN_TIME_S));
+                if (gotResults.get()) {
+                    return "Got " + scanResults.size() + " wifi scan results.";
+                } else {
+                    return "Was not able to complete wifi scan within " + WIFI_SCAN_TIME_S + "s.";
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return "Interrupted while waiting for scan results!";
+            } finally {
+                mHostActivity.unregisterReceiver(receiver);
+            }
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskName() {
+            return "Scan Wifi";
+        }
+    }
+
+    private abstract class WifiLockTask extends WifiTask {
+        private final long LOCK_TIME = TimeUnit.SECONDS.toMillis(10);
+
+        @Nullable
+        @Override
+        protected String wifiExecute(@NonNull WifiManager manager) {
+            WifiManager.WifiLock lock = manager.createWifiLock(getLockType(), getTag());
+            lock.acquire();
+
+            boolean lockReleased = false;
+            try {
+                Thread.sleep(LOCK_TIME);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return "Interrupted while idling on locked mode!";
+            } finally {
+                if (lock.isHeld()) {
+                    lock.release();
+                    lockReleased = true;
+                }
+            }
+            if (lockReleased) {
+                return "Wifi lock released.";
+            } else {
+                return "Wifi lock not held.";
+            }
+        }
+
+        protected abstract int getLockType();
+
+        @NonNull
+        private String getTag() {
+            return getClass().getCanonicalName();
+        }
+    }
+
+    private class WifiHighPerformanceModeTask extends WifiLockTask {
+        @Override
+        protected int getLockType() {
+            return WifiManager.WIFI_MODE_FULL_HIGH_PERF;
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskName() {
+            return "Turn on Wifi high performance mode";
+        }
+    }
+
+    private class WifiFullModeTask extends WifiLockTask {
+        @Override
+        protected int getLockType() {
+            return WifiManager.WIFI_MODE_FULL;
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskName() {
+            return "Turn on Wifi full mode";
+        }
+    }
+
+    private class WifiScanModeTask extends WifiLockTask {
+        @Override
+        protected int getLockType() {
+            return WifiManager.WIFI_MODE_SCAN_ONLY;
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskName() {
+            return "Turn on Wifi scan mode";
+        }
     }
 
     private static class HttpUrlConnectionDownloadTask extends Task {
