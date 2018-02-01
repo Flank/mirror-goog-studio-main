@@ -65,9 +65,11 @@ message EnergyEventsResponse {
 message EnergyEvent {
   // Timestamp of the event in nanoseconds.
   int64 timestamp = 1;
+  // Application Id this event is associated with.
+  int32 pid = 2;
   // Optional ID. If set, use to correlate two related events together. Will be
-  // unique even across devices and apps.
-  int64 id = 2;
+  // unique only to an app.
+  int32 event_id = 3;
 
   // Metadata for this specific event. Additionally, use
   // |EnergyEvent.metadata_case()| as a way to see what this event's type is.
