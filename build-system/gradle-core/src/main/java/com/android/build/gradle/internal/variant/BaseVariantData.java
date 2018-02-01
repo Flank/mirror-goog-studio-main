@@ -175,6 +175,12 @@ public abstract class BaseVariantData implements TaskContainer {
         this.variantConfiguration = variantConfiguration;
         this.taskManager = taskManager;
 
+        final Splits splits = androidConfig.getSplits();
+        boolean splitsEnabled =
+                splits.getDensity().isEnable()
+                        || splits.getAbi().isEnable()
+                        || splits.getLanguage().isEnable();
+
         // eventually, this will require a more open ended comparison.
         multiOutputPolicy =
                 (androidConfig.getGeneratePureSplits()
@@ -183,8 +189,9 @@ public abstract class BaseVariantData implements TaskContainer {
                         ? MultiOutputPolicy.SPLITS
                         : MultiOutputPolicy.MULTI_APK;
 
-        // warn the user in case we are forced to ignore the generatePureSplits flag.
-        if (androidConfig.getGeneratePureSplits()
+        // warn the user if we are forced to ignore the generatePureSplits flag.
+        if (splitsEnabled
+                && androidConfig.getGeneratePureSplits()
                 && multiOutputPolicy != MultiOutputPolicy.SPLITS) {
             Logging.getLogger(BaseVariantData.class).warn(
                     String.format("Variant %s, MinSdkVersion %s is too low (<21) "
