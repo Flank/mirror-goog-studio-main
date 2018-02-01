@@ -19,6 +19,7 @@ package com.android.ide.common.symbols;
 import static com.android.SdkConstants.DOT_XML;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.res2.FileResourceNameValidator;
 import com.android.ide.common.res2.MergingException;
 import com.android.resources.FolderTypeRelationship;
@@ -89,7 +90,7 @@ public class ResourceDirectoryParser {
     public static SymbolTable parseDirectory(
             @NonNull File directory,
             @NonNull IdProvider idProvider,
-            @NonNull SymbolTable platformAttrSymbols)
+            @Nullable SymbolTable platformAttrSymbols)
             throws ResourceDirectoryParseException {
         Preconditions.checkArgument(directory.isDirectory(), "!directory.isDirectory()");
 
@@ -137,7 +138,7 @@ public class ResourceDirectoryParser {
             @NonNull SymbolTable.Builder builder,
             @NonNull IdProvider idProvider,
             @NonNull DocumentBuilder documentBuilder,
-            @NonNull SymbolTable platformAttrSymbols)
+            @Nullable SymbolTable platformAttrSymbols)
             throws ResourceDirectoryParseException {
         assert resourceDirectory.isDirectory();
 

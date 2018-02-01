@@ -433,13 +433,20 @@ public final class SymbolIo {
      * @throws UncheckedIOException I/O error
      */
     public static void write(@NonNull SymbolTable table, @NonNull File file) {
-        write(table, file.toPath());
+        write(table, file.toPath(), null);
     }
 
     public static void write(@NonNull SymbolTable table, @NonNull Path file) {
+        write(table, file, null);
+    }
 
+    public static void write(
+            @NonNull SymbolTable table, @NonNull Path file, @Nullable String packageName) {
         try (BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file));
                 PrintWriter pw = new PrintWriter(os)) {
+            if (packageName != null) {
+                pw.println(packageName);
+            }
 
             // loop on the resource types so that the order is always the same
             for (ResourceType resType : ResourceType.values()) {
@@ -557,6 +564,19 @@ public final class SymbolIo {
             throw new IOException(e);
         }
         writeSymbolTableWithPackage(symbolTable, packageName, outputFile);
+    }
+
+    /** Writes tye symbol table with the package name as the first line. */
+    public static void writeSymbolTableWithPackage(
+            @NonNull SymbolTable symbolTable, @NonNull Path manifest, @NonNull File outputFile)
+            throws IOException {
+        String packageName;
+        try (InputStream is = new BufferedInputStream(Files.newInputStream(manifest))) {
+            packageName = AndroidManifestParser.parse(is).getPackage();
+        } catch (SAXException | ParserConfigurationException e) {
+            throw new IOException(e);
+        }
+        write(symbolTable, outputFile.toPath(), packageName);
     }
 
     /**
@@ -707,6 +727,4 @@ public final class SymbolIo {
 
         return file;
     }
-
-
 }
