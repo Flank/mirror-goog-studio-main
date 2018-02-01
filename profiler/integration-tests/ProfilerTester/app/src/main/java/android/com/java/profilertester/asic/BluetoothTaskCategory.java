@@ -1,10 +1,9 @@
 package android.com.java.profilertester.asic;
 
-import static android.app.Activity.RESULT_OK;
-import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
-
+import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
@@ -17,6 +16,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,6 +25,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static android.app.Activity.RESULT_OK;
+import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
 
 public class BluetoothTaskCategory extends TaskCategory {
     private final List<? extends Task> mTasks =
@@ -62,6 +66,14 @@ public class BluetoothTaskCategory extends TaskCategory {
     @Override
     protected boolean shouldRunTask(@NonNull Task taskToRun) {
         mPredicateCountdownLatch = new CountDownLatch(1);
+
+        ActivityCompat.requestPermissions(
+                mHostActivity,
+                new String[]{
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                },
+                1);
 
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
@@ -104,6 +116,7 @@ public class BluetoothTaskCategory extends TaskCategory {
             // minute to complete.
             final AtomicLong startTime = new AtomicLong(INVALID_TIME);
             final AtomicLong endTime = new AtomicLong(INVALID_TIME);
+            final List<BluetoothDevice> devices = new ArrayList<>();
 
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             if (!mBluetoothEnabled || bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
@@ -118,6 +131,13 @@ public class BluetoothTaskCategory extends TaskCategory {
                             startedLatch.countDown();
                         }
                     };
+            BroadcastReceiver deviceFoundBroadcastReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    devices.add(device);
+                }
+            };
             BroadcastReceiver endBroadcastReceiver =
                     new BroadcastReceiver() {
                         @Override
@@ -131,6 +151,9 @@ public class BluetoothTaskCategory extends TaskCategory {
                     startBroadcastReceiver,
                     new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED));
             mHostActivity.registerReceiver(
+                    deviceFoundBroadcastReceiver,
+                    new IntentFilter(BluetoothDevice.ACTION_FOUND));
+            mHostActivity.registerReceiver(
                     endBroadcastReceiver,
                     new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED));
 
@@ -139,8 +162,9 @@ public class BluetoothTaskCategory extends TaskCategory {
             endedLatch.await(BT_SCAN_TIME_S, TimeUnit.SECONDS);
             bluetoothAdapter.cancelDiscovery();
 
-            mHostActivity.unregisterReceiver(startBroadcastReceiver);
             mHostActivity.unregisterReceiver(endBroadcastReceiver);
+            mHostActivity.unregisterReceiver(deviceFoundBroadcastReceiver);
+            mHostActivity.unregisterReceiver(startBroadcastReceiver);
 
             if (startTime.get() == -1) {
                 return "Could not start bluetooth scanning";
@@ -149,7 +173,9 @@ public class BluetoothTaskCategory extends TaskCategory {
             }
             return "Discovery took: "
                     + TimeUnit.MILLISECONDS.toSeconds(endTime.get() - startTime.get())
-                    + "s";
+                    + "s and found "
+                    + devices.size()
+                    + " devices.";
         }
 
         @NonNull
