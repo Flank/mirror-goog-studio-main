@@ -120,7 +120,7 @@ open class LinkAndroidResForBundleTask
                 manifestFile = manifestFile,
                 options = aaptOptions.convert(),
                 resourceOutputApk = bundledResFile,
-                variantType = VariantType.DEFAULT,
+                variantType = VariantType.APK,
                 debuggable = debuggable,
                 pseudoLocalize = getPseudoLocalesEnabled(),
                 resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).singleFile))

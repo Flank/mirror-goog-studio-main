@@ -14,8 +14,8 @@
 package com.android.resources;
 
 import static com.android.ide.common.rendering.api.ResourceNamespace.ANDROID;
-import static com.android.ide.common.rendering.api.ResourceNamespace.EMPTY_NAMESPACE_CONTEXT;
 import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
+import static com.android.ide.common.rendering.api.ResourceNamespace.Resolver.EMPTY_RESOLVER;
 import static com.android.ide.common.rendering.api.ResourceNamespace.TOOLS;
 import static com.android.ide.common.rendering.api.ResourceNamespace.fromNamespacePrefix;
 import static org.junit.Assert.assertEquals;
@@ -38,18 +38,14 @@ public class ResourceNamespaceTest {
     public void fromPrefix() {
         assertEquals(
                 "com.example",
-                fromNamespacePrefix("com.example", RES_AUTO, EMPTY_NAMESPACE_CONTEXT)
-                        .getPackageName());
+                fromNamespacePrefix("com.example", RES_AUTO, EMPTY_RESOLVER).getPackageName());
         assertEquals(
                 SdkConstants.ANDROID_NS_NAME,
-                fromNamespacePrefix("android", RES_AUTO, EMPTY_NAMESPACE_CONTEXT).getPackageName());
-        assertEquals(
-                null,
-                fromNamespacePrefix(null, RES_AUTO, EMPTY_NAMESPACE_CONTEXT).getPackageName());
+                fromNamespacePrefix("android", RES_AUTO, EMPTY_RESOLVER).getPackageName());
+        assertEquals(null, fromNamespacePrefix(null, RES_AUTO, EMPTY_RESOLVER).getPackageName());
 
         assertEquals(
-                "android",
-                fromNamespacePrefix(null, ANDROID, EMPTY_NAMESPACE_CONTEXT).getPackageName());
+                "android", fromNamespacePrefix(null, ANDROID, EMPTY_RESOLVER).getPackageName());
 
         ImmutableMap<String, String> namespaces =
                 ImmutableMap.of(

@@ -42,6 +42,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull private final LintOptions myLintOptions;
     @NonNull private final Collection<String> myUnresolvedDependencies;
     @NonNull private final JavaCompileOptions myJavaCompileOptions;
+    @NonNull private final AaptOptions myAaptOptions;
     @NonNull private final File myBuildFolder;
     @Nullable private final String myResourcePrefix;
     private final int myApiVersion;
@@ -68,6 +69,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 new LintOptionsStub(),
                 Sets.newHashSet("unresolvedDependency"),
                 new JavaCompileOptionsStub(),
+                new AaptOptionsStub(),
                 new File("buildFolder"),
                 "resourcePrefix",
                 1,
@@ -94,6 +96,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             @NonNull LintOptions lintOptions,
             @NonNull Collection<String> unresolvedDependencies,
             @NonNull JavaCompileOptions javaCompileOptions,
+            @NonNull AaptOptions aaptOptions,
             @NonNull File buildFolder,
             @Nullable String resourcePrefix,
             int apiVersion,
@@ -117,6 +120,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         myLintOptions = lintOptions;
         myUnresolvedDependencies = unresolvedDependencies;
         myJavaCompileOptions = javaCompileOptions;
+        myAaptOptions = aaptOptions;
         myBuildFolder = buildFolder;
         myResourcePrefix = resourcePrefix;
         myApiVersion = apiVersion;
@@ -213,7 +217,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @Override
     @NonNull
     public AaptOptions getAaptOptions() {
-        throw new UnusedModelMethodException("getAaptOptions");
+        return myAaptOptions;
     }
 
     @Override

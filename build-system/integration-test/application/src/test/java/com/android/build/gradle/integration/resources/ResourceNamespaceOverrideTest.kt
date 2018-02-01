@@ -92,5 +92,102 @@ class ResourceNamespaceOverrideTest {
 
     }
 
+    @Test
+    fun sourceSetTransformTest() {
+        project.buildFile.appendText(
+"""
+class GenerateFile extends DefaultTask {
+    @Input
+    String filename
+
+    @Input
+    String content
+
+    @OutputFile
+    File outputDir
+
+    @TaskAction
+    void generate() {
+        File outputFile = new File(outputDir, filename)
+        outputFile.parentFile.mkdirs()
+        outputFile.newWriter().withWriter {
+            it << content
+        }
+    }
+}
+android {
+    sourceSets {
+        free.res.replace("replace", GenerateFile.class) { task, input, output ->
+                task.filename = "raw/d.txt"
+                task.outputDir = output
+                task.content = "TransformedFree"
+                task.dependsOn(input)
+        }
+        play.res.appendTo("appendTo", GenerateFile.class) { task, input, output ->
+                task.filename = "raw/f.txt"
+                task.outputDir = output
+                task.content = "TransformedPlay"
+                task.dependsOn(input)
+        }
+        paid.res.appendTo("appendTo", GenerateFile.class) { task, input, output ->
+                task.filename = "raw/b.txt"
+                task.outputDir = output
+                task.content = "TransformedPaid"
+                task.dependsOn(input)
+        }
+        // chaining multiple transforms
+        debug.res.replace("replace", GenerateFile.class) { task, input, output ->
+                task.filename = "raw/g.txt"
+                task.outputDir = output
+                task.content = "TransformedDebug"
+                task.dependsOn(input)
+        }
+        debug.res.appendTo("appendTo1", GenerateFile.class) { task, input, output ->
+                task.filename = "raw/a.txt"
+                task.outputDir = output
+                task.content = "TransformedDebug"
+                task.dependsOn(input)
+        }
+        debug.res.appendTo("appendTo2", GenerateFile.class) { task, input, output ->
+                task.filename = "raw/h.txt"
+                task.outputDir = output
+                task.content = "TransformedDebug"
+                task.dependsOn(input)
+        }
+    }
+}
+""")
+        val result = project.executor().run(":assembleFreePlayDebug")
+
+        assertThat(result.getTask(":replaceFree")).wasExecuted()
+        assertThat(result.getTask(":appendToPlay")).wasExecuted()
+        assertThat(result.getTask(":appendToPaid")).wasNotExecuted()
+        assertThat(result.getTask(":replaceDebug")).wasExecuted()
+        assertThat(result.getTask(":appendTo1Debug")).ranAfter(":replaceDebug")
+        assertThat(result.getTask(":appendTo2Debug")).ranAfter(":appendTo1Debug")
+
+        project.getApk(GradleTestProject.ApkType.DEBUG, "free", "play").use { apk ->
+            assertThat(apk).exists()
+            // a.txt overridden everywhere, variant specific value is used.  debug transform also
+            // override  this, but variant specific value takes priority.
+            assertThat(apk).containsFileWithContent("res/raw/a.txt", "FreePlayDebug")
+            // b.txt originally overridden by debug, but debug source set was replaced and no longer
+            // override b.txt
+            assertThat(apk).containsFileWithContent("res/raw/b.txt", "FreePlay")
+            // c.txt overridden everywhere except variant and build type, multi-flavor value is used.
+            assertThat(apk).containsFileWithContent("res/raw/c.txt", "FreePlay")
+            // d.txt is transformed by :replaceFree task.
+            assertThat(apk).containsFileWithContent("res/raw/d.txt", "TransformedFree")
+            // e.txt overridden in second flavor dimension, that value is used.
+            assertThat(apk).containsFileWithContent("res/raw/e.txt", "Play")
+            // f.txt is never overridden, the default sourceset value is used.
+            assertThat(apk).containsFileWithContent("res/raw/f.txt", "TransformedPlay")
+            // g.txt was appendedTo play
+            assertThat(apk).containsFileWithContent("res/raw/g.txt", "TransformedDebug")
+            // h.txt was appendedTo debug
+            assertThat(apk).containsFileWithContent("res/raw/h.txt", "TransformedDebug")
+        }
+    }
+
 }
 

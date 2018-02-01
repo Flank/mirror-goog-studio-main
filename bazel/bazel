@@ -41,6 +41,7 @@ def main():
   env['JAVA_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir)
   env['ANDROID_NDK_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'sdk', sdk_subdir, 'ndk-bundle')
   env['TERM'] = os.environ.get('TERM', '')
+  env['SHELL'] = os.environ.get('SHELL', '')
   if sys.platform == 'darwin':
     args.insert(0, '--watchfs')
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')

@@ -21,20 +21,20 @@ import com.android.build.api.dsl.model.BuildTypeOrProductFlavor
 import com.android.build.api.dsl.model.BuildTypeOrVariant
 import com.android.build.api.dsl.model.FallbackStrategy
 import com.android.build.api.dsl.model.VariantProperties
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.core.BuilderConstants
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.core.BuilderConstants
+import javax.inject.Inject
 
-class BuildTypeImpl(
+open class BuildTypeImpl @Inject constructor(
         private val named: String,
         private val variantProperties: VariantPropertiesImpl,
         private val buildTypeOrProductFlavor: BuildTypeOrProductFlavorImpl,
         internal val buildTypeOrVariant: BuildTypeOrVariantImpl,
         private val fallbackStrategy: FallbackStrategyImpl,
-        private val deprecationReporter: DeprecationReporter,
-        issueReporter: EvalIssueReporter)
-    : SealableObject(issueReporter),
+        dslScope: DslScope)
+    : SealableObject(dslScope),
         BuildType,
         VariantProperties by variantProperties,
         BuildTypeOrProductFlavor by buildTypeOrProductFlavor,
@@ -46,13 +46,13 @@ class BuildTypeImpl(
     @Suppress("OverridingDeprecatedMember")
     override var crunchPngsDefault: Boolean = name != BuilderConstants.DEBUG
         get() {
-            deprecationReporter.reportObsoleteUsage(
+            dslScope.deprecationReporter.reportObsoleteUsage(
                     "BuildType.crunchPngsDefault",
                     DeprecationReporter.DeprecationTarget.OLD_DSL)
             return field
         }
         set(value) {
-            deprecationReporter.reportObsoleteUsage(
+            dslScope.deprecationReporter.reportObsoleteUsage(
                     "BuildType.crunchPngsDefault",
                     DeprecationReporter.DeprecationTarget.OLD_DSL)
             if (checkSeal()) {
@@ -85,7 +85,7 @@ class BuildTypeImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun isCrunchPngs(): Boolean  {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "BuildType.crunchPngs",
                 "BuildType.isCrunchPngs",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -95,14 +95,14 @@ class BuildTypeImpl(
     @Suppress("OverridingDeprecatedMember")
     override var minifyEnabled: Boolean
         get() {
-            deprecationReporter.reportDeprecatedUsage(
+            dslScope.deprecationReporter.reportDeprecatedUsage(
                     "PostProcessingOptions",
                     "BuildType.minifyEnabled",
                     DeprecationReporter.DeprecationTarget.OLD_DSL)
             return postProcessing.isObfuscate || postProcessing.isRemoveUnusedCode
         }
         set(value) {
-            deprecationReporter.reportDeprecatedUsage(
+            dslScope.deprecationReporter.reportDeprecatedUsage(
                     "PostProcessingOptions",
                     "BuildType.minifyEnabled",
                     DeprecationReporter.DeprecationTarget.OLD_DSL)

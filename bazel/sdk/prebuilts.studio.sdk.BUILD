@@ -222,6 +222,14 @@ java_import(
 )
 
 filegroup(
+    name = "tools/support-annotations",
+    srcs = glob(
+        include = ["*/tools/support/annotations.jar"],
+    ),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "typos",
     srcs = glob(["*/tools/support/typos-*.txt"]),
     visibility = ["//visibility:public"],

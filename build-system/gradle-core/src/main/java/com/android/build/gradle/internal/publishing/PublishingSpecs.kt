@@ -116,7 +116,7 @@ class PublishingSpecs {
         private val variantMap = Maps.newEnumMap<VariantType, VariantSpec>(VariantType::class.java)
 
         init {
-            variantSpec(VariantType.DEFAULT) {
+            variantSpec(VariantType.APK) {
 
                 api(MANIFEST_METADATA, ArtifactType.MANIFEST_METADATA)
                 // use TYPE_JAR to give access to this via the model for now,

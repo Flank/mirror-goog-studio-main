@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.api.dsl.sealing
 
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 
 /**
  * A [MutableMap] that can be sealed to prevent further updates.
@@ -38,22 +38,22 @@ class SealableMap<K,V> private constructor(
             originMap: MutableMap<K,V>?,
             private val instantiator: () -> MutableMap<K,V>,
             private val cloner: (MutableMap<K,V>) -> MutableMap<K,V>,
-            issueReporter: EvalIssueReporter)
-    : NestedSealable(issueReporter), MutableMap<K,V> {
+            dslScope: DslScope)
+    : NestedSealable(dslScope), MutableMap<K,V> {
 
     companion object {
-        fun <K,V> wrap(originMap: MutableMap<K,V>, errorReporter: EvalIssueReporter) =
+        fun <K,V> wrap(originMap: MutableMap<K,V>, dslScope: DslScope) =
                 SealableMap(
                         originMap,
                         { throw RuntimeException("Calling objectFactory on a wrapped SealableMap") },
                         { collection -> collection },
-                        errorReporter)
+                        dslScope)
 
-        fun <K,V> new(errorReporter: EvalIssueReporter) = SealableMap(
+        fun <K,V> new(dslScope: DslScope) = SealableMap(
                 null,
                 { LinkedHashMap<K,V>() },
                 { collection -> LinkedHashMap(collection) },
-                errorReporter)
+                dslScope)
     }
 
     // make a copy if we are wrapping an existing list so that the underlying list cannot be
@@ -83,20 +83,20 @@ class SealableMap<K,V> private constructor(
         // when the map is updated, we cannot optimize and return an empty collection
         // if there is no backing map. We have to create the map here.
         get() = handleSealableSubItem(SealableCollection.wrap(getOrCreateMap().values,
-                issueReporter))
+                dslScope))
 
     override val entries: MutableSet<MutableMap.MutableEntry<K, V>>
         // since the returned collection is actually backed by the map and is updated
         // when the map is updated, we cannot optimize and return an empty collection
         // if there is no backing map. We have to create the map here.
-        get() = handleSealableSubItem(SealableSet.wrap(getOrCreateMap().entries, issueReporter))
+        get() = handleSealableSubItem(SealableSet.wrap(getOrCreateMap().entries, dslScope))
 
     override val keys: MutableSet<K>
         // since the returned collection is actually backed by the map and is updated
         // when the map is updated, we cannot optimize and return an empty collection
         // if there is no backing map. We have to create the map here.
         // otherwise wrap the set in sealable one
-        get() = handleSealableSubItem(SealableSet.wrap(getOrCreateMap().keys, issueReporter))
+        get() = handleSealableSubItem(SealableSet.wrap(getOrCreateMap().keys, dslScope))
 
     override fun put(key: K, value: V): V? {
         if (checkSeal()) {

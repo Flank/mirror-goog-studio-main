@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.extension.VariantCallbackHandler
 import com.android.build.api.dsl.variant.Variant
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.EvalIssueReporter.Type
 import org.gradle.api.Action
@@ -25,32 +26,32 @@ import org.gradle.api.Action
 internal class VariantCallbackHandlerImpl<T: Variant> private constructor(
         private val predicate: VariantPredicate,
         private val variantCallbackHolder: VariantCallbackHolder,
-        private val issueReporter: EvalIssueReporter)
+        private val dslScope: DslScope)
     : VariantCallbackHandler<T> {
 
     internal constructor(
             variantCallbackHolder: VariantCallbackHolder,
-            issueReporter: EvalIssueReporter)
-            : this(VariantPredicate(issueReporter), variantCallbackHolder, issueReporter)
+            dslScope: DslScope)
+            : this(VariantPredicate(dslScope), variantCallbackHolder, dslScope)
 
     override fun withName(name: String): VariantCallbackHandler<T> {
         return VariantCallbackHandlerImpl(
-                predicate.cloneWithName(name), variantCallbackHolder, issueReporter)
+                predicate.cloneWithName(name), variantCallbackHolder, dslScope)
     }
 
     override fun <S : Variant> withType(variantClass: Class<S>): VariantCallbackHandler<S> {
         return VariantCallbackHandlerImpl(
-                predicate.cloneWithClass(variantClass), variantCallbackHolder, issueReporter)
+                predicate.cloneWithClass(variantClass), variantCallbackHolder, dslScope)
     }
 
     override fun withBuildType(name: String): VariantCallbackHandler<T> {
         return VariantCallbackHandlerImpl(
-                predicate.cloneWithBuildType(name), variantCallbackHolder, issueReporter)
+                predicate.cloneWithBuildType(name), variantCallbackHolder, dslScope)
     }
 
     override fun withProductFlavor(name: String): VariantCallbackHandler<T> {
         return VariantCallbackHandlerImpl(
-                predicate.cloneWithFlavor(name), variantCallbackHolder, issueReporter)
+                predicate.cloneWithFlavor(name), variantCallbackHolder, dslScope)
     }
 
     override fun all(action: Action<T>) {
@@ -96,9 +97,9 @@ data class VariantPredicate(
         val theClass: Class<*>?,
         val buildTypeName: String?,
         val flavorNames: List<String>?,
-        private val issueReporter: EvalIssueReporter) {
+        private val dslScope: DslScope) {
 
-    internal constructor(issueReporter: EvalIssueReporter): this(null, null, null, null, issueReporter)
+    internal constructor(dslScope: DslScope): this(null, null, null, null, dslScope)
 
     fun accept(variant: Variant): Boolean {
         if (name != null && variant.name != name) {
@@ -125,7 +126,7 @@ data class VariantPredicate(
      */
     internal fun cloneWithName(name: String): VariantPredicate {
         if (this.name != null) {
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     Type.GENERIC,"Already filtered on variant name")
         }
 
@@ -134,7 +135,7 @@ data class VariantPredicate(
                 theClass,
                 buildTypeName,
                 flavorNames,
-                issueReporter)
+                dslScope)
     }
 
     /**
@@ -142,7 +143,7 @@ data class VariantPredicate(
      */
     internal fun cloneWithClass(variantClass: Class<*>): VariantPredicate {
         if (this.theClass != null) {
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     Type.GENERIC,"Already filtered on variant type")
         }
 
@@ -151,7 +152,7 @@ data class VariantPredicate(
                 variantClass,
                 buildTypeName,
                 flavorNames,
-                issueReporter)
+                dslScope)
     }
 
 
@@ -160,7 +161,7 @@ data class VariantPredicate(
      */
     internal fun cloneWithBuildType(buildTypeName: String): VariantPredicate {
         if (this.buildTypeName != null) {
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     Type.GENERIC,"Already filtered on build type name")
         }
 
@@ -169,7 +170,7 @@ data class VariantPredicate(
                 theClass,
                 buildTypeName,
                 flavorNames,
-                issueReporter)
+                dslScope)
     }
 
     /**
@@ -183,7 +184,7 @@ data class VariantPredicate(
                     theClass,
                     buildTypeName,
                     listOf(flavorName),
-                    issueReporter)
+                    dslScope)
         }
 
         // FIXME we should double check we're not adding a new name from a dimension already
@@ -196,7 +197,7 @@ data class VariantPredicate(
                 theClass,
                 buildTypeName,
                 flavors,
-                issueReporter)
+                dslScope)
     }
 
 }

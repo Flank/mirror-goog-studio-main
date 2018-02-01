@@ -186,31 +186,21 @@ class NamespacedResourcesTaskManager(
                         SdkConstants.FD_COMPILED,
                         variantScope.variantConfiguration.dirName)
 
-
-        val sourceSets = variantScope.variantData.variantConfiguration.sortedSourceProviders
-
         val tasks = mutableListOf<Task>()
         // Preserving the sourceset order in overlays is important.
         val directories = mutableListOf<File>()
 
-        for (sourceSet in sourceSets) {
-            // Just number the multiple resource directories in a source set.
-            // e.g. if debug has two directories, they will be stored in the output directory as
-            // 'debug' and 'debug2'
-            for ((index, resDirectory) in sourceSet.resDirectories.withIndex()) {
-                val sourceSetDirName =
-                        if (index == 0) sourceSet.name else """${sourceSet.name}${index + 1}"""
-                val outputDir = File(compiledDirectory, sourceSetDirName)
-                val name = "compile${sourceSetDirName.capitalize()}" +
-                        "ResourcesFor${variantScope.fullVariantName.capitalize()}"
-                tasks.add(taskFactory.create(CompileSourceSetResources.ConfigAction(
-                        name = name,
-                        inputDirectory = resDirectory,
-                        outputDirectory = outputDir,
-                        variantScope = variantScope,
-                        aaptIntermediateDirectory = variantScope.getIncrementalDir(name))))
-                directories.add(outputDir)
-            }
+        for((sourceSetName, artifacts) in variantScope.variantData.androidResources){
+            val outputDir = File(compiledDirectory, sourceSetName)
+            val name = "compile${sourceSetName.capitalize()}" +
+                    "ResourcesFor${variantScope.fullVariantName.capitalize()}"
+            tasks.add(taskFactory.create(CompileSourceSetResources.ConfigAction(
+                    name = name,
+                    inputDirectories = artifacts,
+                    outputDirectory = outputDir,
+                    variantScope = variantScope,
+                    aaptIntermediateDirectory = variantScope.getIncrementalDir(name))))
+            directories.add(outputDir)
         }
         val compiled = variantScope.globalScope.project.files(directories)
 

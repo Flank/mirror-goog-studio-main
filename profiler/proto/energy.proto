@@ -26,11 +26,17 @@ service EnergyService {
   // Requests energy data from app with given |process_id|, in the time range
   // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
   // mathematically written as in interval (start_timestamp, end_timestamp].
-  rpc GetData(EnergyDataRequest) returns (EnergyDataResponse) {
+  rpc GetData(EnergyRequest) returns (EnergyDataResponse) {
+  }
+
+  // Requests energy event data such as WakeLock, Alarm with given time range.
+  // Request data range is same as #GetData (start_timestamp, end_timestamp].
+  // Response data includes repeated data in time order.
+  rpc GetEvents(EnergyRequest) returns (EnergyEventsResponse) {
   }
 }
 
-message EnergyDataRequest {
+message EnergyRequest {
   Session session = 1;
   int64 start_timestamp = 2;
   int64 end_timestamp = 3;
@@ -48,4 +54,46 @@ message EnergyDataResponse {
 
   // List of Energy usage sample data.
   repeated EnergySample sample_data = 1;
+}
+
+message EnergyEventsResponse {
+  // Energy event details information in time order.
+  repeated EnergyEvent event = 1;
+}
+
+// Energy event data or state change for WakeLock, Alarm, etc.
+message EnergyEvent {
+  enum EventType {
+    UNSPECIFIED = 0;
+    // A wake lock is acquired, forcing the device to stay awake.
+    WAKE_LOCK_ACQUIRE = 1;
+    // A wake lock is released when it's not needed anymore.
+    WAKE_LOCK_RELEASE = 2;
+  }
+
+  // Timestamp of the event in nanoseconds.
+  int64 timestamp = 1;
+  EventType event_type = 2;
+  // Optional ID. If set, use to correlate two related events together. Will be
+  // unique even across devices and apps.
+  int64 id = 3;
+  // Optional event metadata.
+  oneof metadata {
+    // Information of a wake lock such as flags.
+    WakeLockInfo wake_lock_info = 4;
+  }
+}
+
+message WakeLockInfo {
+  // Level and optional flags for the wake lock instance initialization.
+  // https://developer.android.com/reference/android/os/PowerManager.html#newWakeLock(int, java.lang.String)
+  int32 level_and_flags = 1;
+  // Tag of the wake lock (which users may have set for debugging purposes).
+  string tag = 2;
+  // An optional timeout in milliseconds given to the acquire call. The lock
+  // will be released after the given timeout expires.
+  int64 timeout = 3;
+  // Optional flags that modify the release behavior.
+  // https://developer.android.com/reference/android/os/PowerManager.WakeLock.html#release(int)
+  int32 release_flags = 4;
 }

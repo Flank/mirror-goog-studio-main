@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log.LogLevel;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -32,17 +31,20 @@ import java.util.regex.Pattern;
 public final class LogCatMessageParser {
 
     /**
-     * Pattern for logcat -v long header ([ MM-DD HH:MM:SS.mmm PID:TID LEVEL/TAG ])
-     * Ex: [ 08-18 16:39:11.760  2977: 2988 D/PhoneInterfaceManager ]
-     * Group 1: Date + Time
-     * Group 2: PID
-     * Group 3: TID (hex on some systems!)
-     * Group 4: Log Level character
+     * Pattern for logcat -v long header ([ MM-DD HH:MM:SS.mmm PID:TID LEVEL/TAG ]). Example:
+     *
+     * <pre>[ 08-18 16:39:11.760  2977: 2988 D/PhoneInterfaceManager ]</pre>
+     *
+     * <p>Group 1: Date + Time<br>
+     * Group 2: PID<br>
+     * Group 3: TID (hex on some systems!)<br>
+     * Group 4: Log Level character<br>
      * Group 5: Tag
      */
-    private static final Pattern sLogHeaderPattern = Pattern.compile(
-            "^\\[\\s(\\d\\d-\\d\\d\\s\\d\\d:\\d\\d:\\d\\d\\.\\d+)"
-                    + "\\s+(\\d*):\\s*(\\S+)\\s([VDIWEAF])/(.*?)\\s*\\]$");
+    private static final Pattern sLogHeaderPattern =
+            Pattern.compile(
+                    "^\\[\\s(\\d\\d-\\d\\d\\s\\d\\d:\\d\\d:\\d\\d\\.\\d+)"
+                            + "\\s+(\\d*):\\s*(\\S+)\\s([VDIWEAF])/(.*?)\\s*]$");
 
     @Nullable
     LogCatHeader mPrevHeader;
@@ -110,7 +112,7 @@ public final class LogCatMessageParser {
      */
     @NonNull
     public List<LogCatMessage> processLogLines(@NonNull String[] lines, @Nullable IDevice device) {
-        List<LogCatMessage> messages = new ArrayList<LogCatMessage>(lines.length);
+        List<LogCatMessage> messages = new ArrayList<>(lines.length);
 
         for (String line : lines) {
             if (line.isEmpty()) {

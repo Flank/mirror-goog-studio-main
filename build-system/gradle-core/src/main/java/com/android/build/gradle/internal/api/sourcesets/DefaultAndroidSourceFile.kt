@@ -17,16 +17,15 @@
 package com.android.build.gradle.internal.api.sourcesets
 
 import com.android.build.api.sourcesets.AndroidSourceFile
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.EvalIssueReporter
 import java.io.File
-import org.gradle.api.Project
 
 /**
  */
 class DefaultAndroidSourceFile internal constructor(private val name: String,
         private val filesProvider: FilesProvider,
-        issueReporter: EvalIssueReporter) : SealableObject(issueReporter), AndroidSourceFile {
+        dslScope: DslScope) : SealableObject(dslScope), AndroidSourceFile {
 
     private lateinit var _srcFile: File
 

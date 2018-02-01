@@ -16,6 +16,7 @@
 
 package com.android.builder.model;
 
+import com.android.annotations.NonNull;
 import java.util.List;
 
 /**
@@ -23,7 +24,9 @@ import java.util.List;
  */
 public interface NativeSettings {
 
+    @NonNull
     String getName();
 
+    @NonNull
     List<String> getCompilerFlags();
 }

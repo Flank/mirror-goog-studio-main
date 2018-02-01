@@ -18,17 +18,21 @@ package com.android.build.gradle.internal.api.dsl.extensions
 
 import com.android.build.api.dsl.extension.VariantOrExtensionProperties
 import com.android.build.api.dsl.options.AaptOptions
-import com.android.build.api.dsl.options.CompileOptions
 import com.android.build.api.dsl.options.DexOptions
 import com.android.build.api.dsl.options.LintOptions
+import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.internal.api.dsl.options.DexOptionsImpl
+import com.android.build.gradle.internal.api.dsl.sealing.OptionalSupplier
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.DataBindingOptions
 import org.gradle.api.Action
 
-class VariantOrExtensionPropertiesImpl(issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter),
+class VariantOrExtensionPropertiesImpl(dslScope: DslScope)
+        : SealableObject(dslScope),
         VariantOrExtensionProperties {
+
+    private val _dexOptions = OptionalSupplier(this, DexOptionsImpl::class.java, dslScope)
+
     override fun aaptOptions(action: Action<AaptOptions>) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
@@ -36,19 +40,13 @@ class VariantOrExtensionPropertiesImpl(issueReporter: EvalIssueReporter)
     override val aaptOptions: AaptOptions
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
-    override fun compileOptions(action: Action<CompileOptions>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override val compileOptions: CompileOptions
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-
     override fun dexOptions(action: Action<DexOptions>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        action.execute(_dexOptions.get())
     }
 
     override val dexOptions: DexOptions
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = _dexOptions.get()
+
     override val lintOptions: LintOptions
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
@@ -64,6 +62,13 @@ class VariantOrExtensionPropertiesImpl(issueReporter: EvalIssueReporter)
     }
 
     fun initWith(that: VariantOrExtensionPropertiesImpl) {
+        if (checkSeal()) {
+            _dexOptions.copyFrom(that._dexOptions)
+        }
+    }
 
+    override fun seal() {
+        super.seal()
+        _dexOptions.seal()
     }
 }

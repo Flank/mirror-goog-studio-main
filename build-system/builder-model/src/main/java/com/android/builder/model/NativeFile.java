@@ -16,6 +16,8 @@
 
 package com.android.builder.model;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.io.File;
 
 /**
@@ -23,18 +25,15 @@ import java.io.File;
  */
 public interface NativeFile {
 
-   /**
-    * The source file.
-    */
-   File getFilePath();
+    /** The source file. */
+    @NonNull
+    File getFilePath();
 
-   /**
-    * The name of a {@link NativeSettings} for the source file.
-    */
-   String getSettingsName();
+    /** The name of a {@link NativeSettings} for the source file. */
+    @NonNull
+    String getSettingsName();
 
-   /**
-    * The working directory for the compiler.
-    */
-   File getWorkingDirectory();
+    /** The working directory for the compiler. */
+    @Nullable
+    File getWorkingDirectory();
 }

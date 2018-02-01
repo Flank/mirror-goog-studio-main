@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
+import com.android.build.gradle.internal.api.dsl.DslScope;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
@@ -28,32 +29,29 @@ import org.gradle.api.model.ObjectFactory;
  */
 public class AndroidSourceSetFactory implements NamedDomainObjectFactory<AndroidSourceSet> {
 
-    @NonNull private final ObjectFactory objectFactory;
-    @NonNull
-    private final Project project;
-
+    @NonNull private final Project project;
     private final boolean publishPackage;
+    @NonNull private final DslScope dslScope;
 
     /**
      * Constructor for this AndroidSourceSetFactory.
      *
-     * @param objectFactory the objectFactory for this AndroidSourceSetFactory.
      * @param project the project for this AndroidSourceSetFactory.
      * @param publishPackage true to set the package name to "publish", false to set it to "apk".
+     * @param dslScope DslScope of the project.
      */
     public AndroidSourceSetFactory(
-            @NonNull ObjectFactory objectFactory,
-            @NonNull Project project,
-            boolean publishPackage) {
-        this.objectFactory = objectFactory;
+            @NonNull Project project, boolean publishPackage, @NonNull DslScope dslScope) {
         this.publishPackage = publishPackage;
         this.project = project;
+        this.dslScope = dslScope;
     }
 
     @NonNull
     @Override
     public AndroidSourceSet create(@NonNull String name) {
-        return objectFactory.newInstance(
-                DefaultAndroidSourceSet.class, name, project, publishPackage);
+        return dslScope.getObjectFactory()
+                .newInstance(
+                        DefaultAndroidSourceSet.class, name, project, publishPackage, dslScope);
     }
 }

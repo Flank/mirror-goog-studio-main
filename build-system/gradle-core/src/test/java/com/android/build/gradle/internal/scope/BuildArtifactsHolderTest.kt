@@ -19,7 +19,10 @@ package com.android.build.gradle.internal.scope
 import com.android.build.api.artifact.BuildArtifactType.JAVAC_CLASSES
 import com.android.build.api.artifact.BuildArtifactType.JAVA_COMPILE_CLASSPATH
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
+import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
@@ -31,15 +34,18 @@ import java.io.File
 import kotlin.test.assertFailsWith
 
 /**
- * Test for [BuildArtifactHolder]
+ * Test for [BuildArtifactsHolder]
  */
-class BuildArtifactHolderTest {
+class BuildArtifactsHolderTest {
 
     private val variantDir = "debug"
     lateinit private var project : Project
     lateinit var root : File
-    private val issueReporter = FakeEvalIssueReporter(throwOnError = true)
-    lateinit private var holder : BuildArtifactHolder
+    private val dslScope = DslScopeImpl(
+            FakeEvalIssueReporter(throwOnError = true),
+            FakeDeprecationReporter(),
+            FakeObjectFactory())
+    lateinit private var holder : BuildArtifactsHolder
     lateinit private var task0 : Task
     lateinit private var task1 : Task
     lateinit private var task2 : Task
@@ -49,13 +55,13 @@ class BuildArtifactHolderTest {
         BuildableArtifactImpl.enableResolution()
         project = ProjectBuilder.builder().build()
         root = project.file("root")
-        holder = BuildArtifactHolder(
+        holder = BuildArtifactsHolder(
                 project,
                 "debug",
                 root,
                 variantDir,
                 listOf(JAVAC_CLASSES),
-                issueReporter)
+                dslScope)
         task0 = project.tasks.create("task0")
         task1 = project.tasks.create("task1")
         task2 = project.tasks.create("task2")
@@ -82,7 +88,7 @@ class BuildArtifactHolderTest {
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES)).isSameAs(files1)
         val files2 = holder.replaceArtifact(JAVAC_CLASSES, listOf("bar"), "task2")
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES)).isSameAs(files2)
-        holder.createFirstArtifactFiles(JAVAC_CLASSES, "baz", "task0")
+        holder.createFirstArtifactFiles(JAVAC_CLASSES, task0, "baz")
 
         assertThat(files1.single()).isEqualTo(file("task1", "foo"))
         // TaskDependency.getDependencies accepts null.

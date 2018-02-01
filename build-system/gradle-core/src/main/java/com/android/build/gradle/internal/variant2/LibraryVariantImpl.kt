@@ -25,6 +25,7 @@ import com.android.build.api.dsl.variant.CommonVariantProperties
 import com.android.build.api.dsl.variant.LibraryVariant
 import com.android.build.api.dsl.variant.UnitTestVariant
 import com.android.build.api.dsl.variant.Variant
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrVariantImpl
 import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImpl
@@ -48,8 +49,8 @@ class LibraryVariantImpl(
         private val variantExtensionProperties: VariantOrExtensionPropertiesImpl,
         private val commonVariantProperties: CommonVariantPropertiesImpl,
         private val variantDispatcher: VariantDispatcher,
-        issueReporter: EvalIssueReporter)
-    : SealableObject(issueReporter),
+        dslScope: DslScope)
+    : SealableObject(dslScope),
         LibraryVariant,
         SealableVariant,
         VariantProperties by variantProperties,

@@ -91,7 +91,7 @@ public class GradleVariantConfigurationTest {
                 null,
                 buildType,
                 null,
-                VariantType.DEFAULT,
+                VariantType.APK,
                 null,
                 new FakeEvalIssueReporter());
     }

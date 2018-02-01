@@ -371,7 +371,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                         .setManifestFile(androidManifest)
                         .setOptions(aaptOptions)
                         .setDebuggable(true)
-                        .setVariantType(VariantType.DEFAULT)
+                        .setVariantType(VariantType.APK)
                         .setImports(ImmutableList.copyOf(importedAPKs))
                         .setResourceOutputApk(resFilePackageFile);
 

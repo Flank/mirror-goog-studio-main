@@ -17,7 +17,6 @@
 package com.android.build.api.dsl.extension
 
 import com.android.build.api.dsl.options.AaptOptions
-import com.android.build.api.dsl.options.CompileOptions
 import com.android.build.api.dsl.options.DexOptions
 import com.android.build.api.dsl.options.LintOptions
 import com.android.builder.model.DataBindingOptions
@@ -31,11 +30,6 @@ interface VariantOrExtensionProperties {
 
     /** Options for aapt, tool for packaging resources.  */
     val aaptOptions: AaptOptions
-
-    fun compileOptions(action: Action<CompileOptions>)
-
-    /** Compile options.  */
-    val compileOptions: CompileOptions
 
     fun dexOptions(action: Action<DexOptions>)
 

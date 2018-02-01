@@ -19,18 +19,20 @@ package com.android.build.gradle.internal.scope
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactTransformBuilder
 import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.api.artifact.BuildArtifactType
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.build.gradle.tasks.BuildArtifactReportTask
 import com.android.utils.FileUtils
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import java.io.File
+import java.util.Locale
 
 /**
  * Buildable artifact holder.
  *
- * This class manages buildable artifacts, allowing users to transform [BuildArtifactType].
+ * This class manages buildable artifacts, allowing users to transform [ArtifactType].
  *
  * When the class is constructed, it creates [BuildableArtifact] for all of the
  * initialArtifactTypes.  [BuildArtifactTransformBuilder] can then use these [BuildableArtifact] to
@@ -45,21 +47,21 @@ import java.io.File
  * @param initialArtifactTypes the list of artifact types to initialize the holder with.  This list
  *         determines all artifact types available to an external user.
  */
-class BuildArtifactHolder(
+class BuildArtifactsHolder(
         private val project : Project,
         private val variantName : String,
         private val rootOutputDir : File,
         private val variantDirName : String,
-        initialArtifactTypes: List<BuildArtifactType>,
-        private val issueReporter: EvalIssueReporter) {
+        initialArtifactTypes: List<ArtifactType>,
+        private val dslScope: DslScope) {
 
     private val artifactRecordMap =
             initialArtifactTypes.associate{
-                it to ArtifactRecord(BuildableArtifactImpl(null, issueReporter))
+                it to ArtifactRecord(BuildableArtifactImpl(null, dslScope))
             }
 
     /**
-     * Internal private class for storing [BuildableArtifact] created for a [BuildArtifactType]
+     * Internal private class for storing [BuildableArtifact] created for a [ArtifactType]
      */
     private class ArtifactRecord(first : BuildableArtifactImpl) {
         // Artifact is initialized when setFirst is called.
@@ -85,6 +87,9 @@ class BuildArtifactHolder(
             initialized = true
             (history.first() as BuildableArtifactImpl).fileCollection = collection
         }
+
+        val size : Int
+            get() = history.size
     }
 
     /**
@@ -132,7 +137,7 @@ class BuildArtifactHolder(
             taskName : String)
             : BuildableArtifact {
         val collection = project.files(filenames.map{ createFile(taskName, it)}).builtBy(taskName)
-        val files = BuildableArtifactImpl(collection, issueReporter)
+        val files = BuildableArtifactImpl(collection, dslScope)
         createOutput(artifactType, files)
         return files
     }
@@ -161,7 +166,7 @@ class BuildArtifactHolder(
                         filenames.map{ createFile(taskName, it) },
                         originalOutput)
                         .builtBy(taskName, originalOutput)
-        val files = BuildableArtifactImpl(collection, issueReporter)
+        val files = BuildableArtifactImpl(collection, dslScope)
         createOutput(artifactType, files)
         return files
     }
@@ -175,7 +180,7 @@ class BuildArtifactHolder(
     /**
      * Create Files and modify the first [BuildableArtifact] for the artifactType.
      *
-     * When a [BuildArtifactHolder], a set of [BuildableArtifact] are created, but not populated.
+     * When a [BuildArtifactsHolder], a set of [BuildableArtifact] are created, but not populated.
      * The content of the [BuildableArtifact] should come from a source from the Android Gradle plugin.
      * This method modifies the initial [BuildableArtifact] with the appropriate files.
      *
@@ -196,27 +201,32 @@ class BuildArtifactHolder(
      * Same as the other [createFirstArtifactFiles], but for the a single file.
      *
      * @artifactType type of the artifact.
-     * @filename name of the file to be created.
-     * @taskName name of the Task that will generate the output file.
-     * @return the initial [BuildableArtifact] that is now populated with the new file.
+     * @task Task that will generate the output.
+     * @fileName name of the file to be created, or null if "out" should be used.
+     * @return the [File] for the output location to used.
      */
-    fun createFirstArtifactFiles(artifactType: ArtifactType, filename : String, taskName : String)
-            : BuildableArtifact {
-        val collection = project.files(createFile(artifactType.name(), filename))
-        collection.builtBy(taskName)
-        return initializeFirstArtifactFiles(artifactType, collection)
+    fun createFirstArtifactFiles(artifactType: ArtifactType,
+        task: Task,
+        fileName: String = "out"): File {
+
+        val output = createFile(artifactType.name().toLowerCase(Locale.US), fileName)
+        val collection = project.files(output)
+        collection.builtBy(task)
+        initializeFirstArtifactFiles(artifactType, collection)
+        return output
     }
+
 
     /**
      * Initialize the first output with the specified FileCollection.
      *
      * Similar to createFirstArtifactFiles, this method modifies the content of the
-     * [BuildableArtifact] that were created during construction of [BuildArtifactHolder].  Unlike
+     * [BuildableArtifact] that were created during construction of [BuildArtifactsHolder].  Unlike
      * createFirstOutput, this methods does not determine the location of the generated files.
      * Instead, a FileCollection has to be supplied.  This allows outputs not created from a task to
      * be added (e.g. Configuration, SourceSet, etc).
      */
-    private fun initializeFirstArtifactFiles(
+    fun initializeFirstArtifactFiles(
             artifactType: ArtifactType, collection : FileCollection)
             : BuildableArtifact {
         val output = artifactRecordMap[artifactType]
@@ -240,6 +250,12 @@ class BuildArtifactHolder(
                     taskName,
                     variantDirName,
                     filename)
+
+    internal fun getArtifactFilename(artifactType: ArtifactType) : String {
+        val record = artifactRecordMap[artifactType]
+                ?: throw MissingBuildableArtifactException(artifactType)
+        return artifactType.name().toLowerCase(Locale.US) + record.size.toString()
+    }
 
     /**
      * Return history of all [BuildableArtifact] for an [ArtifactType].

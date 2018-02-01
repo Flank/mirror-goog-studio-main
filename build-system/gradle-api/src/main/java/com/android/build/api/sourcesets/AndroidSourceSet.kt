@@ -115,10 +115,6 @@ interface AndroidSourceSet : Named {
      */
     val annotationProcessorConfigurationName: String
 
-    /** Returns the name of the Jack plugin classpath for this source set.  */
-    @Deprecated("Jack is obsolete")
-    val jackPluginConfigurationName: String
-
     /**
      * The Android Manifest file for this source set.
      *

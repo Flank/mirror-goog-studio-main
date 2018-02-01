@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.gradle.model.stubs;
 
+import com.android.annotations.NonNull;
 import com.android.builder.model.NativeFile;
 import java.io.File;
 import java.util.Objects;
@@ -34,11 +35,13 @@ public class NativeFileStub extends BaseStub implements NativeFile {
         myWorkingDirectory = workingDirectory;
     }
 
+    @NonNull
     @Override
     public File getFilePath() {
         return myFilePath;
     }
 
+    @NonNull
     @Override
     public String getSettingsName() {
         return mySettingsName;

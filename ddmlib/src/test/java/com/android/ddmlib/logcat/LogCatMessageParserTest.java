@@ -17,12 +17,9 @@ package com.android.ddmlib.logcat;
 
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log.LogLevel;
-
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-
 import java.util.List;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
 
 /**
  * Unit tests for {@link LogCatMessageParser}.
@@ -71,6 +68,7 @@ public final class LogCatMessageParserTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
+        super.setUp();
         LogCatMessageParser parser = new LogCatMessageParser();
 
         IDevice d = EasyMock.createMock(IDevice.class);
@@ -88,36 +86,37 @@ public final class LogCatMessageParserTest extends TestCase {
 
     /** Check the log level in a few of the parsed messages. */
     public void testLogLevel() {
-        assertEquals(mParsedMessages.get(0).getLogLevel(), LogLevel.DEBUG);
-        assertEquals(mParsedMessages.get(5).getLogLevel(), LogLevel.ASSERT);
+        assertEquals(LogLevel.DEBUG, mParsedMessages.get(0).getLogLevel());
+        assertEquals(LogLevel.ASSERT, mParsedMessages.get(5).getLogLevel());
     }
 
     /** Check the parsed tag. */
+    @SuppressWarnings("NewMethodNamingConvention")
     public void testTag() {
-        assertEquals(mParsedMessages.get(1).getTag(), "etag");
+        assertEquals("etag", mParsedMessages.get(1).getTag());
     }
 
     /** Check for empty tag */
     public void testEmptyTag() {
         // Technically, the "Log" API allows the "tag" parameter to be an empty string
-        assertEquals(mParsedMessages.get(7).getTag(), "");
+        assertEquals("", mParsedMessages.get(7).getTag());
     }
 
     /** Check for empty tag */
     public void testTagWithSpace() {
         // Technically, the "Log" API allows the "tag" parameter to be an empty string
-        assertEquals(mParsedMessages.get(8).getTag(), "my tag");
+        assertEquals("my tag", mParsedMessages.get(8).getTag());
     }
 
     /** Check for empty tag */
     public void testTagWithSpaces() {
         // Technically, the "Log" API allows the "tag" parameter to be an empty string
-        assertEquals(mParsedMessages.get(9).getTag(), "my tag with spaces");
+        assertEquals("my tag with spaces", mParsedMessages.get(9).getTag());
     }
 
     /** Check the time field. */
     public void testTime() {
-        assertEquals(mParsedMessages.get(6).getTimestamp().toString(), "08-11 21:15:35.754");
+        assertEquals("08-11 21:15:35.754", mParsedMessages.get(6).getTimestamp().toString());
     }
 
     /** Check the message field. */
@@ -125,23 +124,24 @@ public final class LogCatMessageParserTest extends TestCase {
         assertEquals(mParsedMessages.get(2).getMessage(), MESSAGES[5]);
     }
 
+    @SuppressWarnings("NewMethodNamingConvention")
     public void testTid() {
-        assertEquals(mParsedMessages.get(0).getTid(), 0x1ef);
-        assertEquals(mParsedMessages.get(1).getTid(), 234);
+        assertEquals(0x1ef, mParsedMessages.get(0).getTid());
+        assertEquals(234, mParsedMessages.get(1).getTid());
     }
 
     public void testTimeAsDate() {
         LogCatHeader header = mParsedMessages.get(0).getHeader();
         // Test date against "08-11 19:11:07.132"
-        assertEquals(header.getTimestamp().toString(), "08-11 19:11:07.132");
+        assertEquals("08-11 19:11:07.132", header.getTimestamp().toString());
     }
 
     public void testPackageName() {
-        assertEquals(mParsedMessages.get(0).getAppName(), "com.example.name");
-        assertEquals(mParsedMessages.get(6).getAppName(), "?");
+        assertEquals("com.example.name", mParsedMessages.get(0).getAppName());
+        assertEquals("?", mParsedMessages.get(6).getAppName());
     }
 
-    public void testLinesWithoutHeadersAreIgnored() throws Exception {
+    public void testLinesWithoutHeadersAreIgnored() {
         String[] TRUNCATED_LOGS = new String[] {
                 "Log[0] logline2",                               //$NON-NLS-1$
                 "Log[0] logline3",                               //$NON-NLS-1$
@@ -154,7 +154,7 @@ public final class LogCatMessageParserTest extends TestCase {
 
         LogCatMessageParser parser = new LogCatMessageParser();
         mParsedMessages = parser.processLogLines(TRUNCATED_LOGS, null);
-        assertEquals(mParsedMessages.size(), 3);
-        assertEquals(mParsedMessages.get(0).getMessage(), "Log[1] logline1");
+        assertEquals(3, mParsedMessages.size());
+        assertEquals("Log[1] logline1", mParsedMessages.get(0).getMessage());
     }
 }

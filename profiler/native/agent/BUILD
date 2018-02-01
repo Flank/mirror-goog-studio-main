@@ -21,6 +21,7 @@ cc_library(
         "agent_component.h",
         "memory_component.cc",
         "memory_component.h",
+        "support/energy_passthrough.cc",
         "support/event_manager.cc",
         "support/event_manager.h",
         "support/event_passthrough.cc",

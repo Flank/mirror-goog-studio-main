@@ -18,20 +18,20 @@ package com.android.build.gradle.internal.api.dsl.model
 
 import com.android.build.api.dsl.model.BuildTypeOrVariant
 import com.android.build.api.dsl.options.PostProcessingOptions
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.options.PostProcessingOptionsImpl
 import com.android.build.gradle.internal.api.dsl.sealing.OptionalSupplier
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 
 class BuildTypeOrVariantImpl(
             private val typeName: String,
-            private val deprecationReporter: DeprecationReporter,
-            issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter), BuildTypeOrVariant {
+            dslScope: DslScope)
+        : SealableObject(dslScope), BuildTypeOrVariant {
 
-    private val _postProcessing = OptionalSupplier({ PostProcessingOptionsImpl(issueReporter) })
+    private val _postProcessing = OptionalSupplier(
+            this, PostProcessingOptionsImpl::class.java, dslScope)
 
     override var debuggable: Boolean = false
         set(value) {
@@ -97,11 +97,11 @@ class BuildTypeOrVariantImpl(
         }
 
     override fun postProcessing(action: Action<PostProcessingOptions>) {
-        action.execute(_postProcessing.get(isSealed()))
+        action.execute(_postProcessing.get())
     }
 
     override val postProcessing: PostProcessingOptions
-        get() = _postProcessing.get(isSealed())
+        get() = _postProcessing.get()
 
     internal fun initWith(that: BuildTypeOrVariantImpl) {
         if (checkSeal()) {
@@ -121,14 +121,14 @@ class BuildTypeOrVariantImpl(
 
     override fun seal() {
         super.seal()
-        _postProcessing.instance?.seal()
+        _postProcessing.seal()
     }
 
     // DEPRECATED
 
     @Suppress("OverridingDeprecatedMember")
     override fun isDebuggable(): Boolean {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "$typeName.debuggable",
                 "$typeName.isDebuggable",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -137,7 +137,7 @@ class BuildTypeOrVariantImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun isTestCoverageEnabled(): Boolean {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "$typeName.testCoverageEnabled",
                 "$typeName.isTestCoverageEnabled",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -146,7 +146,7 @@ class BuildTypeOrVariantImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun isEmbedMicroApp(): Boolean {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "$typeName.testCoverageEnabled",
                 "$typeName.isTestCoverageEnabled",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -155,7 +155,7 @@ class BuildTypeOrVariantImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun isPseudoLocalesEnabled(): Boolean {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "$typeName.pseudoLocalesEnabled",
                 "$typeName.isPseudoLocalesEnabled",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -164,7 +164,7 @@ class BuildTypeOrVariantImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun isJniDebuggable(): Boolean {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "$typeName.jniDebuggable",
                 "$typeName.isJniDebuggable",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -173,7 +173,7 @@ class BuildTypeOrVariantImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun isRenderscriptDebuggable(): Boolean {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "$typeName.renderscriptDebuggable",
                 "$typeName.isRenderscriptDebuggable",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -182,7 +182,7 @@ class BuildTypeOrVariantImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun isZipAlignEnabled(): Boolean {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "$typeName.zipAlignEnabled",
                 "$typeName.isZipAlignEnabled",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)

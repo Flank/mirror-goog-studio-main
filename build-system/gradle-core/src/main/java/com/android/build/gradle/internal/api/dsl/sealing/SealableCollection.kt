@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.api.dsl.sealing
 
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 
 /**
  * A [MutableCollection] that can be sealed to prevent further updates.
@@ -38,26 +38,26 @@ class SealableCollection<T> private constructor(
             wrappedCollection: MutableCollection<T>?,
             instantiator: () -> MutableCollection<T>,
             cloner: (MutableCollection<T>) -> MutableCollection<T>,
-            issueReporter: EvalIssueReporter)
+            dslScope: DslScope)
         : AbstractSealableCollection<T, MutableCollection<T>>(
                 wrappedCollection,
                 instantiator,
                 cloner,
-                issueReporter) {
+                dslScope) {
 
     companion object {
-        fun <T> wrap(wrappedList: MutableCollection<T>, errorReporter: EvalIssueReporter) =
+        fun <T> wrap(wrappedList: MutableCollection<T>, dslScope: DslScope) =
                 SealableCollection(
                         wrappedList,
                         { throw RuntimeException("Calling instantiator on a WrappedSealableCollection") },
                         { collection -> collection },
-                        errorReporter)
+                        dslScope)
 
-        fun <T> new(errorReporter: EvalIssueReporter) = SealableCollection(
+        fun <T> new(dslScope: DslScope) = SealableCollection(
                 null,
                 { ArrayList<T>() },
                 { collection -> ArrayList(collection) },
-                errorReporter)
+                dslScope)
 
     }
 }

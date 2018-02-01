@@ -328,7 +328,7 @@ public class AaptV1Test {
                             .setManifestFile(manifestFile)
                             .setOptions(new AaptOptions(null, false, null))
                             .setSourceOutputDir(sourceOutput)
-                            .setVariantType(VariantType.DEFAULT)
+                            .setVariantType(VariantType.APK)
                             .setResourceDir(outputDir)
                             .build();
             aapt.link(config, mLogger);

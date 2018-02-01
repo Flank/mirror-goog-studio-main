@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.gradle.model.stubs;
 
+import com.android.annotations.NonNull;
 import com.android.builder.model.NativeFolder;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
@@ -39,11 +40,13 @@ public class NativeFolderStub extends BaseStub implements NativeFolder {
         myWorkingDirectory = workingDirectory;
     }
 
+    @NonNull
     @Override
     public File getFolderPath() {
         return myFolderPath;
     }
 
+    @NonNull
     @Override
     public Map<String, String> getPerLanguageSettings() {
         return myPerLanguageSettings;

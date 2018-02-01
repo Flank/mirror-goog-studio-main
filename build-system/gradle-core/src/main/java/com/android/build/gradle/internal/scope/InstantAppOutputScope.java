@@ -18,10 +18,10 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
@@ -72,22 +72,24 @@ public class InstantAppOutputScope {
 
     public void save(@NonNull File outputDirectory) throws IOException {
         File outputFile = new File(outputDirectory, PERSISTED_FILE_NAME);
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        Gson gson = gsonBuilder.create();
+        Gson gson =
+                new GsonBuilder()
+                        .registerTypeAdapter(File.class, new PlainFileGsonTypeAdaptor())
+                        .create();
         FileUtils.write(outputFile, gson.toJson(this));
     }
 
     @Nullable
     public static InstantAppOutputScope load(@NonNull File directory) throws IOException {
         File input = new File(directory, PERSISTED_FILE_NAME);
-
         if (!input.exists()) {
             return null;
         }
 
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        Gson gson = gsonBuilder.create();
-
+        Gson gson =
+                new GsonBuilder()
+                        .registerTypeAdapter(File.class, new PlainFileGsonTypeAdaptor())
+                        .create();
         try (FileReader fr = new FileReader(input)) {
             return gson.fromJson(fr, InstantAppOutputScope.class);
         }

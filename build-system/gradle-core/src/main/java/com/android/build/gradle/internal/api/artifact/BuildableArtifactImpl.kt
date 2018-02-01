@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.api.artifact
 
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.builder.errors.EvalIssueReporter
-import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskDependency
 import java.io.File
@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class BuildableArtifactImpl(
         internal var fileCollection: FileCollection?,
-        private var issueReporter : EvalIssueReporter)
+        private val dslScope: DslScope)
     : BuildableArtifact {
     companion object {
         private val resolvable = AtomicBoolean(false)
@@ -50,7 +50,7 @@ class BuildableArtifactImpl(
 
     private fun checkResolvable() {
         if (!isResolvable()) {
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
                     "Resolving this BuildableArtifact can only done during task execution.")
         }
@@ -60,7 +60,7 @@ class BuildableArtifactImpl(
             // This error is also possible if there is another error that occurred previously, but
             // the build continues because this is we are doing a sync and issueReporter does not
             // throw.
-            issueReporter.reportError(
+            dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
                     "BuildableArtifact has not been initialized.")
         }
@@ -85,7 +85,7 @@ class BuildableArtifactImpl(
             if (fileCollection != null) {
                 fileCollection!!.buildDependencies
             } else {
-                issueReporter.reportError(
+                dslScope.issueReporter.reportError(
                         EvalIssueReporter.Type.GENERIC,
                         "Cannot get build dependencies before BuildableArtifact is initialized.")
                 TaskDependency { mutableSetOf() }

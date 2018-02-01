@@ -34,11 +34,13 @@ public final class IdeNativeFile extends IdeModel implements NativeFile {
         myHashCode = calculateHashCode();
     }
 
+    @NonNull
     @Override
     public File getFilePath() {
         return myFilePath;
     }
 
+    @NonNull
     @Override
     public String getSettingsName() {
         return mySettingsName;

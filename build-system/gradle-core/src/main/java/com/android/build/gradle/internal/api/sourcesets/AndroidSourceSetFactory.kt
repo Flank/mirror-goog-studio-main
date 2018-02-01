@@ -16,21 +16,17 @@
 
 package com.android.build.gradle.internal.api.sourcesets
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.api.model.ObjectFactory
 
 class AndroidSourceSetFactory(
             private val filesProvider: FilesProvider,
             private val publishPackage: Boolean,
-            private val objectFactory: ObjectFactory,
-            private val deprecationReporter: DeprecationReporter,
-            private val issueReporter: EvalIssueReporter)
+            private val dslScope: DslScope)
         : NamedDomainObjectFactory<DefaultAndroidSourceSet> {
 
     override fun create(name: String): DefaultAndroidSourceSet {
-        return objectFactory.newInstance(DefaultAndroidSourceSet::class.java,
-                name, filesProvider, publishPackage, deprecationReporter, issueReporter)
+        return dslScope.objectFactory.newInstance(DefaultAndroidSourceSet::class.java,
+                name, filesProvider, publishPackage, dslScope)
     }
 }

@@ -27,11 +27,11 @@ interface AnnotationProcessorOptions : Initializable<AnnotationProcessorOptions>
      * Annotation processors to run.
      * If empty, processors will be automatically discovered.
      */
-    val classNames: List<String>
+    var classNames: MutableList<String>
 
     /** Options for the annotation processors.  */
-    val arguments: Map<String, String>
+    var arguments: MutableMap<String, String>
 
     /** Whether to include compile classpath in the processors path.  */
-    val includeCompileClasspath: Boolean?
+    var includeCompileClasspath: Boolean?
 }

@@ -17,17 +17,18 @@
 package com.android.build.gradle.internal.api.dsl.options
 
 import com.android.build.api.dsl.options.NdkOptions
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealable
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.build.gradle.internal.api.dsl.sealing.SealableSet
-import com.android.builder.errors.EvalIssueReporter
+import javax.inject.Inject
 
-class NdkOptionsImpl(issueReporter: EvalIssueReporter)
-        : InitializableSealable<NdkOptions>(issueReporter), NdkOptions {
+open class NdkOptionsImpl @Inject constructor(dslScope: DslScope)
+        : InitializableSealable<NdkOptions>(dslScope), NdkOptions {
 
     //backing properties for lists/sets
-    private val _ldlibs: SealableList<String> = SealableList.new(issueReporter)
-    private val _abiFilters: SealableSet<String> = SealableSet.new(issueReporter)
+    private val _ldlibs: SealableList<String> = SealableList.new(dslScope)
+    private val _abiFilters: SealableSet<String> = SealableSet.new(dslScope)
 
     override var ldLibs: MutableList<String>
         get() = _ldlibs

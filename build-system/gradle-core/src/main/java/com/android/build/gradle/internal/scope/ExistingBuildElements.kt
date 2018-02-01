@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.scope
 import com.android.build.FilterData
 import com.android.build.VariantOutput
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.api.artifact.forName
 import com.android.build.gradle.internal.ide.FilterDataImpl
 import com.android.ide.common.build.ApkInfo
 import com.android.ide.common.internal.WaitableExecutor
@@ -40,9 +42,19 @@ import java.nio.file.Path
  * Factory for {@link BuildElements} that can load its content from save metadata file (.json)
  */
 class ExistingBuildElements {
+
     companion object {
 
+        private val METADATA_FILE_NAME = "output.json"
+
         val executor: WaitableExecutor = WaitableExecutor.useGlobalSharedThreadPool()
+
+        @JvmStatic
+        fun from(artifactType: ArtifactType, buildableArtifact : BuildableArtifact) : BuildElements {
+            val metadataFile = buildableArtifact.forName(METADATA_FILE_NAME)
+            return _from(artifactType, metadataFile)
+        }
+
         /**
          * create a {@link BuildElement} from a previous task execution metadata file collection.
          * @param elementType the expected element type of the BuildElements.
@@ -83,7 +95,7 @@ class ExistingBuildElements {
         }
 
         private fun getMetadataFileIfPresent(fileCollection: FileCollection): File? {
-            return fileCollection.asFileTree.files.find { it.name == "output.json" }
+            return fileCollection.asFileTree.files.find { it.name == METADATA_FILE_NAME }
         }
 
         @JvmStatic
@@ -94,7 +106,7 @@ class ExistingBuildElements {
 
         @JvmStatic
         fun getMetadataFile(folder: File): File {
-            return File(folder, "output.json")
+            return File(folder, METADATA_FILE_NAME)
         }
 
         @JvmStatic

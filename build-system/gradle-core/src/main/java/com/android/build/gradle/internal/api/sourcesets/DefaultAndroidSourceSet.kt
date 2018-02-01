@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.build.api.sourcesets.AndroidSourceDirectorySet
 import com.android.build.api.sourcesets.AndroidSourceFile
 import com.android.build.api.sourcesets.AndroidSourceSet
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANNOTATION_PROCESSOR
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_API
@@ -32,19 +33,18 @@ import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_N
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_RUNTIME_ONLY
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_WEAR_APP
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.GUtil
+import javax.inject.Inject
 
 /**
  */
-class DefaultAndroidSourceSet(
+open class DefaultAndroidSourceSet @Inject constructor(
         private val name: String,
         filesProvider: FilesProvider,
         private val publishPackage: Boolean,
-        private val deprecationReporter: DeprecationReporter,
-        issueReporter: EvalIssueReporter) : SealableObject(issueReporter), AndroidSourceSet {
+        dslScope: DslScope) : SealableObject(dslScope), AndroidSourceSet {
 
     private val _javaSource: DefaultAndroidSourceDirectorySet
     private val _javaResources: DefaultAndroidSourceDirectorySet
@@ -60,39 +60,42 @@ class DefaultAndroidSourceSet(
 
     init {
         val javaSrcDisplayName = "$displayName Java source"
-        _javaSource = DefaultAndroidSourceDirectorySet(javaSrcDisplayName,
-                filesProvider, issueReporter)
+        _javaSource = DefaultAndroidSourceDirectorySet(javaSrcDisplayName, filesProvider, dslScope)
         _javaSource.filter.include("**/*.java")
 
         val javaResourcesDisplayName = "$displayName Java resources"
-        _javaResources = DefaultAndroidSourceDirectorySet(javaResourcesDisplayName,
-                filesProvider, issueReporter)
+        _javaResources = DefaultAndroidSourceDirectorySet(
+                javaResourcesDisplayName,
+                filesProvider,
+                dslScope)
         _javaResources.filter.exclude("**/*.java")
 
         val manifestDisplayName = "$displayName manifest"
-        _manifest = DefaultAndroidSourceFile(manifestDisplayName, filesProvider, issueReporter)
+        _manifest = DefaultAndroidSourceFile(manifestDisplayName, filesProvider, dslScope)
 
         val assetsDisplayName = "$displayName assets"
-        _assets = DefaultAndroidSourceDirectorySet(assetsDisplayName, filesProvider, issueReporter)
+        _assets = DefaultAndroidSourceDirectorySet(assetsDisplayName, filesProvider, dslScope)
 
         val resourcesDisplayName = "$displayName resources"
-        _res = DefaultAndroidSourceDirectorySet(resourcesDisplayName, filesProvider, issueReporter)
+        _res = DefaultAndroidSourceDirectorySet(resourcesDisplayName, filesProvider, dslScope)
 
         val aidlDisplayName = "$displayName aidl"
-        _aidl = DefaultAndroidSourceDirectorySet(aidlDisplayName, filesProvider, issueReporter)
+        _aidl = DefaultAndroidSourceDirectorySet(aidlDisplayName, filesProvider, dslScope)
 
         val renderscriptDisplayName = "$displayName renderscript"
-        _renderscript = DefaultAndroidSourceDirectorySet(renderscriptDisplayName,
-                filesProvider, issueReporter)
+        _renderscript = DefaultAndroidSourceDirectorySet(
+                renderscriptDisplayName,
+                filesProvider,
+                dslScope)
 
         val jniDisplayName = "$displayName jni"
-        _jni = DefaultAndroidSourceDirectorySet(jniDisplayName, filesProvider, issueReporter)
+        _jni = DefaultAndroidSourceDirectorySet(jniDisplayName, filesProvider, dslScope)
 
         val libsDisplayName = "$displayName jniLibs"
-        _jniLibs = DefaultAndroidSourceDirectorySet(libsDisplayName, filesProvider, issueReporter)
+        _jniLibs = DefaultAndroidSourceDirectorySet(libsDisplayName, filesProvider, dslScope)
 
         val shaderDisplayName = "$displayName shaders"
-        _shaders = DefaultAndroidSourceDirectorySet(shaderDisplayName, filesProvider, issueReporter)
+        _shaders = DefaultAndroidSourceDirectorySet(shaderDisplayName, filesProvider, dslScope)
     }
 
     override fun getName() = name
@@ -256,7 +259,7 @@ class DefaultAndroidSourceSet(
     @Suppress("OverridingDeprecatedMember")
     override val compileConfigurationName: String
         get() {
-            deprecationReporter.reportDeprecatedUsage(
+            dslScope.deprecationReporter.reportDeprecatedUsage(
                     "AndroidSourceSet.implementationConfigurationName",
                     "AndroidSourceSet.compileConfigurationName",
                     DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -273,7 +276,7 @@ class DefaultAndroidSourceSet(
     @Suppress("OverridingDeprecatedMember")
     override val packageConfigurationName: String
         get() {
-            deprecationReporter.reportDeprecatedUsage(
+            dslScope.deprecationReporter.reportDeprecatedUsage(
                     "AndroidSourceSet.runtimeOnlyConfigurationName",
                     "AndroidSourceSet.packageConfigurationName",
                     DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -300,7 +303,7 @@ class DefaultAndroidSourceSet(
     @Suppress("OverridingDeprecatedMember")
     override val providedConfigurationName: String
         get() {
-            deprecationReporter.reportDeprecatedUsage(
+            dslScope.deprecationReporter.reportDeprecatedUsage(
                     "AndroidSourceSet.compileOnlyConfigurationName",
                     "AndroidSourceSet.providedConfigurationName",
                     DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -312,13 +315,5 @@ class DefaultAndroidSourceSet(
             CONFIG_NAME_PROVIDED
         } else {
             "${name}Provided"
-        }
-
-    @Suppress("OverridingDeprecatedMember")
-    override val jackPluginConfigurationName: String
-        get() {
-            deprecationReporter.reportObsoleteUsage("AndroidSourceSet.getJackPluginConfigurationName()",
-                    DeprecationReporter.DeprecationTarget.OLD_DSL)
-            return ""
         }
 }

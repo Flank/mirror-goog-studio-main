@@ -24,6 +24,7 @@ import com.android.build.api.dsl.variant.AndroidTestVariant
 import com.android.build.api.dsl.variant.UnitTestVariant
 import com.android.build.api.dsl.variant.Variant
 import com.android.build.api.sourcesets.AndroidSourceSet
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeImpl
@@ -33,7 +34,6 @@ import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
 import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
-import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.EvalIssueReporter.Type
@@ -57,14 +57,12 @@ import java.io.File
  *
  * @param dslModelData the dsl model data containing flavors and build type and sourcesets
  * @param extension the extension
- * @param deprecationReporter the deprecation reporter
- * @param issueReporter the error/warning reporter.
+ * @param dslScope the [DslScope]
  */
 class VariantBuilder<in E: BaseExtension2>(
         private val dslModelData: DslModelDataImpl<E>,
         private val extension: E,
-        private val deprecationReporter: DeprecationReporter,
-        private val issueReporter: EvalIssueReporter) {
+        private val dslScope: DslScope) {
 
     /** whether the variants have been computed */
     private var generated: Boolean = false
@@ -138,7 +136,7 @@ class VariantBuilder<in E: BaseExtension2>(
 
         // ensure that there is always a dimension
         if (flavorDimensions.isEmpty()) {
-            issueReporter.reportError(Type.UNNAMED_FLAVOR_DIMENSION,
+            dslScope.issueReporter.reportError(Type.UNNAMED_FLAVOR_DIMENSION,
                     "All flavors must now belong to a named flavor dimension. "
                             + "Learn more at "
                             + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html")
@@ -157,7 +155,7 @@ class VariantBuilder<in E: BaseExtension2>(
         //configureDependencies()
 
         // Get a list of all combinations of product flavors.
-        return createCombinations(flavorDimensions, dslModelData.productFlavors, issueReporter)
+        return createCombinations(flavorDimensions, dslModelData.productFlavors, dslScope.issueReporter)
     }
 
     /**
@@ -172,7 +170,7 @@ class VariantBuilder<in E: BaseExtension2>(
         val filterObject = VariantFilterImpl(
                 buildType.name,
                 flavorCombo?.flavorNames ?: ImmutableList.of(),
-                issueReporter)
+                dslScope)
         for (filter in extension.variantFilters) {
             filter.execute(filterObject)
             if (filterObject.ignoresAll) {
@@ -314,7 +312,7 @@ class VariantBuilder<in E: BaseExtension2>(
                     variantExtensionPropertiesCopy,
                     commonVariantProperties,
                     variantDispatcher,
-                    issueReporter)
+                    dslScope)
 
             val variantType = variant.variantType
 
@@ -352,7 +350,7 @@ class VariantBuilder<in E: BaseExtension2>(
     }
 
     private fun mergeVariantProperties(items: List<VariantProperties>): VariantPropertiesImpl {
-        val variantProperties = VariantPropertiesImpl(issueReporter)
+        val variantProperties = VariantPropertiesImpl(dslScope)
 
         takeLastNonNull(variantProperties, items, SET_MULTIDEX_ENABLED, GET_MULTIDEX_ENABLED)
         takeLastNonNull(variantProperties, items, SET_MULTIDEX_KEEPFILE, GET_MULTIDEX_KEEPFILE)
@@ -362,24 +360,24 @@ class VariantBuilder<in E: BaseExtension2>(
     }
 
     private fun cloneVariantProperties(that: VariantPropertiesImpl): VariantPropertiesImpl {
-        val clone = VariantPropertiesImpl(issueReporter)
+        val clone = VariantPropertiesImpl(dslScope)
         clone.initWith(that)
         return clone
     }
 
     @Suppress("UNUSED_PARAMETER")  // TODO: Implement method
     private fun mergeProductFlavorOrVariant(items: List<ProductFlavorOrVariant>): ProductFlavorOrVariantImpl {
-        @Suppress("UnnecessaryVariable")
-        val productFlavorOrVariant = ProductFlavorOrVariantImpl(issueReporter)
+        val productFlavorOrVariant = ProductFlavorOrVariantImpl(dslScope)
 
         // merge the default-config + flavors in there.
+        takeLastNonNull(productFlavorOrVariant, items, SET_VERSION_CODE, GET_VERSION_CODE)
         // TODO more
 
         return productFlavorOrVariant
     }
 
     private fun cloneProductFlavorOrVariant(that: ProductFlavorOrVariantImpl): ProductFlavorOrVariantImpl {
-        val clone = ProductFlavorOrVariantImpl(issueReporter)
+        val clone = ProductFlavorOrVariantImpl(dslScope)
         clone.initWith(that)
         return clone
     }
@@ -389,15 +387,14 @@ class VariantBuilder<in E: BaseExtension2>(
 
     private fun cloneBuildTypeOrVariant(that: BuildTypeOrVariantImpl): BuildTypeOrVariantImpl {
         // values here don't matter, we're going to run initWith
-        val clone = BuildTypeOrVariantImpl(
-                "Variant", deprecationReporter, issueReporter)
+        val clone = BuildTypeOrVariantImpl("Variant", dslScope)
         clone.initWith(that)
         return clone
     }
 
     private fun cloneVariantOrExtensionProperties(
             that: VariantOrExtensionPropertiesImpl): VariantOrExtensionPropertiesImpl {
-        val prop = VariantOrExtensionPropertiesImpl(issueReporter)
+        val prop = VariantOrExtensionPropertiesImpl(dslScope)
 
         prop.initWith(that)
         return prop
@@ -457,20 +454,29 @@ class VariantBuilder<in E: BaseExtension2>(
                 sourceSets,
                 variantSourceSet,
                 multiFlavorSourceSet,
-                issueReporter)
+                dslScope)
     }
 }
 
+// VariantProperties
 private val SET_MULTIDEX_ENABLED: (VariantProperties, Boolean?) -> Unit = { o, v -> o.multiDexEnabled = v}
 private val GET_MULTIDEX_ENABLED: (VariantProperties) -> Boolean? = { it.multiDexEnabled }
 private val SET_MULTIDEX_KEEPFILE: (VariantProperties, File?) -> Unit = { o, v -> o.multiDexKeepFile = v}
 private val GET_MULTIDEX_KEEPFILE: (VariantProperties) -> File? = { it.multiDexKeepFile }
 
-private fun <T, V> takeLastNonNull(outObject: T, inList: List<T>, setter: (T,V) -> Unit, getter: (T) -> V?) {
+// ProductFlavorOrVariant
+private val SET_VERSION_CODE: (ProductFlavorOrVariant, Int?) -> Unit = { o, v -> o.versionCode = v}
+private val GET_VERSION_CODE: (ProductFlavorOrVariant) -> Int? = { it.versionCode }
+
+private inline fun <T, V> takeLastNonNull(
+        outObject: T,
+        inList: List<T>,
+        crossinline setter: (T,V) -> Unit,
+        getter: (T) -> V?) {
     for (i in inList.size - 1 downTo 0) {
-        val value: V? = getter.invoke(inList[i])
+        val value: V? = getter(inList[i])
         if (value != null) {
-            setter.invoke(outObject, value)
+            setter(outObject, value)
             return
         }
     }

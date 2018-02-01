@@ -542,15 +542,9 @@ public class ResourceResolver extends RenderResources {
     private SampleDataManager mSampleDataManager = new SampleDataManager();
 
     private ResourceValue findSampleDataValue(@NonNull ResourceReference value) {
-        // TODO(namespaces): Remove this once repositories have namespace support
-        // Resource repositories do not support namespaces yet. Because of this
-        // we currently hack the namespace support as part of the item name.
-        String name =
-                (value.getNamespace() == ResourceNamespace.TOOLS ? "tools:" : "") + value.getName();
-
-        // TODO(namespaces): move sample data to the TOOLS namespace.
+        String name = value.getName();
         return Optional.ofNullable(
-                        getResourceValueMap(ResourceNamespace.TODO, ResourceType.SAMPLE_DATA))
+                        getResourceValueMap(value.getNamespace(), value.getResourceType()))
                 .map(t -> t.get(SampleDataManager.getResourceNameFromSampleReference(name)))
                 .filter(SampleDataResourceValue.class::isInstance)
                 .map(SampleDataResourceValue.class::cast)
@@ -559,7 +553,7 @@ public class ResourceResolver extends RenderResources {
                 .map(
                         lineContent ->
                                 new ResourceValue(
-                                        ResourceNamespace.TODO,
+                                        value.getNamespace(),
                                         ResourceType.SAMPLE_DATA,
                                         name,
                                         lineContent))

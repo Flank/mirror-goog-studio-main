@@ -16,7 +16,15 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.model.BuildType
 import com.android.build.api.dsl.model.TypedValue
+import com.android.build.api.dsl.options.ExternalNativeBuildOptions
+import com.android.build.api.dsl.options.JavaCompileOptions
+import com.android.build.api.dsl.options.NdkOptions
+import com.android.build.api.dsl.options.PostProcessingOptions
+import com.android.build.api.dsl.options.ShaderOptions
+import com.android.build.api.dsl.options.SigningConfig
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrProductFlavorImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrVariantImpl
@@ -31,12 +39,15 @@ import com.android.build.gradle.internal.api.dsl.options.PostProcessingOptionsIm
 import com.android.build.gradle.internal.api.dsl.options.ShaderOptionsImpl
 import com.android.build.gradle.internal.api.dsl.options.SigningConfigImpl
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ListMultimap
 import com.google.common.reflect.ClassPath
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.JavaVersion
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
@@ -51,22 +62,25 @@ import kotlin.reflect.KType
 class DslImplementationSealableTest {
 
     @Mock lateinit var issueReporter: EvalIssueReporter
-    @Mock lateinit var depecationReporter : DeprecationReporter
+    @Mock lateinit var deprecationReporter: DeprecationReporter
+    lateinit var dslScope: DslScope
 
     val dslTypes : List<KClass<out Any>> = listOf(
-            com.android.build.api.dsl.model.BuildType::class,
-            com.android.build.api.dsl.options.SigningConfig::class,
-            com.android.build.api.dsl.options.ExternalNativeBuildOptions::class,
-            com.android.build.api.dsl.options.JavaCompileOptions::class,
-            com.android.build.api.dsl.options.NdkOptions::class,
-            com.android.build.api.dsl.options.ShaderOptions::class,
-            com.android.build.api.dsl.options.PostProcessingOptions::class)
+            BuildType::class,
+            SigningConfig::class,
+            ExternalNativeBuildOptions::class,
+            JavaCompileOptions::class,
+            NdkOptions::class,
+            ShaderOptions::class,
+            PostProcessingOptions::class)
 
     val testedTypes: MutableList<KClass<*>> = mutableListOf()
 
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
+        dslScope = DslScopeImpl(issueReporter, deprecationReporter, FakeObjectFactory())
+
     }
 
     private fun getDslInterfaces(classPath: ClassPath) =
@@ -111,61 +125,47 @@ class DslImplementationSealableTest {
                 .that(tester.visitedTypes).isEmpty()
     }
 
-    private fun instantiate(type: KType) : Any {
-        when(type.classifier) {
-            // Basic Types
-            Boolean::class -> return java.lang.Boolean.TRUE
-            Int::class -> return 12
-            String::class -> return "abc"
-            Any::class -> return Object()
+    private fun instantiate(type: KType): Any = when(type.classifier) {
+        // Basic Types
+        Boolean::class -> java.lang.Boolean.TRUE
+        Int::class -> 12
+        String::class -> "abc"
+        Any::class -> Object()
 
-            // Kotlin Types
-            MutableList::class ->
-                return MutableList(4) { _ -> instantiate(type.arguments[0].type!!)}
-            MutableMap::class ->
-                return mutableMapOf(
-                        Pair(instantiate(type.arguments[0].type!!),
-                                instantiate(type.arguments[1].type!!)))
-            MutableSet::class ->
-                return mutableSetOf(instantiate(type.arguments[0].type!!))
+        // Kotlin Types
+        MutableList::class -> MutableList(4) { _ -> instantiate(type.arguments[0].type!!) }
+        MutableMap::class -> mutableMapOf(
+                Pair(instantiate(type.arguments[0].type!!), instantiate(type.arguments[1].type!!)))
+        MutableSet::class -> mutableSetOf(instantiate(type.arguments[0].type!!))
 
-            // Java Types
-            File::class -> return File("/not/real/file")
+        // Java Types
+        File::class -> File("/not/real/file")
 
-            // Guava Types
-            ListMultimap::class ->
-                return ArrayListMultimap.create<Any, Any>(2, 2)
+        // Guava Types
+        ListMultimap::class -> ArrayListMultimap.create<Any, Any>(2, 2)
 
-            // DSL types
-            TypedValue::class ->
-                 return TypedValueImpl("type", "type_name", "type_value")
-            com.android.build.api.dsl.options.SigningConfig::class ->
-                return SigningConfigImpl("signing", depecationReporter, issueReporter)
-            com.android.build.api.dsl.model.BuildType::class ->
-                return BuildTypeImpl(
-                        "foo",
-                        VariantPropertiesImpl(issueReporter),
-                        BuildTypeOrProductFlavorImpl(depecationReporter, issueReporter) {
-                            PostProcessingFilesOptionsImpl(issueReporter)
-                        },
-                        BuildTypeOrVariantImpl("buildType",
-                                depecationReporter, issueReporter),
-                        FallbackStrategyImpl(depecationReporter, issueReporter),
-                        depecationReporter,
-                        issueReporter)
+        // DSL types
+        TypedValue::class -> TypedValueImpl("type", "type_name", "type_value")
+        SigningConfig::class -> SigningConfigImpl("signing", dslScope)
+        BuildType::class -> BuildTypeImpl(
+                "foo",
+                VariantPropertiesImpl(dslScope),
+                BuildTypeOrProductFlavorImpl(dslScope) {
+                    PostProcessingFilesOptionsImpl(dslScope)
+                },
+                BuildTypeOrVariantImpl("buildType", dslScope),
+                FallbackStrategyImpl(dslScope),
+                dslScope)
 
-            com.android.build.api.dsl.options.ExternalNativeBuildOptions::class ->
-                    return ExternalNativeBuildOptionsImpl(issueReporter)
-            com.android.build.api.dsl.options.JavaCompileOptions::class ->
-                    return JavaCompileOptionsImpl(issueReporter)
-            com.android.build.api.dsl.options.NdkOptions::class ->
-                    return NdkOptionsImpl(issueReporter)
-            com.android.build.api.dsl.options.ShaderOptions::class ->
-                    return ShaderOptionsImpl(issueReporter)
-            com.android.build.api.dsl.options.PostProcessingOptions::class ->
-                    return PostProcessingOptionsImpl(issueReporter)
-        }
-        throw IllegalArgumentException("I don't know how to instantiate $type")
+        ExternalNativeBuildOptions::class -> ExternalNativeBuildOptionsImpl(dslScope)
+        JavaCompileOptions::class -> JavaCompileOptionsImpl(dslScope)
+        NdkOptions::class -> NdkOptionsImpl(dslScope)
+        ShaderOptions::class -> ShaderOptionsImpl(dslScope)
+        PostProcessingOptions::class -> PostProcessingOptionsImpl(dslScope)
+
+        JavaVersion::class -> JavaVersion.VERSION_1_8
+
+        else -> throw IllegalArgumentException("I don't know how to instantiate $type")
     }
 
     private fun propertyChecker(property: KProperty<*>) {

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.extension.VariantCallbackHandler
 import com.android.build.api.dsl.variant.Variant
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.ArrayListMultimap
@@ -41,9 +42,8 @@ interface VariantCallbackHolder {
  *
  * This mostly handles the callbacks for the variant.
  */
-class VariantModelData(
-        issueReporter: EvalIssueReporter)
-    : SealableObject(issueReporter), VariantCallbackHolder {
+class VariantModelData(dslScope: DslScope)
+    : SealableObject(dslScope), VariantCallbackHolder {
 
     // map of (predicate, List<callbacks>).
     private val variantCallbacks: ListMultimap<VariantPredicate, Action<Variant>> =
@@ -74,7 +74,7 @@ class VariantModelData(
     }
 
     override fun createVariantCallbackHandler(): VariantCallbackHandler<Variant> {
-        return VariantCallbackHandlerImpl(this, issueReporter)
+        return VariantCallbackHandlerImpl(this, dslScope)
     }
 
     override fun register(predicate: VariantPredicate, action: Action<Variant>) {

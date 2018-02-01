@@ -69,14 +69,15 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
-import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
@@ -167,6 +168,7 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
+import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.CopyOutputs;
@@ -207,6 +209,7 @@ import com.android.builder.core.DesugarProcessArgs;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.SyncIssue;
@@ -369,7 +372,6 @@ public abstract class TaskManager {
                 "ndk/" + variantData.getVariantConfiguration().getDirName() + "/lib")));
         File objFolder = new File(scope.getGlobalScope().getIntermediatesDir(),
                 "ndk/" + variantData.getVariantConfiguration().getDirName() + "/obj");
-        scope.setNdkObjFolder(objFolder);
         for (Abi abi : NdkHandler.getAbiList()) {
             scope.addNdkDebuggableLibraryFolders(abi,
                     new File(objFolder, "local/" + abi.getName()));
@@ -591,8 +593,6 @@ public abstract class TaskManager {
         globalScope.addTaskOutput(PLATFORM_R_TXT, platformRtxt, task.getName());
     }
 
-    public void createBuildArtifactReportTask(@NonNull final VariantScope scope) {}
-
     protected void createDependencyStreams(@NonNull final VariantScope variantScope) {
         // Since it's going to chance the configurations, we need to do it before
         // we start doing queries to fill the streams.
@@ -721,7 +721,8 @@ public abstract class TaskManager {
             PublishingSpecs.OutputSpec taskOutputSpec =
                     testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
             // now get the output type
-            ArtifactType testedOutputType = taskOutputSpec.getOutputType();
+            com.android.build.api.artifact.ArtifactType testedOutputType =
+                    taskOutputSpec.getOutputType();
 
             // create two streams of different types.
             transformManager.addStream(
@@ -742,18 +743,26 @@ public abstract class TaskManager {
         }
     }
 
+    public void createBuildArtifactReportTask(@NonNull VariantScope scope) {
+        taskFactory.create(new BuildArtifactReportTask.BuildArtifactReportConfigAction(scope));
+    }
+
+    public void createSourceSetArtifactReportTask(@NonNull GlobalScope scope) {
+        for (AndroidSourceSet sourceSet : scope.getExtension().getSourceSets()) {
+            if (sourceSet instanceof DefaultAndroidSourceSet) {
+                taskFactory.create(
+                        new BuildArtifactReportTask.SourceSetReportConfigAction(
+                                scope, (DefaultAndroidSourceSet) sourceSet));
+            }
+        }
+    }
+
     public void createMergeApkManifestsTask(@NonNull VariantScope variantScope) {
         AndroidArtifactVariantData androidArtifactVariantData =
                 (AndroidArtifactVariantData) variantScope.getVariantData();
         Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
 
-        CompatibleScreensManifest csmTask =
-                taskFactory.create(
-                        new CompatibleScreensManifest.ConfigAction(variantScope, screenSizes));
-        variantScope.addTaskOutput(
-                InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
-                variantScope.getCompatibleScreensManifestDirectory(),
-                csmTask.getName());
+        taskFactory.create(new CompatibleScreensManifest.ConfigAction(variantScope, screenSizes));
 
         ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures =
                 ImmutableList.builder();
@@ -1015,7 +1024,6 @@ public abstract class TaskManager {
         }
 
         scope.setResourceOutputDir(mergedOutputDir);
-        scope.setMergeResourceOutputDir(outputLocation);
         return mergeResourcesTask;
     }
 
@@ -1660,6 +1668,41 @@ public abstract class TaskManager {
         }
     }
 
+    protected void createCompileTask(@NonNull VariantScope variantScope) {
+        JavaCompile javacTask = createJavacTask(variantScope);
+        VariantScope.Java8LangSupport java8LangSupport = variantScope.getJava8LangSupportType();
+        if (java8LangSupport == VariantScope.Java8LangSupport.INVALID) {
+            return;
+        }
+        // Only warn for users of retrolambda
+        String pluginName = null;
+        if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
+            pluginName = "me.tatarka.retrolambda";
+        }
+
+        if (pluginName != null) {
+            String warningMsg =
+                    String.format(
+                            "One of the plugins you are using supports Java 8 "
+                                    + "language features. To try the support built into"
+                                    + " the Android plugin, remove the following from "
+                                    + "your build.gradle:\n"
+                                    + "    apply plugin: '%s'\n"
+                                    + "To learn more, go to https://d.android.com/r/"
+                                    + "tools/java-8-support-message.html\n",
+                            pluginName);
+
+            androidBuilder
+                    .getIssueReporter()
+                    .reportWarning(EvalIssueReporter.Type.GENERIC, warningMsg);
+        }
+
+        addJavacClassesStream(variantScope);
+        setJavaCompilerTask(javacTask, variantScope);
+        createPostCompilationTasks(variantScope);
+    }
+
+
     /** Makes the given task the one used by top-level "compile" task. */
     public static void setJavaCompilerTask(
             @NonNull Task javaCompilerTask, @NonNull VariantScope scope) {
@@ -1748,7 +1791,8 @@ public abstract class TaskManager {
                         new ExternalNativeBuildTask.ConfigAction(
                                 targetAbi, generator, scope, androidBuilder));
 
-        buildTask.dependsOn(generateTask);
+        buildTask.dependsOn(
+                generateTask, scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI));
         scope.setExternalNativeBuildTask(buildTask);
         scope.getCompileTask().dependsOn(buildTask);
 
@@ -2279,7 +2323,7 @@ public abstract class TaskManager {
         // ----- Android studio profiling transforms
         for (String jar : getAdvancedProfilingTransforms(projectOptions)) {
             if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()
-                    && variantData.getType().equals(VariantType.DEFAULT)
+                    && variantData.getType().equals(VariantType.APK)
                     && jar != null) {
                 transformManager.addTransform(
                         taskFactory, variantScope, new CustomClassTransform(jar));
@@ -3063,16 +3107,19 @@ public abstract class TaskManager {
         Task packageInstantRunResources = null;
 
         if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
-            if (useSeparateApkForResources) {
-                packageInstantRunResources =
-                        taskFactory.create(
-                                new InstantRunResourcesApkBuilder.ConfigAction(
-                                        resourceFilesInputType,
-                                        variantScope.getOutput(resourceFilesInputType),
-                                        variantScope));
-                packageInstantRunResources.dependsOn(getValidateSigningTask(variantScope));
-            } else {
-                // in instantRunMode, there is no user configured splits, only  one apk.
+            packageInstantRunResources =
+                    taskFactory.create(
+                            new InstantRunResourcesApkBuilder.ConfigAction(
+                                    resourceFilesInputType,
+                                    variantScope.getOutput(resourceFilesInputType),
+                                    variantScope));
+            packageInstantRunResources.dependsOn(getValidateSigningTask(variantScope));
+            // make sure the task run even if none of the files we consume are available,
+            // this is necessary so we can clean up output.
+            packageApp.dependsOn(packageInstantRunResources);
+
+            if (!useSeparateApkForResources) {
+                // in instantRunMode, there is no user configured splits, only one apk.
                 packageInstantRunResources =
                         taskFactory.create(
                                 new PackageApplication.InstantRunResourcesConfigAction(

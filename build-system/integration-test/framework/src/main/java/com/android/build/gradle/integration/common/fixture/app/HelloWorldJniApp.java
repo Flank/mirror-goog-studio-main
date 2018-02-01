@@ -305,10 +305,10 @@ public class HelloWorldJniApp extends AbstractAndroidTestApp implements AndroidT
     }
 
     public HelloWorldJniApp() {
-        this("jni", false);
+        this("jni", false /* useCppSource */, false /* withCmake */);
     }
 
-    HelloWorldJniApp(String jniDir, boolean useCppSource) {
+    HelloWorldJniApp(String jniDir, boolean useCppSource, boolean withCmake) {
         TestSourceFile jniSource =
                 useCppSource
                         ? cppSource("src/main/jni")
@@ -319,6 +319,9 @@ public class HelloWorldJniApp extends AbstractAndroidTestApp implements AndroidT
                 resSource,
                 manifest,
                 androidTestSource);
+        if (withCmake) {
+            addFile(cmakeLists("."));
+        }
     }
 
     public static Builder builder() {
@@ -328,6 +331,7 @@ public class HelloWorldJniApp extends AbstractAndroidTestApp implements AndroidT
     public static class Builder {
         private String jniDir = "jni";
         private boolean useCppSource = false;
+        private boolean withCmake = false;
 
         public Builder withNativeDir(@NonNull String jniDir) {
             this.jniDir = jniDir;
@@ -339,13 +343,18 @@ public class HelloWorldJniApp extends AbstractAndroidTestApp implements AndroidT
             return this;
         }
 
+        public Builder withCmake() {
+            this.withCmake = true;
+            return this;
+        }
+
         public Builder useCppSource(boolean useCppSource) {
             this.useCppSource = useCppSource;
             return this;
         }
 
         public HelloWorldJniApp build() {
-            return new HelloWorldJniApp(jniDir, useCppSource);
+            return new HelloWorldJniApp(jniDir, useCppSource, withCmake);
         }
     }
 }

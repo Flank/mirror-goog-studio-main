@@ -465,4 +465,12 @@ public class SigningTest {
         assertFalse(verificationResult.isVerifiedUsingV1Scheme());
         assertTrue(verificationResult.isVerifiedUsingV2Scheme());
     }
+
+    @Test
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+    public void failWithMissingKeyPassword() throws Exception {
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(), "keyPassword '" + KEY_PASSWORD + "'\n", "");
+        project.executeExpectingFailure("assembleDebug");
+    }
 }

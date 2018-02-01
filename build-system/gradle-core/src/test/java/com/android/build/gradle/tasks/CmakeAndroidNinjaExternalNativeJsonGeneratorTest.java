@@ -21,17 +21,18 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.SdkConstants;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestUtils;
+import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule;
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
@@ -43,7 +44,7 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
     NdkHandler ndkHandler;
     int minSdkVersion;
     String variantName;
-    Collection<Abi> abis;
+    List<JsonGenerationAbiConfiguration> abis;
     AndroidBuilder androidBuilder;
     File sdkFolder;
     File ndkFolder;
@@ -67,13 +68,22 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         ndkHandler = Mockito.mock(NdkHandler.class);
         minSdkVersion = 123;
         variantName = "dummy variant name";
-        abis = Mockito.mock(Collection.class);
+        abis = Lists.newArrayList();
+        for (Abi abi : Abi.values()) {
+            abis.add(
+                    new JsonGenerationAbiConfiguration(
+                            abi,
+                            new File("./json"),
+                            new File("./obj"),
+                            NativeBuildSystem.CMAKE,
+                            31));
+        }
         androidBuilder = Mockito.mock(AndroidBuilder.class);
         sdkFolder = TestUtils.getSdk();
         ndkFolder = TestUtils.getNdk();
         soFolder = Mockito.mock(File.class);
-        objFolder = null;
-        jsonFolder = Mockito.mock(File.class);
+        objFolder = new File("./obj");
+        jsonFolder = new File("./json");
         makeFile = Mockito.mock(File.class);
         stats = GradleBuildVariant.newBuilder();
         AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkDirectory);

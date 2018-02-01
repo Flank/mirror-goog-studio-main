@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.api.dsl.sealing
 
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.SyncIssue
 import groovy.lang.Closure
 import org.gradle.api.Action
 import org.gradle.api.DomainObjectCollection
@@ -28,7 +28,7 @@ import org.gradle.api.Rule
 import org.gradle.api.specs.Spec
 import java.util.SortedMap
 import java.util.SortedSet
-import java.util.stream.Collectors
+import javax.inject.Inject
 
 /**
  * A [NamedDomainObjectContainer] that can be sealed to prevent further updates.
@@ -41,11 +41,12 @@ import java.util.stream.Collectors
  *
  * @see SealableObject
  */
-class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT>(
+open class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT>
+    @Inject constructor(
             private val container: NamedDomainObjectContainer<ImplementationT>,
             private val implClass: Class<ImplementationT>,
-            issueReporter: EvalIssueReporter)
-    : NestedSealable(issueReporter), NamedDomainObjectContainer<InterfaceT> {
+            dslScope: DslScope)
+    : NestedSealable(dslScope), NamedDomainObjectContainer<InterfaceT> {
 
     override fun seal() {
         super.seal()
@@ -58,19 +59,19 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
 
     // wrapper with checkSeal
 
-    override fun create(name: String?): InterfaceT {
+    override fun create(name: String): InterfaceT {
         // cant use if (checkSeal) because we need to return something if checkSeal returns false
         checkSeal()
         return container.create(name)
     }
 
-    override fun create(name: String?, closure: Closure<*>?): InterfaceT {
+    override fun create(name: String, closure: Closure<*>): InterfaceT {
         // cant use if (checkSeal) because we need to return something if checkSeal returns false
         checkSeal()
         return container.create(name, closure)
     }
 
-    override fun create(name: String?, action: Action<in InterfaceT>?): InterfaceT {
+    override fun create(name: String, action: Action<in InterfaceT>): InterfaceT {
         // cant use if (checkSeal) because we need to return something if checkSeal returns false
         checkSeal()
         return container.create(name, action)
@@ -86,7 +87,7 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
             if (recastedElements.size != elements.size) {
                 val wrongTypeElements = elements.filter { !implClass.isInstance(it) }
 
-                issueReporter.reportError(EvalIssueReporter.Type.GENERIC,
+                dslScope.issueReporter.reportError(EvalIssueReporter.Type.GENERIC,
                         "Expected type ${implClass.name} for items: $wrongTypeElements")
                 return false
             }
@@ -103,7 +104,7 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
         }
     }
 
-    override fun maybeCreate(name: String?): InterfaceT {
+    override fun maybeCreate(name: String): InterfaceT {
         // cant use if (checkSeal) because we need to return something if checkSeal returns false
         checkSeal()
         return container.create(name)
@@ -130,7 +131,7 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
             return if (implClass.isInstance(element)) {
                 container.add(implClass.cast(element))
             } else {
-                issueReporter.reportError(EvalIssueReporter.Type.GENERIC,
+                dslScope.issueReporter.reportError(EvalIssueReporter.Type.GENERIC,
                         "Expected type ${implClass.name} for item: $element")
                 false
             }
@@ -149,13 +150,16 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
 
     override fun iterator(): MutableIterator<InterfaceT> {
         return handleSealableSubItem(
-                SealableMutableIterator(container.iterator(), issueReporter))
+                SealableMutableIterator(container.iterator(), dslScope))
     }
 
 
     // basic wrappers
 
-    override fun whenObjectRemoved(closure: Closure<*>?) {
+    override val size: Int
+        get() = container.size
+
+    override fun whenObjectRemoved(closure: Closure<*>) {
         container.whenObjectRemoved(closure)
     }
 
@@ -164,7 +168,7 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
         return action
     }
 
-    override fun whenObjectAdded(closure: Closure<*>?) {
+    override fun whenObjectAdded(closure: Closure<*>) {
         container.whenObjectAdded(closure)
     }
 
@@ -173,45 +177,108 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
         return action
     }
 
-    override fun getByName(name: String?): InterfaceT = container.getByName(name)
+    override fun getByName(name: String): InterfaceT = container.getByName(name)
 
-    override fun findByName(name: String?): InterfaceT? = container.findByName(name)
+    override fun findByName(name: String): InterfaceT? = container.findByName(name)
 
     override fun getRules(): MutableList<Rule> = container.rules
 
-    override fun addRule(p0: String?, p1: Closure<*>?): Rule = container.addRule(p0, p1)
+    override fun addRule(description: String, action: Closure<*>): Rule = container.addRule(description, action)
 
-    override fun addRule(p0: String?, p1: Action<String>?): Rule = container.addRule(p0, p1)
+    override fun addRule(description: String, action: Action<String>): Rule = container.addRule(description, action)
 
-    override fun addRule(p0: Rule?): Rule = container.addRule(p0)
+    override fun addRule(rule: Rule): Rule = container.addRule(rule)
 
-    override fun <S : InterfaceT> withType(p0: Class<S>?, p1: Closure<*>?): DomainObjectCollection<S> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun configure(action: Closure<*>): NamedDomainObjectContainer<InterfaceT> {
+        container.configure(action)
+        return this
     }
 
-    override fun <S : InterfaceT> withType(p0: Class<S>?): NamedDomainObjectSet<S> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun <S : InterfaceT > withType(type: Class<S>, closure: Closure<*>): DomainObjectCollection<S> {
+        if (!implClass.isAssignableFrom(type)) {
+            // the sub class of the interface is not a sub class of the internal implementation.
+            // need to break
+            dslScope.issueReporter.reportError(
+                    EvalIssueReporter.Type.GENERIC,
+                    "Type ${type.canonicalName} cannot be used with withType() because it does not extend internal type ${implClass.name}")
+
+            // still need to return something for the case where sync happens so we return a,
+            // container with all the items.
+            // FIXME We can't use the closure!
+            // it is not safe as it's a closure to configure a type that is not valid for the
+            // internal implementation. Maybe we should use an empty list to ensure the closure
+            // is not called?
+            @Suppress("UNCHECKED_CAST")
+            return container.withType(implClass, closure) as DomainObjectCollection<S>
+        }
+
+        // we know this is correct because we checked above that the requested type does extend
+        // the internal implementation
+        @Suppress("UNCHECKED_CAST")
+        return container.withType(type as Class<ImplementationT>, closure) as DomainObjectCollection<S>
     }
 
-    override fun <S : InterfaceT> withType(p0: Class<S>?, p1: Action<in S>?): DomainObjectCollection<S> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun <S : InterfaceT> withType(type: Class<S>): NamedDomainObjectSet<S> {
+        if (!implClass.isAssignableFrom(type)) {
+            // the sub class of the interface is not a sub class of the internal implementation.
+            // need to break
+            dslScope.issueReporter.reportError(
+                    EvalIssueReporter.Type.GENERIC,
+                    "Type ${type.canonicalName} cannot be used with withType() because it does not extend internal type ${implClass.name}")
+
+            // still need to return something for the case where sync happens so we return a,
+            // container with all the items.
+            @Suppress("UNCHECKED_CAST")
+            return container.withType(implClass) as NamedDomainObjectSet<S>
+        }
+
+        // we know this is correct because we checked above that the requested type does extend
+        // the internal implementation
+        @Suppress("UNCHECKED_CAST")
+        return container.withType(type as Class<ImplementationT>) as NamedDomainObjectSet<S>
     }
 
-    override fun configure(p0: Closure<*>?): NamedDomainObjectContainer<InterfaceT> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun <S : InterfaceT> withType(type: Class<S>, action: Action<in S>): DomainObjectCollection<S> {
+        if (!implClass.isAssignableFrom(type)) {
+            // the sub class of the interface is not a sub class of the internal implementation.
+            // need to break
+            dslScope.issueReporter.reportError(
+                    EvalIssueReporter.Type.GENERIC,
+                    "Type ${type.canonicalName} cannot be used with withType() because it does not extend internal type ${implClass.name}")
+
+            // still need to return something for the case where sync happens so we return a,
+            // container with all the items.
+            // FIXME We can't use the action!
+            // it is not safe as it's an action to configure a type that is not valid for the
+            // internal implementation. Maybe we should use an empty list to ensure the action
+            // is not called?
+            @Suppress("UNCHECKED_CAST")
+            return container.withType(implClass, action as Action<ImplementationT>) as DomainObjectCollection<S>
+        }
+
+        // we know this is correct because we checked above that the requested type does extend
+        // the internal implementation
+        @Suppress("UNCHECKED_CAST")
+        return container.withType(type as Class<ImplementationT>, action as Action<ImplementationT>) as DomainObjectCollection<S>
     }
 
-    override fun matching(p0: Spec<in InterfaceT>?): NamedDomainObjectSet<InterfaceT> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun matching(spec: Spec<in InterfaceT>): NamedDomainObjectSet<InterfaceT> {
+        @Suppress("UNCHECKED_CAST")
+        return container.matching(spec) as NamedDomainObjectSet<InterfaceT>
     }
 
-    override fun matching(p0: Closure<*>?): NamedDomainObjectSet<InterfaceT> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun matching(spec: Closure<*>): NamedDomainObjectSet<InterfaceT> {
+        @Suppress("UNCHECKED_CAST")
+        return container.matching(spec) as NamedDomainObjectSet<InterfaceT>
     }
 
     override fun getNamer(): Namer<InterfaceT> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        @Suppress("UNCHECKED_CAST")
+        return container.namer as Namer<InterfaceT>
     }
+
+    // TODO
+
 
     override fun getAsMap(): SortedMap<String, InterfaceT> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -236,9 +303,6 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
     override fun containsAll(elements: Collection<InterfaceT>): Boolean {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
-
-    override val size: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
     override fun getByName(p0: String?, p1: Closure<*>?): InterfaceT {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.

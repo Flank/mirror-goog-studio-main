@@ -19,6 +19,7 @@ import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
@@ -65,11 +66,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -172,6 +175,12 @@ public abstract class BaseVariantData implements TaskContainer {
         this.variantConfiguration = variantConfiguration;
         this.taskManager = taskManager;
 
+        final Splits splits = androidConfig.getSplits();
+        boolean splitsEnabled =
+                splits.getDensity().isEnable()
+                        || splits.getAbi().isEnable()
+                        || splits.getLanguage().isEnable();
+
         // eventually, this will require a more open ended comparison.
         multiOutputPolicy =
                 (androidConfig.getGeneratePureSplits()
@@ -180,8 +189,9 @@ public abstract class BaseVariantData implements TaskContainer {
                         ? MultiOutputPolicy.SPLITS
                         : MultiOutputPolicy.MULTI_APK;
 
-        // warn the user in case we are forced to ignore the generatePureSplits flag.
-        if (androidConfig.getGeneratePureSplits()
+        // warn the user if we are forced to ignore the generatePureSplits flag.
+        if (splitsEnabled
+                && androidConfig.getGeneratePureSplits()
                 && multiOutputPolicy != MultiOutputPolicy.SPLITS) {
             Logging.getLogger(BaseVariantData.class).warn(
                     String.format("Variant %s, MinSdkVersion %s is too low (<21) "
@@ -636,6 +646,24 @@ public abstract class BaseVariantData implements TaskContainer {
         sourceSets.addAll(extraGeneratedSourceFileTrees);
 
         return sourceSets.build();
+    }
+
+    public Map<String, BuildableArtifact> getAndroidResources() {
+        return getVariantConfiguration()
+                .getSortedSourceProviders()
+                .stream()
+                .collect(
+                        Collectors.toMap(
+                                SourceProvider::getName,
+                                (provider) ->
+                                        ((AndroidSourceSet) provider)
+                                                .getRes()
+                                                .getBuildableArtifact(),
+                                (u, v) -> {
+                                    throw new IllegalStateException(
+                                            String.format("Duplicate key %s", u));
+                                },
+                                LinkedHashMap::new));
     }
 
     /**

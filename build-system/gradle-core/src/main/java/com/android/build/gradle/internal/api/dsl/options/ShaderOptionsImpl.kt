@@ -17,12 +17,13 @@
 package com.android.build.gradle.internal.api.dsl.options
 
 import com.android.build.api.dsl.options.ShaderOptions
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealable
-import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.ListMultimap
+import javax.inject.Inject
 
-class ShaderOptionsImpl(issueReporter: EvalIssueReporter)
-        : InitializableSealable<ShaderOptions>(issueReporter), ShaderOptions {
+open class ShaderOptionsImpl @Inject constructor(dslScope: DslScope)
+        : InitializableSealable<ShaderOptions>(dslScope), ShaderOptions {
 
     override var glslcArgs: MutableList<String>
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.

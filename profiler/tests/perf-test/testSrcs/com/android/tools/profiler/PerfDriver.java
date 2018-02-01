@@ -16,18 +16,16 @@
 
 package com.android.tools.profiler;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.android.tools.profiler.proto.Agent;
-import com.android.tools.profiler.proto.Profiler;
-import com.android.tools.profiler.proto.ProfilerServiceGrpc;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.regex.Pattern;
 import org.junit.After;
 import org.junit.Assert;
 
@@ -42,6 +40,7 @@ public class PerfDriver {
     private File myConfigFile;
     private int myPort;
     private int myCommunicationPort;
+    private int myPid = -1;
     private FakeAndroidDriver myMockApp;
     private PerfdDriver myPerfdDriver;
     private GrpcUtils myGrpc;
@@ -60,7 +59,7 @@ public class PerfDriver {
         myCommunicationPort = getAvailablePort();
         myMockApp = new FakeAndroidDriver(LOCAL_HOST, myPort, myCommunicationPort);
         myPerfdDriver = new PerfdDriver(myConfigFile.getAbsolutePath());
-        myGrpc = new GrpcUtils(LOCAL_HOST, myPort);
+        myGrpc = new GrpcUtils(LOCAL_HOST, myPort, myMockApp);
     }
 
     @After
@@ -87,6 +86,10 @@ public class PerfDriver {
 
     public int getPort() {
         return myPort;
+    }
+
+    public int getPid() {
+        return myPid;
     }
 
     /**
@@ -118,8 +121,11 @@ public class PerfDriver {
         // Load our mock application, and launch our test activity.
         myMockApp.launchActivity(activity);
 
-        if (myIsOPlusDevice) {
-            attachAgent();
+        // Retrieve the app's pid
+        String pid = myMockApp.waitForInput(Pattern.compile("(.*)(PID=)(?<result>.*)"));
+        try {
+            myPid = Integer.parseInt(pid);
+        } catch (NumberFormatException ignored) {
         }
     }
 
@@ -142,18 +148,6 @@ public class PerfDriver {
         } catch (IOException ex) {
             Assert.fail("Failed to copy required file: " + ex);
         }
-    }
-
-    public void attachAgent() {
-        ProfilerServiceGrpc.ProfilerServiceBlockingStub stub = myGrpc.getProfilerStub();
-        Profiler.AgentAttachRequest attachRequest = Profiler.AgentAttachRequest.newBuilder()
-            .setProcessId(getCommunicationPort())
-            .setAgentLibFileName("libperfa.so")
-            .build();
-        Profiler.AgentAttachResponse attachResponse = stub.attachAgent(attachRequest);
-        assertEquals(attachResponse.getStatus(), Profiler.AgentAttachResponse.Status.SUCCESS);
-        // Block until we can verify the agent was fully attached.
-        assertTrue(myMockApp.waitForInput("Memory control stream started."));
     }
 
     /**

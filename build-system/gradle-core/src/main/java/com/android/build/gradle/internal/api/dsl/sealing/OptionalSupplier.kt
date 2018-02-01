@@ -16,20 +16,31 @@
 
 package com.android.build.gradle.internal.api.dsl.sealing
 
-import com.android.build.api.dsl.Initializable
-import com.android.builder.errors.EvalIssueReporter
-
 /**
- * An optional supplier of a instance provided by a lamdba.
+ * An optional supplier of a instance
+ *
+ * Once the object is query the first time and instantiated, each new query returns the same
+ * instance.
+ *
+ * The supplier can handle being initialized by another supplier that has not instantiated its
+ * object yet, without triggering the instantiation.
+ *
+ * @param parent the sealable parent of the object. If the parent is sealed at creation time, then
+ * the object is sealed right away.
+ * @param theClass the class of the object to instantiate
+ * @param args the arguments passed to the constructor.
  */
-class OptionalSupplier<T: InitializableSealable<T>>(private val instantiator: () -> T) {
+class OptionalSupplier<T: InitializableSealable<T>>(
+        private val parent: SealableObject,
+        private val theClass: Class<T>,
+        vararg private val args: Any) : Sealable {
 
     private var localInstance: T? = null
 
-    fun get(sealIt: Boolean): T {
+    fun get(): T {
         if (localInstance == null) {
-            localInstance = instantiator.invoke()
-            if (sealIt) {
+            localInstance = parent.dslScope.objectFactory.newInstance(theClass, *args)
+            if (parent.isSealed()) {
                 localInstance?.seal()
             }
         }
@@ -38,20 +49,16 @@ class OptionalSupplier<T: InitializableSealable<T>>(private val instantiator: ()
     }
 
     fun copyFrom(from: OptionalSupplier<T>) {
-        val value = from.instance
+        val value = from.localInstance
 
         if (value != null) {
-            get(false).initWith(value)
+            get().initWith(value)
         } else {
             localInstance = null
         }
     }
 
-    val instance: T?
-        get() = localInstance
-
-    fun hasInstance(): Boolean = localInstance != null
+    override fun seal() {
+        localInstance?.seal()
+    }
 }
-
-abstract class InitializableSealable<in T: Initializable<T>>(issueReporter: EvalIssueReporter):
-        SealableObject(issueReporter), Initializable<T>

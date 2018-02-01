@@ -25,6 +25,7 @@
 #include <grpc++/grpc++.h>
 
 #include "proto/agent_service.grpc.pb.h"
+#include "proto/internal_energy.grpc.pb.h"
 #include "proto/internal_event.grpc.pb.h"
 #include "proto/internal_io.grpc.pb.h"
 #include "proto/internal_network.grpc.pb.h"
@@ -55,6 +56,11 @@ using IoServiceTask = std::function<grpc::Status(
 // |context|. Returns the status from the grpc call.
 using EventServiceTask = std::function<grpc::Status(
     proto::InternalEventService::Stub& stub, grpc::ClientContext& context)>;
+
+// Function for submitting an energy grpc request via |stub| using the given
+// |context|. Returns the status from the grpc call.
+using EnergyServiceTask = std::function<grpc::Status(
+    proto::InternalEnergyService::Stub& stub, grpc::ClientContext& context)>;
 
 // Function for submitting an agent grpc request via |stub| using the given
 // |context|. Returns the status from the grpc call.
@@ -88,6 +94,8 @@ class Agent {
 
   void SubmitEventTasks(const std::vector<EventServiceTask>& tasks);
 
+  void SubmitEnergyTasks(const std::vector<EnergyServiceTask>& tasks);
+
   void AddPerfdStatusChangedCallback(PerfdStatusChanged callback);
 
  private:
@@ -105,6 +113,7 @@ class Agent {
   // isntance sends a new client socket fd to the Agent, the stubs will be
   // resolved to the correct grpc target.
   proto::AgentService::Stub& agent_stub();
+  proto::InternalEnergyService::Stub& energy_stub();
   proto::InternalEventService::Stub& event_stub();
   proto::InternalNetworkService::Stub& network_stub();
   proto::InternalIoService::Stub& io_stub();
@@ -146,6 +155,7 @@ class Agent {
   std::string current_connected_target_;
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<proto::AgentService::Stub> agent_stub_;
+  std::unique_ptr<proto::InternalEnergyService::Stub> energy_stub_;
   std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
   std::unique_ptr<proto::InternalIoService::Stub> io_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;

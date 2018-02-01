@@ -57,23 +57,10 @@ class ProfilerServiceImpl final
       const profiler::proto::AgentStatusRequest* request,
       profiler::proto::AgentStatusResponse* response) override;
 
-  // The current implementation only returns 'connected processes' and is for
-  // testing only. When we move process discover to perfd, we will fix this.
-  // TODO: If needed, add a flag to indicate a process is 'connected'.
-  grpc::Status GetProcesses(
-      grpc::ServerContext* context,
-      const profiler::proto::GetProcessesRequest* request,
-      profiler::proto::GetProcessesResponse* response) override;
-
   grpc::Status GetDevices(
       grpc::ServerContext* context,
       const profiler::proto::GetDevicesRequest* request,
       profiler::proto::GetDevicesResponse* response) override;
-
-  grpc::Status AttachAgent(
-      grpc::ServerContext* context,
-      const profiler::proto::AgentAttachRequest* request,
-      profiler::proto::AgentAttachResponse* response) override;
 
   grpc::Status BeginSession(
       grpc::ServerContext* context,
@@ -101,12 +88,21 @@ class ProfilerServiceImpl final
       profiler::proto::DeleteSessionResponse* response) override;
 
  private:
-  // True if an JVMTI agent has been attached to an app. False otherwise.
-  bool IsAppAgentAlive(int app_pid, const char* app_name);
+  // Attaches an JVMTI agent to an app. If |agent_lib_file_name| is attached
+  // successfully Status::Ok is returned, otherwise a grpc error is returned.
+  // Note: |agent_lib_file_name| refers to the name of the agent library file
+  // located within the perfd directory, and it needs to be compatible with the
+  // app's CPU architecture.
+  grpc::Status TryAttachAppAgent(int32_t app_pid,
+                                 const std::string& agent_lib_file_name);
+
+  // True if there is an JVMTI agent attached to an app. False otherwise.
+  bool IsAppAgentAlive(int32_t app_pid, const std::string& app_name);
+
   // True if perfd has received a heartbeat from an app within the last
   // time interval (as specified by |GenericComponent::kHeartbeatThresholdNs|.
   // False otherwise.
-  bool CheckAppHeartBeat(int app_pid);
+  bool CheckAppHeartBeat(int32_t app_pid);
 
   // Clock knows about timestamps.
   const Clock& clock_;

@@ -22,5 +22,5 @@ import org.gradle.api.Incubating;
 @Incubating
 public enum BuildArtifactType implements ArtifactType {
     JAVAC_CLASSES,
-    JAVA_COMPILE_CLASSPATH
+    JAVA_COMPILE_CLASSPATH,
 }

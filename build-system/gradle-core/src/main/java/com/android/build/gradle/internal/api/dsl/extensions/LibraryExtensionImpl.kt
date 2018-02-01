@@ -22,17 +22,18 @@ import com.android.build.api.dsl.extension.LibraryExtension
 import com.android.build.api.dsl.extension.OnDeviceTestProperties
 import com.android.build.api.dsl.extension.VariantAwareProperties
 import com.android.build.api.dsl.extension.VariantOrExtensionProperties
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.EvalIssueReporter
+import javax.inject.Inject
 
-class LibraryExtensionImpl(
+open class LibraryExtensionImpl @Inject constructor(
             private val buildProperties: BuildPropertiesImpl,
             override val variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             private val variantAwareProperties: VariantAwarePropertiesImpl,
             private val embeddedTestProperties: EmbeddedTestPropertiesImpl,
             private val onDeviceTestProperties: OnDeviceTestPropertiesImpl,
-            issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter),
+            dslScope: DslScope)
+        : SealableObject(dslScope),
         LibraryExtension,
         BaseExtension2,
         BuildProperties by buildProperties,

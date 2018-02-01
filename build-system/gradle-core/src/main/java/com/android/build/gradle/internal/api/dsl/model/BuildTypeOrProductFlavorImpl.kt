@@ -18,15 +18,14 @@ package com.android.build.gradle.internal.api.dsl.model
 
 import com.android.build.api.dsl.model.BuildTypeOrProductFlavor
 import com.android.build.api.dsl.options.PostProcessingFiles
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.builder.errors.EvalIssueReporter
 
 class BuildTypeOrProductFlavorImpl(
-            private val deprecationReporter: DeprecationReporter,
-            issueReporter: EvalIssueReporter,
+            dslScope: DslScope,
             private val postProcessingFiles: () -> PostProcessingFiles)
-        : SealableObject(issueReporter), BuildTypeOrProductFlavor {
+        : SealableObject(dslScope), BuildTypeOrProductFlavor {
 
     override var applicationIdSuffix: String? = null
         set(value) {
@@ -43,7 +42,7 @@ class BuildTypeOrProductFlavorImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun proguardFile(proguardFile: Any) {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.proguardFiles",
                 "proguardFile()",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -52,7 +51,7 @@ class BuildTypeOrProductFlavorImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun proguardFiles(vararg files: Any) {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.proguardFiles",
                 "proguardFiles()",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -61,7 +60,7 @@ class BuildTypeOrProductFlavorImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun setProguardFiles(proguardFileIterable: Iterable<Any>) {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.proguardFiles",
                 "setProguardFiles()",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -70,7 +69,7 @@ class BuildTypeOrProductFlavorImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun testProguardFile(proguardFile: Any) {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.testProguardFiles",
                 "testProguardFile()",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -79,7 +78,7 @@ class BuildTypeOrProductFlavorImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun testProguardFiles(vararg proguardFiles: Any) {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.testProguardFiles",
                 "testProguardFiles()",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -88,7 +87,7 @@ class BuildTypeOrProductFlavorImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun setTestProguardFiles(files: Iterable<Any>) {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.testProguardFiles",
                 "setTestProguardFiles()",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -97,7 +96,7 @@ class BuildTypeOrProductFlavorImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun consumerProguardFile(proguardFile: Any) {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.consumerProguardFiles",
                 "consumerProguardFile()",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -106,7 +105,7 @@ class BuildTypeOrProductFlavorImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun consumerProguardFiles(vararg proguardFiles: Any) {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.consumerProguardFiles",
                 "consumerProguardFiles()",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -115,7 +114,7 @@ class BuildTypeOrProductFlavorImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun setConsumerProguardFiles(proguardFileIterable: Iterable<Any>) {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.consumerProguardFiles",
                 "setConsumerProguardFile()",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)

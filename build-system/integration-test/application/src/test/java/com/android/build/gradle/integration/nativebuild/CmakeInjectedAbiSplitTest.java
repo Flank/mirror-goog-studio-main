@@ -40,8 +40,7 @@ public class CmakeInjectedAbiSplitTest {
     @ClassRule
     public static GradleTestProject sProject =
             GradleTestProject.builder()
-                    .fromTestApp(HelloWorldJniApp.builder().build())
-                    .addFile(HelloWorldJniApp.cmakeLists("."))
+                    .fromTestApp(HelloWorldJniApp.builder().withCmake().build())
                     .create();
 
     @BeforeClass

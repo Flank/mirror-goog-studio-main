@@ -29,6 +29,11 @@ import java.lang.reflect.Field;
  */
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class WakeLockWrapper {
+    // Native functions to send wake lock events to perfd.
+    private static native void sendWakeLockAcquired();
+
+    private static native void sendWakeLockReleased();
+
     /**
      * Exit hook for {@link PowerManager#newWakeLock(int, String)}.
      *
@@ -65,18 +70,29 @@ public final class WakeLockWrapper {
      * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
      */
     public static void wrapAcquire(WakeLock wrapped) {
-        // TODO: Send data via GRpc
-        StudioLog.v(String.format("Acquiring WakeLock: %s", System.identityHashCode(wrapped)));
+        sendWakeLockAcquired();
+    }
+
+    /**
+     * Wraps {@link WakeLock#acquire(long)}.
+     *
+     * <p>Since {@link WakeLock#acquire(long)} does not call {@link WakeLock#acquire()} (vice
+     * versa), this will not cause double-instrumentation.
+     *
+     * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
+     * @param timeout the timeout parameter passed to the original method.
+     */
+    public static void wrapAcquire(WakeLock wrapped, long timeout) {
+        sendWakeLockAcquired();
     }
 
     /**
      * Wraps {@link WakeLock#release(int)}.
      *
      * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
-     * @param timeout the timeout parameter passed to the original method.
+     * @param flags the flags parameter passed to the original method.
      */
-    public static void wrapRelease(WakeLock wrapped, int timeout) {
-        // TODO: Send data via GRpc
-        StudioLog.v(String.format("Releasing WakeLock: %s", System.identityHashCode(wrapped)));
+    public static void wrapRelease(WakeLock wrapped, int flags) {
+        sendWakeLockReleased();
     }
 }

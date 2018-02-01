@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl.tester.negative
 
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.dsl.tester.ValueInterfaceOne
 import com.android.builder.errors.EvalIssueReporter
@@ -25,7 +26,7 @@ interface UnprotectedFinalList {
     val unprotectedFinalListProperty: List<ValueInterfaceOne>
 }
 
-class UnprotectedFinalListImpl(issueReporter: EvalIssueReporter)
-    : SealableObject(issueReporter), UnprotectedFinalList {
+class UnprotectedFinalListImpl(dslScope: DslScope)
+    : SealableObject(dslScope), UnprotectedFinalList {
     override val unprotectedFinalListProperty: List<ValueInterfaceOne> = ArrayList()
 }

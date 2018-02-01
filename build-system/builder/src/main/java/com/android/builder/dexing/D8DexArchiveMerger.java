@@ -45,6 +45,8 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
     private static final String ERROR_MULTIDEX =
             "Cannot fit requested classes in a single dex file";
 
+    private static final String ERROR_DUPLICATE = "Program type already present";
+
     private final int minSdkVersion;
     @NonNull private final CompilationMode compilationMode;
     @NonNull private final MessageReceiver messageReceiver;
@@ -134,6 +136,10 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
 
             if (diagnostic.getDiagnosticMessage().startsWith(ERROR_MULTIDEX)) {
                 addHint(DexParser.DEX_LIMIT_EXCEEDED_ERROR);
+            }
+
+            if (diagnostic.getDiagnosticMessage().startsWith(ERROR_DUPLICATE)) {
+                addHint(diagnostic.getDiagnosticMessage());
             }
 
             return super.convertToMessage(kind, diagnostic);

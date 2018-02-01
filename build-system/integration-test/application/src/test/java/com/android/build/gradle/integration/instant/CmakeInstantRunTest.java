@@ -48,10 +48,10 @@ import org.junit.rules.TemporaryFolder;
 public class CmakeInstantRunTest {
 
     @ClassRule
-    public static GradleTestProject sProject = GradleTestProject.builder()
-            .fromTestApp(HelloWorldJniApp.builder().build())
-            .addFile(HelloWorldJniApp.cmakeLists("."))
-            .create();
+    public static GradleTestProject sProject =
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldJniApp.builder().withCmake().build())
+                    .create();
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();

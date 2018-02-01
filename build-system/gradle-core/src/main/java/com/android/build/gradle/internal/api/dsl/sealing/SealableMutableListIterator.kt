@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.internal.api.dsl.sealing
 
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 
 class SealableMutableListIterator<T>(
             private val iterator: MutableListIterator<T>,
-            issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter), MutableListIterator<T> {
+            dslScope: DslScope)
+        : SealableObject(dslScope), MutableListIterator<T> {
 
     override fun hasPrevious(): Boolean = iterator.hasPrevious()
 

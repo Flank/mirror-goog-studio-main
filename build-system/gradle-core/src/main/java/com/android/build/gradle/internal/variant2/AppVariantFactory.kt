@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
-import com.android.build.api.dsl.variant.Variant
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.extensions.AppExtensionImpl
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrVariantImpl
@@ -26,11 +26,10 @@ import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
 import com.android.builder.core.VariantType
-import com.android.builder.errors.EvalIssueReporter
 
 class AppVariantFactory : VariantFactory2<AppExtensionImpl> {
 
-    override val generatedType: VariantType = VariantType.DEFAULT
+    override val generatedType: VariantType = VariantType.APK
     override val testedBy: List<VariantType> = listOf(VariantType.ANDROID_TEST, VariantType.UNIT_TEST)
     override val testTarget: VariantType? = null
 
@@ -42,18 +41,18 @@ class AppVariantFactory : VariantFactory2<AppExtensionImpl> {
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             commonVariantProperties: CommonVariantPropertiesImpl,
             variantDispatcher: VariantDispatcher,
-            issueReporter: EvalIssueReporter)
+            dslScope: DslScope)
             : SealableVariant {
 
         return AppVariantImpl(
-                VariantType.DEFAULT,
+                VariantType.APK,
                 variantProperties,
                 productFlavorOrVariant,
                 buildTypOrVariant,
                 variantExtensionProperties,
                 commonVariantProperties,
                 variantDispatcher,
-                issueReporter)
+                dslScope)
     }
 
     override fun computeApplicationId(

@@ -18,21 +18,80 @@ package com.android.build.gradle.internal.api.dsl.options
 
 import com.android.build.api.dsl.options.AnnotationProcessorOptions
 import com.android.build.api.dsl.options.JavaCompileOptions
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealable
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.sealing.OptionalSupplier
+import com.google.common.base.Charsets
 import org.gradle.api.Action
+import org.gradle.api.JavaVersion
+import javax.inject.Inject
 
-class JavaCompileOptionsImpl(issueReporter: EvalIssueReporter)
-        : InitializableSealable<JavaCompileOptions>(issueReporter), JavaCompileOptions {
+open class JavaCompileOptionsImpl @Inject constructor(dslScope: DslScope)
+        : InitializableSealable<JavaCompileOptions>(dslScope), JavaCompileOptions {
+
+    @Suppress("LeakingThis")
+    private val _annotationProcessorOptions = OptionalSupplier(this, AnnotationProcessorOptionsImpl::class.java, dslScope)
+
+    override var sourceCompatibility: JavaVersion = JavaVersion.VERSION_1_6
+        set(value) {
+            if (checkSeal()) {
+                field = value
+            }
+        }
+
+    override fun setSourceCompatibility(value: Any) {
+        if (checkSeal()) {
+            sourceCompatibility = JavaVersion.toVersion(value)
+        }
+    }
+
+    override var targetCompatibility: JavaVersion = JavaVersion.VERSION_1_6
+        set(value) {
+            if (checkSeal()) {
+                field = value
+            }
+        }
+
+    override fun setTargetCompatibility(value: Any) {
+        if (checkSeal()) {
+            targetCompatibility = JavaVersion.toVersion(value)
+        }
+    }
+
+    override var encoding: String =  Charsets.UTF_8.name()
+        set(value) {
+            if (checkSeal()) {
+                field = value
+            }
+        }
+    override var incremental: Boolean? = null
+        set(value) {
+            if (checkSeal()) {
+                field = value
+            }
+        }
 
     override val annotationProcessorOptions: AnnotationProcessorOptions
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = _annotationProcessorOptions.get()
 
     override fun annotationProcessorOptions(action: Action<AnnotationProcessorOptions>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        action.execute(_annotationProcessorOptions.get())
     }
 
     override fun initWith(that: JavaCompileOptions) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        if (checkSeal()) {
+            sourceCompatibility = that.sourceCompatibility
+            targetCompatibility = that.targetCompatibility
+            encoding = that.encoding
+            incremental = that.incremental
+            if (that is JavaCompileOptionsImpl) {
+                _annotationProcessorOptions.copyFrom(that._annotationProcessorOptions)
+            }
+        }
+    }
+
+    override fun seal() {
+        super.seal()
+        _annotationProcessorOptions.seal()
     }
 }

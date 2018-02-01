@@ -152,7 +152,8 @@ class Aapt2DaemonImplTest {
                 resourceDirs = ImmutableList.of(compiledDir),
                 resourceOutputApk = outputFile,
                 options = AaptOptions(),
-                variantType = VariantType.DEFAULT)
+                variantType = VariantType.APK
+        )
 
         daemon.link(request, logger)
         assertThat(Zip(outputFile)).containsFileWithContent("res/raw/foo.txt", "content")
@@ -182,7 +183,8 @@ class Aapt2DaemonImplTest {
                 resourceOutputApk = outputFile,
                 resourceDirs = ImmutableList.of(compiledDir),
                 options = AaptOptions(),
-                variantType = VariantType.DEFAULT)
+                variantType = VariantType.APK
+        )
         val exception = assertFailsWith(Aapt2Exception::class) {
             daemon.link(request.copy(intermediateDir = temporaryFolder.newFolder()), logger)
         }

@@ -16,30 +16,22 @@
 
 package com.android.build.gradle.internal.api.dsl.model
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.api.model.ObjectFactory
 
 class BuildTypeFactory(
-            private val objectFactory: ObjectFactory,
-            private val deprecationReporter: DeprecationReporter,
-            private val issueReporter: EvalIssueReporter)
+            private val dslScope: DslScope)
         : NamedDomainObjectFactory<BuildTypeImpl> {
 
     override fun create(name: String): BuildTypeImpl {
-        val buildTypeOrVariant = BuildTypeOrVariantImpl(
-                "BuildType",
-                deprecationReporter,
-                issueReporter)
+        val buildTypeOrVariant = BuildTypeOrVariantImpl("BuildType", dslScope)
 
-        return objectFactory.newInstance(BuildTypeImpl::class.java,
+        return dslScope.objectFactory.newInstance(BuildTypeImpl::class.java,
                 name,
-                VariantPropertiesImpl(issueReporter),
-                BuildTypeOrProductFlavorImpl(deprecationReporter, issueReporter, { buildTypeOrVariant.postProcessing }),
+                VariantPropertiesImpl(dslScope),
+                BuildTypeOrProductFlavorImpl(dslScope, { buildTypeOrVariant.postProcessing }),
                 buildTypeOrVariant,
-                FallbackStrategyImpl(deprecationReporter, issueReporter),
-                deprecationReporter,
-                issueReporter)
+                FallbackStrategyImpl(dslScope),
+                dslScope)
     }
 }

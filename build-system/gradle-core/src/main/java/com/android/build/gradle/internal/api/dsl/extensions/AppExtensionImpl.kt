@@ -23,19 +23,20 @@ import com.android.build.api.dsl.extension.EmbeddedTestProperties
 import com.android.build.api.dsl.extension.OnDeviceTestProperties
 import com.android.build.api.dsl.extension.VariantAwareProperties
 import com.android.build.api.dsl.extension.VariantOrExtensionProperties
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.DomainObjectSet
+import javax.inject.Inject
 
-class AppExtensionImpl(
+open class AppExtensionImpl @Inject constructor(
             private val buildProperties: BuildPropertiesImpl,
             override val variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             private val variantAwareProperties: VariantAwarePropertiesImpl,
             private val apkPropertiesImpl: ApkPropertiesImpl,
             private val embeddedTestProperties: EmbeddedTestPropertiesImpl,
             private val onDeviceTestProperties: OnDeviceTestPropertiesImpl,
-            issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter),
+            dslScope: DslScope)
+        : SealableObject(dslScope),
         AppExtension,
         BaseExtension2,
         BuildProperties by buildProperties,

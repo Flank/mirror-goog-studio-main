@@ -37,7 +37,9 @@
 using grpc::ServerContext;
 using grpc::ServerWriter;
 using grpc::Status;
+using grpc::StatusCode;
 using profiler::proto::AgentStatusResponse;
+using profiler::proto::Device;
 using std::string;
 
 namespace profiler {
@@ -187,7 +189,7 @@ Status ProfilerServiceImpl::GetBytes(
 Status ProfilerServiceImpl::GetAgentStatus(
     ServerContext* context, const profiler::proto::AgentStatusRequest* request,
     profiler::proto::AgentStatusResponse* response) {
-  auto got = heartbeat_timestamp_map_.find(request->process_id());
+  auto got = heartbeat_timestamp_map_.find(request->pid());
   if (got != heartbeat_timestamp_map_.end()) {
     int64_t current_time = clock_.GetCurrentTime();
     if (GenericComponent::kHeartbeatThresholdNs >
@@ -205,21 +207,6 @@ Status ProfilerServiceImpl::GetAgentStatus(
   return Status::OK;
 }
 
-// This function is currently only used in test. It works by grabbing the
-// process id of all heatbeat processes.
-// TODO: update this function to get all processes on host, or move
-// to a test specific RPC.
-Status ProfilerServiceImpl::GetProcesses(
-    ServerContext* context, const profiler::proto::GetProcessesRequest* request,
-    profiler::proto::GetProcessesResponse* response) {
-  Trace trace("PRO:GetProcesses");
-  for (const auto& mapping : heartbeat_timestamp_map_) {
-    profiler::proto::Process* process = response->add_process();
-    process->set_pid(mapping.first);
-  }
-  return Status::OK;
-}
-
 Status ProfilerServiceImpl::GetDevices(
     ServerContext* context, const profiler::proto::GetDevicesRequest* request,
     profiler::proto::GetDevicesResponse* response) {
@@ -231,53 +218,44 @@ Status ProfilerServiceImpl::GetDevices(
   return Status::OK;
 }
 
-Status ProfilerServiceImpl::AttachAgent(
-    grpc::ServerContext* context,
-    const profiler::proto::AgentAttachRequest* request,
-    profiler::proto::AgentAttachResponse* response) {
-  if (profiler::DeviceInfo::feature_level() < 26) {
-    return ::grpc::Status(
-        ::grpc::StatusCode::UNIMPLEMENTED,
-        "Attaching agent not implemented on Nougat or older devices");
+Status ProfilerServiceImpl::TryAttachAppAgent(
+    int32_t app_pid, const string& agent_lib_file_name) {
+  if (profiler::DeviceInfo::feature_level() < Device::O) {
+    return Status(StatusCode::UNIMPLEMENTED,
+                  "JVMTI agent cannot be attached on Nougat or older devices");
   } else {
-    string app_name = ProcessManager::GetCmdlineForPid(request->process_id());
+    string app_name = ProcessManager::GetCmdlineForPid(app_pid);
     if (app_name.empty()) {
-      Log::V("Process (PID %d) isn't running. Cannot attach agent.",
-             request->process_id());
-      response->set_status(
-          profiler::proto::AgentAttachResponse::FAILURE_UNKNOWN);
-      return Status::OK;
+      return Status(StatusCode::NOT_FOUND,
+                    "Process isn't running. Cannot attach agent.");
     }
 
     // Copies the connector over to the package's data folder so we can run it
     // to send messages to perfa's Unix socket server.
     string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
     CopyFileToPackageFolder(package_name, kConnectorFileName);
-    if (!IsAppAgentAlive(request->process_id(), package_name.c_str())) {
-      // Only attach agent if one is not detected.
-      if (RunAgent(app_name, package_name, config_.GetConfigFilePath(),
-                   request->agent_lib_file_name())) {
-        response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
-      } else {
-        response->set_status(
-            profiler::proto::AgentAttachResponse::FAILURE_UNKNOWN);
-      }
+    // Only attach agent if one is not detected. Note that an agent can already
+    // exist if we have profiled the same app before, and either Studio/perfd
+    // has restarted and has lost any knowledge about such agent.
+    if (!IsAppAgentAlive(app_pid, package_name)) {
+      RunAgent(app_name, package_name, config_.GetConfigFilePath(),
+               agent_lib_file_name);
     }
 
     // Only reconnect to perfa if an existing connection has not been detected.
     // This can be identified by whether perfa has a valid grpc channel to send
     // this perfd instance the heartbeats.
-    if (!CheckAppHeartBeat(request->process_id())) {
+    if (!CheckAppHeartBeat(app_pid)) {
       int fork_pid = fork();
       if (fork_pid == -1) {
         perror("fork connector");
-        return ::grpc::Status(::grpc::StatusCode::RESOURCE_EXHAUSTED,
-                              "Cannot fork a process to run connector");
+        return Status(StatusCode::RESOURCE_EXHAUSTED,
+                      "Cannot fork a process to run connector");
       } else if (fork_pid == 0) {
         // child process
         string socket_name;
         socket_name.append(config_.GetAgentConfig().service_socket_name());
-        RunConnector(request->process_id(), package_name, socket_name);
+        RunConnector(app_pid, package_name, socket_name);
         // RunConnector calls execl() at the end. It returns only if an error
         // has occured.
         exit(EXIT_FAILURE);
@@ -291,9 +269,16 @@ Status ProfilerServiceImpl::AttachAgent(
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {
-  sessions_->BeginSession(request->device_id(), request->process_id(),
+  sessions_->BeginSession(request->device_id(), request->pid(),
                           response->mutable_session());
-  return Status::OK;
+
+  Status status = Status::OK;
+  if (request->jvmti_config().attach_agent()) {
+    status = TryAttachAppAgent(request->pid(),
+                               request->jvmti_config().agent_lib_file_name());
+  }
+
+  return status;
 }
 
 Status ProfilerServiceImpl::EndSession(
@@ -333,7 +318,7 @@ Status ProfilerServiceImpl::DeleteSession(
 // (e.g. |kHeartBeatRequest|) to the agent via unix socket. If the agent's
 // unix socket server is up, the send operation should be sucessful, in which
 // case this will return true, false otherwise.
-bool ProfilerServiceImpl::IsAppAgentAlive(int app_pid, const char* app_name) {
+bool ProfilerServiceImpl::IsAppAgentAlive(int app_pid, const string& app_name) {
   std::ostringstream args;
   args << kConnectCmdLineArg << "=" << app_pid << " " << kHeartBeatRequest;
   BashCommandRunner ping(kConnectorRelativePath);

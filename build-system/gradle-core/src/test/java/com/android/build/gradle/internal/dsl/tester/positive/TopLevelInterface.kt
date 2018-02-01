@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl.tester.positive
 
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.build.gradle.internal.api.dsl.sealing.SealableMap
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
@@ -36,11 +37,10 @@ interface TopLevelInterface {
     val valueInterfaceOnesMap : Map<String, ValueInterfaceOne>
 }
 
-class TopLevelInterfaceImpl(issueReporter: EvalIssueReporter)
-    : SealableObject(issueReporter), TopLevelInterface {
+class TopLevelInterfaceImpl(dslScope: DslScope)
+    : SealableObject(dslScope), TopLevelInterface {
 
-    override var valueInterfaceOne: ValueInterfaceOne = ValueInterfaceOneImpl(
-            issueReporter)
+    override var valueInterfaceOne: ValueInterfaceOne = ValueInterfaceOneImpl(dslScope)
         set(value) {
             if (checkSeal()) {
                 field = value
@@ -61,10 +61,10 @@ class TopLevelInterfaceImpl(issueReporter: EvalIssueReporter)
             }
         }
 
-    override val valueInterfaceOnes : SealableList<ValueInterfaceOne> = SealableList.new(issueReporter)
+    override val valueInterfaceOnes : SealableList<ValueInterfaceOne> = SealableList.new(dslScope)
 
     override val valueInterfaceOnesMap: SealableMap<String, ValueInterfaceOne> =
-            SealableMap.new(issueReporter)
+            SealableMap.new(dslScope)
 
     override fun seal() {
         super.seal()

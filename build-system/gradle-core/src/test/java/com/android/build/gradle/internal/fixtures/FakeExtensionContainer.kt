@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.fixtures
 import org.gradle.api.Action
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.plugins.ExtensionContainer
+import org.gradle.api.plugins.ExtensionsSchema
 import org.gradle.api.plugins.ExtraPropertiesExtension
 import org.gradle.api.reflect.TypeOf
 
@@ -96,5 +97,9 @@ class FakeExtensionContainer(private val objectFactory: ObjectFactory): Extensio
 
     override fun findByName(p0: String?): Any {
         TODO("not implemented")
+    }
+
+    override fun getExtensionsSchema(): ExtensionsSchema {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

@@ -212,6 +212,7 @@ public class PackagingOptionsFilteringTest {
         byte[] c1 = new byte[] { 4, 5 };
         byte[] c2 = new byte[] { 6, 7, 8 };
 
+        // FIXME figure out what to do with the test using folders now excluded by Gradle's Sync task or that windows handles differently.
         dummyFile(c0, "src", "main", "resources", "I_am_ign");
         dummyFile(c0, "src", "main", "resources", "ssccs", "I stay");
         dummyFile(c1, "src", "main", "resources", "Ignoring", "this", "fileign");
@@ -251,21 +252,22 @@ public class PackagingOptionsFilteringTest {
         byte[] c1 = new byte[] { 4, 5 };
         byte[] c2 = new byte[] { 6, 7, 8 };
 
+        // FIXME figure out what to do with the test using folders now excluded by Gradle's Sync task
         dummyFile(c0, "src", "main", "resources", "I_am_ign");
-        dummyFile(c0, "src", "main", "resources", "sccs", "I stay");
+        dummyFile(c0, "src", "main", "resources", "sccs2", "I stay");
         dummyFile(c1, "src", "main", "resources", "Ignoring", "this", "fileign");
         dummyFile(c1, "src", "main", "resources", "SSensitive", "files", "may", "leak");
         dummyFile(c2, "src", "main", "resources", "some", "sensitive", "files", "dont");
-        dummyFile(c2, "src", "main", "resources", "pkg", "cvs", "very-sensitive-info");
+        dummyFile(c2, "src", "main", "resources", "pkg", "cvs2", "very-sensitive-info");
 
         project.execute(":assembleDebug");
 
-        ApkSubject apk = TruthHelper.assertThat(project.getApk("debug"));
+        ApkSubject apk = TruthHelper.assertThat(project.getApk(GradleTestProject.ApkType.DEBUG));
         apk.doesNotContainJavaResource("I_am_ign");
-        apk.containsJavaResourceWithContent("sccs/I stay", c0);
+        apk.containsJavaResourceWithContent("sccs2/I stay", c0);
         apk.doesNotContainJavaResource("Ignoring/this/fileign");
         apk.containsJavaResourceWithContent("SSensitive/files/may/leak", c1);
         apk.doesNotContainJavaResource("some/sensitive/files/dont");
-        apk.containsJavaResourceWithContent("pkg/cvs/very-sensitive-info", c2);
+        apk.containsJavaResourceWithContent("pkg/cvs2/very-sensitive-info", c2);
     }
 }

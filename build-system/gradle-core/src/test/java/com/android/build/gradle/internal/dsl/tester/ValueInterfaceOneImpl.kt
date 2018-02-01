@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl.tester
 
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.builder.errors.EvalIssueReporter
 
@@ -24,8 +25,8 @@ interface ValueInterfaceOne {
     var valueInterfaceOneProperty: String
 }
 
-class ValueInterfaceOneImpl(issueReporter: EvalIssueReporter)
-    : SealableObject(issueReporter), ValueInterfaceOne {
+class ValueInterfaceOneImpl(dslScope: DslScope)
+    : SealableObject(dslScope), ValueInterfaceOne {
 
     override var valueInterfaceOneProperty: String = "valueInterfaceOneProperty"
         set(value) {

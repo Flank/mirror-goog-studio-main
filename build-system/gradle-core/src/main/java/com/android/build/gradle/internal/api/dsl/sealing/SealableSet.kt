@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.api.dsl.sealing
 
-import com.android.builder.errors.EvalIssueReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 
 /**
  * A [MutableSet] that can be sealed to prevent further updates.
@@ -39,23 +39,23 @@ class SealableSet<T> private constructor(
             wrappedSet: MutableSet<T>?,
             instantiator: () -> MutableSet<T>,
             cloner: (MutableSet<T>) -> MutableSet<T>,
-            issueReporter: EvalIssueReporter)
+        dslScope: DslScope)
         : AbstractSealableCollection<T, MutableSet<T>>(
-                wrappedSet, instantiator, cloner, issueReporter),
+                wrappedSet, instantiator, cloner, dslScope),
         MutableSet<T> {
 
     companion object {
-        fun <T> wrap(wrappedList: MutableSet<T>, errorReporter: EvalIssueReporter) =
+        fun <T> wrap(wrappedList: MutableSet<T>, dslScope: DslScope) =
                 SealableSet(
                         wrappedList,
                         { throw RuntimeException("Calling objectFactory on a WrappedSealableSet") },
                         { collection -> collection },
-                        errorReporter)
+                        dslScope)
 
-        fun <T> new(errorReporter: EvalIssueReporter) = SealableSet(
+        fun <T> new(dslScope: DslScope) = SealableSet(
                 null,
                 { LinkedHashSet<T>() },
                 { collection -> LinkedHashSet(collection) },
-                errorReporter)
+                dslScope)
     }
 }

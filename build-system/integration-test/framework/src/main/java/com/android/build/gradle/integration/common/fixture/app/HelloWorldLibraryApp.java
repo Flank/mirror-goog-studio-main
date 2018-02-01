@@ -48,9 +48,6 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
                                 + "     compileSdkVersion "
                                 + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                                 + "\n"
-                                + "     buildToolsVersion '"
-                                + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                                + "'\n"
                                 + "}\n"));
 
         // Create AndroidManifest.xml that uses the Activity from the library.
@@ -85,9 +82,6 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
                                 + "     compileSdkVersion "
                                 + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                                 + "\n"
-                                + "     buildToolsVersion '"
-                                + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                                + "'\n"
                                 + "}\n"));
 
     }

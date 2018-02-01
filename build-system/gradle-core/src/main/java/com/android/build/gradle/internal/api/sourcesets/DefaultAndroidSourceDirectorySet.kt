@@ -17,22 +17,22 @@
 package com.android.build.gradle.internal.api.sourcesets
 
 import com.android.build.api.sourcesets.AndroidSourceDirectorySet
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Lists
 import groovy.lang.Closure
-import java.io.File
-import java.util.ArrayList
-import java.util.Collections
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.FileTreeElement
 import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.api.tasks.util.PatternSet
+import java.io.File
+import java.util.ArrayList
+import java.util.Collections
 
 /**
  * Default implementation of the AndroidSourceDirectorySet.
@@ -40,7 +40,7 @@ import org.gradle.api.tasks.util.PatternSet
 class DefaultAndroidSourceDirectorySet(
         private val name: String,
         private val filesProvider: FilesProvider,
-        issueReporter: EvalIssueReporter) : SealableObject(issueReporter), AndroidSourceDirectorySet {
+        dslScope: DslScope) : SealableObject(dslScope), AndroidSourceDirectorySet {
     private val source = Lists.newArrayList<Any>()
     private val _filter = PatternSet()
 

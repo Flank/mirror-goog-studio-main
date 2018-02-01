@@ -20,13 +20,14 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.repository.Revision;
 import com.android.utils.ILogger;
+import com.google.common.collect.Lists;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
-import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +38,7 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
     NdkHandler ndkHandler;
     int minSdkVersion;
     String variantName;
-    Collection<Abi> abis;
+    List<JsonGenerationAbiConfiguration> abis;
     AndroidBuilder androidBuilder;
     File sdkFolder;
     File ndkFolder;
@@ -60,13 +61,22 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
         ndkHandler = Mockito.mock(NdkHandler.class);
         minSdkVersion = 123;
         variantName = "dummy variant name";
-        abis = Mockito.mock(Collection.class);
+        abis = Lists.newArrayList();
+        for (Abi abi : Abi.values()) {
+            abis.add(
+                    new JsonGenerationAbiConfiguration(
+                            abi,
+                            new File("./json"),
+                            new File("./obj"),
+                            NativeBuildSystem.CMAKE,
+                            31));
+        }
         androidBuilder = Mockito.mock(AndroidBuilder.class);
         sdkFolder = Mockito.mock(File.class);
         ndkFolder = Mockito.mock(File.class);
         soFolder = Mockito.mock(File.class);
-        objFolder = Mockito.mock(File.class);
-        jsonFolder = Mockito.mock(File.class);
+        objFolder = new File("./obj");
+        jsonFolder = new File("./json");
         makeFile = Mockito.mock(File.class);
         cmakeFolder = Mockito.mock(File.class);
         ninjaFolder = Mockito.mock(File.class);

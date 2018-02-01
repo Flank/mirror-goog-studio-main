@@ -24,21 +24,20 @@ import com.android.build.api.dsl.model.ProductFlavor
 import com.android.build.api.dsl.options.SigningConfig
 import com.android.build.api.dsl.variant.Variant
 import com.android.build.api.dsl.variant.VariantFilter
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.variant2.DslModelData
 import com.android.build.gradle.internal.variant2.VariantCallbackHolder
-import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
 class VariantAwarePropertiesImpl(
             private val dslModelData: DslModelData,
             variantCallbackHolder: VariantCallbackHolder,
-            private val deprecationReporter: DeprecationReporter,
-            issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter),
+            dslScope: DslScope)
+        : SealableObject(dslScope),
         VariantAwareProperties,
         DefaultConfig by dslModelData.defaultConfig {
 
@@ -49,10 +48,10 @@ class VariantAwarePropertiesImpl(
     override val signingConfigs
         get() = dslModelData.signingConfigs
 
-    private val _flavorDimensions: SealableList<String> = SealableList.new(issueReporter)
-    private val _variantFilters: SealableList<Action<VariantFilter>> = SealableList.new(issueReporter)
-    private val _preVariants: SealableList<Action<Void>> = SealableList.new(issueReporter)
-    private val _postVariants: SealableList<Action<Collection<Variant>>> = SealableList.new(issueReporter)
+    private val _flavorDimensions: SealableList<String> = SealableList.new(dslScope)
+    private val _variantFilters: SealableList<Action<VariantFilter>> = SealableList.new(dslScope)
+    private val _preVariants: SealableList<Action<Void>> = SealableList.new(dslScope)
+    private val _postVariants: SealableList<Action<Collection<Variant>>> = SealableList.new(dslScope)
 
     override val variants: VariantCallbackHandler<Variant> =
             variantCallbackHolder.createVariantCallbackHandler()
@@ -124,14 +123,14 @@ class VariantAwarePropertiesImpl(
     @Suppress("OverridingDeprecatedMember")
     override var flavorDimensionList: MutableList<String>
         get() {
-            deprecationReporter.reportDeprecatedUsage(
+            dslScope.deprecationReporter.reportDeprecatedUsage(
                     "android.flavorDimensions",
                     "android.flavorDimensionList",
                     DeprecationReporter.DeprecationTarget.OLD_DSL)
             return flavorDimensions
         }
         set(value) {
-            deprecationReporter.reportDeprecatedUsage(
+            dslScope.deprecationReporter.reportDeprecatedUsage(
                     "android.flavorDimensions",
                     "android.flavorDimensionList",
                     DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -141,7 +140,7 @@ class VariantAwarePropertiesImpl(
     @Suppress("OverridingDeprecatedMember")
     override val defaultConfig: DefaultConfig
         get() {
-            deprecationReporter.reportDeprecatedUsage(
+            dslScope.deprecationReporter.reportDeprecatedUsage(
                     "android",
                     "android.defaultConfig",
                     DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -150,7 +149,7 @@ class VariantAwarePropertiesImpl(
 
     @Suppress("OverridingDeprecatedMember")
     override fun defaultConfig(action: Action<DefaultConfig>) {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "android",
                 "android.defaultConfig",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)

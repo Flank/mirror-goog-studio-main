@@ -19,7 +19,6 @@ import com.android.annotations.Nullable;
 import com.google.common.base.Strings;
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.function.Function;
 
 /**
  * Represents a namespace used by aapt when processing resources.
@@ -37,9 +36,9 @@ import java.util.function.Function;
  *
  * <p>This class is serializable to allow passing between Gradle workers.
  */
-public class ResourceNamespace implements Serializable {
+public class ResourceNamespace implements Comparable<ResourceNamespace>, Serializable {
     public static final ResourceNamespace ANDROID =
-            new ResourceNamespace(SdkConstants.ANDROID_NS_NAME);
+            new ResourceNamespace(SdkConstants.ANDROID_URI, SdkConstants.ANDROID_NS_NAME);
     public static final ResourceNamespace RES_AUTO = new ResAutoNamespace();
     public static final ResourceNamespace TOOLS = new ToolsNamespace();
 
@@ -49,8 +48,21 @@ public class ResourceNamespace implements Serializable {
      */
     public static final ResourceNamespace TODO = RES_AUTO;
 
-    public static final Function<String, String> EMPTY_NAMESPACE_CONTEXT = s -> null;
+    /**
+     * Logic for looking up namespace prefixes defined in some context.
+     *
+     * @see ResourceNamespace#fromNamespacePrefix(String, ResourceNamespace, Resolver)
+     */
+    @FunctionalInterface
+    public interface Resolver {
+        /** Returns the full URI of an XML namespace for a given prefix, if defined. */
+        @Nullable
+        String prefixToUri(@NonNull String namespacePrefix);
 
+        Resolver EMPTY_RESOLVER = prefix -> null;
+    }
+
+    @NonNull private final String uri;
     @Nullable private final String packageName;
 
     /**
@@ -62,7 +74,7 @@ public class ResourceNamespace implements Serializable {
      * code most likely needs to resolve the short namespace prefix against XML namespaces defined
      * in the given context.
      *
-     * @see #fromNamespacePrefix(String, ResourceNamespace, Function)
+     * @see #fromNamespacePrefix(String, ResourceNamespace, Resolver)
      */
     @NonNull
     public static ResourceNamespace fromPackageName(@NonNull String packageName) {
@@ -71,7 +83,7 @@ public class ResourceNamespace implements Serializable {
             // Make sure ANDROID is a singleton, so we can use object identity to check for it.
             return ANDROID;
         } else {
-            return new ResourceNamespace(packageName);
+            return new ResourceNamespace(SdkConstants.URI_PREFIX + packageName, packageName);
         }
     }
 
@@ -94,24 +106,23 @@ public class ResourceNamespace implements Serializable {
      *     null), this is the namespace that will be returned. For example, if an XML file inside
      *     libA (com.lib.a) references "@string/foo", it means the "foo" resource from libA, so the
      *     "com.lib.a" namespace should be passed as the {@code defaultNamespace}.
-     * @param namespaceLookup strategy for mapping short namespace prefixes to namespace URIs as
-     *     used in XML resource files. This should be provided by the XML parser used. For example,
-     *     if the source XML document contained snippet such as {@code
-     *     xmlns:foo="http://schemas.android.com/apk/res/com.foo"}, this {@link Function} should
-     *     return {@code "http://schemas.android.com/apk/res/com.foo"} when applied to argument
-     *     {@code "foo"}.
+     * @param resolver strategy for mapping short namespace prefixes to namespace URIs as used in
+     *     XML resource files. This should be provided by the XML parser used. For example, if the
+     *     source XML document contained snippet such as {@code
+     *     xmlns:foo="http://schemas.android.com/apk/res/com.foo"}, it should return {@code
+     *     "http://schemas.android.com/apk/res/com.foo"} when applied to argument {@code "foo"}.
      * @see com.android.resources.ResourceUrl#namespace
      */
     @Nullable
     public static ResourceNamespace fromNamespacePrefix(
             @Nullable String prefix,
             @NonNull ResourceNamespace defaultNamespace,
-            @NonNull Function<String, String> namespaceLookup) {
+            @NonNull Resolver resolver) {
         if (Strings.isNullOrEmpty(prefix)) {
             return defaultNamespace;
         }
 
-        String uri = namespaceLookup.apply(prefix);
+        String uri = resolver.prefixToUri(prefix);
         if (uri != null) {
             if (uri.equals(SdkConstants.AUTO_URI)) {
                 return RES_AUTO;
@@ -123,9 +134,8 @@ public class ResourceNamespace implements Serializable {
                 // TODO(namespaces): What is considered a good package name by aapt?
                 String packageName = uri.substring(SdkConstants.URI_PREFIX.length());
                 if (!packageName.isEmpty()) {
-                    return new ResourceNamespace(packageName);
-                } else {
-                    return null;
+                    return new ResourceNamespace(
+                            SdkConstants.URI_PREFIX + packageName, packageName);
                 }
             }
 
@@ -137,12 +147,13 @@ public class ResourceNamespace implements Serializable {
         }
     }
 
-    private ResourceNamespace(@Nullable String packageName) {
+    private ResourceNamespace(@NonNull String uri, @Nullable String packageName) {
+        this.uri = uri;
         this.packageName = packageName;
     }
 
     /**
-     * Returns namespace associated with this namespace, or null in the case of {@link #RES_AUTO}.
+     * Returns the package associated with this namespace, or null in the case of {@link #RES_AUTO}.
      *
      * <p>The result value can be used as the namespace part of a {@link
      * com.android.resources.ResourceUrl}.
@@ -154,7 +165,7 @@ public class ResourceNamespace implements Serializable {
 
     @NonNull
     public String getXmlNamespaceUri() {
-        return SdkConstants.URI_PREFIX + packageName;
+        return uri;
     }
 
     @Override
@@ -171,52 +182,28 @@ public class ResourceNamespace implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(packageName);
+        return uri.hashCode();
     }
 
     @Override
     public String toString() {
-        return packageName;
+        return uri.substring("http://schemas.android.com/".length());
+    }
+
+    @Override
+    public int compareTo(@NonNull ResourceNamespace other) {
+        return uri.compareTo(other.uri);
     }
 
     private static class ResAutoNamespace extends ResourceNamespace {
         private ResAutoNamespace() {
-            super(null);
+            super(SdkConstants.AUTO_URI, null);
         }
-
-        @NonNull
-        @Override
-        public String getXmlNamespaceUri() {
-            return SdkConstants.AUTO_URI;
-        }
-
-        @Override
-        public String toString() {
-            return "res-auto";
-        }
-
     }
 
     private static class ToolsNamespace extends ResourceNamespace {
         private ToolsNamespace() {
-            super(null);
-        }
-
-        @NonNull
-        @Override
-        public String getXmlNamespaceUri() {
-            return SdkConstants.TOOLS_URI;
-        }
-
-        @Override
-        public String toString() {
-            return "tools";
-        }
-
-        @Override
-        public int hashCode() {
-            // Try to hit a different bucket from res-auto.
-            return 1;
+            super(SdkConstants.TOOLS_URI, null);
         }
     }
 }

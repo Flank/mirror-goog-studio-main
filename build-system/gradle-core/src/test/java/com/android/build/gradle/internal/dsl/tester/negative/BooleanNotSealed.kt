@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl.tester.negative
 
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.builder.errors.EvalIssueReporter
 
@@ -24,8 +25,8 @@ interface BooleanNotSealed {
     var booleanProperty: Boolean
 }
 
-class BooleanNotSealedImpl(issueReporter: EvalIssueReporter)
-    : SealableObject(issueReporter), BooleanNotSealed {
+class BooleanNotSealedImpl(dslScope: DslScope)
+    : SealableObject(dslScope), BooleanNotSealed {
 
     override var booleanProperty: Boolean = true
         set(value) {

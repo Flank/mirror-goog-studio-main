@@ -27,7 +27,6 @@ import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.function.Function;
 
 /**
  * A {@linkplain ResourceUrl} represents a parsed resource url such as {@code @string/foo} or {@code
@@ -254,17 +253,17 @@ public class ResourceUrl implements Serializable {
      * was used.
      *
      * @param contextNamespace aapt namespace of the module in which this URL was used
-     * @param namespaceLookup logic for expanding namespaces aliases, most likely by walking up the
-     *     XML tree.
-     * @see ResourceNamespace#fromNamespacePrefix(String, ResourceNamespace, Function)
+     * @param resolver logic for expanding namespaces aliases, most likely by walking up the XML
+     *     tree.
+     * @see ResourceNamespace#fromNamespacePrefix(String, ResourceNamespace,
+     *     ResourceNamespace.Resolver)
      */
     @Nullable
     public ResourceReference resolve(
             @NonNull ResourceNamespace contextNamespace,
-            @NonNull Function<String, String> namespaceLookup) {
+            @NonNull ResourceNamespace.Resolver resolver) {
         ResourceNamespace resolvedNamespace =
-                ResourceNamespace.fromNamespacePrefix(
-                        this.namespace, contextNamespace, namespaceLookup);
+                ResourceNamespace.fromNamespacePrefix(this.namespace, contextNamespace, resolver);
         if (resolvedNamespace == null) {
             return null;
         }

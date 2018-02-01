@@ -156,19 +156,29 @@ public class IncrementalPackagerBuilder {
      */
     @NonNull
     public IncrementalPackagerBuilder withSigning(@Nullable SigningConfig signingConfig) {
+        if (signingConfig == null) {
+            return this;
+        }
         try {
-            if (signingConfig != null && signingConfig.isSigningReady()) {
-                CertificateInfo certificateInfo = KeystoreHelper.getCertificateInfo(
-                        signingConfig.getStoreType(),
-                        Preconditions.checkNotNull(signingConfig.getStoreFile()),
-                        Preconditions.checkNotNull(signingConfig.getStorePassword()),
-                        Preconditions.checkNotNull(signingConfig.getKeyPassword()),
-                        Preconditions.checkNotNull(signingConfig.getKeyAlias()));
-                key = certificateInfo.getKey();
-                certificate = certificateInfo.getCertificate();
-                v1SigningEnabled = signingConfig.isV1SigningEnabled();
-                v2SigningEnabled = signingConfig.isV2SigningEnabled();
-            }
+            String error =
+                    "SigningConfig \""
+                            + signingConfig.getName()
+                            + "\" is missing required property \"%s\".";
+            CertificateInfo certificateInfo =
+                    KeystoreHelper.getCertificateInfo(
+                            signingConfig.getStoreType(),
+                            Preconditions.checkNotNull(
+                                    signingConfig.getStoreFile(), error, "storeFile"),
+                            Preconditions.checkNotNull(
+                                    signingConfig.getStorePassword(), error, "storePassword"),
+                            Preconditions.checkNotNull(
+                                    signingConfig.getKeyPassword(), error, "keyPassword"),
+                            Preconditions.checkNotNull(
+                                    signingConfig.getKeyAlias(), error, "keyAlias"));
+            key = certificateInfo.getKey();
+            certificate = certificateInfo.getCertificate();
+            v1SigningEnabled = signingConfig.isV1SigningEnabled();
+            v2SigningEnabled = signingConfig.isV2SigningEnabled();
         } catch (KeytoolException|FileNotFoundException e) {
             throw new RuntimeException(e);
         }

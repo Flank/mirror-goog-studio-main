@@ -52,11 +52,6 @@ service ProfilerService {
   rpc GetAgentStatus(AgentStatusRequest) returns (AgentStatusResponse) {
   }
 
-  // TODO (b/67508564): Delete this and updated affected sites to call
-  // BeginSession instead.
-  rpc AttachAgent(AgentAttachRequest) returns (AgentAttachResponse) {
-  }
-
   // Start a new session. As a side effect, this also starts all profilers for
   // the PID being targeted by this session.
   // If a session with the same PID is already running, this method will
@@ -85,22 +80,6 @@ service ProfilerService {
   // automatically be called on it.
   rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse) {
   }
-}
-
-message AgentAttachRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  // TODO: This is temporary, remove when moving process discovery.
-  string agent_lib_file_name = 3;
-}
-
-message AgentAttachResponse {
-  enum Status {
-    UNSPECIFICED = 0;
-    SUCCESS = 1;
-    FAILURE_UNKNOWN = 2;
-  }
-  Status status = 1;
 }
 
 message TimeRequest {
@@ -141,8 +120,16 @@ message GetProcessesResponse {
 }
 
 message BeginSessionRequest {
+  message JvmtiConfig {
+    // True if an jvmti agent should be attached, false otherwise.
+    bool attach_agent = 1;
+    // TODO(b/65458869): Remove when moving process discovery to perfd.
+    string agent_lib_file_name = 2;
+  }
+
   int64 device_id = 1;
-  int32 process_id = 2;
+  int32 pid = 2;
+  JvmtiConfig jvmti_config = 3;
 }
 
 message BeginSessionResponse {
@@ -202,7 +189,7 @@ message BytesResponse {
 
 message AgentStatusRequest {
   int64 device_id = 1;
-  int32 process_id = 2;
+  int32 pid = 2;
 }
 
 message AgentStatusResponse {

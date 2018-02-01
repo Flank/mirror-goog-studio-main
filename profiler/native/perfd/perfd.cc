@@ -18,6 +18,7 @@
 #include "perfd/connector.h"
 #include "perfd/cpu/cpu_profiler_component.h"
 #include "perfd/daemon.h"
+#include "perfd/energy/energy_profiler_component.h"
 #include "perfd/event/event_profiler_component.h"
 #include "perfd/generic_component.h"
 #include "perfd/graphics/graphics_profiler_component.h"
@@ -32,8 +33,6 @@
 #include "utils/socket_utils.h"
 #include "utils/trace.h"
 
-// TODO: Move the flag to the agent config to be set by Studio.
-const bool is_io_profiling_enabled = false;
 const char* const kProfilerTest = "-profiler_test";
 
 int main(int argc, char** argv) {
@@ -72,6 +71,7 @@ int main(int argc, char** argv) {
   profiler::Daemon daemon(config_path, is_testing_profiler
                                            ? getenv("TEST_TMPDIR")
                                            : profiler::CurrentProcess::dir());
+  auto agent_config = daemon.utilities().config().GetAgentConfig();
 
   profiler::GenericComponent generic_component{&daemon.utilities(),
                                                &daemon.sessions()};
@@ -93,14 +93,18 @@ int main(int argc, char** argv) {
   daemon.RegisterComponent(&network_component);
 
   profiler::IoProfilerComponent io_component;
-  if (is_io_profiling_enabled) {
+  if (agent_config.profiler_io_enabled()) {
     daemon.RegisterComponent(&io_component);
+  }
+
+  profiler::EnergyProfilerComponent energy_component;
+  if (agent_config.energy_profiler_enabled()) {
+    daemon.RegisterComponent(&energy_component);
   }
 
   profiler::GraphicsProfilerComponent graphics_component{&daemon.utilities()};
   daemon.RegisterComponent(&graphics_component);
 
-  auto agent_config = daemon.utilities().config().GetAgentConfig();
   if (profiler::DeviceInfo::feature_level() >= 26 &&
       // TODO: remove the check on argument after agent uses only JVMTI to
       // instrument bytecode on O+ devices.

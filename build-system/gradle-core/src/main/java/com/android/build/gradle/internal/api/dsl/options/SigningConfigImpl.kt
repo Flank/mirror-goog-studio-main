@@ -17,17 +17,17 @@
 package com.android.build.gradle.internal.api.dsl.options
 
 import com.android.build.api.dsl.options.SigningConfig
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.errors.DeprecationReporter
-import com.android.builder.errors.EvalIssueReporter
 import java.io.File
+import javax.inject.Inject
 
 @Suppress("OverridingDeprecatedMember")
-class SigningConfigImpl(
+open class SigningConfigImpl @Inject constructor(
             private val named : String,
-            private val deprecationReporter: DeprecationReporter,
-            issueReporter: EvalIssueReporter)
-        : SealableObject(issueReporter), SigningConfig {
+            dslScope: DslScope)
+        : SealableObject(dslScope), SigningConfig {
 
     override fun getName(): String = named
 
@@ -83,7 +83,7 @@ class SigningConfigImpl(
     override fun isSigningReady() = storeFile != null &&  storePassword != null && keyAlias != null && keyPassword != null
 
     override fun isV1SigningEnabled(): Boolean {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "SigningConfig.v1SigningEnabled",
                 "SigningConfig.isV1SigningEnabled()",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)
@@ -91,7 +91,7 @@ class SigningConfigImpl(
     }
 
     override fun isV2SigningEnabled(): Boolean {
-        deprecationReporter.reportDeprecatedUsage(
+        dslScope.deprecationReporter.reportDeprecatedUsage(
                 "SigningConfig.v2SigningEnabled",
                 "SigningConfig.isV2SigningEnabled()",
                 DeprecationReporter.DeprecationTarget.OLD_DSL)

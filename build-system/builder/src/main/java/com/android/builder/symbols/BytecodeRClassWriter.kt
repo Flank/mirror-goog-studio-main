@@ -29,6 +29,7 @@ import org.objectweb.asm.ClassWriter.COMPUTE_MAXS
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.Opcodes.ACC_FINAL
+import org.objectweb.asm.Opcodes.ACC_PRIVATE
 import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ACC_STATIC
 import org.objectweb.asm.Opcodes.ACC_SUPER
@@ -91,7 +92,7 @@ private fun generateOuterRClass(resourceTypes: EnumSet<ResourceType>, packageR: 
 
     // Constructor
     val mv: MethodVisitor
-    mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null)
+    mv = cw.visitMethod(ACC_PRIVATE, "<init>", "()V", null, null)
     mv.visitCode()
     mv.visitVarInsn(ALOAD, 0)
     mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false)
@@ -147,7 +148,7 @@ private fun generateResourceTypeClass(table: SymbolTable, resType: ResourceType)
     }
 
     // Constructor
-    val init = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null)
+    val init = cw.visitMethod(ACC_PRIVATE, "<init>", "()V", null, null)
     init.visitCode()
     init.visitVarInsn(ALOAD, 0)
     init.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false)

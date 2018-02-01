@@ -22,6 +22,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -78,6 +79,11 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
         return resInputType.name();
     }
 
+    @Input
+    public String getPatchingPolicy() {
+        return instantRunBuildContext.getPatchingPolicy().name();
+    }
+
     @InputFiles
     public FileCollection getResourcesFile() {
         return resources;
@@ -91,6 +97,28 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
     @TaskAction
     protected void doFullTaskAction() {
 
+        if (instantRunBuildContext.getPatchingPolicy()
+                != InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES) {
+            // when not packaging resources in a separate APK, delete the output APK file so
+            // that if we switch back to this mode later on, we ensure that the APK is rebuilt
+            // and re-added to the build context and therefore the build-info.xml
+            getResInputBuildArtifacts()
+                    .forEach(
+                            buildOutput -> {
+                                ApkInfo apkInfo = buildOutput.getApkInfo();
+                                final File outputFile =
+                                        new File(
+                                                outputDirectory,
+                                                mangleApkName(apkInfo)
+                                                        + SdkConstants.DOT_ANDROID_PACKAGE);
+                                try {
+                                    FileUtils.deleteIfExists(outputFile);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+            return;
+        }
         getResInputBuildArtifacts()
                 .transform(
                         (apkData, input) -> {

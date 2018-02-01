@@ -19,12 +19,13 @@ package com.android.build.gradle.internal.api.dsl.options
 import com.android.build.api.dsl.options.ExternalNativeBuildOptions
 import com.android.build.api.dsl.options.ExternalNativeCmakeOptions
 import com.android.build.api.dsl.options.ExternalNativeNdkBuildOptions
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealable
-import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
+import javax.inject.Inject
 
-class ExternalNativeBuildOptionsImpl(issueReporter: EvalIssueReporter)
-        : InitializableSealable<ExternalNativeBuildOptions>(issueReporter),
+open class ExternalNativeBuildOptionsImpl @Inject constructor(dslScope: DslScope)
+        : InitializableSealable<ExternalNativeBuildOptions>(dslScope),
         ExternalNativeBuildOptions {
 
     override val externalNativeNdkBuildOptions: ExternalNativeNdkBuildOptions?

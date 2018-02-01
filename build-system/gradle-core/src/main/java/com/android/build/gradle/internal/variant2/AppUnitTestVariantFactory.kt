@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.extensions.AppExtensionImpl
-import com.android.build.gradle.internal.api.dsl.extensions.LibraryExtensionImpl
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrVariantImpl
 import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImpl
@@ -32,7 +32,7 @@ class AppUnitTestVariantFactory : VariantFactory2<AppExtensionImpl> {
 
     override val generatedType: VariantType = VariantType.UNIT_TEST
     override val testedBy: List<VariantType> = listOf()
-    override val testTarget: VariantType? = VariantType.DEFAULT
+    override val testTarget: VariantType? = VariantType.APK
 
     override fun createVariant(
             extension: AppExtensionImpl,
@@ -42,7 +42,7 @@ class AppUnitTestVariantFactory : VariantFactory2<AppExtensionImpl> {
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             commonVariantProperties: CommonVariantPropertiesImpl,
             variantDispatcher: VariantDispatcher,
-            issueReporter: EvalIssueReporter)
+            dslScope: DslScope)
             : SealableVariant {
 
         return UnitTestVariantImpl(
@@ -53,7 +53,7 @@ class AppUnitTestVariantFactory : VariantFactory2<AppExtensionImpl> {
                 variantExtensionProperties,
                 commonVariantProperties,
                 variantDispatcher,
-                issueReporter)
+                dslScope)
     }
 
     override fun computeApplicationId(mergedFlavor: ProductFlavorOrVariant, appIdSuffixFromFlavors: String?): String? {

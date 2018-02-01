@@ -25,6 +25,7 @@ import static org.objectweb.asm.Opcodes.V1_6;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.testutils.TestClassesGenerator;
+import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.apk.Dex;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
@@ -38,6 +39,7 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -390,6 +392,31 @@ public class DexArchiveMergerTest {
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
         DexArchiveTestUtil.mergeNativeDex(ImmutableList.of(dexArchive), outputDex, dexMerger);
+    }
+
+    @Test
+    public void testD8DuplicateClassError() throws Exception {
+        // create 2 classes with the same name and package
+        int numClasses = 2;
+        List<Path> dexArchives = new ArrayList<>();
+        for (int i = 0; i < numClasses; i++) {
+            Path classes = temporaryFolder.newFolder("classes" + i).toPath();
+            TestInputsGenerator.dirWithEmptyClasses(classes, Collections.singletonList("test/A"));
+            dexArchives.add(temporaryFolder.getRoot().toPath().resolve("output" + i));
+            DexArchiveTestUtil.convertClassesToDexArchive(classes, dexArchives.get(i), dexerTool);
+        }
+
+        Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
+
+        try {
+            DexArchiveTestUtil.mergeMonoDex(dexArchives, outputDex, dexMerger);
+            fail("dex merging should fail when there are classes with same name and package");
+        } catch (DexArchiveMergerException e) {
+            Truth.assertThat(e.getMessage()).contains("Program type already present");
+        } catch (Exception e) {
+            Truth.assertThat(Throwables.getStackTraceAsString(e))
+                    .contains("Multiple dex files define");
+        }
     }
 
     @NonNull

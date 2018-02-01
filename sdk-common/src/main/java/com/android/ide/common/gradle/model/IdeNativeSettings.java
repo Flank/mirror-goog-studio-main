@@ -40,11 +40,13 @@ public final class IdeNativeSettings extends IdeModel implements NativeSettings 
         myHashCode = calculateHashCode();
     }
 
+    @NonNull
     @Override
     public String getName() {
         return myName;
     }
 
+    @NonNull
     @Override
     public List<String> getCompilerFlags() {
         return myCompilerFlags;

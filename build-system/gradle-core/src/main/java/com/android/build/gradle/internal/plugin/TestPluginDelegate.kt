@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.plugin
 
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.extensions.ApkPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.extensions.AppExtensionImpl
 import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl
@@ -38,8 +39,7 @@ class TestPluginDelegate : TypedPluginDelegate<TestExtensionImpl> {
             buildProperties: BuildPropertiesImpl,
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             variantAwareProperties: VariantAwarePropertiesImpl,
-            deprecationReporter: DeprecationReporter,
-            issueReporter: EvalIssueReporter): TestExtensionImpl {
+            dslScope: DslScope): TestExtensionImpl {
         return extensionContainer
                 .create(
                         "android",
@@ -47,10 +47,10 @@ class TestPluginDelegate : TypedPluginDelegate<TestExtensionImpl> {
                         buildProperties,
                         variantExtensionProperties,
                         variantAwareProperties,
-                        ApkPropertiesImpl(issueReporter),
-                        EmbeddedTestPropertiesImpl(issueReporter),
-                        OnDeviceTestPropertiesImpl(issueReporter),
-                        issueReporter)
+                        ApkPropertiesImpl(dslScope),
+                        EmbeddedTestPropertiesImpl(dslScope),
+                        OnDeviceTestPropertiesImpl(dslScope),
+                        dslScope)
     }
 
     override fun createDefaults(extension: TestExtensionImpl) {

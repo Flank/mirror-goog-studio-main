@@ -16,26 +16,22 @@
 
 package com.android.build.gradle.internal.api.dsl.options
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.builder.core.BuilderConstants
-import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.api.model.ObjectFactory
 import java.io.File
 
-private val DEFAULT_PASSWORD = "android"
-private val DEFAULT_ALIAS = "AndroidDebugKey"
+private const val DEFAULT_PASSWORD = "android"
+private const val DEFAULT_ALIAS = "AndroidDebugKey"
 
 class SigningConfigFactory(
-            private val objectFactory: ObjectFactory,
-            private val deprecationReporter: DeprecationReporter,
-            private val issueReporter: EvalIssueReporter,
+            private val dslScope: DslScope,
             private val defaultDebugKeystoreLocation: File)
         : NamedDomainObjectFactory<SigningConfigImpl> {
 
     override fun create(name: String): SigningConfigImpl {
-        val newInstance = objectFactory.newInstance(SigningConfigImpl::class.java,
-                name, deprecationReporter, issueReporter)
+        val newInstance = dslScope.objectFactory.newInstance(SigningConfigImpl::class.java,
+                name, dslScope)
 
         if (BuilderConstants.DEBUG == name) {
             newInstance.storeFile = defaultDebugKeystoreLocation

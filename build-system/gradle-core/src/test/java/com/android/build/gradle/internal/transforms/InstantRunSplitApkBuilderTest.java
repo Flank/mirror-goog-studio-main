@@ -184,7 +184,7 @@ public class InstantRunSplitApkBuilderTest {
         AaptPackageConfig build = builder.build();
         File resourceOutputApk = build.getResourceOutputApk();
         assertThat(resourceOutputApk.getName()).isEqualTo("resources_ap");
-        assertThat(build.getVariantType()).isEqualTo(VariantType.DEFAULT);
+        assertThat(build.getVariantType()).isEqualTo(VariantType.APK);
         assertThat(build.getDebuggable()).isTrue();
     }
 

@@ -25,5 +25,4 @@ import com.android.build.gradle.internal.api.dsl.sealing.Sealable
 interface BaseExtension2 : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, Sealable {
 
     val variantExtensionProperties: VariantOrExtensionPropertiesImpl
-
 }

@@ -28,7 +28,7 @@ import java.io.IOException;
 public class PlainFileGsonTypeAdaptor extends TypeAdapter<File> {
     @Override
     public void write(JsonWriter jsonWriter, File file) throws IOException {
-        if (file == null || file.getPath() == null) {
+        if (file == null) {
             jsonWriter.nullValue();
             return;
         }

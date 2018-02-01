@@ -19,18 +19,16 @@ package com.android.build.gradle.internal.api.dsl.extensions
 import com.android.build.api.dsl.extension.BuildProperties
 import com.android.build.api.sourcesets.AndroidSourceSet
 import com.android.build.api.transform.Transform
-import com.android.build.gradle.internal.api.dsl.sealing.SealableNamedDomainObjectContainer
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.variant2.DslModelData
-import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
 class BuildPropertiesImpl(
         dslModelData: DslModelData,
-        issueReporter: EvalIssueReporter):
-        SealableObject(issueReporter), BuildProperties {
+        dslScope: DslScope):
+        SealableObject(dslScope), BuildProperties {
 
     override val sourceSets = dslModelData.sourceSets
 

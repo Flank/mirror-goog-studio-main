@@ -17,11 +17,11 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.variant2.DeprecatedConfigurationAction
 import com.android.builder.errors.EvalIssueReporter
-import java.util.HashSet
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
@@ -33,11 +33,10 @@ import org.gradle.api.logging.Logging
 class SourceSetManager(
         project: Project,
         private val publishPackage: Boolean,
-        private val deprecationReporter: DeprecationReporter,
-        private val issueReporter: EvalIssueReporter) {
+        private val dslScope : DslScope) {
     val sourceSetsContainer: NamedDomainObjectContainer<AndroidSourceSet> = project.container(
             AndroidSourceSet::class.java,
-            AndroidSourceSetFactory(project.objects, project, publishPackage))
+            AndroidSourceSetFactory(project, publishPackage, dslScope))
     private val configurations: ConfigurationContainer = project.configurations
     private val logger: Logger = Logging.getLogger(this.javaClass)
 
@@ -77,7 +76,7 @@ class SourceSetManager(
                         DeprecatedConfigurationAction(
                                 implementationName,
                                 compileName,
-                                deprecationReporter,
+                                dslScope.deprecationReporter,
                                 DeprecationReporter.DeprecationTarget.CONFIG_NAME))
 
         val packageConfigDescription: String
@@ -98,7 +97,7 @@ class SourceSetManager(
                         DeprecatedConfigurationAction(
                                 runtimeOnlyName,
                                 apkName,
-                                deprecationReporter,
+                                dslScope.deprecationReporter,
                                 DeprecationReporter.DeprecationTarget.CONFIG_NAME))
 
         val providedName = sourceSet.providedConfigurationName
@@ -110,7 +109,7 @@ class SourceSetManager(
                         DeprecatedConfigurationAction(
                                 compileOnlyName,
                                 providedName,
-                                deprecationReporter,
+                                dslScope.deprecationReporter,
                                 DeprecationReporter.DeprecationTarget.CONFIG_NAME))
 
         // then the new configurations.
@@ -123,7 +122,7 @@ class SourceSetManager(
                             DeprecatedConfigurationAction(
                                     implementationName,
                                     apiName,
-                                    deprecationReporter,
+                                    dslScope.deprecationReporter,
                                     DeprecationReporter.DeprecationTarget.CONFIG_NAME))
         }
 
@@ -190,7 +189,7 @@ class SourceSetManager(
             if (!configuredSourceSets.contains(sourceSet.name)) {
                 val message = ("The SourceSet '${sourceSet.name}' is not recognized " +
                         "by the Android Gradle Plugin. Perhaps you misspelled something?")
-                issueReporter.reportError(EvalIssueReporter.Type.GENERIC, message)
+                dslScope.issueReporter.reportError(EvalIssueReporter.Type.GENERIC, message)
             }
         }
     }

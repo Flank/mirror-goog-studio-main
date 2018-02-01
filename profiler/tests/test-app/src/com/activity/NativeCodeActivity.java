@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.activity;
 
-import android.app.Activity;
 import java.util.*;
 
-public class NativeCodeActivity extends Activity {
+public class NativeCodeActivity extends PerfdTestActivity {
     public NativeCodeActivity() {
         super("NativeCodeActivity");
-        System.loadLibrary("nativetest");
+        System.loadLibrary("memorynativetest");
     }
 
     public static class JNITestEntity {};

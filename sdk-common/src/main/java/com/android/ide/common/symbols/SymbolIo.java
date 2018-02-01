@@ -634,6 +634,8 @@ public final class SymbolIo {
 
             pw.println();
             pw.println("public final class R {");
+            pw.println("    private R() {}");
+            pw.println();
 
             final String typeName = SymbolJavaType.INT.getTypeName();
 
@@ -646,6 +648,11 @@ public final class SymbolIo {
                 pw.print("    public static final class ");
                 pw.print(resType.getName());
                 pw.print(" {");
+                pw.println();
+
+                pw.print("        private ");
+                pw.print(resType.getName());
+                pw.println("() {}");
                 pw.println();
 
                 for (Symbol s : symbols) {
