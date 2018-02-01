@@ -33,7 +33,7 @@
         </activity>
 
         <activity
-            android:name=".event.EventTaskCategory$EmptyActivity"
+            android:name=".taskcategory.EventTaskCategory$EmptyActivity"
             android:label="EmptyActivity">
         </activity>
     </application>

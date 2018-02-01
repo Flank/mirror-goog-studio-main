@@ -1,8 +1,7 @@
-package android.com.java.profilertester.event;
+package android.com.java.profilertester.taskcategory;
 
 import android.app.Activity;
 import android.com.java.profilertester.R;
-import android.com.java.profilertester.profiletask.TaskCategory;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;

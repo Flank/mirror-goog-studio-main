@@ -5,7 +5,7 @@
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_android_com_java_profilertester_memory_MemoryTaskCategory_AllocateNativeMemoryTask_allocateNativeMemory(
+Java_android_com_java_profilertester_taskcategory_MemoryTaskCategory_AllocateNativeMemoryTask_allocateNativeMemory(
         JNIEnv *env,
         jobject instance) {
 

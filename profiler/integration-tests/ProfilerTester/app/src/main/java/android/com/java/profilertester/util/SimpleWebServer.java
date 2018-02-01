@@ -1,4 +1,4 @@
-package android.com.java.profilertester.network;
+package android.com.java.profilertester.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,7 +10,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
-final class SimpleWebServer implements Runnable {
+public final class SimpleWebServer implements Runnable {
     public static class QueryParam {
 
         private String key;

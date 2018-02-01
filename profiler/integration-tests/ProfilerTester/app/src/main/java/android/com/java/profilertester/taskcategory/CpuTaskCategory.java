@@ -1,6 +1,5 @@
-package android.com.java.profilertester.cpu;
+package android.com.java.profilertester.taskcategory;
 
-import android.com.java.profilertester.profiletask.TaskCategory;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;

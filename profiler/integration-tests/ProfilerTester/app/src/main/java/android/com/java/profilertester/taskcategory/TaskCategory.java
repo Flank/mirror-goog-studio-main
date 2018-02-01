@@ -1,4 +1,4 @@
-package android.com.java.profilertester.profiletask;
+package android.com.java.profilertester.taskcategory;
 
 import android.annotation.TargetApi;
 import android.content.Intent;
@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 

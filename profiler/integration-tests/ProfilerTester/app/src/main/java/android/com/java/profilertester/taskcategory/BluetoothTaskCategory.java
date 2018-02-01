@@ -1,4 +1,4 @@
-package android.com.java.profilertester.asic;
+package android.com.java.profilertester.taskcategory;
 
 import android.Manifest;
 import android.app.Activity;
@@ -8,8 +8,6 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
-import android.com.java.profilertester.ActivityRequestCodes;
-import android.com.java.profilertester.profiletask.TaskCategory;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;

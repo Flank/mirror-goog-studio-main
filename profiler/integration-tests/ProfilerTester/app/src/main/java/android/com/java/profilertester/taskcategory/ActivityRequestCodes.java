@@ -1,4 +1,4 @@
-package android.com.java.profilertester;
+package android.com.java.profilertester.taskcategory;
 
 import android.content.Intent;
 

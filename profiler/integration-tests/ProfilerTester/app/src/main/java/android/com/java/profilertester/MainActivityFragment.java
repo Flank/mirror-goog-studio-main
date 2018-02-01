@@ -1,12 +1,12 @@
 package android.com.java.profilertester;
 
 import android.app.Activity;
-import android.com.java.profilertester.asic.BluetoothTaskCategory;
-import android.com.java.profilertester.cpu.CpuTaskCategory;
-import android.com.java.profilertester.event.EventTaskCategory;
-import android.com.java.profilertester.memory.MemoryTaskCategory;
-import android.com.java.profilertester.network.NetworkTaskCategory;
-import android.com.java.profilertester.profiletask.TaskCategory;
+import android.com.java.profilertester.taskcategory.BluetoothTaskCategory;
+import android.com.java.profilertester.taskcategory.CpuTaskCategory;
+import android.com.java.profilertester.taskcategory.EventTaskCategory;
+import android.com.java.profilertester.taskcategory.MemoryTaskCategory;
+import android.com.java.profilertester.taskcategory.NetworkTaskCategory;
+import android.com.java.profilertester.taskcategory.TaskCategory;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;

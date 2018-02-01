@@ -1,6 +1,5 @@
-package android.com.java.profilertester.memory;
+package android.com.java.profilertester.taskcategory;
 
-import android.com.java.profilertester.profiletask.TaskCategory;
 import android.support.annotation.NonNull;
 
 import java.util.Arrays;

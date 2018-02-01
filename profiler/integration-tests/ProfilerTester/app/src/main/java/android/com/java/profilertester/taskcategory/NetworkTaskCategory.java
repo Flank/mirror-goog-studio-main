@@ -1,9 +1,8 @@
-package android.com.java.profilertester.network;
+package android.com.java.profilertester.taskcategory;
 
 import android.Manifest;
 import android.app.Activity;
-import android.com.java.profilertester.ActivityRequestCodes;
-import android.com.java.profilertester.profiletask.TaskCategory;
+import android.com.java.profilertester.util.SimpleWebServer;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
