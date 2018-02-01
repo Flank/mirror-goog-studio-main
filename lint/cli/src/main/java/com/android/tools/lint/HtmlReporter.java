@@ -1239,6 +1239,20 @@ public class HtmlReporter extends Reporter {
         if (url != null && url.startsWith("../") && new File(displayPath).isAbsolute()) {
             displayPath = url;
         }
+
+        // Clean up super-long and ugly paths to cache files such as
+        //    ../../../../../../.gradle/caches/transforms-1/files-1.1/timber-4.6.0.aar/
+        //      8fe9cb22a46026bb3bd0c9d976e2897a/jars/lint.jar
+        if (displayPath.contains("transforms-1") && displayPath.endsWith("lint.jar")
+                && displayPath.contains(".aar")) {
+            int aarIndex = displayPath.indexOf(".aar");
+            int startWin = displayPath.lastIndexOf('\\', aarIndex) + 1;
+            int startUnix = displayPath.lastIndexOf('/', aarIndex) + 1;
+            int start = Math.max(startWin, startUnix);
+            displayPath = displayPath.substring(start, aarIndex + 4) + File.separator + "..." +
+                    File.separator + "lint.jar";
+        }
+
         append(displayPath);
         //noinspection VariableNotUsedInsideIf
         if (url != null) {

@@ -371,6 +371,104 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                         "/usr/local/google/home/AndroidStudioProjects/BugTest/app/src/main/test/Test1.cpp");
         assertThat(nativeSourceFileValue.flags)
                 .isEqualTo(
+                        "-g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security  -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security   -O0 -fno-limit-debug-info -O0 -fno-limit-debug-info  -fPIC  ");
+    }
+
+    // Reference http://b/72065334
+    @Test
+    public void getNativeLibraryValue_FlagsFromServerModelUsed() throws IOException {
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
+        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
+        String targetStr =
+                "{  \n"
+                        + "   \"artifacts\":[  \n"
+                        + "      \"/usr/local/google/home/jomof/projects/nre-json/Teapots2/choreographer-30fps/.externalNativeBuild/cmake/debug/armeabi-v7a/libnative_app_glue.a\"\n"
+                        + "   ],\n"
+                        + "   \"buildDirectory\":\"/usr/local/google/home/jomof/projects/nre-json/Teapots2/choreographer-30fps/.externalNativeBuild/cmake/debug/armeabi-v7a\",\n"
+                        + "   \"fileGroups\":[  \n"
+                        + "      {  \n"
+                        + "         \"compileFlags\":\"-isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sysroot/usr/include/arm-linux-androideabi -D__ANDROID_API__=16 -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -fno-integrated-as -mthumb -Wa,--noexecstack -Wformat -Werror=format-security  -O0 -fno-limit-debug-info  -fPIC  \",\n"
+                        + "         \"isGenerated\":false,\n"
+                        + "         \"language\":\"C\",\n"
+                        + "         \"sources\":[  \n"
+                        + "            \"../../../../../../../Android/Sdk/ndk-bundle/sources/android/native_app_glue/android_native_app_glue.c\"\n"
+                        + "         ]\n"
+                        + "      }\n"
+                        + "   ],\n"
+                        + "   \"fullName\":\"libnative_app_glue.a\",\n"
+                        + "   \"linkerLanguage\":\"C\",\n"
+                        + "   \"name\":\"native_app_glue\",\n"
+                        + "   \"sourceDirectory\":\"/usr/local/google/home/jomof/projects/nre-json/Teapots2/choreographer-30fps/src/main/cpp\",\n"
+                        + "   \"sysroot\":\"/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sysroot\",\n"
+                        + "   \"type\":\"STATIC_LIBRARY\"\n"
+                        + "}";
+        NativeLibraryValue nativeLibraryValue =
+                cmakeServerStrategy.getNativeLibraryValue("x86", getTestTarget(targetStr));
+
+        assertThat(nativeLibraryValue.files).hasSize(1);
+        NativeSourceFileValue nativeSourceFileValue = Iterables.get(nativeLibraryValue.files, 0);
+        assertThat(nativeSourceFileValue.flags)
+                .isEqualTo(
+                        "-isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sysroot/usr/include/arm-linux-androideabi -D__ANDROID_API__=16 -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -fno-integrated-as -mthumb -Wa,--noexecstack -Wformat -Werror=format-security  -O0 -fno-limit-debug-info  -fPIC  ");
+    }
+
+    // Reference http://b/72065334
+    @Test
+    public void getNativeLibraryValue_FlagsFromServerModelNotPresentCompilationDatabaseUsed()
+            throws IOException {
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
+        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
+        String targetStr =
+                " {  \n"
+                        + "     \"artifacts\":[  \n"
+                        + "        \"/usr/local/google/home/AndroidStudioProjects/BugTest/app/build/intermediates/cmake/debug/obj/x86_64/libTest1.so\"\n"
+                        + "     ],\n"
+                        + "     \"buildDirectory\":\"/usr/local/google/home/AndroidStudioProjects/BugTest/app/.externalNativeBuild/cmake/debug/x86_64/src/main/test\",\n"
+                        + "     \"fileGroups\":[  \n"
+                        + "        {  \n"
+                        + "           \"defines\":[  \n"
+                        + "              \"Test1_EXPORTS\"\n"
+                        + "           ],\n"
+                        + "           \"includePath\":[  \n"
+                        + "              {  \n"
+                        + "                 \"isSystem\":true,\n"
+                        + "                 \"path\":\"/usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include\"\n"
+                        + "              },\n"
+                        + "              {  \n"
+                        + "                 \"isSystem\":true,\n"
+                        + "                 \"path\":\"/usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/include\"\n"
+                        + "              },\n"
+                        + "              {  \n"
+                        + "                 \"isSystem\":true,\n"
+                        + "                 \"path\":\"/usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward\"\n"
+                        + "              }\n"
+                        + "           ],\n"
+                        + "           \"isGenerated\":false,\n"
+                        + "           \"language\":\"CXX\",\n"
+                        + "           \"sources\":[  \n"
+                        + "              \"Test1.cpp\"\n"
+                        + "           ]\n"
+                        + "        }\n"
+                        + "     ],\n"
+                        + "     \"fullName\":\"libTest1.so\",\n"
+                        + "     \"linkFlags\":\"-Wl,--build-id -Wl,--warn-shared-textrel -Wl,--fatal-warnings -Wl,--no-undefined -Wl,-z,noexecstack -Qunused-arguments -Wl,-z,relro -Wl,-z,now -Wl,--build-id -Wl,--warn-shared-textrel -Wl,--fatal-warnings -Wl,--no-undefined -Wl,-z,noexecstack -Qunused-arguments -Wl,-z,relro -Wl,-z,now\",\n"
+                        + "     \"linkLibraries\":\"-lm \\\"/usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/libgnustl_static.a\\\"\",\n"
+                        + "     \"linkerLanguage\":\"CXX\",\n"
+                        + "     \"name\":\"Test1\",\n"
+                        + "     \"sourceDirectory\":\"/usr/local/google/home/AndroidStudioProjects/BugTest/app/src/main/test\",\n"
+                        + "     \"sysroot\":\"/usr/local/google/home/Android/Sdk/ndk-bundle/platforms/android-21/arch-x86_64\",\n"
+                        + "     \"type\":\"SHARED_LIBRARY\"\n"
+                        + "}";
+        NativeLibraryValue nativeLibraryValue =
+                cmakeServerStrategy.getNativeLibraryValue("x86", getTestTarget(targetStr));
+
+        assertThat(nativeLibraryValue.files).hasSize(1);
+        NativeSourceFileValue nativeSourceFileValue = Iterables.get(nativeLibraryValue.files, 0);
+        assertThat(nativeSourceFileValue.src.getAbsolutePath())
+                .isEqualTo(
+                        "/usr/local/google/home/AndroidStudioProjects/BugTest/app/src/main/test/Test1.cpp");
+        assertThat(nativeSourceFileValue.flags)
+                .isEqualTo(
                         "--target=x86_64-none-linux-android --gcc-toolchain=/usr/local/google/home/Android/Sdk/ndk-bundle/toolchains/x86_64-4.9/prebuilt/linux-x86_64 --sysroot=/usr/local/google/home/Android/Sdk/ndk-bundle/platforms/android-21/arch-x86_64  -DTest1_EXPORTS -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/include -isystem /usr/local/google/home/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward  -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security  -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security   -O0 -fno-limit-debug-info -O0 -fno-limit-debug-info  -fPIC   -o src/main/test/CMakeFiles/Test1.dir/Test1.cpp.o -c ");
     }
 

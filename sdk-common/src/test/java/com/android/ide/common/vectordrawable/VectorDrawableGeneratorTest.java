@@ -194,7 +194,7 @@ public class VectorDrawableGeneratorTest extends TestCase {
     // Preview broken on linux, fine on chrome browser
     public void testSvgStrokeWidthTransform() throws Exception {
         checkSvgConversionAndContainsError("ic_strokewidth_transform",
-                "We don't scale the stroke width!");
+                "Scaling of the stroke width is ignored");
     }
 
     public void testSvgEmptyAttributes() throws Exception {
@@ -207,8 +207,8 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
     public void testSvgContainsError() throws Exception {
         checkSvgConversionAndContainsError("ic_contains_ignorable_error",
-                "ERROR@ line 16 <switch> is not supported\n"
-                        + "ERROR@ line 17 <foreignObject> is not supported");
+                "ERROR @ line 16 <switch> is not supported\n"
+                        + "ERROR @ line 17 <foreignObject> is not supported");
     }
 
     public void testSvgLineToMoveTo() throws Exception {

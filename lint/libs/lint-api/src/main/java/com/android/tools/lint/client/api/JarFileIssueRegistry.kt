@@ -175,6 +175,22 @@ private constructor(
                 val registryClass = Class.forName(className, true, loader)
                 val registry = registryClass.newInstance() as IssueRegistry
 
+                val issues = try {
+                    registry.issues
+                } catch (e: Throwable) {
+                    val stacktrace = StringBuilder()
+                    LintDriver.appendStackTraceSummary(e, stacktrace)
+                    val message = "Lint found one or more custom checks that could not " +
+                            "be loaded. The most likely reason for this is that it is using an " +
+                            "older, incompatible or unsupported API in lint. Make sure these " +
+                            "lint checks are updated to the new APIs. The issue registry class " +
+                            "is $className. The class loading issue is ${e.message}: $stacktrace"
+
+                    LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
+                        message = message, file = jarFile)
+                    return null
+                }
+
                 try {
                     val apiField = registryClass.getDeclaredMethod("getApi")
                     val api = apiField.invoke(registry) as Int
@@ -206,32 +222,38 @@ private constructor(
                         }
                     }
                 } catch (e: Throwable) {
-                    val message = "Lint found an issue registry (`$className`) which did not " +
-                            "specify the Lint API version it was compiled with.\n" +
-                            "This means that the lint checks are likely not compatible.\n" +
-                            "To fix this, make your lint `IssueRegistry` class contain\n" +
-                            "  `override val api: Int = com.android.tools.lint.detector.api.CURRENT_API`\n" +
-                            "or from Java,\n" +
-                            "  `@Override public int getApi() { return com.android.tools.lint.detector.api.ApiKt.CURRENT_API; }`"
+                    var message = "Lint found an issue registry (`$className`) which did not " +
+                        "specify the Lint API version it was compiled with.\n" +
+                        "\n" +
+                        "**This means that the lint checks are likely not compatible.**\n" +
+                        "\n" +
+                        "If you are the author of this lint check, make your lint " +
+                        "`IssueRegistry` class contain\n" +
+                        "\u00a0\u00a0override val api: Int = com.android.tools.lint.detector.api.CURRENT_API\n" +
+                        "or from Java,\n" +
+                        "\u00a0\u00a0@Override public int getApi() { return com.android.tools.lint.detector.api.ApiKt.CURRENT_API; }"
+
+                    val issueIds = issues.map { it.id }.sorted()
+                    if (issueIds.any()) {
+                        message += ("\n" +
+                            "\n" +
+                            "If you are just using lint checks from a third party library " +
+                            "you have no control over, you can disable these lint checks (if " +
+                            "they misbehave) like this:\n" +
+                            "\n" +
+                            "    android {\n" +
+                            "        lintOptions {\n" +
+                            "            disable ${issueIds.joinToString(
+                                separator = ",\n                    ") { "\"$it\"" }}\n" +
+                            "        }\n" +
+                            "    }\n").
+                                // Force indentation
+                                replace("    ", "\u00a0\u00a0\u00a0\u00a0")
+                    }
+
                     LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
                             message = message, file = jarFile)
                     // Not returning here: try to run the checks
-                }
-
-                try {
-                    registry.issues
-                } catch (e: Throwable) {
-                    val stacktrace = StringBuilder()
-                    LintDriver.appendStackTraceSummary(e, stacktrace)
-                    val message = "Lint found one or more custom checks that could not " +
-                            "be loaded. The most likely reason for this is that it is using an " +
-                            "older, incompatible or unsupported API in lint. Make sure these " +
-                            "lint checks are updated to the new APIs. The issue registry class " +
-                            "is $className. The class loading issue is ${e.message}: $stacktrace"
-
-                    LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
-                            message = message, file = jarFile)
-                    return null
                 }
 
                 registry

@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.incremental;
 
+import static com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
@@ -454,8 +456,7 @@ public class InstantRunBuildContext {
 
     /** Returns true if the application's resources should be packaged in a separate split APK. */
     public boolean useSeparateApkForResources() {
-        return isInInstantRunMode()
-                && (getPatchingPolicy() == InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES);
+        return isInInstantRunMode() && (getPatchingPolicy() == MULTI_APK_SEPARATE_RESOURCES);
     }
 
     @NonNull
@@ -488,7 +489,7 @@ public class InstantRunBuildContext {
             }
 
             // since the main FULL_APK is produced, no need to keep the RESOURCES record around.
-            if (patchingPolicy != InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES) {
+            if (patchingPolicy != MULTI_APK_SEPARATE_RESOURCES) {
                 Artifact resourcesApFile = currentBuild.getArtifactForType(FileType.RESOURCES);
                 while (resourcesApFile != null) {
                     currentBuild.artifacts.remove(resourcesApFile);
@@ -722,6 +723,22 @@ public class InstantRunBuildContext {
                 }
             } else if (artifact.fileType == FileType.SPLIT_MAIN) {
                 main = null;
+            }
+        }
+
+        // we can also be in the case where we used to produce a resources split but are now in a
+        // mode were resources are shipped in the main apk. If that's the case, make sure the
+        // resources split is removed.
+        if (MULTI_APK_SEPARATE_RESOURCES != patchingPolicy) {
+            String resourceApkName = null;
+            for (String splitLocation : splitLocations) {
+                String apkFileName = new File(splitLocation).getName();
+                if (apkFileName.startsWith(InstantRunResourcesApkBuilder.APK_FILE_NAME)) {
+                    resourceApkName = splitLocation;
+                }
+            }
+            if (resourceApkName != null) {
+                splitLocations.remove(resourceApkName);
             }
         }
 

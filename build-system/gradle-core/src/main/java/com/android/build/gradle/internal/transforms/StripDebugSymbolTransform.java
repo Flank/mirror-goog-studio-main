@@ -85,7 +85,7 @@ public class StripDebugSymbolTransform extends Transform {
         this.isLibrary = isLibrary;
         checkArgument(ndkHandler.isConfigured());
 
-        for (Abi abi : ndkHandler.getSupportedAbis()) {
+        for (Abi abi : ndkHandler.getDefaultAbis()) {
             stripExecutables.put(abi, ndkHandler.getStripExecutable(abi));
         }
         this.project = project;

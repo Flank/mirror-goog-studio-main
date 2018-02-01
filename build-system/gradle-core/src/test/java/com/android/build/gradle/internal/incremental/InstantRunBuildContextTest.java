@@ -16,13 +16,15 @@
 
 package com.android.build.gradle.internal.incremental;
 
+import static com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy.MULTI_APK;
+import static com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES;
+import static com.android.build.gradle.tasks.InstantRunResourcesApkBuilder.APK_FILE_NAME;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext.Build;
-import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.builder.model.Version;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.XmlUtils;
@@ -722,7 +724,7 @@ public class InstantRunBuildContextTest {
                         "x86",
                         null,
                         true);
-        assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
+        assertThat(context.getPatchingPolicy()).isEqualTo(MULTI_APK);
 
         context =
                 new InstantRunBuildContext(
@@ -733,8 +735,8 @@ public class InstantRunBuildContextTest {
                         "x86",
                         null,
                         true);
-        assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
-        assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.MULTI_APK);
+        assertThat(context.getPatchingPolicy()).isEqualTo(MULTI_APK);
+        assertThat(context.getPatchingPolicy()).isEqualTo(MULTI_APK);
     }
 
     @Test
@@ -953,14 +955,7 @@ public class InstantRunBuildContextTest {
 
         // re-add a new resource apk and a split
         InstantRunBuildContext update =
-                new InstantRunBuildContext(
-                        idAllocator,
-                        true,
-                        AaptGeneration.AAPT_V2_DAEMON_MODE,
-                        new AndroidVersion(21, null),
-                        null,
-                        null,
-                        true);
+                createBuildContextForPatchingPolicy(MULTI_APK_SEPARATE_RESOURCES);
         update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
         update.loadFromXml(buildInfo);
         update.addChangedFile(FileType.SPLIT, new File("resources-x86-debug.apk"));
@@ -970,19 +965,101 @@ public class InstantRunBuildContextTest {
         // make sure resources APK is not added twice.
         assertThat(update.getLastBuild()).isNotNull();
         assertThat(update.getLastBuild().getArtifacts()).hasSize(3);
-        assertThat(
-                        update.getLastBuild()
-                                .getArtifacts()
-                                .stream()
-                                .map(InstantRunBuildContext.Artifact::getLocation)
-                                .filter(
-                                        it ->
-                                                it.getName()
-                                                        .startsWith(
-                                                                InstantRunResourcesApkBuilder
-                                                                        .APK_FILE_NAME))
-                                .count())
-                .isEqualTo(1);
+        assertThat(doestArtifactsContainResourcesAPK(update.getLastBuild().getArtifacts()))
+                .isTrue();
+    }
+
+    private boolean doestArtifactsContainResourcesAPK(
+            List<InstantRunBuildContext.Artifact> artifacts) {
+        return artifacts
+                .stream()
+                .map(InstantRunBuildContext.Artifact::getLocation)
+                .anyMatch(it -> it.getName().startsWith(APK_FILE_NAME));
+    }
+
+    private InstantRunBuildContext createBuildContextForPatchingPolicy(
+            InstantRunPatchingPolicy patchingPolicy) {
+
+        return new InstantRunBuildContext(
+                idAllocator,
+                true,
+                AaptGeneration.AAPT_V2_DAEMON_MODE,
+                new AndroidVersion(patchingPolicy == MULTI_APK_SEPARATE_RESOURCES ? 27 : 21, null),
+                null,
+                null,
+                patchingPolicy == MULTI_APK_SEPARATE_RESOURCES);
+    }
+
+    @Test
+    public void testPatchingPolicyChanges() throws Exception {
+
+        // initial is not using a separate APK for resources
+        InstantRunBuildContext initial = createBuildContextForPatchingPolicy(MULTI_APK);
+
+        // set the initial build.
+        initial.addChangedFile(FileType.SPLIT_MAIN, new File("main.apk"));
+        initial.addChangedFile(FileType.SPLIT, new File("split_0.apk"));
+        initial.close();
+        String buildInfo = initial.toXml();
+
+        // now request a full build with incremental gradle build while upgrading to 27,
+        // make sure we have the resources apk saved.
+        InstantRunBuildContext update =
+                createBuildContextForPatchingPolicy(MULTI_APK_SEPARATE_RESOURCES);
+        update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
+        update.loadFromXml(buildInfo);
+        // only the resources APK will appear when doing an incremental build.
+        update.addChangedFile(FileType.SPLIT, new File("resources-arm64-v8a-debug.apk"));
+        update.close();
+
+        // make sure resources APK is added
+        assertThat(update.getLastBuild()).isNotNull();
+        assertThat(update.getLastBuild().getArtifacts()).hasSize(3);
+        assertThat(doestArtifactsContainResourcesAPK(update.getLastBuild().getArtifacts()))
+                .isTrue();
+
+        buildInfo = update.toXml();
+
+        // now revert back to not use a separate APK, the resources APK should disappear.
+        update = createBuildContextForPatchingPolicy(MULTI_APK);
+        update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
+        // only the main split with the resources APK will appear when doing an incremental build.
+        update.addChangedFile(FileType.SPLIT_MAIN, new File("main.apk"));
+        update.loadFromXml(buildInfo);
+        update.close();
+
+        // make sure resources APK is removed.
+        assertThat(update.getLastBuild()).isNotNull();
+        assertThat(update.getLastBuild().getArtifacts()).hasSize(2);
+        assertThat(doestArtifactsContainResourcesAPK(update.getLastBuild().getArtifacts()))
+                .isFalse();
+
+        buildInfo = update.toXml();
+
+        // stay on <27 and produce incrementally ap_ file.
+        update = createBuildContextForPatchingPolicy(MULTI_APK);
+        // make a resource incremental change so we produce an ap_ file.
+        update.setVerifierStatus(InstantRunVerifierStatus.COMPATIBLE);
+        update.loadFromXml(buildInfo);
+        update.addChangedFile(FileType.RESOURCES, new File("resources.ap_"));
+        update.close();
+
+        assertThat(update.getLastBuild()).isNotNull();
+        assertThat(update.getLastBuild().getArtifacts()).hasSize(1);
+
+        // now switch to 27 and separate APK again, make sure the resources.ap_ disappear.
+        update = createBuildContextForPatchingPolicy(MULTI_APK_SEPARATE_RESOURCES);
+        update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
+        update.loadFromXml(buildInfo);
+        // only the resources APK will appear when doing an incremental build.
+        update.addChangedFile(FileType.SPLIT, new File("resources-arm64-v8a-debug.apk"));
+        update.close();
+
+        assertThat(update.getLastBuild()).isNotNull();
+        assertThat(update.getLastBuild().getArtifacts()).hasSize(3);
+        assertThat(doestArtifactsContainResourcesAPK(update.getLastBuild().getArtifacts()))
+                .isTrue();
+
     }
 
     @Test
@@ -1033,12 +1110,12 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testRevertsToFullIfAllSplitsRebuiltMultiApk() throws Exception {
-        testRevertsToFullIfAllSplitsRebuilt(InstantRunPatchingPolicy.MULTI_APK);
+        testRevertsToFullIfAllSplitsRebuilt(MULTI_APK);
     }
 
     @Test
     public void testRevertsToFullIfAllSplitsRebuiltSeparateResources() throws Exception {
-        testRevertsToFullIfAllSplitsRebuilt(InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES);
+        testRevertsToFullIfAllSplitsRebuilt(MULTI_APK_SEPARATE_RESOURCES);
     }
 
     private static void testRevertsToFullIfAllSplitsRebuilt(

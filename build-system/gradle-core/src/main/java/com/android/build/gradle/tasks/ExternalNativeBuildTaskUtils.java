@@ -379,8 +379,8 @@ public class ExternalNativeBuildTaskUtils {
         }
 
         errorMsg.append(
-                "Please make sure the folder to CMake binary is added to the PATH environment"
-                        + "variable.");
+                "Please make sure the folder with the CMake binary is added to the PATH "
+                        + "environment variable.");
 
         throw new RuntimeException(errorMsg.toString());
     }

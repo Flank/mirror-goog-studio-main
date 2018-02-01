@@ -159,11 +159,22 @@ class CustomRuleTest {
 
         val expected = "" +
                 "lint1.jar: Warning: Lint found an issue registry (android.support.v7.lint.AppCompatIssueRegistry) which did not specify the Lint API version it was compiled with.\n" +
+                "\n" +
                 "This means that the lint checks are likely not compatible.\n" +
-                "To fix this, make your lint IssueRegistry class contain\n" +
-                "  override val api: Int = com.android.tools.lint.detector.api.CURRENT_API\n" +
+                "\n" +
+                "If you are the author of this lint check, make your lint IssueRegistry class contain\n" +
+                "  override val api: Int = com.android.tools.lint.detector.api.CURRENT_API\n" +
                 "or from Java,\n" +
-                "  @Override public int getApi() { return com.android.tools.lint.detector.api.ApiKt.CURRENT_API; } [ObsoleteLintCustomCheck]\n" +
+                "  @Override public int getApi() { return com.android.tools.lint.detector.api.ApiKt.CURRENT_API; }\n" +
+                "\n" +
+                "If you are just using lint checks from a third party library you have no control over, you can disable these lint checks (if they misbehave) like this:\n" +
+                "\n" +
+                "    android {\n" +
+                "        lintOptions {\n" +
+                "            disable \"UnitTestAppCompatMethod\"\n" +
+                "        }\n" +
+                "    }\n" +
+                " [ObsoleteLintCustomCheck]\n" +
                 "src/main/java/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [UnitTestAppCompatMethod]\n" +
                 "        getActionBar();                    // ERROR\n" +
                 "        ~~~~~~~~~~~~\n" +
@@ -276,11 +287,6 @@ class CustomRuleTest {
                 .allowCompilationErrors()
                 .run()
                 .check {
-                    assertThat(it).contains("lint2.jar: Warning: Lint found an issue registry " +
-                            "(googleio.demo.MyIssueRegistry) which did not specify the Lint " +
-                            "API version it was compiled with.\n" +
-                            "This means that the lint checks are likely not compatible.")
-
                     assertThat(it).contains("lint2.jar: Warning: Lint found one or more custom " +
                             "checks that could not be loaded.")
                     assertThat(it).contains("The most likely reason for this is that it is using " +
@@ -291,7 +297,7 @@ class CustomRuleTest {
                     assertThat(it).contains("The class loading issue is " +
                             "com/android/tools/lint/detector/api/Detector\$JavaScanner:")
                     assertThat(it).contains("ClassLoader.defineClass1(ClassLoader.java:")
-                    assertThat(it).contains("0 errors, 2 warnings")
+                    assertThat(it).contains("0 errors, 1 warnings")
                 }
     }
 
@@ -329,7 +335,7 @@ class CustomRuleTest {
                     assertThat(it).contains("The class loading issue is " +
                             "com/android/tools/lint/detector/api/Detector\$JavaPsiScanner:")
                     assertThat(it).contains("ClassLoader.defineClass1(ClassLoader.java:")
-                    assertThat(it).contains("0 errors, 2 warnings")
+                    assertThat(it).contains("0 errors, 1 warnings")
                 }
     }
 

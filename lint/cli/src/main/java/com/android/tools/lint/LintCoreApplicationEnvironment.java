@@ -49,6 +49,7 @@ import com.intellij.psi.meta.MetaDataContributor;
 import com.intellij.psi.stubs.BinaryFileStubBuilders;
 import com.intellij.psi.util.JavaClassSupers;
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment;
+import org.jetbrains.kotlin.resolve.diagnostics.DiagnosticSuppressor;
 import org.jetbrains.uast.UastContext;
 import org.jetbrains.uast.UastLanguagePlugin;
 import org.jetbrains.uast.evaluation.UEvaluatorExtension;
@@ -140,6 +141,8 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, UastLanguagePlugin.Companion.getExtensionPointName(), UastLanguagePlugin.class);
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, CustomExceptionHandler.KEY, CustomExceptionHandler.class); // TODO: Remove
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, JavaModuleSystem.EP_NAME, JavaModuleSystem.class);
+
+        CoreApplicationEnvironment.registerExtensionPoint(rootArea, DiagnosticSuppressor.Companion.getEP_NAME(), DiagnosticSuppressor.class);
 
         rootArea.getExtensionPoint(UastLanguagePlugin.Companion.getExtensionPointName()).registerExtension(
                 new org.jetbrains.uast.java.JavaUastLanguagePlugin());

@@ -36,8 +36,10 @@ import java.util.List;
 import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.Action;
+import org.gradle.api.Incubating;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.tasks.Internal;
 
 /** DSL object to configure build types. */
 @SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue", "Convert2Lambda"})
@@ -604,6 +606,9 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         return isCrunchPngsDefault;
     }
 
+    /** This DSL is incubating and subject to change. */
+    @Incubating
+    @Internal
     @NonNull
     public PostprocessingOptions getPostprocessing() {
         checkPostprocessingConfiguration(
@@ -611,6 +616,9 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         return postprocessingOptions;
     }
 
+    /** This DSL is incubating and subject to change. */
+    @Incubating
+    @Internal
     public void postprocessing(@NonNull Action<PostprocessingOptions> action) {
         checkPostprocessingConfiguration(
                 PostprocessingConfiguration.POSTPROCESSING_BLOCK, "postProcessing");
