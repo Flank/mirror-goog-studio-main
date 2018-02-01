@@ -58,6 +58,7 @@ import com.google.common.base.Splitter
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import com.google.common.io.Files
+import com.intellij.openapi.util.Computable
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -1448,6 +1449,14 @@ abstract class LintClient {
      * @param runnable the runnable to be run
      */
     open fun runReadAction(runnable: Runnable) = runnable.run()
+
+    /**
+     * Runs the given computation under a read lock such that it can access the PSI
+     *
+     * @param computable the computation to perform
+     * @return the result returned by the computation
+     */
+    open fun <T> runReadAction(computable: Computable<T>): T = computable.compute()
 
     /** Returns a repository logger used by this client.  */
     open fun getRepositoryLogger(): ProgressIndicator = RepoLogger()

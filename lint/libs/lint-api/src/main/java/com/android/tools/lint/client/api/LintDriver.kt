@@ -75,6 +75,7 @@ import com.google.common.collect.Iterables
 import com.google.common.collect.Sets
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.IndexNotReadyException
+import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiArrayInitializerExpression
@@ -1910,6 +1911,8 @@ class LintDriver
         override fun getClientRevision(): String? = delegate.getClientRevision()
 
         override fun runReadAction(runnable: Runnable) = delegate.runReadAction(runnable)
+
+        override fun <T> runReadAction(computable: Computable<T>): T = delegate.runReadAction(computable)
 
         override fun readFile(file: File): CharSequence = delegate.readFile(file)
 
