@@ -78,6 +78,7 @@ import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
@@ -223,6 +224,7 @@ import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -1535,19 +1537,10 @@ public abstract class TaskManager {
         preCompileTask.dependsOn(scope.getPreBuildTask());
         scope.addTaskOutput(ANNOTATION_PROCESSOR_LIST, processorListFile, preCompileTask.getName());
 
-        // create the output folder
-        File outputFolder =
-                new File(
-                        globalScope.getIntermediatesDir(),
-                        "/classes/" + scope.getVariantConfiguration().getDirName());
-
-        final JavaCompile javacTask =
-                taskFactory.create(new JavaCompileConfigAction(scope, outputFolder));
+        final JavaCompile javacTask = taskFactory.create(new JavaCompileConfigAction(scope));
         scope.setJavacTask(javacTask);
 
         setupCompileTaskDependencies(scope, javacTask);
-
-        scope.addTaskOutput(JAVAC, outputFolder, javacTask.getName());
 
         postJavacCreation(scope);
 
@@ -1560,6 +1553,10 @@ public abstract class TaskManager {
      * This should not be called for classes that will also be compiled from source by jack.
      */
     public void addJavacClassesStream(VariantScope scope) {
+        FileCollection javaOutputs =
+                ((BuildableArtifactImpl) scope.getBuildArtifactsHolder().getArtifactFiles(JAVAC))
+                        .getFileCollection();
+        Preconditions.checkNotNull(javaOutputs);
         // create separate streams for the output of JAVAC and for the pre/post javac
         // bytecode hooks
         scope.getTransformManager()
@@ -1570,7 +1567,7 @@ public abstract class TaskManager {
                                 .addContentTypes(
                                         DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                                 .addScope(Scope.PROJECT)
-                                .setFileCollection(scope.getOutput(JAVAC))
+                                .setFileCollection(javaOutputs)
                                 .build());
 
         scope.getTransformManager()

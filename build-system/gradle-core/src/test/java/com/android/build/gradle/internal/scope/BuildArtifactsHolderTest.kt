@@ -31,6 +31,7 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import java.util.Locale
 import kotlin.test.assertFailsWith
 
 /**
@@ -112,10 +113,14 @@ class BuildArtifactsHolderTest {
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES)).isSameAs(files2)
         holder.createFirstArtifactFiles(JAVAC_CLASSES, listOf("baz"), "task0")
 
-        assertThat(files0).containsExactly(file(JAVAC_CLASSES.name, "baz"))
-        assertThat(files1).containsExactly(file("task1", "foo"), file(JAVAC_CLASSES.name, "baz"))
+        assertThat(files0).containsExactly(file(JAVAC_CLASSES.name.toLowerCase(Locale.US), "baz"))
+        assertThat(files1).containsExactly(
+                file("task1", "foo"),
+                file(JAVAC_CLASSES.name.toLowerCase(Locale.US), "baz"))
         assertThat(files2).containsExactly(
-                file("task1", "foo"), file("task2", "bar"), file(JAVAC_CLASSES.name, "baz"))
+                file("task1", "foo"),
+                file("task2", "bar"),
+                file(JAVAC_CLASSES.name.toLowerCase(Locale.US), "baz"))
 
         @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         assertThat(files0.buildDependencies.getDependencies(null)).containsExactly(task0)
@@ -144,7 +149,8 @@ class BuildArtifactsHolderTest {
         // Check the original output is modified.
         val newFiles = holder.createFirstArtifactFiles(JAVAC_CLASSES, listOf("foo"), "task0")
         assertThat(newFiles).isSameAs(files0)
-        assertThat(files0.single()).isEqualTo(file(JAVAC_CLASSES.name, "foo"))
+        assertThat(files0.single()).isEqualTo(
+                file(JAVAC_CLASSES.name.toLowerCase(Locale.US), "foo"))
         @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         assertThat(files0.buildDependencies.getDependencies(null)).containsExactly(task0)
 

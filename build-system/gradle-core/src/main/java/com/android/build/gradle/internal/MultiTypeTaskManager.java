@@ -112,7 +112,7 @@ public class MultiTypeTaskManager extends TaskManager {
         // create an anchor collection for usage inside the same module (unit tests basically)
         ConfigurableFileCollection fileCollection =
                 scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
-        fileCollection.from(scope.getOutput(JAVAC));
+        fileCollection.from(scope.getBuildArtifactsHolder().getArtifactFiles(JAVAC));
         fileCollection.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
         fileCollection.from(scope.getVariantData().getAllPostJavacGeneratedBytecode());
     }

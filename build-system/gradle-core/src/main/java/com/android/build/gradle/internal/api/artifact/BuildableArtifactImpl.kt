@@ -20,6 +20,7 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.TaskDependency
 import java.io.File
 import java.util.Collections
@@ -29,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Implementation of [BuildableArtifact].
  */
 class BuildableArtifactImpl(
-        internal var fileCollection: FileCollection?,
+        var fileCollection: FileCollection?,
         private val dslScope: DslScope)
     : BuildableArtifact {
     companion object {
@@ -90,4 +91,10 @@ class BuildableArtifactImpl(
                         "Cannot get build dependencies before BuildableArtifact is initialized.")
                 TaskDependency { mutableSetOf() }
             }
+
+    val asFileTree : FileTree
+        get() {
+            checkResolvable()
+            return fileCollection!!.asFileTree
+        }
 }

@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.feature
 
+import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
@@ -44,7 +46,7 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
 
     @get:OutputFile lateinit var outputJar: File
 
-    @get:InputFiles lateinit var javacClasses: FileCollection
+    @get:InputFiles lateinit var javacClasses: BuildableArtifact
     @get:InputFiles lateinit var preJavacClasses: FileCollection
     @get:InputFiles lateinit var postJavacClasses: FileCollection
     @get:InputFiles private var thisRClassClasses: FileCollection? = null
@@ -61,7 +63,7 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
             override fun visitDir(fileVisitDetails: FileVisitDetails) {
             }
         }
-        javacClasses.asFileTree.visit(collector)
+        (javacClasses as BuildableArtifactImpl).asFileTree.visit(collector)
         preJavacClasses.asFileTree.visit(collector)
         postJavacClasses.asFileTree.visit(collector)
         thisRClassClasses?.asFileTree?.visit(collector)
@@ -85,7 +87,8 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
 
         override fun execute(task: BundleFeatureClasses) {
             task.outputJar = classesJar
-            task.javacClasses = scope.getOutput(InternalArtifactType.JAVAC)
+            task.javacClasses =
+                    scope.buildArtifactsHolder.getArtifactFiles(InternalArtifactType.JAVAC)
             task.preJavacClasses = scope.variantData.allPreJavacGeneratedBytecode
             task.postJavacClasses = scope.variantData.allPostJavacGeneratedBytecode
             val globalScope = scope.globalScope
