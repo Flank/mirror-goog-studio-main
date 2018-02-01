@@ -15,6 +15,10 @@
  */
 package com.android.ide.common.resources;
 
+import static com.android.ide.common.rendering.api.ResourceNamespace.ANDROID;
+import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
+import static com.android.ide.common.rendering.api.ResourceNamespace.Resolver.EMPTY_RESOLVER;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
@@ -22,12 +26,14 @@ import com.android.ide.common.rendering.api.DensityBasedResourceValue;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.RenderResources;
 import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.res2.ResourceRepository;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.Density;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.util.Collections;
@@ -55,18 +61,33 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     static ResourceResolver nonNamespacedResolver(
-            Map<ResourceType, ResourceValueMap> projectResources,
-            Map<ResourceType, ResourceValueMap> frameworkResources,
-            String themeName,
-            boolean isProjectTheme) {
+            @NonNull Map<ResourceType, ResourceValueMap> projectResources,
+            @NonNull Map<ResourceType, ResourceValueMap> frameworkResources,
+            @Nullable String themeName) {
+        ResourceReference theme = null;
+        if (themeName != null) {
+            theme =
+                    ResourceUrl.parseStyleParentReference(themeName)
+                            .resolve(RES_AUTO, EMPTY_RESOLVER);
+        }
+
         return ResourceResolver.create(
                 ImmutableMap.of(
-                        ResourceNamespace.RES_AUTO,
-                        projectResources,
-                        ResourceNamespace.ANDROID,
-                        frameworkResources),
-                themeName,
-                isProjectTheme);
+                        RES_AUTO, projectResources, ResourceNamespace.ANDROID, frameworkResources),
+                theme);
+    }
+
+    /**
+     * Returns true if the given {@code themeStyle} extends the theme given by {@code parentStyle}
+     */
+    public static boolean themeExtends(
+            @NonNull ResourceResolver resolver,
+            @NonNull String parentStyle,
+            @NonNull String themeStyle) {
+        return resolver.styleExtends(
+                resolver.getStyle(ResourceUrl.parse(themeStyle).resolve(RES_AUTO, EMPTY_RESOLVER)),
+                resolver.getStyle(
+                        ResourceUrl.parse(parentStyle).resolve(RES_AUTO, EMPTY_RESOLVER)));
     }
 
     public void testBasicFunctionality() throws Exception {
@@ -185,7 +206,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 frameworkRepository.getConfiguredResources(config).row(ResourceNamespace.ANDROID);
         assertNotNull(projectResources);
         ResourceResolver resolver =
-                nonNamespacedResolver(projectResources, frameworkResources, "MyTheme", true);
+                nonNamespacedResolver(projectResources, frameworkResources, "MyTheme");
         assertNotNull(resolver);
 
         LayoutLog logger =
@@ -223,8 +244,8 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 };
         resolver.setLogger(logger);
 
-        assertEquals("MyTheme", resolver.getThemeName());
-        assertTrue(resolver.isProjectTheme());
+        assertEquals("MyTheme", resolver.getTheme().getName());
+        assertEquals(RES_AUTO, resolver.getTheme().getNamespace());
 
         // findResValue
         assertNotNull(resolver.findResValue("@string/show_all_apps", false));
@@ -282,7 +303,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         //    check XML escaping in value resources
         StyleResourceValue randomStyle = (StyleResourceValue) resolver.findResValue(
                 "@style/RandomStyle", false);
-        assertEquals("\u00a9 Copyright", randomStyle.getItem("text", true).getValue());
+        assertEquals("\u00a9 Copyright", randomStyle.getItem(ANDROID, "text").getValue());
         assertTrue(resolver.isTheme(resolver.findResValue("@style/MyTheme.Dotted2", false), null));
         assertFalse(resolver.isTheme(resolver.findResValue("@style/MyTheme.Dotted1", false),
                 null));
@@ -304,8 +325,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 resolver.findItemInTheme("colorForeground", true).getValue());
         assertEquals("@color/bright_foreground_light",
                 resolver.findResValue("?colorForeground", true).getValue());
-        ResourceValue target =
-                new ResourceValue(ResourceNamespace.RES_AUTO, ResourceType.STRING, "dummy", "?foo");
+        ResourceValue target = new ResourceValue(RES_AUTO, ResourceType.STRING, "dummy", "?foo");
         assertEquals("#ff000000", resolver.resolveResValue(target).getValue());
 
         // getFrameworkResource
@@ -340,10 +360,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertFalse(
                 resolver.resolveResValue(
                                 new ResourceValue(
-                                        ResourceNamespace.RES_AUTO,
-                                        ResourceType.ID,
-                                        "my_id",
-                                        "@+id/some_new_id"))
+                                        RES_AUTO, ResourceType.ID, "my_id", "@+id/some_new_id"))
                         .isFramework());
         // error expected.
         boolean failed = false;
@@ -352,7 +369,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
             val =
                     resolver.resolveResValue(
                             new ResourceValue(
-                                    ResourceNamespace.RES_AUTO,
+                                    RES_AUTO,
                                     ResourceType.STRING,
                                     "bright_foreground_dark",
                                     "@color/background_light"));
@@ -366,38 +383,34 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 .getName(), array instanceof ArrayResourceValue);
 
         // themeExtends
-        assertTrue(resolver.themeExtends("@android:style/Theme", "@android:style/Theme"));
-        assertTrue(resolver.themeExtends("@android:style/Theme", "@android:style/Theme.Light"));
-        assertFalse(resolver.themeExtends("@android:style/Theme.Light", "@android:style/Theme"));
-        assertTrue(resolver.themeExtends("@style/MyTheme.Dotted2", "@style/MyTheme.Dotted2"));
-        assertTrue(resolver.themeExtends("@style/MyTheme", "@style/MyTheme.Dotted2"));
-        assertTrue(resolver.themeExtends("@android:style/Theme.Light", "@style/MyTheme.Dotted2"));
-        assertTrue(resolver.themeExtends("@android:style/Theme", "@style/MyTheme.Dotted2"));
-        assertFalse(resolver.themeExtends("@style/MyTheme.Dotted1", "@style/MyTheme.Dotted2"));
+        assertTrue(themeExtends(resolver, "@android:style/Theme", "@android:style/Theme"));
+        assertTrue(themeExtends(resolver, "@android:style/Theme", "@android:style/Theme.Light"));
+        assertFalse(themeExtends(resolver, "@android:style/Theme.Light", "@android:style/Theme"));
+        assertTrue(themeExtends(resolver, "@style/MyTheme.Dotted2", "@style/MyTheme.Dotted2"));
+        assertTrue(themeExtends(resolver, "@style/MyTheme", "@style/MyTheme.Dotted2"));
+        assertTrue(themeExtends(resolver, "@android:style/Theme.Light", "@style/MyTheme.Dotted2"));
+        assertTrue(themeExtends(resolver, "@android:style/Theme", "@style/MyTheme.Dotted2"));
+        assertFalse(themeExtends(resolver, "@style/MyTheme.Dotted1", "@style/MyTheme.Dotted2"));
 
         // Switch to MyTheme.Dotted1 (to make sure the parent="" inheritance works properly.)
         // To do that we need to create a new resource resolver.
-        resolver =
-                nonNamespacedResolver(
-                        projectResources, frameworkResources, "MyTheme.Dotted1", true);
+        resolver = nonNamespacedResolver(projectResources, frameworkResources, "MyTheme.Dotted1");
         resolver.setLogger(logger);
         assertNotNull(resolver);
-        assertEquals("MyTheme.Dotted1", resolver.getThemeName());
-        assertTrue(resolver.isProjectTheme());
+        assertEquals("MyTheme.Dotted1", resolver.getTheme().getName());
+        assertEquals(RES_AUTO, resolver.getTheme().getNamespace());
         assertNull(resolver.findItemInTheme("colorForeground", true));
 
-        resolver =
-                nonNamespacedResolver(
-                        projectResources, frameworkResources, "MyTheme.Dotted2", true);
+        resolver = nonNamespacedResolver(projectResources, frameworkResources, "MyTheme.Dotted2");
         resolver.setLogger(logger);
         assertNotNull(resolver);
-        assertEquals("MyTheme.Dotted2", resolver.getThemeName());
-        assertTrue(resolver.isProjectTheme());
+        assertEquals("MyTheme.Dotted2", resolver.getTheme().getName());
+        assertEquals(RES_AUTO, resolver.getTheme().getNamespace());
         assertNotNull(resolver.findItemInTheme("colorForeground", true));
 
         // Test recording resolver
         List<ResourceValue> chain = Lists.newArrayList();
-        resolver = nonNamespacedResolver(projectResources, frameworkResources, "MyTheme", true);
+        resolver = nonNamespacedResolver(projectResources, frameworkResources, "MyTheme");
         resolver = resolver.createRecorder(chain);
         assertNotNull(resolver.findResValue("@android:color/bright_foreground_dark", true));
         ResourceValue v = resolver.findResValue("@android:color/bright_foreground_dark", false);
@@ -430,7 +443,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
         assertNotNull(projectResources);
         ResourceResolver resolver =
-                nonNamespacedResolver(projectResources, projectResources, "MyTheme", true);
+                nonNamespacedResolver(projectResources, projectResources, "MyTheme");
         final AtomicBoolean wasWarned = new AtomicBoolean(false);
         LayoutLog logger =
                 new LayoutLog() {
@@ -471,7 +484,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
         assertNotNull(projectResources);
         ResourceResolver resolver =
-                nonNamespacedResolver(projectResources, projectResources, "MyTheme", true);
+                nonNamespacedResolver(projectResources, projectResources, "MyTheme");
         assertNotNull(resolver);
 
         final AtomicBoolean wasWarned = new AtomicBoolean(false);
@@ -546,7 +559,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
         assertNotNull(projectResources);
         ResourceResolver resolver =
-                nonNamespacedResolver(projectResources, projectResources, "ButtonStyle", true);
+                nonNamespacedResolver(projectResources, projectResources, "ButtonStyle");
         assertNotNull(resolver);
 
         final AtomicBoolean wasWarned = new AtomicBoolean(false);
@@ -641,7 +654,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 frameworkRepository.getConfiguredResources(config).row(ResourceNamespace.ANDROID);
         assertNotNull(projectResources);
         ResourceResolver lightResolver =
-                nonNamespacedResolver(projectResources, frameworkResources, "AppTheme", true);
+                nonNamespacedResolver(projectResources, frameworkResources, "AppTheme");
         assertNotNull(lightResolver);
         ResourceValue textColor = lightResolver.findItemInTheme("textColor", true);
         assertNotNull(textColor);
@@ -653,7 +666,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertEquals("#ff0000", textColor.getValue());
 
         ResourceResolver darkResolver =
-                nonNamespacedResolver(projectResources, frameworkResources, "AppTheme.Dark", true);
+                nonNamespacedResolver(projectResources, frameworkResources, "AppTheme.Dark");
         assertNotNull(darkResolver);
         textColor = darkResolver.findItemInTheme("textColor", true);
         assertNotNull(textColor);
@@ -717,7 +730,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 frameworkRepository.getConfiguredResources(config).row(ResourceNamespace.ANDROID);
         assertNotNull(projectResources);
         ResourceResolver resolver =
-                nonNamespacedResolver(projectResources, frameworkResources, "AppTheme", true);
+                nonNamespacedResolver(projectResources, frameworkResources, "AppTheme");
 
         final AtomicBoolean wasWarned = new AtomicBoolean(false);
         LayoutLog logger =
@@ -781,7 +794,10 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
 
         ResourceResolver resolver =
                 nonNamespacedResolver(
-                        projectResources, frameworkResources, "Theme.Material", false);
+                        projectResources, frameworkResources, "android:Theme.Material");
+        assertEquals(1, resolver.getAllThemes().size());
+        assertNotNull(resolver.getTheme());
+
         assertNull(ResourceResolver.copy(null));
         ResourceResolver copyResolver = ResourceResolver.copy(resolver);
         assertNotNull(copyResolver);
@@ -799,7 +815,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         // If the LocalResourceRespository fails to be loaded, the resolver will be created with empty maps. Make sure
         // empty maps are valid inputs
         ResourceResolver resolver =
-                nonNamespacedResolver(Collections.emptyMap(), Collections.emptyMap(), null, false);
+                nonNamespacedResolver(Collections.emptyMap(), Collections.emptyMap(), null);
         assertNotNull(ResourceResolver.copy(resolver));
 
         assertNull(resolver.findResValue("@color/doesnt_exist", false));
@@ -850,7 +866,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
         assertNotNull(projectResources);
         ResourceResolver resolver =
-                nonNamespacedResolver(projectResources, projectResources, "ButtonStyle", true);
+                nonNamespacedResolver(projectResources, projectResources, "ButtonStyle");
         resolver.setFrameworkResourceIdProvider(
                 new RenderResources.ResourceIdProvider() {
                     @Override

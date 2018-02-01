@@ -20,6 +20,7 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.res2.ResourceRepository;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -207,8 +208,10 @@ public class ResourceItemResolverTest extends TestCase {
                                                     appResourceMap,
                                                     ResourceNamespace.ANDROID,
                                                     frameworkResourcesMap),
-                                            "MyTheme",
-                                            true);
+                                            new ResourceReference(
+                                                    ResourceNamespace.RES_AUTO,
+                                                    ResourceType.STYLE,
+                                                    "MyTheme"));
                             assertNotNull(mResolver);
                             mResolver.setLogger(logger);
                         }

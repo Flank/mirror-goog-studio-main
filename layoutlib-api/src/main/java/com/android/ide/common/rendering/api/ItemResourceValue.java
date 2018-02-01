@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,57 +15,73 @@
  */
 package com.android.ide.common.rendering.api;
 
+import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
+import com.google.common.base.MoreObjects;
+import org.jetbrains.annotations.Nullable;
 
-/**
- * Represents each item in the android style resource.
- */
 public class ItemResourceValue extends ResourceValue {
+    @NonNull private final String attributeName;
 
-    private final boolean mIsFrameworkAttr;
-    /**
-     * If the value is a reference to a framework resource or not is NOT represented with a boolean!
-     * but can be deduced with:
-     *
-     * <pre>{@code
-     * boolean isFrameworkValue = item.isFramework() ||
-     *     item.getValue().startsWith(SdkConstants.ANDROID_PREFIX) ||
-     *     item.getValue().startsWith(SdkConstants.ANDROID_THEME_PREFIX);
-     * }</pre>
-     *
-     * For {@code <item name="foo">bar</item>}, item in a style resource, the values of the
-     * parameters will be as follows:
-     *
-     * @param attributeName foo
-     * @param isFrameworkAttr is foo in framework namespace.
-     * @param value bar (in case of a reference, the value may include the namespace. if the
-     *     namespace is absent, default namespace is assumed based on isFrameworkStyle (android
-     *     namespace when isFrameworkStyle=true and app namespace when isFrameworkStyle=false))
-     * @param isFrameworkStyle if the style is a framework file or project file.
-     */
     public ItemResourceValue(
-            String attributeName,
-            boolean isFrameworkAttr,
-            String value,
-            boolean isFrameworkStyle,
-            String libraryName) {
-        // Style items don't have a name of their own, but reference things that do. We abuse the
-        // abstraction a little to store all the necessary pieces of information. This will have to
-        // be reworked, as currently the namespace doesn't match isFramework(). It seems that this
-        // should not be represented as a ResourceValue at all.
-        super(
-                new ResourceReference(ResourceType.STYLE_ITEM, attributeName, isFrameworkStyle),
-                value,
-                libraryName);
-        mIsFrameworkAttr = isFrameworkAttr;
+            @NonNull ResourceNamespace namespace,
+            @NonNull String attributeName,
+            @Nullable String value,
+            @Nullable String libraryName) {
+        super(namespace, ResourceType.STYLE_ITEM, "<item>", value, libraryName);
+        this.attributeName = attributeName;
     }
 
-    public boolean isFrameworkAttr() {
-        return mIsFrameworkAttr;
+    /**
+     * Returns contents of the {@code name} XML attribute that defined this style item. This is
+     * supposed to be a reference to an {@code attr} resource.
+     */
+    @NonNull
+    public String getAttrName() {
+        return attributeName;
+    }
+
+    /**
+     * Returns a {@link ResourceReference} to the {@code attr} resource this item is defined for, if
+     * the name was specified using the correct syntax.
+     */
+    @Nullable
+    public ResourceReference getAttr() {
+        ResourceUrl url = ResourceUrl.parseAttrReference(attributeName);
+        if (url == null) {
+            return null;
+        }
+
+        return url.resolve(getNamespace(), mNamespaceResolver);
+    }
+
+    /**
+     * Returns just the name part of the attribute being referenced, for backwards compatibility
+     * with layoutlib. Don't call this method, the item may be in a different namespace than the
+     * attribute and the value being referenced, use {@link #getAttr()} instead.
+     *
+     * @deprecated TODO(namespaces): Throw in this method, once layoutlib correctly calls {@link
+     *     #getAttr()} instead.
+     */
+    @NonNull
+    @Override
+    @Deprecated
+    public String getName() {
+        ResourceUrl url = ResourceUrl.parseAttrReference(attributeName);
+        if (url != null) {
+            return url.name;
+        } else {
+            return attributeName;
+        }
     }
 
     @Override
     public String toString() {
-        return super.toString() + " (mIsFrameworkAttr=" + mIsFrameworkAttr + ")";
+        return MoreObjects.toStringHelper(this)
+                .add("namespace", getNamespace())
+                .add("attribute", attributeName)
+                .add("value", getValue())
+                .toString();
     }
 }

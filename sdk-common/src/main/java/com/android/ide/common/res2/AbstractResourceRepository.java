@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceValueMap;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -159,6 +160,12 @@ public abstract class AbstractResourceRepository {
         }
 
         return Collections.emptyList();
+    }
+
+    @NonNull
+    public List<ResourceItem> getResourceItems(@NonNull ResourceReference reference) {
+        return getResourceItems(
+                reference.getNamespace(), reference.getResourceType(), reference.getName());
     }
 
     /** @deprecated Use {@link #getItemsOfType(ResourceNamespace, ResourceType)} instead. */

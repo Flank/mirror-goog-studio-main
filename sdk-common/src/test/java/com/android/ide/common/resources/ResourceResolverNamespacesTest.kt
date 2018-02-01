@@ -15,15 +15,21 @@
  */
 package com.android.ide.common.resources
 
+import com.android.ide.common.rendering.api.AttrResourceValue
+import com.android.ide.common.rendering.api.ItemResourceValue
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.rendering.api.ResourceNamespace.ANDROID
 import com.android.ide.common.rendering.api.ResourceReference
 import com.android.ide.common.rendering.api.ResourceValue
+import com.android.ide.common.rendering.api.StyleResourceValue
 import com.android.resources.ResourceType
+import com.android.resources.ResourceType.ATTR
 import com.android.resources.ResourceType.COLOR
 import com.android.resources.ResourceType.STRING
+import com.android.resources.ResourceType.STYLE
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Before
 import org.junit.Test
 
 class ResourceResolverNamespacesTest {
@@ -32,123 +38,94 @@ class ResourceResolverNamespacesTest {
     private val localLib = ResourceNamespace.fromPackageName("com.example.common")
     private val supportLib = ResourceNamespace.fromPackageName("com.android.support")
 
-    private val resolver: ResourceResolver = ResourceResolver.create(
-        mapOf(
-            ANDROID to mapOf(
-                COLOR to ResourceValueMap.create().also { map ->
-                    map.put(ResourceValue(ANDROID, COLOR, "black", "#000000"))
-                }
-            ),
-            supportLib to mapOf(
-                COLOR to ResourceValueMap.create().also { map ->
-                    listOf(
-                        ResourceValue(
-                            supportLib,
-                            COLOR,
-                            "material_blue",
-                            "#0000ff"
-                        )
-                    ).forEach(map::put)
-                }
-            ),
-            localLib to mapOf(
-                STRING to ResourceValueMap.create().also { map ->
-                    listOf(
-                        ResourceValue(
-                            localLib,
-                            STRING,
-                            "company_name",
-                            "Example"
-                        ),
-                        ResourceValue(
-                            localLib,
-                            STRING,
-                            "header",
-                            "@string/company_name"
-                        ),
-                        ResourceValue(
-                            localLib,
-                            STRING,
-                            "header_explicit",
-                            "@com.example.common:string/company_name"
-                        ),
-                        ResourceValue(
-                            localLib,
-                            STRING,
-                            "wrong_ref",
-                            "@string/made_up"
-                        )
-                    ).forEach(map::put)
-                },
-                COLOR to ResourceValueMap.create().also { map ->
-                    listOf(
-                        ResourceValue(
-                            localLib,
-                            COLOR,
-                            "logo_color",
-                            "@android:color/black"
-                        ),
-                        ResourceValue(
-                            localLib,
-                            STRING,
-                            "missing_ns",
-                            "@support:color/material_blue"
-                        )
-                    ).forEach(map::put)
-                }
-            ),
-            app to mapOf(
-                COLOR to ResourceValueMap.create().also { map ->
-                    val namespaces = mapOf(
-                        "common" to localLib.xmlNamespaceUri,
-                        "support" to supportLib.xmlNamespaceUri
-                    )
+    private lateinit var resolver: ResourceResolver
 
-                    listOf(
-                        ResourceValue(
-                            app,
-                            COLOR,
-                            "image_color",
-                            "@common:color/logo_color"
-                        ),
-                        ResourceValue(
-                            app,
-                            COLOR,
-                            "title_bar_color",
-                            "@support:color/material_blue"
-                        ),
-                        ResourceValue(
-                            app,
-                            COLOR,
-                            "broken_chain_color",
-                            "@common:color/missing_ns"
-                        )
-                    ).forEach {
-                        it.setNamespaceLookup(namespaces::get)
-                        map.put(it)
-                    }
-                },
-                STRING to ResourceValueMap.create().also { map ->
-                    listOf(
-                        ResourceValue(
-                            app,
-                            STRING,
-                            "title_text",
-                            "@com.example.common:string/header"
-                        ),
-                        ResourceValue(
-                            app,
-                            STRING,
-                            "title_text_explicit",
-                            "@com.example.common:string/header_explicit"
-                        )
-                    ).forEach(map::put)
-                }
+    private fun StyleResourceValue.withItems(
+        namespaces: Map<String, String>,
+        vararg items: ItemResourceValue
+    ): StyleResourceValue {
+        for (item in items) {
+            item.setNamespaceLookup(namespaces::get)
+            this.addItem(item)
+        }
+        return this
+    }
+
+    @Before
+    fun createRes() {
+        val androidRes = listOf(
+            ResourceValue(ANDROID, COLOR, "black", "#000000"),
+            ResourceValue(ANDROID, COLOR, "white", "#ffffff"),
+            AttrResourceValue(ResourceReference(ANDROID, ATTR, "colorPrimary"), null)
+        )
+
+        val supportRes = listOf(
+            ResourceValue(supportLib, COLOR, "material_blue", "#0000ff"),
+            AttrResourceValue(ResourceReference(supportLib, ATTR, "fabColor"), null),
+            AttrResourceValue(ResourceReference(supportLib, ATTR, "actionBarColor"), null)
+        )
+
+        val libRes = listOf(
+            ResourceValue(localLib, COLOR, "logo_color", "@android:color/black"),
+            ResourceValue(localLib, COLOR, "missing_ns", "@support:color/material_blue"),
+            ResourceValue(localLib, STRING, "company_name", "Example"),
+            ResourceValue(localLib, STRING, "header", "@string/company_name"),
+            ResourceValue(localLib, STRING, "wrong_ref", "@string/made_up"),
+            ResourceValue(
+                localLib,
+                STRING,
+                "header_explicit",
+                "@com.example.common:string/company_name"
+            ),
+
+            StyleResourceValue(
+                ResourceReference(localLib, STYLE, "Theme.Base"),
+                "android:Theme",
+                null
+            ).withItems(
+                emptyMap(),
+                ItemResourceValue(app, "com.android.support:actionBarColor", "#00ff00", null)
             )
-        ),
-        "AppTheme",
-        true
-    )
+        )
+
+        val appPrefixes =
+            mapOf("common" to localLib.xmlNamespaceUri, "support" to supportLib.xmlNamespaceUri)
+        val appRes = listOf(
+            ResourceValue(app, COLOR, "image_color", "@common:color/logo_color"),
+            ResourceValue(app, COLOR, "title_bar_color", "@support:color/material_blue"),
+            ResourceValue(app, COLOR, "broken_chain_color", "@common:color/missing_ns"),
+
+
+            ResourceValue(app, COLOR, "from_theme_1", "?android:colorPrimary"),
+            ResourceValue(app, COLOR, "from_theme_2", "?support:fabColor"),
+            ResourceValue(app, COLOR, "from_theme_3", "?support:actionBarColor"),
+
+            ResourceValue(app, STRING, "title_text", "@com.example.common:string/header"),
+            ResourceValue(
+                app,
+                STRING,
+                "title_text_explicit",
+                "@com.example.common:string/header_explicit"
+            ),
+
+            StyleResourceValue(
+                ResourceReference(app, STYLE, "AppTheme"),
+                "common:Theme.Base",
+                null
+            ).withItems(
+                appPrefixes,
+                ItemResourceValue(app, "android:colorPrimary", "@android:color/white", null),
+                ItemResourceValue(app, "support:fabColor", "@color/image_color", null)
+            )
+        )
+        appRes.forEach { it.setNamespaceLookup(appPrefixes::get) }
+
+        val allRes = sequenceOf(androidRes, appRes, supportRes, libRes)
+            .flatMap { it.asSequence() }
+            .asIterable()
+
+        resolver = ResourceResolver.withValues(allRes, ResourceReference(app, STYLE, "AppTheme"))
+    }
 
     private fun check(
         namespace: ResourceNamespace,
@@ -160,7 +137,7 @@ class ResourceResolverNamespacesTest {
         assertNotNull(resolver.getUnresolvedResource(ref))
         val resolved = resolver.getResolvedResource(ref)
         assertNotNull(resolved)
-        assertEquals(resolvesTo, resolved!!.value)
+        assertEquals(ref.resourceUrl.toString(), resolvesTo, resolved!!.value)
     }
 
     @Test
@@ -195,5 +172,12 @@ class ResourceResolverNamespacesTest {
         // (which is assumed to use fully qualified package names in XML). Below we make sure that
         // the resolution process doesn't "leak" the defined prefixes as it walks the graph.
         check(app, COLOR, "broken_chain_color", resolvesTo = "@support:color/material_blue")
+    }
+
+    @Test
+    fun themeResolution() {
+        check(app, COLOR, "from_theme_1", resolvesTo = "#ffffff")
+        check(app, COLOR, "from_theme_2", resolvesTo = "#000000")
+        check(app, COLOR, "from_theme_3", resolvesTo = "#00ff00")
     }
 }

@@ -136,7 +136,6 @@ public class ResourceUrl implements Serializable {
      *
      * @see #parse(String)
      * @param namespace the resource namespace
-     * @param type the resource type
      * @param name the name
      */
     @NonNull
@@ -288,7 +287,12 @@ public class ResourceUrl implements Serializable {
     /** Returns a {@link ResourceUrl} representation of the given reference to a style's parent. */
     @Nullable
     public static ResourceUrl parseStyleParentReference(@NonNull String input) {
+        if (input.isEmpty()) {
+            return null;
+        }
+
         int pos = 0;
+
         if (input.charAt(pos) == '@' || input.charAt(pos) == '?') {
             pos++;
         }
@@ -413,6 +417,24 @@ public class ResourceUrl implements Serializable {
 
         sb.append(name);
         return sb.toString();
+    }
+
+    /**
+     * Returns a short string representation, which includes just the namespace (if defined in this
+     * {@link ResourceUrl} and name, separated by a colon. For example {@code
+     * ResourceUrl.parse("@android:style/Theme").getQualifiedName()} returns {@code "android:Theme"}
+     * and {@code ResourceUrl.parse("?myColor").getQualifiedName()} returns {@code "myColor"}.
+     *
+     * <p>This is used when the type is implicit, e.g. when specifying attribute for a style item or
+     * a parent for a style.
+     */
+    @NonNull
+    public String getQualifiedName() {
+        if (namespace == null) {
+            return name;
+        } else {
+            return namespace + ':' + name;
+        }
     }
 
     @Override

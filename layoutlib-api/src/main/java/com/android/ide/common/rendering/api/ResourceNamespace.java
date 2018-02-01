@@ -124,26 +124,36 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
 
         String uri = resolver.prefixToUri(prefix);
         if (uri != null) {
-            if (uri.equals(SdkConstants.AUTO_URI)) {
-                return RES_AUTO;
-            }
-            if (uri.equals(SdkConstants.TOOLS_URI)) {
-                return TOOLS;
-            }
-            if (uri.startsWith(SdkConstants.URI_PREFIX)) {
-                // TODO(namespaces): What is considered a good package name by aapt?
-                String packageName = uri.substring(SdkConstants.URI_PREFIX.length());
-                if (!packageName.isEmpty()) {
-                    return fromPackageName(packageName);
-                }
-            }
-
-            // The prefix is mapped to a string/URL we don't understand.
-            return null;
+            return fromNamespaceUri(uri);
         } else {
             // TODO(namespaces): What is considered a good package name by aapt?
             return fromPackageName(prefix);
         }
+    }
+
+    /**
+     * Constructs a {@link ResourceNamespace} for the given URI, as used in XML resource files.
+     *
+     * <p>This methods returns null if we don't recognize the URI.
+     */
+    @Nullable
+    public static ResourceNamespace fromNamespaceUri(@NonNull String uri) {
+        if (uri.equals(SdkConstants.AUTO_URI)) {
+            return RES_AUTO;
+        }
+        if (uri.equals(SdkConstants.TOOLS_URI)) {
+            return TOOLS;
+        }
+        if (uri.startsWith(SdkConstants.URI_PREFIX)) {
+            // TODO(namespaces): What is considered a good package name by aapt?
+            String packageName = uri.substring(SdkConstants.URI_PREFIX.length());
+            if (!packageName.isEmpty()) {
+                return fromPackageName(packageName);
+            }
+        }
+
+        // The prefix is mapped to a string/URL we don't understand.
+        return null;
     }
 
     private ResourceNamespace(@NonNull String uri, @Nullable String packageName) {

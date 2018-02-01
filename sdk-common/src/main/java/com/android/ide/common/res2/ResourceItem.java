@@ -54,6 +54,7 @@ import com.android.utils.XmlUtils;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import java.nio.file.Paths;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -463,9 +464,14 @@ public class ResourceItem extends DataItem<ResourceFile>
                 break;
         }
 
-        // TODO(namespaces): precompute this?
-        value.setNamespaceLookup(mValue::lookupNamespaceURI);
+        value.setNamespaceLookup(getNamespaceResolver(this.mValue));
         return value;
+    }
+
+    @NonNull
+    private static ResourceNamespace.Resolver getNamespaceResolver(Node node) {
+        // TODO(namespaces): precompute this?
+        return node::lookupNamespaceURI;
     }
 
     @Nullable
@@ -497,25 +503,16 @@ public class ResourceItem extends DataItem<ResourceFile>
 
             if (child.getNodeType() == Node.ELEMENT_NODE) {
                 NamedNodeMap attributes = child.getAttributes();
-                String name = getAttributeValue(attributes, ATTR_NAME);
-                if (name != null) {
-                    // is the attribute in the android namespace?
-                    boolean isFrameworkAttr = styleValue.isFramework();
-                    if (name.startsWith(ANDROID_NS_NAME_PREFIX)) {
-                        name = name.substring(ANDROID_NS_NAME_PREFIX_LEN);
-                        isFrameworkAttr = true;
-                    }
-
-                    String value =
-                            ValueXmlHelper.unescapeResourceString(
-                                    getTextNode(child.getChildNodes()), false, true);
+                String attributeUrl = getAttributeValue(attributes, ATTR_NAME);
+                if (!Strings.isNullOrEmpty(attributeUrl)) {
                     ItemResourceValue resValue =
                             new ItemResourceValue(
-                                    name,
-                                    isFrameworkAttr,
-                                    value,
-                                    styleValue.isFramework(),
+                                    styleValue.getNamespace(),
+                                    attributeUrl,
+                                    ValueXmlHelper.unescapeResourceString(
+                                            getTextNode(child.getChildNodes()), false, true),
                                     styleValue.getLibraryName());
+                    resValue.setNamespaceLookup(getNamespaceResolver(child));
                     styleValue.addItem(resValue);
                 }
             }
@@ -616,6 +613,7 @@ public class ResourceItem extends DataItem<ResourceFile>
                                             new ResourceReference(
                                                     namespace, ResourceType.ATTR, name),
                                             mLibraryName));
+                    attr.setNamespaceLookup(getNamespaceResolver(child));
                     declareStyleable.addValue(attr);
                 }
             }

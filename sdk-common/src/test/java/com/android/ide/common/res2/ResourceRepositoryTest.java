@@ -16,6 +16,7 @@
 
 package com.android.ide.common.res2;
 
+import static com.android.ide.common.rendering.api.ResourceNamespace.ANDROID;
 import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 import static org.junit.Assert.*;
 
@@ -215,25 +216,25 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertTrue(value instanceof StyleResourceValue);
         StyleResourceValue styleResourceValue = (StyleResourceValue) value;
 
-        assertEquals("@android:style/Holo.Light", styleResourceValue.getParentStyle());
+        assertEquals("@android:style/Holo.Light", styleResourceValue.getParentStyleName());
 
-        ItemResourceValue styleValue = styleResourceValue.getItem("singleLine", true /*framework*/);
+        ItemResourceValue styleValue = styleResourceValue.getItem(ANDROID, "singleLine");
         assertNotNull(styleValue);
         assertEquals("true", styleValue.getValue());
 
-        styleValue = styleResourceValue.getItem("textAppearance", true /*framework*/);
+        styleValue = styleResourceValue.getItem(ANDROID, "textAppearance");
         assertNotNull(styleValue);
         assertEquals("@style/TextAppearance.WindowTitle", styleValue.getValue());
 
-        styleValue = styleResourceValue.getItem("shadowColor", true /*framework*/);
+        styleValue = styleResourceValue.getItem(ANDROID, "shadowColor");
         assertNotNull(styleValue);
         assertEquals("#BB000000", styleValue.getValue());
 
-        styleValue = styleResourceValue.getItem("shadowRadius", true /*framework*/);
+        styleValue = styleResourceValue.getItem(ANDROID, "shadowRadius");
         assertNotNull(styleValue);
         assertEquals("2.75", styleValue.getValue());
 
-        styleValue = styleResourceValue.getItem("foo", false /*framework*/);
+        styleValue = styleResourceValue.getItem(RES_AUTO, "foo");
         assertNotNull(styleValue);
         assertEquals("foo", styleValue.getValue());
     }

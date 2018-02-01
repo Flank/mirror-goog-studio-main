@@ -183,4 +183,12 @@ class ResourceUrlTest {
         assertEquals("android:foo", ResourceUrl.parseAttrReference("android:foo")!!.toString())
         assertEquals("androidx:foo", ResourceUrl.parseAttrReference("androidx:foo")!!.toString())
     }
+
+    @Test
+    fun qualifiedName() {
+        assertEquals("android:Theme", ResourceUrl.parse("@android:style/Theme")!!.qualifiedName)
+        assertEquals("MyStyle", ResourceUrl.parse("@style/MyStyle")!!.qualifiedName)
+        assertEquals("myColor", ResourceUrl.parse("?myColor")!!.qualifiedName)
+        assertEquals("android:colorPrimary", ResourceUrl.parse("?android:colorPrimary")!!.qualifiedName)
+    }
 }

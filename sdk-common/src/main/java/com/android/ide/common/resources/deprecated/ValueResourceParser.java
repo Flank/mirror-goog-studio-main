@@ -34,6 +34,7 @@ import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.res2.ValueXmlHelper;
 import com.android.resources.ResourceType;
+import com.google.common.base.Strings;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -150,19 +151,11 @@ public final class ValueResourceParser extends DefaultHandler {
             } else if (mDepth == 3) {
                 // get the resource name
                 String name = attributes.getValue(ATTR_NAME);
-                if (name != null) {
-
+                if (!Strings.isNullOrEmpty(name)) {
                     if (mCurrentStyle != null) {
-                        // is the attribute in the android namespace?
-                        boolean isFrameworkAttr = mIsFramework;
-                        if (name.startsWith(ANDROID_NS_NAME_PREFIX)) {
-                            name = name.substring(ANDROID_NS_NAME_PREFIX_LEN);
-                            isFrameworkAttr = true;
-                        }
-
                         mCurrentValue =
                                 new ItemResourceValue(
-                                        name, isFrameworkAttr, null, mIsFramework, mLibraryName);
+                                        mCurrentStyle.getNamespace(), name, null, mLibraryName);
                         mCurrentStyle.addItem((ItemResourceValue)mCurrentValue);
                     } else if (mCurrentDeclareStyleable != null) {
                         // is the attribute in the android namespace?
