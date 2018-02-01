@@ -28,17 +28,25 @@ public enum BooleanOption implements Option<Boolean> {
     ENABLE_PROFILE_JSON("android.enableProfileJson", false),
     ENABLE_SDK_DOWNLOAD("android.builder.sdkDownload", true),
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
-    ENABLE_DEX_ARCHIVE("android.useDexArchive", true),
+    ENABLE_DEX_ARCHIVE(
+            "android.useDexArchive", true, DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
 
     ENABLE_INTERMEDIATE_ARTIFACTS_CACHE("android.enableIntermediateArtifactsCache", true),
     ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true),
     VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck"),
     OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck"),
-    ENABLE_DESUGAR("android.enableDesugar", true),
-    ENABLE_INCREMENTAL_DESUGARING("android.enableIncrementalDesugaring", true),
+    ENABLE_DESUGAR(
+            "android.enableDesugar", true, DeprecationReporter.DeprecationTarget.DESUGAR_TOOL),
+    ENABLE_INCREMENTAL_DESUGARING(
+            "android.enableIncrementalDesugaring",
+            true,
+            DeprecationReporter.DeprecationTarget.INCREMENTAL_DESUGARING),
     ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", false),
     ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", false),
-    ENABLE_CORE_LAMBDA_STUBS("android.enableCoreLambdaStubs", true),
+    ENABLE_CORE_LAMBDA_STUBS(
+            "android.enableCoreLambdaStubs",
+            true,
+            DeprecationReporter.DeprecationTarget.CORE_LAMBDA_STUBS),
 
     ENABLE_D8("android.enableD8", true, DeprecationReporter.DeprecationTarget.LEGACY_DEXER),
     ENABLE_D8_DESUGARING("android.enableD8.desugaring", true),
