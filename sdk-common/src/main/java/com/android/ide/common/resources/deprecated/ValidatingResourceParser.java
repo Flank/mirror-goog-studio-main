@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.ide.common.resources;
+package com.android.ide.common.resources.deprecated;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.ide.common.rendering.api.ResourceReference;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.ValueResourceParser.IValueResourceRepository;
-import com.android.resources.ResourceType;
 import com.google.common.io.Closeables;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -32,45 +27,57 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 /**
- * Parser for scanning an id-generating resource file such as a layout or a menu
- * file, which registers any ids it encounters with an
- * {@link IValueResourceRepository}, and which registers errors with a
- * {@link ScanningContext}.
+ * @deprecated This class is part of an obsolete resource repository system that is no longer used
+ *     in production code. The class is preserved temporarily for LayoutLib tests.
  */
-public class IdResourceParser {
-    private final IValueResourceRepository mRepository;
+@Deprecated
+public class ValidatingResourceParser {
     private final boolean mIsFramework;
     private ScanningContext mContext;
 
     /**
-     * Creates a new {@link IdResourceParser}
+     * Creates a new {@link ValidatingResourceParser}
      *
-     * @param repository value repository for registering resource declaration
      * @param context a context object with state for the current update, such
      *            as a place to stash errors encountered
      * @param isFramework true if scanning a framework resource
      */
-    public IdResourceParser(
-            @NonNull IValueResourceRepository repository,
+    public ValidatingResourceParser(
             @NonNull ScanningContext context,
             boolean isFramework) {
-        mRepository = repository;
         mContext = context;
         mIsFramework = isFramework;
     }
 
     /**
-     * Parse the given input and register ids with the given
-     * {@link IValueResourceRepository}.
+     * Parse the given input and return false if it contains errors, <b>or</b> if
+     * the context is already tagged as needing a full aapt run.
      *
-     * @param type the type of resource being scanned
      * @param path the full OS path to the file being parsed
      * @param input the input stream of the XML to be parsed (will be closed by this method)
      * @return true if parsing succeeds and false if it fails
      * @throws IOException if reading the contents fails
      */
-    public boolean parse(ResourceType type, final String path, InputStream input)
+    public boolean parse(final String path, InputStream input)
             throws IOException {
+        // No need to validate framework files
+        if (mIsFramework) {
+            try {
+                Closeables.close(input, true /* swallowIOException */);
+            } catch (IOException e) {
+                // cannot happen
+            }
+            return true;
+        }
+        if (mContext.needsFullAapt()) {
+            try {
+                Closeables.close(input, true /* swallowIOException */);
+            } catch (IOException e) {
+                // cannot happen
+            }
+            return false;
+        }
+
         KXmlParser parser = new KXmlParser();
         try {
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
@@ -80,7 +87,7 @@ public class IdResourceParser {
             }
             parser.setInput(input, SdkConstants.UTF_8);
 
-            return parse(type, path, parser);
+            return parse(path, parser);
         } catch (XmlPullParserException e) {
             String message = e.getMessage();
 
@@ -114,9 +121,8 @@ public class IdResourceParser {
         }
     }
 
-    private boolean parse(ResourceType type, String path, KXmlParser parser)
+    private boolean parse(String path, KXmlParser parser)
             throws XmlPullParserException, IOException {
-        boolean valid = true;
         boolean checkForErrors = !mIsFramework && !mContext.needsFullAapt();
 
         while (true) {
@@ -131,19 +137,8 @@ public class IdResourceParser {
                         String uri = parser.getAttributeNamespace(i);
                         if (!mContext.checkValue(uri, attribute, value)) {
                             mContext.requestFullAapt();
-                            checkForErrors = false;
-                            valid = false;
+                            return false;
                         }
-                    }
-
-                    if (value.startsWith("@+")) {       //$NON-NLS-1$
-                        // Strip out the @+id/ or @+android:id/ section
-                        String id = value.substring(value.indexOf('/') + 1);
-                        ResourceValue newId =
-                                new ResourceValue(
-                                        new ResourceReference(ResourceType.ID, id, mIsFramework),
-                                        null);
-                        mRepository.addResourceValue(newId);
                     }
                 }
             } else if (event == XmlPullParser.END_DOCUMENT) {
@@ -151,6 +146,6 @@ public class IdResourceParser {
             }
         }
 
-        return valid;
+        return true;
     }
 }

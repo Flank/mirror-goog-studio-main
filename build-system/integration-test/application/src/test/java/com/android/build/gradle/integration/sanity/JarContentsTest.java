@@ -551,6 +551,7 @@ public class JarContentsTest {
                 "com/android/ide/common/res2/",
                 "com/android/ide/common/resources/",
                 "com/android/ide/common/resources/configuration/",
+                "com/android/ide/common/resources/deprecated/",
                 "com/android/ide/common/resources/sampledata/",
                 "com/android/ide/common/resources/usage/",
                 "com/android/ide/common/sdk/",

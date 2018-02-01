@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.resources;
+package com.android.ide.common.resources.deprecated;
 
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.ResourceType;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 /**
- * An android resource.
- *
- * This is a representation of the resource, not of its value(s). It gives access to all
- * the source files that generate this particular resource which then can be used to access
- * the actual value(s).
+ * @deprecated This class is part of an obsolete resource repository system that is no longer used
+ *     in production code. The class is preserved temporarily for LayoutLib tests.
  */
+@Deprecated
 public class ResourceItem implements Comparable<ResourceItem> {
 
     private static final Comparator<ResourceFile> sComparator = new Comparator<ResourceFile>() {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.resources;
+package com.android.ide.common.resources.deprecated;
 
-import static com.android.SdkConstants.*;
+import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
+import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_PARENT;
+import static com.android.SdkConstants.ATTR_TYPE;
+import static com.android.SdkConstants.ATTR_VALUE;
+import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_RESOURCES;
 
-import com.android.ide.common.rendering.api.*;
+import com.android.ide.common.rendering.api.ArrayResourceValue;
+import com.android.ide.common.rendering.api.AttrResourceValue;
+import com.android.ide.common.rendering.api.DeclareStyleableResourceValue;
+import com.android.ide.common.rendering.api.ItemResourceValue;
+import com.android.ide.common.rendering.api.ResourceReference;
+import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.res2.ValueXmlHelper;
 import com.android.resources.ResourceType;
 import org.xml.sax.Attributes;
@@ -26,8 +39,10 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * SAX handler to parse value resource files.
+ * @deprecated This class is part of an obsolete resource repository system that is no longer used
+ *     in production code. The class is preserved temporarily for LayoutLib tests.
  */
+@Deprecated
 public final class ValueResourceParser extends DefaultHandler {
 
     private static final ResourceReference TMP_REF =

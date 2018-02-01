@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.resources;
+package com.android.ide.common.resources.deprecated;
 
 /**
- * A custom {@link ResourceItem} for resources provided by the framework.
- *
- * The main change is that {@link #isEditableDirectly()} returns false.
+ * @deprecated This class is part of an obsolete resource repository system that is no longer used
+ *     in production code. The class is preserved temporarily for LayoutLib tests.
  */
+@Deprecated
 class FrameworkResourceItem extends ResourceItem {
 
     FrameworkResourceItem(String name) {

@@ -31,9 +31,6 @@ import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.android.SdkConstants.TOOLS_URI;
-import static com.android.ide.common.resources.ResourceResolver.ATTR_EXAMPLE;
-import static com.android.ide.common.resources.ResourceResolver.XLIFF_G_TAG;
-import static com.android.ide.common.resources.ResourceResolver.XLIFF_NAMESPACE_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -73,6 +70,10 @@ import org.w3c.dom.NodeList;
  */
 public class ResourceItem extends DataItem<ResourceFile>
         implements Configurable, Comparable<ResourceItem> {
+    public static final String XLIFF_NAMESPACE_PREFIX = "urn:oasis:names:tc:xliff:document:";
+    public static final String XLIFF_G_TAG = "g";
+    public static final String ATTR_EXAMPLE = "example";
+
     @NonNull private final ResourceType mType;
 
     /**
@@ -271,6 +272,7 @@ public class ResourceItem extends DataItem<ResourceFile>
         mResourceValue = null;
     }
 
+    // TODO(namespaces): Deprecate ths method and replace it with one without arguments.
     @Nullable
     public ResourceValue getResourceValue(boolean isFrameworks) {
         if (mResourceValue == null) {

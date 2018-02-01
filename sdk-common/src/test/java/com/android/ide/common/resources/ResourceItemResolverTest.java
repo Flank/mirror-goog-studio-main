@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.LayoutLog;
@@ -24,123 +24,139 @@ import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.res2.ResourceRepository;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.ResourceType;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Map;
 import junit.framework.TestCase;
 
 public class ResourceItemResolverTest extends TestCase {
+    private final ResourceRepositoryFixture resourceFixture = new ResourceRepositoryFixture();
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        resourceFixture.setUp();
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        try {
+            resourceFixture.tearDown();
+        } finally {
+            super.tearDown();
+        }
+    }
+
     public void testBasicFunctionality() throws Exception {
-        final TestResourceRepository frameworkResources = TestResourceRepository.create(true,
-                new Object[]{
-                        "values/strings.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <string name=\"ok\">Ok</string>\n"
-                        + "    <array name=\"my_fw_array\">\"\n"
-                        + "        <item>  fw_value1</item>\n"   // also test trimming.
-                        + "        <item>fw_value2\n</item>\n"
-                        + "        <item>fw_value3</item>\n"
-                        + "    </array>\n"
-                        + "</resources>\n",
+        ResourceRepository frameworkResources =
+            resourceFixture.createTestResources(ResourceNamespace.ANDROID, new Object[] {
+                "values/strings.xml", ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<resources>\n"
+                + "    <string name=\"ok\">Ok</string>\n"
+                + "    <array name=\"my_fw_array\">\"\n"
+                + "        <item>  fw_value1</item>\n"   // also test trimming.
+                + "        <item>fw_value2\n</item>\n"
+                + "        <item>fw_value3</item>\n"
+                + "    </array>\n"
+                + "</resources>\n",
 
-                        "values/themes.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <style name=\"Theme\">\n"
-                        + "        <item name=\"colorForeground\">@android:color/bright_foreground_dark</item>\n"
-                        + "        <item name=\"colorBackground\">@android:color/background_dark</item>\n"
-                        + "    </style>\n"
-                        + "    <style name=\"Theme.Light\">\n"
-                        + "        <item name=\"colorBackground\">@android:color/background_light</item>\n"
-                        + "        <item name=\"colorForeground\">@color/bright_foreground_light</item>\n"
-                        + "    </style>\n"
-                        + "</resources>\n",
+                "values/themes.xml", ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<resources>\n"
+                + "    <style name=\"Theme\">\n"
+                + "        <item name=\"colorForeground\">@android:color/bright_foreground_dark</item>\n"
+                + "        <item name=\"colorBackground\">@android:color/background_dark</item>\n"
+                + "    </style>\n"
+                + "    <style name=\"Theme.Light\">\n"
+                + "        <item name=\"colorBackground\">@android:color/background_light</item>\n"
+                + "        <item name=\"colorForeground\">@color/bright_foreground_light</item>\n"
+                + "    </style>\n"
+                + "</resources>\n",
 
-                        "values/colors.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <color name=\"background_dark\">#ff000000</color>\n"
-                        + "    <color name=\"background_light\">#ffffffff</color>\n"
-                        + "    <color name=\"bright_foreground_dark\">@android:color/background_light</color>\n"
-                        + "    <color name=\"bright_foreground_light\">@android:color/background_dark</color>\n"
-                        + "</resources>\n",
-                });
+                "values/colors.xml", ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<resources>\n"
+                + "    <color name=\"background_dark\">#ff000000</color>\n"
+                + "    <color name=\"background_light\">#ffffffff</color>\n"
+                + "    <color name=\"bright_foreground_dark\">@android:color/background_light</color>\n"
+                + "    <color name=\"bright_foreground_light\">@android:color/background_dark</color>\n"
+                + "</resources>\n",
+            });
 
-        final ResourceRepository appResources =
-                TestResourceRepository.createRes2(
-                        new Object[] {
-                            "layout/layout1.xml",
-                            "<!--contents doesn't matter-->",
-                            "layout/layout2.xml",
-                            "<!--contents doesn't matter-->",
-                            "layout-land/layout1.xml",
-                            "<!--contents doesn't matter-->",
-                            "layout-land/only_land.xml",
-                            "<!--contents doesn't matter-->",
-                            "drawable/graphic.9.png",
-                            new byte[0],
-                            "values/styles.xml",
-                            ""
-                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                    + "<resources>\n"
-                                    + "    <style name=\"MyTheme\" parent=\"android:Theme.Light\">\n"
-                                    + "        <item name=\"android:textColor\">#999999</item>\n"
-                                    + "        <item name=\"foo\">?android:colorForeground</item>\n"
-                                    + "    </style>\n"
-                                    + "    <style name=\"MyTheme.Dotted1\" parent=\"\">\n"
-                                    + "    </style>"
-                                    + "    <style name=\"MyTheme.Dotted2\">\n"
-                                    + "    </style>"
-                                    + "    <style name=\"RandomStyle\">\n"
-                                    + "    </style>"
-                                    + "    <style name=\"RandomStyle2\" parent=\"RandomStyle\">\n"
-                                    + "    </style>"
-                                    + "</resources>\n",
-                            "values/strings.xml",
-                            ""
-                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                    + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
-                                    + "    <item type=\"id\" name=\"action_bar_refresh\" />\n"
-                                    + "    <item type=\"dimen\" name=\"dialog_min_width_major\">45%</item>\n"
-                                    + "    <string name=\"home_title\">Home Sample</string>\n"
-                                    + "    <string name=\"show_all_apps\">All</string>\n"
-                                    + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
-                                    + "    <string name=\"menu_search\">Search</string>\n"
-                                    + "    <string name=\"menu_settings\">Settings</string>\n"
-                                    + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
-                                    + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
-                                    + "    <string name=\"xliff_string\">First: <xliff:g id=\"firstName\">%1$s</xliff:g> Last: <xliff:g id=\"lastName\">%2$s</xliff:g></string>\n"
-                                    + "    <array name=\"my_array\">\"\n"
-                                    + "        <item>@string/home_title</item>\n"
-                                    + "        <item>value2\n</item>\n"
-                                    + "        <item>value3</item>\n"
-                                    + "    </array>\n"
-                                    + "</resources>\n",
-                            "values-es/strings.xml",
-                            ""
-                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                    + "<resources>\n"
-                                    + "    <string name=\"show_all_apps\">Todo</string>\n"
-                                    + "</resources>\n",
-                        });
+        ResourceRepository appResources =
+            resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
+                "layout/layout1.xml", "<!--contents doesn't matter-->",
 
-        final FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
+                "layout/layout2.xml", "<!--contents doesn't matter-->",
+
+                "layout-land/layout1.xml", "<!--contents doesn't matter-->",
+
+                "layout-land/only_land.xml", "<!--contents doesn't matter-->",
+
+                "drawable/graphic.9.png", new byte[0],
+
+                "values/styles.xml", ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<resources>\n"
+                + "    <style name=\"MyTheme\" parent=\"android:Theme.Light\">\n"
+                + "        <item name=\"android:textColor\">#999999</item>\n"
+                + "        <item name=\"foo\">?android:colorForeground</item>\n"
+                + "    </style>\n"
+                + "    <style name=\"MyTheme.Dotted1\" parent=\"\">\n"
+                + "    </style>"
+                + "    <style name=\"MyTheme.Dotted2\">\n"
+                + "    </style>"
+                + "    <style name=\"RandomStyle\">\n"
+                + "    </style>"
+                + "    <style name=\"RandomStyle2\" parent=\"RandomStyle\">\n"
+                + "    </style>"
+                + "</resources>\n",
+
+                "values/strings.xml", ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+                + "    <item type=\"id\" name=\"action_bar_refresh\" />\n"
+                + "    <item type=\"dimen\" name=\"dialog_min_width_major\">45%</item>\n"
+                + "    <string name=\"home_title\">Home Sample</string>\n"
+                + "    <string name=\"show_all_apps\">All</string>\n"
+                + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
+                + "    <string name=\"menu_search\">Search</string>\n"
+                + "    <string name=\"menu_settings\">Settings</string>\n"
+                + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
+                + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
+                + "    <string name=\"xliff_string\">First: <xliff:g id=\"firstName\">%1$s</xliff:g> Last: <xliff:g id=\"lastName\">%2$s</xliff:g></string>\n"
+                + "    <array name=\"my_array\">\"\n"
+                + "        <item>@string/home_title</item>\n"
+                + "        <item>value2\n</item>\n"
+                + "        <item>value3</item>\n"
+                + "    </array>\n"
+                + "</resources>\n",
+
+                "values-es/strings.xml", ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<resources>\n"
+                + "    <string name=\"show_all_apps\">Todo</string>\n"
+                + "</resources>\n",
+            });
+
+        FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertFalse(appResources.isFramework());
         assertNotNull(config);
 
-        final LayoutLog logger =
+        LayoutLog logger =
                 new LayoutLog() {
                     @Override
                     public void warning(
-                            String tag, String message, Object viewCookie, Object data) {
+                            String tag, @NonNull String message, Object viewCookie, Object data) {
                         fail(message);
                     }
 
                     @Override
                     public void fidelityWarning(
                             String tag,
-                            String message,
+                            @NonNull String message,
                             Throwable throwable,
                             Object viewCookie,
                             Object data) {
@@ -148,14 +164,18 @@ public class ResourceItemResolverTest extends TestCase {
                     }
 
                     @Override
-                    public void error(String tag, String message, Object viewCookie, Object data) {
+                    public void error(
+                            String tag,
+                            @NonNull String message,
+                            Object viewCookie,
+                            Object data) {
                         fail(message);
                     }
 
                     @Override
                     public void error(
                             String tag,
-                            String message,
+                            @NonNull String message,
                             Throwable throwable,
                             Object viewCookie,
                             Object data) {
@@ -176,11 +196,19 @@ public class ResourceItemResolverTest extends TestCase {
                                             .getConfiguredResources(config)
                                             .row(ResourceNamespace.RES_AUTO);
                             Map<ResourceType, ResourceValueMap> frameworkResourcesMap =
-                                    frameworkResources.getConfiguredResources(config);
+                                    frameworkResources
+                                            .getConfiguredResources(config)
+                                            .row(ResourceNamespace.ANDROID);
                             assertNotNull(appResourceMap);
                             mResolver =
-                                    ResourceResolverNoNamespacesTest.nonNamespacedResolver(
-                                            appResourceMap, frameworkResourcesMap, "MyTheme", true);
+                                    ResourceResolver.create(
+                                            ImmutableMap.of(
+                                                    ResourceNamespace.RES_AUTO,
+                                                    appResourceMap,
+                                                    ResourceNamespace.ANDROID,
+                                                    frameworkResourcesMap),
+                                            "MyTheme",
+                                            true);
                             assertNotNull(mResolver);
                             mResolver.setLogger(logger);
                         }
@@ -190,8 +218,7 @@ public class ResourceItemResolverTest extends TestCase {
 
                     @Nullable
                     @Override
-                    public com.android.ide.common.resources.ResourceRepository
-                            getFrameworkResources() {
+                    public ResourceRepository getFrameworkResources() {
                         return frameworkResources;
                     }
 
@@ -306,6 +333,5 @@ public class ResourceItemResolverTest extends TestCase {
         assertEquals("fw_value1", ((ArrayResourceValue) resValue).getElement(0));
         assertEquals("fw_value2", ((ArrayResourceValue) resValue).getElement(1));
         assertEquals("fw_value3", ((ArrayResourceValue) resValue).getElement(2));
-
     }
 }

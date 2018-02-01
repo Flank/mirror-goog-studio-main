@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,33 +14,30 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.resources;
+package com.android.ide.common.resources.deprecated;
 
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.ValueResourceParser.IValueResourceRepository;
+import com.android.ide.common.resources.ResourceValueMap;
+import com.android.ide.common.resources.deprecated.ValueResourceParser.IValueResourceRepository;
 import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.resources.ResourceType;
-
 import com.android.utils.XmlUtils;
-import org.xml.sax.SAXException;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
-
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import org.xml.sax.SAXException;
 
 /**
- * Represents a resource file able to declare multiple resources, which could be of
- * different {@link ResourceType}.
- * <p>
- * This is typically an XML file inside res/values.
+ * @deprecated This class is part of an obsolete resource repository system that is no longer used
+ *     in production code. The class is preserved temporarily for LayoutLib tests.
  */
+@Deprecated
 public final class MultiResourceFile extends ResourceFile implements IValueResourceRepository {
 
     private static final SAXParserFactory sParserFactory = XmlUtils.configureSaxFactory(

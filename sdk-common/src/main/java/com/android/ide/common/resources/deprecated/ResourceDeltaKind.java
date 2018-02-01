@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.resources;
+package com.android.ide.common.resources.deprecated;
 
 /**
- * Enum indicating a type of resource change.
- *
- * This is similar, and can be easily mapped to Eclipse's integer constants in IResourceDelta.
+ * @deprecated This class is part of an obsolete resource repository system that is no longer used
+ *     in production code. The class is preserved temporarily for LayoutLib tests.
  */
+@Deprecated
 public enum ResourceDeltaKind {
     CHANGED, ADDED, REMOVED
 }

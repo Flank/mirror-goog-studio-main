@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.resources;
+package com.android.ide.common.resources.deprecated;
 
 
 import com.android.SdkConstants;
@@ -25,10 +25,6 @@ import com.android.io.IAbstractFolder;
 import com.android.resources.ResourceType;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
-
-import org.kxml2.io.KXmlParser;
-import org.xmlpull.v1.XmlPullParser;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -39,18 +35,14 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import org.kxml2.io.KXmlParser;
+import org.xmlpull.v1.XmlPullParser;
 
 /**
- * Framework resources repository.
- *
- * This behaves the same as {@link ResourceRepository} except that it differentiates between
- * resources that are public and non public.
- * {@link #getResourceItemsOfType(ResourceType)} and {@link #hasResourcesOfType(ResourceType)} only return
- * public resources. This is typically used to display resource lists in the UI.
- *
- * {@link #getConfiguredResources(com.android.ide.common.resources.configuration.FolderConfiguration)}
- * returns all resources, even the non public ones so that this can be used for rendering.
+ * @deprecated This class is part of an obsolete resource repository system that is no longer used
+ *     in production code. The class is preserved temporarily for LayoutLib tests.
  */
+@Deprecated
 public class FrameworkResources extends ResourceRepository {
 
     /**

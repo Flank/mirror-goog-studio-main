@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.resources;
+package com.android.ide.common.resources.deprecated;
 
 import com.android.ide.common.rendering.api.DensityBasedResourceValue;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.resources.ValueResourceParser.IValueResourceRepository;
+import com.android.ide.common.resources.ResourceValueMap;
 import com.android.ide.common.resources.configuration.DensityQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
+import com.android.ide.common.resources.deprecated.ValueResourceParser.IValueResourceRepository;
 import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.resources.ResourceType;
@@ -32,12 +33,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Represents a resource file that also generates ID resources.
- * <p>
- * This is typically an XML file in res/layout or res/menu
+ * @deprecated This class is part of an obsolete resource repository system that is no longer used
+ *     in production code. The class is preserved temporarily for LayoutLib tests.
  */
+@Deprecated
 public final class IdGeneratingResourceFile extends ResourceFile
-                                            implements IValueResourceRepository {
+        implements IValueResourceRepository {
 
     private final ResourceValueMap mIdResources = ResourceValueMap.create();
 

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.res2;
 
 import static com.android.SdkConstants.FD_RES;
@@ -23,14 +22,15 @@ import static com.android.SdkConstants.FD_RES_VALUES;
 
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.resources.ResourceRepositoryFixture;
 import com.android.ide.common.resources.ResourceValueMap;
-import com.android.ide.common.resources.TestResourceRepository;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.ide.common.resources.configuration.ScreenOrientationQualifier;
 import com.android.resources.ResourceType;
 import com.android.resources.ScreenOrientation;
 import com.android.testutils.TestUtils;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -44,18 +44,19 @@ import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
 public class ResourceRepositoryTest2 extends TestCase {
+    private final ResourceRepositoryFixture resourceFixture = new ResourceRepositoryFixture();
     private File mTempDir;
     private File mRes;
     private ResourceMerger mResourceMerger;
     private ResourceRepository mRepository;
     private ILogger mLogger;
 
-
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     protected void setUp() throws Exception {
         super.setUp();
 
+        resourceFixture.setUp();
         mTempDir = TestUtils.createTempDirDeletedOnExit();
         mRes = new File(mTempDir, FD_RES);
         mRes.mkdirs();
@@ -139,21 +140,11 @@ public class ResourceRepositoryTest2 extends TestCase {
 
     @Override
     protected void tearDown() throws Exception {
-        super.tearDown();
-
-        deleteFile(mTempDir);
-    }
-
-    private static void deleteFile(File dir) {
-        if (dir.isDirectory()) {
-            File[] files = dir.listFiles();
-            if (files != null) {
-                for (File f : files) {
-                    deleteFile(f);
-                }
-            }
-        } else if (dir.isFile()) {
-            assertTrue(dir.getPath(), dir.delete());
+        try {
+            FileUtils.deletePath(mTempDir);
+            resourceFixture.tearDown();
+        } finally {
+            super.tearDown();
         }
     }
 
@@ -172,7 +163,7 @@ public class ResourceRepositoryTest2 extends TestCase {
         assertTrue(mRepository.hasResourcesOfType(ResourceType.DRAWABLE));
         assertFalse(mRepository.hasResourcesOfType(ResourceType.ANIM));
 
-        List<ResourceType> availableResourceTypes = mRepository.getAvailableResourceTypes();
+        Collection<ResourceType> availableResourceTypes = mRepository.getAvailableResourceTypes();
         assertEquals(5, availableResourceTypes.size()); // layout, string, drawable, id, dimen
 
         Collection<String> allStrings = mRepository.getItemsOfType(ResourceType.STRING);
@@ -391,9 +382,10 @@ public class ResourceRepositoryTest2 extends TestCase {
                         + "    <string name=\"fileSizeSuffix\"><xliff:g id=\"number\" example=\"123\">%1$s</xliff:g><xliff:g id=\"unit\" example=\"KB\">%2$s</xliff:g></string>"
                         + "</resources>\n";
         ResourceRepository resources =
-                TestResourceRepository.createRes2(new Object[] {"values/strings.xml", content});
+                resourceFixture.createTestResources(
+                        ResourceNamespace.TODO, new Object[] {"values/strings.xml", content});
 
-        assertFalse(resources.isFramework());
+        assertEquals(Collections.singleton(ResourceNamespace.TODO), resources.getNamespaces());
         assertNotNull(resources);
 
         assertNotNull(resources);

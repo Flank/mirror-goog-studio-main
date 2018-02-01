@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.resources;
+package com.android.ide.common.resources.deprecated;
 
 import static com.android.SdkConstants.ATTR_REF_PREFIX;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
@@ -24,6 +24,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.resources.ResourceValueMap;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.io.IAbstractFile;
@@ -48,17 +49,10 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Base class for resource repository.
- *
- * <p>A repository is both a file representation of a resource folder and a representation
- * of the generated resources, organized by type.
- *
- * <p>{@link #getResourceFolder(IAbstractFolder)} and
- * {@link #getSourceFiles(ResourceType, String, FolderConfiguration)}
- * give access to the folders and files of the resource folder.
- *
- * <p>{@link #getResourceItemsOfType(ResourceType)} gives access to the resources directly.
+ * @deprecated This class is part of an obsolete resource repository system that is no longer used
+ *     in production code. The class is preserved temporarily for LayoutLib tests.
  */
+@Deprecated
 public abstract class ResourceRepository {
     private final IAbstractFolder mResourceFolder;
 

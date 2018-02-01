@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.ide.common.resources;
+package com.android.ide.common.resources.deprecated;
 
 import static com.android.SdkConstants.DOT_XML;
 
@@ -32,11 +31,10 @@ import java.util.List;
 import javax.xml.parsers.SAXParserFactory;
 
 /**
- * Represents a resource file describing a single resource.
- * <p>
- * This is typically an XML file inside res/anim, res/layout, or res/menu or an image file
- * under res/drawable.
+ * @deprecated This class is part of an obsolete resource repository system that is no longer used
+ *     in production code. The class is preserved temporarily for LayoutLib tests.
  */
+@Deprecated
 public class SingleResourceFile extends ResourceFile {
 
     private static final SAXParserFactory sParserFactory = SAXParserFactory.newInstance();
