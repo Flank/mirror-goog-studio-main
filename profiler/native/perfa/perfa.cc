@@ -55,6 +55,7 @@ class JvmtiAllocator : public dex::Writer::Allocator {
 };
 
 bool energy_profiler_enabled = false;
+bool cpu_api_tracing_enabled = false;
 
 // Retrieve the app's data directory path
 static std::string GetAppDataPath() {
@@ -68,6 +69,8 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
   return (strcmp(sig_mutf8, "Ljava/net/URL;") == 0) ||
          (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
          (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0) ||
+         (strcmp(sig_mutf8, "Landroid/os/Debug;") == 0 &&
+          cpu_api_tracing_enabled) ||
          (energy_profiler_enabled &&
           (strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/JobSchedulerImpl;") == 0 ||
@@ -157,6 +160,26 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "networkInterceptors",
                                           "()Ljava/util/List;"))) {
       Log::E("Error instrumenting OkHttp2 OkHttpClient");
+    }
+  } else if (strcmp(name, "android/os/Debug") == 0) {
+    // Instrument startMethodTracing(String tracePath).
+    slicer::MethodInstrumenter mi_start(dex_ir);
+    mi_start.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
+        "onStartMethodTracing"));
+    if (!mi_start.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "startMethodTracing", "(Ljava/lang/String;)V"))) {
+      Log::E("Error instrumenting Debug.startMethodTracing(String)");
+    }
+
+    // Instrument stopMethodTracing().
+    slicer::MethodInstrumenter mi_stop(dex_ir);
+    mi_stop.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
+        "onStopMethodTracing"));
+    if (!mi_stop.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "stopMethodTracing", "()V"))) {
+      Log::E("Error instrumenting Debug.stopMethodTracing");
     }
   } else if (strcmp(name, "android/os/PowerManager") == 0) {
     slicer::MethodInstrumenter mi(dex_ir);
@@ -336,6 +359,15 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
                   "sendWakeLockReleased", "(IIZLjava/lang/String;)V");
   }
 
+  if (agent_config->cpu_api_tracing_enabled()) {
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/cpu/TraceOperationTracker",
+        "sendStartOperation", "(ILjava/lang/String;)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/cpu/TraceOperationTracker",
+        "sendStopOperation", "(I)V");
+  }
+
   BindJNIMethod(jni,
                 "com/android/tools/profiler/support/network/"
                 "HttpTracker$InputStreamTracker",
@@ -462,6 +494,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   Agent::Instance(&config);
 
   energy_profiler_enabled = agent_config.energy_profiler_enabled();
+  cpu_api_tracing_enabled = agent_config.cpu_api_tracing_enabled();
 
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
   LoadDex(jvmti_env, jni_env, &agent_config);

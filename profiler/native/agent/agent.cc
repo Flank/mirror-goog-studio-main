@@ -45,6 +45,7 @@ using grpc::Status;
 using proto::AgentService;
 using proto::HeartBeatRequest;
 using proto::HeartBeatResponse;
+using proto::InternalCpuService;
 using proto::InternalEnergyService;
 using proto::InternalEventService;
 using proto::InternalIoService;
@@ -161,12 +162,40 @@ void Agent::SubmitEnergyTasks(const std::vector<EnergyServiceTask>& tasks) {
   });
 }
 
+void Agent::SubmitCpuTasks(const std::vector <CpuServiceTask>& tasks) {
+  background_queue_.EnqueueTask([this, tasks] {
+    for (auto task : tasks) {
+      if (can_grpc_target_change_) {
+        bool success = false;
+        do {
+          // Each grpc call needs a new ClientContext.
+          grpc::ClientContext ctx;
+          Config::SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
+          Status status = task(cpu_stub(), ctx);
+          success = status.ok();
+        } while (!success);
+      } else {
+        grpc::ClientContext ctx;
+        task(cpu_stub(), ctx);
+      }
+    }
+  });
+}
+
 proto::AgentService::Stub& Agent::agent_stub() {
   std::unique_lock<std::mutex> lock(connect_mutex_);
   while (!grpc_target_initialized_ || agent_stub_.get() == nullptr) {
     connect_cv_.wait(lock);
   }
   return *(agent_stub_.get());
+}
+
+proto::InternalCpuService::Stub& Agent::cpu_stub() {
+  std::unique_lock<std::mutex> lock(connect_mutex_);
+  while (!grpc_target_initialized_ || cpu_stub_.get() == nullptr) {
+    connect_cv_.wait(lock);
+  }
+  return *(cpu_stub_.get());
 }
 
 proto::InternalEnergyService::Stub& Agent::energy_stub() {
@@ -327,6 +356,7 @@ void Agent::ConnectToPerfd(const std::string& target) {
   }
 
   agent_stub_ = AgentService::NewStub(channel_);
+  cpu_stub_ = InternalCpuService::NewStub(channel_);
   energy_stub_ = InternalEnergyService::NewStub(channel_);
   event_stub_ = InternalEventService::NewStub(channel_);
   network_stub_ = InternalNetworkService::NewStub(channel_);

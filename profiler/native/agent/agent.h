@@ -25,6 +25,7 @@
 #include <grpc++/grpc++.h>
 
 #include "proto/agent_service.grpc.pb.h"
+#include "proto/internal_cpu.grpc.pb.h"
 #include "proto/internal_energy.grpc.pb.h"
 #include "proto/internal_event.grpc.pb.h"
 #include "proto/internal_io.grpc.pb.h"
@@ -62,6 +63,11 @@ using EventServiceTask = std::function<grpc::Status(
 using EnergyServiceTask = std::function<grpc::Status(
     proto::InternalEnergyService::Stub& stub, grpc::ClientContext& context)>;
 
+// Function for submitting a CPU grpc request via |stub| using the given
+// |context|. Returns the status from the grpc call.
+using CpuServiceTask = std::function<grpc::Status(
+    proto::InternalCpuService::Stub& stub, grpc::ClientContext& context)>;
+
 // Function for submitting an agent grpc request via |stub| using the given
 // |context|. Returns the status from the grpc call.
 using AgentServiceTask = std::function<grpc::Status(
@@ -96,6 +102,8 @@ class Agent {
 
   void SubmitEnergyTasks(const std::vector<EnergyServiceTask>& tasks);
 
+  void SubmitCpuTasks(const std::vector<CpuServiceTask>& tasks);
+
   void AddPerfdStatusChangedCallback(PerfdStatusChanged callback);
 
   // Callback for everytime perfd is reconnected to perfa.
@@ -117,6 +125,7 @@ class Agent {
   // isntance sends a new client socket fd to the Agent, the stubs will be
   // resolved to the correct grpc target.
   proto::AgentService::Stub& agent_stub();
+  proto::InternalCpuService::Stub& cpu_stub();
   proto::InternalEnergyService::Stub& energy_stub();
   proto::InternalEventService::Stub& event_stub();
   proto::InternalNetworkService::Stub& network_stub();
@@ -159,6 +168,7 @@ class Agent {
   std::string current_connected_target_;
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<proto::AgentService::Stub> agent_stub_;
+  std::unique_ptr<proto::InternalCpuService::Stub> cpu_stub_;
   std::unique_ptr<proto::InternalEnergyService::Stub> energy_stub_;
   std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
   std::unique_ptr<proto::InternalIoService::Stub> io_stub_;
