@@ -42,7 +42,7 @@ public enum BooleanOption implements Option<Boolean> {
             true,
             DeprecationReporter.DeprecationTarget.INCREMENTAL_DESUGARING),
     ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", false),
-    ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", false),
+    ENABLE_AAPT2_WORKER_ACTIONS("android.enableAapt2WorkerActions", true),
     ENABLE_CORE_LAMBDA_STUBS(
             "android.enableCoreLambdaStubs",
             true,
