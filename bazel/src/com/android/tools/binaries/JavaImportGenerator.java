@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.maven.model.Model;
@@ -80,18 +81,19 @@ public class JavaImportGenerator {
     }
 
     private void processPomFiles() throws IOException, ArtifactDescriptorException {
-        Files.walk(mRepo.getDirectory())
-                .filter(path -> path.toString().endsWith(".pom"))
-                .forEach(
-                        pom -> {
-                            try {
-                                processPomFile(pom, true);
-                            } catch (IOException e) {
-                                throw new UncheckedIOException(e);
-                            }
-                        });
+        try (Stream<Path> stream = Files.walk(mRepo.getDirectory())) {
+            stream.filter(path -> path.toString().endsWith(".pom"))
+                    .forEach(
+                            pom -> {
+                                try {
+                                    processPomFile(pom, true);
+                                } catch (IOException e) {
+                                    throw new UncheckedIOException(e);
+                                }
+                            });
 
-        System.out.println();
+            System.out.println();
+        }
     }
 
     /**
