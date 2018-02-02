@@ -437,16 +437,14 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                 if (method.name.equals(CONSTRUCTOR_NAME)) {
                     if (method.desc.equals("()V")) {
                         // The constructor must be public
-                        if ((method.access & Opcodes.ACC_PUBLIC) != 0) {
-                            hasDefaultConstructor = true;
-                        } else {
+                        if ((method.access & Opcodes.ACC_PUBLIC) == 0) {
                             context.report(INSTANTIATABLE, context.getLocation(method, classNode),
                                     "The default constructor must be public");
                             // Also mark that we have a constructor so we don't complain again
                             // below since we've already emitted a more specific error related
                             // to the default constructor
-                            hasDefaultConstructor = true;
                         }
+                        hasDefaultConstructor = true;
                     }
                 }
             }
