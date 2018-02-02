@@ -85,7 +85,7 @@ class BytecodeRClassWriterTest {
         Zip(rJar).use {
             assertThat(it.entries).hasSize(5)
 
-            assertThat<String, Iterable<String>>(it.entries.map { f -> f.toString() }).containsExactly(
+            assertThat(it.entries.map { f -> f.toString() }).containsExactly(
                     "/com/example/foo/R.class",
                     "/com/example/foo/R\$id.class",
                     "/com/example/foo/R\$drawable.class",

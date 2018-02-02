@@ -98,8 +98,7 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
     }
 
     @NonNull
-    public IterableSubject<? extends IterableSubject<?, String, List<String>>, String, List<String>>
-            locales() {
+    public IterableSubject locales() {
         File apk = getSubject().getFile().toFile();
         List<String> locales = ApkHelper.getLocales(apk);
 
