@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 /** Creates a deep copy of an {@link AndroidProject}. */
 public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidProject {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
