@@ -184,6 +184,29 @@ public class JarContentsTest {
                 "META-INF/",
                 "NOTICE");
         expected.putAll(
+                "com/android/tools/build/aapt2:windows",
+                "aapt2.exe",
+                "libwinpthread-1.dll",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
+                "META-INF/");
+        expected.putAll(
+                "com/android/tools/build/aapt2:osx",
+                "aapt2",
+                "lib64/",
+                "lib64/libc++.dylib",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
+                "META-INF/");
+        expected.putAll(
+                "com/android/tools/build/aapt2:linux",
+                "aapt2",
+                "lib64/",
+                "lib64/libc++.so",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
+                "META-INF/");
+        expected.putAll(
                 "com/android/tools/build/builder",
                 "com/",
                 "com/android/",
@@ -1170,7 +1193,7 @@ public class JarContentsTest {
                 checkSourcesJar(jar);
             } else {
                 checkJar(jar, repo);
-                jarNames.add(jarRelativePathWithoutVersion(jar, repo));
+                jarNames.add(jarRelativePathWithoutVersionWithClassifier(jar, repo));
             }
         }
 
@@ -1232,9 +1255,22 @@ public class JarContentsTest {
                 || path.toString().contains(Version.ANDROID_TOOLS_BASE_VERSION);
     }
 
-    private static String jarRelativePathWithoutVersion(Path jar, Path repo) {
+    private static String jarRelativePathWithoutVersionWithClassifier(Path jar, Path repo) {
         String pathWithoutVersion = repo.relativize(jar).getParent().getParent().toString();
-        return FileUtils.toSystemIndependentPath(pathWithoutVersion);
+
+        String name = jar.getParent().getParent().getFileName().toString();
+        String revision = jar.getParent().getFileName().toString();
+        String expectedNameNoClassifier = name + "-" + revision;
+        String filename = jar.getFileName().toString();
+        String path = FileUtils.toSystemIndependentPath(pathWithoutVersion);
+        if (!filename.equals(expectedNameNoClassifier + ".jar")) {
+            String classifier =
+                    filename.substring(
+                            expectedNameNoClassifier.length() + 1,
+                            filename.length() - ".jar".length());
+            return path + ":" + classifier;
+        }
+        return path;
     }
 
     private static boolean shouldCheckFile(String fileName) {
@@ -1285,7 +1321,9 @@ public class JarContentsTest {
     private static void checkJar(Path jar, Path repo) throws Exception {
         checkLicense(jar);
 
-        String key = FileUtils.toSystemIndependentPath(jarRelativePathWithoutVersion(jar, repo));
+        String key =
+                FileUtils.toSystemIndependentPath(
+                        jarRelativePathWithoutVersionWithClassifier(jar, repo));
         Set<String> expected = EXPECTED.get(key);
         if (expected == null) {
             expected = Collections.emptySet();

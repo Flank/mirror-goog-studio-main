@@ -1,0 +1,55 @@
+load("//tools/base/bazel:bazel.bzl", "fileset")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:maven.bzl", "maven_aar", "maven_pom")
+
+filegroup(
+    name = "aapt2",
+    visibility = ["//visibility:public"],
+)
+
+maven_pom(
+    name = "aapt2_maven",
+    artifact = "aapt2",
+    classified_files = [
+        ":darwin_zip",
+        ":linux_zip",
+        ":windows_zip",
+    ],
+    classifiers = [
+        "osx",
+        "linux",
+        "windows",
+    ],
+    group = "com.android.tools.build",
+    source = "//tools/buildSrc/base:build_version",
+    visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "darwin_zip",
+    resource_strip_prefix = "prebuilts/tools/common/aapt/darwin",
+    #  resources = [":darwin_files"],
+    resources = [
+        "//prebuilts/tools/common/aapt:darwin/aapt2",
+        "//prebuilts/tools/common/aapt:darwin/lib64/libc++.dylib",
+    ],
+)
+
+java_library(
+    name = "linux_zip",
+    resource_strip_prefix = "prebuilts/tools/common/aapt/linux",
+    #    resources = [":linux_files"],
+    resources = [
+        "//prebuilts/tools/common/aapt:linux/aapt2",
+        "//prebuilts/tools/common/aapt:linux/lib64/libc++.so",
+    ],
+)
+
+java_library(
+    name = "windows_zip",
+    resource_strip_prefix = "prebuilts/tools/common/aapt/windows",
+    resources = [
+        "//prebuilts/tools/common/aapt:windows/aapt2.exe",
+        "//prebuilts/tools/common/aapt:windows/libwinpthread-1.dll",
+    ],
+)

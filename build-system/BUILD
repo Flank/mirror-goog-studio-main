@@ -125,6 +125,7 @@ maven_pom(
 # the data-binding runtime library with the Gradle plugin.
 
 GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
+    "//tools/base/build-system/aapt2",
     "//tools/base/build-system/gradle",
     "//tools/base/lint:tools.lint-gradle",
     "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.0.18:jar",
