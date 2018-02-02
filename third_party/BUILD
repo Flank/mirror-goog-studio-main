@@ -8,6 +8,7 @@
 
 load("//tools/base/bazel:maven.bzl", "maven_java_library")
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "cglib_cglib-nodep",
     export_artifact = "//prebuilts/tools/common/m2/repository/cglib/cglib-nodep/3.1:jar",
@@ -15,6 +16,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_aapt2-proto",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/aapt2-proto/0.2.0:jar",
@@ -22,6 +24,7 @@ maven_java_library(
     exports = [":com.google.protobuf_protobuf-java"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_bundletool",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.1.0-alpha04:jar",
@@ -36,6 +39,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build_transform-api",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/transform-api/2.0.0-deprecated-use-gradle-api:jar",
@@ -43,6 +47,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.beust_jcommander",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/beust/jcommander/1.64:jar",
@@ -50,6 +55,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.fasterxml.jackson.core_jackson-core",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/fasterxml/jackson/core/jackson-core/2.1.3:jar",
@@ -57,6 +63,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.api-client_google-api-client",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/api-client/google-api-client/1.22.0:jar",
@@ -67,6 +74,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.apis_google-api-services-storage",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/apis/google-api-services-storage/v1-rev82-1.22.0:jar",
@@ -74,6 +82,7 @@ maven_java_library(
     exports = [":com.google.api-client_google-api-client"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.auth_google-auth-library-credentials",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auth/google-auth-library-credentials/0.4.0:jar",
@@ -81,6 +90,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.auto.value_auto-value",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value/1.5.2:jar",
@@ -88,6 +98,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.code.findbugs_jsr305",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/3.0.0:jar",
@@ -95,6 +106,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.code.gson_gson",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.7:jar",
@@ -102,6 +114,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.errorprone_error_prone_annotations",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.1.2:jar",
@@ -109,6 +122,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.guava_guava",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/22.0:jar",
@@ -121,6 +135,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.http-client_google-http-client",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/http-client/google-http-client/1.22.0:jar",
@@ -131,6 +146,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.http-client_google-http-client-jackson2",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/http-client/google-http-client-jackson2/1.22.0:jar",
@@ -141,6 +157,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.j2objc_j2objc-annotations",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/j2objc/j2objc-annotations/1.1:jar",
@@ -148,6 +165,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.jimfs_jimfs",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/jimfs/jimfs/1.1:jar",
@@ -155,6 +173,7 @@ maven_java_library(
     exports = [":com.google.guava_guava"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.oauth-client_google-oauth-client",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/oauth-client/google-oauth-client/1.22.0:jar",
@@ -165,6 +184,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.protobuf.nano_protobuf-javanano",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/nano/protobuf-javanano/3.0.0-alpha-5:jar",
@@ -172,6 +192,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.protobuf_protobuf-java",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
@@ -179,6 +200,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.protobuf_protobuf-java-util",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.4.0:jar",
@@ -190,6 +212,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.truth_truth",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.28:jar",
@@ -200,6 +223,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.googlecode.json-simple_json-simple",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/googlecode/json-simple/json-simple/1.1:jar",
@@ -207,6 +231,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.googlecode.juniversalchardet_juniversalchardet",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/googlecode/juniversalchardet/juniversalchardet/1.0.3:jar",
@@ -214,6 +239,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.squareup.okhttp_okhttp",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/squareup/okhttp/okhttp/2.5.0:jar",
@@ -221,6 +247,7 @@ maven_java_library(
     exports = [":com.squareup.okio_okio"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.squareup.okio_okio",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/squareup/okio/okio/1.6.0:jar",
@@ -228,6 +255,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.squareup_javapoet",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/squareup/javapoet/1.8.0:jar",
@@ -235,6 +263,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.squareup_javawriter",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/squareup/javawriter/2.5.0:jar",
@@ -242,6 +271,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.activation_javax.activation",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/activation/javax.activation/1.2.0:jar",
@@ -249,6 +279,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.istack_istack-commons-runtime",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/istack/istack-commons-runtime/2.21:jar",
@@ -256,6 +287,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.istack_istack-commons-tools",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/istack/istack-commons-tools/2.21:jar",
@@ -263,6 +295,7 @@ maven_java_library(
     exports = [":org.apache.ant_ant"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.xml.bind.external_rngom",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/bind/external/rngom/2.2.11:jar",
@@ -270,6 +303,7 @@ maven_java_library(
     exports = [":relaxngDatatype_relaxngDatatype"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.xml.dtd-parser_dtd-parser",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/dtd-parser/dtd-parser/1.1:jar",
@@ -277,6 +311,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.xml.fastinfoset_FastInfoset",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xml/fastinfoset/FastInfoset/1.2.13:jar",
@@ -284,6 +319,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.sun.xsom_xsom",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/sun/xsom/xsom/20140925:jar",
@@ -291,6 +327,7 @@ maven_java_library(
     exports = [":relaxngDatatype_relaxngDatatype"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "commons-codec_commons-codec",
     export_artifact = "//prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.6:jar",
@@ -298,6 +335,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "commons-io_commons-io",
     export_artifact = "//prebuilts/tools/common/m2/repository/commons-io/commons-io/2.4:jar",
@@ -305,6 +343,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "commons-lang_commons-lang",
     export_artifact = "//prebuilts/tools/common/m2/repository/commons-lang/commons-lang/2.6:jar",
@@ -312,6 +351,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "commons-logging_commons-logging",
     export_artifact = "//prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.2:jar",
@@ -319,6 +359,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-all",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-all/1.0.1:jar",
@@ -336,6 +377,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-auth",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-auth/1.0.1:jar",
@@ -346,6 +388,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-context",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-context/1.0.1:jar",
@@ -353,6 +396,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-core",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-core/1.0.1:jar",
@@ -364,6 +408,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-netty",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-netty/1.0.1:jar",
@@ -374,6 +419,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-okhttp",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-okhttp/1.0.1:jar",
@@ -385,6 +431,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-protobuf",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf/1.0.1:jar",
@@ -398,6 +445,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-protobuf-lite",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf-lite/1.0.1:jar",
@@ -408,6 +456,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-protobuf-nano",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf-nano/1.0.1:jar",
@@ -419,6 +468,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.grpc_grpc-stub",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-stub/1.0.1:jar",
@@ -426,6 +476,7 @@ maven_java_library(
     exports = [":io.grpc_grpc-core"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-buffer",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-buffer/4.1.3.Final:jar",
@@ -433,6 +484,7 @@ maven_java_library(
     exports = [":io.netty_netty-common"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-codec",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec/4.1.3.Final:jar",
@@ -440,6 +492,7 @@ maven_java_library(
     exports = [":io.netty_netty-transport"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-codec-http",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http/4.1.3.Final:jar",
@@ -447,6 +500,7 @@ maven_java_library(
     exports = [":io.netty_netty-codec"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-codec-http2",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http2/4.1.3.Final:jar",
@@ -457,6 +511,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-common",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-common/4.1.3.Final:jar",
@@ -464,6 +519,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-handler",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-handler/4.1.3.Final:jar",
@@ -475,6 +531,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-resolver",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-resolver/4.1.3.Final:jar",
@@ -482,6 +539,7 @@ maven_java_library(
     exports = [":io.netty_netty-common"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "io.netty_netty-transport",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-transport/4.1.3.Final:jar",
@@ -492,6 +550,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "it.unimi.dsi_fastutil",
     export_artifact = "//prebuilts/tools/common/m2/repository/it/unimi/dsi/fastutil/7.2.0:jar",
@@ -499,6 +558,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "javax.xml.bind_jaxb-api",
     export_artifact = "//prebuilts/tools/common/m2/repository/javax/xml/bind/jaxb-api/2.2.12-b140109.1041:jar",
@@ -506,6 +566,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "junit_junit",
     export_artifact = "//prebuilts/tools/common/m2/repository/junit/junit/4.12:jar",
@@ -513,6 +574,7 @@ maven_java_library(
     exports = [":org.hamcrest_hamcrest-core"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "net.bytebuddy_byte-buddy",
     export_artifact = "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy/1.6.5:jar",
@@ -520,6 +582,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "net.bytebuddy_byte-buddy-agent",
     export_artifact = "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy-agent/1.6.5:jar",
@@ -527,6 +590,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "net.sf.jopt-simple_jopt-simple",
     export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/jopt-simple/jopt-simple/4.9:jar",
@@ -534,6 +598,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "net.sf.kxml_kxml2",
     export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/kxml/kxml2/2.3.0:jar",
@@ -541,6 +606,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "net.sf.proguard_proguard-base",
     export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-base/5.3.3:jar",
@@ -548,6 +614,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "net.sf.proguard_proguard-gradle",
     export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-gradle/5.3.3:jar",
@@ -555,6 +622,7 @@ maven_java_library(
     exports = [":net.sf.proguard_proguard-base"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "nl.jqno.equalsverifier_equalsverifier",
     export_artifact = "//prebuilts/tools/common/m2/repository/nl/jqno/equalsverifier/equalsverifier/2.1.5:jar",
@@ -562,6 +630,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.antlr_ST4",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/antlr/ST4/4.0.8:jar",
@@ -569,6 +638,7 @@ maven_java_library(
     exports = [":org.antlr_antlr-runtime"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.antlr_antlr",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/antlr/antlr/3.5.2:jar",
@@ -579,6 +649,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.antlr_antlr-runtime",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/antlr/antlr-runtime/3.5.2:jar",
@@ -586,6 +657,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.antlr_antlr4",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/antlr/antlr4/4.5.3:jar",
@@ -593,6 +665,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.ant_ant",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/ant/ant/1.7.0:jar",
@@ -600,6 +673,7 @@ maven_java_library(
     exports = [":org.apache.ant_ant-launcher"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.ant_ant-launcher",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/ant/ant-launcher/1.7.0:jar",
@@ -607,6 +681,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.commons_commons-compress",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.12:jar",
@@ -614,6 +689,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.commons_commons-lang3",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/commons/commons-lang3/3.4:jar",
@@ -621,6 +697,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.httpcomponents_httpclient",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.2.6:jar",
@@ -632,6 +709,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.httpcomponents_httpcore",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.2.5:jar",
@@ -639,6 +717,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.httpcomponents_httpmime",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpmime/4.1:jar",
@@ -649,6 +728,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.maven_maven-aether-provider",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-aether-provider/3.3.9:jar",
@@ -667,6 +747,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.maven_maven-artifact",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-artifact/3.3.9:jar",
@@ -677,6 +758,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.maven_maven-builder-support",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-builder-support/3.3.9:jar",
@@ -687,6 +769,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.maven_maven-model",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-model/3.3.9:jar",
@@ -697,6 +780,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.maven_maven-model-builder",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-model-builder/3.3.9:jar",
@@ -713,6 +797,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.apache.maven_maven-repository-metadata",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-repository-metadata/3.3.9:jar",
@@ -720,6 +805,7 @@ maven_java_library(
     exports = [":org.codehaus.plexus_plexus-utils"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.bouncycastle_bcpkix-jdk15on",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcpkix-jdk15on/1.56:jar",
@@ -727,6 +813,7 @@ maven_java_library(
     exports = [":org.bouncycastle_bcprov-jdk15on"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.bouncycastle_bcprov-jdk15on",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk15on/1.56:jar",
@@ -734,6 +821,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.groovy_groovy-all",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/groovy/groovy-all/2.4.12:jar",
@@ -741,6 +829,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.mojo_animal-sniffer-annotations",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/mojo/animal-sniffer-annotations/1.14:jar",
@@ -748,6 +837,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.plexus_plexus-component-annotations",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-component-annotations/1.6:jar",
@@ -755,6 +845,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.plexus_plexus-interpolation",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-interpolation/1.21:jar",
@@ -762,6 +853,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.plexus_plexus-utils",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-utils/3.0.22:jar",
@@ -769,6 +861,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.easymock_easymock",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/easymock/easymock/3.3:jar",
@@ -779,6 +872,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.eclipse.aether_aether-api",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-api/1.0.2.v20150114:jar",
@@ -786,6 +880,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.eclipse.aether_aether-connector-basic",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-connector-basic/1.0.2.v20150114:jar",
@@ -797,6 +892,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.eclipse.aether_aether-impl",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-impl/1.0.2.v20150114:jar",
@@ -808,6 +904,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.eclipse.aether_aether-spi",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-spi/1.0.2.v20150114:jar",
@@ -815,6 +912,7 @@ maven_java_library(
     exports = [":org.eclipse.aether_aether-api"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.eclipse.aether_aether-transport-file",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-transport-file/1.0.2.v20150114:jar",
@@ -826,6 +924,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.eclipse.aether_aether-transport-http",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-transport-http/1.0.2.v20150114:jar",
@@ -839,6 +938,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.eclipse.aether_aether-util",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-util/1.0.2.v20150114:jar",
@@ -846,6 +946,7 @@ maven_java_library(
     exports = [":org.eclipse.aether_aether-api"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.eclipse.jdt.core.compiler_ecj",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/eclipse/jdt/core/compiler/ecj/4.6.1:jar",
@@ -853,6 +954,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.glassfish.jaxb_codemodel",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/codemodel/2.2.11:jar",
@@ -860,6 +962,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.glassfish.jaxb_jaxb-core",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-core/2.2.11:jar",
@@ -871,6 +974,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.glassfish.jaxb_jaxb-runtime",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-runtime/2.2.11:jar",
@@ -882,6 +986,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.glassfish.jaxb_jaxb-xjc",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/jaxb-xjc/2.2.11:jar",
@@ -896,6 +1001,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.glassfish.jaxb_txw2",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/glassfish/jaxb/txw2/2.2.11:jar",
@@ -903,6 +1009,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.gradle_gradle-tooling-api",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/4.5:jar",
@@ -911,6 +1018,7 @@ maven_java_library(
     runtime_deps = [":org.slf4j_slf4j-api"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.hamcrest_hamcrest-core",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-core/1.3:jar",
@@ -918,6 +1026,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jacoco_org.jacoco.agent",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.agent/0.7.9:jar",
@@ -925,6 +1034,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jacoco_org.jacoco.core",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.core/0.7.9:jar",
@@ -932,6 +1042,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jacoco_org.jacoco.report",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.report/0.7.9:jar",
@@ -939,6 +1050,7 @@ maven_java_library(
     exports = [":org.jacoco_org.jacoco.core"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-android-extensions",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.2.0:jar",
@@ -947,6 +1059,7 @@ maven_java_library(
     runtime_deps = [":org.jetbrains.kotlin_kotlin-compiler-embeddable"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-annotation-processing-gradle",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-annotation-processing-gradle/1.2.0:jar",
@@ -955,6 +1068,7 @@ maven_java_library(
     runtime_deps = [":org.jetbrains.kotlin_kotlin-compiler-embeddable"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-build-common",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-build-common/1.2.0:jar",
@@ -962,6 +1076,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-compiler-embeddable",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.2.0:jar",
@@ -974,6 +1089,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-compiler-runner",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-runner/1.2.0:jar",
@@ -985,6 +1101,7 @@ maven_java_library(
     runtime_deps = [":org.jetbrains.kotlin_kotlin-compiler-embeddable"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-daemon-client",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-daemon-client/1.2.0:jar",
@@ -992,6 +1109,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-gradle-plugin",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin/1.2.0:jar",
@@ -1008,6 +1126,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-gradle-plugin-api",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin-api/1.2.0:jar",
@@ -1015,6 +1134,7 @@ maven_java_library(
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-reflect",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.2.0:jar",
@@ -1022,6 +1142,7 @@ maven_java_library(
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-script-runtime",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-script-runtime/1.2.0:jar",
@@ -1029,6 +1150,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-stdlib",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.2.0:jar",
@@ -1036,6 +1158,7 @@ maven_java_library(
     exports = [":org.jetbrains_annotations"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-stdlib-jre7",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre7/1.2.0:jar",
@@ -1043,6 +1166,7 @@ maven_java_library(
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-stdlib-jre8",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre8/1.2.0:jar",
@@ -1053,6 +1177,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-test",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-test/1.2.0:jar",
@@ -1060,6 +1185,7 @@ maven_java_library(
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.trove4j_trove4j",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/trove4j/trove4j/20160824:jar",
@@ -1067,6 +1193,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains_annotations",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/annotations/13.0:jar",
@@ -1074,6 +1201,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jsoup_jsoup",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jsoup/jsoup/1.6.3:jar",
@@ -1081,6 +1209,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jvnet.staxex_stax-ex",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jvnet/staxex/stax-ex/1.7.7:jar",
@@ -1088,6 +1217,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.mockito_mockito-core",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/2.7.1:jar",
@@ -1100,6 +1230,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.objenesis_objenesis",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/objenesis/objenesis/2.5:jar",
@@ -1107,6 +1238,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.1:jar",
@@ -1114,6 +1246,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-analysis",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/5.1:jar",
@@ -1121,6 +1254,7 @@ maven_java_library(
     exports = [":org.ow2.asm_asm-tree"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-commons",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.1:jar",
@@ -1128,6 +1262,7 @@ maven_java_library(
     exports = [":org.ow2.asm_asm-tree"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-tree",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.1:jar",
@@ -1135,6 +1270,7 @@ maven_java_library(
     exports = [":org.ow2.asm_asm"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-util",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/5.1:jar",
@@ -1142,6 +1278,7 @@ maven_java_library(
     exports = [":org.ow2.asm_asm-tree"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.slf4j_jcl-over-slf4j",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/slf4j/jcl-over-slf4j/1.6.2:jar",
@@ -1149,6 +1286,7 @@ maven_java_library(
     exports = [":org.slf4j_slf4j-api"],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.slf4j_slf4j-api",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.10:jar",
@@ -1156,6 +1294,7 @@ maven_java_library(
     exports = [],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.smali_baksmali",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/baksmali/2.2.1:jar",
@@ -1168,6 +1307,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.smali_dexlib2",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/dexlib2/2.2.1:jar",
@@ -1179,6 +1319,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.smali_util",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/util/2.2.1:jar",
@@ -1190,6 +1331,7 @@ maven_java_library(
     ],
 )
 
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "relaxngDatatype_relaxngDatatype",
     export_artifact = "//prebuilts/tools/common/m2/repository/relaxngDatatype/relaxngDatatype/20020414:jar",
