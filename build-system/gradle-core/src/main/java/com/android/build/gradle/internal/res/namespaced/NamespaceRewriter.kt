@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.apkzlib.zip.StoredEntryType
+import com.android.apkzlib.zip.ZFile
 import com.android.ide.common.symbols.SymbolTable
 import com.android.resources.ResourceType
 import com.google.common.collect.ImmutableList
@@ -26,6 +28,7 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ACC_STATIC
 import org.objectweb.asm.Opcodes.ASM5
+import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -40,17 +43,34 @@ import java.util.HashSet
  */
 class NamespaceRewriter(private val symbolTables: ImmutableList<SymbolTable>) {
 
-    @Throws(IOException::class)
     fun rewriteClass(clazz: Path, output: Path) {
         // First read the class and re-write the R class resource references.
         val originalClass = Files.readAllBytes(clazz)
+        val rewrittenClass = rewriteClass(originalClass)
+        Files.write(output, rewrittenClass)
+    }
+
+    fun rewriteClass(originalClass: ByteArray) : ByteArray {
         val cw = ClassWriter(0)
         val crw = ClassReWriter(ASM5, cw, symbolTables)
         val cr = ClassReader(originalClass)
         cr.accept(crw, 0)
         // Write inner R classes references.
         crw.writeInnerRClasses()
-        Files.write(output, cw.toByteArray())
+        return cw.toByteArray()
+    }
+
+    fun rewriteJar(classesJar: File, outputJar: File) {
+        ZFile(classesJar).use { classes ->
+            ZFile(outputJar).use { output ->
+                classes.entries().forEach { entry ->
+                    if (entry.type == StoredEntryType.FILE) {
+                        val outputBytes = rewriteClass(entry.read())
+                        output.add(entry.centralDirectoryHeader.name, outputBytes.inputStream())
+                    }
+                }
+            }
+        }
     }
 
     /**
