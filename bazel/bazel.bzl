@@ -284,7 +284,7 @@ _iml_module_ = rule(
       "data" : attr.label_list(allow_files = True),
       "test_data": attr.label_list(allow_files = True),
       "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:toolchain")),
-      "_host_javabase": attr.label(default = Label("@bazel_tools//tools/jdk:current_host_java_runtime")),
+      "_host_javabase": attr.label(default = Label("//tools/defaults:jdk")),
       "_zipper": attr.label(default = Label("@bazel_tools//tools/zip:zipper"), cfg = "host", executable=True),
       "_singlejar": attr.label(default = Label("//tools/base/bazel:singlejar"), cfg = "host", executable=True),
       "_kotlinc": attr.label(default = Label("//tools/base/bazel:kotlinc"), cfg = "host", executable = True),
