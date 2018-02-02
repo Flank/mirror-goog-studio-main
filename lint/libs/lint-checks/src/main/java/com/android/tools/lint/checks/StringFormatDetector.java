@@ -1122,7 +1122,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
         UExpression argument = args.get(argIndex);
         ResourceUrl resource = ResourceEvaluator.getResource(context.getEvaluator(),
                 argument);
-        if (resource == null || resource.framework || resource.type != ResourceType.STRING) {
+        if (resource == null || resource.isFramework() || resource.type != ResourceType.STRING) {
             return;
         }
 
@@ -1228,7 +1228,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                 // Only resolve a few indirections
                                 for (int i = 0; i < 3; i++) {
                                     ResourceUrl url = ResourceUrl.parse(value);
-                                    if (url == null || url.framework) {
+                                    if (url == null || url.isFramework()) {
                                         break;
                                     }
                                     List<ResourceItem> l = resources.getResourceItem(url.type,

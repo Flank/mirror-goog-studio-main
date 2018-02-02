@@ -429,7 +429,7 @@ public abstract class AbstractResourceRepository {
                     String value = resourceValue.getValue();
                     if (value != null && value.startsWith(PREFIX_RESOURCE_REF)) {
                         ResourceUrl url = ResourceUrl.parse(value);
-                        if (url != null && url.type == type && url.framework == isFramework()) {
+                        if (url != null && url.type == type && url.isFramework() == isFramework()) {
                             if (!seenNames.contains(url.name)) {
                                 // This resource alias needs to be resolved again.
                                 output.addAll(getMatchingFiles(

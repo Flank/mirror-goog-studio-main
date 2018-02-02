@@ -685,18 +685,22 @@ public class ResourceResolver extends RenderResources {
 
     /**
      * Searches for and returns the {@link StyleResourceValue} from a given name.
+     *
      * <p>The format of the name can be:
+     *
      * <ul>
-     * <li>[android:]&lt;name&gt;</li>
-     * <li>[android:]style/&lt;name&gt;</li>
-     * <li>@[android:]style/&lt;name&gt;</li>
+     *   <li>[android:]&lt;name&gt;
+     *   <li>[android:]style/&lt;name&gt;
+     *   <li>@[android:]style/&lt;name&gt;
      * </ul>
+     *
      * @param parentName the name of the style.
      * @param inProjectStyleMap the project style map. Can be <code>null</code>
      * @param inFrameworkStyleMap the framework style map.
      * @return The matching {@link StyleResourceValue} object or <code>null</code> if not found.
      */
-    private StyleResourceValue getStyle(String parentName,
+    private StyleResourceValue getStyle(
+            String parentName,
             ResourceValueMap inProjectStyleMap,
             ResourceValueMap inFrameworkStyleMap) {
         boolean frameworkOnly = false;

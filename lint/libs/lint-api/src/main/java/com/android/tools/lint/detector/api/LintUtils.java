@@ -1064,7 +1064,7 @@ public class LintUtils {
         }
 
         ResourceUrl style = ResourceUrl.parse(styleUrl);
-        if (style == null || style.framework) {
+        if (style == null || style.isFramework()) {
             return null;
         }
 
@@ -1098,7 +1098,7 @@ public class LintUtils {
                         String parent = srv.getParentStyle();
                         if (parent != null && !parent.startsWith(ANDROID_PREFIX)) {
                             ResourceUrl p = ResourceUrl.parse(parent);
-                            if (p != null && !p.framework && !seen.contains(p.name)) {
+                            if (p != null && !p.isFramework() && !seen.contains(p.name)) {
                                 seen.add(p.name);
                                 queue.add(
                                         new ResourceValue(
@@ -1146,7 +1146,7 @@ public class LintUtils {
         }
 
         ResourceUrl style = ResourceUrl.parse(styleUrl);
-        if (style == null || style.framework) {
+        if (style == null || style.isFramework()) {
             return null;
         }
 
@@ -1174,7 +1174,7 @@ public class LintUtils {
                         String parent = srv.getParentStyle();
                         if (parent != null && !parent.startsWith(ANDROID_PREFIX)) {
                             ResourceUrl p = ResourceUrl.parse(parent);
-                            if (p != null && !p.framework && !seen.contains(p.name)) {
+                            if (p != null && !p.isFramework() && !seen.contains(p.name)) {
                                 seen.add(p.name);
                                 queue.add(
                                         new ResourceValue(

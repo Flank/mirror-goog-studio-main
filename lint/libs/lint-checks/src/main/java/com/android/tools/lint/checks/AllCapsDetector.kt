@@ -71,7 +71,7 @@ containing markup that also specify `textAllCaps=true`.""",
         }
 
         val url = ResourceUrl.parse(text)
-        if (url == null || url.framework) {
+        if (url == null || url.isFramework) {
             return
         }
 

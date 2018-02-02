@@ -517,7 +517,8 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 AbstractResourceRepository resources = context.getClient()
                         .getResourceRepository(mainProject, true, false);
                 ResourceUrl url = ResourceUrl.parse(fullBackupNode.getValue());
-                if (url != null && !url.framework
+                if (url != null
+                        && !url.isFramework()
                         && resources != null
                         && !resources.hasResourceItem(url.type, url.name)) {
                     Attr sourceFullBackupNode = sourceApplicationElement.getAttributeNodeNS(

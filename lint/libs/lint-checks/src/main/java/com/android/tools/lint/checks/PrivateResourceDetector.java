@@ -260,7 +260,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
     }
 
     private static boolean isPrivate(@NonNull Context context, @Nullable ResourceUrl url) {
-        return url != null && !url.framework && isPrivate(context, url.type, url.name);
+        return url != null && !url.isFramework() && isPrivate(context, url.type, url.name);
     }
 
     private static void checkChildRefs(@NonNull XmlContext context, Element item) {

@@ -677,7 +677,7 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
             return str;
         }
         ResourceUrl url = ResourceUrl.parse(str);
-        if (url == null || url.framework) {
+        if (url == null || url.isFramework()) {
             return str;
         }
         Project project = context.getProject();

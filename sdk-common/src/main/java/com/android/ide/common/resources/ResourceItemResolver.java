@@ -143,7 +143,7 @@ public class ResourceItemResolver extends RenderResources {
 
         ResourceUrl url = ResourceUrl.parse(valueText);
         if (url != null && url.hasValidName()) {
-            if (url.theme) {
+            if (url.isTheme()) {
                 // Do theme lookup? We can't do that here; requires full global analysis,
                 // so just use a real resource resolver.
                 ResourceResolver resolver = getFullResolver();
@@ -166,7 +166,7 @@ public class ResourceItemResolver extends RenderResources {
     private ResourceValue findResValue(ResourceUrl url) {
         // map of ResourceValue for the given type
         // if allowed, search in the project resources first.
-        if (!url.framework) {
+        if (!url.isFramework()) {
             if (myAppResources == null) {
                 assert myResourceProvider != null;
                 myAppResources = myResourceProvider.getAppResources();

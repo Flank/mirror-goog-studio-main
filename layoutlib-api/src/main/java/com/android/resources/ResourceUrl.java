@@ -44,28 +44,46 @@ public class ResourceUrl implements Serializable {
     /** The namespace, or null if it's in the project namespace */
     @Nullable public final String namespace;
 
+    @NonNull public final UrlType urlType;
+
     /** If true, the resource is in the android: framework */
-    public final boolean framework;
+    public boolean isFramework() {
+        return SdkConstants.ANDROID_NS_NAME.equals(namespace);
+    }
 
     /** Whether an id resource is of the form {@code @+id} rather than just {@code @id} */
-    public final boolean create;
+    public boolean isCreate() {
+        return urlType == UrlType.CREATE;
+    }
 
     /** Whether this is a theme resource reference */
-    public final boolean theme;
+    public boolean isTheme() {
+        return urlType == UrlType.THEME;
+    }
+
+    public enum UrlType {
+        /** Reference of the form {@code @string/foo}. */
+        NORMAL,
+
+        /** Reference of the form {@code @+id/foo}. */
+        CREATE,
+
+        /** Reference of the form {@code ?android:textColor}. */
+        THEME,
+
+        /** Reference of the form {@code android:textColor}. */
+        ATTR,
+    }
 
     private ResourceUrl(
             @NonNull ResourceType type,
             @NonNull String name,
             @Nullable String namespace,
-            boolean framework,
-            boolean create,
-            boolean theme) {
+            @NonNull UrlType urlType) {
         this.type = type;
         this.name = name;
-        this.framework = framework;
         this.namespace = namespace;
-        this.create = create;
-        this.theme = theme;
+        this.urlType = urlType;
     }
 
     /**
@@ -78,16 +96,11 @@ public class ResourceUrl implements Serializable {
      * @deprecated This factory method is used where we have no way of knowing the namespace. We
      *     need to migrate every call site to the other factory method that takes a namespace.
      */
-    @Deprecated
+    @Deprecated // TODO: namespaces
     public static ResourceUrl create(
             @NonNull ResourceType type, @NonNull String name, boolean framework) {
         return new ResourceUrl(
-                type,
-                name,
-                framework ? SdkConstants.ANDROID_NS_NAME : null,
-                framework,
-                false,
-                false);
+                type, name, framework ? SdkConstants.ANDROID_NS_NAME : null, UrlType.NORMAL);
     }
 
     /**
@@ -101,17 +114,42 @@ public class ResourceUrl implements Serializable {
     @NonNull
     public static ResourceUrl create(
             @Nullable String namespace, @NonNull ResourceType type, @NonNull String name) {
-        return new ResourceUrl(
-                type,
-                name,
-                namespace,
-                SdkConstants.ANDROID_NS_NAME.equals(namespace),
-                false,
-                false);
+        return new ResourceUrl(type, name, namespace, UrlType.NORMAL);
     }
 
     /**
-     * Return the resource type of the given url, and the resource name
+     * Creates a new resource URL, representing "?namespace:type/name".
+     *
+     * @see #parse(String)
+     * @param namespace the resource namespace
+     * @param type the resource type
+     * @param name the name
+     */
+    @NonNull
+    public static ResourceUrl createThemeReference(
+            @Nullable String namespace, @NonNull ResourceType type, @NonNull String name) {
+        return new ResourceUrl(type, name, namespace, UrlType.THEME);
+    }
+
+    /**
+     * Creates a new resource URL, representing "namespace:name".
+     *
+     * @see #parse(String)
+     * @param namespace the resource namespace
+     * @param type the resource type
+     * @param name the name
+     */
+    @NonNull
+    public static ResourceUrl createAttrReference(
+            @Nullable String namespace, @NonNull String name) {
+        return new ResourceUrl(ResourceType.ATTR, name, namespace, UrlType.ATTR);
+    }
+
+    /**
+     * Returns a {@link ResourceUrl} representation of the given string, or null if it's not a valid
+     * resource reference. This method works only for strings of type {@link UrlType#NORMAL}, {@link
+     * UrlType#CREATE} and {@link UrlType#THEME}, see dedicated methods for parsing references to
+     * style parents and to {@code attr} resources in the {@code name} XML attribute of style items.
      *
      * @param url the resource url to be parsed
      * @return a pair of the resource type and the resource name
@@ -122,18 +160,21 @@ public class ResourceUrl implements Serializable {
     }
 
     /**
-     * Return the resource type of the given url, and the resource name.
+     * Returns a {@link ResourceUrl} representation of the given string, or null if it's not a valid
+     * resource reference. This method works only for strings of type {@link UrlType#NORMAL}, {@link
+     * UrlType#CREATE} and {@link UrlType#THEME}, see dedicated methods for parsing references to
+     * style parents and to {@code attr} resources in the {@code name} XML attribute of style items.
      *
      * @param url the resource url to be parsed
      * @param forceFramework force the returned value to be a framework resource.
-     * @return a pair of the resource type and the resource name
+     *     <p>TODO(namespaces): remove the forceFramework argument.
      */
     @Nullable
     public static ResourceUrl parse(@NonNull String url, boolean forceFramework) {
-        boolean isTheme = false;
+        UrlType urlType = UrlType.NORMAL;
         // Handle theme references
         if (url.startsWith(SdkConstants.PREFIX_THEME_REF)) {
-            isTheme = true;
+            urlType = UrlType.THEME;
             String remainder = url.substring(SdkConstants.PREFIX_THEME_REF.length());
             if (url.startsWith(SdkConstants.ATTR_REF_PREFIX)) {
                 url =
@@ -175,19 +216,25 @@ public class ResourceUrl implements Serializable {
         int nameBegin = typeEnd + 1;
 
         // Skip @ and @+
-        boolean create = url.startsWith("@+");
-        int typeBegin = create ? 2 : 1;
+        int typeBegin;
+        if (url.startsWith("@+")) {
+            urlType = UrlType.CREATE;
+            typeBegin = 2;
+        } else {
+            typeBegin = 1;
+        }
 
         int colon = url.lastIndexOf(':', typeEnd);
-        boolean framework = forceFramework;
         String namespace = forceFramework ? SdkConstants.ANDROID_NS_NAME : null;
         if (colon >= 0) {
             if (colon - typeBegin == SdkConstants.ANDROID_NS_NAME.length()
                     && url.startsWith(SdkConstants.ANDROID_NS_NAME, typeBegin)) {
-                framework = true;
                 namespace = SdkConstants.ANDROID_NS_NAME;
             } else {
                 namespace = url.substring(typeBegin, colon);
+                if (namespace.isEmpty()) {
+                    return null;
+                }
             }
             typeBegin = colon + 1;
         }
@@ -200,7 +247,78 @@ public class ResourceUrl implements Serializable {
         if (name.isEmpty()) {
             return null;
         }
-        return new ResourceUrl(type, name, namespace, framework, create, isTheme);
+        return new ResourceUrl(type, name, namespace, urlType);
+    }
+
+    /**
+     * Returns a {@link ResourceUrl} representation of the given reference to an {@code attr}
+     * resources, most likely the contents of {@code <item name="..." >}.
+     */
+    @Nullable
+    public static ResourceUrl parseAttrReference(@NonNull String input) {
+        String namespace = null;
+        String name;
+
+        if (input.charAt(0) == '@' || input.charAt(0) == '?') {
+            return null;
+        }
+
+        if (input.indexOf('/') != -1) {
+            return null;
+        }
+
+        int colon = input.indexOf(':');
+        if (colon == -1) {
+            name = input;
+        } else {
+            namespace = input.substring(0, colon);
+            if (namespace.isEmpty()) {
+                return null;
+            }
+            name = input.substring(colon + 1);
+        }
+
+        if (name.isEmpty()) {
+            return null;
+        }
+
+        return new ResourceUrl(ResourceType.ATTR, name, namespace, UrlType.ATTR);
+    }
+
+    /** Returns a {@link ResourceUrl} representation of the given reference to a style's parent. */
+    @Nullable
+    public static ResourceUrl parseStyleParentReference(@NonNull String input) {
+        int pos = 0;
+        if (input.charAt(pos) == '@' || input.charAt(pos) == '?') {
+            pos++;
+        }
+
+        String namespace = null;
+        int colon = input.indexOf(':', pos);
+        if (colon != -1) {
+            namespace = input.substring(pos, colon);
+            if (namespace.isEmpty()) {
+                return null;
+            }
+            pos = colon + 1;
+        }
+
+        int slash = input.indexOf('/', pos);
+        if (slash != -1) {
+            if (!input.startsWith(SdkConstants.REFERENCE_STYLE, pos)) {
+                // Wrong resource type used.
+                return null;
+            }
+
+            pos = slash + 1;
+        }
+
+        String name = input.substring(pos);
+        if (name.isEmpty()) {
+            return null;
+        }
+
+        return new ResourceUrl(ResourceType.STYLE, name, namespace, UrlType.NORMAL);
     }
 
     /** Returns if the resource url is @null, @empty or @undefined. */
@@ -243,12 +361,6 @@ public class ResourceUrl implements Serializable {
         return true;
     }
 
-    /** Creates a copy of this {@link ResourceUrl} with the {@code theme} field set to true. */
-    @NonNull
-    public ResourceUrl asThemeUrl() {
-        return new ResourceUrl(type, name, namespace, framework, create, true);
-    }
-
     /**
      * Tries to resolve this {@link ResourceUrl} into a valid {@link ResourceReference} by expanding
      * the namespace alias (or lack thereof) based on the context in which this {@link ResourceUrl}
@@ -275,16 +387,30 @@ public class ResourceUrl implements Serializable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(theme ? SdkConstants.PREFIX_THEME_REF : SdkConstants.PREFIX_RESOURCE_REF);
-        if (create) {
-            sb.append('+');
+        switch (urlType) {
+            case NORMAL:
+                sb.append(SdkConstants.PREFIX_RESOURCE_REF);
+                break;
+            case CREATE:
+                sb.append("@+");
+                break;
+            case THEME:
+                sb.append(SdkConstants.PREFIX_THEME_REF);
+                break;
+            case ATTR:
+                // No prefix.
+                break;
         }
-        if (framework) {
-            sb.append(SdkConstants.ANDROID_NS_NAME);
+        if (namespace != null) {
+            sb.append(namespace);
             sb.append(':');
         }
-        sb.append(type.getName());
-        sb.append('/');
+
+        if (urlType != UrlType.ATTR) {
+            sb.append(type.getName());
+            sb.append('/');
+        }
+
         sb.append(name);
         return sb.toString();
     }
@@ -298,9 +424,7 @@ public class ResourceUrl implements Serializable {
             return false;
         }
         ResourceUrl that = (ResourceUrl) o;
-        return framework == that.framework
-                && create == that.create
-                && theme == that.theme
+        return urlType == that.urlType
                 && type == that.type
                 && Objects.equals(name, that.name)
                 && Objects.equals(namespace, that.namespace);
@@ -308,7 +432,10 @@ public class ResourceUrl implements Serializable {
 
     @Override
     public int hashCode() {
-        return HashCodes.mix(type.hashCode(), Objects.hashCode(name), Objects.hashCode(namespace),
-                Boolean.hashCode(framework), Boolean.hashCode(create), Boolean.hashCode(theme));
+        return HashCodes.mix(
+                type.hashCode(),
+                Objects.hashCode(name),
+                Objects.hashCode(namespace),
+                urlType.hashCode());
     }
 }
