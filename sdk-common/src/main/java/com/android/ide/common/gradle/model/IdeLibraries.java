@@ -84,7 +84,9 @@ public final class IdeLibraries {
         if (projectPath == null) {
             return false;
         }
-        File buildFolderPath = buildFolderPaths.findBuildFolderPath(projectPath);
+        File buildFolderPath =
+                buildFolderPaths.findBuildFolderPath(
+                        projectPath, copyNewProperty(androidLibrary::getBuildId, null));
         // If the aar bundle is inside of build directory, then it's a regular library module dependency, otherwise it's a wrapped aar module.
         return buildFolderPath != null
                 && !isFileInDirectory(androidLibrary.getBundle(), buildFolderPath);

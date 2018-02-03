@@ -50,12 +50,22 @@ public class IdeDependenciesFactory {
     /**
      * Stores the "build" folder path for the given module.
      *
+     * @param buildId build identifier of project.
      * @param moduleGradlePath module's gradle path.
-     * @param buildFolderPath path to the module's build directory.
+     * @param buildFolder path to the module's build directory.
      */
     public void findAndAddBuildFolderPath(
-            @NonNull String moduleGradlePath, @NonNull File buildFolder) {
-        myBuildFolderPaths.addBuildFolderMapping(moduleGradlePath, buildFolder);
+            @NonNull String buildId, @NonNull String moduleGradlePath, @NonNull File buildFolder) {
+        myBuildFolderPaths.addBuildFolderMapping(buildId, moduleGradlePath, buildFolder);
+    }
+
+    /**
+     * Set the build identifier of root project.
+     *
+     * @param rootBuildId build identifier of root project.
+     */
+    public void setRootBuildId(@NonNull String rootBuildId) {
+        myBuildFolderPaths.setRootBuildId(rootBuildId);
     }
 
     /**
@@ -115,6 +125,7 @@ public class IdeDependenciesFactory {
             }
         } catch (UnsupportedOperationException ignored) {
             // Dependencies::getJavaModules is available for AGP 3.1+. Use Dependencies::getProjects for the old plugins.
+            //noinspection deprecation
             for (String projectPath : dependencies.getProjects()) {
                 createModuleLibrary(visited, projectPath, projectPath, modelCache, null);
             }

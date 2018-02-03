@@ -160,13 +160,128 @@ public class IdeLibrariesTest {
                     }
                 };
         BuildFolderPaths buildFolderPaths = new BuildFolderPaths();
+        buildFolderPaths.setRootBuildId("project");
         buildFolderPaths.addBuildFolderMapping(
-                ":aarModule", new File("/ProjectRoot/aarModule/build/"));
+                "project", ":aarModule", new File("/ProjectRoot/aarModule/build/"));
         buildFolderPaths.addBuildFolderMapping(
-                ":androidLib", new File("/ProjectRoot/androidLib/build/"));
+                "project", ":androidLib", new File("/ProjectRoot/androidLib/build/"));
 
         assertTrue(isLocalAarModule(localAarLibrary, buildFolderPaths));
         assertFalse(isLocalAarModule(moduleLibrary, buildFolderPaths));
+        assertFalse(isLocalAarModule(externalLibrary, buildFolderPaths));
+    }
+
+    @Test
+    public void checkIsLocalAarModuleWithCompositeBuild() {
+        // simulate project structure:
+        // project(root)     - aarModule
+        // project(root)     - androidLib
+        //      project1     - aarModule
+        //      project1     - androidLib
+        AndroidLibrary localAarLibraryInRootProject =
+                new AndroidLibraryStub() {
+                    @Override
+                    @NonNull
+                    public String getProject() {
+                        return ":aarModule";
+                    }
+
+                    @Override
+                    @NonNull
+                    public File getBundle() {
+                        return new File("/Project/aarModule/aarModule.aar");
+                    }
+
+                    @Override
+                    @Nullable
+                    public String getBuildId() {
+                        return "Project";
+                    }
+                };
+        AndroidLibrary localAarLibraryInProject1 =
+                new AndroidLibraryStub() {
+                    @Override
+                    @NonNull
+                    public String getProject() {
+                        return ":aarModule";
+                    }
+
+                    @Override
+                    @NonNull
+                    public File getBundle() {
+                        return new File("/Project1/aarModule/aarModule.aar");
+                    }
+
+                    @Override
+                    @Nullable
+                    public String getBuildId() {
+                        return "Project1";
+                    }
+                };
+        AndroidLibrary moduleLibraryInRootProject =
+                new AndroidLibraryStub() {
+                    @Override
+                    @NonNull
+                    public String getProject() {
+                        return ":androidLib";
+                    }
+
+                    @Override
+                    @NonNull
+                    public File getBundle() {
+                        return new File("/Project/androidLib/build/androidLib.aar");
+                    }
+
+                    @Override
+                    @Nullable
+                    public String getBuildId() {
+                        return "Project";
+                    }
+                };
+        AndroidLibrary moduleLibraryInProject1 =
+                new AndroidLibraryStub() {
+                    @Override
+                    @NonNull
+                    public String getProject() {
+                        return ":androidLib";
+                    }
+
+                    @Override
+                    @NonNull
+                    public File getBundle() {
+                        return new File("/Project1/androidLib/build/androidLib.aar");
+                    }
+
+                    @Override
+                    @Nullable
+                    public String getBuildId() {
+                        return "Project1";
+                    }
+                };
+        AndroidLibrary externalLibrary =
+                new AndroidLibraryStub() {
+                    @Override
+                    @Nullable
+                    public String getProject() {
+                        return null;
+                    }
+                };
+        BuildFolderPaths buildFolderPaths = new BuildFolderPaths();
+        buildFolderPaths.setRootBuildId("Project");
+        buildFolderPaths.addBuildFolderMapping(
+                "Project", ":aarModule", new File("/Project/aarModule/build/"));
+        buildFolderPaths.addBuildFolderMapping(
+                "Project", ":androidLib", new File("/Project/androidLib/build/"));
+        buildFolderPaths.addBuildFolderMapping(
+                "Project1", ":aarModule", new File("/Project1/aarModule/build/"));
+        buildFolderPaths.addBuildFolderMapping(
+                "Project1", ":androidLib", new File("/Project1/androidLib/build/"));
+
+        assertTrue(isLocalAarModule(localAarLibraryInRootProject, buildFolderPaths));
+        assertTrue(isLocalAarModule(localAarLibraryInProject1, buildFolderPaths));
+
+        assertFalse(isLocalAarModule(moduleLibraryInRootProject, buildFolderPaths));
+        assertFalse(isLocalAarModule(moduleLibraryInProject1, buildFolderPaths));
         assertFalse(isLocalAarModule(externalLibrary, buildFolderPaths));
     }
 }
