@@ -12,15 +12,9 @@ import android.net.wifi.WifiManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -32,6 +26,9 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class NetworkTaskCategory extends TaskCategory {
     private static final String URL_STRING =
@@ -86,11 +83,11 @@ public class NetworkTaskCategory extends TaskCategory {
         protected final String execute() throws Exception {
             ActivityCompat.requestPermissions(
                     mHostActivity,
-                    new String[]{
-                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.ACCESS_FINE_LOCATION
+                    new String[] {
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION
                     },
-                    1);
+                    ActivityRequestCodes.LOCATION.ordinal());
 
             final WifiManager manager = (WifiManager) mHostActivity.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (manager == null) {

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.com.java.profilertester.taskcategory.BluetoothTaskCategory;
 import android.com.java.profilertester.taskcategory.CpuTaskCategory;
 import android.com.java.profilertester.taskcategory.EventTaskCategory;
+import android.com.java.profilertester.taskcategory.LocationTaskCategory;
 import android.com.java.profilertester.taskcategory.MemoryTaskCategory;
 import android.com.java.profilertester.taskcategory.NetworkTaskCategory;
 import android.com.java.profilertester.taskcategory.TaskCategory;
@@ -32,7 +33,10 @@ import java.util.concurrent.Callable;
 
 public class MainActivityFragment extends Fragment {
     final static String TAG = MainActivityFragment.class.getName();
+
     private View mFragmentView;
+    private MainLooperThread mMainLooperThread;
+
     private Spinner mCategorySpinner, mTaskSpinner;
     private TaskCategory[] mTaskCategories;
     private List<ArrayAdapter<? extends TaskCategory.Task>> mTaskAdapters;
@@ -40,12 +44,19 @@ public class MainActivityFragment extends Fragment {
     private final List<TaskCategory.Task.SelectionListener> mSelectionListeners = new ArrayList<>();
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mMainLooperThread = new MainLooperThread();
+        mMainLooperThread.start();
+    }
+
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mFragmentView = inflater.inflate(R.layout.fragment_main, container, false);
 
         mCategorySpinner = (Spinner) mFragmentView.findViewById(R.id.category_spinner);
-
         mTaskCategories =
                 new TaskCategory[] {
                     new CpuTaskCategory(getActivity().getFilesDir()),
@@ -59,7 +70,8 @@ public class MainActivityFragment extends Fragment {
                                 }
                             },
                             (EditText) mFragmentView.findViewById(R.id.section_editor)),
-                    new BluetoothTaskCategory(getActivity())
+                    new BluetoothTaskCategory(getActivity()),
+                    new LocationTaskCategory(getActivity(), mMainLooperThread.getLooper())
                 };
         ArrayAdapter<TaskCategory> categoryAdapters =
                 new ArrayAdapter<>(
@@ -68,7 +80,6 @@ public class MainActivityFragment extends Fragment {
                         mTaskCategories);
         categoryAdapters.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mCategorySpinner.setAdapter(categoryAdapters);
-
         mTaskSpinner = (Spinner) mFragmentView.findViewById(R.id.task_spinner);
         // create an adaptor for each category
         mTaskAdapters = new ArrayList<>();
@@ -113,6 +124,12 @@ public class MainActivityFragment extends Fragment {
         });
 
         return mFragmentView;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mMainLooperThread.quit();
     }
 
     private void notifySelection(@Nullable Object selectedItem) {
