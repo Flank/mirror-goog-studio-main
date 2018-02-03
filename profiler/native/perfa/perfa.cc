@@ -68,8 +68,6 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
   return (strcmp(sig_mutf8, "Ljava/net/URL;") == 0) ||
          (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
          (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0) ||
-         (strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 &&
-          energy_profiler_enabled) ||
          (strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0 &&
           energy_profiler_enabled);
 }
@@ -205,37 +203,6 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
 
     *new_class_data_len = new_image_size;
     *new_class_data = new_image;
-  } else if (strcmp(name, "android/os/PowerManager") == 0) {
-    dex::Reader reader(class_data, class_data_len);
-    std::string desc = "L" + std::string(name) + ";";
-    auto class_index = reader.FindClassIndex(desc.c_str());
-    if (class_index == dex::kNoIndex) {
-      Log::V("Could not find class index for %s", name);
-      return;
-    }
-
-    reader.CreateClassIr(class_index);
-    auto dex_ir = reader.GetIr();
-
-    slicer::MethodInstrumenter mi(dex_ir);
-    mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
-        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
-        "onNewWakeLockExit"));
-    if (!mi.InstrumentMethod(ir::MethodId(
-            desc.c_str(), "newWakeLock",
-            "(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;"))) {
-      Log::E("Error instrumenting PowerManager.newWakeLock");
-    }
-
-    size_t new_image_size = 0;
-    dex::u1* new_image = nullptr;
-    dex::Writer writer(dex_ir);
-
-    JvmtiAllocator allocator(jvmti_env);
-    new_image = writer.CreateImage(&allocator, &new_image_size);
-
-    *new_class_data_len = new_image_size;
-    *new_class_data = new_image;
   } else if (strcmp(name, "android/os/PowerManager$WakeLock") == 0) {
     dex::Reader reader(class_data, class_data_len);
     std::string desc = "L" + std::string(name) + ";";
@@ -254,7 +221,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
         "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
         "wrapAcquire"));
     if (!mi_acq.InstrumentMethod(
-            ir::MethodId(desc.c_str(), "acquireLocked", "()V"))) {
+            ir::MethodId(desc.c_str(), "acquire", "()V"))) {
       Log::E("Error instrumenting WakeLock.acquire");
     }
     if (!mi_acq.InstrumentMethod(
@@ -328,10 +295,10 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
   if (agent_config->energy_profiler_enabled()) {
     BindJNIMethod(jni,
                   "com/android/tools/profiler/support/energy/WakeLockWrapper",
-                  "sendWakeLockAcquired", "()V");
+                  "sendWakeLockAcquired", "(IILjava/lang/String;J)V");
     BindJNIMethod(jni,
                   "com/android/tools/profiler/support/energy/WakeLockWrapper",
-                  "sendWakeLockReleased", "()V");
+                  "sendWakeLockReleased", "(II)V");
   }
 
   BindJNIMethod(jni,

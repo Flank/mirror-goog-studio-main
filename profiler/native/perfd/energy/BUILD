@@ -6,11 +6,13 @@ cc_library(
     name = "profiler_energy",
     srcs = [
         "energy_cache.cc",
+        "energy_service.cc",
         "internal_energy_service.cc",
     ],
     hdrs = [
         "energy_cache.h",
         "energy_profiler_component.h",
+        "energy_service.h",
         "internal_energy_service.h",
     ],
     copts = ANDROID_COPTS + [

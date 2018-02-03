@@ -15,8 +15,6 @@
  */
 #include "perfd/energy/internal_energy_service.h"
 
-#include "utils/log.h"
-
 namespace profiler {
 
 using grpc::ServerContext;
@@ -24,14 +22,13 @@ using grpc::Status;
 using profiler::proto::AddEnergyEventRequest;
 using profiler::proto::EmptyEnergyReply;
 
-InternalEnergyServiceImpl::InternalEnergyServiceImpl() {}
+InternalEnergyServiceImpl::InternalEnergyServiceImpl(EnergyCache *energy_cache)
+    : energy_cache_(*energy_cache) {}
 
 Status InternalEnergyServiceImpl::AddEnergyEvent(
     ServerContext *context, const AddEnergyEventRequest *request,
     EmptyEnergyReply *reply) {
-  auto energy_event = request->energy_event();
-  Log::V("AddEnergyEvent (type=%d, timestamp=%lld)",
-         energy_event.metadata_case(), energy_event.timestamp());
+  energy_cache_.AddEnergyEvent(request->energy_event());
   return Status::OK;
 }
 
