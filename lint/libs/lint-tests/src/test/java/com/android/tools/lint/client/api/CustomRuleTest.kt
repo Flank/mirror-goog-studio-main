@@ -158,7 +158,7 @@ class CustomRuleTest {
         // are picked up in a Gradle project
 
         val expected = "" +
-                "lint1.jar: Warning: Lint found an issue registry (android.support.v7.lint.AppCompatIssueRegistry) which did not specify the Lint API version it was compiled with.\n" +
+                "build/intermediates/lint/lint1.jar: Warning: Lint found an issue registry (android.support.v7.lint.AppCompatIssueRegistry) which did not specify the Lint API version it was compiled with.\n" +
                 "\n" +
                 "This means that the lint checks are likely not compatible.\n" +
                 "\n" +
@@ -385,8 +385,9 @@ class CustomRuleTest {
                 .allowMissingSdk()
                 .allowCompilationErrors()
                 .allowObsoleteLintChecks(false)
+                .rootDirectory(lintApiLevel1000.parentFile)
                 .run()
-                .expect("lint6.jar: Warning: Lint found an issue registry " +
+                .expect("../lint6.jar: Warning: Lint found an issue registry " +
                         "(com.example.google.lint.MyIssueRegistry) which requires a newer API " +
                         "level. That means that the custom lint checks are intended for a" +
                         " newer lint version; please upgrade [ObsoleteLintCustomCheck]\n" +

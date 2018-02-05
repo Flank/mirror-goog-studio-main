@@ -267,4 +267,71 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 .run()
                 .expectClean()
     }
+
+    fun testCheckResultIf() {
+        // Regression test for
+        // 72258872: Lint is wrongly detecting "CheckResult" in Kotlin code
+        lint().files(
+                kotlin("""
+                    package test.pkg
+
+                    import android.support.annotation.CheckResult
+
+                    fun testIsUnused(): Int {
+                        if (3 > 2) {
+                            foo() // Unused
+                        } else {
+                            1
+                        }
+                        return 0
+                    }
+
+                    fun testReturn(): Int {
+                        return if (3 > 2) {
+                            foo() // OK
+                        } else {
+                            1
+                        }
+                    }
+
+                    fun testExpressionBodyReturn(): Int =
+                        return if (3 > 2) {
+                            foo() // OK
+                        } else {
+                            1
+                        }
+
+                    fun testAssignment(): Int {
+                        val result = if (3 > 2) {
+                            foo() // OK
+                        } else {
+                            1
+                        }
+                        return result
+                    }
+
+                    fun testNesting(): Int {
+                        return if (3 > 2) {
+                            if (4 > 2) {
+                                foo() // OK
+                            } else {
+                                1
+                            }
+                        } else {
+                            1
+                        }
+                    }
+
+                    @CheckResult
+                    fun foo(): Int {
+                        return 42
+                    }
+"""
+                ),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .run()
+            .expectClean()
+    }
 }

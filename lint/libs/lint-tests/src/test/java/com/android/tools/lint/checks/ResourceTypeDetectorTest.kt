@@ -762,6 +762,29 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                         + "7 errors, 0 warnings\n")
     }
 
+    fun testHalfFloatConstruction() {
+        // Regression test for https://issuetracker.google.com/72509078
+        lint().files(
+                kotlin("""
+                    package test.pkg
+
+                    import android.os.Build
+                    import android.support.annotation.RequiresApi
+                    import android.util.Half
+
+                    @Suppress("unused", "UNUSED_VARIABLE")
+                    @RequiresApi(Build.VERSION_CODES.O)
+                    fun halfFloat(x: Short) {
+                        val v1 = Half.valueOf(x)
+                        val v2 = Half(x)
+                    }
+                    """).indented(),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+            .run()
+            .expectClean()
+    }
+
     fun testAnyRes() {
         // Make sure error messages for @AnyRes are handled right since it's now an
         // enum set containing all possible resource types

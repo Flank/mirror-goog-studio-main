@@ -452,21 +452,21 @@ public class SystemPermissionsDetectorTest extends AbstractCheckTest {
     }
 
     public void testMaxVersion() {
-        // Regresion test for 71701793: android.permission.SYSTEM_ALERT_WINDOW causing lint failure
+        // Regression test for 71701793: android.permission.SYSTEM_ALERT_WINDOW causing lint failure
         lint().files(
                 manifest("" +
                         "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                         "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
                         "    package=\"com.example.lintbugs\">\n" +
-                        "    <uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\" android:maxSdkVersion=\"21\"/><!-- OK -->\n" +
-                        "    <uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\" android:maxSdkVersion=\"22\"/><!-- OK -->\n" +
-                        "    <uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\" android:maxSdkVersion=\"23\"/><!-- ERROR -->\n" +
+                        "    <uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\" android:maxSdkVersion=\"15\"/><!-- OK -->\n" +
+                        "    <uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\" android:maxSdkVersion=\"16\"/><!-- OK -->\n" +
+                        "    <uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\" android:maxSdkVersion=\"17\"/><!-- ERROR -->\n" +
                         "</manifest>"))
                 .run()
                 .expect("" +
                         "AndroidManifest.xml:6: Error: Permission is only granted to system apps [ProtectedPermissions]\n" +
-                        "    <uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\" android:maxSdkVersion=\"23\"/><!-- ERROR -->\n" +
-                        "                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "    <uses-permission android:name=\"android.permission.MOUNT_UNMOUNT_FILESYSTEMS\" android:maxSdkVersion=\"17\"/><!-- ERROR -->\n" +
+                        "                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                         "1 errors, 0 warnings");
     }
 

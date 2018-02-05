@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.SdkConstants.DOT_CLASS
 import com.android.tools.lint.detector.api.CURRENT_API
 import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.describeApi
 import com.android.utils.SdkUtils
@@ -89,7 +90,11 @@ private constructor(
          * local lint.jar's it's possible for the same lint.jar to be handed back
          * multiple times with different paths through various separate dependencies.
          */
-        fun get(client: LintClient,  jarFiles: Collection<File>): List<JarFileIssueRegistry> {
+        fun get(
+            client: LintClient,
+            jarFiles: Collection<File>,
+            currentProject: Project?
+        ): List<JarFileIssueRegistry> {
             val registryMap = try {
                 findRegistries(client, jarFiles)
             } catch (e: IOException) {
@@ -106,7 +111,7 @@ private constructor(
 
             for ((registryClass, jarFile) in registryMap) {
                 try {
-                    val registry = get(client, registryClass, jarFile) ?: continue
+                    val registry = get(client, registryClass, jarFile, currentProject) ?: continue
                     registries.add(registry)
                 } catch (e: Throwable) {
                     client.log(e, "Could not load custom lint check jar file %1\$s", jarFile)
@@ -120,7 +125,12 @@ private constructor(
          * Returns a [JarFileIssueRegistry] for the given issue registry class name
          * and jar file, with caching
          */
-        private fun get(client: LintClient, registryClassName: String, jarFile: File):
+        private fun get(
+            client: LintClient,
+            registryClassName: String,
+            jarFile: File,
+            currentProject: Project?
+        ):
                 JarFileIssueRegistry? {
             if (cache == null) {
                 cache = HashMap()
@@ -137,10 +147,11 @@ private constructor(
             // Ensure that the scope-to-detector map doesn't return stale results
             IssueRegistry.reset()
 
-            val userRegistry = loadIssueRegistry(client, jarFile, registryClassName)
+            val userRegistry = loadIssueRegistry(client, jarFile, registryClassName,
+                    currentProject)
             return if (userRegistry != null) {
                 val jarIssueRegistry = JarFileIssueRegistry(client, jarFile, userRegistry)
-                cache!!.put(jarFile, SoftReference(jarIssueRegistry))
+                cache!![jarFile] = SoftReference(jarIssueRegistry)
                 jarIssueRegistry
             } else {
                 null
@@ -164,9 +175,11 @@ private constructor(
          * custom rules can have dependent jars without needing to jar-jar them!
          */
         private fun loadIssueRegistry(
-                client: LintClient,
-                jarFile: File,
-                className: String): IssueRegistry? {
+            client: LintClient,
+            jarFile: File,
+            className: String,
+            currentProject: Project?
+        ): IssueRegistry? {
             // Make a class loader for this jar
             val url = SdkUtils.fileToUrl(jarFile)
             return try {
@@ -187,7 +200,8 @@ private constructor(
                             "is $className. The class loading issue is ${e.message}: $stacktrace"
 
                     LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
-                        message = message, file = jarFile)
+                        message = message, file = jarFile, project = currentProject
+                    )
                     return null
                 }
 
@@ -204,7 +218,7 @@ private constructor(
                                 "current lint API level is $CURRENT_API " +
                                 "(${describeApi(CURRENT_API)})"
                         LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
-                                message = message, file = jarFile)
+                                message = message, file = jarFile, project = currentProject)
                         // Not returning here: try to run the checks
                     } else {
                         try {
@@ -215,7 +229,7 @@ private constructor(
                                         "lint checks are intended for a newer lint version; please " +
                                         "upgrade"
                                 LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
-                                        message = message, file = jarFile)
+                                        message = message, file = jarFile, project = currentProject)
                                 return null
                             }
                         } catch (ignore: Throwable) {
@@ -252,7 +266,7 @@ private constructor(
                     }
 
                     LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
-                            message = message, file = jarFile)
+                            message = message, file = jarFile, project = currentProject)
                     // Not returning here: try to run the checks
                 }
 

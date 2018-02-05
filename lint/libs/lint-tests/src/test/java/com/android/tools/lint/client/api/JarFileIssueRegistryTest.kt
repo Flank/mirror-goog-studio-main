@@ -85,7 +85,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         val loggedWarnings = StringWriter()
         val client = createClient(loggedWarnings)
 
-        val registries = JarFileIssueRegistry.get(client, listOf(file1, file2))
+        val registries = JarFileIssueRegistry.get(client, listOf(file1, file2), null)
         // Only *one* registry should have been computed, since the two provide the same lint
         // class names!
         assertThat(registries.size).isEqualTo(1)
@@ -98,7 +98,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
 
     private fun getSingleRegistry(client: LintClient, file: File): JarFileIssueRegistry? {
         val list = listOf(file)
-        val registries = JarFileIssueRegistry.get(client, list)
+        val registries = JarFileIssueRegistry.get(client, list, null)
         return if (registries.size == 1) registries[0] else null
     }
 

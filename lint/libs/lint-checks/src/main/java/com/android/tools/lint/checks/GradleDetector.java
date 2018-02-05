@@ -1488,20 +1488,6 @@ public class GradleDetector extends Detector implements GradleScanner {
                         + dependency.getMajorVersion() + ") than the `compileSdkVersion` ("
                         + compileSdkVersion + ")";
                 reportNonFatalCompatibilityIssue(context, cookie, message, fix);
-            } else if (targetSdkVersion > 0
-                    && dependency.getMajorVersion() < targetSdkVersion
-                    && dependency.getMajorVersion() != GradleCoordinate.PLUS_REV_VALUE
-                    && context.isEnabled(COMPATIBILITY)) {
-                LintFix fix = null;
-                if (newerVersion != null) {
-                    fix = fix().name("Replace with " + newerVersion)
-                            .replace().text(version.toString())
-                            .with(newerVersion.toString()).build();
-                }
-                String message = "This support library should not use a lower version ("
-                        + dependency.getMajorVersion() + ") than the `targetSdkVersion` ("
-                        + targetSdkVersion + ")";
-                reportNonFatalCompatibilityIssue(context, cookie, message, fix);
             }
         }
 

@@ -383,7 +383,8 @@ class LintDriver
         jarFiles.addAll(client.findGlobalRuleJars())
 
         if (!jarFiles.isEmpty()) {
-            val extraRegistries = JarFileIssueRegistry.get(client, jarFiles)
+            val extraRegistries = JarFileIssueRegistry.get(client, jarFiles,
+                    currentProject ?: projects.firstOrNull())
             if (extraRegistries.isNotEmpty()) {
                 val registries = ArrayList<IssueRegistry>(jarFiles.size+1)
                 // Include the builtin checks too

@@ -1217,7 +1217,7 @@ abstract class LintClient {
 
 
         if (!jarFiles.isEmpty()) {
-            val extraRegistries = JarFileIssueRegistry.get(this, jarFiles)
+            val extraRegistries = JarFileIssueRegistry.get(this, jarFiles, null)
             if (extraRegistries.isNotEmpty()) {
                 return JarFileIssueRegistry.join(registry, *extraRegistries.toTypedArray())
             }

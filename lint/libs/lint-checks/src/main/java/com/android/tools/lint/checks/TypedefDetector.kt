@@ -49,6 +49,7 @@ import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UField
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UMethod
@@ -342,6 +343,13 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
             }
 
+            val fieldInitialization =
+                if (argument is ULiteralExpression && argument.uastParent is UField) {
+                    argument.uastParent as UField
+                } else {
+                    null
+                }
+
             val initializerExpression = allowed as UCallExpression
             val initializers = initializerExpression.valueArguments
             var psiValue: PsiElement? = null
@@ -350,6 +358,16 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
 
             for (expression in initializers) {
+                // Is this a literal string initialization in a field? If so,
+                // see if that field is a member of the allowed constants (e.g.
+                // a constant declaration intended to be used in a typedef itself)
+                if (fieldInitialization != null && expression is UReferenceExpression) {
+                    val resolved = expression.resolve()
+                    if (resolved != null && resolved.isEquivalentTo(fieldInitialization)) {
+                        return
+                    }
+                }
+
                 if (expression is ULiteralExpression) {
                     if (value == expression.value) {
                         return

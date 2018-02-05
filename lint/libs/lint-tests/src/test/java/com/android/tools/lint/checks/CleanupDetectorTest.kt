@@ -433,6 +433,24 @@ class CleanupDetectorTest : AbstractCheckTest() {
                 .expect(expected)
     }
 
+    fun testElvis() {
+        // Regression test for https://issuetracker.google.com/72581487
+        // Elvis operator on cursor initialization -> "Missing recycle() calls" warning
+        lint().files(
+                kotlin("""
+                    package test.pkg
+                    import android.app.FragmentManager
+
+                    fun ok(f: FragmentManager) {
+                        val transaction = f.beginTransaction() ?: return
+                        transaction.commitAllowingStateLoss()
+                    }
+                    """
+                ).indented())
+            .run()
+            .expectClean()
+    }
+
     fun testCommit2() {
         lint().files(
                 classpath(),
