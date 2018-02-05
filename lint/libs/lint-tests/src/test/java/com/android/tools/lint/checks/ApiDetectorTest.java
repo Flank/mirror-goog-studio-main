@@ -4430,6 +4430,22 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testKotlinFileSuppress() {
+        // Regression test for https://issuetracker.google.com/72509076
+        lint().files(
+                kotlin("" +
+                        "@file:RequiresApi(21)\n" +
+                        "\n" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.support.annotation.RequiresApi\n" +
+                        "import android.widget.Toolbar\n" +
+                        "\n" +
+                        "fun Toolbar.hideOverflowMenu2() = hideOverflowMenu()"))
+                .run()
+                .expectClean();
+    }
+
     public void testMapGetOrDefault() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=235665
         String expected = ""

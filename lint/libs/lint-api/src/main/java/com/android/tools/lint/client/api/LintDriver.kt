@@ -79,6 +79,7 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiArrayInitializerExpression
 import com.intellij.psi.PsiArrayInitializerMemberValue
+import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteral
@@ -2702,6 +2703,40 @@ class LintDriver
                     for (attribute in attributeList) {
                         if (isSuppressedExpression(issue, attribute.expression)) {
                             return true
+                        }
+                    }
+                } else if (fqcn == null) {
+                    // Work around type resolution problems
+                    // Work around bugs in UAST type resolution for file annotations:
+                    // parse the source string instead.
+                    val psi = annotation.psi ?: continue
+                    if (psi is PsiCompiledElement) {
+                        continue
+                    }
+                    val text = psi.text
+                    if (text.contains("SuppressLint(") ||
+                            text.contains("SuppressWarnings(") ||
+                            text.contains("Suppress(")) {
+                        val start = text.indexOf('(')
+                        val end = text.indexOf(')', start + 1)
+                        if (end != -1) {
+                            var value = text.substring(start + 1, end)
+
+                            // Strip off attribute name, e.g.
+                            //   @SuppressLint(id = "O") -> O
+                            val index = value.indexOf('=')
+                            if (index != -1) {
+                                value = value.substring(index + 1).trim()
+                            }
+
+                            // We're looking at source, so get rid of extra syntax
+                            // characters, e.g. from { "foo", "bar" } to just foo, bar
+                            //
+                            value = value.replace(Regex("[\"{}]"), "")
+
+                            if (isSuppressed(issue, value)) {
+                                return true
+                            }
                         }
                     }
                 }

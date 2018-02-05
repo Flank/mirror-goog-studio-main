@@ -135,6 +135,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import org.jetbrains.uast.UAnnotated;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UBinaryExpressionWithType;
@@ -145,12 +146,15 @@ import org.jetbrains.uast.UClass;
 import org.jetbrains.uast.UClassLiteralExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.UForEachExpression;
 import org.jetbrains.uast.UIfExpression;
 import org.jetbrains.uast.UImportStatement;
 import org.jetbrains.uast.UInstanceExpression;
+import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.ULocalVariable;
 import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UNamedExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
@@ -1853,11 +1857,10 @@ public class ApiDetector extends ResourceXmlDetector
             mContext.report(UNSUPPORTED, expression, location, message, apiLevelFix(api));
         }
 
-        // Look for @RequiresApi in modifier lists
-        private boolean checkRequiresApi(UElement expression, PsiMember member,
-                    PsiModifierList modifierList) {
+        private int getRequiresApiFromAnnotations(PsiModifierList modifierList) {
             for (PsiAnnotation annotation : modifierList.getAnnotations()) {
-                if (REQUIRES_API_ANNOTATION.equals(annotation.getQualifiedName())) {
+                String qualifiedName = annotation.getQualifiedName();
+                if (REQUIRES_API_ANNOTATION.equals(qualifiedName)) {
                     UAnnotation wrapped = JavaUAnnotation.wrap(annotation);
                     int api = (int) getLongAttribute(mContext,
                             wrapped, ATTR_VALUE, -1);
@@ -1866,39 +1869,85 @@ public class ApiDetector extends ResourceXmlDetector
                         api = (int) getLongAttribute(mContext,
                                 wrapped, "api", -1);
                     }
-                    int minSdk = getMinSdk(mContext);
-                    if (api > minSdk) {
-                        int target = getTargetApi(expression);
-                        if (target == -1 || api > target) {
-                            if (isWithinVersionCheckConditional(
-                                    mContext.getEvaluator(), expression, api)) {
-                                return true;
+                    return api;
+                } else if (qualifiedName == null) {
+                    // Work around UAST type resolution problems
+                    // Work around bugs in UAST type resolution for file annotations:
+                    // parse the source string instead.
+                    if (annotation instanceof PsiCompiledElement) {
+                        continue;
+                    }
+                    String text = annotation.getText();
+                    if (text.contains("RequiresApi(")) {
+                        int start = text.indexOf('(');
+                        int end = text.indexOf(')', start + 1);
+                        if (end != -1) {
+                            String name = text.substring(start + 1, end);
+                            // Strip off attribute name and qualifiers, e.g.
+                            //   @RequiresApi(api = Build.VERSION.O) -> O
+                            int index = name.indexOf('=');
+                            if (index != -1) {
+                                name = name.substring(index + 1).trim();
                             }
-                            if (isPrecededByVersionCheckExit(
-                                    expression, api)) {
-                                return true;
+                            index = name.indexOf('.');
+                            if (index != -1) {
+                                name = name.substring(index + 1);
                             }
-
-                            Location location;
-                            if (UastExpressionUtils.isConstructorCall(expression)
-                                    && ((UCallExpression)expression).getClassReference() != null) {
-                                location = mContext.getRangeLocation(expression, 0,
-                                        ((UCallExpression)expression).getClassReference(), 0);
-                            } else {
-                                location = mContext.getNameLocation(expression);
+                            if (!name.isEmpty()) {
+                                if (Character.isDigit(name.charAt(0))) {
+                                    int api = Integer.parseInt(name);
+                                    if (api > 0) {
+                                        return api;
+                                    }
+                                } else {
+                                    return codeNameToApi(name);
+                                }
                             }
-
-                            String fqcn = member.getName();
-                            String message = String.format(
-                                "Call requires API level %1$d (current min is %2$d): `%3$s`",
-                                api, Math.max(minSdk, getTargetApi(expression)), fqcn);
-                            mContext.report(UNSUPPORTED, expression, location, message,
-                                    apiLevelFix(api));
                         }
                     }
-
-                    return true;
                 }
+            }
+
+            return -1;
+        }
+
+        // Look for @RequiresApi in modifier lists
+        private boolean checkRequiresApi(UElement expression, PsiMember member,
+                    PsiModifierList modifierList) {
+            int api = getRequiresApiFromAnnotations(modifierList);
+            if (api != -1) {
+                int minSdk = getMinSdk(mContext);
+                if (api > minSdk) {
+                    int target = getTargetApi(expression);
+                    if (target == -1 || api > target) {
+                        if (isWithinVersionCheckConditional(
+                                mContext.getEvaluator(), expression, api)) {
+                            return true;
+                        }
+                        if (isPrecededByVersionCheckExit(
+                                expression, api)) {
+                            return true;
+                        }
+
+                        Location location;
+                        if (UastExpressionUtils.isConstructorCall(expression)
+                                && ((UCallExpression) expression).getClassReference() != null) {
+                            location = mContext.getRangeLocation(expression, 0,
+                                    ((UCallExpression) expression).getClassReference(), 0);
+                        } else {
+                            location = mContext.getNameLocation(expression);
+                        }
+
+                        String fqcn = member.getName();
+                        String message = String.format(
+                                "Call requires API level %1$d (current min is %2$d): `%3$s`",
+                                api, Math.max(minSdk, getTargetApi(expression)), fqcn);
+                        mContext.report(UNSUPPORTED, expression, location, message,
+                                apiLevelFix(api));
+                    }
+                }
+
+                return true;
             }
 
             return false;
@@ -2234,17 +2283,16 @@ public class ApiDetector extends ResourceXmlDetector
 
     public static int getTargetApi(@Nullable UElement scope) {
         while (scope != null) {
-            if (scope instanceof PsiModifierListOwner) {
-                PsiModifierList modifierList = ((PsiModifierListOwner) scope).getModifierList();
-                int targetApi = getTargetApi(modifierList);
+            if (scope instanceof UAnnotated) {
+                int targetApi = getTargetApiForAnnotated((UAnnotated) scope);
                 if (targetApi != -1) {
                     return targetApi;
                 }
             }
-            scope = scope.getUastParent();
-            if (scope instanceof PsiFile) {
+            if (scope instanceof UFile) {
                 break;
             }
+            scope = scope.getUastParent();
         }
 
         return -1;
@@ -2254,37 +2302,37 @@ public class ApiDetector extends ResourceXmlDetector
      * Returns the API level for the given AST node if specified with
      * an {@code @TargetApi} annotation.
      *
-     * @param modifierList the modifier list to check
+     * @param annotated the annotated element to check
      * @return the target API level, or -1 if not specified
      */
-    public static int getTargetApi(@Nullable PsiModifierList modifierList) {
-        if (modifierList == null) {
+    private static int getTargetApiForAnnotated(@Nullable UAnnotated annotated) {
+        if (annotated == null) {
             return -1;
         }
 
-        for (PsiAnnotation annotation : modifierList.getAnnotations()) {
+        for (UAnnotation annotation : annotated.getAnnotations()) {
             String fqcn = annotation.getQualifiedName();
             if (fqcn != null &&
                     (fqcn.equals(FQCN_TARGET_API)
-                    || fqcn.equals(REQUIRES_API_ANNOTATION)
-                    || fqcn.equals(SDK_SUPPRESS_ANNOTATION)
-                    || fqcn.equals(TARGET_API))) { // when missing imports
-                PsiAnnotationParameterList parameterList = annotation.getParameterList();
-                for (PsiNameValuePair pair : parameterList.getAttributes()) {
-                    PsiAnnotationMemberValue v = pair.getValue();
-                    if (v instanceof PsiLiteral) {
-                        PsiLiteral literal = (PsiLiteral)v;
+                            || fqcn.equals(REQUIRES_API_ANNOTATION)
+                            || fqcn.equals(SDK_SUPPRESS_ANNOTATION)
+                            || fqcn.equals(TARGET_API))) { // when missing imports
+                List<UNamedExpression> attributeList = annotation.getAttributeValues();
+                for (UNamedExpression attribute : attributeList) {
+                    UExpression expression = attribute.getExpression();
+                    if (expression instanceof ULiteralExpression) {
+                        ULiteralExpression literal = (ULiteralExpression) expression;
                         Object value = literal.getValue();
                         if (value instanceof Integer) {
                             return (Integer) value;
                         } else if (value instanceof String) {
                             return codeNameToApi((String) value);
                         }
-                    } else if (v instanceof PsiArrayInitializerMemberValue) {
-                        PsiArrayInitializerMemberValue mv = (PsiArrayInitializerMemberValue)v;
-                        for (PsiAnnotationMemberValue mmv : mv.getInitializers()) {
-                            if (mmv instanceof PsiLiteral) {
-                                PsiLiteral literal = (PsiLiteral)mmv;
+                    } else if (expression instanceof UCallExpression) {
+                        UCallExpression mv = (UCallExpression) expression;
+                        for (UExpression argument : mv.getValueArguments()) {
+                            if (argument instanceof ULiteralExpression) {
+                                ULiteralExpression literal = (ULiteralExpression) argument;
                                 Object value = literal.getValue();
                                 if (value instanceof Integer) {
                                     return (Integer) value;
@@ -2293,14 +2341,52 @@ public class ApiDetector extends ResourceXmlDetector
                                 }
                             }
                         }
-                    } else if (v instanceof PsiExpression) {
-                        // PsiExpression nodes are not present in light classes, so
-                        // we can use Java PSI api to get the qualified name
-                        if (v instanceof PsiReferenceExpression) {
-                            String name = ((PsiReferenceExpression)v).getQualifiedName();
+                    } else if (expression instanceof UReferenceExpression) {
+                        String name = ((UReferenceExpression)expression).getResolvedName();
+                        if (name != null) {
                             return codeNameToApi(name);
-                        } else {
-                            return codeNameToApi(v.getText());
+                        }
+                    } else {
+                        return codeNameToApi(expression.asSourceString());
+                    }
+                }
+            } else if (fqcn == null) {
+                // Work around bugs in UAST type resolution for file annotations:
+                // parse the source string instead.
+                PsiElement psi = annotation.getPsi();
+                if (psi == null) {
+                    continue;
+                }
+                if (psi instanceof PsiCompiledElement) {
+                    continue;
+                }
+                String text = psi.getText();
+                if (text.contains("TargetApi(") ||
+                        text.contains("RequiresApi(") ||
+                        text.contains("SdkSuppress(")) {
+                    int start = text.indexOf('(');
+                    int end = text.indexOf(')', start + 1);
+                    if (end != -1) {
+                        String name = text.substring(start + 1, end);
+                        // Strip off attribute name and qualifiers, e.g.
+                        //   @RequiresApi(api = Build.VERSION.O) -> O
+                        int index = name.indexOf('=');
+                        if (index != -1) {
+                            name = name.substring(index + 1).trim();
+                        }
+                        index = name.indexOf('.');
+                        if (index != -1) {
+                            name = name.substring(index + 1);
+                        }
+                        if (!name.isEmpty()) {
+                            if (Character.isDigit(name.charAt(0))) {
+                                int api = Integer.parseInt(name);
+                                if (api > 0) {
+                                    return api;
+                                }
+                            } else {
+                                return codeNameToApi(name);
+                            }
                         }
                     }
                 }
