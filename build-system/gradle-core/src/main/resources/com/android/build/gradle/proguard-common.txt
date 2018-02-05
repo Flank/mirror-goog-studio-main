@@ -72,3 +72,10 @@
 -keepclasseswithmembers class * {
     @android.support.annotation.Keep <init>(...);
 }
+
+# These classes are duplicated between android.jar and org.apache.http.legacy.jar.
+-dontnote org.apache.http.**
+-dontnote android.net.http.**
+
+# These classes are duplicated between android.jar and core-lambda-stubs.jar.
+-dontnote java.lang.invoke.**
