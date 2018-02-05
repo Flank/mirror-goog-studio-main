@@ -18,8 +18,11 @@ import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 import static com.android.ide.common.rendering.api.ResourceNamespace.Resolver.EMPTY_RESOLVER;
 import static com.android.ide.common.rendering.api.ResourceNamespace.TOOLS;
 import static com.android.ide.common.rendering.api.ResourceNamespace.fromNamespacePrefix;
+import static com.android.ide.common.rendering.api.ResourceNamespace.fromPackageName;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 import com.android.SdkConstants;
 import com.android.ide.common.rendering.api.ResourceNamespace;
@@ -30,7 +33,7 @@ public class ResourceNamespaceTest {
     @Test
     public void packageName() {
         assertEquals("android", ANDROID.getPackageName());
-        assertEquals(null, RES_AUTO.getPackageName());
+        assertNull(RES_AUTO.getPackageName());
     }
 
     @Test
@@ -42,7 +45,7 @@ public class ResourceNamespaceTest {
         assertEquals(
                 SdkConstants.ANDROID_NS_NAME,
                 fromNamespacePrefix("android", RES_AUTO, EMPTY_RESOLVER).getPackageName());
-        assertEquals(null, fromNamespacePrefix(null, RES_AUTO, EMPTY_RESOLVER).getPackageName());
+        assertNull(fromNamespacePrefix(null, RES_AUTO, EMPTY_RESOLVER).getPackageName());
 
         assertEquals(
                 "android", fromNamespacePrefix(null, ANDROID, EMPTY_RESOLVER).getPackageName());
@@ -57,18 +60,28 @@ public class ResourceNamespaceTest {
     }
 
     @Test
+    public void androidSingleton() {
+        assertSame(ANDROID, ResourceNamespace.fromPackageName("android"));
+
+        assertSame(
+                ANDROID,
+                ResourceNamespace.fromNamespacePrefix(
+                        "android", RES_AUTO, prefix -> SdkConstants.ANDROID_URI));
+    }
+
+    @Test
     public void testEquals() {
-        ResourceNamespace aaa = ResourceNamespace.fromPackageName("aaa");
-        ResourceNamespace bbb1 = ResourceNamespace.fromPackageName("bbb");
-        ResourceNamespace bbb2 = ResourceNamespace.fromPackageName("bbb");
+        ResourceNamespace aaa = fromPackageName("aaa");
+        ResourceNamespace bbb1 = fromPackageName("bbb");
+        ResourceNamespace bbb2 = fromPackageName("bbb");
 
         assertEquals(aaa, aaa);
         assertEquals(bbb1, bbb2);
         assertNotEquals(aaa, bbb1);
         assertNotEquals(bbb1, aaa);
-        assertNotEquals(aaa, ANDROID);
-        assertNotEquals(aaa, TOOLS);
-        assertNotEquals(aaa, RES_AUTO);
+        assertNotEquals(ANDROID, aaa);
+        assertNotEquals(TOOLS, aaa);
+        assertNotEquals(RES_AUTO, aaa);
         assertNotEquals(ANDROID, bbb2);
         assertNotEquals(TOOLS, bbb2);
         assertNotEquals(RES_AUTO, bbb2);
