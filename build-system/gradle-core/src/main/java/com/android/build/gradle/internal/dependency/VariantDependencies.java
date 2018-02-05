@@ -350,7 +350,7 @@ public class VariantDependencies {
                     metadataElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
                 }
 
-                if (variantType == VariantType.FEATURE && baseSplit) {
+                if (baseSplit) {
                     // The variant-specific configuration that will contain the non-base feature
                     // metadata and the application metadata. It's per-variant to contain the
                     // right attribute. It'll be used to get the applicationId and to consume

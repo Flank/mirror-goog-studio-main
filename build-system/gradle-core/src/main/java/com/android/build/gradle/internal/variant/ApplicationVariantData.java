@@ -31,15 +31,18 @@ import java.util.Map;
  */
 public class ApplicationVariantData extends ApkVariantData implements TestedVariantData {
     private final Map<VariantType, TestVariantData> testVariants;
+    private final boolean isBaseApplication;
 
     public ApplicationVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig,
             @NonNull GradleVariantConfiguration config,
             @NonNull TaskManager taskManager,
-            @NonNull Recorder recorder) {
+            @NonNull Recorder recorder,
+            boolean isBaseApplication) {
         super(globalScope, androidConfig, taskManager, config, recorder);
         testVariants = Maps.newEnumMap(VariantType.class);
+        this.isBaseApplication = isBaseApplication;
     }
 
     @Override
@@ -53,5 +56,9 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
     @Override
     public TestVariantData getTestVariantData(@NonNull VariantType type) {
         return testVariants.get(type);
+    }
+
+    public boolean isBaseApplication() {
+        return isBaseApplication;
     }
 }

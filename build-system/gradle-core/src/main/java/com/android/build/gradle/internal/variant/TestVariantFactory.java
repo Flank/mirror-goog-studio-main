@@ -41,7 +41,7 @@ public class TestVariantFactory extends ApplicationVariantFactory {
             @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension) {
-        super(globalScope, androidBuilder, extension);
+        super(globalScope, androidBuilder, extension, false);
     }
 
     @Override
