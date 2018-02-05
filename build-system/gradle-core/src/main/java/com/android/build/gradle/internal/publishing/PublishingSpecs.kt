@@ -59,6 +59,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT
 import com.android.build.gradle.internal.scope.InternalArtifactType.RES_STATIC_LIBRARY
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
+import com.android.build.gradle.internal.scope.InternalArtifactType.DEFINED_ONLY_SYMBOL_LIST
 import com.android.build.gradle.internal.utils.toImmutableMap
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.builder.core.VariantType
@@ -172,6 +173,7 @@ class PublishingSpecs {
                 runtime(PUBLIC_RES, ArtifactType.PUBLIC_RES)
                 runtime(SYMBOL_LIST, ArtifactType.SYMBOL_LIST)
                 runtime(SYMBOL_LIST_WITH_PACKAGE_NAME, ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
+                runtime(DEFINED_ONLY_SYMBOL_LIST, ArtifactType.DEFINED_ONLY_SYMBOL_LIST)
                 runtime(LIBRARY_JAVA_RES, ArtifactType.JAVA_RES)
                 runtime(CONSUMER_PROGUARD_FILE, ArtifactType.PROGUARD_RULES)
                 runtime(LIBRARY_JNI, ArtifactType.JNI)

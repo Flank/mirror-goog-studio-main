@@ -70,6 +70,7 @@ public enum InternalArtifactType implements ArtifactType {
     SYMBOL_LIST,
     // Synthetic artifacts
     SYMBOL_LIST_WITH_PACKAGE_NAME,
+    DEFINED_ONLY_SYMBOL_LIST,
     // public.txt output
     PUBLIC_RES,
     SHRUNK_PROCESSED_RES,

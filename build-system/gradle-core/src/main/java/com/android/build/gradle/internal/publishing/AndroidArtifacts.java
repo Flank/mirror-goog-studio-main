@@ -67,6 +67,7 @@ public class AndroidArtifacts {
     private static final String TYPE_PUBLIC_RES = "android-public-res";
     private static final String TYPE_SYMBOL = "android-symbol";
     private static final String TYPE_SYMBOL_WITH_PACKAGE_NAME = "android-symbol-with-package-name";
+    private static final String TYPE_DEFINED_ONLY_SYMBOL = "defined-only-android-symbol";
     private static final String TYPE_PROGUARD_RULES = "android-proguad";
     private static final String TYPE_DATA_BINDING_ARTIFACT = "android-databinding";
     private static final String TYPE_DATA_BINDING_BASE_CLASS_LOG_ARTIFACT =
@@ -172,6 +173,7 @@ public class AndroidArtifacts {
          * AndroidManifest.xml to the existing r.txt file.
          */
         SYMBOL_LIST_WITH_PACKAGE_NAME(TYPE_SYMBOL_WITH_PACKAGE_NAME),
+        DEFINED_ONLY_SYMBOL_LIST(TYPE_DEFINED_ONLY_SYMBOL),
         JNI(TYPE_JNI, FD_LIB),
         SHARED_JNI(TYPE_SHARED_JNI),
         ANNOTATIONS(TYPE_EXT_ANNOTATIONS),

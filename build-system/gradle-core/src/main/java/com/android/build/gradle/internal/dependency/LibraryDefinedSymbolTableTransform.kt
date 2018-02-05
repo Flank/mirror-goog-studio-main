@@ -21,6 +21,7 @@ import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
 import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.ResourceDirectoryParser
 import com.android.ide.common.symbols.SymbolIo
+import com.android.ide.common.symbols.SymbolTable
 import com.google.common.collect.ImmutableList
 import org.gradle.api.artifacts.transform.ArtifactTransform
 import java.io.File
@@ -44,10 +45,15 @@ class LibraryDefinedSymbolTableTransform : ArtifactTransform() {
         // compilation.
         // We pass [null] for the platform attr symbols and use the constant [IdProvider] since we
         // don't care about the real values here.
-        val symbols = ResourceDirectoryParser.parseDirectory(
+        val symbols = if (resDir.isDirectory) {
+            ResourceDirectoryParser.parseDirectory(
                 resDir,
                 IdProvider.constant(),
                 null)
+        } else {
+            // If the /res directory does not exist, simply write an empty resource table.
+            SymbolTable.builder().build()
+        }
 
         SymbolIo.writeSymbolTableWithPackage(symbols, manifest.toPath(), outputFile)
 
