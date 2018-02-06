@@ -418,10 +418,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:4: Error: The compileSdkVersion (18) should not be lower than the targetSdkVersion (19) [GradleCompatible]\n"
                 + "    compileSdkVersion 18\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:16: Error: This support library should not use a lower version (18) than the targetSdkVersion (19) [GradleCompatible]\n"
-                + "    compile 'com.android.support:support-v4:18.0.0'\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "2 errors, 0 warnings\n";
+                + "1 errors, 0 warnings\n";
 
         lint().files(
                 gradle(""

@@ -867,6 +867,10 @@ public class VersionChecks {
                         } else if (tokenType == UastBinaryOperator.LESS && level <= api) {
                             // SDK_INT < ICE_CREAM_SANDWICH
                             return false;
+                        } else if ((tokenType == UastBinaryOperator.EQUALS
+                                || tokenType == UastBinaryOperator.IDENTITY_EQUALS) &&
+                                level < api) {
+                            return false;
                         }
                     }
                 }
