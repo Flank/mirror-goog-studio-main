@@ -24,6 +24,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -48,6 +49,8 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.VariantType;
+import com.android.builder.dexing.DexingType;
 import com.android.builder.model.ApiVersion;
 import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestMerger2;
@@ -61,6 +64,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -98,7 +103,7 @@ public class MergeManifests extends ManifestProcessorTask {
     private BuildableArtifact compatibleScreensManifest;
     private FileCollection packageManifest;
     private FileCollection apkList;
-    private List<Feature> optionalFeatures;
+    private EnumSet<Feature> optionalFeatures;
     private OutputScope outputScope;
 
     private String featureName;
@@ -352,7 +357,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
     /** Not an input, see {@link #getOptionalFeaturesString()}. */
     @Internal
-    public List<Feature> getOptionalFeatures() {
+    public EnumSet<Feature> getOptionalFeatures() {
         return optionalFeatures;
     }
 
@@ -430,15 +435,16 @@ public class MergeManifests extends ManifestProcessorTask {
     public static class ConfigAction implements TaskConfigAction<MergeManifests> {
 
         protected final VariantScope variantScope;
-        protected final List<Feature> optionalFeatures;
+        protected final boolean isAdvancedProfilingOn;
         @Nullable private final File reportFile;
 
         public ConfigAction(
                 @NonNull VariantScope scope,
-                @NonNull List<Feature> optionalFeatures,
+                // TODO : remove this variable and find ways to access it from scope.
+                boolean isAdvancedProfilingOn,
                 @Nullable File reportFile) {
             this.variantScope = scope;
-            this.optionalFeatures = optionalFeatures;
+            this.isAdvancedProfilingOn = isAdvancedProfilingOn;
             this.reportFile = reportFile;
         }
 
@@ -502,16 +508,64 @@ public class MergeManifests extends ManifestProcessorTask {
             processManifestTask.maxSdkVersion =
                     TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
 
-            processManifestTask.setManifestOutputDirectory(
-                    variantScope.getManifestOutputDirectory());
+            File manifestOutputDirectory = variantScope.getManifestOutputDirectory();
+            processManifestTask.setManifestOutputDirectory(manifestOutputDirectory);
 
             processManifestTask.setInstantRunManifestOutputDirectory(
                     variantScope.getInstantRunManifestOutputDirectory());
 
             processManifestTask.setReportFile(reportFile);
-            processManifestTask.optionalFeatures = optionalFeatures;
+            processManifestTask.optionalFeatures =
+                    getOptionalFeatures(variantScope, isAdvancedProfilingOn);
 
             processManifestTask.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
+
+            // set optional inputs per module type
+            if (variantData.getType() == VariantType.FEATURE) {
+                if (variantScope.isBaseFeature()) {
+                    processManifestTask.packageManifest =
+                            variantScope.getArtifactFileCollection(
+                                    METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
+
+                    // This includes the other features.
+                    processManifestTask.featureManifests =
+                            variantScope.getArtifactCollection(
+                                    METADATA_VALUES, MODULE, METADATA_FEATURE_MANIFEST);
+                } else {
+                    processManifestTask.featureName =
+                            ((FeatureVariantData) variantScope.getVariantData()).getFeatureName();
+                    processManifestTask.packageManifest =
+                            variantScope.getArtifactFileCollection(
+                                    COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
+                }
+            }
+
+            // set outputs.
+            if (reportFile != null) {
+                variantScope.addTaskOutput(MANIFEST_MERGE_REPORT, reportFile, getName());
+            }
+
+            // when dealing with a non-base feature, output is under a different type.
+            // TODO: add optional APK support.
+            if (variantData.getType() == VariantType.FEATURE && !variantScope.isBaseFeature()) {
+                variantScope.addTaskOutput(
+                        InternalArtifactType.METADADA_FEATURE_MANIFEST,
+                        manifestOutputDirectory,
+                        getName());
+            }
+
+            variantScope.addTaskOutput(
+                    InternalArtifactType.MERGED_MANIFESTS, manifestOutputDirectory, getName());
+
+            variantScope.addTaskOutput(
+                    InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
+                    variantScope.getInstantRunManifestOutputDirectory(),
+                    getName());
+
+            variantScope.addTaskOutput(
+                    InternalArtifactType.MANIFEST_METADATA,
+                    ExistingBuildElements.getMetadataFile(manifestOutputDirectory),
+                    getName());
 
             variantScope
                     .getVariantData()
@@ -551,44 +605,30 @@ public class MergeManifests extends ManifestProcessorTask {
         }
     }
 
-    public static class FeatureConfigAction extends ConfigAction {
-
-        public FeatureConfigAction(
-                @NonNull VariantScope scope, @NonNull List<Feature> optionalFeatures) {
-            super(scope, optionalFeatures, null);
+    private static EnumSet<Feature> getOptionalFeatures(
+            VariantScope variantScope, boolean isAdvancedProfilingOn) {
+        List<Feature> features = new ArrayList<>();
+        if (variantScope.getVariantData().getType() == VariantType.FEATURE) {
+            features.add(Feature.TARGET_SANDBOX_VERSION);
+            if (!variantScope.isBaseFeature()) {
+                features.add(Feature.ADD_FEATURE_SPLIT_INFO);
+            }
         }
-
-        @Override
-        public void execute(@NonNull MergeManifests processManifestTask) {
-            super.execute(processManifestTask);
-
-            processManifestTask.featureName =
-                    ((FeatureVariantData) variantScope.getVariantData()).getFeatureName();
-            processManifestTask.packageManifest =
-                    variantScope.getArtifactFileCollection(
-                            COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
+        if (variantScope.isTestOnly()) {
+            features.add(Feature.TEST_ONLY);
         }
-    }
-
-    public static class BaseFeatureConfigAction extends ConfigAction {
-
-        public BaseFeatureConfigAction(
-                @NonNull VariantScope scope, @NonNull List<Feature> optionalFeatures) {
-            super(scope, optionalFeatures, null);
+        if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
+            features.add(Feature.DEBUGGABLE);
+            if (isAdvancedProfilingOn) {
+                features.add(Feature.ADVANCED_PROFILING);
+            }
         }
-
-        @Override
-        public void execute(@NonNull MergeManifests processManifestTask) {
-            super.execute(processManifestTask);
-
-            processManifestTask.packageManifest =
-                    variantScope.getArtifactFileCollection(
-                            METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
-
-            // This includes the other features.
-            processManifestTask.featureManifests =
-                    variantScope.getArtifactCollection(
-                            METADATA_VALUES, MODULE, METADATA_FEATURE_MANIFEST);
+        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
+            features.add(Feature.INSTANT_RUN_REPLACEMENT);
         }
+        if (variantScope.getVariantConfiguration().getDexingType() == DexingType.LEGACY_MULTIDEX) {
+            features.add(Feature.ADD_MULTIDEX_APPLICATION_IF_NO_NAME);
+        }
+        return features.isEmpty() ? EnumSet.noneOf(Feature.class) : EnumSet.copyOf(features);
     }
 }

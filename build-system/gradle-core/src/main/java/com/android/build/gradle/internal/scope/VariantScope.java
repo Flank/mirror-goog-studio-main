@@ -333,10 +333,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getApkLocation();
 
-    ManifestProcessorTask getManifestProcessorTask();
-
-    void setManifestProcessorTask(ManifestProcessorTask manifestProcessorTask);
-
     DefaultTask getAssembleTask();
 
     void setAssembleTask(@NonNull DefaultTask assembleTask);

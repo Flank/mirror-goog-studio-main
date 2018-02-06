@@ -49,11 +49,9 @@ import com.android.build.gradle.tasks.MergeManifests;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
-import com.android.manifmerger.ManifestMerger2;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.Set;
@@ -400,48 +398,6 @@ public class FeatureTaskManager extends TaskManager {
                         new FeatureSplitTransitiveDepsWriterTask.ConfigAction(scope, textFile));
 
         scope.addTaskOutput(InternalArtifactType.FEATURE_TRANSITIVE_DEPS, textFile, task.getName());
-    }
-
-    /** Creates the merge manifests task. */
-    @Override
-    @NonNull
-    protected ManifestProcessorTask createMergeManifestTask(
-            @NonNull VariantScope variantScope,
-            @NonNull ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures) {
-        if (variantScope.getVariantConfiguration().isInstantRunBuild(globalScope)) {
-            optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
-        }
-
-        optionalFeatures.add(ManifestMerger2.Invoker.Feature.TARGET_SANDBOX_VERSION);
-
-        ManifestProcessorTask mergeManifestsAndroidTask;
-        if (variantScope.isBaseFeature()) {
-            // Base split. Merge all the dependent libraries and the other splits.
-            mergeManifestsAndroidTask =
-                    taskFactory.create(
-                            new MergeManifests.BaseFeatureConfigAction(
-                                    variantScope, optionalFeatures.build()));
-        } else {
-            // Non-base split. Publish the feature manifest.
-            optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_INFO);
-
-            mergeManifestsAndroidTask =
-                    taskFactory.create(
-                            new MergeManifests.FeatureConfigAction(
-                                    variantScope, optionalFeatures.build()));
-
-            variantScope.addTaskOutput(
-                    InternalArtifactType.METADADA_FEATURE_MANIFEST,
-                    variantScope.getManifestOutputDirectory(),
-                    mergeManifestsAndroidTask.getName());
-        }
-
-        variantScope.addTaskOutput(
-                InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
-                variantScope.getInstantRunManifestOutputDirectory(),
-                mergeManifestsAndroidTask.getName());
-
-        return mergeManifestsAndroidTask;
     }
 
     @Override

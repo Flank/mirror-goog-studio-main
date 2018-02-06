@@ -1676,18 +1676,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return FileUtils.join(globalScope.getBuildDir(), FD_OUTPUTS, "apk");
     }
 
-    private ManifestProcessorTask manifestProcessorTask;
-
-    @Override
-    public ManifestProcessorTask getManifestProcessorTask() {
-        return manifestProcessorTask;
-    }
-
-    @Override
-    public void setManifestProcessorTask(ManifestProcessorTask manifestProcessorTask) {
-        this.manifestProcessorTask = manifestProcessorTask;
-    }
-
     @NonNull
     @Override
     public File getAarLocation() {

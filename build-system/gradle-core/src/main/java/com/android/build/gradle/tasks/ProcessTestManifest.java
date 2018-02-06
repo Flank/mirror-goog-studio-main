@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -108,8 +109,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         String testedApplicationId = this.getTestedApplicationId();
         if (!onlyTestApk && testTargetMetadata != null) {
             BuildElements manifestOutputs =
-                    ExistingBuildElements.from(
-                            InternalArtifactType.MERGED_MANIFESTS, testTargetMetadata);
+                    ExistingBuildElements.from(MERGED_MANIFESTS, testTargetMetadata);
 
             java.util.Optional<BuildOutput> mainSplit =
                     manifestOutputs
@@ -162,10 +162,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
         new BuildElements(
                         ImmutableList.of(
-                                new BuildOutput(
-                                        InternalArtifactType.MERGED_MANIFESTS,
-                                        mainApkData,
-                                        manifestOutputFile)))
+                                new BuildOutput(MERGED_MANIFESTS, mainApkData, manifestOutputFile)))
                 .save(getManifestOutputDirectory());
     }
 
@@ -363,6 +360,14 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
             processTestManifestTask.placeholdersValues =
                     TaskInputHelper.memoize(config::getManifestPlaceholders);
+
+            // set outputs.
+            scope.addTaskOutput(MERGED_MANIFESTS, scope.getManifestOutputDirectory(), getName());
+
+            scope.addTaskOutput(
+                    InternalArtifactType.MANIFEST_METADATA,
+                    ExistingBuildElements.getMetadataFile(scope.getManifestOutputDirectory()),
+                    getName());
 
             scope.getVariantData()
                     .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processTestManifestTask);
