@@ -17,14 +17,23 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.common.category.PerformanceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
+import com.android.build.gradle.integration.common.utils.SdkHelper;
+import com.android.testutils.TestUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
+import com.google.common.io.MoreFiles;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -36,6 +45,8 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javax.annotation.concurrent.NotThreadSafe;
 import org.junit.AssumptionViolatedException;
 import org.junit.Test;
@@ -99,6 +110,108 @@ import org.junit.runners.JUnit4;
 public class BenchmarkTest {
     private static ProfileCapturer PROFILE_CAPTURER;
     private static BenchmarkRecorder BENCHMARK_RECORDER;
+    @Nullable private static List<Path> MAVEN_REPOS;
+    @Nullable private static Path PROJECT_DIR;
+    @Nullable private static Path SDK_DIR;
+    @Nullable private static Path GRADLE_DIR;
+
+    /**
+     * Takes an InputStream in zip format and unzips it, returning the directory to which it was
+     * unzipped.
+     */
+    private static Path unzip(InputStream in) throws IOException {
+        File out = Files.createTempDir();
+        byte[] buffer = new byte[4096];
+
+        try (ZipInputStream zis = new ZipInputStream(in)) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+
+                File entryFile = new File(out.getAbsolutePath() + File.separator + entry.getName());
+                Files.createParentDirs(entryFile);
+
+                try (FileOutputStream fos = new FileOutputStream(entryFile)) {
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, len);
+                    }
+                }
+            }
+        }
+
+        return out.getAbsoluteFile().toPath();
+    }
+
+    public static void main(String... args) throws Exception {
+        try {
+            MAVEN_REPOS =
+                    ImmutableList.of(
+                            unzip(ClassLoader.getSystemResourceAsStream("offline_repo.zip")),
+                            unzip(ClassLoader.getSystemResourceAsStream("prebuilts_repo.zip")));
+
+            SDK_DIR = unzip(ClassLoader.getSystemResourceAsStream("android_sdk.zip"));
+            PROJECT_DIR = unzip(ClassLoader.getSystemResourceAsStream("projects.zip"));
+            GRADLE_DIR = unzip(ClassLoader.getSystemResourceAsStream("gradle.zip"));
+
+            new BenchmarkTest().run();
+        } finally {
+            if (MAVEN_REPOS != null) {
+                MAVEN_REPOS.forEach(BenchmarkTest::tryDeleteRecursively);
+            }
+            tryDeleteRecursively(SDK_DIR);
+            tryDeleteRecursively(PROJECT_DIR);
+            tryDeleteRecursively(GRADLE_DIR);
+        }
+    }
+
+    private static void tryDeleteRecursively(@Nullable Path p) {
+        try {
+            if (p != null) {
+                MoreFiles.deleteRecursively(p);
+            }
+        } catch (IOException e) {
+            // we tried
+        }
+    }
+
+    @NonNull
+    public static List<Path> getMavenRepos() {
+        if (MAVEN_REPOS != null) {
+            return MAVEN_REPOS;
+        } else {
+            return GradleTestProject.getLocalRepositories();
+        }
+    }
+
+    @NonNull
+    public static Path getProjectDir() {
+        if (PROJECT_DIR != null) {
+            return PROJECT_DIR;
+        } else {
+            return TestUtils.getWorkspaceFile("external").toPath();
+        }
+    }
+
+    @NonNull
+    public static Path getSdkDir() {
+        if (SDK_DIR != null) {
+            return SDK_DIR;
+        } else {
+            return SdkHelper.findSdkDir().toPath();
+        }
+    }
+
+    @NonNull
+    public static Path getGradleDir() {
+        if (GRADLE_DIR != null) {
+            return GRADLE_DIR;
+        } else {
+            return TestUtils.getWorkspaceFile("tools/external/gradle").toPath();
+        }
+    }
 
     @NonNull
     public static Path getBenchmarkTestRootDirectory() {
@@ -296,6 +409,7 @@ public class BenchmarkTest {
          * complete before shutting down the process.
          */
         BenchmarkRecorder.awaitUploads(15, TimeUnit.MINUTES);
+        BenchmarkRecorder.shutdownExecutor();
 
         Duration totalDuration = Duration.ofNanos(System.nanoTime() - start);
         System.out.println("Total recorded duration: " + recordedDuration);

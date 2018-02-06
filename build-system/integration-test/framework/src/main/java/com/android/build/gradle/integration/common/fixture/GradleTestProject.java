@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.common.fixture;
 
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
@@ -109,9 +108,6 @@ public final class GradleTestProject implements TestRule {
 
     public static final String ANDROID_GRADLE_PLUGIN_VERSION;
 
-    @Nullable public static final File ANDROID_HOME;
-    @Nullable public static final File ANDROID_NDK_HOME;
-
     public static final String DEVICE_TEST_TASK = "deviceCheck";
 
     private static final int MAX_TEST_NAME_DIR_WINDOWS = 50;
@@ -130,13 +126,14 @@ public final class GradleTestProject implements TestRule {
 
     static {
         try {
-            if (BuildSystem.get() == BuildSystem.IDEA) {
+            if (System.getenv("TEST_TMPDIR") != null) {
+                BUILD_DIR = new File(System.getenv("TEST_TMPDIR"));
+            } else if (BuildSystem.get() == BuildSystem.IDEA) {
                 BUILD_DIR = new File(TestUtils.getWorkspaceRoot(), "out/gradle-integration-tests");
             } else {
-                String buildDirPath = System.getenv("TEST_TMPDIR");
-                assertNotNull("$TEST_TMPDIR is not set", buildDirPath);
-                BUILD_DIR = new File(buildDirPath);
+                throw new IllegalStateException("unable to determine location for BUILD_DIR");
             }
+
             OUT_DIR = new File(BUILD_DIR, "tests");
             ANDROID_SDK_HOME = new File(BUILD_DIR, "ANDROID_SDK_HOME");
 
@@ -171,33 +168,6 @@ public final class GradleTestProject implements TestRule {
                     MoreObjects.firstNonNull(
                             envCustomCompileSdk,
                             Integer.toString(SdkVersionInfo.HIGHEST_KNOWN_STABLE_API));
-
-            String envCustomAndroidHome =
-                    Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_HOME"));
-            if (envCustomAndroidHome != null) {
-                ANDROID_HOME = new File(envCustomAndroidHome);
-                assertThat(ANDROID_HOME).named("$CUSTOM_ANDROID_HOME").isDirectory();
-            } else {
-                File androidHome;
-                try {
-                    androidHome = TestUtils.getSdk();
-                } catch (IllegalArgumentException e) {
-                    androidHome = null;
-                }
-                ANDROID_HOME = androidHome;
-            }
-
-            String envCustomAndroidNdkHome =
-                    Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_NDK_HOME"));
-            if (envCustomAndroidNdkHome != null) {
-                ANDROID_NDK_HOME = new File(envCustomAndroidNdkHome);
-                assertThat(ANDROID_NDK_HOME).named("$CUSTOM_ANDROID_NDK_HOME").isDirectory();
-            } else {
-                ANDROID_NDK_HOME =
-                        TestUtils.runningFromBazel()
-                                ? BazelIntegrationTestsSuite.NDK_IN_TMP.toFile()
-                                : new File(ANDROID_HOME, SdkConstants.FD_NDK);
-            }
         } catch (Throwable t) {
             // Print something to stdout, to give us a chance to debug initialization problems.
             System.out.println(Throwables.getStackTraceAsString(t));
@@ -245,6 +215,11 @@ public final class GradleTestProject implements TestRule {
     @Nullable private String heapSize;
     @Nullable private final List<Path> repoDirectories;
 
+    @NonNull private final File androidHome;
+    @NonNull private final File androidNdkHome;
+    @NonNull private final File gradleDistributionDirectory;
+    @NonNull private final String kotlinVersion;
+
     private GradleBuildResult lastBuildResult;
     private ProjectConnection projectConnection;
     private final GradleTestProject rootProject;
@@ -267,7 +242,11 @@ public final class GradleTestProject implements TestRule {
             boolean withAndroidGradlePlugin,
             @NonNull List<String> withIncludedBuilds,
             @Nullable File testDir,
-            @Nullable List<Path> repoDirectories) {
+            @Nullable List<Path> repoDirectories,
+            @NonNull File androidHome,
+            @NonNull File androidNdkHome,
+            @NonNull File gradleDistributionDirectory,
+            @NonNull String kotlinVersion) {
         this.withDeviceProvider = withDeviceProvider;
         this.withSdk = withSdk;
         this.withAndroidGradlePlugin = withAndroidGradlePlugin;
@@ -288,6 +267,10 @@ public final class GradleTestProject implements TestRule {
         this.withCmakeDirInLocalProp = withCmake;
         this.testDir = testDir;
         this.repoDirectories = repoDirectories;
+        this.androidHome = androidHome;
+        this.androidNdkHome = androidNdkHome;
+        this.gradleDistributionDirectory = gradleDistributionDirectory;
+        this.kotlinVersion = kotlinVersion;
     }
 
     /**
@@ -320,6 +303,10 @@ public final class GradleTestProject implements TestRule {
         this.withCmakeDirInLocalProp = rootProject.withCmakeDirInLocalProp;
         this.withIncludedBuilds = ImmutableList.of();
         this.repoDirectories = rootProject.repoDirectories;
+        this.androidHome = rootProject.androidHome;
+        this.androidNdkHome = rootProject.androidNdkHome;
+        this.gradleDistributionDirectory = rootProject.gradleDistributionDirectory;
+        this.kotlinVersion = rootProject.kotlinVersion;
     }
 
     private static Path getGradleUserHome(File buildDir) {
@@ -339,6 +326,11 @@ public final class GradleTestProject implements TestRule {
 
     public static GradleTestProjectBuilder builder() {
         return new GradleTestProjectBuilder();
+    }
+
+    @NonNull
+    public String getKotlinVersion() {
+        return kotlinVersion;
     }
 
     /** Crawls the tools/external/gradle dir, and gets the latest gradle binary. */
@@ -526,12 +518,17 @@ public final class GradleTestProject implements TestRule {
     }
 
     @NonNull
-    private String generateProjectRepoScript() {
+    public List<Path> getRepoDirectories() {
         if (repoDirectories != null) {
-            return generateRepoScript(repoDirectories);
+            return repoDirectories;
         } else {
-            return generateRepoScript(getLocalRepositories());
+            return getLocalRepositories();
         }
+    }
+
+    @NonNull
+    public String generateProjectRepoScript() {
+        return generateRepoScript(getRepoDirectories());
     }
 
     @NonNull
@@ -546,14 +543,14 @@ public final class GradleTestProject implements TestRule {
                                 + "}\n"
                                 + "allprojects {\n"
                                 + "    "
-                                + generateRepoScript(getLocalRepositories())
+                                + generateProjectRepoScript()
                                 + "\n"
                                 + "}\n"
                                 + "",
                         DEFAULT_BUILD_TOOL_VERSION,
                         DEFAULT_COMPILE_SDK_VERSION,
                         false,
-                        TestUtils.getKotlinVersionForTests());
+                        kotlinVersion);
 
         if (APPLY_DEVICEPOOL_PLUGIN) {
             result +=
@@ -614,6 +611,11 @@ public final class GradleTestProject implements TestRule {
     }
 
     @NonNull
+    private static String generateRepoScript() {
+        return generateRepoScript(getLocalRepositories());
+    }
+
+    @NonNull
     private static String generateRepoScript(List<Path> repositories) {
         StringBuilder script = new StringBuilder();
         script.append("repositories {\n");
@@ -621,6 +623,7 @@ public final class GradleTestProject implements TestRule {
             script.append(mavenSnippet(repo));
         }
         script.append("}\n");
+
         return script.toString();
     }
 
@@ -1318,9 +1321,8 @@ public final class GradleTestProject implements TestRule {
         // to start and reuse the daemon.
         ((DefaultGradleConnector) connector).daemonMaxIdleTime(10, TimeUnit.SECONDS);
 
-        File distributionDirectory = TestUtils.getWorkspaceFile("tools/external/gradle");
         String distributionName = String.format("gradle-%s-bin.zip", targetGradleVersion);
-        File distributionZip = new File(distributionDirectory, distributionName);
+        File distributionZip = new File(gradleDistributionDirectory, distributionName);
         assertThat(distributionZip).isFile();
 
         projectConnection =
@@ -1355,11 +1357,11 @@ public final class GradleTestProject implements TestRule {
         if (withSdk) {
             localProp.setProperty(
                     ProjectProperties.PROPERTY_SDK,
-                    Objects.requireNonNull(ANDROID_HOME).getAbsolutePath());
+                    Objects.requireNonNull(getAndroidHome()).getAbsolutePath());
         }
         if (!withoutNdk) {
             localProp.setProperty(
-                    ProjectProperties.PROPERTY_NDK, ANDROID_NDK_HOME.getAbsolutePath());
+                    ProjectProperties.PROPERTY_NDK, getAndroidNdkHome().getAbsolutePath());
         }
 
         if (withCmakeDirInLocalProp && cmakeVersion != null && !cmakeVersion.isEmpty()) {
@@ -1425,7 +1427,12 @@ public final class GradleTestProject implements TestRule {
     }
 
     @NonNull
-    public static File getAndroidHome() {
-        return ANDROID_HOME;
+    public File getAndroidHome() {
+        return androidHome;
+    }
+
+    @NonNull
+    public File getAndroidNdkHome() {
+        return androidNdkHome;
     }
 }

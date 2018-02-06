@@ -54,7 +54,11 @@ data class Benchmark(
         var project = projectFactory(
                 GradleTestProject.builder()
                         .enableProfileOutputInDirectory(BenchmarkTest.getProfileDirectory())
-                        .withTestDir(projectDir().toFile()))
+                        .withTestDir(projectDir().toFile())
+                        .withRepoDirectories(BenchmarkTest.getMavenRepos())
+                        .withAndroidHome(BenchmarkTest.getSdkDir().toFile())
+                        .withGradleDistributionDirectory(BenchmarkTest.getGradleDir().toFile())
+                        .withKotlinVersion(KotlinVersion.CURRENT.toString()))
 
         var profileLocation: Path? = null
 

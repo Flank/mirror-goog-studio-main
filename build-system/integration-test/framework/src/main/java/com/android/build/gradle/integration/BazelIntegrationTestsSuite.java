@@ -20,7 +20,6 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.util.InstallerUtil;
@@ -84,9 +83,17 @@ public class BazelIntegrationTestsSuite {
     @BeforeClass
     public static void symlinkNdkToTmp() throws Exception {
         assertThat(NDK_IN_TMP).doesNotExist();
-        Path ndk = new File(GradleTestProject.ANDROID_HOME, SdkConstants.FD_NDK).toPath();
-        if (Files.exists(ndk)) {
-            Files.createSymbolicLink(NDK_IN_TMP, ndk);
+
+        try {
+            Path ndk = new File(TestUtils.getSdk(), SdkConstants.FD_NDK).toPath();
+            if (Files.exists(ndk)) {
+                Files.createSymbolicLink(NDK_IN_TMP, ndk);
+            }
+        } catch (IllegalArgumentException e) {
+            // this is thrown when getSdk() calls getWorkspaceFile() with a string that cannot be
+            // found in the workspace directory. In this specific instance, we don't care, so don't
+            // do anything about it. Some integration tests don't actually depend on the NDK but
+            // do depend on this code.
         }
     }
 

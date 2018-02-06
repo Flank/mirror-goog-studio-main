@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.utils;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -81,12 +82,17 @@ public class NdkHelper {
 
     @NonNull
     public static NdkInfo getNdkInfo() {
-        return new DefaultNdkInfo(GradleTestProject.ANDROID_NDK_HOME);
+        return new DefaultNdkInfo(new File(SdkHelper.findSdkDir(), SdkConstants.FD_NDK));
     }
 
     @NonNull
-    public static Collection<Abi> getAbiList() {
-        NdkInfo info = getNdkInfo();
+    public static NdkInfo getNdkInfo(GradleTestProject project) {
+        return new DefaultNdkInfo(project.getAndroidNdkHome());
+    }
+
+    @NonNull
+    public static Collection<Abi> getAbiList(GradleTestProject project) {
+        NdkInfo info = getNdkInfo(project);
         return info.getDefaultAbis();
     }
 }

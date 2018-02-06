@@ -30,6 +30,7 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.GENERATE_SOURCES
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.NO_OP
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode.SYNC
+import java.io.File
 import java.util.function.Supplier
 
 object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
@@ -140,7 +141,7 @@ object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                 benchmarkMode = benchmarkMode,
                 projectFactory = {
                     it
-                        .fromExternalProject("android-studio-gradle-test")
+                        .fromDir(File(BenchmarkTest.getProjectDir().toFile(), "android-studio-gradle-test"))
                         .withHeap("20G")
                         .create()
                 },

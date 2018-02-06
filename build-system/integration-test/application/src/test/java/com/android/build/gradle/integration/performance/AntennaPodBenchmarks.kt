@@ -26,6 +26,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
+import java.io.File
 import java.util.function.Supplier
 
 object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
@@ -156,15 +157,15 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                 scenario = scenario,
                 benchmark = Logging.Benchmark.ANTENNA_POD,
                 benchmarkMode = benchmarkMode,
+                projectFactory = { projectBuilder ->
+                    projectBuilder
+                        .fromDir(File(BenchmarkTest.getProjectDir().toFile(), "AntennaPod"))
+                        .withHeap("1536M")
+                        .create()
+                },
                 postApplyProject = { project ->
                     PerformanceTestProjects.initializeAntennaPod(project)
                     project.getSubproject("AntennaPod")
-                },
-                projectFactory = { projectBuilder ->
-                    projectBuilder
-                        .fromExternalProject("AntennaPod")
-                        .withHeap("1536M")
-                        .create()
                 },
                 action = { record, project, executor, model ->
                     executor.run("clean")

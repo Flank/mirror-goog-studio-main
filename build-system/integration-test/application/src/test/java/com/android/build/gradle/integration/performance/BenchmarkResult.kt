@@ -33,6 +33,7 @@ data class BenchmarkResult(
             benchmarkMode: ${benchmark.benchmarkMode.name}
             recordedDuration: $recordedDuration
             totalDuration: $totalDuration
+            testDir: ${benchmark.projectDir()}
             profileLocation: ${profileLocation ?: "none"}
             exception: ${exception ?: "none"}
         """.trimIndent()

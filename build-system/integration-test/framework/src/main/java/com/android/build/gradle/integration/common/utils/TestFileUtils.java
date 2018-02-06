@@ -35,6 +35,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -76,6 +77,12 @@ public class TestFileUtils {
     public static void searchAndReplace(
             @NonNull Path file, @NonNull String search, @NonNull String replace)
             throws IOException {
+        searchAndReplace(file, search, replace, 0);
+    }
+
+    public static void searchAndReplace(
+            @NonNull Path file, @NonNull String search, @NonNull String replace, int flags)
+            throws IOException {
 
         String content = new String(java.nio.file.Files.readAllBytes(file));
         // Handle patterns that use unix-style line endings even on Windows where the test
@@ -86,7 +93,7 @@ public class TestFileUtils {
             replace = StringHelper.toSystemLineSeparator(replace);
         }
 
-        String newContent = content.replaceAll(search, replace);
+        String newContent = Pattern.compile(search, flags).matcher(content).replaceAll(replace);
         assertNotEquals(
                 "No match in file"
                         + "\n - File:   " + file + "\n - Search: " + search

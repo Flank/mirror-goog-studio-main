@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldA
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.build.gradle.integration.performance.BuildbotClient;
 import com.android.build.gradle.integration.performance.ProjectScenario;
-import com.android.testutils.TestUtils;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
@@ -105,8 +104,7 @@ public class BenchmarkRecorderTest {
         // Check that the variant info is populated
         GradleBuildProject aProject = benchmarkResults.get(0).getProfile().getProject(0);
         assertThat(aProject.getCompileSdk()).isEqualTo(GradleTestProject.getCompileSdkHash());
-        assertThat(aProject.getKotlinPluginVersion())
-                .isEqualTo(TestUtils.getKotlinVersionForTests());
+        assertThat(aProject.getKotlinPluginVersion()).isEqualTo(project.getKotlinVersion());
         GradleBuildVariant aVariant = aProject.getVariant(0);
         assertThat(aVariant.getMinSdkVersion().getApiLevel()).isEqualTo(3);
         assertThat(aVariant.hasTargetSdkVersion()).named("has target sdk version").isFalse();
