@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.resources.ResourceAccessibility;
 import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
+import com.android.testutils.truth.FileSubject;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -748,6 +749,23 @@ public class SymbolIoTest {
 
         List<String> outputLines = java.nio.file.Files.readAllLines(output, StandardCharsets.UTF_8);
         assertThat(outputLines).containsExactly("com.example.lib");
+    }
+
+    @Test
+    public void testEmptyPackageAwareSymbolTableRead() throws Exception {
+        File file = mTemporaryFolder.newFile();
+        FileSubject.assertThat(file).exists();
+
+        try {
+            SymbolIo.readTableWithPackage(file);
+            fail();
+        } catch (IOException e) {
+            assertThat(e.getMessage())
+                    .contains(
+                            "Internal error: Symbol file with package cannot be empty. "
+                                    + "File located at: "
+                                    + file.toPath().toString());
+        }
     }
 
     @Test

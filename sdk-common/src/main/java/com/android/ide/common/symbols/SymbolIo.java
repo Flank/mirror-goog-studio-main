@@ -133,7 +133,9 @@ public final class SymbolIo {
         List<String> lines = Files.readAllLines(file, Charsets.UTF_8);
 
         if (lines.isEmpty()) {
-            throw new IOException("Internal error: Symbol file with package cannot be empty.");
+            throw new IOException(
+                    "Internal error: Symbol file with package cannot be empty. File located at: "
+                            + file);
         }
 
         SymbolTable.Builder table =
