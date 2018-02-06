@@ -56,9 +56,8 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockAcquired(
     JNIEnv* env, jobject thiz) {
   EnergyEvent energy_event;
-  energy_event.set_event_type(EnergyEvent::WAKE_LOCK_ACQUIRED);
   // TODO: Set metadata here
-  // energy_event.mutable_wake_lock_acquired_info()->...
+  // energy_event.mutable_wake_lock_acquired()->...
   SubmitEnergyEvent(energy_event);
 }
 
@@ -66,9 +65,8 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockReleased(
     JNIEnv* env, jobject thiz) {
   EnergyEvent energy_event;
-  energy_event.set_event_type(EnergyEvent::WAKE_LOCK_RELEASED);
   // TODO: Set metadata here
-  // energy_event.mutable_wake_lock_released_info()->...
+  // energy_event.mutable_wake_lock_released()->...
   SubmitEnergyEvent(energy_event);
 }
 };

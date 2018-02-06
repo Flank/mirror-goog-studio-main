@@ -30,8 +30,8 @@ Status InternalEnergyServiceImpl::AddEnergyEvent(
     ServerContext *context, const AddEnergyEventRequest *request,
     EmptyEnergyReply *reply) {
   auto energy_event = request->energy_event();
-  Log::V("AddEnergyEvent (type=%d, timestamp=%lld)", energy_event.event_type(),
-         energy_event.timestamp());
+  Log::V("AddEnergyEvent (type=%d, timestamp=%lld)",
+         energy_event.metadata_case(), energy_event.timestamp());
   return Status::OK;
 }
 
