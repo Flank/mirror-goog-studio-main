@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.api.artifact.BuildArtifactTransformBuil
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.NestedSealable
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import org.gradle.api.Project
 import org.gradle.api.Task
 import java.io.File
@@ -34,6 +35,7 @@ import java.io.File
 class BuildArtifactsOptionsImpl(
         private val project: Project,
         private val artifactsHolder: BuildArtifactsHolder,
+        private val artifactsActionsExecutor: DelayedActionsExecutor,
         dslScope: DslScope)
     : BuildArtifactsOptions, NestedSealable(dslScope) {
 
@@ -61,6 +63,7 @@ class BuildArtifactsOptionsImpl(
                 BuildArtifactTransformBuilderImpl(
                         project,
                         artifactsHolder,
+                        artifactsActionsExecutor,
                         taskName,
                         taskType,
                         dslScope)
@@ -99,6 +102,7 @@ class BuildArtifactsOptionsImpl(
                 BuildArtifactTransformBuilderImpl(
                         project,
                         artifactsHolder,
+                        artifactsActionsExecutor,
                         taskName,
                         taskType,
                         dslScope)
@@ -118,6 +122,7 @@ class BuildArtifactsOptionsImpl(
                     BuildArtifactTransformBuilderImpl(
                             project,
                             artifactsHolder,
+                            artifactsActionsExecutor,
                             taskName,
                             taskType,
                             dslScope))

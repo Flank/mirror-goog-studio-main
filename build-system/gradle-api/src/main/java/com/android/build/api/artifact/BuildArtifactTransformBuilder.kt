@@ -26,7 +26,8 @@ import java.io.File
  * The builder allows the task's input and output to be configured.  This modifies the
  * [InputArtifactProvider], and [OutputFileProvider] that will be constructed of for the [create]
  * method.  The [create] method accept [ConfigurationAction] that will be used to configure the
- * task.
+ * task. This action will not run synchronously but will be invoked later when the DSL objects are
+ * sealed and the Android Plugin is creating all tasks from these final values.
  *
  * For example, to create a task that uses compile classpath and javac output and create additional
  * .class files for both compile classpath and javac output:
@@ -113,7 +114,8 @@ interface BuildArtifactTransformBuilder<out T : Task> {
     /**
      * Creates the task and uses the supplied action to configure it.
      *
-     * @param action action that configures the resulting Task.
+     * @param action action that configures the resulting Task. This action will not run when
+     * this function return but will be run at a later stage when the DSL objects are sealed.
      */
     fun create(action : ConfigurationAction<T>) : T
 
@@ -122,7 +124,8 @@ interface BuildArtifactTransformBuilder<out T : Task> {
      *
      * Accepts a function instead of a functional interface.
      *
-     * @param function function that configures the resulting Task.
+     * @param function function that configures the resulting Task. his action will not run when
+     * this function return but will be run at a later stage when the DSL objects are sealed.
      */
     fun create(function : T.(InputArtifactProvider, OutputFileProvider) -> Unit) : T
 }

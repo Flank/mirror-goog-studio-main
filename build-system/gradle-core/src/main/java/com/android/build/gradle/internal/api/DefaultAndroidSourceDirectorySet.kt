@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.api.artifact.BuildArtifactTransformBuil
 import com.android.build.gradle.internal.api.artifact.SourceArtifactType
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
@@ -49,7 +50,8 @@ class DefaultAndroidSourceDirectorySet(
     private val project: Project,
     private val type: SourceArtifactType,
     private val dslScope: DslScope,
-    private val artifactsHolder: BuildArtifactsHolder? = null)
+    private val artifactsHolder: BuildArtifactsHolder? = null,
+    private val delayedActionsExecutor: DelayedActionsExecutor? = null)
     : AndroidSourceDirectorySet {
     private val source = Lists.newArrayList<Any>()
     private val filter = PatternSet()
@@ -166,7 +168,7 @@ class DefaultAndroidSourceDirectorySet(
         return this
     }
 
-    override fun exclude(excludes: Iterable<String>): PatternFilterable {
+    override fun     exclude(excludes: Iterable<String>): PatternFilterable {
         filter.exclude(excludes)
         return this
     }
@@ -190,12 +192,13 @@ class DefaultAndroidSourceDirectorySet(
             taskName: String,
             taskType: Class<T>,
             configurationAction: BuildArtifactTransformBuilder.SimpleConfigurationAction<T>) {
-        if (artifactsHolder == null) {
+        if (artifactsHolder == null || delayedActionsExecutor == null) {
             throw UnsupportedOperationException("appendTo is not supported by source set '$name'")
         }
         BuildArtifactTransformBuilderImpl(
                 project,
                 artifactsHolder,
+                delayedActionsExecutor,
                 taskName,
                 taskType,
                 dslScope!!)
@@ -208,12 +211,13 @@ class DefaultAndroidSourceDirectorySet(
     override fun <T : Task> replace(taskName: String,
             taskType: Class<T>,
             configurationAction: BuildArtifactTransformBuilder.SimpleConfigurationAction<T>) {
-        if (artifactsHolder == null) {
+        if (artifactsHolder == null || delayedActionsExecutor == null) {
             throw UnsupportedOperationException("replace is not supported by source set '$name'")
         }
         BuildArtifactTransformBuilderImpl(
                 project,
                 artifactsHolder,
+                delayedActionsExecutor,
                 taskName,
                 taskType,
                 dslScope!!)

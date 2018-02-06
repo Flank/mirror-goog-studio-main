@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_N
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_RUNTIME_ONLY
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_WEAR_APP
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import com.android.builder.model.SourceProvider
 import com.android.utils.FileUtils
@@ -50,7 +51,8 @@ open class DefaultAndroidSourceSet @Inject constructor(
         private val name: String,
         project: Project,
         private val publishPackage: Boolean,
-        dslScope: DslScope)
+        dslScope: DslScope,
+        delayedActionsExecutor : DelayedActionsExecutor)
         : AndroidSourceSet, SourceProvider {
 
     private val javaSource: AndroidSourceDirectorySet
@@ -63,7 +65,7 @@ open class DefaultAndroidSourceSet @Inject constructor(
     private val jni: AndroidSourceDirectorySet
     private val jniLibs: AndroidSourceDirectorySet
     private val shaders: AndroidSourceDirectorySet
-    val displayName : String = GUtil.toWords(this.name)
+    private val displayName : String = GUtil.toWords(this.name)
     private val buildArtifactsHolder: BuildArtifactsHolder =
             BuildArtifactsHolder(
                     project,
@@ -107,7 +109,8 @@ open class DefaultAndroidSourceSet @Inject constructor(
                 project,
                 SourceArtifactType.ANDROID_RESOURCES,
                 dslScope,
-                buildArtifactsHolder
+                buildArtifactsHolder,
+                delayedActionsExecutor
         )
 
         val aidlDisplayName = displayName + " aidl"

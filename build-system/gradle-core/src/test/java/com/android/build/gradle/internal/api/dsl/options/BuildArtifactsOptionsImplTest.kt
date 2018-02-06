@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.DefaultTask
@@ -58,6 +59,7 @@ class BuildArtifactsOptionsImplTest {
     private val dslScope = DslScopeImpl(issueReporter, FakeDeprecationReporter(), FakeObjectFactory())
     lateinit private var project : Project
     lateinit private var taskHolder : BuildArtifactsHolder
+    private val buildArtifactsActions= DelayedActionsExecutor()
     lateinit private var options : BuildArtifactsOptions
     lateinit private var task0 : Task
 
@@ -73,7 +75,7 @@ class BuildArtifactsOptionsImplTest {
                         "debug",
                         listOf(JAVAC_CLASSES, JAVA_COMPILE_CLASSPATH),
                         dslScope)
-        options = BuildArtifactsOptionsImpl(project, taskHolder, dslScope)
+        options = BuildArtifactsOptionsImpl(project, taskHolder, buildArtifactsActions, dslScope)
         task0 = project.tasks.create("task0")
     }
 
@@ -85,6 +87,7 @@ class BuildArtifactsOptionsImplTest {
         }
         taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, task0)
         BuildableArtifactImpl.enableResolution()
+        buildArtifactsActions.runAll()
 
         project.tasks.getByName("task1Debug") { t ->
             assertThat(t).isInstanceOf(TestTask::class.java)
@@ -117,6 +120,7 @@ class BuildArtifactsOptionsImplTest {
                 })
         taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, task0)
         BuildableArtifactImpl.enableResolution()
+        buildArtifactsActions.runAll()
 
         project.tasks.getByName("task1Debug") { t ->
             assertThat(t).isInstanceOf(TestTask::class.java)
@@ -148,6 +152,7 @@ class BuildArtifactsOptionsImplTest {
                 })
         taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, task0)
         BuildableArtifactImpl.enableResolution()
+        buildArtifactsActions.runAll()
 
         project.tasks.getByName("task1Debug") { t ->
             assertThat(t).isInstanceOf(TestTask::class.java)
