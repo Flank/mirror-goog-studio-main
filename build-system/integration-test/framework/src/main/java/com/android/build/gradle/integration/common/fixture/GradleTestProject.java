@@ -243,6 +243,7 @@ public final class GradleTestProject implements TestRule {
     @Nullable private final Path profileDirectory;
 
     @Nullable private String heapSize;
+    @Nullable private final List<Path> repoDirectories;
 
     private GradleBuildResult lastBuildResult;
     private ProjectConnection projectConnection;
@@ -265,7 +266,8 @@ public final class GradleTestProject implements TestRule {
             boolean withSdk,
             boolean withAndroidGradlePlugin,
             @NonNull List<String> withIncludedBuilds,
-            @Nullable File testDir) {
+            @Nullable File testDir,
+            @Nullable List<Path> repoDirectories) {
         this.withDeviceProvider = withDeviceProvider;
         this.withSdk = withSdk;
         this.withAndroidGradlePlugin = withAndroidGradlePlugin;
@@ -285,6 +287,7 @@ public final class GradleTestProject implements TestRule {
         this.cmakeVersion = cmakeVersion;
         this.withCmakeDirInLocalProp = withCmake;
         this.testDir = testDir;
+        this.repoDirectories = repoDirectories;
     }
 
     /**
@@ -316,6 +319,7 @@ public final class GradleTestProject implements TestRule {
         this.withAndroidGradlePlugin = rootProject.withAndroidGradlePlugin;
         this.withCmakeDirInLocalProp = rootProject.withCmakeDirInLocalProp;
         this.withIncludedBuilds = ImmutableList.of();
+        this.repoDirectories = rootProject.repoDirectories;
     }
 
     private static Path getGradleUserHome(File buildDir) {
@@ -519,7 +523,7 @@ public final class GradleTestProject implements TestRule {
                 new File(testDir.getParent(), COMMON_VERSIONS),
                 StandardCharsets.UTF_8);
         Files.write(
-                generateLocalRepoScript(),
+                generateProjectRepoScript(),
                 new File(testDir.getParent(), COMMON_LOCAL_REPO),
                 StandardCharsets.UTF_8);
         Files.write(
@@ -543,6 +547,15 @@ public final class GradleTestProject implements TestRule {
     }
 
     @NonNull
+    private String generateProjectRepoScript() {
+        if (repoDirectories != null) {
+            return generateRepoScript(repoDirectories);
+        } else {
+            return generateRepoScript(getLocalRepositories());
+        }
+    }
+
+    @NonNull
     private String generateCommonHeader() {
         String result =
                 String.format(
@@ -554,7 +567,7 @@ public final class GradleTestProject implements TestRule {
                                 + "}\n"
                                 + "allprojects {\n"
                                 + "    "
-                                + generateLocalRepoScript()
+                                + generateRepoScript(getLocalRepositories())
                                 + "\n"
                                 + "}\n"
                                 + "",
@@ -622,10 +635,10 @@ public final class GradleTestProject implements TestRule {
     }
 
     @NonNull
-    private static String generateLocalRepoScript() {
+    private static String generateRepoScript(List<Path> repositories) {
         StringBuilder script = new StringBuilder();
         script.append("repositories {\n");
-        for (Path repo : getLocalRepositories()) {
+        for (Path repo : repositories) {
             script.append(mavenSnippet(repo));
         }
         script.append("}\n");
