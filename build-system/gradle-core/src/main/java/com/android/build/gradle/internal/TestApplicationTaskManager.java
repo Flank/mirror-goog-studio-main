@@ -19,6 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST_METADATA;
+import static com.android.build.gradle.internal.variant.TestVariantFactory.getTestedApksConfigurationName;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -46,7 +47,6 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ResolvableDependencies;
 import org.gradle.api.file.FileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -85,16 +85,18 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
         super.createTasksForVariantScope(variantScope);
 
-        final Configuration runtimeClasspath =
-                variantScope.getVariantDependencies().getRuntimeClasspath();
-        final ResolvableDependencies incomingRuntimeClasspath = runtimeClasspath.getIncoming();
+        Configuration testedApksConfig =
+                project.getConfigurations()
+                        .getByName(
+                                getTestedApksConfigurationName(variantScope.getFullVariantName()));
 
         FileCollection testingApk = variantScope.getOutput(InternalArtifactType.APK);
 
         // create a FileCollection that will contain the APKs to be tested.
         // FULL_APK is published only to the runtime configuration
         FileCollection testedApks =
-                incomingRuntimeClasspath
+                testedApksConfig
+                        .getIncoming()
                         .artifactView(
                                 config ->
                                         config.attributes(

@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
+import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.EvalIssueReporter;
 import com.google.common.base.MoreObjects;
@@ -71,6 +72,8 @@ public class VariantDependencies {
     public static final String CONFIG_NAME_APPLICATION = "application";
 
     public static final String CONFIG_NAME_LINTCHECKS = "lintChecks";
+
+    public static final String CONFIG_NAME_TESTED_APKS = "testedApks";
 
     public static final String USAGE_BUNDLE = "android-bundle";
 
@@ -259,6 +262,22 @@ public class VariantDependencies {
             applyVariantAttributes(runtimeAttributes, buildType, consumptionFlavorMap);
             runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
             runtimeAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
+
+            Configuration globalTestedApks = configurations.findByName(CONFIG_NAME_TESTED_APKS);
+            if (variantType == VariantType.APK && globalTestedApks != null) {
+                // this configuration is created only for test-only project
+                Configuration testedApks =
+                        configurations.maybeCreate(
+                                TestVariantFactory.getTestedApksConfigurationName(variantName));
+                testedApks.setVisible(false);
+                testedApks.setDescription(
+                        "Resolved configuration for tested apks for variant: " + variantName);
+                testedApks.extendsFrom(globalTestedApks);
+                final AttributeContainer testedApksAttributes = testedApks.getAttributes();
+                applyVariantAttributes(testedApksAttributes, buildType, consumptionFlavorMap);
+                testedApksAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
+                testedApksAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
+            }
 
             Configuration apiElements = null;
             Configuration runtimeElements = null;
