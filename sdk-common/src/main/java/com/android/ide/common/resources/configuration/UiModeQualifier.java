@@ -43,7 +43,7 @@ public final class UiModeQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
-    ResourceEnum getEnumValue() {
+    public ResourceEnum getEnumValue() {
         return mValue;
     }
 

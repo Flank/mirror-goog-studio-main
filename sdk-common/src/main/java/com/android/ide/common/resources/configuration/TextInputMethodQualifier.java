@@ -42,7 +42,7 @@ public final class TextInputMethodQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
-    ResourceEnum getEnumValue() {
+    public ResourceEnum getEnumValue() {
         return mValue;
     }
 

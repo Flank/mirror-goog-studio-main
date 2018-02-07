@@ -42,7 +42,7 @@ public final class TouchScreenQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
-    ResourceEnum getEnumValue() {
+    public ResourceEnum getEnumValue() {
         return mValue;
     }
 
