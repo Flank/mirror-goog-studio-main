@@ -634,11 +634,9 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                 folderConfiguration.normalize();
             }
 
-            // get the qualifier portion from the folder config.
-            // the returned string starts with "-" so we remove that.
-            fd.qualifiers = folderConfiguration.getUniqueKey().substring(1);
+            // Get the qualifier portion from the folder config.
+            fd.qualifiers = folderConfiguration.getQualifierString();
             fd.folderConfiguration = folderConfiguration;
-
         } else {
             fd.folderType = ResourceFolderType.getTypeByName(folderName);
         }
