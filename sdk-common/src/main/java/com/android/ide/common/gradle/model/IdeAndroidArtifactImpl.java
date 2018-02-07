@@ -78,7 +78,7 @@ public final class IdeAndroidArtifactImpl extends IdeBaseArtifactImpl
         myNativeLibraries = copy(modelCache, artifact.getNativeLibraries());
         mySigned = artifact.isSigned();
         myAdditionalRuntimeApks =
-                copyNewProperty(artifact::getAdditionalRuntimeApks, Collections.<File>emptySet());
+                copyNewProperty(artifact::getAdditionalRuntimeApks, Collections.emptySet());
         myTestOptions =
                 copyNewProperty(
                         modelCache,
