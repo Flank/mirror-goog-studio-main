@@ -70,21 +70,26 @@ public class UninstallTask extends AndroidBuilderTask {
                 getILogger());
 
         deviceProvider.init();
-        final List<? extends DeviceConnector> devices = deviceProvider.getDevices();
 
-        for (DeviceConnector device : devices) {
-            device.uninstallPackage(applicationId, getTimeOutInMs(), getILogger());
-            logger.lifecycle(
-                    "Uninstalling {} (from {}:{}) from device '{}' ({}).",
-                    applicationId, getProject().getName(),
-                    variant.getVariantConfiguration().getFullName(),
-                    device.getName(), device.getSerialNumber());
+        try {
+            final List<? extends DeviceConnector> devices = deviceProvider.getDevices();
+
+            for (DeviceConnector device : devices) {
+                device.uninstallPackage(applicationId, getTimeOutInMs(), getILogger());
+                logger.lifecycle(
+                        "Uninstalling {} (from {}:{}) from device '{}' ({}).",
+                        applicationId,
+                        getProject().getName(),
+                        variant.getVariantConfiguration().getFullName(),
+                        device.getName(),
+                        device.getSerialNumber());
+            }
+
+            int n = devices.size();
+            logger.quiet("Uninstalled {} from {} device{}.", applicationId, n, n == 1 ? "" : "s");
+        } finally {
+            deviceProvider.terminate();
         }
-
-        int n = devices.size();
-        logger.quiet("Uninstalled {} from {} device{}.",
-                applicationId, n, n == 1 ? "" : "s");
-
     }
 
     @InputFile

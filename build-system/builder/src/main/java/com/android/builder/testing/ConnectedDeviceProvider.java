@@ -92,92 +92,102 @@ public class ConnectedDeviceProvider extends DeviceProvider {
         }
         logAdapter = new LogAdapter(iLogger);
         Log.addLogger(logAdapter);
+        DdmPreferences.setLogLevel(Log.LogLevel.VERBOSE.getStringValue());
         AndroidDebugBridge.initIfNeeded(false /*clientSupport*/);
 
-        AndroidDebugBridge bridge = AndroidDebugBridge.createBridge(
-                adbLocation.getAbsolutePath(), false /*forceNewBridge*/);
+        try {
 
-        if (bridge == null) {
-            throw new DeviceException("Could not create ADB Bridge. "
-                    + "ADB location: " + adbLocation.getAbsolutePath());
-        }
+            AndroidDebugBridge bridge =
+                    AndroidDebugBridge.createBridge(
+                            adbLocation.getAbsolutePath(), false /*forceNewBridge*/);
 
-        long getDevicesCountdown = timeOutUnit.toMillis(timeOut);
-        final int sleepTime = 1000;
-        while (!bridge.hasInitialDeviceList() && getDevicesCountdown >= 0) {
-            try {
-                Thread.sleep(sleepTime);
-            } catch (InterruptedException e) {
-                throw new DeviceException(e);
+            if (bridge == null) {
+                throw new DeviceException(
+                        "Could not create ADB Bridge. "
+                                + "ADB location: "
+                                + adbLocation.getAbsolutePath());
             }
-            // If timeOut is 0, wait forever.
-            if (timeOut != 0) {
-                getDevicesCountdown -= sleepTime;
+
+            long getDevicesCountdown = timeOutUnit.toMillis(timeOut);
+            final int sleepTime = 1000;
+            while (!bridge.hasInitialDeviceList() && getDevicesCountdown >= 0) {
+                try {
+                    Thread.sleep(sleepTime);
+                } catch (InterruptedException e) {
+                    throw new DeviceException(e);
+                }
+                // If timeOut is 0, wait forever.
+                if (timeOut != 0) {
+                    getDevicesCountdown -= sleepTime;
+                }
             }
-        }
 
-        if (!bridge.hasInitialDeviceList()) {
-            throw new DeviceException("Timeout getting device list.");
-        }
-
-        IDevice[] devices = bridge.getDevices();
-
-        if (devices.length == 0) {
-            throw new DeviceException("No connected devices!");
-        }
-
-        final String androidSerialsEnv = System.getenv("ANDROID_SERIAL");
-        final boolean isValidSerial = androidSerialsEnv != null && !androidSerialsEnv.isEmpty();
-
-        final Set<String> serials;
-        if (isValidSerial) {
-            serials = Sets.newHashSet(Splitter.on(',').split(androidSerialsEnv));
-        } else {
-            serials = Collections.emptySet();
-        }
-
-        final List<IDevice> filteredDevices = Lists.newArrayListWithCapacity(devices.length);
-        for (IDevice iDevice : devices) {
-            if (!isValidSerial || serials.contains(iDevice.getSerialNumber())) {
-                serials.remove(iDevice.getSerialNumber());
-                filteredDevices.add(iDevice);
+            if (!bridge.hasInitialDeviceList()) {
+                throw new DeviceException("Timeout getting device list.");
             }
-        }
 
-        if (!serials.isEmpty()) {
-            throw new DeviceException(String.format(
-                    "Connected device with serial%s '%s' not found!",
-                    serials.size() == 1 ? "" : "s",
-                    Joiner.on("', '").join(serials)));
-        }
+            IDevice[] devices = bridge.getDevices();
 
-        for (IDevice device : filteredDevices) {
-            if (device.getState() == IDevice.DeviceState.ONLINE) {
-                localDevices.add(new ConnectedDevice(device, iLogger, timeOut, timeOutUnit));
-            } else {
-                iLogger.lifecycle(
-                        "Skipping device '%s' (%s): Device is %s%s.",
-                        device.getName(),
-                        device.getSerialNumber(),
-                        device.getState(),
-                        device.getState() == IDevice.DeviceState.UNAUTHORIZED
-                                ? ",\n"
-                                        + "    see http://d.android.com/tools/help/adb.html#Enabling"
-                                : "");
+            if (devices.length == 0) {
+                throw new DeviceException("No connected devices!");
             }
-        }
 
-        if (localDevices.isEmpty()) {
+            final String androidSerialsEnv = System.getenv("ANDROID_SERIAL");
+            final boolean isValidSerial = androidSerialsEnv != null && !androidSerialsEnv.isEmpty();
+
+            final Set<String> serials;
             if (isValidSerial) {
-                throw new DeviceException(String.format(
-                        "Connected device with serial $1%s is not online.",
-                        androidSerialsEnv));
+                serials = Sets.newHashSet(Splitter.on(',').split(androidSerialsEnv));
             } else {
-                throw new DeviceException("No online devices found.");
+                serials = Collections.emptySet();
             }
+
+            final List<IDevice> filteredDevices = Lists.newArrayListWithCapacity(devices.length);
+            for (IDevice iDevice : devices) {
+                if (!isValidSerial || serials.contains(iDevice.getSerialNumber())) {
+                    serials.remove(iDevice.getSerialNumber());
+                    filteredDevices.add(iDevice);
+                }
+            }
+
+            if (!serials.isEmpty()) {
+                throw new DeviceException(
+                        String.format(
+                                "Connected device with serial%s '%s' not found!",
+                                serials.size() == 1 ? "" : "s", Joiner.on("', '").join(serials)));
+            }
+
+            for (IDevice device : filteredDevices) {
+                if (device.getState() == IDevice.DeviceState.ONLINE) {
+                    localDevices.add(new ConnectedDevice(device, iLogger, timeOut, timeOutUnit));
+                } else {
+                    iLogger.lifecycle(
+                            "Skipping device '%s' (%s): Device is %s%s.",
+                            device.getName(),
+                            device.getSerialNumber(),
+                            device.getState(),
+                            device.getState() == IDevice.DeviceState.UNAUTHORIZED
+                                    ? ",\n"
+                                            + "    see http://d.android.com/tools/help/adb.html#Enabling"
+                                    : "");
+                }
+            }
+
+            if (localDevices.isEmpty()) {
+                if (isValidSerial) {
+                    throw new DeviceException(
+                            String.format(
+                                    "Connected device with serial $1%s is not online.",
+                                    androidSerialsEnv));
+                } else {
+                    throw new DeviceException("No online devices found.");
+                }
+            }
+            // ensure device names are unique since many reports are keyed off of names.
+            makeDeviceNamesUnique();
+        } finally {
+            terminate();
         }
-        // ensure device names are unique since many reports are keyed off of names.
-        makeDeviceNamesUnique();
     }
 
     private boolean hasDevicesWithDuplicateName() {
