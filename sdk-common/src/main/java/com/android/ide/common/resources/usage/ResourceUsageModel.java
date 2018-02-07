@@ -65,6 +65,22 @@ public class ResourceUsageModel {
      */
     private int nextInlinedResourceSuffix;
 
+    public enum ResourceActions {
+        REMOVE("remove"),
+        NO_OBFUSCATE("no_obfuscate");
+
+        private String repr;
+
+        ResourceActions(String repr) {
+            this.repr = repr;
+        }
+
+        @Override
+        public String toString() {
+            return repr;
+        }
+    }
+
 
     public static String getResourceFieldName(Element element) {
         return SdkUtils.getResourceFieldName(element.getAttribute(ATTR_NAME));
@@ -369,6 +385,26 @@ public class ResourceUsageModel {
     public String dumpWhitelistedResources() {
         return Joiner.on(",")
                 .join(mWhitelistedResources.stream().sorted().collect(Collectors.toList()));
+    }
+
+    public String dumpConfig() {
+        StringBuilder sb = new StringBuilder();
+        for (Resource resource : mResources) {
+            sb.append(resource.type);
+            sb.append('/');
+            sb.append(resource.name);
+            sb.append("#");
+            ArrayList<ResourceActions> actions = new ArrayList<>(2);
+            if (!resource.isReachable()) {
+                actions.add(ResourceActions.REMOVE);
+            }
+            if (mWhitelistedResources.contains(resource.name)) {
+                actions.add(ResourceActions.NO_OBFUSCATE);
+            }
+            sb.append(Joiner.on(",").join(actions));
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     public String dumpReferences() {

@@ -93,6 +93,64 @@ public class ResourceUsageAnalyzerTest {
         check(CodeInput.R8, false);
     }
 
+    @Test
+    public void testConfigOutput() throws Exception {
+        File dir = sTemporaryFolder.newFolder();
+
+        File mapping;
+        File classes;
+
+        classes = createUnproguardedClasses(dir);
+        mapping = null;
+
+        File rDir = createResourceClassFolder(dir);
+        File mergedManifest = createMergedManifest(dir);
+        File resources = createResourceFolder(dir);
+
+        ResourceUsageAnalyzer analyzer =
+                new ResourceUsageAnalyzer(
+                        rDir,
+                        Collections.singleton(classes),
+                        mergedManifest,
+                        mapping,
+                        resources,
+                        null,
+                        ResourceUsageAnalyzer.ApkFormat.BINARY);
+        analyzer.analyze();
+        checkState(analyzer);
+        assertEquals(
+                ""
+                        + "attr/myAttr1#remove\n"
+                        + "attr/myAttr2#remove\n"
+                        + "dimen/activity_horizontal_margin#\n"
+                        + "dimen/activity_vertical_margin#\n"
+                        + "drawable/avd_heart_fill#remove\n"
+                        + "drawable/avd_heart_fill_1#remove\n"
+                        + "drawable/avd_heart_fill_2#remove\n"
+                        + "drawable/ic_launcher#\n"
+                        + "drawable/unused#remove\n"
+                        + "id/action_settings#\n"
+                        + "id/action_settings2#remove\n"
+                        + "layout/activity_main#\n"
+                        + "menu/main#\n"
+                        + "menu/menu2#remove\n"
+                        + "raw/android_wear_micro_apk#\n"
+                        + "raw/index1#remove\n"
+                        + "raw/my_js#remove\n"
+                        + "raw/my_used_raw_drawable#remove\n"
+                        + "raw/styles2#remove\n"
+                        + "string/action_settings#\n"
+                        + "string/action_settings2#remove\n"
+                        + "string/alias#remove\n"
+                        + "string/app_name#\n"
+                        + "string/hello_world#\n"
+                        + "style/AppTheme#remove\n"
+                        + "style/MyStyle#\n"
+                        + "style/MyStyle_Child#\n"
+                        + "xml/android_wear_micro_apk#\n",
+                analyzer.getModel().dumpConfig());
+    }
+
     private static void check(CodeInput codeInput, boolean inPlace) throws Exception {
         File dir = sTemporaryFolder.newFolder();
 
