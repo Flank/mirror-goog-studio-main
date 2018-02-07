@@ -42,6 +42,7 @@ import com.android.resources.ResourceUrl;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -148,7 +149,8 @@ public class ResourceResolver extends RenderResources {
         Map<ResourceNamespace, Map<ResourceType, ResourceValueMap>> resources = new HashMap<>();
         for (ResourceValue value : values) {
             Map<ResourceType, ResourceValueMap> byType =
-                    resources.computeIfAbsent(value.getNamespace(), ns -> new HashMap<>());
+                    resources.computeIfAbsent(
+                            value.getNamespace(), ns -> new EnumMap<>(ResourceType.class));
             ResourceValueMap resourceValueMap =
                     byType.computeIfAbsent(value.getResourceType(), t -> ResourceValueMap.create());
             checkArgument(
@@ -490,45 +492,44 @@ public class ResourceResolver extends RenderResources {
 
     @Override
     public ResourceValue resolveResValue(@Nullable ResourceValue resValue) {
-        return resolveResValue(resValue, 0);
-    }
-
-    private ResourceValue resolveResValue(@Nullable ResourceValue resValue, int depth) {
-        if (resValue == null) {
-            return null;
-        }
-
-        String value = resValue.getValue();
-        if (value == null || resValue instanceof ArrayResourceValue) {
-            // If there's no value or this an array resource (eg. <string-array>), return.
-            return resValue;
-        }
-
-        // else attempt to find another ResourceValue referenced by this one.
-        ResourceValue resolvedResValue = dereference(resValue);
-
-        // if the value did not reference anything, then we simply return the input value
-        if (resolvedResValue == null) {
-            return resValue;
-        }
-
-        // detect potential loop due to mishandled namespace in attributes
-        if (resValue == resolvedResValue || depth >= MAX_RESOURCE_INDIRECTION) {
-            if (mLogger != null) {
-                mLogger.error(
-                        LayoutLog.TAG_BROKEN,
-                        String.format(
-                                "Potential stack overflow trying to resolve '%s': cyclic resource definitions? Render may not be accurate.",
-                                value),
-                        null,
-                        null,
-                        null);
+        for (int depth = 0; depth < MAX_RESOURCE_INDIRECTION; depth++) {
+            if (resValue == null) {
+                return null;
             }
-            return resValue;
+
+            String value = resValue.getValue();
+            if (value == null || resValue instanceof ArrayResourceValue) {
+                // If there's no value or this an array resource (e.g. <string-array>), return.
+                return resValue;
+            }
+
+            // Else attempt to find another ResourceValue referenced by this one.
+            ResourceValue resolvedResValue = dereference(resValue);
+
+            // If the value did not reference anything, then return the input value.
+            if (resolvedResValue == null) {
+                return resValue;
+            }
+
+            if (resValue == resolvedResValue) {
+                break; // Resource value referring to itself.
+            }
+            // Continue resolution with the new value.
+            resValue = resolvedResValue;
         }
 
-        // otherwise, we attempt to resolve this new value as well
-        return resolveResValue(resolvedResValue, depth + 1);
+        if (mLogger != null) {
+            mLogger.error(
+                    LayoutLog.TAG_BROKEN,
+                    String.format(
+                            "Potential stack overflow trying to resolve '%s': "
+                                    + "cyclic resource definitions? Render may not be accurate.",
+                            resValue.getValue()),
+                    null,
+                    null,
+                    null);
+        }
+        return resValue;
     }
 
     // ---- Private helper methods.
