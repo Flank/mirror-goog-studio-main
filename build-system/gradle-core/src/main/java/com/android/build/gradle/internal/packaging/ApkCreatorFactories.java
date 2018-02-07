@@ -17,12 +17,12 @@
 package com.android.build.gradle.internal.packaging;
 
 import com.android.annotations.NonNull;
-import com.android.apkzlib.zfile.ApkCreatorFactory;
-import com.android.apkzlib.zfile.ApkZFileCreatorFactory;
-import com.android.apkzlib.zip.ZFileOptions;
-import com.android.apkzlib.zip.compress.BestAndDefaultDeflateExecutorCompressor;
-import com.android.apkzlib.zip.compress.DeflateExecutionCompressor;
 import com.android.build.gradle.AndroidGradleOptions;
+import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
+import com.android.tools.build.apkzlib.zfile.ApkZFileCreatorFactory;
+import com.android.tools.build.apkzlib.zip.ZFileOptions;
+import com.android.tools.build.apkzlib.zip.compress.BestAndDefaultDeflateExecutorCompressor;
+import com.android.tools.build.apkzlib.zip.compress.DeflateExecutionCompressor;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;

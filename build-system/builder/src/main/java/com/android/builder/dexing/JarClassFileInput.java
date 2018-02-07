@@ -18,8 +18,8 @@ package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.apkzlib.zip.StoredEntry;
-import com.android.apkzlib.zip.ZFile;
+import com.android.tools.build.apkzlib.zip.StoredEntry;
+import com.android.tools.build.apkzlib.zip.ZFile;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Predicate;

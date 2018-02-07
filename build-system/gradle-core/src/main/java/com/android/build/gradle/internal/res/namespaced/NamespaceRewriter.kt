@@ -16,10 +16,10 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.apkzlib.zip.StoredEntryType
-import com.android.apkzlib.zip.ZFile
 import com.android.ide.common.symbols.SymbolTable
 import com.android.resources.ResourceType
+import com.android.tools.build.apkzlib.zip.StoredEntryType
+import com.android.tools.build.apkzlib.zip.ZFile
 import com.google.common.collect.ImmutableList
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
@@ -29,7 +29,6 @@ import org.objectweb.asm.Opcodes.ACC_PUBLIC
 import org.objectweb.asm.Opcodes.ACC_STATIC
 import org.objectweb.asm.Opcodes.ASM5
 import java.io.File
-import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.HashSet

@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.apkzlib.utils.CachedSupplier;
-import com.android.apkzlib.utils.IOExceptionRunnable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
@@ -34,6 +32,8 @@ import com.android.builder.merge.IncrementalFileMergerInput;
 import com.android.builder.merge.LazyIncrementalFileMergerInput;
 import com.android.builder.merge.LazyIncrementalFileMergerInputs;
 import com.android.ide.common.res2.FileStatus;
+import com.android.tools.build.apkzlib.utils.CachedSupplier;
+import com.android.tools.build.apkzlib.utils.IOExceptionRunnable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

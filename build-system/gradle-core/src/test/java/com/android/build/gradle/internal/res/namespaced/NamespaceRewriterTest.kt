@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.apkzlib.zip.ZFile
+import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolJavaType
 import com.android.ide.common.symbols.SymbolTable

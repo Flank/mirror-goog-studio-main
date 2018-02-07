@@ -7,7 +7,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.apkzlib.utils.IOExceptionFunction;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -19,6 +18,7 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.Variant;
+import com.android.tools.build.apkzlib.utils.IOExceptionFunction;
 import com.android.utils.SdkUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;

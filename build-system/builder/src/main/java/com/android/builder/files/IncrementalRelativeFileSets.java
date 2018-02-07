@@ -17,11 +17,11 @@
 package com.android.builder.files;
 
 import com.android.annotations.NonNull;
-import com.android.apkzlib.utils.IOExceptionRunnable;
-import com.android.apkzlib.zip.StoredEntry;
-import com.android.apkzlib.zip.StoredEntryType;
-import com.android.apkzlib.zip.ZFile;
 import com.android.ide.common.res2.FileStatus;
+import com.android.tools.build.apkzlib.utils.IOExceptionRunnable;
+import com.android.tools.build.apkzlib.zip.StoredEntry;
+import com.android.tools.build.apkzlib.zip.StoredEntryType;
+import com.android.tools.build.apkzlib.zip.ZFile;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

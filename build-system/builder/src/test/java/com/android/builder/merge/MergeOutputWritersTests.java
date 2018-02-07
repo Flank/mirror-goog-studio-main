@@ -22,8 +22,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.android.apkzlib.zip.StoredEntry;
-import com.android.apkzlib.zip.ZFile;
+import com.android.tools.build.apkzlib.zip.StoredEntry;
+import com.android.tools.build.apkzlib.zip.ZFile;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import java.io.ByteArrayInputStream;

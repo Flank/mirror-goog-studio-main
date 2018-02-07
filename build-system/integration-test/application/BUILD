@@ -7,6 +7,7 @@ TEST_DEPS = [
     "//tools/base/build-system/integration-test/framework",
     "//tools/base/build-system/integration-test/framework/src/main/proto",
     "//tools/apksig",
+    "//tools/apkzlib",
     "//tools/base/annotations",
     "//tools/base/build-system:gradle-api",
     "//tools/base/build-system/builder-test-api:tools.builder-test-api",

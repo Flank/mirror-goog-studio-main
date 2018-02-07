@@ -17,8 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import com.android.annotations.NonNull;
-import com.android.apkzlib.sign.DigestAlgorithm;
-import com.android.apkzlib.sign.SignatureAlgorithm;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -28,6 +26,8 @@ import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.StringOption;
 import com.android.ddmlib.IDevice;
+import com.android.tools.build.apkzlib.sign.DigestAlgorithm;
+import com.android.tools.build.apkzlib.sign.SignatureAlgorithm;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.nio.file.Files;

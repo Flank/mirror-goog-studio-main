@@ -22,7 +22,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
-import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
@@ -39,6 +38,7 @@ import com.android.ide.common.build.ApkInfo;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
+import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

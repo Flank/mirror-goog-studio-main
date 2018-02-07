@@ -20,13 +20,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.android.apkzlib.zip.CompressionMethod;
-import com.android.apkzlib.zip.StoredEntry;
-import com.android.apkzlib.zip.ZFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
+import com.android.tools.build.apkzlib.zip.CompressionMethod;
+import com.android.tools.build.apkzlib.zip.StoredEntry;
+import com.android.tools.build.apkzlib.zip.ZFile;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import java.io.File;

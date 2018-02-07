@@ -17,7 +17,7 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
-import com.android.apkzlib.zip.StoredEntry;
+import com.android.tools.build.apkzlib.zip.StoredEntry;
 import java.io.IOException;
 
 final class NoCacheJarClassFileEntry implements ClassFileEntry {

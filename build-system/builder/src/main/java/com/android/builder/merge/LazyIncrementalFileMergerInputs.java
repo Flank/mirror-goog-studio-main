@@ -17,12 +17,12 @@
 package com.android.builder.merge;
 
 import com.android.annotations.NonNull;
-import com.android.apkzlib.utils.CachedSupplier;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.files.RelativeFiles;
 import com.android.ide.common.res2.FileStatus;
+import com.android.tools.build.apkzlib.utils.CachedSupplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;

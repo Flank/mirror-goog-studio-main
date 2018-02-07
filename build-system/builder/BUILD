@@ -21,7 +21,6 @@ kotlin_library(
     name = "builder",
     srcs = ["src/main/java"],
     bundled_deps = [
-        "//tools/apkzlib",
         "//tools/base/build-system/profile",
         "//tools/dx/dalvik/dx",
         "//prebuilts/r8:d8-master",
@@ -35,6 +34,7 @@ kotlin_library(
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/analytics-library/tracker:tools.analytics-tracker",
+        "//tools/apkzlib",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.apksig",
         "//tools/base/build-system:tools.manifest-merger",
@@ -92,6 +92,7 @@ kotlin_test(
     ],
     deps = [
         ":builder",
+        "//tools/apkzlib",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",

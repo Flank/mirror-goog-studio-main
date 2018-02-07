@@ -17,8 +17,8 @@
 package com.android.build.gradle.integration.resources
 
 import com.android.SdkConstants
-import com.android.apkzlib.zip.ZFile
-import com.android.apkzlib.zip.ZFileOptions
+import com.android.tools.build.apkzlib.zip.ZFile
+import com.android.tools.build.apkzlib.zip.ZFileOptions
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject

@@ -25,7 +25,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
-import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
@@ -43,6 +42,7 @@ import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.signing.KeytoolException;
+import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

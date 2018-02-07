@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
-import com.android.apkzlib.zip.ZFile;
+import com.android.tools.build.apkzlib.zip.ZFile;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;

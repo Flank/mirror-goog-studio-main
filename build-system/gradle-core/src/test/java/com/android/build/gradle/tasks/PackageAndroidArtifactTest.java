@@ -19,7 +19,6 @@ package com.android.build.gradle.tasks;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
-import com.android.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.build.gradle.internal.scope.BuildElements;
@@ -29,6 +28,7 @@ import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.res2.FileStatus;
+import com.android.tools.build.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.BufferedOutputStream;
