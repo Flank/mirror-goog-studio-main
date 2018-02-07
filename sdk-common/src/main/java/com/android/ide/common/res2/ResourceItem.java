@@ -199,20 +199,10 @@ public class ResourceItem extends DataItem<ResourceFile>
         return resourceFile.getType();
     }
 
-    /**
-     * Builds a {@link ResourceReference} that points to this {@link ResourceItem}.
-     *
-     * <p>For now we pass the "framework" flag like before, but soon we'll start relying only on the
-     * namespace. Framework resources are not handled by the res2 system, so this shouldn't matter,
-     * but let's take it one step at a time.
-     */
+    /** Builds a {@link ResourceReference} that points to this {@link ResourceItem}. */
     @NonNull
-    public ResourceReference getReferenceToSelf(boolean forceFramework) {
-        if (forceFramework) {
-            return new ResourceReference(mType, getName(), true);
-        } else {
-            return new ResourceReference(mNamespace, mType, getName());
-        }
+    public ResourceReference getReferenceToSelf() {
+        return new ResourceReference(mNamespace, mType, getName());
     }
 
     /**
@@ -272,9 +262,8 @@ public class ResourceItem extends DataItem<ResourceFile>
         mResourceValue = null;
     }
 
-    // TODO(namespaces): Deprecate ths method and replace it with one without arguments.
     @Nullable
-    public ResourceValue getResourceValue(boolean isFrameworks) {
+    public ResourceValue getResourceValue() {
         if (mResourceValue == null) {
             //noinspection VariableNotUsedInsideIf
             if (mValue == null) {
@@ -290,23 +279,30 @@ public class ResourceItem extends DataItem<ResourceFile>
                 if (density != null) {
                     mResourceValue =
                             new DensityBasedResourceValue(
-                                    getReferenceToSelf(isFrameworks),
+                                    getReferenceToSelf(),
                                     source.getFile().getAbsolutePath(),
                                     density,
                                     mLibraryName);
                 } else {
                     mResourceValue =
                             new ResourceValue(
-                                    getReferenceToSelf(isFrameworks),
+                                    getReferenceToSelf(),
                                     source.getFile().getAbsolutePath(),
                                     mLibraryName);
                 }
             } else {
-                mResourceValue = parseXmlToResourceValue(isFrameworks);
+                mResourceValue = parseXmlToResourceValue();
             }
         }
 
         return mResourceValue;
+    }
+
+    /** @deprecated Use {@link #getResourceValue()} instead. */
+    @Deprecated
+    @Nullable
+    public ResourceValue getResourceValue(boolean isFrameworks) {
+        return getResourceValue();
     }
 
     // TODO: We should be storing shared FolderConfiguration instances on the ResourceFiles
@@ -385,7 +381,7 @@ public class ResourceItem extends DataItem<ResourceFile>
     }
 
     @Nullable
-    private ResourceValue parseXmlToResourceValue(boolean isFrameworks) {
+    private ResourceValue parseXmlToResourceValue() {
         assert mValue != null;
 
         final NamedNodeMap attributes = mValue.getAttributes();
@@ -396,25 +392,20 @@ public class ResourceItem extends DataItem<ResourceFile>
             case STYLE:
                 String parent = getAttributeValue(attributes, ATTR_PARENT);
                 try {
-                    value =
-                            parseStyleValue(
-                                    new StyleResourceValue(
-                                            getReferenceToSelf(isFrameworks),
-                                            parent,
-                                            mLibraryName));
+                    value = parseStyleValue(
+                            new StyleResourceValue(getReferenceToSelf(), parent, mLibraryName));
                 } catch (Exception ignored) {
                     return null;
                 }
                 break;
             case DECLARE_STYLEABLE:
-                value =
-                        parseDeclareStyleable(
-                                new DeclareStyleableResourceValue(
-                                        getReferenceToSelf(isFrameworks), null, mLibraryName));
+                value = parseDeclareStyleable(
+                        new DeclareStyleableResourceValue(
+                                getReferenceToSelf(), null, mLibraryName));
                 break;
             case ARRAY:
                 ArrayResourceValue arrayValue =
-                        new ArrayResourceValue(getReferenceToSelf(isFrameworks), mLibraryName) {
+                        new ArrayResourceValue(getReferenceToSelf(), mLibraryName) {
                             @Override
                             protected int getDefaultIndex() {
                                 // Allow the user to specify a specific element to use via tools:index
@@ -434,8 +425,7 @@ public class ResourceItem extends DataItem<ResourceFile>
                 break;
             case PLURALS:
                 PluralsResourceValue pluralsResourceValue =
-                        new PluralsResourceValue(
-                                getReferenceToSelf(isFrameworks), null, mLibraryName) {
+                        new PluralsResourceValue(getReferenceToSelf(), null, mLibraryName) {
                             @Override
                             public String getValue() {
                                 // Allow the user to specify tools:quantity.
@@ -453,19 +443,11 @@ public class ResourceItem extends DataItem<ResourceFile>
                 value = parsePluralsValue(pluralsResourceValue);
                 break;
             case ATTR:
-                value =
-                        parseAttrValue(
-                                new AttrResourceValue(
-                                        getReferenceToSelf(isFrameworks), mLibraryName));
+                value = parseAttrValue(new AttrResourceValue(getReferenceToSelf(), mLibraryName));
                 break;
             case STRING:
-                value =
-                        parseTextValue(
-                                new TextResourceValue(
-                                        getReferenceToSelf(isFrameworks),
-                                        null,
-                                        null,
-                                        mLibraryName));
+                value = parseTextValue(
+                        new TextResourceValue(getReferenceToSelf(), null, null, mLibraryName));
                 break;
             case ANIMATOR:
             case DRAWABLE:
@@ -474,15 +456,10 @@ public class ResourceItem extends DataItem<ResourceFile>
             case MENU:
             case MIPMAP:
             case TRANSITION:
-                value =
-                        parseFileName(
-                                new ResourceValue(getReferenceToSelf(isFrameworks), mLibraryName));
+                value = parseFileName(new ResourceValue(getReferenceToSelf(), mLibraryName));
                 break;
             default:
-                value =
-                        parseValue(
-                                new ResourceValue(
-                                        getReferenceToSelf(isFrameworks), null, mLibraryName));
+                value = parseValue(new ResourceValue(getReferenceToSelf(), null, mLibraryName));
                 break;
         }
 
@@ -522,7 +499,6 @@ public class ResourceItem extends DataItem<ResourceFile>
                 NamedNodeMap attributes = child.getAttributes();
                 String name = getAttributeValue(attributes, ATTR_NAME);
                 if (name != null) {
-
                     // is the attribute in the android namespace?
                     boolean isFrameworkAttr = styleValue.isFramework();
                     if (name.startsWith(ANDROID_NS_NAME_PREFIX)) {
@@ -627,10 +603,10 @@ public class ResourceItem extends DataItem<ResourceFile>
                 String name = getAttributeValue(attributes, ATTR_NAME);
                 if (name != null) {
                     // is the attribute in the android namespace?
-                    boolean isFrameworkAttr = declareStyleable.isFramework();
+                    ResourceNamespace namespace = declareStyleable.getNamespace();
                     if (name.startsWith(ANDROID_NS_NAME_PREFIX)) {
                         name = name.substring(ANDROID_NS_NAME_PREFIX_LEN);
-                        isFrameworkAttr = true;
+                        namespace = ResourceNamespace.ANDROID;
                     }
 
                     AttrResourceValue attr =
@@ -638,7 +614,7 @@ public class ResourceItem extends DataItem<ResourceFile>
                                     child,
                                     new AttrResourceValue(
                                             new ResourceReference(
-                                                    ResourceType.ATTR, name, isFrameworkAttr),
+                                                    namespace, ResourceType.ATTR, name),
                                             mLibraryName));
                     declareStyleable.addValue(attr);
                 }

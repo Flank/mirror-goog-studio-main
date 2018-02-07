@@ -425,7 +425,7 @@ public abstract class AbstractResourceRepository {
             List<ResourceItem> matches = config.findMatchingConfigurables(matchingItems);
             for (ResourceItem match : matches) {
                 // if match is an alias, check if the name is in seen names.
-                ResourceValue resourceValue = match.getResourceValue(isFramework());
+                ResourceValue resourceValue = match.getResourceValue();
                 if (resourceValue != null) {
                     String value = resourceValue.getValue();
                     if (value != null && value.startsWith(PREFIX_RESOURCE_REF)) {
@@ -519,7 +519,7 @@ public abstract class AbstractResourceRepository {
                 // Look for the best match for the given configuration.
                 ResourceItem match = referenceConfig.findMatchingConfigurable(keyItems);
                 if (match != null) {
-                    ResourceValue value = match.getResourceValue(isFramework());
+                    ResourceValue value = match.getResourceValue();
                     if (value != null) {
                         map.put(match.getName(), value);
                     }
@@ -551,7 +551,7 @@ public abstract class AbstractResourceRepository {
             // look for the best match for the given configuration
             // the match has to be of type ResourceFile since that's what the input list contains
             ResourceItem match = (ResourceItem) referenceConfig.findMatchingConfigurable(keyItems);
-            return match != null ? match.getResourceValue(isFramework()) : null;
+            return match != null ? match.getResourceValue() : null;
         }
     }
 

@@ -19,6 +19,7 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_TEXT
 import com.android.SdkConstants.VALUE_TRUE
+import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.resources.ResourceUrl
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
@@ -78,11 +79,11 @@ containing markup that also specify `textAllCaps=true`.""",
         val project = context.mainProject
         val repository = client.getResourceRepository(project, true, true) ?: return
 
-        val items = repository.getResourceItem(url.type, url.name)
-        if (items == null || items.isEmpty()) {
+        val items = repository.getResourceItems(ResourceNamespace.TODO, url.type, url.name)
+        if (items.isEmpty()) {
             return
         }
-        val resourceValue = items[0].getResourceValue(false) ?: return
+        val resourceValue = items[0].resourceValue ?: return
 
         val rawXmlValue = resourceValue.rawXmlValue
         if (rawXmlValue.contains("<")) {

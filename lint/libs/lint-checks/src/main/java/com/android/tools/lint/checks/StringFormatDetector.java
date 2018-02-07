@@ -1217,7 +1217,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                 }
                 if (items != null) {
                     for (final ResourceItem item : items) {
-                        ResourceValue v = item.getResourceValue(false);
+                        ResourceValue v = item.getResourceValue();
                         if (v != null) {
                             String value = v.getRawXmlValue();
                             // Attempt to resolve indirection
@@ -1234,7 +1234,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                                     List<ResourceItem> l = resources.getResourceItem(url.type,
                                             url.name);
                                     if (l != null && !l.isEmpty()) {
-                                        v = l.get(0).getResourceValue(false);
+                                        v = l.get(0).getResourceValue();
                                         if (v != null) {
                                             value = v.getValue();
                                             if (value == null || !isReference(value)) {

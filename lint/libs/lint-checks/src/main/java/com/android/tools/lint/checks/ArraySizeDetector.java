@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.TAG_ARRAY;
 import static com.android.SdkConstants.TAG_INTEGER_ARRAY;
@@ -297,7 +296,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                                                                    source.getFile())) {
                     continue;
                 }
-                ResourceValue rv = item.getResourceValue(false);
+                ResourceValue rv = item.getResourceValue();
                 if (rv instanceof ArrayResourceValue) {
                     ArrayResourceValue arv = (ArrayResourceValue) rv;
                     if (childCount != arv.getElementCount()) {

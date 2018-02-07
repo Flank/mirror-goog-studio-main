@@ -195,7 +195,7 @@ public class ResourceItemResolver extends RenderResources {
                     myFrameworkResources.getResourceItems(
                             ResourceNamespace.ANDROID, url.type, url.name);
             if (!items.isEmpty()) {
-                ResourceValue value = items.get(0).getResourceValue(true);
+                ResourceValue value = items.get(0).getResourceValue();
                 if (value != null && myLookupChain != null) {
                     myLookupChain.add(value);
                 }

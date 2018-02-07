@@ -107,7 +107,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
-        ResourceValue value = itemList.get(0).getResourceValue(false);
+        ResourceValue value = itemList.get(0).getResourceValue();
         assertNotNull(value);
 
         assertEquals("overlay_string", value.getValue());
@@ -121,7 +121,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
-        ResourceValue value = itemList.get(0).getResourceValue(false);
+        ResourceValue value = itemList.get(0).getResourceValue();
         assertNotNull(value);
 
         assertEquals(
@@ -137,7 +137,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
-        ResourceValue value = itemList.get(0).getResourceValue(false);
+        ResourceValue value = itemList.get(0).getResourceValue();
         assertNotNull(value);
 
         assertEquals("Forgot your username or password?\nVisit google.com/accounts/recovery.",
@@ -152,7 +152,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
-        ResourceValue value = itemList.get(0).getResourceValue(false);
+        ResourceValue value = itemList.get(0).getResourceValue();
         assertNotNull(value);
 
         assertEquals("#FFFFFFFF", value.getValue());
@@ -166,7 +166,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
-        ResourceValue value = itemList.get(0).getResourceValue(false);
+        ResourceValue value = itemList.get(0).getResourceValue();
         assertNotNull(value);
 
         assertEquals("@layout/ref", value.getValue());
@@ -180,7 +180,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
-        ResourceValue value = itemList.get(0).getResourceValue(false);
+        ResourceValue value = itemList.get(0).getResourceValue();
         assertNotNull(value);
         assertTrue(value instanceof AttrResourceValue);
         AttrResourceValue attrValue = (AttrResourceValue) value;
@@ -210,7 +210,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertNotNull(itemList);
         assertEquals(1, itemList.size());
 
-        ResourceValue value = itemList.get(0).getResourceValue(false);
+        ResourceValue value = itemList.get(0).getResourceValue();
         assertNotNull(value);
         assertTrue(value instanceof StyleResourceValue);
         StyleResourceValue styleResourceValue = (StyleResourceValue) value;

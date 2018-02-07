@@ -1082,7 +1082,7 @@ public class LintUtils {
             List<ResourceItem> items = resources.getResourceItem(front.getResourceType(), name);
             if (items != null) {
                 for (ResourceItem item : items) {
-                    ResourceValue rv = item.getResourceValue(false);
+                    ResourceValue rv = item.getResourceValue();
                     if (rv instanceof StyleResourceValue) {
                         StyleResourceValue srv = (StyleResourceValue) rv;
                         ItemResourceValue value = srv.getItem(attribute, isFrameworkAttribute);
@@ -1163,7 +1163,7 @@ public class LintUtils {
             List<ResourceItem> items = resources.getResourceItem(front.getResourceType(), name);
             if (items != null) {
                 for (ResourceItem item : items) {
-                    ResourceValue rv = item.getResourceValue(false);
+                    ResourceValue rv = item.getResourceValue();
                     if (rv instanceof StyleResourceValue) {
                         StyleResourceValue srv = (StyleResourceValue) rv;
                         if (result == null) {

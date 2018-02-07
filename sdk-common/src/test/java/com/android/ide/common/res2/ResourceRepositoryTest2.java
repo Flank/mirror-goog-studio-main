@@ -390,15 +390,19 @@ public class ResourceRepositoryTest2 extends TestCase {
 
         assertNotNull(resources);
         assertEquals("Share your score of (1337) with (Bluetooth)!",
-                resources.getResourceItem(ResourceType.STRING, "share_with_application").get(0).getResourceValue(false).getValue());
+                resources.getResourceItem(ResourceType.STRING, "share_with_application").get(0)
+                        .getResourceValue().getValue());
         assertEquals("Call ${name}",
-                resources.getResourceItem(ResourceType.STRING, "description_call").get(0).getResourceValue(false).getValue());
+                resources.getResourceItem(ResourceType.STRING, "description_call").get(0)
+                        .getResourceValue().getValue());
         assertEquals("(42) mins (28) secs",
-                resources.getResourceItem(ResourceType.STRING, "callDetailsDurationFormat").get(0).getResourceValue(false).getValue());
+                resources.getResourceItem(ResourceType.STRING, "callDetailsDurationFormat").get(0)
+                        .getResourceValue().getValue());
         assertEquals("${number_of_sessions} sessions removed from your schedule",
-                resources.getResourceItem(ResourceType.STRING, "other").get(0).getResourceValue(false).getValue());
+                resources.getResourceItem(ResourceType.STRING, "other").get(0).getResourceValue().getValue());
         assertEquals("(123)(KB)",
-                resources.getResourceItem(ResourceType.STRING, "fileSizeSuffix").get(0).getResourceValue(false).getValue());
+                resources.getResourceItem(ResourceType.STRING, "fileSizeSuffix").get(0)
+                        .getResourceValue().getValue());
 
     }
 }
