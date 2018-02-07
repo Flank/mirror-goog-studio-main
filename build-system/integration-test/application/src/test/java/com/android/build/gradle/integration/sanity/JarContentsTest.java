@@ -276,6 +276,7 @@ public class JarContentsTest {
                 "com/android/tools/r8/compatproguard/",
                 "com/android/tools/r8/dex/",
                 "com/android/tools/r8/dexfilemerger/",
+                "com/android/tools/r8/dexsplitter/",
                 "com/android/tools/r8/errors/",
                 "com/android/tools/r8/graph/",
                 "com/android/tools/r8/ir/",
