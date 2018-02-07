@@ -56,17 +56,7 @@ public final class FileUtils {
      * @throws IOException failed to delete the file / directory
      */
     public static void deletePath(@NonNull final File path) throws IOException {
-        if (!path.exists()) {
-            return;
-        }
-
-        if (path.isDirectory()) {
-            deleteDirectoryContents(path);
-        }
-
-        if (!path.delete()) {
-            throw new IOException(String.format("Could not delete path '%s'.", path));
-        }
+        deleteRecursivelyIfExists(path);
     }
 
     /**
@@ -218,23 +208,34 @@ public final class FileUtils {
     }
 
     /**
-     * Deletes a file.
+     * Deletes an existing file or an existing empty directory.
      *
-     * @param file the file to delete; the file must exist
-     * @throws IOException failed to delete the file
+     * @param file the file or directory to delete. The file/directory must exist, if the directory
+     *     exists, it must be empty.
      */
     public static void delete(@NonNull File file) throws IOException {
-        boolean result = file.delete();
-        if (!result) {
-            throw new IOException("Failed to delete " + file.getAbsolutePath());
-        }
+        java.nio.file.Files.delete(file.toPath());
     }
 
+    /**
+     * Deletes a file or an empty directory if it exists.
+     *
+     * @param file the file or directory to delete. The file/directory may not exist; if the
+     *     directory exists, it must be empty.
+     */
     public static void deleteIfExists(@NonNull File file) throws IOException {
-        boolean result = file.delete();
-        if (!result && file.exists()) {
-            throw new IOException("Failed to delete " + file.getAbsolutePath());
-        }
+        java.nio.file.Files.deleteIfExists(file.toPath());
+    }
+
+    /**
+     * Deletes a file or a directory if it exists. If the directory is not empty, its contents will
+     * be deleted recursively.
+     *
+     * @param file the file or directory to delete. The file/directory may not exist; if the
+     *     directory exists, it may be non-empty.
+     */
+    public static void deleteRecursivelyIfExists(@NonNull File file) throws IOException {
+        PathUtils.deleteRecursivelyIfExists(file.toPath());
     }
 
     public static void renameTo(@NonNull File file, @NonNull File to) throws IOException {

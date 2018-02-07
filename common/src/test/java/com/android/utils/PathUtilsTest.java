@@ -40,7 +40,7 @@ public class PathUtilsTest {
         java.nio.file.Files.write(root.resolve("a/a/t.txt"), ImmutableList.of("content"));
         java.nio.file.Files.write(root.resolve("b/t.txt"), ImmutableList.of("content"));
 
-        PathUtils.deleteIfExists(root);
+        PathUtils.deleteRecursivelyIfExists(root);
 
         assertThat(java.nio.file.Files.notExists(root)).isTrue();
     }
@@ -52,13 +52,14 @@ public class PathUtilsTest {
         java.nio.file.Files.createDirectories(root.resolve("b"));
         java.nio.file.Files.createDirectories(root.resolve("c/c/c"));
 
-        PathUtils.deleteIfExists(root);
+        PathUtils.deleteRecursivelyIfExists(root);
         assertThat(java.nio.file.Files.notExists(root)).isTrue();
     }
 
     @Test
     public void testPathDeleteNonExisting() throws IOException {
-        PathUtils.deleteIfExists(temporaryFolder.getRoot().toPath().resolve("non-existing"));
+        PathUtils.deleteRecursivelyIfExists(
+                temporaryFolder.getRoot().toPath().resolve("non-existing"));
     }
 
     @Test
@@ -66,7 +67,7 @@ public class PathUtilsTest {
         Path root = temporaryFolder.getRoot().toPath();
         java.nio.file.Files.write(root.resolve("t.txt"), ImmutableList.of("content"));
 
-        PathUtils.deleteIfExists(root.resolve("t.txt"));
+        PathUtils.deleteRecursivelyIfExists(root.resolve("t.txt"));
         assertThat(java.nio.file.Files.notExists(root.resolve("t.txt"))).isTrue();
     }
 }

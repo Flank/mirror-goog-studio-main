@@ -38,13 +38,20 @@ public final class PathUtils {
 
     private PathUtils() {}
 
-    public static void deleteIfExists(@NonNull Path path) throws IOException {
+    /**
+     * Deletes a file or a directory if it exists. If the directory is not empty, its contents will
+     * be deleted recursively.
+     *
+     * @param path the file or directory to delete. The file/directory may not exist; if the
+     *     directory exists, it may be non-empty.
+     */
+    public static void deleteRecursivelyIfExists(@NonNull Path path) throws IOException {
         if (Files.isDirectory(path)) {
             try (Stream<Path> pathsInDir = Files.list(path)) {
                 pathsInDir.forEach(
                         pathInDir -> {
                             try {
-                                deleteIfExists(pathInDir);
+                                deleteRecursivelyIfExists(pathInDir);
                             } catch (IOException e) {
                                 throw new UncheckedIOException(e);
                             }
@@ -120,7 +127,7 @@ public final class PathUtils {
                         new Thread(
                                 () -> {
                                     try {
-                                        PathUtils.deleteIfExists(path);
+                                        PathUtils.deleteRecursivelyIfExists(path);
                                     } catch (IOException e) {
                                         Logger.getLogger(PathUtils.class.getName())
                                                 .log(Level.WARNING, "Unable to delete " + path, e);

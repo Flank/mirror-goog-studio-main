@@ -377,25 +377,6 @@ public final class GradleTestProject implements TestRule {
         }
     }
 
-    /**
-     * Recursively delete directory or file.
-     *
-     * @param root directory to delete
-     */
-    private static void deleteRecursive(File root) {
-        if (root.exists()) {
-            if (root.isDirectory()) {
-                File files[] = root.listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        deleteRecursive(file);
-                    }
-                }
-            }
-            assertTrue("Failed to delete " + root.getAbsolutePath(), root.delete());
-        }
-    }
-
     @Override
     public Statement apply(final Statement base, final Description description) {
         if (rootProject != this) {
@@ -512,9 +493,7 @@ public final class GradleTestProject implements TestRule {
         buildFile = new File(testDir, "build.gradle");
         sourceDir = new File(testDir, "src");
 
-        if (testDir.exists()) {
-            deleteRecursive(testDir);
-        }
+        FileUtils.deleteRecursivelyIfExists(testDir);
         FileUtils.mkdirs(testDir);
         FileUtils.mkdirs(sourceDir);
 
