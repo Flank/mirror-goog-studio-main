@@ -29,6 +29,8 @@ import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,6 +54,8 @@ public class ResourceResolver extends RenderResources {
     private final Map<ResourceNamespace, Map<ResourceType, ResourceValueMap>> mResources;
     private final Map<StyleResourceValue, StyleResourceValue> mStyleInheritanceMap =
             new HashMap<>();
+    private final Multimap<StyleResourceValue, StyleResourceValue> mReverseStyleInheritanceMap =
+            HashMultimap.create();
 
     @Nullable private final StyleResourceValue mDefaultTheme;
 
@@ -132,6 +136,7 @@ public class ResourceResolver extends RenderResources {
         resolver.mLibrariesIdProvider = original.mLibrariesIdProvider;
         resolver.mLogger = original.mLogger;
         resolver.mStyleInheritanceMap.putAll(original.mStyleInheritanceMap);
+        resolver.mReverseStyleInheritanceMap.putAll(original.mReverseStyleInheritanceMap);
         resolver.mThemes.addAll(original.mThemes);
 
         return resolver;
@@ -240,6 +245,7 @@ public class ResourceResolver extends RenderResources {
                                 from.asReference(), parentName, from.getLibraryName());
                 newStyle.replaceWith(from);
                 mStyleInheritanceMap.put(newStyle, to);
+                mReverseStyleInheritanceMap.clear();
             }
         }
     }
@@ -601,10 +607,25 @@ public class ResourceResolver extends RenderResources {
         clearStyles();
     }
 
+    private void computeReverseStyleInheritance() {
+        for (Map.Entry<StyleResourceValue, StyleResourceValue> entry :
+                mStyleInheritanceMap.entrySet()) {
+            mReverseStyleInheritanceMap.put(entry.getValue(), entry.getKey());
+        }
+    }
+
     @Override
     @Nullable
     public StyleResourceValue getParent(@NonNull StyleResourceValue style) {
         return mStyleInheritanceMap.get(style);
+    }
+
+    @NonNull
+    public Collection<StyleResourceValue> getChildren(@NonNull StyleResourceValue style) {
+        if (mReverseStyleInheritanceMap.isEmpty()) {
+            computeReverseStyleInheritance();
+        }
+        return mReverseStyleInheritanceMap.get(style);
     }
 
     public boolean styleExtends(
