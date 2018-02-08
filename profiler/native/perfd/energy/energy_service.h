@@ -27,6 +27,14 @@ class EnergyServiceImpl final : public proto::EnergyService::Service {
   explicit EnergyServiceImpl(EnergyCache* energy_cache)
       : energy_cache_(*energy_cache) {}
 
+  grpc::Status StartMonitoringApp(
+      grpc::ServerContext* context, const proto::EnergyStartRequest* request,
+      proto::EnergyStartResponse* response) override;
+
+  grpc::Status StopMonitoringApp(grpc::ServerContext* context,
+                                 const proto::EnergyStopRequest* request,
+                                 proto::EnergyStopResponse* response) override;
+
   grpc::Status GetData(grpc::ServerContext* context,
                        const proto::EnergyRequest* request,
                        proto::EnergyDataResponse* response) override;

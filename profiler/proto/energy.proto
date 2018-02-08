@@ -22,6 +22,15 @@ option java_outer_classname = "EnergyProfiler";
 import "common.proto";
 
 service EnergyService {
+  // Starts collecting execution metrics of a running app, such as energy
+  // samples and events. Does nothing if the app is already being monitored.
+  rpc StartMonitoringApp(EnergyStartRequest) returns (EnergyStartResponse) {
+  }
+
+  // Stops monitoring a running app. Does nothing if the app is not being
+  // monitored, or is not running.
+  rpc StopMonitoringApp(EnergyStopRequest) returns (EnergyStopResponse) {
+  }
 
   // Requests energy data from app with given |process_id|, in the time range
   // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
@@ -34,6 +43,20 @@ service EnergyService {
   // Response data includes repeated data in time order.
   rpc GetEvents(EnergyRequest) returns (EnergyEventsResponse) {
   }
+}
+
+message EnergyStartRequest {
+  Session session = 1;
+}
+
+message EnergyStartResponse {
+}
+
+message EnergyStopRequest {
+  Session session = 1;
+}
+
+message EnergyStopResponse {
 }
 
 message EnergyRequest {

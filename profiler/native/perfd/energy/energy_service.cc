@@ -23,6 +23,24 @@ using proto::EnergyDataResponse;
 using proto::EnergyEventsResponse;
 using proto::EnergyRequest;
 using proto::EnergyService;
+using proto::EnergyStartRequest;
+using proto::EnergyStartResponse;
+using proto::EnergyStopRequest;
+using proto::EnergyStopResponse;
+
+Status EnergyServiceImpl::StartMonitoringApp(ServerContext* context,
+                                             const EnergyStartRequest* request,
+                                             EnergyStartResponse* response) {
+  // TODO (b/73116415): Only cache samples/events if we've started
+  return Status::OK;
+}
+
+Status EnergyServiceImpl::StopMonitoringApp(ServerContext* context,
+                                            const EnergyStopRequest* request,
+                                            EnergyStopResponse* response) {
+  // TODO (b/73116415): Stop monitoring energy samples/events
+  return Status::OK;
+}
 
 Status EnergyServiceImpl::GetData(ServerContext* context,
                                   const EnergyRequest* request,
