@@ -741,6 +741,8 @@ public final class SdkConstants {
     /* Android Support Class Constants */
     public static final AndroidxName CLASS_APP_COMPAT_ACTIVITY =
             AndroidxName.of("android.support.v7.app.", "AppCompatActivity");
+    public static final AndroidxName CLASS_MEDIA_ROUTE_ACTION_PROVIDER =
+            AndroidxName.of("android.support.v7.app.", "MediaRouteActionProvider");
     public static final AndroidxName CLASS_COORDINATOR_LAYOUT =
             AndroidxName.of("android.support.design.widget.", "CoordinatorLayout");
     public static final AndroidxName CLASS_APP_BAR_LAYOUT =
@@ -1005,7 +1007,7 @@ public final class SdkConstants {
 
     public static final String R_CLASS = "R"; //$NON-NLS-1$
     public static final String ANDROID_PKG = "android"; //$NON-NLS-1$
-    public static final String ANDROID_SUPPORT_PKG = "com.android.support";
+    public static final String ANDROID_SUPPORT_PKG = "android.support";
     public static final String ANDROIDX_PKG = "androidx";
 
     public static final String SHERPA_PREFIX = "app"; //$NON-NLS-1$
@@ -1879,8 +1881,8 @@ public final class SdkConstants {
     public static final String MENU_TYPE = "menu"; //$NON-NLS-1$
 
     // Packages
-    public static final String ANDROID_PKG_PREFIX = "android."; //$NON-NLS-1$
-    public static final String ANDROIDX_PKG_PREFIX = "androidx."; //$NON-NLS-1$
+    public static final String ANDROID_PKG_PREFIX = ANDROID_PKG + "."; //$NON-NLS-1$
+    public static final String ANDROIDX_PKG_PREFIX = ANDROIDX_PKG + "."; //$NON-NLS-1$
     public static final String WIDGET_PKG_PREFIX = "android.widget."; //$NON-NLS-1$
     public static final String VIEW_PKG_PREFIX = "android.view."; //$NON-NLS-1$
 
@@ -2274,6 +2276,17 @@ public final class SdkConstants {
     public static final String ADS_ARTIFACT = "com.google.android.gms:play-services-ads";
     public static final String LEANBACK_V17_ARTIFACT = "com.android.support:leanback-v17";
     public static final String ANNOTATIONS_LIB_ARTIFACT = "com.android.support:support-annotations";
+    public static final String MEDIA_ROUTER_LIB_ARTIFACT = "com.android.support:mediarouter-v7";
+
+    public static final String ANDROIDX_MATERIAL_ARTIFACT = "com.google.android.material:material";
+    public static final String ANDROIDX_CORE_UI_ARTIFACT = "androidx.core:core-ui";
+    public static final String ANDROIDX_CARD_VIEW_ARTIFACT = "androidx.widget.cardview:cardview";
+    public static final String ANDROIDX_GRID_LAYOUT_ARTIFACT =
+            "androidx.widget.gridlayout:gridlayout";
+    public static final String ANDROIDX_RECYCLER_VIEW_ARTIFACT =
+            "androidx.widget.recyclerview:recyclerview";
+    public static final String ANDROIDX_LEANBACK_ARTIFACT = "androidx.leanback:leanback";
+    public static final String ANDROIDX_ANNOTATIONS_ARTIFACT = "androidx.annotations:annotations";
 
     // Annotations
     public static final AndroidxName SUPPORT_ANNOTATIONS_PREFIX =

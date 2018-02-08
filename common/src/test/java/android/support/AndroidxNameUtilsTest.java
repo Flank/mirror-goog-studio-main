@@ -37,12 +37,16 @@ public class AndroidxNameUtilsTest {
     public void androidxMappings() {
         Collection<String> androidxCoordinates = AndroidxNameUtils.getAllAndroidxCoordinates();
 
-        for (String androixCoordinate : androidxCoordinates) {
-            String oldCoordinate = AndroidxNameUtils.getCoordinateReverseMapping(androixCoordinate);
-            assertNotEquals(oldCoordinate, androixCoordinate);
+        for (String androidxCoordinate : androidxCoordinates) {
+            String oldCoordinate =
+                    AndroidxNameUtils.getCoordinateReverseMapping(androidxCoordinate);
+            assertNotEquals(oldCoordinate, androidxCoordinate);
             assertFalse(oldCoordinate.startsWith("androidx"));
-            assertTrue(androixCoordinate.startsWith("androidx"));
-            assertEquals(androixCoordinate, AndroidxNameUtils.getCoordinateMapping(oldCoordinate));
+            // It seems material won't be in the androidx package name
+            assertTrue(
+                    androidxCoordinate.startsWith("androidx")
+                            || "com.google.android.material:material".equals(androidxCoordinate));
+            assertEquals(androidxCoordinate, AndroidxNameUtils.getCoordinateMapping(oldCoordinate));
         }
     }
 }
