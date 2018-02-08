@@ -2447,6 +2447,10 @@ class LintDriver
             sb.append("Unexpected failure during lint analysis")
             context?.file?.name?.let { sb.append(" of ").append(it) }
             sb.append(" (this is a bug in lint or one of the libraries it depends on)\n\n")
+            if (throwable.message?.isNotBlank() == true) {
+                sb.append("Message: ${throwable.message}\n")
+            }
+            sb.append("Stack: ")
             sb.append("`")
             sb.append(throwable.javaClass.simpleName)
             sb.append(':')

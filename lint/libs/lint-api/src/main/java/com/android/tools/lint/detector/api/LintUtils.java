@@ -1984,6 +1984,11 @@ public class LintUtils {
         return call.getMethodName();
     }
 
+    /** Returns true if the given element is written in Kotlin */
+    public static boolean isKotlin(@Nullable PsiElement element) {
+        return element != null && isKotlin(element.getLanguage());
+    }
+
     /** Returns true if the given language is Kotlin */
     public static boolean isKotlin(@Nullable Language language) {
         return language != null && language.getID().equals("kotlin");
