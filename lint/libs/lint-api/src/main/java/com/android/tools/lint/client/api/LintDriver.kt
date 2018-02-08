@@ -935,6 +935,15 @@ class LintDriver
                                         binaryChecks)
                             }
                         }
+                        if (isCheckGeneratedSources) {
+                            val generatedResourceFolders = project.generatedResourceFolders
+                            if (!generatedResourceFolders.isEmpty()) {
+                                for (res in generatedResourceFolders) {
+                                    checkResFolder(project, main, res, xmlDetectors, dirChecks,
+                                        binaryChecks)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -957,6 +966,7 @@ class LintDriver
                         project.testSourceFolders
                     else
                         emptyList<File>()
+
                     val generatedFolders = if (isCheckGeneratedSources)
                         project.generatedSourceFolders
                     else

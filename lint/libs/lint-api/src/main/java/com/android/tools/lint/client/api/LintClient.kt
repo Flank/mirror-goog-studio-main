@@ -292,7 +292,7 @@ abstract class LintClient {
     /**
      * Returns the resource folders.
      *
-     * @param project the project to look up the resource folder for
+     * @param project the project to look up the resource folders for
      *
      * @return a list of files pointing to the resource folders, possibly empty
      */
@@ -302,6 +302,17 @@ abstract class LintClient {
             return listOf(res)
         }
 
+        return emptyList()
+    }
+
+    /**
+     * Returns the generated resource folders.
+     *
+     * @param project the project to look up the generated resource folders for
+     *
+     * @return a list of files pointing to the generated resource folders, possibly empty
+     */
+    open fun getGeneratedResourceFolders(project: Project): List<File> {
         return emptyList()
     }
 

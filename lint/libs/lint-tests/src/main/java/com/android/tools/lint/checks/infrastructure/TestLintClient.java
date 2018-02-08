@@ -105,6 +105,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -1241,7 +1242,7 @@ public class TestLintClient extends LintCliClient {
                         Collection<File> srcDirs = provider.getJavaDirectories();
                         // model returns path whether or not it exists
                         for (File srcDir : srcDirs) {
-                            if (!isGenerated(srcDir) && srcDir.exists()) {
+                            if (srcDir.exists()) {
                                 list.add(srcDir);
                             }
                         }
@@ -1256,11 +1257,6 @@ public class TestLintClient extends LintCliClient {
             return javaSourceFolders;
         }
 
-        private static boolean isGenerated(@NonNull File srcDir) {
-            return srcDir.getName().equals("generated") ||
-                    srcDir.getName().equals("gen");
-        }
-
         @NonNull
         @Override
         public List<File> getGeneratedSourceFolders() {
@@ -1268,17 +1264,11 @@ public class TestLintClient extends LintCliClient {
             if (generatedSourceFolders == null) {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
-                    List<File> list = Lists.newArrayList();
-                    for (SourceProvider provider : getSourceProviders()) {
-                        Collection<File> srcDirs = provider.getJavaDirectories();
-                        // model returns path whether or not it exists
-                        for (File srcDir : srcDirs) {
-                            if (isGenerated(srcDir) && srcDir.exists()) {
-                                list.add(srcDir);
-                            }
-                        }
-                    }
-                    generatedSourceFolders = list;
+                    generatedSourceFolders =
+                            mocker.getVariant().getMainArtifact().
+                                    getGeneratedSourceFolders().stream()
+                            .filter(File::exists)
+                            .collect(Collectors.toList());
                 }
                 if (generatedSourceFolders == null || generatedSourceFolders.isEmpty()) {
                     generatedSourceFolders = super.getGeneratedSourceFolders();
@@ -1286,6 +1276,27 @@ public class TestLintClient extends LintCliClient {
             }
 
             return generatedSourceFolders;
+        }
+
+        @NonNull
+        @Override
+        public List<File> getGeneratedResourceFolders() {
+            // In the tests the only way to mark something as generated is "gen" or "generated"
+            if (generatedResourceFolders == null) {
+                //noinspection VariableNotUsedInsideIf
+                if (mocker != null) {
+                    generatedResourceFolders =
+                            mocker.getVariant().getMainArtifact().
+                            getGeneratedResourceFolders().stream()
+                            .filter(File::exists)
+                            .collect(Collectors.toList());
+                }
+                if (generatedResourceFolders == null || generatedResourceFolders.isEmpty()) {
+                    generatedResourceFolders = super.getGeneratedResourceFolders();
+                }
+            }
+
+            return generatedResourceFolders;
         }
 
         @NonNull

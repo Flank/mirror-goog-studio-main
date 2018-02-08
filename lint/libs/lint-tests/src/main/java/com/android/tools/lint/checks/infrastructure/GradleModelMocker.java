@@ -370,6 +370,22 @@ public class GradleModelMocker {
             }
         }
         setVariantName(defaultVariant);
+
+        // Generated sources: Special test support under folder "generated" instead of "src"
+        File generated = new File(projectDir, "generated");
+        if (generated.exists()) {
+            File generatedRes = new File(generated, "res");
+            if (generatedRes.exists()) {
+                List<File> generatedResources = Collections.singletonList(generatedRes);
+                when(artifact.getGeneratedResourceFolders()).thenReturn(generatedResources);
+            }
+
+            File generatedJava = new File(generated, "java");
+            if (generatedJava.exists()) {
+                List<File> generatedSources = Collections.singletonList(generatedJava);
+                when(artifact.getGeneratedSourceFolders()).thenReturn(generatedSources);
+            }
+        }
     }
 
     private static LintOptions createLintOptions() {
@@ -1246,14 +1262,6 @@ public class GradleModelMocker {
         resDirectories.add(new File(root, "src/" + name + "/res"));
         javaDirectories.add(new File(root, "src/" + name + "/java"));
         javaDirectories.add(new File(root, "src/" + name + "/kotlin"));
-
-        // Add generated source provider to let us test generated source handling
-        if ("main".equals(name)) {
-            File generated = new File(root, "generated");
-            if (generated.exists()) {
-                javaDirectories.add(generated);
-            }
-        }
 
         when(provider.getResDirectories()).thenReturn(resDirectories);
         when(provider.getJavaDirectories()).thenReturn(javaDirectories);
