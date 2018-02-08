@@ -172,7 +172,6 @@ public class FolderConfigurationTest extends TestCase {
         assertEquals("Locale en_US", configForFolder.toDisplayString());
         assertEquals("en,US", configForFolder.toShortDisplayString());
         assertEquals("layout-en-rUS", configForFolder.getFolderName(ResourceFolderType.LAYOUT));
-        assertEquals("-en-rUS", configForFolder.getUniqueKey());
         assertEquals("en-rUS", configForFolder.getQualifierString());
         assertEquals("", new FolderConfiguration().getQualifierString());
     }
