@@ -218,6 +218,7 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.34:jar",
     visibility = ["//visibility:public"],
     exports = [
+        ":com.google.errorprone_error_prone_annotations",
         ":com.google.guava_guava",
         ":junit_junit",
     ],
@@ -807,6 +808,14 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "org.apiguardian_apiguardian-api",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/apiguardian/apiguardian-api/1.0.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "org.bouncycastle_bcpkix-jdk15on",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcpkix-jdk15on/1.56:jar",
     visibility = ["//visibility:public"],
@@ -1211,6 +1220,62 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "org.junit.jupiter_junit-jupiter-api",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/junit/jupiter/junit-jupiter-api/5.0.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.apiguardian_apiguardian-api",
+        ":org.junit.platform_junit-platform-commons",
+        ":org.opentest4j_opentest4j",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.junit.jupiter_junit-jupiter-engine",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/junit/jupiter/junit-jupiter-engine/5.0.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.apiguardian_apiguardian-api",
+        ":org.junit.jupiter_junit-jupiter-api",
+        ":org.junit.platform_junit-platform-engine",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.junit.platform_junit-platform-commons",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/junit/platform/junit-platform-commons/1.0.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [":org.apiguardian_apiguardian-api"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.junit.platform_junit-platform-engine",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/junit/platform/junit-platform-engine/1.0.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.apiguardian_apiguardian-api",
+        ":org.junit.platform_junit-platform-commons",
+        ":org.opentest4j_opentest4j",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.junit.vintage_junit-vintage-engine",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/junit/vintage/junit-vintage-engine/4.12.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":org.apiguardian_apiguardian-api",
+        ":org.junit.platform_junit-platform-engine",
+    ],
+    runtime_deps = [":junit_junit"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "org.jvnet.staxex_stax-ex",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jvnet/staxex/stax-ex/1.7.7:jar",
     visibility = ["//visibility:public"],
@@ -1234,6 +1299,14 @@ maven_java_library(
 maven_java_library(
     name = "org.objenesis_objenesis",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/objenesis/objenesis/2.5:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "org.opentest4j_opentest4j",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/opentest4j/opentest4j/1.0.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
