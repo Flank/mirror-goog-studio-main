@@ -16,6 +16,7 @@
 package android.app;
 
 import android.mock.MockWindowManager;
+import android.os.PowerManager;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -38,5 +39,9 @@ public class Activity {
 
     public WindowManager getWindowManager() {
         return new MockWindowManager();
+    }
+
+    public PowerManager getPowerManager() {
+        return new PowerManager();
     }
 }

@@ -3,6 +3,7 @@ package com.android.tools.profiler;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.profiler.proto.Common.*;
+import com.android.tools.profiler.proto.EnergyServiceGrpc;
 import com.android.tools.profiler.proto.EventProfiler.ActivityDataResponse;
 import com.android.tools.profiler.proto.EventProfiler.EventDataRequest;
 import com.android.tools.profiler.proto.EventServiceGrpc;
@@ -23,6 +24,7 @@ public class GrpcUtils {
     private final EventServiceGrpc.EventServiceBlockingStub myEventServiceStub;
     private final NetworkServiceGrpc.NetworkServiceBlockingStub myNetworkServiceStub;
     private final MemoryServiceGrpc.MemoryServiceBlockingStub myMemoryServiceStub;
+    private final EnergyServiceGrpc.EnergyServiceBlockingStub myEnergyServiceStub;
     private final FakeAndroidDriver myMockApp;
 
     /** Connect to perfd using a socket and port, currently abstract sockets are not supported. */
@@ -32,6 +34,7 @@ public class GrpcUtils {
         myEventServiceStub = EventServiceGrpc.newBlockingStub(myChannel);
         myNetworkServiceStub = NetworkServiceGrpc.newBlockingStub(myChannel);
         myMemoryServiceStub = MemoryServiceGrpc.newBlockingStub(myChannel);
+        myEnergyServiceStub = EnergyServiceGrpc.newBlockingStub(myChannel);
         myMockApp = mockApp;
     }
 
@@ -49,6 +52,10 @@ public class GrpcUtils {
 
     public MemoryServiceGrpc.MemoryServiceBlockingStub getMemoryStub() {
         return myMemoryServiceStub;
+    }
+
+    public EnergyServiceGrpc.EnergyServiceBlockingStub getEnergyStub() {
+        return myEnergyServiceStub;
     }
 
     private ManagedChannel connectGrpc(String socket, int port) {
@@ -103,5 +110,11 @@ public class GrpcUtils {
         assertThat(myMockApp.waitForInput("StudioProfilers agent attached.")).isTrue();
 
         return session;
+    }
+
+    /** Ends the profiler session for the specified sessionId. */
+    public void endSession(long sessionId) {
+        myProfilerServiceStub.endSession(
+                EndSessionRequest.newBuilder().setSessionId(sessionId).build());
     }
 }

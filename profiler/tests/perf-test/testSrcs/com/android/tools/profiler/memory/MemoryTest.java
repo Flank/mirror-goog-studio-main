@@ -53,11 +53,7 @@ public class MemoryTest {
 
     @After
     public void tearDown() {
-        myGrpc.getProfilerStub()
-                .endSession(
-                        EndSessionRequest.newBuilder()
-                                .setSessionId(mySession.getSessionId())
-                                .build());
+        myGrpc.endSession(mySession.getSessionId());
         myGrpc.getMemoryStub()
                 .stopMonitoringApp(MemoryStopRequest.newBuilder().setSession(mySession).build());
     }

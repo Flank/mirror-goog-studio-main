@@ -128,3 +128,16 @@ perf_test(
         "//tools/idea/.idea/libraries:truth",
     ],
 )
+
+perf_test(
+    name = "EnergyTest",
+    srcs = [
+        "testSrcs/com/android/tools/profiler/energy/WakeLockTest.java",
+    ],
+    test_app = "//tools/base/profiler/tests/test-app:test-app",
+    deps = [
+        ":tests",
+        "//tools/base/profiler/tests/test-app:libjni.so",
+        "//tools/idea/.idea/libraries:truth",
+    ],
+)
