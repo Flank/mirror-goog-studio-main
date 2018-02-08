@@ -17,6 +17,9 @@
 
 namespace profiler {
 
+using profiler::proto::EnergyEvent;
+using std::vector;
+
 void EnergyCache::AddEnergyEvent(const EnergyEvent& data) {
   std::lock_guard<std::mutex> lock(energy_events_mutex_);
   energy_events_.emplace(data.pid(), CircularBuffer<EnergyEvent>(500))
