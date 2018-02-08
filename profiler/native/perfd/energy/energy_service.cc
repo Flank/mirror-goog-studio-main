@@ -17,6 +17,13 @@
 
 namespace profiler {
 
+using grpc::ServerContext;
+using grpc::Status;
+using proto::EnergyDataResponse;
+using proto::EnergyEventsResponse;
+using proto::EnergyRequest;
+using proto::EnergyService;
+
 Status EnergyServiceImpl::GetData(ServerContext* context,
                                   const EnergyRequest* request,
                                   EnergyDataResponse* response) {
