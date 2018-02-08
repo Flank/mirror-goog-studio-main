@@ -40,7 +40,7 @@ interface DeprecationReporter {
         // Deprecation of AAPT, replaced by AAPT2.
         AAPT("at the end of 2018"),
         // When legacy dexer will be removed and fully replaced by D8.
-        LEGACY_DEXER("in AGP version 3.2")
+        LEGACY_DEXER("in AGP version 3.3")
     }
 
     /**

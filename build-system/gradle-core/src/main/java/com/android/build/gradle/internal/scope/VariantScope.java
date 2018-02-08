@@ -48,6 +48,7 @@ import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -178,7 +179,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
             @NonNull ArtifactType artifactType);
 
     @NonNull
-    FileCollection getLocalPackagedJars();
+    Supplier<Collection<File>> getLocalPackagedJars();
 
     @NonNull
     FileCollection getProvidedOnlyClasspath();

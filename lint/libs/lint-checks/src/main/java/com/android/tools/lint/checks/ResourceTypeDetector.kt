@@ -280,6 +280,10 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         PsiType.BYTE == expressionType) {
                     break
                 }
+                if (expressionType.canonicalText == "android.util.Half") {
+                    break
+                }
+
                 val message = String.format("Half-float type in expression widened to %1\$s",
                         expressionType.canonicalText)
                 report(context, HALF_FLOAT, argument, context.getLocation(argument), message)

@@ -53,9 +53,11 @@ import java.util.Arrays;
 import java.util.List;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UDeclarationsExpression;
 import org.jetbrains.uast.UDoWhileExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UExpressionList;
 import org.jetbrains.uast.UField;
 import org.jetbrains.uast.UIfExpression;
 import org.jetbrains.uast.ULambdaExpression;
@@ -69,6 +71,7 @@ import org.jetbrains.uast.UUnaryExpression;
 import org.jetbrains.uast.UVariable;
 import org.jetbrains.uast.UWhileExpression;
 import org.jetbrains.uast.UastCallKind;
+import org.jetbrains.uast.UastSpecialExpressionKind;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
@@ -790,6 +793,24 @@ public class CleanupDetector extends Detector implements SourceCodeScanner {
             }
         } else if (parent instanceof UVariable
                 && (allowFields || !(parent instanceof UField))) {
+            // Handle elvis operators in Kotlin. A statement like this:
+            //   val transaction = f.beginTransaction() ?: return
+            // is turned into
+            //   var transaction: android.app.FragmentTransaction = elvis {
+            //       @org.jetbrains.annotations.NotNull var var8633f9d5: android.app.FragmentTransaction = f.beginTransaction()
+            //       if (var8633f9d5 != null) var8633f9d5 else return
+            //   }
+            // and here we want to record "transaction", not "var8633f9d5", as the variable
+            // to track.
+            if (parent.getUastParent() instanceof UDeclarationsExpression &&
+                    parent.getUastParent().getUastParent() instanceof UExpressionList) {
+                UExpressionList exp = (UExpressionList) parent.getUastParent().getUastParent();
+                UastSpecialExpressionKind kind = exp.getKind();
+                if (kind.getName().equals("elvis") && exp.getUastParent() instanceof UVariable) {
+                    parent = exp.getUastParent();
+                }
+            }
+
             return ((UVariable) parent).getPsi();
         }
 
