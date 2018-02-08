@@ -20,19 +20,32 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
- * Test that keep rules are applied properly when the main app references classes from the
- * library project.
+ * Test that keep rules are applied properly when the main app references classes from the library
+ * project.
  */
+@RunWith(FilterableParameterized.class)
 public class MinifyLibAndAppKeepRules {
+
+    @Parameterized.Parameters(name = "codeShrinker = {0}")
+    public static CodeShrinker[] data() {
+        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+    }
+
+    @Parameterized.Parameter() public CodeShrinker codeShrinker;
+
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("minifyLibWithJavaRes")
@@ -69,7 +82,7 @@ public class MinifyLibAndAppKeepRules {
                         "    }\n" +
                         "}");
 
-        project.execute(":app:assembleRelease");
+        project.executor().run(":app:assembleRelease");
         assertThat(project.getSubproject("app").getApk("release"))
                 .containsClass("LNoPackage;");
     }

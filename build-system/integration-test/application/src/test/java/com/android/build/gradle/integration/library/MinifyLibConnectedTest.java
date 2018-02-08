@@ -18,12 +18,25 @@ package com.android.build.gradle.integration.library;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(FilterableParameterized.class)
 public class MinifyLibConnectedTest {
+
+    @Parameterized.Parameters(name = "codeShrinker = {0}")
+    public static CodeShrinker[] getShrinkers() {
+        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+    }
+
+    @Parameterized.Parameter public CodeShrinker codeShrinker;
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("minifyLib").create();
@@ -31,6 +44,6 @@ public class MinifyLibConnectedTest {
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck();
+        project.executor().executeConnectedCheck();
     }
 }

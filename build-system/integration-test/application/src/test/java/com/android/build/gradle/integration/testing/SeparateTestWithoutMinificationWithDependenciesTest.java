@@ -1,30 +1,42 @@
 package com.android.build.gradle.integration.testing;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import java.io.IOException;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * Test separate test module that tests an application with some complicated dependencies : - the
  * app imports a library importing a jar file itself.
  */
+@RunWith(FilterableParameterized.class)
 public class SeparateTestWithoutMinificationWithDependenciesTest {
-    @ClassRule
-    public static GradleTestProject project =
+
+    @Parameterized.Parameters(name = "codeShrinker = {0}")
+    public static CodeShrinker[] getShrinkers() {
+        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+    }
+
+    @Parameterized.Parameter public CodeShrinker codeShrinker;
+
+    @Rule
+    public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("separateTestModuleWithDependencies")
                     .withDependencyChecker(false)
                     .create();
 
-    @BeforeClass
-    public static void setup() throws IOException, InterruptedException {
+    @Before
+    public void setup() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getSubproject("test").getBuildFile(),
                 "\n"
@@ -37,26 +49,18 @@ public class SeparateTestWithoutMinificationWithDependenciesTest {
                         + "            targetProjectPath ':app'\n"
                         + "            targetVariant 'debug'\n"
                         + "        }\n");
-        project.execute("clean", "assemble");
-    }
-
-    @AfterClass
-    public static void cleanUp() {
-        project = null;
+        project.execute("clean");
+        project.executor().run("assemble");
     }
 
     @Test
-    public void checkAppContainsAllDependentClasses() throws IOException, ProcessException {
-        Apk apk = project.getSubproject("app").getApk("debug");
+    public void checkApkContent() throws IOException, ProcessException {
+        Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
         TruthHelper.assertThatApk(apk)
                 .containsClass("Lcom/android/tests/jarDep/JarDependencyUtil;");
-    }
 
-    @Test
-    public void checkTestAppDoesNotContainAnyApplicationDependentClasses()
-            throws IOException, ProcessException {
-        Apk apk = project.getSubproject("test").getApk("debug");
-        TruthHelper.assertThatApk(apk)
+        Apk apkTest = project.getSubproject("test").getApk(GradleTestProject.ApkType.DEBUG);
+        TruthHelper.assertThatApk(apkTest)
                 .doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;");
     }
 }

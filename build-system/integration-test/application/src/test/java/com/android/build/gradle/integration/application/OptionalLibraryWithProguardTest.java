@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,13 +33,12 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class OptionalLibraryWithProguardTest {
 
-    @Parameterized.Parameters(name = "useProguard = {0}")
-    public static Object[][] data() {
-        return new Boolean[][] {{true}, {false}};
+    @Parameterized.Parameters(name = "codeShrinker = {0}")
+    public static CodeShrinker[] data() {
+        return CodeShrinker.values();
     }
 
-    @Parameterized.Parameter(0)
-    public boolean useProguard;
+    @Parameterized.Parameter public CodeShrinker codeShrinker;
 
     @Rule
     public GradleTestProject project =
@@ -46,18 +46,18 @@ public class OptionalLibraryWithProguardTest {
 
     @Before
     public void chooseShrinker() throws Exception {
-        if (!useProguard) {
+        if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
             ShrinkerTestUtils.enableShrinker(project.getSubproject("app"), "debug");
         }
     }
 
     @Test
     public void testThatProguardCompilesWithOptionalClasses() throws Exception {
-        project.execute("clean", "app:assembleDebug");
+        project.executor().run("clean", "app:assembleDebug");
     }
 
     @Test
     public void testUnitTestWithOptionalClasses() throws Exception {
-        project.execute("clean", "mylibrary:test");
+        project.executor().run("clean", "mylibrary:test");
     }
 }

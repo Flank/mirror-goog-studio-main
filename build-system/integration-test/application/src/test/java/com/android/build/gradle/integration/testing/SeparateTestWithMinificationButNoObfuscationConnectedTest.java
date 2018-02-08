@@ -17,22 +17,39 @@
 package com.android.build.gradle.integration.testing;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(FilterableParameterized.class)
 public class SeparateTestWithMinificationButNoObfuscationConnectedTest {
+
+    @Parameterized.Parameters(name = "codeShrinker = {0}")
+    public static CodeShrinker[] getShrinkers() {
+        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+    }
+
+    @Parameterized.Parameter public CodeShrinker codeShrinker;
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("separateTestWithMinificationButNoObfuscation")
                     .create();
 
+    @Rule public Adb adb = new Adb();
+
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws IOException, InterruptedException {
-        project.execute(":test:deviceAndroidTest");
+        adb.exclusiveAccess();
+        project.executor().run(":test:connectedCheck");
     }
 }

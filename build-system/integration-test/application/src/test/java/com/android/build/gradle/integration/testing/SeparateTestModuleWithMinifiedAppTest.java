@@ -22,19 +22,29 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.utils.FileUtils;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
 
-/**
- * Test for a separate test module run against the minified app.
- */
+/** Test for a separate test module run against the minified app. */
+@RunWith(FilterableParameterized.class)
 public class SeparateTestModuleWithMinifiedAppTest {
+
+    @Parameterized.Parameters(name = "codeShrinker = {0}")
+    public static CodeShrinker[] getShrinkers() {
+        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+    }
+
+    @Parameterized.Parameter public CodeShrinker codeShrinker;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -65,7 +75,7 @@ public class SeparateTestModuleWithMinifiedAppTest {
 
     @Test
     public void checkMappingsApplied() throws Exception {
-        project.execute("clean", ":test:assembleMinified");
+        project.executor().run("clean", ":test:assembleMinified");
 
         GradleTestProject testProject = project.getSubproject("test");
 
