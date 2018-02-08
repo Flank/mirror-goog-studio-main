@@ -42,16 +42,16 @@ message EnergyRequest {
   int64 end_timestamp = 3;
 }
 
-message EnergyDataResponse {
-  message EnergySample {
-    // Time when the energy sample usages occured.
-    int64 timestamp = 1;
-    // Sample usage data by cpu in mAh.
-    int32 cpu_usage = 2;
-    // Sample usage data by network in mAh.
-    int32 network_usage = 3;
-  }
+message EnergySample {
+  // Time when the energy sample usages occured.
+  int64 timestamp = 1;
+  // Sample usage data by cpu in mAh.
+  int32 cpu_usage = 2;
+  // Sample usage data by network in mAh.
+  int32 network_usage = 3;
+}
 
+message EnergyDataResponse {
   // List of Energy usage sample data.
   repeated EnergySample sample_data = 1;
 }
