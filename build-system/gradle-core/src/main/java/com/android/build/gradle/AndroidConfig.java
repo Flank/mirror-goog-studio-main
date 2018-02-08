@@ -45,8 +45,6 @@ import java.util.List;
 import org.gradle.api.Action;
 import org.gradle.api.Incubating;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.tasks.Internal;
 
 /**
@@ -506,7 +504,7 @@ public interface AndroidConfig {
      * type-, product flavor-, and build variant-specific source set. you can run this task from the
      * command line as follows:
      *
-     * <pre>./gradlew sourseSets</pre>
+     * <pre>./gradlew sourceSets</pre>
      *
      * <p>The following sample output describes where Gradle expects to find certain files for the
      * "debug" build type:

@@ -16,9 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_URI;
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.TAG_PERMISSION;
 import static com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION;
 import static com.android.tools.lint.checks.PermissionRequirement.REVOCABLE_PERMISSION_NAMES;
 import static com.android.tools.lint.checks.PermissionRequirement.isRevocableSystemPermission;
@@ -28,28 +25,15 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.AndroidVersion;
-import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.PermissionHolder.SetPermissionLookup;
-import com.android.utils.XmlUtils;
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 import com.intellij.psi.JavaTokenType;
-import java.io.File;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 import junit.framework.TestCase;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.ULiteralExpression;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 public class PermissionRequirementTest extends TestCase {
     public static class MockValue {
@@ -84,7 +68,7 @@ public class PermissionRequirementTest extends TestCase {
                 "android.permission.ACCESS_FINE_LOCATION");
         Set<String> emptySet = Collections.emptySet();
         Set<String> fineSet = Collections.singleton("android.permission.ACCESS_FINE_LOCATION");
-        UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION, values);
+        UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         PermissionRequirement req = PermissionRequirement.create(annotation);
         assertTrue(req.isRevocable(new SetPermissionLookup(emptySet)));
 
@@ -111,7 +95,7 @@ public class PermissionRequirementTest extends TestCase {
                 "android.permission.ACCESS_FINE_LOCATION",
                 "android.permission.ACCESS_COARSE_LOCATION");
 
-        UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION, values);
+        UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         PermissionRequirement req = PermissionRequirement.create(annotation);
         assertTrue(req.isRevocable(new SetPermissionLookup(emptySet)));
         assertFalse(req.isSatisfied(new SetPermissionLookup(emptySet)));
@@ -137,7 +121,7 @@ public class PermissionRequirementTest extends TestCase {
                 "android.permission.ACCESS_FINE_LOCATION",
                 "android.permission.ACCESS_COARSE_LOCATION");
 
-        UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION, values);
+        UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         PermissionRequirement req = PermissionRequirement.create(annotation);
         assertTrue(req.isRevocable(new SetPermissionLookup(emptySet)));
         assertFalse(req.isSatisfied(new SetPermissionLookup(emptySet)));
@@ -165,7 +149,7 @@ public class PermissionRequirementTest extends TestCase {
         // Annotations let you supply a single string to an array method
         MockValue values = new MockValue("allOf",
                 "android.permission.ACCESS_FINE_LOCATION");
-        UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION, values);
+        UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         assertTrue(PermissionRequirement.create(annotation).isSingle());
     }
 
@@ -186,8 +170,10 @@ public class PermissionRequirementTest extends TestCase {
         PermissionRequirement req;
 
         // No date range applies to permission
-        annotation = createUAnnotation(PERMISSION_ANNOTATION,
-                new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"));
+        annotation =
+                createUAnnotation(
+                        PERMISSION_ANNOTATION.defaultName(),
+                        new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"));
         req = PermissionRequirement.create(annotation);
         assertTrue(req.appliesTo(getHolder(15, 1)));
         assertTrue(req.appliesTo(getHolder(15, 19)));
@@ -196,9 +182,11 @@ public class PermissionRequirementTest extends TestCase {
         assertTrue(req.appliesTo(getHolder(23, 23)));
 
         // Permission discontinued in API 23:
-        annotation = createUAnnotation(PERMISSION_ANNOTATION,
-                new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
-                new MockValue("apis", "..22"));
+        annotation =
+                createUAnnotation(
+                        PERMISSION_ANNOTATION.defaultName(),
+                        new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
+                        new MockValue("apis", "..22"));
         req = PermissionRequirement.create(annotation);
         assertTrue(req.appliesTo(getHolder(15, 1)));
         assertTrue(req.appliesTo(getHolder(15, 19)));
@@ -207,9 +195,11 @@ public class PermissionRequirementTest extends TestCase {
         assertFalse(req.appliesTo(getHolder(23, 23)));
 
         // Permission requirement started in API 23
-        annotation = createUAnnotation(PERMISSION_ANNOTATION,
-                new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
-                new MockValue("apis", "23.."));
+        annotation =
+                createUAnnotation(
+                        PERMISSION_ANNOTATION.defaultName(),
+                        new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
+                        new MockValue("apis", "23.."));
         req = PermissionRequirement.create(annotation);
         assertFalse(req.appliesTo(getHolder(15, 1)));
         assertFalse(req.appliesTo(getHolder(1, 19)));
@@ -218,9 +208,11 @@ public class PermissionRequirementTest extends TestCase {
         assertTrue(req.appliesTo(getHolder(23, 30)));
 
         // Permission requirement applied from API 14 through API 18
-        annotation = createUAnnotation(PERMISSION_ANNOTATION,
-                new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
-                new MockValue("apis", "14..18"));
+        annotation =
+                createUAnnotation(
+                        PERMISSION_ANNOTATION.defaultName(),
+                        new MockValue("value", "android.permission.AUTHENTICATE_ACCOUNTS"),
+                        new MockValue("apis", "14..18"));
         req = PermissionRequirement.create(annotation);
         assertFalse(req.appliesTo(getHolder(1, 5)));
         assertTrue(req.appliesTo(getHolder(15, 19)));

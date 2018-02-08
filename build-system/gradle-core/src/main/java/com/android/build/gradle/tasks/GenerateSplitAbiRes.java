@@ -66,6 +66,7 @@ import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.workers.IsolationMode;
 import org.gradle.workers.WorkerExecutor;
 
 /** Generates all metadata (like AndroidManifest.xml) necessary for a ABI dimension split APK. */
@@ -180,22 +181,28 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             File manifestFile = generateSplitManifest(split, abiApkData);
 
             AndroidBuilder builder = getBuilder();
-            AaptPackageConfig.Builder aaptConfig = new AaptPackageConfig.Builder();
-            aaptConfig
-                    .setManifestFile(manifestFile)
-                    .setOptions(DslAdaptersKt.convert(aaptOptions))
-                    .setDebuggable(debuggable)
-                    .setResourceOutputApk(resPackageFile)
-                    .setVariantType(variantType);
+            AaptPackageConfig aaptConfig =
+                    new AaptPackageConfig.Builder()
+                            .setManifestFile(manifestFile)
+                            .setOptions(DslAdaptersKt.convert(aaptOptions))
+                            .setDebuggable(debuggable)
+                            .setResourceOutputApk(resPackageFile)
+                            .setVariantType(variantType)
+                            .setAndroidTarget(builder.getTarget())
+                            .build();
             if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
                 Aapt2ProcessResourcesRunnable.Params params =
                         new Aapt2ProcessResourcesRunnable.Params(
-                                getBuildTools().getRevision(), aaptConfig.build());
+                                getBuildTools().getRevision(), aaptConfig);
                 workerExecutor.submit(
-                        Aapt2ProcessResourcesRunnable.class, it -> it.setParams(params));
+                        Aapt2ProcessResourcesRunnable.class,
+                        it -> {
+                            it.setIsolationMode(IsolationMode.NONE);
+                            it.setParams(params);
+                        });
             } else {
                 try (Aapt aapt = makeAapt(builder)) {
-                    builder.processResources(aapt, aaptConfig);
+                    AndroidBuilder.processResources(aapt, aaptConfig, builder.getLogger());
                 }
             }
 

@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.android.ide.common.resources;
 
 import com.android.annotations.NonNull;
@@ -9,12 +24,12 @@ import com.android.ide.common.rendering.api.RenderResources;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.res2.ResourceRepository;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.Density;
 import com.android.resources.ResourceType;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +37,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import junit.framework.TestCase;
 
 public class ResourceResolverNoNamespacesTest extends TestCase {
+    private final ResourceRepositoryFixture resourceFixture = new ResourceRepositoryFixture();
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        resourceFixture.setUp();
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        try {
+            resourceFixture.tearDown();
+        } finally {
+            super.tearDown();
+        }
+    }
 
     static ResourceResolver nonNamespacedResolver(
             Map<ResourceType, ResourceValueMap> projectResources,
@@ -39,8 +70,8 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testBasicFunctionality() throws Exception {
-        TestResourceRepository frameworkRepository = TestResourceRepository.create(true,
-                new Object[]{
+        ResourceRepository frameworkRepository =
+                resourceFixture.createTestResources(ResourceNamespace.ANDROID, new Object[] {
                         "values/strings.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<resources>\n"
@@ -76,15 +107,15 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         + "</resources>\n",
                 });
 
-        TestResourceRepository projectRepository = TestResourceRepository.create(false,
-                new Object[]{
+        ResourceRepository projectRepository =
+                resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
                         "layout/layout1.xml", "<!--contents doesn't matter-->",
 
                         "layout/layout2.xml", "<!--contents doesn't matter-->",
 
                         "layout-land/layout1.xml", "<!--contents doesn't matter-->",
 
-                        "layout-land/onlyLand.xml", "<!--contents doesn't matter-->",
+                        "layout-land/onlyland.xml", "<!--contents doesn't matter-->",
 
                         "drawable/graphic.9.png", new byte[0],
 
@@ -144,13 +175,14 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         + "</resources>\n",
                 });
 
-        assertFalse(projectRepository.isFrameworkRepository());
+        assertEquals(
+                Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
-                projectRepository.getConfiguredResources(config);
+                projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
         Map<ResourceType, ResourceValueMap> frameworkResources =
-                frameworkRepository.getConfiguredResources(config);
+                frameworkRepository.getConfiguredResources(config).row(ResourceNamespace.ANDROID);
         assertNotNull(projectResources);
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, frameworkResources, "MyTheme", true);
@@ -375,14 +407,11 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 + "@android:color/background_light => #ffffffff",
                 ResourceItemResolver.getDisplayString("@android:color/bright_foreground_dark",
                         chain));
-
-        frameworkRepository.dispose();
-        projectRepository.dispose();
     }
 
     public void testMissingMessage() throws Exception {
-        TestResourceRepository projectRepository = TestResourceRepository.create(false,
-                new Object[]{
+        ResourceRepository projectRepository =
+                resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
                         "values/colors.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<resources>\n"
@@ -393,11 +422,12 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
 
                 });
 
-        assertFalse(projectRepository.isFrameworkRepository());
+        assertEquals(
+                Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
-                projectRepository.getConfiguredResources(config);
+                projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
         assertNotNull(projectResources);
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, projectResources, "MyTheme", true);
@@ -418,12 +448,11 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         resolver.setLogger(logger);
         assertNull(resolver.findResValue("@string/show_all_apps", true));
         assertTrue(wasWarned.get());
-        projectRepository.dispose();
     }
 
     public void testLoop() throws Exception {
-        TestResourceRepository projectRepository = TestResourceRepository.create(false,
-                new Object[]{
+        ResourceRepository projectRepository =
+                resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
                         "values/colors.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<resources>\n"
@@ -434,11 +463,12 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
 
                 });
 
-        assertFalse(projectRepository.isFrameworkRepository());
+        assertEquals(
+                Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
-                projectRepository.getConfiguredResources(config);
+                projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
         assertNotNull(projectResources);
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, projectResources, "MyTheme", true);
@@ -479,45 +509,41 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertNotNull(resolver.findResValue("@color/loop2a", false));
         resolver.resolveResValue(resolver.findResValue("@color/loop2a", false));
         assertTrue(wasWarned.get());
-
-        projectRepository.dispose();
     }
 
-    public void testParentCycle() throws IOException {
-        TestResourceRepository projectRepository =
-                TestResourceRepository.create(
-                        false,
-                        new Object[] {
-                            "values/styles.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<resources>\n"
-                                            + "    <style name=\"ButtonStyle.Base\">\n"
-                                            + "        <item name=\"android:textColor\">#ff0000</item>\n"
-                                            + "    </style>\n"
-                                            + "    <style name=\"ButtonStyle\" parent=\"ButtonStyle.Base\">\n"
-                                            + "        <item name=\"android:layout_height\">40dp</item>\n"
-                                            + "    </style>\n"
-                                            + "</resources>\n",
-                            "layouts/layout.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    android:layout_width=\"match_parent\"\n"
-                                            + "    android:layout_height=\"match_parent\">\n"
-                                            + "\n"
-                                            + "    <TextView\n"
-                                            + "        style=\"@style/ButtonStyle\"\n"
-                                            + "        android:layout_width=\"wrap_content\"\n"
-                                            + "        android:layout_height=\"wrap_content\" />\n"
-                                            + "\n"
-                                            + "</RelativeLayout>\n",
+    public void testParentCycle() throws Exception {
+        ResourceRepository projectRepository =
+                resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
+                            "values/styles.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<resources>\n"
+                            + "    <style name=\"ButtonStyle.Base\">\n"
+                            + "        <item name=\"android:textColor\">#ff0000</item>\n"
+                            + "    </style>\n"
+                            + "    <style name=\"ButtonStyle\" parent=\"ButtonStyle.Base\">\n"
+                            + "        <item name=\"android:layout_height\">40dp</item>\n"
+                            + "    </style>\n"
+                            + "</resources>\n",
+
+                            "layouts/layout.xml", ""
+                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "    android:layout_width=\"match_parent\"\n"
+                            + "    android:layout_height=\"match_parent\">\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "        style=\"@style/ButtonStyle\"\n"
+                            + "        android:layout_width=\"wrap_content\"\n"
+                            + "        android:layout_height=\"wrap_content\" />\n"
+                            + "\n"
+                            + "</RelativeLayout>\n",
                         });
-        assertFalse(projectRepository.isFrameworkRepository());
+        assertEquals(
+                Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
-                projectRepository.getConfiguredResources(config);
+                projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
         assertNotNull(projectResources);
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, projectResources, "ButtonStyle", true);
@@ -552,13 +578,11 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         ResourceValue missing = resolver.findItemInStyle(buttonStyle, "missing", true);
         assertNull(missing);
         assertTrue(wasWarned.get());
-
-        projectRepository.dispose();
     }
 
     public void testSetDeviceDefaults() throws Exception {
-        TestResourceRepository frameworkRepository = TestResourceRepository.create(true,
-            new Object[] {
+        ResourceRepository frameworkRepository =
+            resourceFixture.createTestResources(ResourceNamespace.ANDROID, new Object[] {
                 "values/themes.xml", ""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<resources>\n"
@@ -597,8 +621,8 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 + "</resources>\n",
         });
 
-        TestResourceRepository projectRepository = TestResourceRepository.create(false,
-            new Object[] {
+        ResourceRepository projectRepository =
+            resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
                 "values/themes.xml", ""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<resources>\n"
@@ -607,13 +631,14 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 + "</resources>\n"
         });
 
-        assertFalse(projectRepository.isFrameworkRepository());
+        assertEquals(
+                Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
-        Map<ResourceType, ResourceValueMap> projectResources = projectRepository
-                .getConfiguredResources(config);
-        Map<ResourceType, ResourceValueMap> frameworkResources = frameworkRepository
-                .getConfiguredResources(config);
+        Map<ResourceType, ResourceValueMap> projectResources =
+                projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
+        Map<ResourceType, ResourceValueMap> frameworkResources =
+                frameworkRepository.getConfiguredResources(config).row(ResourceNamespace.ANDROID);
         assertNotNull(projectResources);
         ResourceResolver lightResolver =
                 nonNamespacedResolver(projectResources, frameworkResources, "AppTheme", true);
@@ -661,37 +686,35 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testCycle() throws Exception {
-        TestResourceRepository frameworkRepository = TestResourceRepository.create(true,
-                new Object[] {
-                        "values/themes.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <style name=\"Theme.DeviceDefault.Light\"/>\n"
-                        + "</resources>\n",
-                });
+        ResourceRepository frameworkRepository =
+            resourceFixture.createTestResources(ResourceNamespace.ANDROID, new Object[] {
+                "values/themes.xml", ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<resources>\n"
+                + "    <style name=\"Theme.DeviceDefault.Light\"/>\n"
+                + "</resources>\n",
+            });
 
-        TestResourceRepository projectRepository =
-                TestResourceRepository.create(
-                        false,
-                        new Object[] {
-                            "values/themes.xml",
-                            ""
-                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                    + "<resources>\n"
-                                    + "    <style name=\"AppTheme\" parent=\"android:Theme.DeviceDefault.Light\"/>\n"
-                                    + "    <style name=\"AppTheme.Dark\" parent=\"android:Theme.DeviceDefault\"/>\n"
-                                    + "    <style name=\"foo\" parent=\"bar\"/>\n"
-                                    + "    <style name=\"bar\" parent=\"foo\"/>\n"
-                                    + "</resources>\n"
-                        });
+        ResourceRepository projectRepository =
+            resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
+                "values/themes.xml", ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<resources>\n"
+                + "    <style name=\"AppTheme\" parent=\"android:Theme.DeviceDefault.Light\"/>\n"
+                + "    <style name=\"AppTheme.Dark\" parent=\"android:Theme.DeviceDefault\"/>\n"
+                + "    <style name=\"foo\" parent=\"bar\"/>\n"
+                + "    <style name=\"bar\" parent=\"foo\"/>\n"
+                + "</resources>\n"
+            });
 
-        assertFalse(projectRepository.isFrameworkRepository());
+        assertEquals(
+                Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values");
         assertNotNull(config);
-        Map<ResourceType, ResourceValueMap> projectResources = projectRepository
-                .getConfiguredResources(config);
-        Map<ResourceType, ResourceValueMap> frameworkResources = frameworkRepository
-                .getConfiguredResources(config);
+        Map<ResourceType, ResourceValueMap> projectResources =
+                projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
+        Map<ResourceType, ResourceValueMap> frameworkResources =
+                frameworkRepository.getConfiguredResources(config).row(ResourceNamespace.ANDROID);
         assertNotNull(projectResources);
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, frameworkResources, "AppTheme", true);
@@ -717,46 +740,43 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         resolver.setLogger(logger);
         assertFalse(resolver.isTheme(resolver.findResValue("@style/foo", false), null));
         assertTrue(wasWarned.get());
-
-        projectRepository.dispose();
-
     }
 
     public void testCopy() throws Exception {
-        TestResourceRepository frameworkRepository = TestResourceRepository.create(true,
-                new Object[]{
-                        "values/themes.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <style name=\"Theme.Material\"/>\n"
-                        + "</resources>\n",
-                });
-        TestResourceRepository projectRepository = TestResourceRepository.create(false,
-                new Object[]{
-                        "values/colors.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <color name=\"loop1\">@color/loop1</color>\n"
-                        + "    <color name=\"loop2a\">@color/loop2b</color>\n"
-                        + "    <color name=\"loop2b\">@color/loop2a</color>\n"
-                        + "    <style name=\"MyStyle\"/>\n"
-                        + "</resources>\n",
-                        "values/styles.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <style name=\"MyStyle\"/>\n"
-                        + "</resources>\n",
+        ResourceRepository frameworkRepository =
+            resourceFixture.createTestResources(ResourceNamespace.ANDROID, new Object[] {
+                "values/themes.xml", ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<resources>\n"
+                + "    <style name=\"Theme.Material\"/>\n"
+                + "</resources>\n",
+            });
+        ResourceRepository projectRepository =
+            resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
+                "values/colors.xml", ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<resources>\n"
+                + "    <color name=\"loop1\">@color/loop1</color>\n"
+                + "    <color name=\"loop2a\">@color/loop2b</color>\n"
+                + "    <color name=\"loop2b\">@color/loop2a</color>\n"
+                + "    <style name=\"MyStyle\"/>\n"
+                + "</resources>\n",
 
-                });
+                "values/styles.xml", ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<resources>\n"
+                + "    <style name=\"MyStyle\"/>\n"
+                + "</resources>\n",
+            });
 
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
-                projectRepository.getConfiguredResources(config);
+                projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
         assertNotNull(projectResources);
 
         Map<ResourceType, ResourceValueMap> frameworkResources =
-                frameworkRepository.getConfiguredResources(config);
+                frameworkRepository.getConfiguredResources(config).row(ResourceNamespace.ANDROID);
         assertNotNull(frameworkResources);
 
         ResourceResolver resolver =
@@ -773,9 +793,6 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         resolver.clearStyles();
         assertEquals(1, resolver.getAllThemes().size());
         assertEquals(1, copyResolver.getAllThemes().size());
-
-        frameworkRepository.dispose();
-        projectRepository.dispose();
     }
 
     public void testEmptyRepository() throws Exception {
@@ -791,7 +808,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertNull(resolver.getTheme("NoTheme", true));
     }
 
-    public void testResolverIds() throws IOException {
+    public void testResolverIds() throws Exception {
         ImmutableMap<String, Integer> frameworkIds =
                 ImmutableMap.of(
                         "framework_id1", 1,
@@ -800,10 +817,8 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                 ImmutableMap.of(
                         "lib_id1", 11,
                         "lib_id2", 22);
-        TestResourceRepository projectRepository =
-                TestResourceRepository.create(
-                        false,
-                        new Object[] {
+        ResourceRepository projectRepository =
+                resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
                             "layout/layout1.xml",
                             "<!--contents doesn't matter-->",
                             "layout/layout2.xml",
@@ -827,11 +842,12 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                     + "\n"
                                     + "</RelativeLayout>\n",
                         });
-        assertFalse(projectRepository.isFrameworkRepository());
+        assertEquals(
+                Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
         Map<ResourceType, ResourceValueMap> projectResources =
-                projectRepository.getConfiguredResources(config);
+                projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
         assertNotNull(projectResources);
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, projectResources, "ButtonStyle", true);
@@ -860,7 +876,5 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertNotNull(resolver.findResValue("@id/lib_id1", false));
         assertNull(resolver.findResValue("@id/lib_id1", true));
         assertNull(resolver.findResValue("@android:id/lib_id1", false));
-
-        projectRepository.dispose();
     }
 }

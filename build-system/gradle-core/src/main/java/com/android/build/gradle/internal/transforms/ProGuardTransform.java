@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.transforms;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.android.utils.FileUtils.mkdirs;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -55,6 +56,7 @@ import java.util.concurrent.ExecutionException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.compile.CompileOptions;
 import proguard.ClassPath;
 
 /**
@@ -228,9 +230,9 @@ public class ProGuardTransform extends BaseProguardAction {
             addInputsToConfiguration(referencedInputs, true);
 
             // libraryJars: the runtime jars, with all optional libraries.
-            for (File runtimeJar : globalScope.getAndroidBuilder().getBootClasspath(true)) {
-                libraryJar(runtimeJar);
-            }
+            CompileOptions options = requireNonNull(variantScope.getJavacTask()).getOptions();
+            options.getBootstrapClasspath().getFiles().forEach(this::libraryJar);
+            globalScope.getAndroidBuilder().getBootClasspath(true).forEach(this::libraryJar);
 
             // --- Out files ---
             outJar(outFile);

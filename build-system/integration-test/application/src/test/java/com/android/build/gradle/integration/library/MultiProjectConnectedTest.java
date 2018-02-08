@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,6 +32,7 @@ public class MultiProjectConnectedTest {
 
     @Rule public Adb adb = new Adb();
 
+    @Ignore("Causes deadlocks.")
     @Test
     @Category(DeviceTests.class)
     public void connectedCheckAndReport() throws IOException, InterruptedException {

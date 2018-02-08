@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.api.artifact
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType
 
 /**
  * Utility class for [ArtifactType]
@@ -28,6 +29,8 @@ private val sourceArtifactMap : Map<String, ArtifactType> =
         SourceArtifactType.values().associateBy(ArtifactType::name)
 private val buildArtifactMap : Map<String, ArtifactType> =
         BuildArtifactType.values().associateBy(ArtifactType::name)
+private val internalArtifactMap : Map<String, ArtifactType> =
+        InternalArtifactType.values().associateBy(ArtifactType::name)
 
 /**
  * Return the enum of [ArtifactType] base on the name.
@@ -39,4 +42,5 @@ private val buildArtifactMap : Map<String, ArtifactType> =
 fun String.toArtifactType() : ArtifactType =
     sourceArtifactMap[this] ?:
             buildArtifactMap[this]  ?:
+            internalArtifactMap[this] ?:
             throw IllegalArgumentException("'$this' is not a value ArtifactType.")

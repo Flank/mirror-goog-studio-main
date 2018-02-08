@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.tasks.BuildArtifactReportTask
 import org.junit.Before
@@ -54,7 +55,9 @@ android {
         project.executor()
                 .with(StringOption.BUILD_ARTIFACT_REPORT_FILE, "report.txt")
                 .run("reportBuildArtifactsDebug")
-        val report = BuildArtifactReportTask.parseReport(project.file("report.txt"))
-        assertThat(report).hasSize(0)
+        val report = BuildArtifactsHolder.parseReport(project.file("report.txt"))
+        for (data in report.values) {
+            assertThat(data).hasSize(1)
+        }
     }
 }

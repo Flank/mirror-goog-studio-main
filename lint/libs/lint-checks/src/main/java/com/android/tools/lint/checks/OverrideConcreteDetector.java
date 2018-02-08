@@ -29,10 +29,10 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Collections;
 import java.util.List;
 import org.jetbrains.uast.UClass;
+import org.jetbrains.uast.UastUtils;
 
 /**
  * Checks that subclasses of certain APIs are overriding all methods that were abstract
@@ -142,14 +142,14 @@ public class OverrideConcreteDetector extends Detector implements SourceCodeScan
         }
     }
 
-    private static int getTargetApi(@NonNull PsiClass node) {
+    private static int getTargetApi(@NonNull UClass node) {
         while (node != null) {
-            int targetApi = ApiDetector.getTargetApi(node.getModifierList());
+            int targetApi = ApiDetector.getTargetApi(node);
             if (targetApi != -1) {
                 return targetApi;
             }
 
-            node = PsiTreeUtil.getParentOfType(node, PsiClass.class, true);
+            node = UastUtils.getParentOfType(node, UClass.class, true);
         }
 
         return -1;

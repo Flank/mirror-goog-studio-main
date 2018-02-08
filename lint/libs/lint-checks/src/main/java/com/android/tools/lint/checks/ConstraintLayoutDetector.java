@@ -45,8 +45,8 @@ import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.collect.ImmutableList;
 import java.util.Collection;
-import java.util.Collections;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -90,7 +90,7 @@ public class ConstraintLayoutDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Collections.singletonList(CONSTRAINT_LAYOUT);
+        return ImmutableList.of(CONSTRAINT_LAYOUT.oldName(), CONSTRAINT_LAYOUT.newName());
     }
 
     @Override
@@ -130,7 +130,7 @@ public class ConstraintLayoutDetector extends LayoutDetector {
             }
             Element element = (Element)child;
 
-            if (element.getTagName().equals(CLASS_CONSTRAINT_LAYOUT_GUIDELINE)) {
+            if (CLASS_CONSTRAINT_LAYOUT_GUIDELINE.isEquals(element.getTagName())) {
                 continue;
             }
 

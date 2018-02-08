@@ -23,28 +23,51 @@ import java.util.Map;
 
 /** The "build" folder paths per module. */
 public class BuildFolderPaths {
-    // Key: Module's Gradle path. Value: Path of the module's 'build' folder.
-    @NonNull private final Map<String, File> myBuildFolderPathsByModule = new HashMap<>();
+    // Key: project build id
+    // Value: key - module's Gradle path, value - path of the module's 'build' folder.
+    @NonNull
+    private final Map<String, Map<String, File>> myBuildFolderPathsByModule = new HashMap<>();
+
+    private String myRootBuildId;
+
+    /**
+     * Set the build identifier of root project.
+     *
+     * @param rootBuildId build identifier of root project.
+     */
+    public void setRootBuildId(@NonNull String rootBuildId) {
+        myRootBuildId = rootBuildId;
+    }
 
     /**
      * Stores the "build" folder path for the given module.
      *
+     * @param buildId build identifier of the project.
      * @param moduleGradlePath module's gradle path.
      * @param buildFolder path to the module's build directory.
      */
-    public void addBuildFolderMapping(@NonNull String moduleGradlePath, @NonNull File buildFolder) {
-        myBuildFolderPathsByModule.put(moduleGradlePath, buildFolder);
+    public void addBuildFolderMapping(
+            @NonNull String buildId, @NonNull String moduleGradlePath, @NonNull File buildFolder) {
+        Map<String, File> perBuildMap =
+                myBuildFolderPathsByModule.computeIfAbsent(buildId, id -> new HashMap<>());
+        perBuildMap.put(moduleGradlePath, buildFolder);
     }
 
     /**
-     * Finds the path of the "build" folder for the given module path.
+     * Finds the path of the "build" folder for the given module path and build id.
      *
-     * @param moduleGradlePath the given module path.
-     * @return the path of the "build" folder for the given module path; or {@code null} if the path
-     *     is not found or haven't been registered yet.
+     * @param moduleGradlePath the gradle path of module.
+     * @param buildId build identifier of included project of the module.
+     * @return the "build" folder for the given module path from build id; or {@code null} if the
+     *     path or build id is not found.
      */
     @Nullable
-    public File findBuildFolderPath(@NonNull String moduleGradlePath) {
-        return myBuildFolderPathsByModule.get(moduleGradlePath);
+    public File findBuildFolderPath(@NonNull String moduleGradlePath, @Nullable String buildId) {
+        // buildId can be null for root project or for pre-3.1 plugin.
+        String projectId = buildId == null ? myRootBuildId : buildId;
+        if (myBuildFolderPathsByModule.containsKey(projectId)) {
+            return myBuildFolderPathsByModule.get(projectId).get(moduleGradlePath);
+        }
+        return null;
     }
 }

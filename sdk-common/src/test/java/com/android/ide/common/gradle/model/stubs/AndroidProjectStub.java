@@ -34,6 +34,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull private final String myBuildToolsVersion;
     @NonNull private final Collection<SyncIssue> mySyncIssues;
     @NonNull private final Collection<Variant> myVariants;
+    @NonNull private final Collection<String> myVariantNames;
     @NonNull private final Collection<String> myFlavorDimensions;
     @NonNull private final String myCompileTarget;
     @NonNull private final Collection<String> myBootClasspath;
@@ -61,6 +62,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 "buildToolsVersion",
                 Lists.newArrayList(new SyncIssueStub()),
                 Lists.newArrayList(new VariantStub()),
+                Lists.newArrayList("debug", "release"),
                 Lists.newArrayList("flavorDimension"),
                 "compileTarget",
                 Lists.newArrayList("bootClasspath"),
@@ -88,6 +90,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             @NonNull String buildToolsVersion,
             @NonNull Collection<SyncIssue> syncIssues,
             @NonNull Collection<Variant> variants,
+            @NonNull Collection<String> variantNames,
             @NonNull Collection<String> flavorDimensions,
             @NonNull String compileTarget,
             @NonNull Collection<String> bootClasspath,
@@ -112,6 +115,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         myBuildToolsVersion = buildToolsVersion;
         mySyncIssues = syncIssues;
         myVariants = variants;
+        myVariantNames = variantNames;
         myFlavorDimensions = flavorDimensions;
         myCompileTarget = compileTarget;
         myBootClasspath = bootClasspath;
@@ -176,6 +180,12 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull
     public Collection<Variant> getVariants() {
         return myVariants;
+    }
+
+    @Override
+    @NonNull
+    public Collection<String> getVariantNames() {
+        return myVariantNames;
     }
 
     @Override
@@ -304,6 +314,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 && Objects.equals(getBuildToolsVersion(), stub.getBuildToolsVersion())
                 && Objects.equals(getSyncIssues(), stub.getSyncIssues())
                 && Objects.equals(getVariants(), stub.getVariants())
+                && Objects.equals(getVariantNames(), stub.getVariantNames())
                 && Objects.equals(getFlavorDimensions(), stub.getFlavorDimensions())
                 && Objects.equals(getCompileTarget(), stub.getCompileTarget())
                 && Objects.equals(getBootClasspath(), stub.getBootClasspath())
@@ -327,6 +338,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 getBuildToolsVersion(),
                 getSyncIssues(),
                 getVariants(),
+                getVariantNames(),
                 getFlavorDimensions(),
                 getCompileTarget(),
                 getBootClasspath(),
@@ -366,6 +378,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 + mySyncIssues
                 + ", myVariants="
                 + myVariants
+                + ", myVariantNames="
+                + myVariantNames
                 + ", myFlavorDimensions="
                 + myFlavorDimensions
                 + ", myCompileTarget='"

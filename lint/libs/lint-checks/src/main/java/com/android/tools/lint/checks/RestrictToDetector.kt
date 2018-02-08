@@ -49,9 +49,11 @@ import org.jetbrains.uast.util.isArrayInitializer
 
 class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-            RESTRICT_TO_ANNOTATION,
+            RESTRICT_TO_ANNOTATION.oldName(),
+            RESTRICT_TO_ANNOTATION.newName(),
             GMS_HIDE_ANNOTATION,
-            VISIBLE_FOR_TESTING_ANNOTATION,
+            VISIBLE_FOR_TESTING_ANNOTATION.oldName(),
+            VISIBLE_FOR_TESTING_ANNOTATION.newName(),
             GUAVA_VISIBLE_FOR_TESTING
     )
 
@@ -68,14 +70,14 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             allPackageAnnotations: List<UAnnotation>) {
 
         when (qualifiedName) {
-            RESTRICT_TO_ANNOTATION,
+            RESTRICT_TO_ANNOTATION.oldName(), RESTRICT_TO_ANNOTATION.newName(),
             GMS_HIDE_ANNOTATION -> {
                 if (method != null) {
                     checkRestrictTo(context, usage, method, annotation, allMemberAnnotations,
                             allClassAnnotations)
                 }
             }
-            VISIBLE_FOR_TESTING_ANNOTATION,
+            VISIBLE_FOR_TESTING_ANNOTATION.oldName(), VISIBLE_FOR_TESTING_ANNOTATION.newName(),
             GUAVA_VISIBLE_FOR_TESTING -> {
                 if (method != null) {
                     checkVisibleForTesting(context,
@@ -123,12 +125,12 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             for (annotation in owner.annotations) {
                 val name = annotation.qualifiedName
-                if (RESTRICT_TO_ANNOTATION == name) {
+                if (RESTRICT_TO_ANNOTATION.isEquals(name)) {
                     val restrictionScope = getRestrictionScope(annotation)
                     if (restrictionScope and RESTRICT_TO_TESTS != 0) {
                         return true
                     }
-                } else if (VISIBLE_FOR_TESTING_ANNOTATION == name) {
+                } else if (VISIBLE_FOR_TESTING_ANNOTATION.isEquals(name)) {
                     return true
                 }
             }
@@ -412,7 +414,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     private fun containsRestrictionAnnotation(list: List<UAnnotation>): Boolean {
-        return containsAnnotation(list, RESTRICT_TO_ANNOTATION)
+        return containsAnnotation(list, RESTRICT_TO_ANNOTATION.oldName()) || containsAnnotation(list, RESTRICT_TO_ANNOTATION.newName())
     }
 
     companion object {

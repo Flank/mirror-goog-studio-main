@@ -40,9 +40,7 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
-import com.android.manifmerger.ManifestMerger2;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
@@ -212,9 +210,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     /** Creates the merge manifests task. */
     @Override
     @NonNull
-    protected ManifestProcessorTask createMergeManifestTask(
-            @NonNull VariantScope variantScope,
-            @NonNull ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures) {
+    protected ManifestProcessorTask createMergeManifestTask(@NonNull VariantScope variantScope) {
         return taskFactory.create(
                 new ProcessTestManifest.ConfigAction(
                         variantScope, getTestedManifestMetadata(variantScope.getVariantData())));

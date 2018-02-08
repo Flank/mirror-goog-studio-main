@@ -15,22 +15,20 @@
  */
 #include "perfd/energy/internal_energy_service.h"
 
-#include "utils/log.h"
-
 namespace profiler {
 
 using grpc::ServerContext;
 using grpc::Status;
-using profiler::proto::WakeLockEventRequest;
+using profiler::proto::AddEnergyEventRequest;
 using profiler::proto::EmptyEnergyReply;
 
-InternalEnergyServiceImpl::InternalEnergyServiceImpl() {}
+InternalEnergyServiceImpl::InternalEnergyServiceImpl(EnergyCache *energy_cache)
+    : energy_cache_(*energy_cache) {}
 
-Status InternalEnergyServiceImpl::SendWakeLockEvent(
-    ServerContext *context,
-    const WakeLockEventRequest *request,
+Status InternalEnergyServiceImpl::AddEnergyEvent(
+    ServerContext *context, const AddEnergyEventRequest *request,
     EmptyEnergyReply *reply) {
-  Log::V("SendWakeLockEvent (timestamp=%lld)", request->timestamp());
+  energy_cache_.AddEnergyEvent(request->energy_event());
   return Status::OK;
 }
 

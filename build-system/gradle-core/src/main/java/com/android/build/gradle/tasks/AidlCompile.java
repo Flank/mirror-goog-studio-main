@@ -381,10 +381,10 @@ public class AidlCompile extends IncrementalTask {
             compileTask.setSourceOutputDir(scope.getAidlSourceOutputDir());
 
             if (variantConfiguration.getType() == VariantType.LIBRARY) {
-                File packagedAidlDir = scope.getPackagedAidlDir();
-                compileTask.setPackagedDir(packagedAidlDir);
-                scope.addTaskOutput(
-                        InternalArtifactType.AIDL_PARCELABLE, packagedAidlDir, getName());
+                compileTask.setPackagedDir(
+                        scope.getBuildArtifactsHolder()
+                                .createFirstArtifactFiles(
+                                        InternalArtifactType.AIDL_PARCELABLE, compileTask, "out"));
                 compileTask.setPackageWhitelist(
                         scope.getGlobalScope().getExtension().getAidlPackageWhiteList());
             }

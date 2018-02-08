@@ -37,6 +37,7 @@ import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -244,7 +245,6 @@ public class MergedResourceWriter
             while (!mCompileResourceRequests.isEmpty()) {
                 CompileResourceRequest request = mCompileResourceRequests.poll();
                 try {
-                    Future<File> result;
                     File fileToCompile = request.getInputFile();
 
                     if (mMergingLog != null) {
@@ -296,7 +296,9 @@ public class MergedResourceWriter
                                     request.getOutputDirectory(),
                                     request.getInputDirectoryName(),
                                     pseudoLocalesEnabled,
-                                    crunchPng));
+                                    crunchPng,
+                                    ImmutableMap.of(),
+                                    request.getInputFile()));
                     mCompiledFileMap.put(
                             fileToCompile.getAbsolutePath(),
                             mResourceCompiler.compileOutputFor(request).getAbsolutePath());
@@ -558,7 +560,8 @@ public class MergedResourceWriter
                                     getRootFolder(),
                                     folderName,
                                     pseudoLocalesEnabled,
-                                    crunchPng);
+                                    crunchPng,
+                                    blame != null ? blame : ImmutableMap.of());
 
                     // If we are going to shrink resources, the resource shrinker needs to have the
                     // final merged uncompiled file.

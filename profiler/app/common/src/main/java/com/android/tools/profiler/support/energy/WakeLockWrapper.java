@@ -20,6 +20,9 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import com.android.tools.profiler.support.util.StudioLog;
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A set of helpers for Android Wake Lock instrumentation, used by the Energy profiler.
@@ -29,40 +32,14 @@ import java.lang.reflect.Field;
  */
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class WakeLockWrapper {
+    private static final AtomicInteger atomicInteger = new AtomicInteger();
+    private static final Map<WakeLock, Integer> wakeLockIdMap = new HashMap<>();
+
     // Native functions to send wake lock events to perfd.
-    private static native void sendWakeLockAcquired();
+    private static native void sendWakeLockAcquired(
+            int wakeLockId, int flags, String tag, long timeout);
 
-    private static native void sendWakeLockReleased();
-
-    /**
-     * Exit hook for {@link PowerManager#newWakeLock(int, String)}.
-     *
-     * @param wrapped the return value of the original method.
-     * @return the original return value.
-     */
-    public static WakeLock onNewWakeLockExit(WakeLock wrapped) {
-        // TODO: Send data via GRpc
-        Class<?> c = wrapped.getClass();
-        try {
-            // Uses reflection to access the fields that store the original parameter values.
-            // TODO(b/72337740): Use constructor entry hook once supported.
-            Field flagsField = c.getDeclaredField("mFlags");
-            Field tagField = c.getDeclaredField("mTag");
-            flagsField.setAccessible(true);
-            tagField.setAccessible(true);
-            StudioLog.v(
-                    String.format(
-                            "Created WakeLock: %s. Flags: %x. Tag: %s",
-                            System.identityHashCode(wrapped),
-                            flagsField.getInt(wrapped),
-                            tagField.get(wrapped)));
-        } catch (NoSuchFieldException e) {
-            StudioLog.e(e.getMessage());
-        } catch (IllegalAccessException e) {
-            StudioLog.e(e.getMessage());
-        }
-        return wrapped;
-    }
+    private static native void sendWakeLockReleased(int wakeLockId, int releaseFlags);
 
     /**
      * Wraps {@link WakeLock#acquire()}.
@@ -70,7 +47,7 @@ public final class WakeLockWrapper {
      * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
      */
     public static void wrapAcquire(WakeLock wrapped) {
-        sendWakeLockAcquired();
+        wrapAcquire(wrapped, 0);
     }
 
     /**
@@ -83,7 +60,32 @@ public final class WakeLockWrapper {
      * @param timeout the timeout parameter passed to the original method.
      */
     public static void wrapAcquire(WakeLock wrapped, long timeout) {
-        sendWakeLockAcquired();
+        if (!wakeLockIdMap.containsKey(wrapped)) {
+            wakeLockIdMap.put(wrapped, atomicInteger.incrementAndGet());
+        }
+        int wakeLockId = wakeLockIdMap.get(wrapped);
+        int flags = 0;
+        String tag = "";
+
+        Class<?> c = wrapped.getClass();
+        // Uses reflection to access the fields that store the original parameter values.
+        // TODO(b/72337740): Use constructor entry hook once supported.
+        try {
+            Field flagsField = c.getDeclaredField("mFlags");
+            flagsField.setAccessible(true);
+            flags = flagsField.getInt(wrapped);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            StudioLog.e("Failed to retrieve WakeLock flags: ", e);
+        }
+        try {
+            Field tagField = c.getDeclaredField("mTag");
+            tagField.setAccessible(true);
+            tag = (String) tagField.get(wrapped);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            StudioLog.e("Failed to retrieve WakeLock tag: ", e);
+        }
+
+        sendWakeLockAcquired(wakeLockId, flags, tag, timeout);
     }
 
     /**
@@ -93,6 +95,6 @@ public final class WakeLockWrapper {
      * @param flags the flags parameter passed to the original method.
      */
     public static void wrapRelease(WakeLock wrapped, int flags) {
-        sendWakeLockReleased();
+        sendWakeLockReleased(wakeLockIdMap.getOrDefault(wrapped, 0), flags);
     }
 }

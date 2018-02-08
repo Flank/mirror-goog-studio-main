@@ -25,10 +25,15 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Class to parse raw output of {@code adb logcat -v long} to {@link LogCatMessage} objects.
- */
-public final class LogCatMessageParser {
+/** Class to parse raw output of {@code adb logcat -v long} to {@link LogCatMessage} objects. */
+public class LogCatMessageParser {
+    private static final Pattern DATE_TIME =
+            Pattern.compile("\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d\\.\\d\\d\\d");
+
+    static final Pattern PROCESS_ID = Pattern.compile("\\d+");
+    static final Pattern THREAD_ID = Pattern.compile("\\w+");
+    static final Pattern PRIORITY = Pattern.compile("[VDIWEAF]");
+    static final Pattern TAG = Pattern.compile(".*?");
 
     /**
      * Pattern for logcat -v long header ([ MM-DD HH:MM:SS.mmm PID:TID LEVEL/TAG ]). Example:
@@ -41,10 +46,19 @@ public final class LogCatMessageParser {
      * Group 4: Log Level character<br>
      * Group 5: Tag
      */
-    private static final Pattern sLogHeaderPattern =
+    private static final Pattern HEADER =
             Pattern.compile(
-                    "^\\[\\s(\\d\\d-\\d\\d\\s\\d\\d:\\d\\d:\\d\\d\\.\\d+)"
-                            + "\\s+(\\d*):\\s*(\\S+)\\s([VDIWEAF])/(.*?)\\s*]$");
+                    "^\\[ ("
+                            + DATE_TIME
+                            + ") +("
+                            + PROCESS_ID
+                            + "): *("
+                            + THREAD_ID
+                            + ") ("
+                            + PRIORITY
+                            + ")/("
+                            + TAG
+                            + ") +]$");
 
     @Nullable
     LogCatHeader mPrevHeader;
@@ -59,46 +73,84 @@ public final class LogCatMessageParser {
      */
     @Nullable
     public LogCatHeader processLogHeader(@NonNull String line, @Nullable IDevice device) {
-        Matcher matcher = sLogHeaderPattern.matcher(line);
+        Matcher matcher = HEADER.matcher(line);
+
         if (!matcher.matches()) {
             return null;
         }
 
-        int pid = -1;
-        try {
-            pid = Integer.parseInt(matcher.group(2));
-        } catch (NumberFormatException ignored) {
-        }
+        LogCatTimestamp dateTime = LogCatTimestamp.fromString(matcher.group(1));
+        int processId = parseProcessId(matcher.group(2));
+        int threadId = parseThreadId(matcher.group(3));
+        LogLevel priority = parsePriority(matcher.group(4));
+        String tag = matcher.group(5);
 
-        int tid = -1;
-        try {
-            // Thread id's may be in hex on some platforms.
-            // Decode and store them in radix 10.
-            tid = Integer.decode(matcher.group(3));
-        } catch (NumberFormatException ignored) {
-        }
-
-        String pkgName = null;
-        if (device != null && pid != -1) {
-            pkgName = device.getClientName(pid);
-        }
-        if (pkgName == null || pkgName.isEmpty()) {
-            pkgName = "?"; //$NON-NLS-1$
-        }
-
-        LogLevel logLevel = LogLevel.getByLetterString(matcher.group(4));
-        if (logLevel == null && matcher.group(4).equals("F")) {
-            logLevel = LogLevel.ASSERT;
-        }
-        if (logLevel == null) {
-            // Should never happen but warn seems like a decent default just in case
-            logLevel = LogLevel.WARN;
-        }
-
-        mPrevHeader = new LogCatHeader(logLevel, pid, tid, pkgName,
-                matcher.group(5), LogCatTimestamp.fromString(matcher.group(1)));
+        mPrevHeader =
+                new LogCatHeader(
+                        priority,
+                        processId,
+                        threadId,
+                        getPackageName(device, processId),
+                        tag,
+                        dateTime);
 
         return mPrevHeader;
+    }
+
+    static int parseProcessId(@NonNull String string) {
+        try {
+            return Integer.parseInt(string);
+        } catch (NumberFormatException exception) {
+            return -1;
+        }
+    }
+
+    static int parseThreadId(@NonNull String string) {
+        try {
+            // Some versions of logcat return hexadecimal thread IDs. Propagate them as decimal.
+            return Integer.decode(string);
+        } catch (NumberFormatException exception) {
+            return -1;
+        }
+    }
+
+    /**
+     * Parses the <a href="https://developer.android.com/studio/command-line/logcat.html">priority
+     * part of a logcat message header:</a> the "I" in
+     *
+     * <pre>[          1517949446.554  2848: 2848 I/MainActivity ]</pre>
+     *
+     * @return the log level corresponding to the priority. If the argument is not one of the
+     *     expected letters returns LogLevel.WARN.
+     */
+    @NonNull
+    static LogLevel parsePriority(@NonNull String string) {
+        LogLevel priority = LogLevel.getByLetterString(string);
+
+        if (priority == null) {
+            if (!string.equals("F")) {
+                return LogLevel.WARN;
+            }
+
+            return LogLevel.ASSERT;
+        }
+
+        return priority;
+    }
+
+    @NonNull
+    static String getPackageName(@Nullable IDevice device, int processId) {
+        if (device == null || processId == -1) {
+            return "?";
+        }
+
+        String name = device.getClientName(processId);
+
+        if (name == null || name.isEmpty()) {
+            return "?";
+        }
+
+        return name;
     }
 
     /**

@@ -50,6 +50,7 @@ public final class GradleTestProjectBuilder {
     // Indicates if we need to create a project without setting cmake.dir in local.properties.
     private boolean withCmakeDirInLocalProp = false;
     @NonNull String cmakeVersion;
+    @Nullable private List<Path> repoDirectories;
 
     private boolean withDeviceProvider = true;
     private boolean withSdk = true;
@@ -79,7 +80,8 @@ public final class GradleTestProjectBuilder {
                 withSdk,
                 withAndroidGradlePlugin,
                 withIncludedBuilds,
-                testDir);
+                testDir,
+                repoDirectories);
     }
 
     /**
@@ -105,6 +107,11 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder withSdk(boolean withSdk) {
         this.withSdk = withSdk;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withRepoDirectories(List<Path> repoDirectories) {
+        this.repoDirectories = repoDirectories;
         return this;
     }
 

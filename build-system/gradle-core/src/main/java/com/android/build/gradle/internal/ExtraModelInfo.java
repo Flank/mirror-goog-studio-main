@@ -71,7 +71,8 @@ public class ExtraModelInfo {
         syncIssueHandler =
                 new SyncIssueHandlerImpl(SyncOptions.getModelQueryMode(projectOptions), logger);
         deprecationReporter = new DeprecationReporterImpl(syncIssueHandler, projectPath);
-        messageReceiver = new MessageReceiverImpl(projectOptions, logger);
+        messageReceiver =
+                new MessageReceiverImpl(SyncOptions.getErrorFormatMode(projectOptions), logger);
     }
 
     public DeprecationReporter getDeprecationReporter() {

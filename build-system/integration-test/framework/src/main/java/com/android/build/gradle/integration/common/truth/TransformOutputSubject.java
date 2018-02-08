@@ -21,11 +21,11 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.internal.pipeline.SubStream;
 import com.google.common.truth.FailureStrategy;
-import com.google.common.truth.IterableSubject;
+import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
 
 public class TransformOutputSubject
-        extends IterableSubject<TransformOutputSubject, SubStream, TransformOutputContent> {
+        extends Subject<TransformOutputSubject, TransformOutputContent> {
 
     static class Factory extends SubjectFactory<TransformOutputSubject, TransformOutputContent> {
         @NonNull

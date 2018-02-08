@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.apkzlib.zip.ZFile
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolJavaType
 import com.android.ide.common.symbols.SymbolTable
@@ -41,9 +42,11 @@ class NamespaceRewriterTest {
     var temporaryFolder = TemporaryFolder()
 
     lateinit var testClass: File
+    lateinit var test2Class: File
     lateinit var moduleRClass: File
     lateinit var moduleRStringClass: File
     lateinit var dependencyRClass: File
+    lateinit var dependencyRStringClass: File
     lateinit var javacOutput: File
 
     @Before
@@ -56,6 +59,7 @@ class NamespaceRewriterTest {
         val sources = ImmutableList.of(
                 getFile("R.java"),
                 getFile("Test.java"),
+                getFile("Test2.java"),
                 getFile("dependency/R.java")
         )
 
@@ -70,12 +74,22 @@ class NamespaceRewriterTest {
 
         testClass = FileUtils.join(javacOutput, "com", "example", "mymodule", "Test.class")
         assertThat(testClass).exists()
+        test2Class = FileUtils.join(javacOutput, "com", "example", "mymodule", "Test2.class")
+        assertThat(test2Class).exists()
         moduleRClass = FileUtils.join(javacOutput, "com", "example", "mymodule", "R.class")
         assertThat(moduleRClass).exists()
         moduleRStringClass = FileUtils.join(moduleRClass.parentFile, "R\$string.class")
         assertThat(moduleRStringClass).exists()
         dependencyRClass = FileUtils.join(javacOutput, "com", "example", "dependency", "R.class")
         assertThat(dependencyRClass).exists()
+        dependencyRStringClass = FileUtils.join(
+                javacOutput,
+                "com",
+                "example",
+                "dependency",
+                "R\$string.class"
+        )
+        assertThat(dependencyRStringClass).exists()
     }
 
     private fun getFile(name: String): File {
@@ -144,6 +158,51 @@ class NamespaceRewriterTest {
             )
         }
         assertThat(e.message).contains("Unknown symbol of type string and name s1.")
+    }
+
+    @Test
+    fun rewriteJar() {
+        val aarsDir = temporaryFolder.newFolder("aars")
+        val inputJar = File(aarsDir, "classes.jar")
+        val outputJar = File(aarsDir, "namespaced-classes.jar")
+
+        ZFile(inputJar).use {
+            it.add("com/example/mymodule/Test.class", testClass.inputStream())
+            it.add("com/example/mymodule/Test2.class", test2Class.inputStream())
+        }
+
+        val moduleTable = SymbolTable.builder()
+            .tablePackage("com.example.mymodule")
+            .add(symbol("string", "s1"))
+            .build()
+        val dependencyTable = SymbolTable.builder()
+            .tablePackage("com.example.dependency")
+            .add(symbol("string", "s2"))
+            .add(symbol("string", "s3"))
+            .build()
+
+        NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable)).rewriteJar(
+                inputJar,
+                outputJar
+        )
+        assertThat(outputJar).exists()
+        ZFile(outputJar).use {
+            it.add("com/example/mymodule/R.class", moduleRClass.inputStream())
+            it.add("com/example/mymodule/R\$string.class", moduleRStringClass.inputStream())
+            it.add("com/example/dependency/R.class", dependencyRClass.inputStream())
+            it.add("com/example/dependency/R\$string.class", dependencyRStringClass.inputStream())
+        }
+
+        URLClassLoader(arrayOf(outputJar.toURI().toURL()), null).use { classLoader ->
+            var testC = classLoader.loadClass("com.example.mymodule.Test")
+            var method = testC.getMethod("test")
+            var result = method.invoke(null) as Int
+            assertThat(result).isEqualTo(2 * 11 * 13)
+            testC = classLoader.loadClass("com.example.mymodule.Test2")
+            method = testC.getMethod("test2")
+            result = method.invoke(null) as Int
+            assertThat(result).isEqualTo(2 * 11 * 13 + 2 + 11 + 13)
+        }
     }
 
     private fun symbol(type: String, name: String): Symbol {

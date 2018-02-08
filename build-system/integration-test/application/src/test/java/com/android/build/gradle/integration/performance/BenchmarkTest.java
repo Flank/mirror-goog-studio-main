@@ -21,6 +21,7 @@ import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.common.category.PerformanceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import java.io.IOException;
@@ -83,6 +84,12 @@ import org.junit.runners.JUnit4;
  *      This controls the BenchmarkMode. If you're only interested in how long it takes to build
  *      from clean, for example, you could set PERF_BENCHMARK_MODE=BUILD__FROM_CLEAN. See
  *      {@code Logging.BenchmarkMode} for more examples.
+ *
+ *   RUNS_PER_BENCHMARK
+ *
+ *      In order to get a good, clear signal of how long a benchmark really takes you need to run
+ *      the benchmark more than once. This environment variable tells the code how many times you
+ *      want to run each benchmark, and you should assume that the lowest value is the best signal.
  * </pre>
  *
  * You can set all or none of these environment variables to run whatever subset of benchmarks you
@@ -91,6 +98,7 @@ import org.junit.runners.JUnit4;
 @NotThreadSafe
 public class BenchmarkTest {
     private static ProfileCapturer PROFILE_CAPTURER;
+    private static BenchmarkRecorder BENCHMARK_RECORDER;
 
     @NonNull
     public static Path getBenchmarkTestRootDirectory() {
@@ -110,9 +118,22 @@ public class BenchmarkTest {
         return PROFILE_CAPTURER;
     }
 
+    @NonNull
+    public static BenchmarkRecorder getBenchmarkRecorder() throws IOException {
+        if (BENCHMARK_RECORDER == null) {
+            BENCHMARK_RECORDER = new BenchmarkRecorder(getProfileCapturer());
+        }
+        return BENCHMARK_RECORDER;
+    }
+
     @Test
     @Category(PerformanceTests.class)
     public void run() throws Exception {
+        /*
+         * Sometimes the version of Gradle checked in to our repo is the same as their current
+         * nightly version. In this scenario, we want to avoid running the same set of tests twice
+         * and wasting lots of time, so we just bail out at this point.
+         */
         if (GradleTestProject.USE_LATEST_NIGHTLY_GRADLE_VERSION
                 && GradleTestProject.GRADLE_TEST_VERSION.equals(
                         BasePlugin.GRADLE_MIN_VERSION.toString())) {
@@ -126,7 +147,8 @@ public class BenchmarkTest {
         List<Benchmark> benchmarks = new ArrayList<>();
 
         /*
-         * Add all Benchmark objects to the list here.
+         * Add all Benchmark objects to the list here. If you're wanting to create new Benchmarks,
+         * this is the place to add them to make sure that they're correctly filtered and sharded.
          */
         benchmarks.addAll(AntennaPodBenchmarks.INSTANCE.get());
         benchmarks.addAll(LargeGradleProjectBenchmarks.INSTANCE.get());
@@ -138,8 +160,7 @@ public class BenchmarkTest {
          * machines need this list to be in the same order so that they can run a non-overlapping
          * subset of them.
          */
-        Collections.sort(
-                benchmarks,
+        benchmarks.sort(
                 Comparator.comparing(Benchmark::getScenario)
                         .thenComparing(Benchmark::getBenchmark)
                         .thenComparing(Benchmark::getBenchmarkMode));
@@ -225,32 +246,55 @@ public class BenchmarkTest {
                         + " when re-running locally if you need to ensure that the benchmarks run in the same order");
         Collections.shuffle(shard, new Random(shuffleSeed));
 
-        System.out.println("Running " + shard.size() + " benchmarks");
-        Duration benchmarkDuration = Duration.ofNanos(0);
-        Duration recordedDuration = Duration.ofNanos(0);
-
         /*
          * Run the benchmarks.
          */
         int i = 0;
+        int runsPerBenchmark = Integer.parseInt(env("RUNS_PER_BENCHMARK", "1"));
+        Preconditions.checkArgument(
+                runsPerBenchmark > 0, "you must set RUNS_PER_BENCHMARK to a number greater than 0");
+
+        System.out.println(
+                "Running " + shard.size() + " benchmarks, " + runsPerBenchmark + " times each...");
         System.out.println();
+
+        Duration benchmarkDuration = Duration.ofNanos(0);
+        Duration recordedDuration = Duration.ofNanos(0);
+
         List<BenchmarkResult> failed = new ArrayList<>();
         for (Benchmark b : shard) {
             i++;
-            BenchmarkResult result = b.run();
 
-            benchmarkDuration = benchmarkDuration.plus(result.getTotalDuration());
-            recordedDuration = recordedDuration.plus(result.getRecordedDuration());
+            for (int j = 0; j < runsPerBenchmark; j++) {
+                BenchmarkResult result = b.run();
 
-            System.out.println(i + "/" + shard.size());
-            System.out.println(result);
-            System.out.println();
+                benchmarkDuration = benchmarkDuration.plus(result.getTotalDuration());
+                recordedDuration = recordedDuration.plus(result.getRecordedDuration());
 
-            if (result.getException() != null) {
-                failed.add(result);
+                System.out.println(
+                        "Benchmark "
+                                + i
+                                + "/"
+                                + shard.size()
+                                + " (run "
+                                + (j + 1)
+                                + "/"
+                                + runsPerBenchmark
+                                + ")");
+                System.out.println(result);
+                System.out.println();
+
+                if (result.getException() != null) {
+                    failed.add(result);
+                }
             }
         }
 
+        /*
+         * The Benchmark.run method will call uploadAsync() on its BenchmarkRecorder when the test
+         * completely successfully and a profile is found. We need to wait for these uploads to
+         * complete before shutting down the process.
+         */
         BenchmarkRecorder.awaitUploads(15, TimeUnit.MINUTES);
 
         Duration totalDuration = Duration.ofNanos(System.nanoTime() - start);

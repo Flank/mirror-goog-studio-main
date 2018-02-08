@@ -251,9 +251,9 @@ public class TruthHelper {
         return assert_().that(target);
     }
 
-    public static <T, C extends Iterable<T>> IterableSubject<? extends IterableSubject<?, T, C>, T, C>
-    assertThat(@Nullable Iterable<T> target) {
-        return assert_().<T,C>that(target);
+    public static <T, C extends Iterable<T>> IterableSubject assertThat(
+            @Nullable Iterable<T> target) {
+        return assert_().that(target);
     }
 
     public static <T> ObjectArraySubject<T> assertThat(@Nullable T[] target) {
@@ -296,28 +296,24 @@ public class TruthHelper {
         return assert_().that(target);
     }
 
-    public static <K, V, M extends Multimap<K, V>>
-    MultimapSubject<? extends MultimapSubject<?, K, V, M>, K, V, M> assertThat(
+    public static <K, V, M extends Multimap<K, V>> MultimapSubject assertThat(
             @Nullable Multimap<K, V> target) {
-        return assert_().<K,V,M>that(target);
+        return assert_().that(target);
     }
 
-    public static <K, V, M extends ListMultimap<K, V>>
-    ListMultimapSubject<? extends ListMultimapSubject<?, K, V, M>, K, V, M> assertThat(
+    public static <K, V, M extends ListMultimap<K, V>> ListMultimapSubject assertThat(
             @Nullable ListMultimap<K, V> target) {
-        return assert_().<K,V,M>that(target);
+        return assert_().that(target);
     }
 
-    public static <K, V, M extends SetMultimap<K, V>>
-    SetMultimapSubject<? extends SetMultimapSubject<?, K, V, M>, K, V, M> assertThat(
+    public static <K, V, M extends SetMultimap<K, V>> SetMultimapSubject assertThat(
             @Nullable SetMultimap<K, V> target) {
-        return assert_().<K,V,M>that(target);
+        return assert_().that(target);
     }
 
-    public static <E, M extends Multiset<E>>
-    MultisetSubject<? extends MultisetSubject<?, E, M>, E, M> assertThat(
+    public static <E, M extends Multiset<E>> MultisetSubject assertThat(
             @Nullable Multiset<E> target) {
-        return assert_().<E,M>that(target);
+        return assert_().that(target);
     }
 
     public static TableSubject assertThat(@Nullable Table<?, ?, ?> target) {

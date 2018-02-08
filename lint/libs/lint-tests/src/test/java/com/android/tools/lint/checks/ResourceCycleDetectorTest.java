@@ -90,6 +90,21 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                             + "</LinearLayout>\n")));
     }
 
+    public void testNoCycleThroughFramework() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                xml("res/values/theme.xml", "" +
+                        "<resources>\n" +
+                        //"    <style name=\"InterstitialDialogLayout\" />\n" +
+                        //"\n" +
+                        "    <style name=\"ButtonBar\" parent=\"@android:style/ButtonBar\" />\n" +
+                        //"    <style name=\"ButtonBarButton\" parent=\"@android:style/Widget.Button\" />\n" +
+                        "\n" +
+                        "</resources>\n"))
+                .run()
+                .expectClean();
+    }
+
     public void testColors() throws Exception {
         //noinspection all // Sample code
         assertEquals(""

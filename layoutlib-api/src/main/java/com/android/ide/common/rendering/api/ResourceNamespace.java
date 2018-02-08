@@ -134,8 +134,7 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
                 // TODO(namespaces): What is considered a good package name by aapt?
                 String packageName = uri.substring(SdkConstants.URI_PREFIX.length());
                 if (!packageName.isEmpty()) {
-                    return new ResourceNamespace(
-                            SdkConstants.URI_PREFIX + packageName, packageName);
+                    return fromPackageName(packageName);
                 }
             }
 

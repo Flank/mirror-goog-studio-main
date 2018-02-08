@@ -20,14 +20,20 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactTransformBuilder
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
+import com.android.build.gradle.internal.api.artifact.toArtifactType
 import com.android.build.gradle.internal.api.dsl.DslScope
-import com.android.build.gradle.tasks.BuildArtifactReportTask
 import com.android.utils.FileUtils
+import com.google.gson.JsonElement
+import com.google.gson.JsonParser
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileCollection
 import java.io.File
 import java.util.Locale
+import com.google.gson.annotations.SerializedName
+import java.io.FileReader
+
+typealias Report = Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifactData>>
 
 /**
  * Buildable artifact holder.
@@ -44,8 +50,8 @@ import java.util.Locale
  * @param variantName name of the Variant
  * @param rootOutputDir the intermediate directories to place output files.
  * @param variantDirName the subdirectory where outputs should be placed for the variant
- * @param initialArtifactTypes the list of artifact types to initialize the holder with.  This list
- *         determines all artifact types available to an external user.
+ * @param initialArtifactTypes the list of external artifact types to initialize the holder with.
+ *         This list determines all artifact types available to an external user.
  */
 class BuildArtifactsHolder(
         private val project : Project,
@@ -56,7 +62,7 @@ class BuildArtifactsHolder(
         private val dslScope: DslScope) {
 
     private val artifactRecordMap =
-            initialArtifactTypes.associate{
+            initialArtifactTypes.associateTo(mutableMapOf()){
                 it to ArtifactRecord(BuildableArtifactImpl(null, dslScope))
             }
 
@@ -160,12 +166,11 @@ class BuildArtifactsHolder(
             filenames : Collection<String>,
             taskName : String)
             : BuildableArtifact {
-        val originalOutput = getArtifactFiles(artifactType)
         val collection =
                 project.files(
                         filenames.map{ createFile(taskName, it) },
-                        originalOutput)
-                        .builtBy(taskName, originalOutput)
+                        getArtifactFiles(artifactType))
+                    .builtBy(taskName)
         val files = BuildableArtifactImpl(collection, dslScope)
         createOutput(artifactType, files)
         return files
@@ -192,8 +197,8 @@ class BuildArtifactsHolder(
     fun createFirstArtifactFiles(
             artifactType: ArtifactType, filenames : Collection<String>, taskName : String)
             : BuildableArtifact {
-        val collection = project.files(filenames.map{ createFile(artifactType.name(), it)})
-        collection.builtBy(taskName)
+        val collection =
+                project.files(filenames.map{ createFile(artifactType.name(), it)}).builtBy(taskName)
         return initializeFirstArtifactFiles(artifactType, collection)
     }
 
@@ -229,8 +234,9 @@ class BuildArtifactsHolder(
     fun initializeFirstArtifactFiles(
             artifactType: ArtifactType, collection : FileCollection)
             : BuildableArtifact {
-        val output = artifactRecordMap[artifactType]
-                ?: throw MissingBuildableArtifactException(artifactType)
+        val output = artifactRecordMap.getOrPut(artifactType) {
+            ArtifactRecord((BuildableArtifactImpl(null, dslScope)))
+        }
         if (output.initialized) {
             throw RuntimeException("Artifact already registered for type: $artifactType")
         }
@@ -238,16 +244,23 @@ class BuildArtifactsHolder(
         return output.first
     }
 
+    fun createReport() : Report =
+            artifactRecordMap.entries.associate {
+                it.key to it.value.history.map(this::newArtifact)
+            }
+
     /**
      * Creates a File for a task.
      *
-     * @param taskName taskName
+     * @param identifier identifier for the file.  This should be the task name prefix when creating
+     *                   a file for external user, and the artifact type name when creating for
+     *                   internal task.
      * @param filename name of the file.
      */
-    internal fun createFile(taskName: String, filename : String) =
+    internal fun createFile(identifier: String, filename : String) =
             FileUtils.join(
                     rootOutputDir,
-                    taskName,
+                    identifier,
                     variantDirName,
                     filename)
 
@@ -260,10 +273,45 @@ class BuildArtifactsHolder(
     /**
      * Return history of all [BuildableArtifact] for an [ArtifactType].
      */
-    //FIXME: VisibleForTesting.  Make this internal when bazel supports it for tests (b/71602857)
-    fun getHistory(artifactType: ArtifactType) : List<BuildableArtifact> {
+    internal fun getHistory(artifactType: ArtifactType) : List<BuildableArtifact> {
         val record = artifactRecordMap[artifactType]
                 ?: throw MissingBuildableArtifactException(artifactType)
         return record.history
+    }
+
+    /** A data class for use with GSON. */
+    data class BuildableArtifactData(
+        @SerializedName("files") var files : Collection<File>,
+        @SerializedName("builtBy") var builtBy : List<String>)
+
+    /** Create [BuildableArtifactData] from [BuildableArtifact]. */
+    private fun newArtifact(artifact : BuildableArtifact) =
+            // getDependencies accepts null.
+        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+        BuildableArtifactData(
+                artifact.files,
+                artifact.buildDependencies.getDependencies(null).map(Task::getPath))
+
+    companion object {
+        fun parseReport(file : File) : Report {
+            val result = mutableMapOf<ArtifactType, List<BuildableArtifactData>>()
+            val parser = JsonParser()
+            FileReader(file).use { reader ->
+                for ((key, value) in parser.parse(reader).asJsonObject.entrySet()) {
+                    val history =
+                            value.asJsonArray.map {
+                                val obj = it.asJsonObject
+                                BuildableArtifactData(
+                                        obj.getAsJsonArray("files").map {
+                                            File(it.asJsonObject.get("path").asString)
+                                        },
+                                        obj.getAsJsonArray("builtBy").map(
+                                                JsonElement::getAsString))
+                            }
+                    result.put(key.toArtifactType(), history)
+                }
+            }
+            return result
+        }
     }
 }

@@ -27,7 +27,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Version;
 import com.android.io.StreamException;
@@ -101,10 +100,8 @@ public final class GradleTestProject implements TestRule {
     public static final int LATEST_GOOGLE_APIS_VERSION = 24;
 
     public static final String DEFAULT_BUILD_TOOL_VERSION;
-    public static final String REMOTE_TEST_PROVIDER = System.getenv().get("REMOTE_TEST_PROVIDER");
-
-    public static final String DEVICE_PROVIDER_NAME =
-            REMOTE_TEST_PROVIDER != null ? REMOTE_TEST_PROVIDER : BuilderConstants.CONNECTED;
+    public static final boolean APPLY_DEVICEPOOL_PLUGIN =
+            Boolean.parseBoolean(System.getenv().getOrDefault("APPLY_DEVICEPOOL_PLUGIN", "false"));
 
     public static final boolean USE_LATEST_NIGHTLY_GRADLE_VERSION =
             Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"));
@@ -246,6 +243,7 @@ public final class GradleTestProject implements TestRule {
     @Nullable private final Path profileDirectory;
 
     @Nullable private String heapSize;
+    @Nullable private final List<Path> repoDirectories;
 
     private GradleBuildResult lastBuildResult;
     private ProjectConnection projectConnection;
@@ -268,7 +266,8 @@ public final class GradleTestProject implements TestRule {
             boolean withSdk,
             boolean withAndroidGradlePlugin,
             @NonNull List<String> withIncludedBuilds,
-            @Nullable File testDir) {
+            @Nullable File testDir,
+            @Nullable List<Path> repoDirectories) {
         this.withDeviceProvider = withDeviceProvider;
         this.withSdk = withSdk;
         this.withAndroidGradlePlugin = withAndroidGradlePlugin;
@@ -288,6 +287,7 @@ public final class GradleTestProject implements TestRule {
         this.cmakeVersion = cmakeVersion;
         this.withCmakeDirInLocalProp = withCmake;
         this.testDir = testDir;
+        this.repoDirectories = repoDirectories;
     }
 
     /**
@@ -319,6 +319,7 @@ public final class GradleTestProject implements TestRule {
         this.withAndroidGradlePlugin = rootProject.withAndroidGradlePlugin;
         this.withCmakeDirInLocalProp = rootProject.withCmakeDirInLocalProp;
         this.withIncludedBuilds = ImmutableList.of();
+        this.repoDirectories = rootProject.repoDirectories;
     }
 
     private static Path getGradleUserHome(File buildDir) {
@@ -522,7 +523,7 @@ public final class GradleTestProject implements TestRule {
                 new File(testDir.getParent(), COMMON_VERSIONS),
                 StandardCharsets.UTF_8);
         Files.write(
-                generateLocalRepoScript(),
+                generateProjectRepoScript(),
                 new File(testDir.getParent(), COMMON_LOCAL_REPO),
                 StandardCharsets.UTF_8);
         Files.write(
@@ -546,30 +547,27 @@ public final class GradleTestProject implements TestRule {
     }
 
     @NonNull
+    private String generateProjectRepoScript() {
+        if (repoDirectories != null) {
+            return generateRepoScript(repoDirectories);
+        } else {
+            return generateRepoScript(getLocalRepositories());
+        }
+    }
+
+    @NonNull
     private String generateCommonHeader() {
         String result =
                 String.format(
-                        "ext {\n"
+                        "\n"
+                                + "ext {\n"
                                 + "    buildToolsVersion = '%1$s'\n"
                                 + "    latestCompileSdk = %2$s\n"
                                 + "    kotlinVersion = '%4$s'\n"
-                                + "\n"
-                                + "    plugins.withId('com.android.application') {\n"
-                                + "        apply plugin: 'devicepool'\n"
-                                + "    }\n"
-                                + "    plugins.withId('com.android.library') {\n"
-                                + "        apply plugin: 'devicepool'\n"
-                                + "    }\n"
-                                + "    plugins.withId('com.android.model.application') {\n"
-                                + "        apply plugin: 'devicepool'\n"
-                                + "    }\n"
-                                + "    plugins.withId('com.android.model.library') {\n"
-                                + "        apply plugin: 'devicepool'\n"
-                                + "    }\n"
                                 + "}\n"
                                 + "allprojects {\n"
                                 + "    "
-                                + generateLocalRepoScript()
+                                + generateRepoScript(getLocalRepositories())
                                 + "\n"
                                 + "}\n"
                                 + "",
@@ -577,6 +575,25 @@ public final class GradleTestProject implements TestRule {
                         DEFAULT_COMPILE_SDK_VERSION,
                         false,
                         TestUtils.getKotlinVersionForTests());
+
+        if (APPLY_DEVICEPOOL_PLUGIN) {
+            result +=
+                    "\n"
+                            + "allprojects { proj ->\n"
+                            + "    proj.plugins.withId('com.android.application') {\n"
+                            + "        proj.apply plugin: 'devicepool'\n"
+                            + "    }\n"
+                            + "    proj.plugins.withId('com.android.library') {\n"
+                            + "        proj.apply plugin: 'devicepool'\n"
+                            + "    }\n"
+                            + "    proj.plugins.withId('com.android.model.application') {\n"
+                            + "        proj.apply plugin: 'devicepool'\n"
+                            + "    }\n"
+                            + "    proj.plugins.withId('com.android.model.library') {\n"
+                            + "        proj.apply plugin: 'devicepool'\n"
+                            + "    }\n"
+                            + "}\n";
+        }
 
         if (withDependencyChecker) {
             result =
@@ -618,10 +635,10 @@ public final class GradleTestProject implements TestRule {
     }
 
     @NonNull
-    private static String generateLocalRepoScript() {
+    private static String generateRepoScript(List<Path> repositories) {
         StringBuilder script = new StringBuilder();
         script.append("repositories {\n");
-        for (Path repo : getLocalRepositories()) {
+        for (Path repo : repositories) {
             script.append(mavenSnippet(repo));
         }
         script.append("}\n");

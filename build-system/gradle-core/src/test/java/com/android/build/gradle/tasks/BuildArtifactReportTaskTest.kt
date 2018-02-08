@@ -67,7 +67,7 @@ class BuildArtifactReportTaskTest {
     @Test
     fun report() {
         val task = project.tasks.create("report", BuildArtifactReportTask::class.java)
-        task.init(artifactsHolder, artifactTypes)
+        task.init(artifactsHolder::createReport)
         task.report()
     }
 
@@ -75,13 +75,13 @@ class BuildArtifactReportTaskTest {
     fun reportToFile() {
         val task = project.tasks.create("report", BuildArtifactReportTask::class.java)
         val outputFile = project.file("report.txt")
-        task.init(artifactsHolder, artifactTypes, outputFile)
+        task.init(artifactsHolder::createReport, outputFile)
 
         artifactsHolder.replaceArtifact(JAVAC_CLASSES, listOf("classes"), "task1")
 
         task.report()
 
-        val report = BuildArtifactReportTask.parseReport(outputFile)
+        val report = BuildArtifactsHolder.parseReport(outputFile)
         val javacArtifacts = report[JAVAC_CLASSES] ?: throw NullPointerException()
         assertThat(javacArtifacts).hasSize(2)
         assertThat(javacArtifacts[0].files.map(File::getName)).containsExactly("javac_classes")

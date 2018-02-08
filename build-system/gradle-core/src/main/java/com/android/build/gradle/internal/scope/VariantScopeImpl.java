@@ -42,6 +42,7 @@ import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -115,6 +116,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.ArrayList;
@@ -122,9 +124,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.JavaVersion;
@@ -134,7 +137,6 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationVariant;
-import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -142,6 +144,7 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -296,8 +299,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (file instanceof File) {
             OutputSpec taskSpec = variantPublishingSpec.getSpec(outputType);
             if (taskSpec != null) {
+                Preconditions.checkNotNull(taskName);
                 publishIntermediateArtifact(
-                        (File) file,
+                        file,
                         taskName,
                         taskSpec.getArtifactType(),
                         taskSpec.getPublishedConfigTypes());
@@ -323,9 +327,40 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
     }
 
+    /**
+     * Publish an intermediate artifact.
+     *
+     * @param artifact BuildableArtifact to be published. Must not be an appendable
+     *     BuildableArtifact.
+     * @param artifactType the artifact type.
+     * @param configTypes the PublishedConfigType. (e.g. api, runtime, etc)
+     */
+    @Override
+    public void publishIntermediateArtifact(
+            @NonNull BuildableArtifact artifact,
+            @NonNull ArtifactType artifactType,
+            @NonNull Collection<PublishedConfigType> configTypes) {
+        // Create Provider so that the BuildableArtifact is not resolved until needed.
+        Provider<File> provider =
+                getProject().provider(() -> Iterables.getOnlyElement(artifact.getFiles()));
+        publishIntermediateArtifact((Object) provider, artifact, artifactType, configTypes);
+    }
+
+    /**
+     * Publish an intermediate artifact.
+     *
+     * @deprecated inline this into the other publishIntermediateArtifact when all tasks are
+     *     converted to use BuildArtifactHolder instead of TaskOutputHolder.
+     * @param file file to be published, this should be either a File or a Provider<File>
+     * @param builtBy the tasks that produce the file. This is evaluated as per {@link
+     *     Task#dependsOn(Object...)}.
+     * @param artifactType the artifact type.
+     * @param configTypes the PublishedConfigType. (e.g. api, runtime, etc)
+     */
+    @Deprecated
     private void publishIntermediateArtifact(
-            @NonNull File file,
-            @NonNull String builtBy,
+            @NonNull Object file,
+            @NonNull Object builtBy,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<PublishedConfigType> configTypes) {
         Preconditions.checkState(!configTypes.isEmpty());
@@ -367,21 +402,26 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     }
 
-    private void publishArtifactToConfiguration(
+    private static void publishArtifactToConfiguration(
             @NonNull Configuration configuration,
-            @NonNull File file,
-            @NonNull String builtBy,
+            @NonNull Object file,
+            @NonNull Object builtBy,
             @NonNull ArtifactType artifactType) {
-        final Project project = globalScope.getProject();
         String type = artifactType.getType();
-        configuration.getOutgoing().variants(
-                (NamedDomainObjectContainer<ConfigurationVariant> variants) -> {
-                    variants.create(type, (variant) ->
-                            variant.artifact(file, (artifact) -> {
-                                artifact.setType(type);
-                                artifact.builtBy(project.getTasks().getByName(builtBy));
-                            }));
-                });
+        configuration
+                .getOutgoing()
+                .variants(
+                        (NamedDomainObjectContainer<ConfigurationVariant> variants) -> {
+                            variants.create(
+                                    type,
+                                    (variant) ->
+                                            variant.artifact(
+                                                    file,
+                                                    (artifact) -> {
+                                                        artifact.setType(type);
+                                                        artifact.builtBy(builtBy);
+                                                    }));
+                        });
     }
 
     @Override
@@ -1135,10 +1175,37 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
      */
     @NonNull
     @Override
-    public Supplier<Collection<File>> getLocalPackagedJars() {
+    public FileCollection getLocalPackagedJars() {
+        Configuration configuration = getVariantData().getVariantDependency().getRuntimeClasspath();
 
-        return TaskInputHelper.bypassFileSupplier(
-                getLocalJarLambda(getVariantData().getVariantDependency().getRuntimeClasspath()));
+        // Get a list of local Jars dependencies.
+        Callable<Collection<SelfResolvingDependency>> dependencies =
+                () ->
+                        configuration
+                                .getAllDependencies()
+                                .stream()
+                                .filter((it) -> it instanceof SelfResolvingDependency)
+                                .filter((it) -> !(it instanceof ProjectDependency))
+                                .map((it) -> (SelfResolvingDependency) it)
+                                .collect(ImmutableList.toImmutableList());
+
+        // Create a file collection builtBy the dependencies.  The files are resolved later.
+        return getGlobalScope()
+                .getProject()
+                .files(
+                        TaskInputHelper.bypassFileCallable(
+                                () -> {
+                                    try {
+                                        return dependencies
+                                                .call()
+                                                .stream()
+                                                .flatMap((it) -> it.resolve().stream())
+                                                .collect(Collectors.toList());
+                                    } catch (Exception e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }))
+                .builtBy(dependencies);
     }
 
     @NonNull
@@ -1357,12 +1424,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope.getIntermediatesDir(),
                 "incremental",
                 name);
-    }
-
-    @Override
-    @NonNull
-    public File getPackagedAidlDir() {
-        return intermediate("packaged-aidl");
     }
 
     @NonNull
@@ -1613,18 +1674,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     private File getDefaultApkLocation() {
         return FileUtils.join(globalScope.getBuildDir(), FD_OUTPUTS, "apk");
-    }
-
-    private ManifestProcessorTask manifestProcessorTask;
-
-    @Override
-    public ManifestProcessorTask getManifestProcessorTask() {
-        return manifestProcessorTask;
-    }
-
-    @Override
-    public void setManifestProcessorTask(ManifestProcessorTask manifestProcessorTask) {
-        this.manifestProcessorTask = manifestProcessorTask;
     }
 
     @NonNull
@@ -2024,21 +2073,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         return result;
-    }
-
-    @NonNull
-    private static Supplier<Collection<File>> getLocalJarLambda(
-            @NonNull Configuration configuration) {
-        return () -> {
-            List<File> files = new ArrayList<>();
-            for (Dependency dependency : configuration.getAllDependencies()) {
-                if (dependency instanceof SelfResolvingDependency
-                        && !(dependency instanceof ProjectDependency)) {
-                    files.addAll(((SelfResolvingDependency) dependency).resolve());
-                }
-            }
-            return files;
-        };
     }
 
     @NonNull

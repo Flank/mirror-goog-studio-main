@@ -196,6 +196,26 @@ public class D8DesugaringTest {
     }
 
     @Test
+    public void checkWithProguard() throws IOException, InterruptedException {
+        // Regression test for http://b/72624896
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                "android.buildTypes.debug.minifyEnabled true");
+        TestFileUtils.addMethod(
+                FileUtils.join(
+                        project.getSubproject(":app").getMainSrcDir(),
+                        "com/example/helloworld/HelloWorld.java"),
+                "Runnable r = () -> {};");
+        project.executor()
+                .with(BooleanOption.ENABLE_D8, true)
+                .with(BooleanOption.ENABLE_D8_DESUGARING, true)
+                .run("assembleBaseDebug");
+        Apk androidApk =
+                project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG, "base");
+        assertThat(androidApk).hasDexVersion(35);
+    }
+
+    @Test
     public void checkMultidex() throws IOException, InterruptedException, ProcessException {
         project.executor()
                 .with(BooleanOption.ENABLE_D8, true)

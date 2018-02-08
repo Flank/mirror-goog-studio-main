@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ANDROID_PREFIX
+import com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_COLOR
 import com.android.SdkConstants.ATTR_DRAWABLE
@@ -268,7 +269,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                     // as a chain, since this error is more helpful
                     return
                 }
-                if (!parent.isEmpty()) {
+                if (!parent.isEmpty() && !parent.startsWith(ANDROID_STYLE_RESOURCE_PREFIX)) {
                     val parentName = parent.substring(parent.lastIndexOf('/') + 1)
                     handleReference(context, parentNode, ResourceType.STYLE, name, parentName)
                 }

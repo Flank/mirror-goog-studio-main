@@ -103,7 +103,6 @@ import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -219,7 +218,6 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkData;
-import com.android.manifmerger.ManifestMerger2;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -764,42 +762,7 @@ public abstract class TaskManager {
 
         taskFactory.create(new CompatibleScreensManifest.ConfigAction(variantScope, screenSizes));
 
-        ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures =
-                ImmutableList.builder();
-
-        if (variantScope.isTestOnly()) {
-            optionalFeatures.add(ManifestMerger2.Invoker.Feature.TEST_ONLY);
-        }
-
-        if (variantScope.getVariantConfiguration().getDexingType() == DexingType.LEGACY_MULTIDEX) {
-            optionalFeatures.add(
-                    ManifestMerger2.Invoker.Feature.ADD_MULTIDEX_APPLICATION_IF_NO_NAME);
-        }
-
-        if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
-            optionalFeatures.add(ManifestMerger2.Invoker.Feature.DEBUGGABLE);
-        }
-
-        if (!getAdvancedProfilingTransforms(projectOptions).isEmpty()
-                && variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
-            optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADVANCED_PROFILING);
-        }
-
-        ManifestProcessorTask processManifestTask =
-                createMergeManifestTask(variantScope, optionalFeatures);
-
-        variantScope.addTaskOutput(
-                MERGED_MANIFESTS,
-                variantScope.getManifestOutputDirectory(),
-                processManifestTask.getName());
-
-        variantScope.addTaskOutput(
-                InternalArtifactType.MANIFEST_METADATA,
-                ExistingBuildElements.getMetadataFile(variantScope.getManifestOutputDirectory()),
-                processManifestTask.getName());
-
-        // TODO: use FileCollection
-        variantScope.setManifestProcessorTask(processManifestTask);
+        ManifestProcessorTask processManifestTask = createMergeManifestTask(variantScope);
 
         processManifestTask.dependsOn(variantScope.getCheckManifestTask());
 
@@ -829,29 +792,14 @@ public abstract class TaskManager {
 
     /** Creates the merge manifests task. */
     @NonNull
-    protected ManifestProcessorTask createMergeManifestTask(
-            @NonNull VariantScope variantScope,
-            @NonNull ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures) {
-        if (variantScope.getVariantConfiguration().isInstantRunBuild(globalScope)) {
-            optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
-        }
+    protected ManifestProcessorTask createMergeManifestTask(@NonNull VariantScope variantScope) {
 
         final File reportFile = computeManifestReportFile(variantScope);
-        MergeManifests mergeManifestsAndroidTask =
-                taskFactory.create(
-                        new MergeManifests.ConfigAction(
-                                variantScope, optionalFeatures.build(), reportFile));
-
-        final String name = mergeManifestsAndroidTask.getName();
-
-        variantScope.addTaskOutput(
-                INSTANT_RUN_MERGED_MANIFESTS,
-                variantScope.getInstantRunManifestOutputDirectory(),
-                name);
-
-        variantScope.addTaskOutput(MANIFEST_MERGE_REPORT, reportFile, name);
-
-        return mergeManifestsAndroidTask;
+        return taskFactory.create(
+                new MergeManifests.ConfigAction(
+                        variantScope,
+                        !getAdvancedProfilingTransforms(projectOptions).isEmpty(),
+                        reportFile));
     }
 
     public ProcessManifest createMergeLibManifestsTask(@NonNull VariantScope scope) {
@@ -880,7 +828,7 @@ public abstract class TaskManager {
 
         processManifest.dependsOn(scope.getCheckManifestTask());
 
-        scope.setManifestProcessorTask(processManifest);
+        scope.getVariantData().addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processManifest);
 
         return processManifest;
     }
@@ -894,16 +842,12 @@ public abstract class TaskManager {
                         new ProcessTestManifest.ConfigAction(
                                 scope, testedScope.getOutput(MERGED_MANIFESTS)));
 
-        scope.addTaskOutput(
-                MERGED_MANIFESTS,
-                scope.getManifestOutputDirectory(),
-                processTestManifestTask.getName());
-
         if (scope.getCheckManifestTask() != null) {
             processTestManifestTask.dependsOn(scope.getCheckManifestTask());
         }
 
-        scope.setManifestProcessorTask(processTestManifestTask);
+        scope.getVariantData()
+                .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processTestManifestTask);
     }
 
     public void createRenderscriptTask(
@@ -914,7 +858,10 @@ public abstract class TaskManager {
         GradleVariantConfiguration config = scope.getVariantConfiguration();
 
         if (config.getType().isForTesting()) {
-            scope.getRenderscriptCompileTask().dependsOn(scope.getManifestProcessorTask());
+            scope.getRenderscriptCompileTask()
+                    .dependsOn(
+                            scope.getVariantData()
+                                    .getTaskByKind(TaskContainer.TaskKind.PROCESS_MANIFEST));
         } else {
             scope.getRenderscriptCompileTask().dependsOn(scope.getPreBuildTask());
         }
@@ -1170,7 +1117,8 @@ public abstract class TaskManager {
             // in case of a test project, the manifest is generated so we need to depend
             // on its creation.
 
-            generateBuildConfigTask.dependsOn(scope.getManifestProcessorTask());
+            generateBuildConfigTask.dependsOn(
+                    scope.getVariantData().getTaskByKind(TaskContainer.TaskKind.PROCESS_MANIFEST));
         } else {
             generateBuildConfigTask.dependsOn(scope.getCheckManifestTask());
         }
@@ -1884,7 +1832,10 @@ public abstract class TaskManager {
                 testedVariantScope.getProcessJavaResourcesTask());
         if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
             compileTask.dependsOn(testedVariantScope.getMergeAssetsTask());
-            compileTask.dependsOn(testedVariantScope.getManifestProcessorTask());
+            compileTask.dependsOn(
+                    testedVariantScope
+                            .getVariantData()
+                            .getTaskByKind(TaskContainer.TaskKind.PROCESS_MANIFEST));
         }
 
         // Empty R class jar. TODO: Resources support for unit tests?

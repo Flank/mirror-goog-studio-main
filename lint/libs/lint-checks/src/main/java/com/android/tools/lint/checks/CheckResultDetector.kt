@@ -42,7 +42,8 @@ import org.jetbrains.uast.getQualifiedParentOrThis
 
 class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-            CHECK_RESULT_ANNOTATION,
+            CHECK_RESULT_ANNOTATION.oldName(),
+            CHECK_RESULT_ANNOTATION.newName(),
             FINDBUGS_ANNOTATIONS_CHECK_RETURN_VALUE,
             JAVAX_ANNOTATION_CHECK_RETURN_VALUE,
             ERRORPRONE_CAN_IGNORE_RETURN_VALUE,
@@ -151,7 +152,40 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     private fun isExpressionValueUnused(expression: UExpression): Boolean {
-        return expression.getQualifiedParentOrThis().uastParent is UBlockExpression
+        val parent = expression.getQualifiedParentOrThis().uastParent
+        if (parent is UBlockExpression) {
+            // In Java, it's apparent when an expression is unused:
+            // the parent is a block expression. However, in Kotlin it's
+            // much trickier: values can flow through blocks and up through
+            // if statements, try statements.
+            //
+            // In Kotlin, we consider an expression unused if its parent
+            // is not a block, OR, the expression is not the last statement
+            // in the block, OR, recursively the parent expression is not
+            // used (e.g. you're in an if, but that if statement is itself
+            // not doing anything with the value.)
+            val index = parent.expressions.indexOf(expression)
+            if (index == -1) {
+                if (parent.uastParent is ULambdaExpression) {
+                    return false
+                }
+                return true
+            }
+
+            if (index < parent.expressions.size - 1) {
+                // Not last child
+                return true
+            }
+
+            // It's the last child: see if the parent is unused
+            val parentExpression = expression.getParentOfType<UExpression>(
+                    UExpression::class.java, true
+            ) ?: return true
+
+            return isExpressionValueUnused(parentExpression)
+        }
+
+        return false
     }
 
     companion object {

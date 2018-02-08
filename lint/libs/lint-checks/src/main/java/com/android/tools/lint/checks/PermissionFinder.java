@@ -22,6 +22,7 @@ import static com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTA
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.support.AndroidxName;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.UastLintUtils;
 import com.intellij.psi.PsiAnnotation;
@@ -178,16 +179,31 @@ public class PermissionFinder {
                 //}
                 PsiField field = (PsiField)resolved;
                 if (mOperation == Operation.ACTION) {
-                    PsiAnnotation annotation = mContext.getEvaluator().findAnnotation(field,
-                            PERMISSION_ANNOTATION);
+                    PsiAnnotation annotation =
+                            mContext.getEvaluator()
+                                    .findAnnotation(field, PERMISSION_ANNOTATION.oldName());
+
+                    if (annotation == null) {
+                        annotation =
+                                mContext.getEvaluator()
+                                        .findAnnotation(field, PERMISSION_ANNOTATION.newName());
+                    }
+
                     if (annotation != null) {
                         //return getPermissionRequirement(field, annotation);
                         return getPermissionRequirement(field, JavaUAnnotation.wrap(annotation));
                     }
                 } else if (mOperation == Operation.READ || mOperation == Operation.WRITE) {
-                    String fqn = mOperation == Operation.READ
-                            ? PERMISSION_ANNOTATION_READ : PERMISSION_ANNOTATION_WRITE;
-                    PsiAnnotation annotation = mContext.getEvaluator().findAnnotation(field, fqn);
+                    AndroidxName fqn =
+                            mOperation == Operation.READ
+                                    ? PERMISSION_ANNOTATION_READ
+                                    : PERMISSION_ANNOTATION_WRITE;
+
+                    PsiAnnotation annotation =
+                            mContext.getEvaluator().findAnnotation(field, fqn.oldName());
+                    if (annotation == null) {
+                        annotation = mContext.getEvaluator().findAnnotation(field, fqn.newName());
+                    }
                     if (annotation != null) {
                         PsiNameValuePair[] attributes = annotation.getParameterList().getAttributes();
                         PsiNameValuePair o = attributes.length == 1 ? attributes[0] : null;
@@ -195,10 +211,10 @@ public class PermissionFinder {
                             annotation = (PsiAnnotation) o.getValue();
 
                             //List<UNamedExpression> attributes = annotation.getAttributeValues();
-                        //UNamedExpression o = attributes.size() == 1 ? attributes.get(0) : null;
-                        //if (o != null && o.getExpression() instanceof UAnnotation) {
-                        //    annotation = (UAnnotation) o.getExpression();
-                            if (PERMISSION_ANNOTATION.equals(annotation.getQualifiedName())) {
+                            //UNamedExpression o = attributes.size() == 1 ? attributes.get(0) : null;
+                            //if (o != null && o.getExpression() instanceof UAnnotation) {
+                            //    annotation = (UAnnotation) o.getExpression();
+                            if (PERMISSION_ANNOTATION.isEquals(annotation.getQualifiedName())) {
                                 //return getPermissionRequirement(field, annotation);
                                 return getPermissionRequirement(field, JavaUAnnotation.wrap(annotation));
                             }

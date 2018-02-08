@@ -457,7 +457,7 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
         for (Map.Entry<String, Collection<I>> entry : mItems.asMap().entrySet()) {
             Collection<I> items = entry.getValue();
 
-            // there can be several version of the same key if some are "removed"
+            // There can be several version of the same key if some are "removed".
             I lastItem = null;
             for (I item : items) {
                 if (!item.isRemoved()) {

@@ -16,6 +16,8 @@
 
 package com.android.ide.common.res2
 
+import com.android.ide.common.blame.SourceFilePosition
+import com.android.ide.common.blame.SourcePosition
 import java.io.File
 import java.io.Serializable
 
@@ -25,4 +27,9 @@ class CompileResourceRequest @JvmOverloads constructor(
         val outputDirectory: File,
         val inputDirectoryName: String = inputFile.parentFile.name,
         val isPseudoLocalize: Boolean = false,
-        val isPngCrunching: Boolean = true) : Serializable
+        val isPngCrunching: Boolean = true,
+        /** The map of where values came from, so errors are reported correctly. */
+        val blameMap: Map<SourcePosition, SourceFilePosition> = mapOf(),
+        /** The original source file. For data binding, so errors are reported correctly */
+        val originalInputFile: File = inputFile
+) : Serializable

@@ -21,6 +21,7 @@ import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.google.common.base.Joiner;
 import java.util.ArrayList;
@@ -152,7 +153,7 @@ public final class ResourceValuesXmlParser {
     public static SymbolTable parse(
             @NonNull Document xmlDocument,
             @NonNull IdProvider idProvider,
-            SymbolTable platformAttrSymbols) {
+            @Nullable SymbolTable platformAttrSymbols) {
         Element root = xmlDocument.getDocumentElement();
         if (root == null) {
             throw new ResourceValuesXmlParseException("XML document does not have a root element.");
@@ -200,7 +201,7 @@ public final class ResourceValuesXmlParser {
             @NonNull SymbolTable.Builder builder,
             @NonNull IdProvider idProvider,
             @NonNull List<Symbol> enumSymbols,
-            @NonNull SymbolTable platformAttrSymbols) {
+            @Nullable SymbolTable platformAttrSymbols) {
 
         String type = child.getTagName();
         if (type.equals(SdkConstants.TAG_ITEM)) {
@@ -293,7 +294,7 @@ public final class ResourceValuesXmlParser {
             @NonNull String name,
             @NonNull SymbolTable.Builder builder,
             @NonNull List<Symbol> enumSymbols,
-            @NonNull SymbolTable platformAttrSymbols) {
+            @Nullable SymbolTable platformAttrSymbols) {
         List<String> attrValues = new ArrayList<>();
         List<String> attrNames = new ArrayList<>();
 
@@ -322,17 +323,24 @@ public final class ResourceValuesXmlParser {
             String attrName = getMandatoryAttr(attrElement, "name");
 
             if (attrName.startsWith(ANDROID_NS_NAME_PREFIX)) {
-                // this is an android attr.
-                String realAttrName = attrName.substring(ANDROID_NS_NAME_PREFIX_LEN);
-
-                final Symbol attrSymbol =
-                        platformAttrSymbols.getSymbols().get(ResourceType.ATTR, realAttrName);
-
-                if (attrSymbol != null) {
-                    attrValues.add(attrSymbol.getValue());
+                if (platformAttrSymbols == null) {
+                    // If platform attr symbols are not provided, we don't need the actual values.
+                    // Use a fake ID to signal this is the case.
+                    attrName = SymbolUtils.canonicalizeValueResourceName(attrName);
+                    attrValues.add("-1");
                 } else {
-                    throw new ResourceValuesXmlParseException(
-                            String.format("Unknown android attribute '%s'", name));
+                    // this is an android attr.
+                    String realAttrName = attrName.substring(ANDROID_NS_NAME_PREFIX_LEN);
+
+                    final Symbol attrSymbol =
+                            platformAttrSymbols.getSymbols().get(ResourceType.ATTR, realAttrName);
+
+                    if (attrSymbol != null) {
+                        attrValues.add(attrSymbol.getValue());
+                    } else {
+                        throw new ResourceValuesXmlParseException(
+                                String.format("Unknown android attribute '%s'", name));
+                    }
                 }
             } else {
                 attrName = SymbolUtils.canonicalizeValueResourceName(attrName);

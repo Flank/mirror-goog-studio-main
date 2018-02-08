@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.core.Abi;
@@ -48,7 +49,6 @@ import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -72,6 +72,11 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     PublishingSpecs.VariantSpec getPublishingSpec();
+
+    void publishIntermediateArtifact(
+            @NonNull BuildableArtifact artifact,
+            @NonNull ArtifactType artifactType,
+            @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes);
 
     @NonNull
     BaseVariantData getVariantData();
@@ -171,7 +176,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
             @NonNull ArtifactType artifactType);
 
     @NonNull
-    Supplier<Collection<File>> getLocalPackagedJars();
+    FileCollection getLocalPackagedJars();
 
     @NonNull
     FileCollection getProvidedOnlyClasspath();
@@ -240,9 +245,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getAidlSourceOutputDir();
-
-    @NonNull
-    File getPackagedAidlDir();
 
     @NonNull
     File getAarClassesJar();
@@ -330,10 +332,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getApkLocation();
-
-    ManifestProcessorTask getManifestProcessorTask();
-
-    void setManifestProcessorTask(ManifestProcessorTask manifestProcessorTask);
 
     DefaultTask getAssembleTask();
 

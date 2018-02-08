@@ -84,10 +84,10 @@ class BuildElementsTest {
                         reader))
 
         // check that persisted was loaded correctly.
-        assertThat<BuildOutput, Iterable<BuildOutput>>(buildOutputs).hasSize(1)
+        assertThat(buildOutputs).hasSize(1)
         val buildOutput = Iterators.getOnlyElement<BuildOutput>(buildOutputs.iterator())
         assertThat(buildOutput.outputFile).isEqualTo(outputForSplit)
-        assertThat<FilterData, Iterable<FilterData>>(buildOutput.apkInfo.filters).hasSize(1)
+        assertThat(buildOutput.apkInfo.filters).hasSize(1)
         val filter = Iterators.getOnlyElement(buildOutput.apkInfo.filters.iterator())
         assertThat(filter.identifier).isEqualTo("xxhdpi")
         assertThat(filter.filterType).isEqualTo(VariantOutput.FilterType.DENSITY.name)
@@ -259,7 +259,7 @@ class BuildElementsTest {
                 APK,
                 StringReader(gsonOutput))
 
-        assertThat<BuildOutput, Iterable<BuildOutput>>(loadedBuildOutputs).hasSize(1)
+        assertThat(loadedBuildOutputs).hasSize(1)
         loadedBuildOutputs.forEach { loadedBuildOutput ->
             assertThat(loadedBuildOutput.outputFile.absolutePath)
                     .startsWith(newProjectLocation.absolutePath)

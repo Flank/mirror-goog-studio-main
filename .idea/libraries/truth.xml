@@ -4,11 +4,11 @@
       <root url="file://$PROJECT_DIR$/.idea/codeContracts" />
     </ANNOTATIONS>
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/truth/truth/0.28/truth-0.28.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/truth/truth/0.34/truth-0.34.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/truth/truth/0.28/truth-0.28-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/truth/truth/0.34/truth-0.34-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

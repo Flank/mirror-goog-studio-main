@@ -44,11 +44,16 @@ import java.util.ArrayList
 
 class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-            UI_THREAD_ANNOTATION,
-            MAIN_THREAD_ANNOTATION,
-            BINDER_THREAD_ANNOTATION,
-            WORKER_THREAD_ANNOTATION,
-            ANY_THREAD_ANNOTATION
+            UI_THREAD_ANNOTATION.oldName(),
+            UI_THREAD_ANNOTATION.newName(),
+            MAIN_THREAD_ANNOTATION.oldName(),
+            MAIN_THREAD_ANNOTATION.newName(),
+            BINDER_THREAD_ANNOTATION.oldName(),
+            BINDER_THREAD_ANNOTATION.newName(),
+            WORKER_THREAD_ANNOTATION.oldName(),
+            WORKER_THREAD_ANNOTATION.newName(),
+            ANY_THREAD_ANNOTATION.oldName(),
+            ANY_THREAD_ANNOTATION.newName()
     )
 
     override fun visitAnnotationUsage(
@@ -154,7 +159,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val signature = annotation.qualifiedName
         return (signature != null
                 && signature.endsWith(THREAD_SUFFIX)
-                && signature.startsWith(SUPPORT_ANNOTATIONS_PREFIX))
+                && SUPPORT_ANNOTATIONS_PREFIX.isPrefix(signature))
     }
 
     private fun describeThreads(annotations: List<String>, any: Boolean): String {
@@ -177,11 +182,11 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     }
 
     private fun describeThread(annotation: String): String = when (annotation) {
-        UI_THREAD_ANNOTATION -> "UI"
-        MAIN_THREAD_ANNOTATION -> "main"
-        BINDER_THREAD_ANNOTATION -> "binder"
-        WORKER_THREAD_ANNOTATION -> "worker"
-        ANY_THREAD_ANNOTATION -> "any"
+        UI_THREAD_ANNOTATION.oldName(), UI_THREAD_ANNOTATION.newName() -> "UI"
+        MAIN_THREAD_ANNOTATION.oldName(), MAIN_THREAD_ANNOTATION.newName() -> "main"
+        BINDER_THREAD_ANNOTATION.oldName(), BINDER_THREAD_ANNOTATION.newName() -> "binder"
+        WORKER_THREAD_ANNOTATION.oldName(), WORKER_THREAD_ANNOTATION.newName() -> "worker"
+        ANY_THREAD_ANNOTATION.oldName(), ANY_THREAD_ANNOTATION.newName() -> "any"
         else -> "other"
     }
 
@@ -204,17 +209,17 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             return true
         }
 
-        if (callee == ANY_THREAD_ANNOTATION) {
+        if (ANY_THREAD_ANNOTATION.isEquals(callee)) {
             return true
         }
 
         // Allow @UiThread and @MainThread to be combined
-        if (callee == UI_THREAD_ANNOTATION) {
-            if (caller == MAIN_THREAD_ANNOTATION) {
+        if (UI_THREAD_ANNOTATION.isEquals(callee)) {
+            if (MAIN_THREAD_ANNOTATION.isEquals(caller)) {
                 return true
             }
-        } else if (callee == MAIN_THREAD_ANNOTATION) {
-            if (caller == UI_THREAD_ANNOTATION) {
+        } else if (MAIN_THREAD_ANNOTATION.isEquals(callee)) {
+            if (UI_THREAD_ANNOTATION.isEquals(caller)) {
                 return true
             }
         }
@@ -240,7 +245,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             while (method != null) {
                 for (annotation in method.modifierList.annotations) {
                     val name = annotation.qualifiedName
-                    if (name != null && name.startsWith(SUPPORT_ANNOTATIONS_PREFIX)
+                    if (name != null && SUPPORT_ANNOTATIONS_PREFIX.isPrefix(name)
                             && name.endsWith(THREAD_SUFFIX)) {
                         if (result == null) {
                             result = ArrayList(4)
@@ -262,7 +267,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 if (modifierList != null) {
                     for (annotation in modifierList.annotations) {
                         val name = annotation.qualifiedName
-                        if (name != null && name.startsWith(SUPPORT_ANNOTATIONS_PREFIX)
+                        if (name != null && SUPPORT_ANNOTATIONS_PREFIX.isPrefix(name)
                                 && name.endsWith(THREAD_SUFFIX)) {
                             if (result == null) {
                                 result = ArrayList(4)

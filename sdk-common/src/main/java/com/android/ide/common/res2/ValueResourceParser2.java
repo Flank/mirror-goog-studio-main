@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.res2;
 
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
@@ -31,14 +30,14 @@ import com.android.ide.common.symbols.ResourceValuesXmlParser;
 import com.android.resources.ResourceType;
 import com.android.utils.PositionXmlParser;
 import com.android.utils.XmlUtils;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,16 +58,12 @@ import org.xml.sax.SAXException;
  */
 @Deprecated
 class ValueResourceParser2 {
-
-    @NonNull
-    private final File mFile;
-
-    @Nullable
-    private final String mLibraryName;
-
+    @NonNull private final File mFile;
+    @Nullable private final String mLibraryName;
     @NonNull private final ResourceNamespace mNamespace;
-
     private boolean mTrackSourcePositions = true;
+    private boolean mCheckDuplicates = true;
+    private boolean mAllowUnspecifiedAttrFormat;
 
     /**
      * Creates the parser for a given file.
@@ -85,16 +80,30 @@ class ValueResourceParser2 {
     }
 
     /**
-     * Set whether or not to use a source position-tracking XML parser.
+     * Sets whether or not to use a source position-tracking XML parser.
      */
     void setTrackSourcePositions(boolean value) {
         mTrackSourcePositions = value;
     }
 
     /**
+     * Tells the parser whether to allow check for duplicate resource items or not.
+     */
+    void setCheckDuplicates(boolean value) {
+        mCheckDuplicates = value;
+    }
+
+    /**
+     * Tells the parser whether to allow "attr" items without a "format" attribute or children.
+     */
+    void setAllowUnspecifiedAttrFormat(boolean value) {
+        mAllowUnspecifiedAttrFormat = value;
+    }
+
+    /**
      * Parses the file and returns a list of {@link ResourceItem} objects.
-     * @return a list of resources.
      *
+     * @return a list of resources.
      * @throws MergingException if a merging exception happens
      */
     @NonNull
@@ -110,9 +119,10 @@ class ValueResourceParser2 {
 
         final int count = nodes.getLength();
         // list containing the result
-        List<ResourceItem> resources = Lists.newArrayListWithExpectedSize(count);
-        // Multimap to detect dups
-        Map<ResourceType, Set<String>> map = Maps.newEnumMap(ResourceType.class);
+        List<ResourceItem> resources = new ArrayList<>(count);
+        // Multimap to detect duplicates.
+        Map<ResourceType, Set<String>> map =
+                mCheckDuplicates ? new EnumMap<>(ResourceType.class) : null;
 
         for (int i = 0, n = nodes.getLength(); i < n; i++) {
             Node node = nodes.item(i);
@@ -123,14 +133,21 @@ class ValueResourceParser2 {
 
             ResourceItem resource = getResource(node, mFile, mNamespace, mLibraryName);
             if (resource != null) {
-                // check this is not a dup
+                // Check that this is not a duplicate.
                 checkDuplicate(resource, map, mFile);
 
                 resources.add(resource);
 
                 if (resource.getType() == ResourceType.DECLARE_STYLEABLE) {
                     // Need to also create ATTR items for its children
-                    addStyleableItems(node, resources, map, mFile, mNamespace, mLibraryName);
+                    addStyleableItems(
+                            node,
+                            resources,
+                            map,
+                            mFile,
+                            mNamespace,
+                            mLibraryName,
+                            mAllowUnspecifiedAttrFormat);
                 }
             }
         }
@@ -242,11 +259,13 @@ class ValueResourceParser2 {
 
     /**
      * Adds any declare styleable attr items below the given declare styleable nodes into the given
-     * list
+     * list.
      *
      * @param styleableNode the declare styleable node
      * @param list the list to add items into
      * @param map map of existing items to detect dups.
+     * @param allowUnspecifiedFormat whether to allow "attr" items without a "format" attribute or
+     *     children.
      */
     static void addStyleableItems(
             @NonNull Node styleableNode,
@@ -254,7 +273,8 @@ class ValueResourceParser2 {
             @Nullable Map<ResourceType, Set<String>> map,
             @Nullable File from,
             @NonNull ResourceNamespace namespace,
-            @Nullable String libraryName)
+            @Nullable String libraryName,
+            boolean allowUnspecifiedFormat)
             throws MergingException {
         assert styleableNode.getNodeName().equals(ResourceType.DECLARE_STYLEABLE.getName());
         NodeList nodes = styleableNode.getChildNodes();
@@ -272,7 +292,9 @@ class ValueResourceParser2 {
 
                 // is the attribute in the android namespace?
                 if (!resource.getName().startsWith(ANDROID_NS_NAME_PREFIX)) {
-                    if (hasFormatAttribute(node) || XmlUtils.hasElementChildren(node)) {
+                    if (allowUnspecifiedFormat
+                            || hasFormatAttribute(node)
+                            || XmlUtils.hasElementChildren(node)) {
                         checkDuplicate(resource, map, from);
                         resource.setIgnoredFromDiskMerge(true);
                         list.add(resource);
@@ -290,19 +312,19 @@ class ValueResourceParser2 {
             return;
         }
 
-        String name = resource.getName();
         Set<String> set = map.get(resource.getType());
         if (set == null) {
-            set = Sets.newHashSet(name);
+            set = new HashSet<>();
             map.put(resource.getType(), set);
-        } else {
-            if (set.contains(name) && resource.getType() != ResourceType.PUBLIC) {
-                throw MergingException.withMessage(
-                        "Found item %s/%s more than one time",
-                        resource.getType().getDisplayName(), name).withFile(from).build();
-            }
+        }
 
-            set.add(name);
+        String name = resource.getName();
+        if (!set.add(name) && resource.getType() != ResourceType.PUBLIC) {
+            throw MergingException.withMessage(
+                            "Found item %s/%s more than one time",
+                            resource.getType().getDisplayName(), name)
+                    .withFile(from)
+                    .build();
         }
     }
 

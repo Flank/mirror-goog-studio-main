@@ -171,6 +171,10 @@ public class ThirdPartyBuildGenerator {
                 List<String> runtimeDeps =
                         getDirectDependencies(artifact, JavaScopes.RUNTIME, versions.keySet());
 
+                fileWriter.append(
+                        "# ATTENTION: This file is generated from "
+                                + "tools/buildSrc/base/dependencies.properties, "
+                                + "see top of this file.\n");
                 fileWriter.append("maven_java_library(");
                 fileWriter.append(String.format("name = \"%s\", ", ruleName));
                 fileWriter.append(

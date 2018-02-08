@@ -73,59 +73,11 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
     }
 
     /**
-     * Override of the normal ResourceItem to handle merged item cases.
-     * This is mostly to deal with items that do not have a matching source file.
-     * This override the method returning the qualifier or the source type, to directly
-     * return a value instead of relying on a source file (since merged items don't have any).
-     */
-    private static class MergedResourceItem extends SourcelessResourceItem {
-
-        @NonNull
-        private final String mQualifiers;
-
-        /**
-         * Constructs the object with a name, type and optional value.
-         *
-         * <p>Note that the object is not fully usable as-is. It must be added to a ResourceFile
-         * first.
-         *
-         * @param name the name of the resource
-         * @param type the type of the resource
-         * @param qualifiers the qualifiers of the resource
-         * @param value an optional Node that represents the resource value.
-         * @param libraryName name of library where resource came from if any
-         */
-        public MergedResourceItem(
-                @NonNull String name,
-                @NonNull ResourceNamespace namespace,
-                @NonNull ResourceType type,
-                @NonNull String qualifiers,
-                @Nullable Node value,
-                @Nullable String libraryName) {
-            super(name, namespace, type, value, libraryName);
-            mQualifiers = qualifiers;
-        }
-
-        @NonNull
-        @Override
-        public String getQualifiers() {
-            return mQualifiers;
-        }
-
-        @Override
-        @NonNull
-        public FileType getSourceType() {
-            return FileType.XML_VALUES;
-        }
-    }
-
-    /**
      * Map of items that are purely results of merges (ie item that made up of several
      * original items). The first map key is the associated qualifier for the items,
      * the second map key is the item name.
      */
     protected final Map<String, Map<String, ResourceItem>> mMergedItems = Maps.newHashMap();
-
 
     /**
      * Reads the {@link ResourceSet} from the blob XML. {@link ResourceMerger} deals with two kinds

@@ -48,6 +48,15 @@ class FakeFailureStrategy extends FailureStrategy {
     }
 
     @Override
+    public void failComparing(
+            String message, CharSequence expected, CharSequence actual, Throwable throwable) {
+        this.message = message;
+        this.expected = expected;
+        this.actual = actual;
+        this.throwable = throwable;
+    }
+
+    @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("message", message)

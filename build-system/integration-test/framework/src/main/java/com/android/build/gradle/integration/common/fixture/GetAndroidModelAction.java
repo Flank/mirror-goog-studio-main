@@ -17,10 +17,15 @@
 package com.android.build.gradle.integration.common.fixture;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ModelBuilderParameter;
+import com.android.builder.model.Variant;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -189,13 +194,46 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
             while ((index = getNextIndex()) < count) {
                 Pair<BuildIdentifier, BasicGradleProject> pair = projects.get(index);
                 BasicGradleProject project = pair.getSecond();
-                T model = buildController.findModel(project, type);
+                T model;
+                if (type != ParameterizedAndroidProject.class) {
+                    model = buildController.findModel(project, type);
+                } else {
+                    //noinspection unchecked
+                    model = (T) getParameterizedAndroidProject(project);
+                }
                 if (model != null) {
                     Map<String, T> perBuildMap =
                             models.computeIfAbsent(pair.getFirst(), id -> new HashMap<>());
                     perBuildMap.put(project.getPath(), model);
                 }
             }
+        }
+
+        @Nullable
+        private ParameterizedAndroidProject getParameterizedAndroidProject(
+                @NonNull BasicGradleProject project) {
+            AndroidProject androidProject =
+                    buildController.findModel(
+                            project,
+                            AndroidProject.class,
+                            ModelBuilderParameter.class,
+                            p -> p.setShouldBuildVariant(false));
+            if (androidProject != null) {
+                List<Variant> variants = new ArrayList<>();
+                for (String variantName : androidProject.getVariantNames()) {
+                    Variant variant =
+                            buildController.findModel(
+                                    project,
+                                    Variant.class,
+                                    ModelBuilderParameter.class,
+                                    p -> p.setVariantName(variantName));
+                    if (variant != null) {
+                        variants.add(variant);
+                    }
+                }
+                return new ParameterizedAndroidProject(androidProject, variants);
+            }
+            return null;
         }
     }
 }

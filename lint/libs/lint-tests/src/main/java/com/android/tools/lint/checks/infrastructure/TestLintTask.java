@@ -105,6 +105,7 @@ public class TestLintTask {
     Map<String, byte[]> mockNetworkData;
     boolean allowNetworkAccess;
     boolean allowDuplicates = false;
+    File rootDirectory;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -675,7 +676,7 @@ public class TestLintTask {
         alreadyRun = true;
         ensureConfigured();
 
-        File rootDir = Files.createTempDir();
+        File rootDir = rootDirectory != null ? rootDirectory : Files.createTempDir();
         try {
             // Use canonical path to make sure we don't end up failing
             // to chop off the prefix from Project#getDisplayPath
@@ -692,7 +693,9 @@ public class TestLintTask {
         } catch (Exception e) {
             return new TestLintResult(this, null, e, Collections.emptyList());
         } finally {
-            TestUtils.deleteFile(rootDir);
+            if (rootDirectory == null) { // Only delete if we created it above
+                TestUtils.deleteFile(rootDir);
+            }
         }
     }
 
@@ -866,7 +869,8 @@ public class TestLintTask {
                 TestLintClient client = createClient();
                 client.task = this;
                 List<JarFileIssueRegistry> registries =
-                        JarFileIssueRegistry.Factory.get(client, Arrays.asList(customRules));
+                        JarFileIssueRegistry.Factory.get(client, Arrays.asList(customRules),
+                                null);
                 IssueRegistry[] array = registries.toArray(new IssueRegistry[0]);
                 IssueRegistry all = JarFileIssueRegistry.Factory.join(array);
                 return checkedIssues = all.getIssues();
@@ -1002,6 +1006,20 @@ public class TestLintTask {
      */
     public TestLintTask allowNetworkAccess(boolean allowNetworkAccess) {
         this.allowNetworkAccess = allowNetworkAccess;
+        return this;
+    }
+
+    /**
+     * Configures the root directory to create projects in when running lint.
+     * Normally lint creates it in the temporary folder, but this allows you
+     * to specify a specific location. When this is set, lint will not delete
+     * the contents after running.
+     *
+     * @param rootDirectory the root directory to create lint files under
+     * @return this, for constructor chaining
+     */
+    public TestLintTask rootDirectory(@Nullable File rootDirectory) {
+        this.rootDirectory = rootDirectory;
         return this;
     }
 

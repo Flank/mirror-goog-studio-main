@@ -243,7 +243,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
         // Check annotation references; these are a form of method call
         val qualifiedName = annotation.qualifiedName
         if (qualifiedName == null || qualifiedName.startsWith("java.") ||
-                qualifiedName.startsWith(SUPPORT_ANNOTATIONS_PREFIX)) {
+                SUPPORT_ANNOTATIONS_PREFIX.isPrefix(qualifiedName)) {
             return
         }
 

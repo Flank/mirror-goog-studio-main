@@ -72,7 +72,8 @@ open class AndroidZip : Zip() {
             bundle.archiveNameSupplier = { variantScope.outputScope.mainSplit.outputFileName }
             bundle.extension = BuilderConstants.EXT_LIB_ARCHIVE
             bundle.from(
-                    variantScope.getOutput(InternalArtifactType.AIDL_PARCELABLE),
+                    variantScope.buildArtifactsHolder.getArtifactFiles(
+                            InternalArtifactType.AIDL_PARCELABLE),
                     prependToCopyPath(SdkConstants.FD_AIDL))
             bundle.from(variantScope.getOutput(InternalArtifactType.CONSUMER_PROGUARD_FILE))
             if (extension.dataBinding.isEnabled) {

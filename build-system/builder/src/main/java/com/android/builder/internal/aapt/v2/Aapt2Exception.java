@@ -16,19 +16,34 @@
 
 package com.android.builder.internal.aapt.v2;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+
 /** Exception thrown when an error occurs during {@code aapt2} processing. */
 public class Aapt2Exception extends RuntimeException {
+    private static final long serialVersionUID = 7034893190645766939L;
 
-    /** Version for serialization. */
-    private static final long serialVersionUID = 1;
+    @Nullable private final String output;
 
     /**
      * Creates a new exception.
      *
      * @param description a description of the exception
      */
-    public Aapt2Exception(String description) {
+    public Aapt2Exception(@NonNull String description) {
         super(description);
+        output = null;
+    }
+
+    /**
+     * Creates a new exception.
+     *
+     * @param description a description of the exception
+     * @param output the error output of AAPT
+     */
+    public Aapt2Exception(@NonNull String description, @Nullable String output) {
+        super(description);
+        this.output = output;
     }
 
     /**
@@ -37,7 +52,39 @@ public class Aapt2Exception extends RuntimeException {
      * @param description a description of the exception
      * @param cause the cause of the exception
      */
-    public Aapt2Exception(String description, Throwable cause) {
+    public Aapt2Exception(String description, @Nullable Throwable cause) {
         super(description, cause);
+        this.output = null;
+    }
+
+    /**
+     * Creates a new exception.
+     *
+     * @param description a description of the exception
+     * @param output the error output of AAPT
+     * @param cause the cause of the exception
+     */
+    public Aapt2Exception(
+            @NonNull String description, @Nullable String output, @Nullable Throwable cause) {
+        super(description, cause);
+        this.output = output;
+    }
+
+    /**
+     * The error output of AAPT2.
+     *
+     * <p>Null if not set.
+     */
+    @Nullable
+    public String getOutput() {
+        return output;
+    }
+
+    @Override
+    public String getMessage() {
+        if (output == null) {
+            return super.getMessage();
+        }
+        return super.getMessage() + "\nOutput:  " + output;
     }
 }

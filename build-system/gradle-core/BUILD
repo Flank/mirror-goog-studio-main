@@ -105,6 +105,7 @@ kotlin_test(
     friends = [":gradle-core"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
+    tags = ["no_test_mac"],  # b/72972266
     # TODO: Remove the blacklist, once NDK is checked in.
     test_class = "com.android.build.gradle.internal.GradleCoreBazelSuite",
     deps = [

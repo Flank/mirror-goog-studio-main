@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
@@ -22,6 +21,7 @@ import static com.android.SdkConstants.PREFIX_ANDROID;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
 import static com.android.SdkConstants.REFERENCE_STYLE;
+import static com.android.ide.common.res2.AbstractResourceRepository.MAX_RESOURCE_INDIRECTION;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.android.annotations.NonNull;
@@ -52,12 +52,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * <b>NOTE:</b> LayoutLib tests depend on this class.
+ */
 public class ResourceResolver extends RenderResources {
     public static final String THEME_NAME = "Theme";
     public static final String THEME_NAME_DOT = "Theme.";
-    public static final String XLIFF_NAMESPACE_PREFIX = "urn:oasis:names:tc:xliff:document:";
-    public static final String XLIFF_G_TAG = "g";
-    public static final String ATTR_EXAMPLE = "example";
 
     /**
      * Constant passed to {@link #setDeviceDefaults(String)} to indicate the DeviceDefault styles
@@ -65,14 +65,8 @@ public class ResourceResolver extends RenderResources {
      */
     public static final String LEGACY_THEME = "";
 
-    public static final Pattern DEVICE_DEFAULT_PATTERN = Pattern
-            .compile("(\\p{Alpha}+)?\\.?DeviceDefault\\.?(.+)?");
-
-    /**
-     * Number of indirections we'll follow for resource resolution before assuming there
-     * is a cyclic dependency error in the input
-     */
-    public static final int MAX_RESOURCE_INDIRECTION = 50;
+    public static final Pattern DEVICE_DEFAULT_PATTERN =
+            Pattern.compile("(\\p{Alpha}+)?\\.?DeviceDefault\\.?(.+)?");
 
     private final Map<ResourceNamespace, Map<ResourceType, ResourceValueMap>> mResources;
     private final Map<StyleResourceValue, StyleResourceValue> mStyleInheritanceMap =
@@ -87,7 +81,7 @@ public class ResourceResolver extends RenderResources {
     private boolean mIsProjectTheme;
 
     /** Contains the default parent for DeviceDefault styles (e.g. for API 18, "Holo") */
-    private String mDeviceDefaultParent = null;
+    private String mDeviceDefaultParent;
 
     private ResourceResolver(
             Map<ResourceNamespace, Map<ResourceType, ResourceValueMap>> resources,

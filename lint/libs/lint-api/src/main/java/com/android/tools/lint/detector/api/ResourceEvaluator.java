@@ -30,8 +30,10 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
+import com.android.support.AndroidxName;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.ResourceReference;
+import com.google.common.collect.ImmutableMap;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiConditionalExpression;
@@ -78,37 +80,114 @@ public class ResourceEvaluator {
      */
     public static final ResourceType DIMENSION_MARKER_TYPE = ResourceType.DECLARE_STYLEABLE;
 
-    public static final String COLOR_INT_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "ColorInt";
-    public static final String PX_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Px";
-    public static final String DIMENSION_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Dimension";
+    public static final AndroidxName COLOR_INT_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "ColorInt");
+    public static final AndroidxName PX_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "Px");
+    public static final AndroidxName DIMENSION_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "Dimension");
     public static final String RES_SUFFIX = "Res";
 
-    public static final String ANIMATOR_RES_ANNOTATION = "android.support.annotation.AnimatorRes";
-    public static final String ANIM_RES_ANNOTATION = "android.support.annotation.AnimRes";
-    public static final String ANY_RES_ANNOTATION = "android.support.annotation.AnyRes";
-    public static final String ARRAY_RES_ANNOTATION = "android.support.annotation.ArrayRes";
-    public static final String ATTR_RES_ANNOTATION = "android.support.annotation.AttrRes";
-    public static final String BOOL_RES_ANNOTATION = "android.support.annotation.BoolRes";
-    public static final String COLOR_RES_ANNOTATION = "android.support.annotation.ColorRes";
-    public static final String DIMEN_RES_ANNOTATION = "android.support.annotation.DimenRes";
-    public static final String DRAWABLE_RES_ANNOTATION = "android.support.annotation.DrawableRes";
-    public static final String FONT_RES_ANNOTATION = "android.support.annotation.FontRes";
-    public static final String FRACTION_RES_ANNOTATION = "android.support.annotation.FractionRes";
-    public static final String ID_RES_ANNOTATION = "android.support.annotation.IdRes";
-    public static final String INTEGER_RES_ANNOTATION = "android.support.annotation.IntegerRes";
-    public static final String INTERPOLATOR_RES_ANNOTATION = "android.support.annotation.InterpolatorRes";
-    public static final String LAYOUT_RES_ANNOTATION = "android.support.annotation.LayoutRes";
-    public static final String MENU_RES_ANNOTATION = "android.support.annotation.MenuRes";
-    public static final String PLURALS_RES_ANNOTATION = "android.support.annotation.PluralsRes";
-    public static final String RAW_RES_ANNOTATION = "android.support.annotation.RawRes";
-    public static final String STRING_RES_ANNOTATION = "android.support.annotation.StringRes";
-    public static final String STYLEABLE_RES_ANNOTATION = "android.support.annotation.StyleableRes";
-    public static final String STYLE_RES_ANNOTATION = "android.support.annotation.StyleRes";
-    public static final String TRANSITION_RES_ANNOTATION = "android.support.annotation.TransitionRes";
-    public static final String XML_RES_ANNOTATION = "android.support.annotation.XmlRes";
-    public static final String NAVIGATION_RES_ANNOTATION = "android.support.annotation.NavigationRes";
+    public static final AndroidxName ANIMATOR_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "AnimatorRes");
+    public static final AndroidxName ANIM_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "AnimRes");
+    public static final AndroidxName ANY_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "AnyRes");
+    public static final AndroidxName ARRAY_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "ArrayRes");
+    public static final AndroidxName BOOL_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "BoolRes");
+    public static final AndroidxName COLOR_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "ColorRes");
+    public static final AndroidxName ATTR_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "AttrRes");
+    public static final AndroidxName DIMEN_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "DimenRes");
+    public static final AndroidxName DRAWABLE_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "DrawableRes");
+    public static final AndroidxName FONT_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "FontRes");
+    public static final AndroidxName FRACTION_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "FractionRes");
+    public static final AndroidxName ID_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "IdRes");
+    public static final AndroidxName INTEGER_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "IntegerRes");
+    public static final AndroidxName INTERPOLATOR_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "InterpolatorRes");
+    public static final AndroidxName LAYOUT_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "LayoutRes");
+    public static final AndroidxName MENU_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "MenuRes");
+    public static final AndroidxName PLURALS_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "PluralsRes");
+    public static final AndroidxName RAW_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "RawRes");
+    public static final AndroidxName STRING_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "StringRes");
+    public static final AndroidxName STYLEABLE_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "StyleableRes");
+    public static final AndroidxName STYLE_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "StyleRes");
+    public static final AndroidxName TRANSITION_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "TransitionRes");
+    public static final AndroidxName XML_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "XmlRes");
 
     private final JavaEvaluator evaluator;
+    public static final AndroidxName NAVIGATION_RES_ANNOTATION =
+            AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "NavigationRes");
+
+    private static final ImmutableMap<String, ResourceType> TYPE_FROM_ANNOTATION_SIGNATURE =
+            ImmutableMap.<String, ResourceType>builder()
+                    .put(ANIMATOR_RES_ANNOTATION.oldName(), ResourceType.ANIMATOR)
+                    .put(ANIMATOR_RES_ANNOTATION.newName(), ResourceType.ANIMATOR)
+                    .put(ANIM_RES_ANNOTATION.oldName(), ResourceType.ANIM)
+                    .put(ANIM_RES_ANNOTATION.newName(), ResourceType.ANIM)
+                    .put(ARRAY_RES_ANNOTATION.oldName(), ResourceType.ARRAY)
+                    .put(ARRAY_RES_ANNOTATION.newName(), ResourceType.ARRAY)
+                    .put(ATTR_RES_ANNOTATION.oldName(), ResourceType.ATTR)
+                    .put(ATTR_RES_ANNOTATION.newName(), ResourceType.ATTR)
+                    .put(BOOL_RES_ANNOTATION.oldName(), ResourceType.BOOL)
+                    .put(BOOL_RES_ANNOTATION.newName(), ResourceType.BOOL)
+                    .put(COLOR_RES_ANNOTATION.oldName(), ResourceType.COLOR)
+                    .put(COLOR_RES_ANNOTATION.newName(), ResourceType.COLOR)
+                    .put(DIMEN_RES_ANNOTATION.oldName(), ResourceType.DIMEN)
+                    .put(DIMEN_RES_ANNOTATION.newName(), ResourceType.DIMEN)
+                    .put(DRAWABLE_RES_ANNOTATION.oldName(), ResourceType.DRAWABLE)
+                    .put(DRAWABLE_RES_ANNOTATION.newName(), ResourceType.DRAWABLE)
+                    .put(FONT_RES_ANNOTATION.oldName(), ResourceType.FONT)
+                    .put(FONT_RES_ANNOTATION.newName(), ResourceType.FONT)
+                    .put(FRACTION_RES_ANNOTATION.oldName(), ResourceType.FRACTION)
+                    .put(FRACTION_RES_ANNOTATION.newName(), ResourceType.FRACTION)
+                    .put(ID_RES_ANNOTATION.oldName(), ResourceType.ID)
+                    .put(ID_RES_ANNOTATION.newName(), ResourceType.ID)
+                    .put(INTEGER_RES_ANNOTATION.oldName(), ResourceType.INTEGER)
+                    .put(INTEGER_RES_ANNOTATION.newName(), ResourceType.INTEGER)
+                    .put(INTERPOLATOR_RES_ANNOTATION.oldName(), ResourceType.INTERPOLATOR)
+                    .put(INTERPOLATOR_RES_ANNOTATION.newName(), ResourceType.INTERPOLATOR)
+                    .put(LAYOUT_RES_ANNOTATION.oldName(), ResourceType.LAYOUT)
+                    .put(LAYOUT_RES_ANNOTATION.newName(), ResourceType.LAYOUT)
+                    .put(MENU_RES_ANNOTATION.oldName(), ResourceType.MENU)
+                    .put(MENU_RES_ANNOTATION.newName(), ResourceType.MENU)
+                    .put(NAVIGATION_RES_ANNOTATION.oldName(), ResourceType.NAVIGATION)
+                    .put(NAVIGATION_RES_ANNOTATION.newName(), ResourceType.NAVIGATION)
+                    .put(PLURALS_RES_ANNOTATION.oldName(), ResourceType.PLURALS)
+                    .put(PLURALS_RES_ANNOTATION.newName(), ResourceType.PLURALS)
+                    .put(RAW_RES_ANNOTATION.oldName(), ResourceType.RAW)
+                    .put(RAW_RES_ANNOTATION.newName(), ResourceType.RAW)
+                    .put(STRING_RES_ANNOTATION.oldName(), ResourceType.STRING)
+                    .put(STRING_RES_ANNOTATION.newName(), ResourceType.STRING)
+                    .put(STYLEABLE_RES_ANNOTATION.oldName(), ResourceType.STYLEABLE)
+                    .put(STYLEABLE_RES_ANNOTATION.newName(), ResourceType.STYLEABLE)
+                    .put(STYLE_RES_ANNOTATION.oldName(), ResourceType.STYLE)
+                    .put(STYLE_RES_ANNOTATION.newName(), ResourceType.STYLE)
+                    .put(TRANSITION_RES_ANNOTATION.oldName(), ResourceType.TRANSITION)
+                    .put(TRANSITION_RES_ANNOTATION.newName(), ResourceType.TRANSITION)
+                    .put(XML_RES_ANNOTATION.oldName(), ResourceType.XML)
+                    .put(XML_RES_ANNOTATION.newName(), ResourceType.XML)
+                    .build();
 
     private boolean allowDereference = true;
 
@@ -228,7 +307,7 @@ public class ResourceEvaluator {
                 if ((CLASS_RESOURCES.equals(qualifiedName)
                                 || CLASS_CONTEXT.equals(qualifiedName)
                                 || CLASS_FRAGMENT.equals(qualifiedName)
-                                || CLASS_V4_FRAGMENT.equals(qualifiedName)
+                                || CLASS_V4_FRAGMENT.isEquals(qualifiedName)
                                 || CLS_TYPED_ARRAY.equals(qualifiedName))
                         && name != null
                         && name.startsWith("get")) {
@@ -300,10 +379,10 @@ public class ResourceEvaluator {
                 String qualifiedName = method.getContainingClass().getQualifiedName();
                 String name = expression.getReferenceName();
                 if ((CLASS_RESOURCES.equals(qualifiedName)
-                        || CLASS_CONTEXT.equals(qualifiedName)
-                        || CLASS_FRAGMENT.equals(qualifiedName)
-                        || CLASS_V4_FRAGMENT.equals(qualifiedName)
-                        || CLS_TYPED_ARRAY.equals(qualifiedName))
+                                || CLASS_CONTEXT.equals(qualifiedName)
+                                || CLASS_FRAGMENT.equals(qualifiedName)
+                                || CLASS_V4_FRAGMENT.isEquals(qualifiedName)
+                                || CLS_TYPED_ARRAY.equals(qualifiedName))
                         && name != null
                         && name.startsWith("get")) {
                     PsiExpression[] args = call.getArgumentList().getExpressions();
@@ -532,22 +611,20 @@ public class ResourceEvaluator {
             if (signature == null) {
                 continue;
             }
-            switch (signature) {
-                case COLOR_INT_ANNOTATION:
-                    return EnumSet.of(COLOR_INT_MARKER_TYPE);
-                case PX_ANNOTATION:
-                case DIMENSION_ANNOTATION:
-                    return EnumSet.of(DIMENSION_MARKER_TYPE);
-                case ANY_RES_ANNOTATION:
-                    return getAnyRes();
-                default: {
-                    ResourceType type = getTypeFromAnnotationSignature(signature);
-                    if (type != null) {
-                        if (resources == null) {
-                            resources = EnumSet.of(type);
-                        } else {
-                            resources.add(type);
-                        }
+            if (COLOR_INT_ANNOTATION.isEquals(signature)) {
+                return EnumSet.of(COLOR_INT_MARKER_TYPE);
+            } else if (PX_ANNOTATION.isEquals(signature)
+                    || DIMENSION_ANNOTATION.isEquals(signature)) {
+                return EnumSet.of(DIMENSION_MARKER_TYPE);
+            } else if (ANY_RES_ANNOTATION.isEquals(signature)) {
+                return getAnyRes();
+            } else {
+                ResourceType type = getTypeFromAnnotationSignature(signature);
+                if (type != null) {
+                    if (resources == null) {
+                        resources = EnumSet.of(type);
+                    } else {
+                        resources.add(type);
                     }
                 }
             }
@@ -565,22 +642,20 @@ public class ResourceEvaluator {
             if (signature == null) {
                 continue;
             }
-            switch (signature) {
-                case COLOR_INT_ANNOTATION:
-                    return EnumSet.of(COLOR_INT_MARKER_TYPE);
-                case PX_ANNOTATION:
-                case DIMENSION_ANNOTATION:
-                    return EnumSet.of(DIMENSION_MARKER_TYPE);
-                case ANY_RES_ANNOTATION:
-                    return getAnyRes();
-                default: {
-                    ResourceType type = getTypeFromAnnotationSignature(signature);
-                    if (type != null) {
-                        if (resources == null) {
-                            resources = EnumSet.of(type);
-                        } else {
-                            resources.add(type);
-                        }
+            if (COLOR_INT_ANNOTATION.isEquals(signature)) {
+                return EnumSet.of(COLOR_INT_MARKER_TYPE);
+            } else if (PX_ANNOTATION.isEquals(signature)
+                    || DIMENSION_ANNOTATION.isEquals(signature)) {
+                return EnumSet.of(DIMENSION_MARKER_TYPE);
+            } else if (ANY_RES_ANNOTATION.isEquals(signature)) {
+                return getAnyRes();
+            } else {
+                ResourceType type = getTypeFromAnnotationSignature(signature);
+                if (type != null) {
+                    if (resources == null) {
+                        resources = EnumSet.of(type);
+                    } else {
+                        resources.add(type);
                     }
                 }
             }
@@ -591,56 +666,7 @@ public class ResourceEvaluator {
 
     @Nullable
     public static ResourceType getTypeFromAnnotationSignature(@NonNull String signature) {
-        switch (signature) {
-            case ANIMATOR_RES_ANNOTATION:
-                return ResourceType.ANIMATOR;
-            case ANIM_RES_ANNOTATION:
-                return ResourceType.ANIM;
-            case ARRAY_RES_ANNOTATION:
-                return ResourceType.ARRAY;
-            case ATTR_RES_ANNOTATION:
-                return ResourceType.ATTR;
-            case BOOL_RES_ANNOTATION:
-                return ResourceType.BOOL;
-            case COLOR_RES_ANNOTATION:
-                return ResourceType.COLOR;
-            case DIMEN_RES_ANNOTATION:
-                return ResourceType.DIMEN;
-            case DRAWABLE_RES_ANNOTATION:
-                return ResourceType.DRAWABLE;
-            case FONT_RES_ANNOTATION:
-                return ResourceType.FONT;
-            case FRACTION_RES_ANNOTATION:
-                return ResourceType.FRACTION;
-            case ID_RES_ANNOTATION:
-                return ResourceType.ID;
-            case INTEGER_RES_ANNOTATION:
-                return ResourceType.INTEGER;
-            case INTERPOLATOR_RES_ANNOTATION:
-                return ResourceType.INTERPOLATOR;
-            case LAYOUT_RES_ANNOTATION:
-                return ResourceType.LAYOUT;
-            case MENU_RES_ANNOTATION:
-                return ResourceType.MENU;
-            case NAVIGATION_RES_ANNOTATION:
-                return ResourceType.NAVIGATION;
-            case PLURALS_RES_ANNOTATION:
-                return ResourceType.PLURALS;
-            case RAW_RES_ANNOTATION:
-                return ResourceType.RAW;
-            case STRING_RES_ANNOTATION:
-                return ResourceType.STRING;
-            case STYLEABLE_RES_ANNOTATION:
-                return ResourceType.STYLEABLE;
-            case STYLE_RES_ANNOTATION:
-                return ResourceType.STYLE;
-            case TRANSITION_RES_ANNOTATION:
-                return ResourceType.TRANSITION;
-            case XML_RES_ANNOTATION:
-                return ResourceType.XML;
-        }
-
-        return null;
+        return TYPE_FROM_ANNOTATION_SIGNATURE.get(signature);
     }
 
     /** Returns a resource URL based on the field reference in the code */

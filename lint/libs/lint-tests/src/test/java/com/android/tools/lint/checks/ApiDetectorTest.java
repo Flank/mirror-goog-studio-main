@@ -4352,35 +4352,41 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     @SuppressWarnings("all") // sample code
     public void testObsoleteVersionCheck() {
-        String expected = ""
-                + "src/test/pkg/TestVersionCheck.java:7: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
-                + "        if (Build.VERSION.SDK_INT >= 21) { }\n"
-                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/TestVersionCheck.java:8: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
-                + "        if (Build.VERSION.SDK_INT > 21) { }\n"
-                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/TestVersionCheck.java:9: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
-                + "        if (Build.VERSION.SDK_INT < 21) { }\n"
-                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/TestVersionCheck.java:10: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
-                + "        if (Build.VERSION.SDK_INT <= 21) { }\n"
-                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/TestVersionCheck.java:13: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
-                + "        if (Build.VERSION.SDK_INT >= 22) { }\n"
-                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/TestVersionCheck.java:14: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
-                + "        if (Build.VERSION.SDK_INT > 22) { }\n"
-                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/TestVersionCheck.java:15: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
-                + "        if (Build.VERSION.SDK_INT < 22) { }\n"
-                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/TestVersionCheck.java:16: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
-                + "        if (Build.VERSION.SDK_INT <= 22) { }\n"
-                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/TestVersionCheck.java:21: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
-                + "        if (Build.VERSION.SDK_INT < 23) { }\n"
-                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 9 warnings\n";
+        String expected = "" +
+                "src/test/pkg/TestVersionCheck.java:7: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n" +
+                "        if (Build.VERSION.SDK_INT >= 21) { }\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/TestVersionCheck.java:8: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n" +
+                "        if (Build.VERSION.SDK_INT > 21) { }\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/TestVersionCheck.java:9: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n" +
+                "        if (Build.VERSION.SDK_INT < 21) { }\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/TestVersionCheck.java:10: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n" +
+                "        if (Build.VERSION.SDK_INT <= 21) { }\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/TestVersionCheck.java:11: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n" +
+                "        if (Build.VERSION.SDK_INT == 21) { }\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/TestVersionCheck.java:13: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n" +
+                "        if (Build.VERSION.SDK_INT >= 22) { }\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/TestVersionCheck.java:14: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n" +
+                "        if (Build.VERSION.SDK_INT > 22) { }\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/TestVersionCheck.java:15: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n" +
+                "        if (Build.VERSION.SDK_INT < 22) { }\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/TestVersionCheck.java:16: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n" +
+                "        if (Build.VERSION.SDK_INT <= 22) { }\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/TestVersionCheck.java:17: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n" +
+                "        if (Build.VERSION.SDK_INT == 22) { }\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/TestVersionCheck.java:21: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n" +
+                "        if (Build.VERSION.SDK_INT < 23) { }\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 11 warnings";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(23),
@@ -4422,6 +4428,22 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
+    }
+
+    public void testKotlinFileSuppress() {
+        // Regression test for https://issuetracker.google.com/72509076
+        lint().files(
+                kotlin("" +
+                        "@file:RequiresApi(21)\n" +
+                        "\n" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.support.annotation.RequiresApi\n" +
+                        "import android.widget.Toolbar\n" +
+                        "\n" +
+                        "fun Toolbar.hideOverflowMenu2() = hideOverflowMenu()"))
+                .run()
+                .expectClean();
     }
 
     public void testMapGetOrDefault() {

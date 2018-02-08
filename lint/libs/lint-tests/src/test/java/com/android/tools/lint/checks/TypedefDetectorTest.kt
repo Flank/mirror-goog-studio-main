@@ -1030,4 +1030,36 @@ class TypedefDetectorTest : AbstractCheckTest() {
                         "                ~~~~~~~~~~~~~~~~~~~~~~~\n" +
                         "5 errors, 0 warnings")
     }
+
+    fun testStringDefInitialization() {
+        // Regression test for https://issuetracker.google.com/72756166
+        // 72756166: AGP 3.1-beta1 StringDef Lint Error
+        lint().files(
+                java("""
+                    package test.pkg;
+
+                    import android.support.annotation.StringDef;
+
+                    import java.lang.annotation.Documented;
+                    import java.lang.annotation.Retention;
+                    import java.lang.annotation.RetentionPolicy;
+
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    public class StringDefTest {
+
+                        @MyTypeDef
+                        public static final String FOO = "foo";
+
+                        @StringDef({FOO})
+                        @Retention(RetentionPolicy.SOURCE)
+                        @Documented
+                        public @interface MyTypeDef {
+                        }
+                    }
+                    """).indented(),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+            .run()
+            .expectClean()
+    }
 }

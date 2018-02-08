@@ -39,5 +39,7 @@ data class BuildArtifactSpec(
         fun get(type : ArtifactType) =
                 specMap[type]
                         ?: throw RuntimeException("Specification is not defined for type '$type'.")
+
+        fun has(type : ArtifactType) = specMap.containsKey(type)
     }
 }

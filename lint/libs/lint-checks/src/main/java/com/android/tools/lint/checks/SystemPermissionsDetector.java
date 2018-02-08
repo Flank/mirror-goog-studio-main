@@ -427,6 +427,14 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
                     return;
                 }
 
+                if (permissionName.equals("android.permission.SYSTEM_ALERT_WINDOW")) {
+                    // Even though it's a signature permission you *can* get it by
+                    // sending an intent with action ACTION_MANAGE_OVERLAY_PERMISSION; see
+                    // https://developer.android.com/reference/android/Manifest.permission.html#SYSTEM_ALERT_WINDOW
+                    // Therefore, don't flag it here.
+                    return;
+                }
+
                 // Special cases: some permissions were added as signature permissions later;
                 // look for these and allow it.
                 int max = getLastNonSignatureApiLevel(permissionName);

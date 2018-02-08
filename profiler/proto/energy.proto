@@ -42,16 +42,16 @@ message EnergyRequest {
   int64 end_timestamp = 3;
 }
 
-message EnergyDataResponse {
-  message EnergySample {
-    // Time when the energy sample usages occured.
-    int64 timestamp = 1;
-    // Sample usage data by cpu in mAh.
-    int32 cpu_usage = 2;
-    // Sample usage data by network in mAh.
-    int32 network_usage = 3;
-  }
+message EnergySample {
+  // Time when the energy sample usages occured.
+  int64 timestamp = 1;
+  // Sample usage data by cpu in mAh.
+  int32 cpu_usage = 2;
+  // Sample usage data by network in mAh.
+  int32 network_usage = 3;
+}
 
+message EnergyDataResponse {
   // List of Energy usage sample data.
   repeated EnergySample sample_data = 1;
 }
@@ -63,28 +63,28 @@ message EnergyEventsResponse {
 
 // Energy event data or state change for WakeLock, Alarm, etc.
 message EnergyEvent {
-  enum EventType {
-    UNSPECIFIED = 0;
-    // A wake lock is acquired, forcing the device to stay awake.
-    WAKE_LOCK_ACQUIRE = 1;
-    // A wake lock is released when it's not needed anymore.
-    WAKE_LOCK_RELEASE = 2;
-  }
-
   // Timestamp of the event in nanoseconds.
   int64 timestamp = 1;
-  EventType event_type = 2;
+  // Application Id this event is associated with.
+  int32 pid = 2;
   // Optional ID. If set, use to correlate two related events together. Will be
-  // unique even across devices and apps.
-  int64 id = 3;
-  // Optional event metadata.
+  // unique only to an app.
+  int32 event_id = 3;
+
+  // Metadata for this specific event. Additionally, use
+  // |EnergyEvent.metadata_case()| as a way to see what this event's type is.
   oneof metadata {
-    // Information of a wake lock such as flags.
-    WakeLockInfo wake_lock_info = 4;
+    // Note: metadata IDs start at 101, so EnergyEvent fields can be added later
+    // without any concern for numbers overlapping.
+
+    // A wake lock was acquired, forcing the device to stay awake.
+    WakeLockAcquired wake_lock_acquired = 101;
+    // A wake lock was released, indicating it's not needed anymore.
+    WakeLockReleased wake_lock_released = 102;
   }
 }
 
-message WakeLockInfo {
+message WakeLockAcquired {
   // Level and optional flags for the wake lock instance initialization.
   // https://developer.android.com/reference/android/os/PowerManager.html#newWakeLock(int, java.lang.String)
   int32 level_and_flags = 1;
@@ -93,7 +93,10 @@ message WakeLockInfo {
   // An optional timeout in milliseconds given to the acquire call. The lock
   // will be released after the given timeout expires.
   int64 timeout = 3;
+}
+
+message WakeLockReleased {
   // Optional flags that modify the release behavior.
   // https://developer.android.com/reference/android/os/PowerManager.WakeLock.html#release(int)
-  int32 release_flags = 4;
+  int32 flags = 1;
 }

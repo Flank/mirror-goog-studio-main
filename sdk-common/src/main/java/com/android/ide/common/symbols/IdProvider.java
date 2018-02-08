@@ -51,4 +51,9 @@ public interface IdProvider {
         };
     }
 
+    /** Obtains a new constant ID provider that provides constant IDs of "-1". */
+    @NonNull
+    static IdProvider constant() {
+        return resourceType -> "-1";
+    }
 }

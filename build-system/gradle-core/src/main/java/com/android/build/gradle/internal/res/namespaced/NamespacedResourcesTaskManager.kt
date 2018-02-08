@@ -57,7 +57,7 @@ class NamespacedResourcesTaskManager(
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
         val aaptGeneration = AaptGeneration.fromProjectOptions(globalScope.projectOptions)
-        Preconditions.checkState(aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_MODE,
+        Preconditions.checkState(aaptGeneration != AaptGeneration.AAPT_V1,
                 "Resource Namespacing can only be used with aapt2")
         // Compile
         createCompileResourcesTask()

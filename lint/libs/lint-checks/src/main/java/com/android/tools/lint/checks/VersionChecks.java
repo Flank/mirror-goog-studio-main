@@ -503,7 +503,7 @@ public class VersionChecks {
                 } else if (name.equals("isAtLeastO")) {
                     return api <= 26;
                 } else if (name.startsWith("isAtLeastP")) {
-                    return api <= 27; // could be higher if there's an OMR1 etc
+                    return api <= 28;
                 }
             }
         }
@@ -866,6 +866,10 @@ public class VersionChecks {
                             return false;
                         } else if (tokenType == UastBinaryOperator.LESS && level <= api) {
                             // SDK_INT < ICE_CREAM_SANDWICH
+                            return false;
+                        } else if ((tokenType == UastBinaryOperator.EQUALS
+                                || tokenType == UastBinaryOperator.IDENTITY_EQUALS) &&
+                                level < api) {
                             return false;
                         }
                     }

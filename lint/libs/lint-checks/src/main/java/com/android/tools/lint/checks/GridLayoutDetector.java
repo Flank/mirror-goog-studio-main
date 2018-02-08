@@ -75,9 +75,7 @@ public class GridLayoutDetector extends LayoutDetector {
     @Override
     public Collection<String> getApplicableElements() {
         return Arrays.asList(
-                GRID_LAYOUT,
-                FQCN_GRID_LAYOUT_V7
-        );
+                GRID_LAYOUT, FQCN_GRID_LAYOUT_V7.oldName(), FQCN_GRID_LAYOUT_V7.newName());
     }
 
     private static int getInt(Element element, String attribute, int defaultValue) {
@@ -121,7 +119,7 @@ public class GridLayoutDetector extends LayoutDetector {
             }
         }
 
-        if (element.getTagName().equals(FQCN_GRID_LAYOUT_V7)) {
+        if (FQCN_GRID_LAYOUT_V7.isEquals(element.getTagName())) {
             // Make sure that we're not using android: namespace attributes where we should
             // be using app namespace attributes!
             ensureAppNamespace(context, element, ATTR_COLUMN_COUNT);

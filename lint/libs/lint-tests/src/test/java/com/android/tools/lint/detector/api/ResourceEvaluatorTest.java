@@ -260,11 +260,17 @@ public class ResourceEvaluatorTest extends TestCase {
     }
 
     public void testResourceTypes() {
-        assertEquals(ResourceType.ANIM, ResourceEvaluator.getTypeFromAnnotationSignature(
-                ResourceEvaluator.ANIM_RES_ANNOTATION));
-        assertEquals(ResourceType.STRING, ResourceEvaluator.getTypeFromAnnotationSignature(
-                ResourceEvaluator.STRING_RES_ANNOTATION));
-        assertEquals(ResourceType.LAYOUT, ResourceEvaluator.getTypeFromAnnotationSignature(
-                ResourceEvaluator.LAYOUT_RES_ANNOTATION));
+        assertEquals(
+                ResourceType.ANIM,
+                ResourceEvaluator.getTypeFromAnnotationSignature(
+                        ResourceEvaluator.ANIM_RES_ANNOTATION.defaultName()));
+        assertEquals(
+                ResourceType.STRING,
+                ResourceEvaluator.getTypeFromAnnotationSignature(
+                        ResourceEvaluator.STRING_RES_ANNOTATION.defaultName()));
+        assertEquals(
+                ResourceType.LAYOUT,
+                ResourceEvaluator.getTypeFromAnnotationSignature(
+                        ResourceEvaluator.LAYOUT_RES_ANNOTATION.defaultName()));
     }
 }

@@ -17,17 +17,17 @@
 package com.android.ide.common.blame;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.google.common.base.Objects;
+import java.io.Serializable;
 
 /**
  * An immutable position in a text file, used in errors to point the user to an issue.
  *
- * Positions that are unknown are represented by -1.
+ * <p>Positions that are unknown are represented by -1.
  */
 @Immutable
-public final class SourcePosition {
+public final class SourcePosition implements Serializable {
 
     @NonNull
     public static final SourcePosition UNKNOWN = new SourcePosition();

@@ -18,6 +18,7 @@
 
 #include <grpc++/grpc++.h>
 
+#include "perfd/energy/energy_cache.h"
 #include "proto/internal_energy.grpc.pb.h"
 
 namespace profiler {
@@ -25,15 +26,17 @@ namespace profiler {
 class InternalEnergyServiceImpl final
     : public proto::InternalEnergyService::Service {
  public:
-  InternalEnergyServiceImpl();
+  InternalEnergyServiceImpl(EnergyCache* energy_cache);
 
   // RPC to send a wake lock acquire or release event.
-  grpc::Status SendWakeLockEvent(
-      grpc::ServerContext* context,
-      const proto::WakeLockEventRequest* request,
-      proto::EmptyEnergyReply* reply) override;
+  grpc::Status AddEnergyEvent(grpc::ServerContext* context,
+                              const proto::AddEnergyEventRequest* request,
+                              proto::EmptyEnergyReply* reply) override;
+
+ private:
+  EnergyCache& energy_cache_;
 };
 
 }  // namespace profiler
 
-#endif //PERFD_ENERGY_INTERNAL_ENERGY_SERVICE_H_
+#endif  // PERFD_ENERGY_INTERNAL_ENERGY_SERVICE_H_

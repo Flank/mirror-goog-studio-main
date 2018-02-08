@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,19 @@ package com.android.ide.common.resources;
 
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.ide.common.resources.ResourceResolver.MAX_RESOURCE_INDIRECTION;
+import static com.android.ide.common.res2.AbstractResourceRepository.MAX_RESOURCE_INDIRECTION;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.rendering.api.*;
+import com.android.ide.common.rendering.api.ArrayResourceValue;
+import com.android.ide.common.rendering.api.ItemResourceValue;
+import com.android.ide.common.rendering.api.LayoutLog;
+import com.android.ide.common.rendering.api.RenderResources;
+import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.res2.AbstractResourceRepository;
+import com.android.ide.common.res2.ResourceItem;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
@@ -36,44 +43,44 @@ import java.util.List;
  * display the final resolved color in the editor margin.
  */
 public class ResourceItemResolver extends RenderResources {
-    private final FolderConfiguration mConfiguration;
-    private final LayoutLog mLogger;
-    private final ResourceProvider mResourceProvider;
-    private ResourceRepository mFrameworkResources;
-    private ResourceResolver mResolver;
+    private final FolderConfiguration myConfiguration;
+    private final LayoutLog myLogger;
+    private final ResourceProvider myResourceProvider;
+    private ResourceResolver myResolver;
+    private AbstractResourceRepository myFrameworkResources;
     private AbstractResourceRepository myAppResources;
-    @Nullable private List<ResourceValue> mLookupChain;
+    @Nullable private List<ResourceValue> myLookupChain;
 
     public ResourceItemResolver(
             @NonNull FolderConfiguration configuration,
             @NonNull ResourceProvider resourceProvider,
             @Nullable LayoutLog logger) {
-        mConfiguration = configuration;
-        mResourceProvider = resourceProvider;
-        mLogger = logger;
-        mResolver = resourceProvider.getResolver(false);
+        myConfiguration = configuration;
+        myResourceProvider = resourceProvider;
+        myLogger = logger;
+        myResolver = resourceProvider.getResolver(false);
     }
 
     public ResourceItemResolver(
             @NonNull FolderConfiguration configuration,
-            @NonNull ResourceRepository frameworkResources,
+            @NonNull AbstractResourceRepository frameworkResources,
             @NonNull AbstractResourceRepository appResources,
             @Nullable LayoutLog logger) {
-        mConfiguration = configuration;
-        mResourceProvider = null;
-        mLogger = logger;
-        mFrameworkResources = frameworkResources;
+        myConfiguration = configuration;
+        myResourceProvider = null;
+        myLogger = logger;
+        myFrameworkResources = frameworkResources;
         myAppResources = appResources;
     }
 
     @Override
     @Nullable
     public ResourceValue resolveResValue(@Nullable ResourceValue resValue) {
-        if (mResolver != null) {
-            return mResolver.resolveResValue(resValue);
+        if (myResolver != null) {
+            return myResolver.resolveResValue(resValue);
         }
-        if (mLookupChain != null) {
-            mLookupChain.add(resValue);
+        if (myLookupChain != null) {
+            myLookupChain.add(resValue);
         }
         return resolveResValue(resValue, 0);
     }
@@ -100,32 +107,33 @@ public class ResourceItemResolver extends RenderResources {
 
         // detect potential loop due to mishandled namespace in attributes
         if (resValue == resolvedResValue || depth >= MAX_RESOURCE_INDIRECTION) {
-            if (mLogger != null) {
-                mLogger.error(
+            if (myLogger != null) {
+                myLogger.error(
                         LayoutLog.TAG_BROKEN,
                         String.format(
-                                "Potential stack overflow trying to resolve '%s': cyclic resource definitions? Render may not be accurate.",
+                                "Potential stack overflow trying to resolve '%s': "
+                                        + "cyclic resource definitions? Render may not be accurate.",
                                 value),
                         null);
             }
             return resValue;
         }
 
-        // otherwise, we attempt to resolve this new value as well
+        // Otherwise, we attempt to resolve this new value as well.
         return resolveResValue(resolvedResValue, depth + 1);
     }
 
-    @Nullable
     @Override
+    @Nullable
     public ResourceValue dereference(@NonNull ResourceValue value) {
-        if (mResolver != null) {
-            return mResolver.dereference(value);
+        if (myResolver != null) {
+            return myResolver.dereference(value);
         }
 
-        if (mLookupChain != null
-                && !mLookupChain.isEmpty()
-                && !mLookupChain.get(mLookupChain.size() - 1).equals(value)) {
-            mLookupChain.add(value);
+        if (myLookupChain != null
+                && !myLookupChain.isEmpty()
+                && !myLookupChain.get(myLookupChain.size() - 1).equals(value)) {
+            myLookupChain.add(value);
         }
 
         String valueText = value.getValue();
@@ -136,8 +144,8 @@ public class ResourceItemResolver extends RenderResources {
         ResourceUrl url = ResourceUrl.parse(valueText);
         if (url != null && url.hasValidName()) {
             if (url.theme) {
-                // Do theme lookup? We can't do that here; requires full global analysis, so just use
-                // a real resource resolver.
+                // Do theme lookup? We can't do that here; requires full global analysis,
+                // so just use a real resource resolver.
                 ResourceResolver resolver = getFullResolver();
                 if (resolver != null) {
                     return resolver.dereference(value);
@@ -154,53 +162,57 @@ public class ResourceItemResolver extends RenderResources {
         return null;
     }
 
+    @Nullable
     private ResourceValue findResValue(ResourceUrl url) {
         // map of ResourceValue for the given type
         // if allowed, search in the project resources first.
         if (!url.framework) {
             if (myAppResources == null) {
-                assert mResourceProvider != null;
-                myAppResources = mResourceProvider.getAppResources();
+                assert myResourceProvider != null;
+                myAppResources = myResourceProvider.getAppResources();
                 if (myAppResources == null) {
                     return null;
                 }
             }
             ResourceValue item;
-            item = myAppResources.getConfiguredValue(url.type, url.name, mConfiguration);
+            item = myAppResources.getConfiguredValue(url.type, url.name, myConfiguration);
             if (item != null) {
-                if (mLookupChain != null) {
-                    mLookupChain.add(item);
+                if (myLookupChain != null) {
+                    myLookupChain.add(item);
                 }
                 return item;
             }
         } else {
-            if (mFrameworkResources == null) {
-                assert mResourceProvider != null;
-                mFrameworkResources = mResourceProvider.getFrameworkResources();
-                if (mFrameworkResources == null) {
+            if (myFrameworkResources == null) {
+                assert myResourceProvider != null;
+                myFrameworkResources = myResourceProvider.getFrameworkResources();
+                if (myFrameworkResources == null) {
                     return null;
                 }
             }
-            // now search in the framework resources.
-            if (mFrameworkResources.hasResourceItem(url.type, url.name)) {
-                ResourceItem item = mFrameworkResources.getResourceItem(url.type, url.name);
-                ResourceValue value = item.getResourceValue(url.type, mConfiguration, true);
-                if (value != null && mLookupChain != null) {
-                    mLookupChain.add(value);
+            // Now search in the framework resources.
+            List<ResourceItem> items =
+                    myFrameworkResources.getResourceItems(
+                            ResourceNamespace.ANDROID, url.type, url.name);
+            if (!items.isEmpty()) {
+                ResourceValue value = items.get(0).getResourceValue(true);
+                if (value != null && myLookupChain != null) {
+                    myLookupChain.add(value);
                 }
                 return value;
             }
         }
 
-        // didn't find the resource anywhere.
-        if (mLogger != null) {
-            mLogger.warning(
+        // Didn't find the resource anywhere.
+        if (myLogger != null) {
+            myLogger.warning(
                     LayoutLog.TAG_RESOURCES_RESOLVE, "Couldn't resolve resource " + url, null, url);
         }
         return null;
     }
 
     @Override
+    @Nullable
     public StyleResourceValue getCurrentTheme() {
         ResourceResolver resolver = getFullResolver();
         if (resolver != null) {
@@ -212,7 +224,7 @@ public class ResourceItemResolver extends RenderResources {
 
     @Override
     public StyleResourceValue getTheme(String name, boolean frameworkTheme) {
-        assert false; // This method shouldn't be called on this resolver
+        assert false; // This method shouldn't be called on this resolver.
         return super.getTheme(name, frameworkTheme);
     }
 
@@ -243,8 +255,8 @@ public class ResourceItemResolver extends RenderResources {
     }
 
     @Override
-    public ItemResourceValue findItemInStyle(StyleResourceValue style, String attrName,
-            boolean isFrameworkAttr) {
+    public ItemResourceValue findItemInStyle(
+            StyleResourceValue style, String attrName, boolean isFrameworkAttr) {
         ResourceResolver resolver = getFullResolver();
         return resolver != null ? resolver.findItemInStyle(style, attrName, isFrameworkAttr) : null;
     }
@@ -255,45 +267,46 @@ public class ResourceItemResolver extends RenderResources {
         return resolver != null ? resolver.getParent(style) : null;
     }
 
+    @Nullable
     private ResourceResolver getFullResolver() {
-        if (mResolver == null) {
-            if (mResourceProvider == null) {
+        if (myResolver == null) {
+            if (myResourceProvider == null) {
                 return null;
             }
-            mResolver = mResourceProvider.getResolver(true);
-            if (mResolver != null) {
-                if (mLookupChain != null) {
-                    mResolver = mResolver.createRecorder(mLookupChain);
+            myResolver = myResourceProvider.getResolver(true);
+            if (myResolver != null) {
+                if (myLookupChain != null) {
+                    myResolver = myResolver.createRecorder(myLookupChain);
                 }
             }
 
         }
-        return mResolver;
+        return myResolver;
     }
 
     /**
-     * Optional method to set a list the resolver should record all value resolutions
-     * into. Useful if you want to find out the resolution chain for a resource,
-     * e.g. {@code @color/buttonForeground ⇒ @color/foreground ⇒ @android:color/black }.
-     * <p>
-     * There is no getter. Clients setting this list should look it up themselves.
-     * Note also that if this resolver has to delegate to a full resource resolver,
-     * e.g. to follow theme attributes, those resolutions will not be recorded.
+     * Optional method to set a list the resolver should record all value resolutions into. Useful
+     * if you want to find out the resolution chain for a resource, e.g.
+     * {@code @color/buttonForeground ⇒ @color/foreground ⇒ @android:color/black}.
+     *
+     * <p>There is no getter. Clients setting this list should look it up themselves. Note also that
+     * if this resolver has to delegate to a full resource resolver, e.g. to follow theme
+     * attributes, those resolutions will not be recorded.
      *
      * @param lookupChain the list to set, or null
      */
     public void setLookupChainList(@Nullable List<ResourceValue> lookupChain) {
-        mLookupChain = lookupChain;
+        myLookupChain = lookupChain;
     }
 
-    /** Returns the lookup chain being used by this resolver */
+    /** Returns the lookup chain being used by this resolver. */
     @Nullable
     public List<ResourceValue> getLookupChain() {
-        return mLookupChain;
+        return myLookupChain;
     }
 
     /**
-     * Returns a display string for a resource lookup
+     * Returns a display string for a resource lookup.
      *
      * @param type the resource type
      * @param name the resource name
@@ -311,15 +324,15 @@ public class ResourceItemResolver extends RenderResources {
     }
 
     /**
-     * Returns a display string for a resource lookup
+     * Returns a display string for a resource lookup.
+     *
      * @param url the resource url, such as {@code @string/foo}
      * @param lookupChain the list of resolved items to display
      * @return the display string
      */
     @NonNull
     public static String getDisplayString(
-            @NonNull String url,
-            @NonNull List<ResourceValue> lookupChain) {
+            @NonNull String url, @NonNull List<ResourceValue> lookupChain) {
         StringBuilder sb = new StringBuilder();
         sb.append(url);
         String prev = url;
@@ -338,7 +351,7 @@ public class ResourceItemResolver extends RenderResources {
 
             sb.append(" => ");
 
-            // Strip paths
+            // Strip paths.
             if (!(text.startsWith(PREFIX_THEME_REF) || text.startsWith(PREFIX_RESOURCE_REF))) {
                 int end = Math.max(text.lastIndexOf('/'), text.lastIndexOf('\\'));
                 if (end != -1) {
@@ -354,13 +367,14 @@ public class ResourceItemResolver extends RenderResources {
     }
 
     /**
-     * Interface implemented by clients of the {@link ResourceItemResolver} which allows
-     * it to lazily look up the project resources, the framework resources and optionally
-     * to provide a fully configured resource resolver, if any
+     * Interface implemented by clients of the {@link ResourceItemResolver} which allows it to
+     * lazily look up the project resources, the framework resources and optionally to provide a
+     * fully configured resource resolver, if any.
      */
     public interface ResourceProvider {
         @Nullable ResourceResolver getResolver(boolean createIfNecessary);
-        @Nullable ResourceRepository getFrameworkResources();
+        @Nullable
+        AbstractResourceRepository getFrameworkResources();
         @Nullable AbstractResourceRepository getAppResources();
     }
 }

@@ -1,8 +1,7 @@
 package com.android.tests.basic;
 
-import junit.framework.TestCase;
-
 import java.lang.reflect.Method;
+import junit.framework.TestCase;
 
 public class StringProviderTest extends TestCase {
 
@@ -11,14 +10,15 @@ public class StringProviderTest extends TestCase {
         String className = "com.android.tests.basic.StringProvider";
         String methodName = "getString";
 
-        searchMethod(className, methodName, true /*shouldExist*/);
+        searchMethod(className, methodName, true);
     }
 
     public void testObduscatedMethod() {
+        // this should not be obfuscated, main sources are not obfuscated for library test APK
         String className = "com.android.tests.basic.StringProvider";
         String methodName = "getStringInternal";
 
-        searchMethod(className, methodName, false /*shouldExist*/);
+        searchMethod(className, methodName, true);
     }
 
     private void searchMethod(String className, String methodName, boolean shouldExist) {

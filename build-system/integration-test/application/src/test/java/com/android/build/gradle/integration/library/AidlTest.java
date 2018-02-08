@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AarSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -168,7 +169,14 @@ public class AidlTest {
         if (plugin.contains("library")) {
             TestFileUtils.appendToFile(
                     project.getBuildFile(),
-                    "android.aidlPackageWhiteList = [\"com/example/helloworld/WhiteListed.aidl\"]");
+                    "android.aidlPackageWhiteList = [\"com/example/helloworld/WhiteListed.aidl\"]\n"
+                            + "\n"
+                            + "// Check that AIDL is published as intermediate artifact for library.\n"
+                            + "afterEvaluate {\n"
+                            + "    assert !configurations.debugApiElements.outgoing.variants.findAll { it.name == \""
+                            + AndroidArtifacts.ArtifactType.AIDL.getType()
+                            + "\" }.isEmpty()\n"
+                            + "}\n");
         }
     }
 

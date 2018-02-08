@@ -58,7 +58,7 @@ public final class IdeSourceProvider extends IdeModel implements SourceProvider 
         myShadersDirectories =
                 copyNewProperty(
                         () -> ImmutableList.copyOf(provider.getShadersDirectories()),
-                        Collections.<File>emptyList());
+                        Collections.emptyList());
         myHashCode = calculateHashCode();
     }
 

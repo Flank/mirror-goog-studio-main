@@ -49,6 +49,7 @@ import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UField
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.UMethod
@@ -68,13 +69,17 @@ import org.jetbrains.uast.util.isNewArrayWithInitializer
 
 class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-            INT_DEF_ANNOTATION,
-            LONG_DEF_ANNOTATION,
-            STRING_DEF_ANNOTATION,
+            INT_DEF_ANNOTATION.oldName(),
+            INT_DEF_ANNOTATION.newName(),
+            LONG_DEF_ANNOTATION.oldName(),
+            LONG_DEF_ANNOTATION.newName(),
+            STRING_DEF_ANNOTATION.oldName(),
+            STRING_DEF_ANNOTATION.newName(),
 
             // Such that the annotation is considered relevant by the annotation handler
             // even if the range check itself is disabled
-            INT_RANGE_ANNOTATION
+            INT_RANGE_ANNOTATION.oldName(),
+            INT_RANGE_ANNOTATION.newName()
     )
 
     override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean =
@@ -92,18 +97,18 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             allClassAnnotations: List<UAnnotation>,
             allPackageAnnotations: List<UAnnotation>) {
         when (qualifiedName) {
-            INT_DEF_ANNOTATION,
-            LONG_DEF_ANNOTATION -> {
+            INT_DEF_ANNOTATION.oldName(), INT_DEF_ANNOTATION.newName(),
+            LONG_DEF_ANNOTATION.oldName(), LONG_DEF_ANNOTATION.newName() -> {
                 val flagAttribute = getAnnotationBooleanValue(annotation, TYPE_DEF_FLAG_ATTRIBUTE)
                 val flag = flagAttribute != null && flagAttribute
                 checkTypeDefConstant(context, annotation, usage, null, flag,
                         annotations)
             }
-            STRING_DEF_ANNOTATION -> {
+            STRING_DEF_ANNOTATION.oldName(), STRING_DEF_ANNOTATION.newName() -> {
                 checkTypeDefConstant(context, annotation, usage, null, false,
                         annotations)
             }
-            INT_RANGE_ANNOTATION -> {} // deliberate no-op
+            INT_RANGE_ANNOTATION.oldName(), INT_RANGE_ANNOTATION.newName() -> {} // deliberate no-op
         }
     }
 
@@ -287,9 +292,9 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 var hadTypeDef = false
                 for (a in evaluator.filterRelevantAnnotations(annotations)) {
                     val qualifiedName = a.qualifiedName
-                    if (INT_DEF_ANNOTATION == qualifiedName ||
-                            LONG_DEF_ANNOTATION == qualifiedName ||
-                            STRING_DEF_ANNOTATION == qualifiedName) {
+                    if (INT_DEF_ANNOTATION.isEquals(qualifiedName) ||
+                            LONG_DEF_ANNOTATION.isEquals(qualifiedName) ||
+                            STRING_DEF_ANNOTATION.isEquals(qualifiedName)) {
                         hadTypeDef = true
                         val paramValues = getAnnotationValue(JavaUAnnotation.wrap(a))
                         if (paramValues != null) {
@@ -342,6 +347,13 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 }
             }
 
+            val fieldInitialization =
+                if (argument is ULiteralExpression && argument.uastParent is UField) {
+                    argument.uastParent as UField
+                } else {
+                    null
+                }
+
             val initializerExpression = allowed as UCallExpression
             val initializers = initializerExpression.valueArguments
             var psiValue: PsiElement? = null
@@ -350,6 +362,16 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             }
 
             for (expression in initializers) {
+                // Is this a literal string initialization in a field? If so,
+                // see if that field is a member of the allowed constants (e.g.
+                // a constant declaration intended to be used in a typedef itself)
+                if (fieldInitialization != null && expression is UReferenceExpression) {
+                    val resolved = expression.resolve()
+                    if (resolved != null && resolved.isEquivalentTo(fieldInitialization)) {
+                        return
+                    }
+                }
+
                 if (expression is ULiteralExpression) {
                     if (value == expression.value) {
                         return
@@ -526,8 +548,8 @@ class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         fun findIntDef(annotations: List<UAnnotation>): UAnnotation? {
             for (annotation in annotations) {
                 val qualifiedName = annotation.qualifiedName
-                if (INT_DEF_ANNOTATION == qualifiedName ||
-                        LONG_DEF_ANNOTATION == qualifiedName) {
+                if (INT_DEF_ANNOTATION.isEquals(qualifiedName) ||
+                        LONG_DEF_ANNOTATION.isEquals(qualifiedName)) {
                     return annotation
                 }
             }

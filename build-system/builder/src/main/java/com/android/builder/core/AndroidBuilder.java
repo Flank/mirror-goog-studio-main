@@ -460,7 +460,7 @@ public class AndroidBuilder {
             @Nullable String outInstantRunManifestLocation,
             ManifestMerger2.MergeType mergeType,
             Map<String, Object> placeHolders,
-            @NonNull List<Invoker.Feature> optionalFeatures,
+            @NonNull Collection<Invoker.Feature> optionalFeatures,
             @Nullable File reportFile) {
 
         try {

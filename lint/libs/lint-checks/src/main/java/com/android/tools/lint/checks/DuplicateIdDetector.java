@@ -18,6 +18,12 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_LAYOUT;
+import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER;
+import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_CHAIN;
+import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_CONSTRAINTS;
+import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GROUP;
+import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_LAYER;
+import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_REFERENCE;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
@@ -249,12 +255,12 @@ public class DuplicateIdDetector extends LayoutDetector {
         if (context.getPhase() == 1) {
             if (attribute.getOwnerElement() != null) {
                 String ownerName = attribute.getOwnerElement().getTagName();
-                if (ownerName != null && ownerName.equals(SdkConstants.CLASS_CONSTRAINT_LAYOUT_REFERENCE)) {
+                if (ownerName != null && CLASS_CONSTRAINT_LAYOUT_REFERENCE.isEquals(ownerName)) {
                     Node parentNode = attribute.getOwnerElement().getParentNode();
                     if (parentNode != null) {
                         String parentName = parentNode.getNodeName();
-                        if (parentName != null && parentName.equals(
-                          SdkConstants.CLASS_CONSTRAINT_LAYOUT_CONSTRAINTS)) {
+                        if (parentName != null
+                                && CLASS_CONSTRAINT_LAYOUT_CONSTRAINTS.isEquals(parentName)) {
                             return;
                         }
                     }
@@ -264,14 +270,10 @@ public class DuplicateIdDetector extends LayoutDetector {
                     if (parentNode != null) {
                         String parentName = parentNode.getNodeName();
                         if (parentName != null
-                                && (parentName.equals(SdkConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER)
-                                        || parentName.equals(
-                                                SdkConstants.CLASS_CONSTRAINT_LAYOUT_CHAIN)
-                                        || parentName.equals(
-                                                SdkConstants.CLASS_CONSTRAINT_LAYOUT_LAYER)
-                                        || parentName.equals(
-                                                SdkConstants.CLASS_CONSTRAINT_LAYOUT_GROUP)
-                                    )) {
+                                && (CLASS_CONSTRAINT_LAYOUT_BARRIER.isEquals(parentName)
+                                        || CLASS_CONSTRAINT_LAYOUT_CHAIN.isEquals(parentName)
+                                        || CLASS_CONSTRAINT_LAYOUT_LAYER.isEquals(parentName)
+                                        || CLASS_CONSTRAINT_LAYOUT_GROUP.isEquals(parentName))) {
                             return;
                         }
                     }

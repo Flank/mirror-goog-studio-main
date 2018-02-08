@@ -24,7 +24,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.io.File;
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
@@ -156,6 +155,8 @@ public class MergingLog {
 
     /**
      * Find the original source file and position for a position in an intermediate merged file.
+     *
+     * <p>Returns the original position if none found.
      */
     @NonNull
     public SourceFilePosition find(@NonNull final SourceFilePosition mergedFilePosition) {
@@ -166,16 +167,24 @@ public class MergingLog {
             SourceFile sourceFile = find(mergedSourceFile);
             return new SourceFilePosition(sourceFile, mergedFilePosition.getPosition());
         }
-        final SourcePosition position = mergedFilePosition.getPosition();
+        SourceFilePosition position = find(mergedFilePosition.getPosition(), positionMap);
+        // we failed to find a link, return where we are.
+        return position != null ? position : mergedFilePosition;
+    }
+
+    /**
+     * Find the original source file and position for a position in an intermediate merged file.
+     *
+     * <p>Returns null if none found.
+     */
+    @Nullable
+    public static SourceFilePosition find(
+            @NonNull final SourcePosition position,
+            @NonNull final Map<SourcePosition, SourceFilePosition> positionMap) {
 
         // TODO: this is not very efficient, which matters if we start processing debug messages.
         NavigableMap<SourcePosition, SourceFilePosition> sortedMap =
-                new TreeMap<SourcePosition, SourceFilePosition>(new Comparator<SourcePosition>() {
-                    @Override
-                    public int compare(SourcePosition position1, SourcePosition position2) {
-                        return position1.compareStart(position2);
-                    }
-                });
+                new TreeMap<>(SourcePosition::compareStart);
         sortedMap.putAll(positionMap);
 
         /*
@@ -215,8 +224,8 @@ public class MergingLog {
         }
 
         if (candidate == null) {
-            // we failed to find a link, return where we were.
-            return mergedFilePosition;
+            // we failed to find a link.
+            return null;
         }
 
         return candidate.getValue();

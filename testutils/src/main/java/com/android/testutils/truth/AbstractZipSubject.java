@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -56,9 +55,7 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
      * @return a {@link IterableSubject} propositions for matching entries.
      * @throws IOException of the zip file cannot be opened.
      */
-    public final IterableSubject<
-                    ? extends IterableSubject<?, String, List<String>>, String, List<String>>
-            entries(@NonNull String conformingTo) throws IOException {
+    public final IterableSubject entries(@NonNull String conformingTo) throws IOException {
         // validate file presence
         exists();
 
