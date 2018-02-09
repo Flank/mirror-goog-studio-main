@@ -22,6 +22,7 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.artifact.InputArtifactProvider
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 
 /**
@@ -38,13 +39,13 @@ class InputArtifactProviderImpl(
             collections.isEmpty() -> {
                 dslScope.issueReporter.reportError(
                         EvalIssueReporter.Type.GENERIC,
-                        "No artifacts was defined for input.")
+                    EvalIssueException("No artifacts was defined for input."))
                 BuildableArtifactImpl(null, dslScope)
             }
             collections.size > 1 -> {
                 dslScope.issueReporter.reportError(
                         EvalIssueReporter.Type.GENERIC,
-                        "Multiple inputs types was defined.")
+                    EvalIssueException("Multiple inputs types was defined."))
                 BuildableArtifactImpl(null, dslScope)
             }
             else -> collections.single()
@@ -55,7 +56,7 @@ class InputArtifactProviderImpl(
         if (index == -1) {
             dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "Artifact was not defined for input of type: $type.")
+                EvalIssueException("Artifact was not defined for input of type: $type."))
             return BuildableArtifactImpl(null, dslScope)
         }
         return collections[inputTypes.indexOf(type)]

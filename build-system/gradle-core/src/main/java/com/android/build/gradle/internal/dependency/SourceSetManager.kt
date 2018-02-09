@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.build.gradle.internal.variant2.DeprecatedConfigurationAction
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -191,7 +192,7 @@ class SourceSetManager(
             if (!configuredSourceSets.contains(sourceSet.name)) {
                 val message = ("The SourceSet '${sourceSet.name}' is not recognized " +
                         "by the Android Gradle Plugin. Perhaps you misspelled something?")
-                dslScope.issueReporter.reportError(EvalIssueReporter.Type.GENERIC, message)
+                dslScope.issueReporter.reportError(EvalIssueReporter.Type.GENERIC, EvalIssueException(message))
             }
         }
     }

@@ -28,9 +28,9 @@ import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.model.SigningConfig;
 import java.util.Set;
-import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.junit.Before;
 import org.junit.Rule;
@@ -125,7 +125,7 @@ public class LibraryPluginDslTest {
         try {
             plugin.createAndroidTasks(false);
             fail("Expected resource shrinker error");
-        } catch (GradleException e) {
+        } catch (EvalIssueException e) {
             assertThat(e).hasMessage("Resource shrinker cannot be used for libraries.");
         }
 

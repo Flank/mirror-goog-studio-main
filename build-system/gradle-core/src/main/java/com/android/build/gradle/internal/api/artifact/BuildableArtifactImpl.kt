@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.api.artifact
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
@@ -53,7 +54,7 @@ class BuildableArtifactImpl(
         if (!isResolvable()) {
             dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "Resolving this BuildableArtifact can only done during task execution.")
+                    EvalIssueException("Resolving this BuildableArtifact can only done during task execution."))
         }
         if (fileCollection == null) {
             // If this exception is thrown, this is most likely a bug in the plugin.  It means a
@@ -63,7 +64,7 @@ class BuildableArtifactImpl(
             // throw.
             dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "BuildableArtifact has not been initialized.")
+                EvalIssueException("BuildableArtifact has not been initialized."))
         }
     }
 
@@ -88,7 +89,7 @@ class BuildableArtifactImpl(
             } else {
                 dslScope.issueReporter.reportError(
                         EvalIssueReporter.Type.GENERIC,
-                        "Cannot get build dependencies before BuildableArtifact is initialized.")
+                    EvalIssueException("Cannot get build dependencies before BuildableArtifact is initialized."))
                 TaskDependency { mutableSetOf() }
             }
 

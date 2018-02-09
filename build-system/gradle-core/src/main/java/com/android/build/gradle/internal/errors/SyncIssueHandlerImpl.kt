@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.errors
 import com.android.annotations.concurrency.Immutable
 import com.android.build.gradle.internal.ide.SyncIssueImpl
 import com.android.build.gradle.options.SyncOptions.EvaluationMode
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 import com.google.common.base.MoreObjects
@@ -44,20 +45,17 @@ class SyncIssueHandlerImpl(
     override fun reportIssue(
             type: EvalIssueReporter.Type,
             severity: EvalIssueReporter.Severity,
-            msg: String,
-            data: String?): SyncIssue {
-        val issue: SyncIssue
+            exception: EvalIssueException): SyncIssue {
+        val issue = SyncIssueImpl(type, severity, exception.data, exception.message)
         when (mode) {
             EvaluationMode.STANDARD -> {
                 if (severity.severity != SyncIssue.SEVERITY_WARNING) {
-                    throw GradleException(msg)
+                    throw exception
                 }
-                logger.warn("WARNING: " + msg)
-                issue = SyncIssueImpl(type, severity, data, msg)
+                logger.warn("WARNING: " + exception.message)
             }
 
             EvaluationMode.IDE -> {
-                issue = SyncIssueImpl(type, severity, data, msg)
                 _syncIssues.put(syncIssueKeyFrom(issue), issue)
             }
             else -> throw RuntimeException("Unknown SyncIssue type")

@@ -211,6 +211,7 @@ import com.android.builder.core.DesugarProcessArgs;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.DataBindingOptions;
@@ -1689,8 +1690,9 @@ public abstract class TaskManager {
                     .getIssueReporter()
                     .reportError(
                             Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                            pathResolution.errorText,
-                            scope.getVariantConfiguration().getFullName());
+                            new EvalIssueException(
+                                    pathResolution.errorText,
+                                    scope.getVariantConfiguration().getFullName()));
             return;
         }
 
@@ -3532,7 +3534,8 @@ public abstract class TaskManager {
                     .getIssueReporter()
                     .reportError(
                             Type.GENERIC,
-                            "Internal error, could not add the ShrinkResourcesTransform");
+                            new EvalIssueException(
+                                    "Internal error, could not add the ShrinkResourcesTransform"));
         }
     }
 
@@ -3722,22 +3725,32 @@ public abstract class TaskManager {
     private void configureKotlinKaptTasksForDataBinding(
             Project project, List<VariantScope> variantScopes, String version) {
         DependencySet kaptDeps = project.getConfigurations().getByName("kapt").getAllDependencies();
-        kaptDeps.forEach((Dependency dependency) -> {
-            // if it is a data binding compiler dependency w/ a different version, report error
-            if (Objects.equals(dependency.getGroup() + ":" + dependency.getName(),
-                    SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT)
-                    && !Objects.equals(dependency.getVersion(), version)) {
-                String depString = dependency.getGroup()
-                        + ":" + dependency.getName()
-                        + ":" + dependency.getVersion();
-                androidBuilder.getIssueReporter().reportError(Type.GENERIC,
-                        "Data Binding annotation processor version needs to match the" +
-                                " Android Gradle Plugin version. You can remove the kapt" +
-                                " dependency " + depString +
-                                " and Android Gradle Plugin will inject" +
-                                " the right version.");
-            }
-        });
+        kaptDeps.forEach(
+                (Dependency dependency) -> {
+                    // if it is a data binding compiler dependency w/ a different version, report error
+                    if (Objects.equals(
+                                    dependency.getGroup() + ":" + dependency.getName(),
+                                    SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT)
+                            && !Objects.equals(dependency.getVersion(), version)) {
+                        String depString =
+                                dependency.getGroup()
+                                        + ":"
+                                        + dependency.getName()
+                                        + ":"
+                                        + dependency.getVersion();
+                        androidBuilder
+                                .getIssueReporter()
+                                .reportError(
+                                        Type.GENERIC,
+                                        new EvalIssueException(
+                                                "Data Binding annotation processor version needs to match the"
+                                                        + " Android Gradle Plugin version. You can remove the kapt"
+                                                        + " dependency "
+                                                        + depString
+                                                        + " and Android Gradle Plugin will inject"
+                                                        + " the right version."));
+                    }
+                });
         project.getDependencies()
                 .add(
                         "kapt",

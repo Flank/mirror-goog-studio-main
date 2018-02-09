@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
@@ -93,11 +94,12 @@ public class LibraryVariantFactory extends BaseVariantFactory {
             String applicationId = model.getDefaultConfig().getProductFlavor().getApplicationId();
             issueReporter.reportError(
                     Type.GENERIC,
-                    "Library projects cannot set applicationId. "
-                            + "applicationId is set to '"
-                            + applicationId
-                            + "' in default config.",
-                    applicationId);
+                    new EvalIssueException(
+                            "Library projects cannot set applicationId. "
+                                    + "applicationId is set to '"
+                                    + applicationId
+                                    + "' in default config.",
+                            applicationId));
         }
 
         if (model.getDefaultConfig().getProductFlavor().getApplicationIdSuffix() != null) {
@@ -105,11 +107,12 @@ public class LibraryVariantFactory extends BaseVariantFactory {
                     model.getDefaultConfig().getProductFlavor().getApplicationIdSuffix();
             issueReporter.reportError(
                     Type.GENERIC,
-                    "Library projects cannot set applicationIdSuffix. "
-                            + "applicationIdSuffix is set to '"
-                            + applicationIdSuffix
-                            + "' in default config.",
-                    applicationIdSuffix);
+                    new EvalIssueException(
+                            "Library projects cannot set applicationIdSuffix. "
+                                    + "applicationIdSuffix is set to '"
+                                    + applicationIdSuffix
+                                    + "' in default config.",
+                            applicationIdSuffix));
         }
 
         for (BuildTypeData buildType : model.getBuildTypes().values()) {
@@ -117,13 +120,14 @@ public class LibraryVariantFactory extends BaseVariantFactory {
                 String applicationIdSuffix = buildType.getBuildType().getApplicationIdSuffix();
                 issueReporter.reportError(
                         Type.GENERIC,
-                        "Library projects cannot set applicationIdSuffix. "
-                                + "applicationIdSuffix is set to '"
-                                + applicationIdSuffix
-                                + "' in build type '"
-                                + buildType.getBuildType().getName()
-                                + "'.",
-                        applicationIdSuffix);
+                        new EvalIssueException(
+                                "Library projects cannot set applicationIdSuffix. "
+                                        + "applicationIdSuffix is set to '"
+                                        + applicationIdSuffix
+                                        + "' in build type '"
+                                        + buildType.getBuildType().getName()
+                                        + "'.",
+                                applicationIdSuffix));
             }
         }
         for (ProductFlavorData productFlavor : model.getProductFlavors().values()) {
@@ -131,13 +135,14 @@ public class LibraryVariantFactory extends BaseVariantFactory {
                 String applicationId = productFlavor.getProductFlavor().getApplicationId();
                 issueReporter.reportError(
                         Type.GENERIC,
-                        "Library projects cannot set applicationId. "
-                                + "applicationId is set to '"
-                                + applicationId
-                                + "' in flavor '"
-                                + productFlavor.getProductFlavor().getName()
-                                + "'.",
-                        applicationId);
+                        new EvalIssueException(
+                                "Library projects cannot set applicationId. "
+                                        + "applicationId is set to '"
+                                        + applicationId
+                                        + "' in flavor '"
+                                        + productFlavor.getProductFlavor().getName()
+                                        + "'.",
+                                applicationId));
             }
 
             if (productFlavor.getProductFlavor().getApplicationIdSuffix() != null) {
@@ -145,13 +150,14 @@ public class LibraryVariantFactory extends BaseVariantFactory {
                         productFlavor.getProductFlavor().getApplicationIdSuffix();
                 issueReporter.reportError(
                         Type.GENERIC,
-                        "Library projects cannot set applicationIdSuffix. "
-                                + "applicationIdSuffix is set to '"
-                                + applicationIdSuffix
-                                + "' in flavor '"
-                                + productFlavor.getProductFlavor().getName()
-                                + "'.",
-                        applicationIdSuffix);
+                        new EvalIssueException(
+                                "Library projects cannot set applicationIdSuffix. "
+                                        + "applicationIdSuffix is set to '"
+                                        + applicationIdSuffix
+                                        + "' in flavor '"
+                                        + productFlavor.getProductFlavor().getName()
+                                        + "'.",
+                                applicationIdSuffix));
             }
         }
     }

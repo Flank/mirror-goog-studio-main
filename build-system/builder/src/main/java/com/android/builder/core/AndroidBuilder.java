@@ -29,6 +29,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.compiling.DependencyFileProcessor;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
@@ -208,13 +209,14 @@ public class AndroidBuilder {
         if (mTargetInfo.getBuildTools().getRevision().compareTo(MIN_BUILD_TOOLS_REV) < 0) {
             issueReporter.reportError(
                     EvalIssueReporter.Type.BUILD_TOOLS_TOO_LOW,
-                    String.format(
-                            "The SDK Build Tools revision (%1$s) is too low for project '%2$s'. "
-                                    + "Minimum required is %3$s",
-                            mTargetInfo.getBuildTools().getRevision(),
-                            mProjectId,
-                            MIN_BUILD_TOOLS_REV),
-                    MIN_BUILD_TOOLS_REV.toString());
+                    new EvalIssueException(
+                            String.format(
+                                    "The SDK Build Tools revision (%1$s) is too low for project '%2$s'. "
+                                            + "Minimum required is %3$s",
+                                    mTargetInfo.getBuildTools().getRevision(),
+                                    mProjectId,
+                                    MIN_BUILD_TOOLS_REV),
+                            MIN_BUILD_TOOLS_REV.toString()));
         }
     }
 

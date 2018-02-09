@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.api.dsl.sealing
 
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Named
 
@@ -35,8 +36,8 @@ abstract class SealableObject(
             val className = this.javaClass.name
             val itemNameStr = computeName()
             dslScope.issueReporter.reportError(
-                    EvalIssueReporter.Type.GENERIC,
-                    "Attempting to seal object$itemNameStr of type $className after it's been sealed.")
+                EvalIssueReporter.Type.GENERIC,
+                EvalIssueException("Attempting to seal object$itemNameStr of type $className after it's been sealed."))
         }
 
         sealed = true
@@ -51,9 +52,9 @@ abstract class SealableObject(
             val itemNameStr = computeName()
             // FIXME better error message and custom TYPE.
             dslScope.issueReporter.reportError(
-                    EvalIssueReporter.Type.GENERIC,
-                    "Attempting to modify object$itemNameStr of type $className after it's been sealed.",
-                    className)
+                EvalIssueReporter.Type.GENERIC,
+                EvalIssueException("Attempting to modify object$itemNameStr of type $className after it's been sealed.",
+                    className))
 
             return false
         }

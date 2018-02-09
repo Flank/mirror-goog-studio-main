@@ -17,6 +17,7 @@
 package com.android.builder.core;
 
 import com.android.annotations.NonNull;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.base.Preconditions;
@@ -137,8 +138,9 @@ public class BootClasspathBuilder {
         for (LibraryRequest library : libraryRequests) {
             issueReporter.reportError(
                     EvalIssueReporter.Type.OPTIONAL_LIB_NOT_FOUND,
-                    "Unable to find optional library: " + library.getName(),
-                    library.getName());
+                    new EvalIssueException(
+                            "Unable to find optional library: " + library.getName(),
+                            library.getName()));
         }
 
         return classpath.build();

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.fixtures
 
 import com.android.build.gradle.internal.ide.SyncIssueImpl
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 
@@ -28,12 +29,11 @@ class FakeEvalIssueReporter(private val throwOnError : Boolean) : EvalIssueRepor
 
     override fun reportIssue(type: EvalIssueReporter.Type,
             severity: EvalIssueReporter.Severity,
-            msg: String,
-            data: String?): SyncIssue {
-        messages.add(msg)
+            exception: EvalIssueException): SyncIssue {
+        messages.add(exception.message)
         if (severity == EvalIssueReporter.Severity.ERROR && throwOnError) {
-            throw RuntimeException(msg)
+            throw exception
         }
-        return SyncIssueImpl(type, severity, data, msg, listOf())
+        return SyncIssueImpl(type, severity, exception.data, exception.message, listOf())
     }
 }

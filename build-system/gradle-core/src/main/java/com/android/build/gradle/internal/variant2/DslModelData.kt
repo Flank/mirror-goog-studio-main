@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreLocation
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter.Type
 import com.android.utils.StringHelper
 import org.gradle.api.Action
@@ -262,7 +263,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
 
         if (_buildTypes.any { it.name == name }) {
             dslScope.issueReporter.reportError(Type.GENERIC,
-                    "ProductFlavor names cannot collide with BuildType names: $name")
+                EvalIssueException("ProductFlavor names cannot collide with BuildType names: $name"))
 
             // don't want to keep going in case of sync
             return
@@ -287,7 +288,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
 
         if (_productFlavors.any { it.name == name }) {
             dslScope.issueReporter.reportError(Type.GENERIC,
-                    "BuildType names cannot collide with ProductFlavor names: $name")
+                EvalIssueException("BuildType names cannot collide with ProductFlavor names: $name"))
 
             // don't want to keep going in case of sync
             return
@@ -443,13 +444,13 @@ class DslModelDataImpl<in E: BaseExtension2>(
 
         if (BuilderConstants.MAIN == name) {
             dslScope.issueReporter.reportError(Type.GENERIC,
-                    "$displayName names cannot be '${BuilderConstants.MAIN}'")
+                EvalIssueException("$displayName names cannot be '${BuilderConstants.MAIN}'"))
             return false
         }
 
         if (BuilderConstants.LINT == name) {
             dslScope.issueReporter.reportError(Type.GENERIC,
-                    "$displayName names cannot be '${BuilderConstants.LINT}'")
+                EvalIssueException("$displayName names cannot be '${BuilderConstants.LINT}'"))
             return false
         }
 
@@ -459,7 +460,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
     private fun checkPrefix(name: String, displayName: String, prefix: String): Boolean {
         if (name.startsWith(prefix)) {
             dslScope.issueReporter.reportError(Type.GENERIC,
-                    "$displayName names cannot start with '$prefix'")
+                EvalIssueException("$displayName names cannot start with '$prefix'"))
             return false
         }
 

@@ -28,11 +28,11 @@ import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.tasks.MergeResources;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import groovy.util.Eval;
 import java.util.Arrays;
-import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.junit.Before;
 import org.junit.Rule;
@@ -242,7 +242,7 @@ public class AppPluginDslTest {
         try {
             plugin.createAndroidTasks(false);
             fail();
-        } catch (GradleException e) {
+        } catch (EvalIssueException e) {
             assertThat(e.getMessage()).contains("obfuscating");
         }
     }

@@ -76,6 +76,7 @@ import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.DefaultProductFlavor.DimensionRequest;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
@@ -859,9 +860,10 @@ public class VariantManager implements VariantModel {
                         .getIssueReporter()
                         .reportError(
                                 EvalIssueReporter.Type.UNNAMED_FLAVOR_DIMENSION,
-                                "All flavors must now belong to a named flavor dimension. "
-                                        + "Learn more at "
-                                        + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html");
+                                new EvalIssueException(
+                                        "All flavors must now belong to a named flavor dimension. "
+                                                + "Learn more at "
+                                                + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html"));
             } else if (flavorDimensionList.size() == 1) {
                 // if there's only one dimension, auto-assign the dimension to all the flavors.
                 String dimensionName = flavorDimensionList.get(0);

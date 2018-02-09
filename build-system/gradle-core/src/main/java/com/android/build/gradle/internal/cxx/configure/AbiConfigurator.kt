@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.options.StringOption
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 
 /**
@@ -51,9 +52,9 @@ class AbiConfigurator(issueReporter: EvalIssueReporter,
         if (!userMistakes.isEmpty()) {
             issueReporter.reportError(
                     EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                    "ABIs [${sortAndJoin(userMistakes)}] are not supported for platform. " +
+                EvalIssueException("ABIs [${sortAndJoin(userMistakes)}] are not supported for platform. " +
                             "Supported ABIs are [${sortAndJoin(ndkHandlerSupportedAbiStrings)}].",
-                    variantName)
+                    variantName))
         }
         if (userChosenAbis.isEmpty()) {
             // The user didn't explicitly name any ABIs so return the default set
@@ -87,11 +88,11 @@ class AbiConfigurator(issueReporter: EvalIssueReporter,
             if (injectedLegalValidAbis.isEmpty()) {
                 issueReporter.reportError(
                         EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                        "ABIs [${ideBuildTargetAbi}] set by " +
+                    EvalIssueException("ABIs [${ideBuildTargetAbi}] set by " +
                                 "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
                                 "flag is not supported by this project. Supported ABIs " +
                                 "are [${sortAndJoin(validAbis.map(Abi::getName))}].",
-                        variantName)
+                        variantName))
             }
         }
     }

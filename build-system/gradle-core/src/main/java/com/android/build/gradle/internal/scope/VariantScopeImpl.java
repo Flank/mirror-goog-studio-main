@@ -106,6 +106,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.BaseConfig;
 import com.android.repository.api.ProgressIndicator;
@@ -262,7 +263,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         .getErrorHandler()
                         .reportError(
                                 Type.GENERIC,
-                                "The 'android-gradle' code shrinker does not support obfuscating.");
+                                new EvalIssueException(
+                                        "The 'android-gradle' code shrinker does not support obfuscating."));
             }
 
             if (postprocessingOptions.isOptimizeCode()) {
@@ -270,7 +272,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         .getErrorHandler()
                         .reportError(
                                 Type.GENERIC,
-                                "The 'android-gradle' code shrinker does not support optimizing code.");
+                                new EvalIssueException(
+                                        "The 'android-gradle' code shrinker does not support optimizing code."));
             }
         }
     }
@@ -496,7 +499,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope
                         .getErrorHandler()
                         .reportError(
-                                Type.GENERIC, "Resource shrinker cannot be used for libraries.");
+                                Type.GENERIC,
+                                new EvalIssueException(
+                                        "Resource shrinker cannot be used for libraries."));
             }
             return false;
         }
@@ -506,9 +511,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     .getErrorHandler()
                     .reportError(
                             Type.GENERIC,
-                            "Removing unused resources requires unused code shrinking to be turned on. See "
-                                    + "http://d.android.com/r/tools/shrink-resources.html "
-                                    + "for more information.");
+                            new EvalIssueException(
+                                    "Removing unused resources requires unused code shrinking to be turned on. See "
+                                            + "http://d.android.com/r/tools/shrink-resources.html "
+                                            + "for more information."));
 
             return false;
         }
@@ -2173,12 +2179,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 .getErrorHandler()
                 .reportError(
                         Type.GENERIC,
-                        String.format(
-                                "Please add '%s=true' to your "
-                                        + "gradle.properties file to enable Java 8 "
-                                        + "language support.",
-                                missingFlag.name()),
-                        getVariantConfiguration().getFullName());
+                        new EvalIssueException(
+                                String.format(
+                                        "Please add '%s=true' to your "
+                                                + "gradle.properties file to enable Java 8 "
+                                                + "language support.",
+                                        missingFlag.name()),
+                                getVariantConfiguration().getFullName()));
         return Java8LangSupport.INVALID;
     }
 
@@ -2207,7 +2214,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                             invalid.stream().collect(Collectors.joining(",")));
             globalScope
                     .getErrorHandler()
-                    .reportError(Type.GENERIC, msg, getVariantConfiguration().getFullName());
+                    .reportError(
+                            Type.GENERIC,
+                            new EvalIssueException(msg, getVariantConfiguration().getFullName()));
             return false;
         }
     }

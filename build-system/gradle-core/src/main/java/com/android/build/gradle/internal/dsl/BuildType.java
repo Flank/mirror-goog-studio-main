@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.internal.ClassFieldImpl;
@@ -668,7 +669,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
                 default:
                     throw new AssertionError("Unknown value " + used);
             }
-            issueReporter.reportError(Type.GENERIC, message, methodName);
+            issueReporter.reportError(Type.GENERIC, new EvalIssueException(message, methodName));
         }
     }
 

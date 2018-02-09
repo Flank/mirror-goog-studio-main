@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.HashMultimap
 import org.gradle.api.Project
@@ -58,7 +59,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
         if (replacedOutput.contains(artifactType) || appendedOutput.contains(artifactType)) {
             dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "Output type '$artifactType' was already specified as an output.")
+                    EvalIssueException("Output type '$artifactType' was already specified as an output."))
             return this
         }
         val spec = BuildArtifactSpec.get(artifactType)
@@ -67,7 +68,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
                 if (!spec.replaceable) {
                     dslScope.issueReporter.reportError(
                             EvalIssueReporter.Type.GENERIC,
-                            "Replacing ArtifactType '$artifactType' is not allowed.")
+                            EvalIssueException("Replacing ArtifactType '$artifactType' is not allowed."))
                     return this
                 }
                 replacedOutput.add(artifactType)
@@ -76,7 +77,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
                 if (!spec.appendable) {
                     dslScope.issueReporter.reportError(
                             EvalIssueReporter.Type.GENERIC,
-                            "Append to ArtifactType '$artifactType' is not allowed.")
+                        EvalIssueException("Append to ArtifactType '$artifactType' is not allowed."))
                     return this
                 }
                 appendedOutput.add(artifactType)
@@ -92,7 +93,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
         if (inputs.contains(artifactType)) {
             dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "Output type '$artifactType' was already specified as an input.")
+                EvalIssueException("Output type '$artifactType' was already specified as an input."))
             return this
         }
         inputs.add(artifactType)
@@ -107,7 +108,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
         if (outputFiles.containsValue(filename)) {
             dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "Output file '$filename' was already created.")
+                EvalIssueException("Output file '$filename' was already created."))
             return this
         }
         if (consumers.isEmpty()) {
@@ -120,7 +121,7 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
                 if (!spec.appendable && outputFiles[consumer].size > 1) {
                     dslScope.issueReporter.reportError(
                             EvalIssueReporter.Type.GENERIC,
-                            "OutputType '$consumer' does not support multiple output files.")
+                        EvalIssueException("OutputType '$consumer' does not support multiple output files."))
                 }
             }
         }
@@ -163,9 +164,13 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
             } catch (e: Exception) {
                 dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    """Exception thrown while configuring task '$taskName'.
+                    EvalIssueException(
+                        """Exception thrown while configuring task '$taskName'.
                             |Type: ${e.javaClass.name}
-                            |Message: ${e.message}""".trimMargin()
+                            |Message: ${e.message}""".trimMargin(),
+                        null,
+                        e
+                    )
                 )
             }
         }

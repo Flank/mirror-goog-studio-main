@@ -20,6 +20,7 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.OutputFileProvider
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.Multimap
 import java.io.File
@@ -57,7 +58,8 @@ class OutputFileProviderImpl(
                 if (files.isEmpty()) {
                     dslScope.issueReporter.reportError(
                             EvalIssueReporter.Type.GENERIC,
-                            "An output file must be created for OutputType '$artifactType'.")
+                            EvalIssueException(
+                                "An output file must be created for OutputType '$artifactType'."))
                 }
             }
             artifactsHolder.replaceArtifact(artifactType, files, taskName)
@@ -73,14 +75,14 @@ class OutputFileProviderImpl(
             fileMap.values.isEmpty() -> {
                 dslScope.issueReporter.reportError(
                         EvalIssueReporter.Type.GENERIC,
-                        "No output file was defined.")
+                    EvalIssueException("No output file was defined."))
                 File("")
 
             }
             fileMap.values.size > 1 -> {
                 dslScope.issueReporter.reportError(
                         EvalIssueReporter.Type.GENERIC,
-                        "Multiple output files was defined.")
+                    EvalIssueException("Multiple output files was defined."))
                 File("")
             }
             else -> fileMap.values.single()
@@ -91,7 +93,7 @@ class OutputFileProviderImpl(
         if (file == null) {
             dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "Multiple output files was defined.")
+                EvalIssueException("Multiple output files was defined."))
             return File("")
         }
         return file

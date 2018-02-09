@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
@@ -57,6 +58,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.testfixtures.ProjectBuilder;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
@@ -100,11 +102,11 @@ public class TaskTestUtils {
         public SyncIssue reportIssue(
                 @NonNull Type type,
                 @NonNull Severity severity,
-                @NonNull String msg,
-                @Nullable String data) {
+                @NonNull EvalIssueException exception) {
             // always create a sync issue, no matter what the mode is. This can be used to validate
             // what error is thrown anyway.
-            syncIssue = new SyncIssueImpl(type, severity, data, msg);
+            syncIssue =
+                    new SyncIssueImpl(type, severity, exception.getData(), exception.getMessage());
             return syncIssue;
         }
 
@@ -131,17 +133,20 @@ public class TaskTestUtils {
             return reportIssue(type, severity, msg, null);
         }
 
-        @NonNull
+        @NotNull
         @Override
-        public SyncIssue reportError(
-                @NonNull Type type, @NonNull String msg, @Nullable String data) {
-            return reportIssue(type, Severity.ERROR, msg, data);
+        public SyncIssue reportIssue(
+                @NotNull Type type,
+                @NotNull Severity severity,
+                @NotNull String msg,
+                @Nullable String data) {
+            return reportIssue(type, severity, new EvalIssueException(msg, data));
         }
 
-        @NonNull
+        @NotNull
         @Override
-        public SyncIssue reportError(@NonNull Type type, @NonNull String msg) {
-            return reportIssue(type, Severity.ERROR, msg, null);
+        public SyncIssue reportError(@NotNull Type type, @NotNull EvalIssueException exception) {
+            return reportIssue(type, Severity.ERROR, exception);
         }
 
         @NonNull

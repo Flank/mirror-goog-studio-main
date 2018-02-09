@@ -37,6 +37,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.profile.Recorder;
 import com.android.ide.common.build.ApkData;
@@ -167,10 +168,12 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         EvalIssueReporter issueReporter = globalScope.getAndroidBuilder().getIssueReporter();
         issueReporter.reportError(
                 EvalIssueReporter.Type.GENERIC,
-                String.format(
-                        "Conflicting configuration : '%1$s' in ndk abiFilters "
-                                + "cannot be present when splits abi filters are set : %2$s",
-                        Joiner.on(",").join(ndkConfigAbiFilters), Joiner.on(",").join(abiFilters)));
+                new EvalIssueException(
+                        String.format(
+                                "Conflicting configuration : '%1$s' in ndk abiFilters "
+                                        + "cannot be present when splits abi filters are set : %2$s",
+                                Joiner.on(",").join(ndkConfigAbiFilters),
+                                Joiner.on(",").join(abiFilters))));
     }
 
     private void restrictEnabledOutputs(

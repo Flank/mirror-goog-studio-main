@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.api.dsl.sealing
 
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import groovy.lang.Closure
 import org.gradle.api.Action
@@ -88,7 +89,7 @@ open class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: Inter
                 val wrongTypeElements = elements.filter { !implClass.isInstance(it) }
 
                 dslScope.issueReporter.reportError(EvalIssueReporter.Type.GENERIC,
-                        "Expected type ${implClass.name} for items: $wrongTypeElements")
+                    EvalIssueException("Expected type ${implClass.name} for items: $wrongTypeElements"))
                 return false
             }
 
@@ -132,7 +133,7 @@ open class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: Inter
                 container.add(implClass.cast(element))
             } else {
                 dslScope.issueReporter.reportError(EvalIssueReporter.Type.GENERIC,
-                        "Expected type ${implClass.name} for item: $element")
+                    EvalIssueException("Expected type ${implClass.name} for item: $element"))
                 false
             }
         }
@@ -200,7 +201,7 @@ open class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: Inter
             // need to break
             dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "Type ${type.canonicalName} cannot be used with withType() because it does not extend internal type ${implClass.name}")
+                EvalIssueException("Type ${type.canonicalName} cannot be used with withType() because it does not extend internal type ${implClass.name}"))
 
             // still need to return something for the case where sync happens so we return a,
             // container with all the items.
@@ -223,8 +224,8 @@ open class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: Inter
             // the sub class of the interface is not a sub class of the internal implementation.
             // need to break
             dslScope.issueReporter.reportError(
-                    EvalIssueReporter.Type.GENERIC,
-                    "Type ${type.canonicalName} cannot be used with withType() because it does not extend internal type ${implClass.name}")
+                EvalIssueReporter.Type.GENERIC,
+                EvalIssueException("Type ${type.canonicalName} cannot be used with withType() because it does not extend internal type ${implClass.name}"))
 
             // still need to return something for the case where sync happens so we return a,
             // container with all the items.
@@ -244,7 +245,7 @@ open class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: Inter
             // need to break
             dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "Type ${type.canonicalName} cannot be used with withType() because it does not extend internal type ${implClass.name}")
+                EvalIssueException("Type ${type.canonicalName} cannot be used with withType() because it does not extend internal type ${implClass.name}"))
 
             // still need to return something for the case where sync happens so we return a,
             // container with all the items.
