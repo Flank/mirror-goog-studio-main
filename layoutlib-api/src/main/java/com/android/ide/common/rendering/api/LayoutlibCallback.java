@@ -17,8 +17,6 @@ package com.android.ide.common.rendering.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.resources.ResourceType;
-import com.android.util.Pair;
 import org.intellij.lang.annotations.MagicConstant;
 import org.xmlpull.v1.XmlPullParser;
 
@@ -126,24 +124,5 @@ public abstract class LayoutlibCallback implements IProjectCallback {
     @NonNull
     public ResourceNamespace.Resolver getImplicitNamespaces() {
         return ResourceNamespace.Resolver.EMPTY_RESOLVER;
-    }
-
-    // ------ implementation of the old interface using the new interface.
-
-    public final Integer getResourceValue(String type, String name) {
-        return getResourceId(ResourceType.getEnum(type), name);
-    }
-
-    public final String[] resolveResourceValue(int id) {
-        Pair<ResourceType, String> info = resolveResourceId(id);
-        if (info != null) {
-            return new String[] { info.getSecond(), info.getFirst().getName() };
-        }
-
-        return null;
-    }
-
-    public final String resolveResourceValue(int[] id) {
-        return resolveResourceId(id);
     }
 }

@@ -42,6 +42,7 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
             new ResourceNamespace(SdkConstants.ANDROID_URI, SdkConstants.ANDROID_NS_NAME);
     public static final ResourceNamespace RES_AUTO = new ResAutoNamespace();
     public static final ResourceNamespace TOOLS = new ToolsNamespace();
+    public static final ResourceNamespace AAPT = new AaptNamespace();
 
     /**
      * Namespace used in code that needs to start keeping track of namespaces. For easy tracking of
@@ -186,6 +187,9 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
         if (uri.equals(SdkConstants.TOOLS_URI)) {
             return TOOLS;
         }
+        if (uri.equals(SdkConstants.AAPT_URI)) {
+            return AAPT;
+        }
         if (uri.startsWith(SdkConstants.URI_PREFIX)) {
             // TODO(namespaces): What is considered a good package name by aapt?
             String packageName = uri.substring(SdkConstants.URI_PREFIX.length());
@@ -255,6 +259,12 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
     private static class ToolsNamespace extends ResourceNamespace {
         private ToolsNamespace() {
             super(SdkConstants.TOOLS_URI, null);
+        }
+    }
+
+    private static class AaptNamespace extends ResourceNamespace {
+        private AaptNamespace() {
+            super(SdkConstants.AAPT_URI, null);
         }
     }
 }

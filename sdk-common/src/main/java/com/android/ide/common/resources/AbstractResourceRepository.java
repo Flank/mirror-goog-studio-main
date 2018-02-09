@@ -170,7 +170,7 @@ public abstract class AbstractResourceRepository {
     /** @deprecated Use {@link #getItemsOfType(ResourceNamespace, ResourceType)} instead. */
     @Deprecated
     @NonNull
-    public Collection<String> getItemsOfType(@NonNull ResourceType type) {
+    public final Collection<String> getItemsOfType(@NonNull ResourceType type) {
         return getItemsOfType(ResourceNamespace.TODO, type);
     }
 

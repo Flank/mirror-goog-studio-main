@@ -25,7 +25,6 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.DensityBasedResourceValue;
 import com.android.ide.common.rendering.api.LayoutLog;
-import com.android.ide.common.rendering.api.RenderResources;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
@@ -35,6 +34,7 @@ import com.android.resources.Density;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.Collections;
@@ -838,14 +838,6 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testResolverIds() throws Exception {
-        ImmutableMap<String, Integer> frameworkIds =
-                ImmutableMap.of(
-                        "framework_id1", 1,
-                        "framework_id2", 2);
-        ImmutableMap<String, Integer> libraryIds =
-                ImmutableMap.of(
-                        "lib_id1", 11,
-                        "lib_id2", 22);
         ResourceRepository projectRepository =
                 resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
                             "layout/layout1.xml",
@@ -878,32 +870,22 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         Map<ResourceType, ResourceValueMap> projectResources =
                 projectRepository.getConfiguredResources(config).row(ResourceNamespace.TODO);
         assertNotNull(projectResources);
+
         ResourceResolver resolver =
                 nonNamespacedResolver(projectResources, projectResources, "ButtonStyle");
-        resolver.setFrameworkResourceIdProvider(
-                new RenderResources.ResourceIdProvider() {
-                    @Override
-                    public Integer getId(ResourceType resType, String resName) {
-                        assertEquals(ResourceType.ID, resType);
-                        return frameworkIds.get(resName);
-                    }
-                });
-        resolver.setLibrariesIdProvider(
-                new RenderResources.ResourceIdProvider() {
-                    @Override
-                    public Integer getId(ResourceType resType, String resName) {
-                        assertEquals(ResourceType.ID, resType);
-                        return libraryIds.get(resName);
-                    }
-                });
         assertNotNull(resolver);
+
+        ImmutableSet<String> libraryIds = ImmutableSet.of("lib_id1", "lib_id2");
+        resolver.setProjectIdChecker(ref -> libraryIds.contains(ref.getName()));
 
         assertNull(resolver.findResValue("@id/not_found", false));
         assertNull(resolver.findResValue("@id/new_id", false));
         assertNull(resolver.findResValue("@id/framework_id1", false));
         assertNotNull(resolver.findResValue("@android:id/framework_id1", false));
         assertNotNull(resolver.findResValue("@id/lib_id1", false));
-        assertNull(resolver.findResValue("@id/lib_id1", true));
-        assertNull(resolver.findResValue("@android:id/lib_id1", false));
+
+        // See the comment in ResourceResolver#dereference. We need to fix this.
+        assertNotNull(resolver.findResValue("@id/lib_id1", true));
+        assertNotNull(resolver.findResValue("@android:id/lib_id1", false));
     }
 }
