@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
 import org.intellij.lang.annotations.Language;
 
-@SuppressWarnings("javadoc")
+/**
+ * Tests for {@link VectorDetector}.
+ */
 public class VectorDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
@@ -282,7 +283,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 gradle(""
                         + "buildscript {\n"
                         + "    dependencies {\n"
-                        + "        classpath 'com.android.tools.build:gradle:3.1.0-alpha7'\n"
+                        + "        classpath 'com.android.tools.build:gradle:3.2.0-alpha1'\n"
                         + "    }\n"
                         + "}\n"))
                 .run()
@@ -297,7 +298,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 gradle(""
                         + "buildscript {\n"
                         + "    dependencies {\n"
-                        + "        classpath 'com.android.tools.build:gradle:3.1.0-alpha7'\n"
+                        + "        classpath 'com.android.tools.build:gradle:3.2.0-alpha1'\n"
                         + "    }\n"
                         + "}\n"))
                 .run()
@@ -312,7 +313,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 gradle(""
                         + "buildscript {\n"
                         + "    dependencies {\n"
-                        + "        classpath 'com.android.tools.build:gradle:3.1.0-alpha7'\n"
+                        + "        classpath 'com.android.tools.build:gradle:3.2.0-alpha1'\n"
                         + "    }\n"
                         + "}\n"
                         + "android.defaultConfig.vectorDrawables.useSupportLibrary = true\n"))

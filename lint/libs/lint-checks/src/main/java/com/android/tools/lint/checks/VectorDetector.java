@@ -114,9 +114,8 @@ public class VectorDetector extends ResourceXmlDetector {
      */
     public static boolean isVectorGenerationSupportedForFillType(@NonNull Project project) {
         GradleVersion modelVersion = project.getGradleModelVersion();
-        // TODO Change to 3.2 when it becomes available.
-        // Requires 3.1.x or higher.
-        return modelVersion != null && modelVersion.isAtLeastIncludingPreviews(3, 1, 0);
+        // Requires 3.2.x or higher.
+        return modelVersion != null && modelVersion.isAtLeastIncludingPreviews(3, 2, 0);
     }
 
     @Override
