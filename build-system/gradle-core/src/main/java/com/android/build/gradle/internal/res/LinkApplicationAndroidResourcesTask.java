@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
+import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -237,6 +238,15 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
         try (@Nullable Aapt aapt = makeAapt()) {
 
+            Aapt2ServiceKey aapt2ServiceKey;
+            if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+                aapt2ServiceKey =
+                        Aapt2DaemonManagerService.registerAaptService(
+                                getBuildTools(), getILogger());
+            } else {
+                aapt2ServiceKey = null;
+            }
+
             // do a first pass at the list so we generate the code synchronously since it's required
             // by the full splits asynchronous processing below.
             List<BuildOutput> unprocessedManifest =
@@ -259,7 +269,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                     featureResourcePackages,
                                     apkInfo,
                                     true,
-                                    aapt));
+                                    aapt,
+                                    aapt2ServiceKey));
                     break;
                 }
             }
@@ -278,7 +289,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                             featureResourcePackages,
                                             apkInfo,
                                             false,
-                                            aapt));
+                                            aapt,
+                                            aapt2ServiceKey));
                 }
             }
 
@@ -369,7 +381,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             @NonNull Set<File> featureResourcePackages,
             ApkInfo apkData,
             boolean generateCode,
-            @Nullable Aapt aapt)
+            @Nullable Aapt aapt,
+            @Nullable Aapt2ServiceKey aapt2ServiceKey)
             throws IOException {
 
         ImmutableList.Builder<File> featurePackagesBuilder = ImmutableList.builder();
@@ -492,9 +505,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 AaptPackageConfig config = configBuilder.build();
 
                 if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+                    Preconditions.checkNotNull(
+                            aapt2ServiceKey, "AAPT2 daemon manager service not initialized");
                     try (Aapt2DaemonManager.LeasedAaptDaemon aaptDaemon =
-                            Aapt2DaemonManagerService.getAaptDaemon(
-                                    getBuilder().getBuildToolInfo().getRevision())) {
+                            Aapt2DaemonManagerService.getAaptDaemon(aapt2ServiceKey)) {
                         AndroidBuilder.processResources(aaptDaemon, config, getILogger());
                     } catch (Aapt2Exception e) {
                         throw Aapt2ErrorUtils.rewriteLinkException(
@@ -564,11 +578,12 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
      */
     @Nullable
     private Aapt makeAapt() {
+        AndroidBuilder builder = getBuilder();
         if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+
             return null;
         }
 
-        AndroidBuilder builder = getBuilder();
         MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
 
         ProcessOutputHandler processOutputHandler =

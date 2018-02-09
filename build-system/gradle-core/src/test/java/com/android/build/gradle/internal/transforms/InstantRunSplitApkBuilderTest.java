@@ -124,7 +124,7 @@ public class InstantRunSplitApkBuilderTest {
                         apkList,
                         apkInfo) {
                     @Override
-                    protected Aapt makeAapt() {
+                    protected Aapt getLinker() {
                         return aapt;
                     }
                 };
@@ -253,7 +253,7 @@ public class InstantRunSplitApkBuilderTest {
                         apkList,
                         apkInfo) {
                     @Override
-                    protected Aapt makeAapt() {
+                    protected Aapt getLinker() {
                         return aapt;
                     }
                 };

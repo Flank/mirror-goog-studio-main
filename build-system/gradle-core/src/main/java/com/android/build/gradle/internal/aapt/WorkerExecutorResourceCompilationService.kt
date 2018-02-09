@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.aapt
 
 import com.android.build.gradle.internal.res.Aapt2CompileWithBlameRunnable
+import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.ResourceCompilationService
@@ -28,12 +29,12 @@ import java.io.File
 /** Resource compilation service built on top of a Aapt2Daemon and Gradle Worker Executors. */
 class WorkerExecutorResourceCompilationService(
         private val workerExecutor: WorkerExecutor,
-        private val aaptVersion: Revision) : ResourceCompilationService {
+        private val aapt2ServiceKey: Aapt2ServiceKey) : ResourceCompilationService {
 
     override fun submitCompile(request: CompileResourceRequest) {
         workerExecutor.submit(Aapt2CompileWithBlameRunnable::class.java) {
             it.isolationMode = IsolationMode.NONE
-            it.setParams(Aapt2CompileWithBlameRunnable.Params(aaptVersion, request))
+            it.setParams(Aapt2CompileWithBlameRunnable.Params(aapt2ServiceKey, request))
         }
     }
 

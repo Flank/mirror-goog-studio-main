@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.repository.Revision
 import org.gradle.api.logging.Logging
 import java.io.Serializable
 import javax.inject.Inject
@@ -28,12 +27,13 @@ class Aapt2LinkRunnable @Inject constructor(
 
     override fun run() {
         val logger = LoggerWrapper(Logging.getLogger(this::class.java))
-        useAaptDaemon(params.revision) { daemon ->
+        useAaptDaemon(params.aapt2ServiceKey) { daemon ->
             daemon.link(params.request, logger)
         }
     }
 
     class Params(
-            val revision: Revision,
-            val request: AaptPackageConfig) : Serializable
+        val aapt2ServiceKey: Aapt2ServiceKey,
+        val request: AaptPackageConfig
+    ) : Serializable
 }

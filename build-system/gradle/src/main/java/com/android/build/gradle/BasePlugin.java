@@ -62,7 +62,6 @@ import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
-import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -116,7 +115,6 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ForkJoinPool;
 import org.gradle.BuildListener;
@@ -434,12 +432,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 .addTaskExecutionGraphListener(
                         taskGraph -> {
                             TaskInputHelper.disableBypass();
-                            Aapt2DaemonManagerService.registerAaptService(
-                                    Objects.requireNonNull(androidBuilder.getTargetInfo())
-                                            .getBuildTools(),
-                                    loggerWrapper,
-                                    WorkerActionServiceRegistry.INSTANCE);
-
                             for (Task task : taskGraph.getAllTasks()) {
                                 if (task instanceof TransformTask) {
                                     Transform transform = ((TransformTask) task).getTransform();

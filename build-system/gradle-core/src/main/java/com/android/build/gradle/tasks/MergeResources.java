@@ -28,6 +28,8 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
 import com.android.build.gradle.internal.api.sourcesets.FilesProvider;
+import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
+import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -189,9 +191,11 @@ public class MergeResources extends IncrementalTask {
         }
 
         if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+            Aapt2ServiceKey aapt2ServiceKey =
+                    Aapt2DaemonManagerService.registerAaptService(
+                            builder.getBuildToolInfo(), builder.getLogger());
             return new WorkerExecutorResourceCompilationService(
-                    Objects.requireNonNull(workerExecutor),
-                    builder.getBuildToolInfo().getRevision());
+                    Objects.requireNonNull(workerExecutor), aapt2ServiceKey);
         }
 
         // Finally, use AAPT or one of AAPT2 versions based on the project flags.

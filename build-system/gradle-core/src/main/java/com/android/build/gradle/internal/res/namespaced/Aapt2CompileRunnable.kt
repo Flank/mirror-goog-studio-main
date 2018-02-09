@@ -28,12 +28,13 @@ class Aapt2CompileRunnable @Inject constructor(
 
     override fun run() {
         val logger = LoggerWrapper(Logging.getLogger(this::class.java))
-        useAaptDaemon(params.revision) { daemon ->
+        useAaptDaemon(params.aapt2ServiceKey) { daemon ->
             params.requests.forEach { daemon.compile(it, logger) }
         }
     }
 
     class Params(
-            val revision: Revision,
-            val requests: List<CompileResourceRequest>) : Serializable
+        val aapt2ServiceKey: Aapt2ServiceKey,
+        val requests: List<CompileResourceRequest>
+    ) : Serializable
 }

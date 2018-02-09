@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
+import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.AaptOptions;
@@ -210,7 +211,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         final File alignedOutput = new File(outputDirectory, uniqueName + ".apk");
         Files.createParentDirs(alignedOutput);
 
-        try (CloseableBlockingResourceLinker aapt = makeAapt()) {
+        try (CloseableBlockingResourceLinker aapt = getLinker()) {
             File resPackageFile =
                     generateSplitApkResourcesAp(
                             logger,
@@ -380,18 +381,20 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         return resFilePackageFile;
     }
 
-    protected CloseableBlockingResourceLinker makeAapt() {
-        return makeAapt(aaptGeneration, androidBuilder, aaptIntermediateDirectory);
+    protected CloseableBlockingResourceLinker getLinker() {
+        return getLinker(aaptGeneration, androidBuilder, aaptIntermediateDirectory);
     }
 
     @NonNull
-    public static CloseableBlockingResourceLinker makeAapt(
+    public static CloseableBlockingResourceLinker getLinker(
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File intermediateFolder) {
         if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
-            return Aapt2DaemonManagerService.getAaptDaemon(
-                    androidBuilder.getBuildToolInfo().getRevision());
+            Aapt2ServiceKey aapt2ServiceKey =
+                    Aapt2DaemonManagerService.registerAaptService(
+                            androidBuilder.getBuildToolInfo(), androidBuilder.getLogger());
+            return Aapt2DaemonManagerService.getAaptDaemon(aapt2ServiceKey);
         }
         return AaptGradleFactory.make(
                 aaptGeneration,

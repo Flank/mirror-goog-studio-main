@@ -18,11 +18,10 @@ package com.android.build.gradle.tasks.ir
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.aapt.AaptGeneration
-import com.android.build.gradle.internal.res.namespaced.useAaptDaemon
 import com.android.build.gradle.internal.scope.ExistingBuildElements
-import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
+import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder
@@ -88,15 +87,9 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
         }
 
         try {
-            return if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
-                useAaptDaemon<File>(builder.buildToolInfo.revision) { aapt ->
-                    processSplit(manifestFile, aapt)
-                }
-            } else {
-                InstantRunSplitApkBuilder.makeAapt(
+            return InstantRunSplitApkBuilder.getLinker(
                         aaptGeneration, builder, aaptIntermediateFolder).use { aapt ->
-                    processSplit(manifestFile, aapt)
-                }
+                processSplit(manifestFile, aapt)
             }
         } catch (e: InterruptedException) {
             Thread.interrupted()

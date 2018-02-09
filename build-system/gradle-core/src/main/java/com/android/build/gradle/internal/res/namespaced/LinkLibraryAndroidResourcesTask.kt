@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.ExistingBuildElements
-import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.builder.core.VariantType
@@ -100,9 +100,13 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
                 symbolOutputDir = rDotTxt.parentFile,
                 intermediateDir = aaptIntermediateDir)
 
+        val aapt2ServiceKey = registerAaptService(
+            builder.targetInfo!!.buildTools,
+            builder.logger
+        )
         workerExecutor.submit(Aapt2LinkRunnable::class.java) {
             it.isolationMode = IsolationMode.NONE
-            it.setParams(Aapt2LinkRunnable.Params(buildTools.revision, request))
+            it.setParams(Aapt2LinkRunnable.Params(aapt2ServiceKey, request))
         }
     }
 

@@ -128,12 +128,17 @@ open class CompileSourceSetResources
         if (requests.isEmpty()) {
             return
         }
+        val aapt2ServiceKey = registerAaptService(
+            builder.targetInfo!!.buildTools,
+            builder.logger
+        )
         for (request in requests) {
             workerExecutor.submit(Aapt2CompileRunnable::class.java) {
                 it.isolationMode = IsolationMode.NONE
                 it.setParams(Aapt2CompileRunnable.Params(
-                        revision = builder.buildToolInfo.revision,
-                        requests = listOf(request)))
+                    aapt2ServiceKey = aapt2ServiceKey,
+                    requests = listOf(request)
+                ))
             }
         }
     }

@@ -21,10 +21,11 @@ import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.res.namespaced.Aapt2LinkRunnable
+import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ExistingBuildElements
-import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
+import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.options.StringOption
@@ -128,10 +129,14 @@ open class LinkAndroidResForBundleTask
             logger.info("Aapt output file {}", bundledResFile.absolutePath)
         }
         if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+            val aapt2ServiceKey = registerAaptService(
+                builder.targetInfo!!.buildTools,
+                builder.logger
+            )
             //TODO: message rewriting.
             workerExecutor.submit(Aapt2ProcessResourcesRunnable::class.java) {
                 it.isolationMode = IsolationMode.NONE
-                it.params(Aapt2LinkRunnable.Params(buildTools.revision, config))
+                it.params(Aapt2LinkRunnable.Params(aapt2ServiceKey, config))
             }
         } else {
             makeAapt().use { aapt ->

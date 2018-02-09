@@ -33,6 +33,8 @@ import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable;
+import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
+import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -191,9 +193,11 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                             .setAndroidTarget(builder.getTarget())
                             .build();
             if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+                Aapt2ServiceKey aapt2ServiceKey =
+                        Aapt2DaemonManagerService.registerAaptService(
+                                builder.getBuildToolInfo(), builder.getLogger());
                 Aapt2ProcessResourcesRunnable.Params params =
-                        new Aapt2ProcessResourcesRunnable.Params(
-                                getBuildTools().getRevision(), aaptConfig);
+                        new Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, aaptConfig);
                 workerExecutor.submit(
                         Aapt2ProcessResourcesRunnable.class,
                         it -> {

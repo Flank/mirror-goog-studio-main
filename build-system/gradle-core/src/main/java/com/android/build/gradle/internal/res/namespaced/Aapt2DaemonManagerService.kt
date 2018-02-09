@@ -42,10 +42,11 @@ private val daemonTimeouts = Aapt2DaemonTimeouts()
 private val daemonExpiryTimeSeconds = TimeUnit.MINUTES.toSeconds(3)
 private val maintenanceIntervalSeconds = TimeUnit.MINUTES.toSeconds(1)
 
-private data class AaptServiceKey(val aapt2Version: Revision) :
-        WorkerActionServiceRegistry.ServiceKey<Aapt2DaemonManager> {
-    override val type: Class<Aapt2DaemonManager> get() = Aapt2DaemonManager::class.java
+sealed class Aapt2ServiceKey : WorkerActionServiceRegistry.ServiceKey<Aapt2DaemonManager> {
+    final override val type: Class<Aapt2DaemonManager> get() = Aapt2DaemonManager::class.java
 }
+
+private data class Aapt2SdkServiceKey(val aapt2Version: Revision) : Aapt2ServiceKey()
 
 private class RegisteredAaptService(override val service: Aapt2DaemonManager)
     : WorkerActionServiceRegistry.RegisteredService<Aapt2DaemonManager> {
@@ -57,27 +58,27 @@ private class RegisteredAaptService(override val service: Aapt2DaemonManager)
 /** Intended for use from worker actions. */
 @Throws(ProcessException::class, IOException::class)
 fun <T: Any>useAaptDaemon(
-        aapt2Version: Revision,
-        serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE,
-        block: (Aapt2DaemonManager.LeasedAaptDaemon) -> T) : T {
-    return getAaptDaemon(aapt2Version, serviceRegistry).use(block)
+    aapt2ServiceKey: Aapt2ServiceKey,
+    serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE,
+    block: (Aapt2DaemonManager.LeasedAaptDaemon) -> T) : T {
+    return getAaptDaemon(aapt2ServiceKey, serviceRegistry).use(block)
 }
 
 /** Intended for use from java worker actions. */
 @JvmOverloads
 fun getAaptDaemon(
-        aapt2Version: Revision,
-        serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE) : Aapt2DaemonManager.LeasedAaptDaemon =
-        serviceRegistry.getService(AaptServiceKey(aapt2Version)).service.leaseDaemon()
-
-
+    aapt2ServiceKey: Aapt2ServiceKey,
+    serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE) : Aapt2DaemonManager.LeasedAaptDaemon =
+    serviceRegistry.getService(aapt2ServiceKey).service.leaseDaemon()
 
 /** Registers an AAPT2 daemon manager for the given build tools, keyed from version. Idempotent. */
+@JvmOverloads
 fun registerAaptService(
         buildToolInfo: BuildToolInfo,
         logger: ILogger,
-        serviceRegistry: WorkerActionServiceRegistry) {
-    serviceRegistry.registerService(AaptServiceKey(buildToolInfo.revision), {
+        serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE): Aapt2ServiceKey {
+    val key = Aapt2SdkServiceKey(buildToolInfo.revision)
+    serviceRegistry.registerService(key, {
         val aaptExecutablePath = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT2)
         val manager = Aapt2DaemonManager(logger = logger,
                 daemonFactory = { displayId ->
@@ -92,6 +93,7 @@ fun registerAaptService(
                 listener = Aapt2DaemonManagerMaintainer())
         RegisteredAaptService(manager)
     })
+    return key
 }
 
 /**
