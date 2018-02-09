@@ -304,6 +304,11 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
     }
 
     @Override
+    public void keepattributes() {
+        // do nothing
+    }
+
+    @Override
     public void dontwarn(@NonNull String dontwarn) {
         this.addtionalLines.add("-dontwarn " + dontwarn);
     }
