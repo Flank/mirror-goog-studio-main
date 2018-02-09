@@ -242,8 +242,7 @@ public abstract class AbstractResourceRepository {
             ResourceNamespace namespace = ResourceNamespace.RES_AUTO;
             if (colon >= 0) {
                 if (colon - typeBegin == ANDROID_NS_NAME.length()
-                        && url.regionMatches(
-                                typeBegin, ANDROID_NS_NAME, 0, ANDROID_NS_NAME.length())) {
+                        && url.startsWith(ANDROID_NS_NAME, typeBegin)) {
                     namespace = ResourceNamespace.ANDROID;
                 } else {
                     // TODO: namespaces
