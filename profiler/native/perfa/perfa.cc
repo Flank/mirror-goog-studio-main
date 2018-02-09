@@ -97,22 +97,23 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                const unsigned char* class_data,
                                jint* new_class_data_len,
                                unsigned char** new_class_data) {
-  bool transformed = true;
+  // The tooling interface will specify class names like "java/net/URL"
+  // however, in .dex these classes are stored using the "Ljava/net/URL;"
+  // format.
+  std::string desc = "L" + std::string(name) + ";";
+  if (!IsRetransformClassSignature(desc.c_str())) return;
+
+  dex::Reader reader(class_data, class_data_len);
+  auto class_index = reader.FindClassIndex(desc.c_str());
+  if (class_index == dex::kNoIndex) {
+    Log::V("Could not find class index for %s", name);
+    return;
+  }
+
+  reader.CreateClassIr(class_index);
+  auto dex_ir = reader.GetIr();
+
   if (strcmp(name, "java/net/URL") == 0) {
-    dex::Reader reader(class_data, class_data_len);
-    // The tooling interface will specify class names like "java/net/URL"
-    // however, in .dex these classes are stored using the "Ljava/net/URL;"
-    // format.
-    std::string desc = "L" + std::string(name) + ";";
-    auto class_index = reader.FindClassIndex(desc.c_str());
-    if (class_index == dex::kNoIndex) {
-      Log::V("Could not find class index for %s", name);
-      return;
-    }
-
-    reader.CreateClassIr(class_index);
-    auto dex_ir = reader.GetIr();
-
     slicer::MethodInstrumenter mi(dex_ir);
     mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/network/httpurl/HttpURLWrapper;",
@@ -121,28 +122,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                           "()Ljava/net/URLConnection;"))) {
       Log::E("Error instrumenting URL.openConnection");
     }
-
-    size_t new_image_size = 0;
-    dex::u1* new_image = nullptr;
-    dex::Writer writer(dex_ir);
-
-    JvmtiAllocator allocator(jvmti_env);
-    new_image = writer.CreateImage(&allocator, &new_image_size);
-
-    *new_class_data_len = new_image_size;
-    *new_class_data = new_image;
   } else if (strcmp(name, "okhttp3/OkHttpClient") == 0) {
-    dex::Reader reader(class_data, class_data_len);
-    std::string desc = "L" + std::string(name) + ";";
-    auto class_index = reader.FindClassIndex(desc.c_str());
-    if (class_index == dex::kNoIndex) {
-      Log::V("Could not find class index for %s", name);
-      return;
-    }
-
-    reader.CreateClassIr(class_index);
-    auto dex_ir = reader.GetIr();
-
     slicer::MethodInstrumenter mi(dex_ir);
     // Add Entry hook method with this argument passed as type Object.
     mi.AddTransformation<slicer::EntryHook>(
@@ -157,28 +137,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                           "()Ljava/util/List;"))) {
       Log::E("Error instrumenting OkHttp3 OkHttpClient");
     }
-
-    size_t new_image_size = 0;
-    dex::u1* new_image = nullptr;
-    dex::Writer writer(dex_ir);
-
-    JvmtiAllocator allocator(jvmti_env);
-    new_image = writer.CreateImage(&allocator, &new_image_size);
-
-    *new_class_data_len = new_image_size;
-    *new_class_data = new_image;
   } else if (strcmp(name, "com/squareup/okhttp/OkHttpClient") == 0) {
-    dex::Reader reader(class_data, class_data_len);
-    std::string desc = "L" + std::string(name) + ";";
-    auto class_index = reader.FindClassIndex(desc.c_str());
-    if (class_index == dex::kNoIndex) {
-      Log::V("Could not find class index for %s", name);
-      return;
-    }
-
-    reader.CreateClassIr(class_index);
-    auto dex_ir = reader.GetIr();
-
     slicer::MethodInstrumenter mi(dex_ir);
     // Add Entry hook method with this argument passed as type Object.
     mi.AddTransformation<slicer::EntryHook>(
@@ -193,28 +152,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                           "()Ljava/util/List;"))) {
       Log::E("Error instrumenting OkHttp2 OkHttpClient");
     }
-
-    size_t new_image_size = 0;
-    dex::u1* new_image = nullptr;
-    dex::Writer writer(dex_ir);
-
-    JvmtiAllocator allocator(jvmti_env);
-    new_image = writer.CreateImage(&allocator, &new_image_size);
-
-    *new_class_data_len = new_image_size;
-    *new_class_data = new_image;
   } else if (strcmp(name, "android/os/PowerManager$WakeLock") == 0) {
-    dex::Reader reader(class_data, class_data_len);
-    std::string desc = "L" + std::string(name) + ";";
-    auto class_index = reader.FindClassIndex(desc.c_str());
-    if (class_index == dex::kNoIndex) {
-      Log::V("Could not find class index for %s", name);
-      return;
-    }
-
-    reader.CreateClassIr(class_index);
-    auto dex_ir = reader.GetIr();
-
     // Instrument acquire() and acquire(long).
     slicer::MethodInstrumenter mi_acq(dex_ir);
     mi_acq.AddTransformation<slicer::EntryHook>(ir::MethodId(
@@ -238,23 +176,21 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
             ir::MethodId(desc.c_str(), "release", "(I)V"))) {
       Log::E("Error instrumenting WakeLock.release");
     }
-
-    size_t new_image_size = 0;
-    dex::u1* new_image = nullptr;
-    dex::Writer writer(dex_ir);
-
-    JvmtiAllocator allocator(jvmti_env);
-    new_image = writer.CreateImage(&allocator, &new_image_size);
-
-    *new_class_data_len = new_image_size;
-    *new_class_data = new_image;
   } else {
-    transformed = false;
+    Log::V("No transformation applied for class: %s", name);
+    return;
   }
 
-  if (transformed) {
-    Log::V("Transformed class: %s", name);
-  }
+  size_t new_image_size = 0;
+  dex::u1* new_image = nullptr;
+  dex::Writer writer(dex_ir);
+
+  JvmtiAllocator allocator(jvmti_env);
+  new_image = writer.CreateImage(&allocator, &new_image_size);
+
+  *new_class_data_len = new_image_size;
+  *new_class_data = new_image;
+  Log::V("Transformed class: %s", name);
 }
 
 void BindJNIMethod(JNIEnv* jni, const char* class_name, const char* method_name,
