@@ -266,6 +266,28 @@ Status ProfilerServiceImpl::TryAttachAppAgent(
   }
 }
 
+Status ProfilerServiceImpl::ConfigureStartupAgent(
+    ServerContext* context, const profiler::proto::ConfigureStartupAgentRequest* request,
+    profiler::proto::ConfigureStartupAgentResponse* response) {
+  string package_name = request->app_package_name();
+  string agent_lib_file_name = request->agent_lib_file_name();
+
+  CopyFileToPackageFolder(package_name, kAgentJarFileName);
+  CopyFileToPackageFolder(package_name, agent_lib_file_name);
+
+  PackageManager package_manager;
+  string data_path;
+  string error;
+  string config_path = config_.GetConfigFilePath();
+
+  string agent_args = "";
+  if (package_manager.GetAppDataPath(package_name, &data_path, &error)) {
+    agent_args.append(data_path).append("/").append(agent_lib_file_name).append("=").append(config_path);
+  }
+  response->set_agent_args(agent_args);
+  return Status::OK;
+}
+
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {

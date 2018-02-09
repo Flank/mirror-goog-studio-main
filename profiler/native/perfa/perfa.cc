@@ -510,14 +510,19 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   }
   jvmti_env->Deallocate(reinterpret_cast<unsigned char*>(loaded_classes));
 
-  MemoryTrackingEnv::Instance(
-      vm, agent_config.mem_config().use_live_alloc(),
-      agent_config.mem_config().max_stack_depth(),
-      agent_config.mem_config().track_global_jni_refs());
-
-  // Perf-test currently waits on this message to determine the attach process
-  // is completed.
-  Log::V("StudioProfilers agent attached.");
+  Agent::Instance().AddPerfdConnectedCallback([agent_config, vm] {
+    // MemoryTackingEnv needs a connection to perfd, which may not be always the
+    // case. If we don't postpone until there is a connection, MemoryTackingEnv
+    // is going to busy-wait, so not allowing the application to finish
+    // initialization. This callback will be called each time perfd connects.
+    MemoryTrackingEnv::Instance(
+        vm, agent_config.mem_config().use_live_alloc(),
+        agent_config.mem_config().max_stack_depth(),
+        agent_config.mem_config().track_global_jni_refs());
+    // Perf-test currently waits on this message to determine that perfa is
+    // connected to perfd.
+    Log::V("Perfa connected to Perfd.");
+  });
 
   return JNI_OK;
 }

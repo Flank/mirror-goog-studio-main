@@ -52,6 +52,12 @@ service ProfilerService {
   rpc GetAgentStatus(AgentStatusRequest) returns (AgentStatusResponse) {
   }
 
+  // Makes all necessary configurations needed for attaching agent on startup.
+  // Returns |agent_args| to be used with the application launch command,
+  // e.g "am start --attach-agent |agent_args|".
+  rpc ConfigureStartupAgent(ConfigureStartupAgentRequest) returns (ConfigureStartupAgentResponse) {
+  }
+
   // Start a new session. As a side effect, this also starts all profilers for
   // the PID being targeted by this session.
   // If a session with the same PID is already running, this method will
@@ -122,6 +128,16 @@ message GetProcessesRequest {
 
 message GetProcessesResponse {
   repeated Process process = 2;
+}
+
+message ConfigureStartupAgentRequest {
+  string app_package_name = 1;
+  string agent_lib_file_name = 2;
+  int64 device_id = 3;
+}
+
+message ConfigureStartupAgentResponse {
+  string agent_args = 1;
 }
 
 message BeginSessionRequest {

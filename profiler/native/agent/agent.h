@@ -98,6 +98,10 @@ class Agent {
 
   void AddPerfdStatusChangedCallback(PerfdStatusChanged callback);
 
+  // Callback for everytime perfd is reconnected to perfa.
+  // (e.g. Studio restarts within the duration of the same app instance)
+  void AddPerfdConnectedCallback(std::function<void()> callback);
+
  private:
   static constexpr int64_t kHeartBeatIntervalNs = Clock::ms_to_ns(250);
 
@@ -165,6 +169,8 @@ class Agent {
   std::mutex callback_mutex_;
   std::list<PerfdStatusChanged> perfd_status_changed_callbacks_;
 
+  std::mutex perfd_connected_mutex_;
+  std::vector<std::function<void()>> perfd_connected_callbacks_;
   // Used for |RunHeartbeatThread|
   std::thread heartbeat_thread_;
   // O+ only - Used for |RunSocketThread|

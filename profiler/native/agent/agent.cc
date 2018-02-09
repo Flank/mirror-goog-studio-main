@@ -141,7 +141,7 @@ void Agent::SubmitEventTasks(const std::vector<EventServiceTask>& tasks) {
   });
 }
 
-void Agent::SubmitEnergyTasks(const std::vector <EnergyServiceTask>& tasks) {
+void Agent::SubmitEnergyTasks(const std::vector<EnergyServiceTask>& tasks) {
   background_queue_.EnqueueTask([this, tasks] {
     for (auto task : tasks) {
       if (can_grpc_target_change_) {
@@ -212,6 +212,15 @@ MemoryComponent& Agent::memory_component() {
 void Agent::AddPerfdStatusChangedCallback(PerfdStatusChanged callback) {
   lock_guard<std::mutex> guard(callback_mutex_);
   perfd_status_changed_callbacks_.push_back(callback);
+}
+
+void Agent::AddPerfdConnectedCallback(std::function<void()> callback) {
+  lock_guard<std::mutex> connect_guard(connect_mutex_);
+  if (grpc_target_initialized_) {
+    background_queue_.EnqueueTask([callback] { callback(); });
+  }
+  lock_guard<std::mutex> perfd_connected_guard(perfd_connected_mutex_);
+  perfd_connected_callbacks_.push_back(callback);
 }
 
 void Agent::RunHeartbeatThread() {
@@ -332,6 +341,12 @@ void Agent::ConnectToPerfd(const std::string& target) {
     // all tasks that have been called once everything has been initialized
     // the first time.
     connect_cv_.notify_all();
+    background_queue_.EnqueueTask([this] {
+      lock_guard<std::mutex> guard(perfd_connected_mutex_);
+      for (auto callback : perfd_connected_callbacks_) {
+        callback();
+      }
+    });
   }
 }
 

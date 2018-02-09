@@ -62,6 +62,10 @@ class ProfilerServiceImpl final
       const profiler::proto::GetDevicesRequest* request,
       profiler::proto::GetDevicesResponse* response) override;
 
+  grpc::Status ConfigureStartupAgent(
+    grpc::ServerContext* context, const profiler::proto::ConfigureStartupAgentRequest* request,
+    profiler::proto::ConfigureStartupAgentResponse* response) override;
+
   grpc::Status BeginSession(
       grpc::ServerContext* context,
       const profiler::proto::BeginSessionRequest* request,

@@ -107,7 +107,7 @@ public class GrpcUtils {
                                         .build());
         myProfilerServiceStub.beginSession(requestBuilder.build());
         // Block until we can verify the agent was fully attached.
-        assertThat(myMockApp.waitForInput("StudioProfilers agent attached.")).isTrue();
+        assertThat(myMockApp.waitForInput("Perfa connected to Perfd.")).isTrue();
 
         return session;
     }
