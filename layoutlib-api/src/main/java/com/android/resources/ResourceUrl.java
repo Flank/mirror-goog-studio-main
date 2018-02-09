@@ -25,6 +25,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
+import com.android.utils.HashCodes;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -307,6 +308,7 @@ public class ResourceUrl implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, name, namespace, framework, create, theme);
+        return HashCodes.mix(type.hashCode(), Objects.hashCode(name), Objects.hashCode(namespace),
+                Boolean.hashCode(framework), Boolean.hashCode(create), Boolean.hashCode(theme));
     }
 }
