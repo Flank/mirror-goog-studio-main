@@ -140,9 +140,9 @@ public class ResourceUrl implements Serializable {
                                 + url.substring(SdkConstants.PREFIX_THEME_REF.length());
             } else {
                 int colon = url.indexOf(':');
-                if (colon != -1) {
+                if (colon >= 0) {
                     // Convert from ?android:progressBarStyleBig to ?android:attr/progressBarStyleBig
-                    if (remainder.indexOf('/', colon) == -1) {
+                    if (remainder.indexOf('/', colon) < 0) {
                         remainder =
                                 remainder.substring(0, colon)
                                         + SdkConstants.RESOURCE_CLZ_ATTR
@@ -152,7 +152,7 @@ public class ResourceUrl implements Serializable {
                     url = SdkConstants.PREFIX_RESOURCE_REF + remainder;
                 } else {
                     int slash = url.indexOf('/');
-                    if (slash == -1) {
+                    if (slash < 0) {
                         url =
                                 SdkConstants.PREFIX_RESOURCE_REF
                                         + SdkConstants.RESOURCE_CLZ_ATTR
@@ -168,7 +168,7 @@ public class ResourceUrl implements Serializable {
         }
 
         int typeEnd = url.indexOf('/', 1);
-        if (typeEnd == -1) {
+        if (typeEnd < 0) {
             return null;
         }
         int nameBegin = typeEnd + 1;
@@ -180,8 +180,9 @@ public class ResourceUrl implements Serializable {
         int colon = url.lastIndexOf(':', typeEnd);
         boolean framework = forceFramework;
         String namespace = forceFramework ? SdkConstants.ANDROID_NS_NAME : null;
-        if (colon != -1) {
-            if (url.startsWith(SdkConstants.ANDROID_NS_NAME, typeBegin)) {
+        if (colon >= 0) {
+            if (colon - typeBegin == SdkConstants.ANDROID_NS_NAME.length()
+                    && url.startsWith(SdkConstants.ANDROID_NS_NAME, typeBegin)) {
                 framework = true;
                 namespace = SdkConstants.ANDROID_NS_NAME;
             } else {
