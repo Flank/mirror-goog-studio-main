@@ -16,13 +16,28 @@
 
 package com.android.build.gradle;
 
+import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import javax.inject.Inject;
+import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on the base application module */
 public class AppPlugin extends AbstractAppPlugin {
     @Inject
     public AppPlugin(ToolingModelBuilderRegistry registry) {
-        super(registry, true);
+        super(registry, true /*isBaseApplication*/);
+    }
+
+    @Override
+    public void apply(@NonNull Project project) {
+        super.apply(project);
+
+        // create the configuration used to declare the feature split in the base split.
+        Configuration featureSplit =
+                project.getConfigurations().maybeCreate(VariantDependencies.CONFIG_NAME_FEATURE);
+        featureSplit.setCanBeConsumed(false);
+        featureSplit.setCanBeResolved(false);
     }
 }

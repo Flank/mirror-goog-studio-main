@@ -350,11 +350,10 @@ public class VariantDependencies {
                 // apiElements only extends the api classpaths.
                 apiElements.setExtendsFrom(apiClasspaths);
 
-                if (variantType != VariantType.LIBRARY) {
-                    // FIXME: we should create this configuration unconditionally. This is a quick
-                    // workaround so we don't end up with ambiguous resolution between feature
-                    // and libraries. This is fine for now as libraries do not publish anything
-                    // there.
+                if (variantType == VariantType.APK
+                        || (variantType == VariantType.FEATURE && !baseSplit)) {
+                    // Variant-specific metadata publishing configuration. Only published to by app
+                    // modules and non-base feature modules.
 
                     metadataElements = configurations.maybeCreate(variantName + "MetadataElements");
                     metadataElements.setDescription("Metadata elements for " + variantName);
@@ -375,9 +374,11 @@ public class VariantDependencies {
                     // right attribute. It'll be used to get the applicationId and to consume
                     // the manifest.
                     metadataValues = configurations.maybeCreate(variantName + "MetadataValues");
-                    metadataValues.extendsFrom(
-                            configurations.getByName(CONFIG_NAME_FEATURE),
-                            configurations.getByName(CONFIG_NAME_APPLICATION));
+                    metadataValues.extendsFrom(configurations.getByName(CONFIG_NAME_FEATURE));
+                    if (variantType == VariantType.FEATURE) {
+                        metadataValues.extendsFrom(
+                                configurations.getByName(CONFIG_NAME_APPLICATION));
+                    }
                     metadataValues.setDescription(
                             "Metadata Values dependencies for the base Split");
                     metadataValues.setCanBeConsumed(false);

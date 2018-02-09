@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.dsl.extensions.AppExtensionImpl;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
@@ -42,7 +41,6 @@ import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects. */
@@ -123,19 +121,6 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
     @Override
     public void apply(@NonNull Project project) {
         super.apply(project);
-
-        // create the configuration used to declare the feature split in the base split.
-        Configuration featureSplit =
-                project.getConfigurations().maybeCreate(VariantDependencies.CONFIG_NAME_FEATURE);
-        featureSplit.setCanBeConsumed(false);
-        featureSplit.setCanBeResolved(false);
-
-        // create the configuration used to declare the application id to the base feature.
-        Configuration application =
-                project.getConfigurations()
-                        .maybeCreate(VariantDependencies.CONFIG_NAME_APPLICATION);
-        application.setCanBeConsumed(false);
-        application.setCanBeResolved(false);
     }
 
     @NonNull

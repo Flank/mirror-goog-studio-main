@@ -427,7 +427,8 @@ public class JarContentsTest {
                 "META-INF/gradle-plugins/com.android.library.properties",
                 "META-INF/gradle-plugins/com.android.lint.properties",
                 "META-INF/gradle-plugins/com.android.test.properties",
-                "META-INF/gradle-plugins/com.android.bundle.properties");
+                "META-INF/gradle-plugins/com.android.bundle.properties",
+                "META-INF/gradle-plugins/com.android.dynamic-feature.properties");
         expected.putAll(
                 "com/android/tools/build/apksig",
                 "com/",
