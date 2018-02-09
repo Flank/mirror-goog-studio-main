@@ -78,6 +78,9 @@ std::string GraphicsFrameStatsSampler::GetDumpsysCommand(
     // and will only be monitored if it is present on the screen.
     cmd.append(" - ").append(app_and_activity_name);
   }
+  if (sdk >= 26) {
+    cmd.append("#0");
+  }
   return cmd.append("\"");
 }
 
