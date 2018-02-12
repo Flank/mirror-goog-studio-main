@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources.configuration;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -29,7 +28,6 @@ import com.android.resources.UiMode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +36,6 @@ import java.util.List;
 import junit.framework.TestCase;
 
 public class FolderConfigurationTest extends TestCase {
-
     /*
      * Test createDefault creates all the qualifiers.
      */
@@ -252,7 +249,6 @@ public class FolderConfigurationTest extends TestCase {
     }
 
     public void testDensityQualifier() {
-
         // test find correct density
         runConfigMatchTest("hdpi", 2,
                 "ldpi",
@@ -314,7 +310,6 @@ public class FolderConfigurationTest extends TestCase {
     // --- helper methods
 
     private static final class MockConfigurable implements Configurable {
-
         private final FolderConfiguration mConfig;
 
         MockConfigurable(String config) {
@@ -343,7 +338,7 @@ public class FolderConfigurationTest extends TestCase {
     }
 
     private static List<Configurable> getConfigurable(String... configs) {
-        ArrayList<Configurable> list = new ArrayList<Configurable>();
+        ArrayList<Configurable> list = new ArrayList<>();
 
         for (String config : configs) {
             list.add(new MockConfigurable(config));
@@ -357,7 +352,7 @@ public class FolderConfigurationTest extends TestCase {
     }
 
     public void testSort1() {
-        List<FolderConfiguration> configs = Lists.newArrayList();
+        List<FolderConfiguration> configs = new ArrayList<>();
         FolderConfiguration f1 = FolderConfiguration.getConfigForFolder("values-hdpi");
         FolderConfiguration f2 = FolderConfiguration.getConfigForFolder("values-v11");
         FolderConfiguration f3 = FolderConfiguration.getConfigForFolder("values-sp");
@@ -374,7 +369,7 @@ public class FolderConfigurationTest extends TestCase {
     public void testSort2() {
         // Test case from
         // http://developer.android.com/guide/topics/resources/providing-resources.html#BestMatch
-        List<FolderConfiguration> configs = Lists.newArrayList();
+        List<FolderConfiguration> configs = new ArrayList<>();
         for (String name : new String[] {
                 "drawable",
                 "drawable-en",
@@ -392,18 +387,17 @@ public class FolderConfigurationTest extends TestCase {
         Collections.reverse(configs);
         //assertEquals("", configs.get(0).toDisplayString());
 
-        List<String> strings = Lists.newArrayList();
+        List<String> strings = new ArrayList<>();
         for (FolderConfiguration config : configs) {
-            strings.add(config.getUniqueKey());
+            strings.add(config.getQualifierString());
         }
-        assertEquals("-fr-rCA,-en-port,-en-notouch-12key,-en,-port-ldpi,-port-notouch-12key,",
+        assertEquals("fr-rCA,en-port,en-notouch-12key,en,port-ldpi,port-notouch-12key,",
                 Joiner.on(",").skipNulls().join(strings));
-
     }
 
-    private void doTestNormalize(int expectedVersion, String... segments) {
-        FolderConfiguration configForFolder = FolderConfiguration.getConfigFromQualifiers(
-                Arrays.asList(segments));
+    private static void doTestNormalize(int expectedVersion, String... segments) {
+        FolderConfiguration configForFolder =
+                FolderConfiguration.getConfigFromQualifiers(Arrays.asList(segments));
 
         assertNotNull(configForFolder);
 
@@ -411,7 +405,6 @@ public class FolderConfigurationTest extends TestCase {
         VersionQualifier versionQualifier = configForFolder.getVersionQualifier();
         assertNotNull(versionQualifier);
         assertEquals(expectedVersion, versionQualifier.getVersion());
-
     }
 
     public void testCarModeAndLanguage() {
@@ -500,24 +493,24 @@ public class FolderConfigurationTest extends TestCase {
         FolderConfiguration configDe = itemDe.getConfiguration();
 
         // "" matches everything
-        assertEquals(Arrays.<Configurable>asList(itemBlank, itemBcpEn, itemEn, itemDe),
+        assertEquals(Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe),
                 configBlank.findMatchingConfigurables(
                         Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)));
 
         // "de" matches only "" and "de"
-        assertEquals(Arrays.<Configurable>asList(itemBlank, itemDe),
+        assertEquals(Arrays.asList(itemBlank, itemDe),
                 configDe.findMatchingConfigurables(
                         Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)));
 
         // "en" matches "en" and "b+en"
         assertTrue(configEn.isMatchFor(configBcpEn));
         assertTrue(configBcpEn.isMatchFor(configEn));
-        assertEquals(Arrays.<Configurable>asList(itemBcpEn, itemEn),
+        assertEquals(Arrays.asList(itemBcpEn, itemEn),
                 configEn.findMatchingConfigurables(
                         Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)));
 
         // "b+en" matches "en and "b+en"
-        assertEquals(Arrays.<Configurable>asList(itemBcpEn, itemEn),
+        assertEquals(Arrays.asList(itemBcpEn, itemEn),
                 configBcpEn.findMatchingConfigurables(
                         Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)));
     }
