@@ -470,7 +470,7 @@ public class SigningTest {
     @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     public void failWithMissingKeyPassword() throws Exception {
         TestFileUtils.searchAndReplace(
-                project.getBuildFile(), "keyPassword '" + KEY_PASSWORD + "'\n", "");
+                project.getBuildFile(), "keyPassword '" + KEY_PASSWORD + "'", "");
         project.executeExpectingFailure("assembleDebug");
     }
 }
