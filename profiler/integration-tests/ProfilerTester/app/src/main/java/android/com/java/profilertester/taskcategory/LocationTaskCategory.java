@@ -14,6 +14,8 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -74,12 +76,15 @@ public final class LocationTaskCategory extends TaskCategory {
                 return "Could not acquire both coarse and fine location permission!";
             }
 
-            final AtomicInteger locationChangedCount = new AtomicInteger(0);
+            final List<Location> locations = new ArrayList<>();
+            final List<Long> times = new ArrayList<>();
+            long startTime = System.currentTimeMillis();
             LocationListener locationListener =
                     new LocationListener() {
                         @Override
                         public void onLocationChanged(Location location) {
-                            locationChangedCount.incrementAndGet();
+                            times.add(System.currentTimeMillis());
+                            locations.add(location);
                         }
 
                         @Override
@@ -94,7 +99,7 @@ public final class LocationTaskCategory extends TaskCategory {
             manager.requestLocationUpdates(getProvider(), 0, 0, locationListener, mLooper);
 
             try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+                Thread.sleep(TimeUnit.SECONDS.toMillis(30));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return getName() + " update interrupted!";
@@ -103,8 +108,10 @@ public final class LocationTaskCategory extends TaskCategory {
             }
             return getName()
                     + " update completed, changed "
-                    + locationChangedCount.get()
-                    + " times.";
+                    + locations.size()
+                    + " times"
+                    + (times.size() > 0 ? ", last one at " + (times.get(times.size() - 1) - startTime) : "")
+                    + ".";
         }
 
         @NonNull
