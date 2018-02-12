@@ -285,7 +285,7 @@ public class OverdrawDetector extends LayoutDetector implements SourceCodeScanne
             }
 
             Location location = context.getLocation(attribute);
-            location.setClientData(attribute);
+            location.setData(attribute);
             if (rootAttributes == null) {
                 rootAttributes = new ArrayList<>();
             }
