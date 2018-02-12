@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.tools.build.apkzlib.zip.ZFile
+import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolJavaType
 import com.android.ide.common.symbols.SymbolTable
 import com.android.resources.ResourceType
 import com.android.testutils.TestResources
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
@@ -134,10 +135,38 @@ class NamespaceRewriterTest {
             .add(symbol("string", "s2"))
             .add(symbol("string", "s3"))
             .build()
+        val secondDependencyTable = SymbolTable.builder()
+            .tablePackage("com.example.libA")
+            .add(symbol("string", "s2"))
+            .build()
+        val thirdDependencyTable = SymbolTable.builder()
+            .tablePackage("com.example.libB")
+            .add(symbol("string", "s1"))
+            .add(symbol("string", "s2"))
+            .build()
 
+        val logger = MockLogger()
         // Just override the existing file as we compile them per test.
-        NamespaceRewriter(ImmutableList.of(moduleTable, dependencyTable))
+        NamespaceRewriter(
+                ImmutableList.of(
+                        moduleTable,
+                        dependencyTable,
+                        secondDependencyTable,
+                        thirdDependencyTable
+                ),
+                logger
+        )
             .rewriteClass(testClass.toPath(), testClass.toPath())
+
+        assertThat(logger.messages).hasSize(2)
+        assertThat(logger.messages[0]).contains(
+                "In package com.example.mymodule multiple options found in its dependencies for " +
+                        "resource string s1. Using com.example.mymodule, other available: " +
+                        "com.example.libB")
+        assertThat(logger.messages[1]).contains(
+                "In package com.example.mymodule multiple options found in its dependencies for " +
+                        "resource string s2. Using com.example.dependency, other available: " +
+                        "com.example.libA, com.example.libB")
 
         val urls = arrayOf(javacOutput.toURI().toURL())
         URLClassLoader(urls, null).use { classLoader ->
@@ -152,12 +181,14 @@ class NamespaceRewriterTest {
     @Test
     fun exceptionOnMissingResources() {
         val e = assertFailsWith<IllegalStateException> {
-            NamespaceRewriter(ImmutableList.of()).rewriteClass(
+            val symbols = SymbolTable.builder().tablePackage("my.example.lib").build()
+            NamespaceRewriter(ImmutableList.of(symbols)).rewriteClass(
                     testClass.toPath(),
                     testClass.toPath()
             )
         }
-        assertThat(e.message).contains("Unknown symbol of type string and name s1.")
+        assertThat(e.message).contains(
+                "In package my.example.lib found unknown symbol of type string and name s1.")
     }
 
     @Test
@@ -214,5 +245,13 @@ class NamespaceRewriterTest {
             value = "{}"
         }
         return Symbol.createSymbol(resType, name, javaType, value)
+    }
+
+    private class MockLogger : FakeLogger() {
+        val messages = ArrayList<String>()
+
+        override fun warn(p0: String?) {
+            messages.add(p0!!)
+        }
     }
 }

@@ -20,7 +20,10 @@ import com.android.ide.common.symbols.SymbolTable
 import com.android.resources.ResourceType
 import com.android.tools.build.apkzlib.zip.StoredEntryType
 import com.android.tools.build.apkzlib.zip.ZFile
+import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
@@ -40,7 +43,10 @@ import java.util.HashSet
  *      order matters, the closest modules are at the front, the furthest are at the end. The first
  *      symbol table should be for the module from which the transformed classes come from.
  */
-class NamespaceRewriter(private val symbolTables: ImmutableList<SymbolTable>) {
+class NamespaceRewriter(
+    private val symbolTables: ImmutableList<SymbolTable>,
+    private val logger: Logger = Logging.getLogger(NamespaceRewriter::class.java)
+) {
 
     fun rewriteClass(clazz: Path, output: Path) {
         // First read the class and re-write the R class resource references.
@@ -51,7 +57,7 @@ class NamespaceRewriter(private val symbolTables: ImmutableList<SymbolTable>) {
 
     fun rewriteClass(originalClass: ByteArray) : ByteArray {
         val cw = ClassWriter(0)
-        val crw = ClassReWriter(ASM5, cw, symbolTables)
+        val crw = ClassReWriter(ASM5, cw, symbolTables, logger)
         val cr = ClassReader(originalClass)
         cr.accept(crw, 0)
         // Write inner R classes references.
@@ -82,7 +88,8 @@ class NamespaceRewriter(private val symbolTables: ImmutableList<SymbolTable>) {
     private class ClassReWriter internal constructor(
         api: Int,
         cv: ClassVisitor?,
-        val symbolTables: ImmutableList<SymbolTable>
+        private val symbolTables: ImmutableList<SymbolTable>,
+        private val logger: Logger
     ) : ClassVisitor(api, cv) {
 
         private val innerClasses = HashSet<String>()
@@ -134,14 +141,37 @@ class NamespaceRewriter(private val symbolTables: ImmutableList<SymbolTable>) {
          * name.
          */
         fun findPackage(type: String, name: String): String {
+            var packages:ArrayList<String>? = null
+            var result:String? = null
+
             // Go through R.txt files and find the proper package.
             for (table in symbolTables) {
                 if (table.symbols.contains(ResourceType.getEnum(type), name)) {
-                    return table.tablePackage
+                    if (result == null) {
+                        result = table.tablePackage
+                    }
+                    else {
+                        if (packages == null) {
+                            packages = ArrayList()
+                        }
+                        packages.add(table.tablePackage)
+                    }
                 }
             }
-            // Error out if we cannot find the symbol.
-            error("Unknown symbol of type $type and name $name.")
+            if (result == null) {
+                // Error out if we cannot find the symbol.
+                error("In package ${symbolTables[0].tablePackage} found unknown symbol of type " +
+                                "$type and name $name.")
+            }
+            if (packages != null && !packages.isEmpty()) {
+                // If we have found more than one fitting package, log a warning about which one we
+                // chose (the closest one in the dependencies graph).
+                logger.warn("In package ${symbolTables[0].tablePackage} multiple options found " +
+                        "in its dependencies for resource $type $name. " +
+                        "Using $result, other available: ${Joiner.on(", ").join(packages)}")
+            }
+            // Return the first found reference.
+            return result
         }
 
         fun addInnerClass(innerClass: String) {
