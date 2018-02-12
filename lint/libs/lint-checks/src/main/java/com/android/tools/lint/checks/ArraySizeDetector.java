@@ -270,7 +270,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                         return;
                     }
                     Location location = context.getLocation(element);
-                    location.setClientData(element);
+                    location.setData(element);
                     location.setMessage(String.format("Declaration with array size (%1$d)",
                                     LintUtils.getChildCount(element)));
                     location.setSecondary(mLocations.get(name));
