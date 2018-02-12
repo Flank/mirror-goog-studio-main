@@ -68,6 +68,8 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
   return (strcmp(sig_mutf8, "Ljava/net/URL;") == 0) ||
          (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
          (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0) ||
+         (strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 &&
+          energy_profiler_enabled) ||
          (strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0 &&
           energy_profiler_enabled);
 }
@@ -151,6 +153,19 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "networkInterceptors",
                                           "()Ljava/util/List;"))) {
       Log::E("Error instrumenting OkHttp2 OkHttpClient");
+    }
+  } else if (strcmp(name, "android/os/PowerManager") == 0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
+        "onNewWakeLockEntry"));
+    mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
+        "onNewWakeLockExit"));
+    if (!mi.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "newWakeLock",
+            "(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;"))) {
+      Log::E("Error instrumenting PowerManager.newWakeLock");
     }
   } else if (strcmp(name, "android/os/PowerManager$WakeLock") == 0) {
     // Instrument acquire() and acquire(long).
