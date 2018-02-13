@@ -290,7 +290,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                                             .equals(SdkConstants.ANDROID_MANIFEST_XML)) {
                                 listBuilder.add(
                                         PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
-                                                        manifest)
+                                                        manifest,
+                                                        () -> getProject().getState().getExecuted())
                                                 .toString());
                             }
                         });
@@ -651,10 +652,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         // these manifest files.
                         .withNativeLibraryPackagingMode(
                                 PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
-                                        manifestForSplit.getOutputFile()))
+                                        manifestForSplit.getOutputFile(),
+                                        () -> getProject().getState().getExecuted()))
                         .withNoCompressPredicate(
                                 PackagingUtils.getNoCompressPredicate(
-                                        aaptOptionsNoCompress, manifestForSplit.getOutputFile()))
+                                        aaptOptionsNoCompress,
+                                        manifestForSplit.getOutputFile(),
+                                        () -> getProject().getState().getExecuted()))
                         .withIntermediateDir(incrementalDirForSplit)
                         .withProject(getProject())
                         .withDebuggableBuild(getDebugBuild())

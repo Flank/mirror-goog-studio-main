@@ -354,7 +354,10 @@ public class IncrementalPackagerBuilder {
         if (noCompressPredicate == null) {
             if (manifest != null) {
                 noCompressPredicate =
-                        PackagingUtils.getNoCompressPredicate(aaptOptionsNoCompress, manifest);
+                        PackagingUtils.getNoCompressPredicate(
+                                aaptOptionsNoCompress,
+                                manifest,
+                                () -> project.getState().getExecuted());
             } else {
                 noCompressPredicate = path -> false;
             }
@@ -363,7 +366,8 @@ public class IncrementalPackagerBuilder {
         if (nativeLibrariesPackagingMode == null) {
             if (manifest != null) {
                 nativeLibrariesPackagingMode =
-                        PackagingUtils.getNativeLibrariesLibrariesPackagingMode(manifest);
+                        PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
+                                manifest, () -> project.getState().getExecuted());
             } else {
                 nativeLibrariesPackagingMode = NativeLibrariesPackagingMode.COMPRESSED;
             }
