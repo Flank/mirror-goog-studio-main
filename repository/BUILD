@@ -1,3 +1,4 @@
+load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
@@ -23,18 +24,29 @@ iml_module(
     ],
 )
 
-kotlin_library(
-    name = "tools.repository",
+fileset(
+    name = "tools.resources",
     # TODO: Why are the xml files not under resources?
-    srcs = ["src/main/java"],
-    pom = ":pom",
-    resources = glob(
-        include = ["src/main/java/**"],
+    srcs = glob(
+        include = [
+            "src/main/java/**",
+        ],
         exclude = [
-            "src/main/java/**/*.java",
-            "src/main/java/**/*.kt",
+            "**/*.java",
+            "**/*.kt",
         ],
     ),
+    mappings = {
+        "src/main/java/": "",
+    },
+)
+
+kotlin_library(
+    name = "tools.repository",
+    srcs = ["src/main/java"],
+    pom = ":pom",
+    resource_strip_prefix = "tools/base/repository",
+    resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     # TODO: Why is MockFileOp in main sources?
     deps = [

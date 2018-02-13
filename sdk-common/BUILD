@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
@@ -49,6 +50,14 @@ iml_module(
     ],
 )
 
+fileset(
+    name = "tools.resources",
+    srcs = glob(["src/main/resources/**"]),
+    mappings = {
+        "src/main/resources/": "",
+    },
+)
+
 kotlin_library(
     name = "tools.sdk-common",
     srcs = ["src/main/java"],
@@ -59,7 +68,8 @@ kotlin_library(
         "//tools/base:auto-value-plugin",
     ],
     pom = ":pom",
-    resources = glob(["src/main/resources/**"]),
+    resource_strip_prefix = "tools/base/sdk-common",
+    resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base:com.google.auto.value_auto-value_neverlink",

@@ -35,6 +35,7 @@ maven_java_library(
     srcs = glob(["src/main/java/**"]),
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     pom = ":pom",
+    resource_strip_prefix = "tools/base/ddmlib",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

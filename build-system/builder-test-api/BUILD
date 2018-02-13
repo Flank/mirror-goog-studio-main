@@ -23,6 +23,7 @@ maven_java_library(
     name = "tools.builder-test-api",
     srcs = glob(["src/main/java/**"]),
     pom = ":builder-test-api.pom",
+    resource_strip_prefix = "tools/base/build-system/builder-test-api",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

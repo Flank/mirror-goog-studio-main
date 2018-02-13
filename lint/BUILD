@@ -45,13 +45,14 @@ kotlin_library(
     # TODO: move resources out of java?
     srcs = ["libs/lint-api/src/main/java"],
     pom = "lint-api.pom",
+    resource_strip_prefix = "tools/base/lint/libs/lint-api",
     resources = glob(
         include = ["libs/lint-api/src/main/java/**"],
         exclude = [
             "libs/lint-api/src/main/java/**/*.java",
             "libs/lint-api/src/main/java/**/*.kt",
         ],
-    ),
+    ) + ["libs/lint-api/NOTICE"],
     visibility = ["//visibility:public"],
     deps = [
         ":tools.lint-kotlin",
@@ -99,13 +100,14 @@ kotlin_library(
     # TODO: move resources out of java?
     srcs = ["libs/lint-checks/src/main/java"],
     pom = "lint-checks.pom",
+    resource_strip_prefix = "tools/base/lint/libs/lint-checks",
     resources = glob(
         include = ["libs/lint-checks/src/main/java/**"],
         exclude = [
             "libs/lint-checks/src/main/java/**/*.java",
             "libs/lint-checks/src/main/java/**/*.kt",
         ],
-    ),
+    ) + ["libs/lint-checks/NOTICE"],
     visibility = ["//visibility:public"],
     deps = [
         ":tools.lint-api",
@@ -138,13 +140,14 @@ kotlin_library(
     # TODO: move resources out of java?
     srcs = ["libs/lint-gradle-api/src/main/java"],
     pom = "lint-gradle-api.pom",
+    resource_strip_prefix = "tools/base/lint/libs/lint-gradle-api",
     resources = glob(
         include = ["libs/lint-gradle-api/src/main/java/**"],
         exclude = [
             "libs/lint-gradle-api/src/main/java/**/*.java",
             "libs/lint-gradle-api/src/main/java/**/*.kt",
         ],
-    ),
+    ) + ["libs/lint-gradle-api/NOTICE"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
@@ -169,13 +172,14 @@ kotlin_library(
     # TODO: move resources out of java?
     srcs = ["libs/lint-gradle/src/main/java"],
     pom = "lint-gradle.pom",
+    resource_strip_prefix = "tools/base/lint/libs/lint-gradle",
     resources = glob(
         include = ["libs/lint-gradle/src/main/java/**"],
         exclude = [
             "libs/lint-gradle/src/main/java/**/*.java",
             "libs/lint-gradle/src/main/java/**/*.kt",
         ],
-    ),
+    ) + ["libs/lint-gradle/NOTICE"],
     visibility = ["//visibility:public"],
     deps = [
         # NOTE NOTE NOTE - before changing this, note that lint dependencies
@@ -218,13 +222,14 @@ kotlin_library(
     name = "tools.lint-kotlin",
     srcs = ["libs/lint-kotlin/src/main/java"],
     pom = "lint-kotlin.pom",
+    resource_strip_prefix = "tools/base/lint/libs/lint-kotlin",
     resources = glob(
         include = ["libs/lint-kotlin/src/main/java/**"],
         exclude = [
-            "libs/lint-api/src/main/kotlin/**/*.java",
-            "libs/lint-api/src/main/kotlin/**/*.kt",
+            "libs/lint-kotlin/src/main/java/**/*.java",
+            "libs/lint-kotlin/src/main/java/**/*.kt",
         ],
-    ),
+    ) + ["libs/lint-kotlin/NOTICE"],
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/lint-psi/intellij-core",

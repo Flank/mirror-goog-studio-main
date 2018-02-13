@@ -29,6 +29,7 @@ maven_java_library(
     name = "tools.devicelib",
     srcs = glob(["src/main/java/**"]),
     pom = ":pom",
+    resource_strip_prefix = "tools/base/devicelib",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

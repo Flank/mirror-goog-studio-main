@@ -22,6 +22,7 @@ maven_java_library(
     name = "tools.fakeadbserver",
     srcs = glob(["src/main/java/**"]),
     pom = ":pom",
+    resource_strip_prefix = "tools/base/fakeadbserver",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

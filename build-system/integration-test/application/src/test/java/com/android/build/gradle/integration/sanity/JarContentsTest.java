@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.sanity;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.android.builder.model.Version;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
@@ -27,7 +25,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
+import com.google.common.truth.Expect;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FilterInputStream;
@@ -42,11 +40,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Checks what we distribute in our jars. */
@@ -1157,6 +1154,8 @@ public class JarContentsTest {
         }
     }
 
+    @Rule public Expect expect = Expect.createAndEnableStackTrace();
+
     @Test
     public void checkTools() throws Exception {
         checkGroup("com/android/tools", GMAVEN_ZIP);
@@ -1175,7 +1174,7 @@ public class JarContentsTest {
         checkGroup("com/android/java", JAVALIBMODELBUILDER_ZIP);
     }
 
-    private static void checkGroup(String groupPrefix, String zipLocation) throws Exception {
+    private void checkGroup(String groupPrefix, String zipLocation) throws Exception {
         List<String> jarNames = new ArrayList<>();
 
         Path repo = getRepo(zipLocation);
@@ -1210,28 +1209,30 @@ public class JarContentsTest {
                         .collect(Collectors.toList());
         // Test only artifact need not be there.
         expectedJars.remove("com/android/tools/internal/build/test/devicepool");
-        assertThat(expectedJars).isNotEmpty();
-        assertThat(jarNames).named("Jars for " + groupPrefix).containsAllIn(expectedJars);
+        expect.that(expectedJars).isNotEmpty();
+        expect.that(jarNames).named("Jars for " + groupPrefix).containsAllIn(expectedJars);
     }
 
-    private static void checkSourcesJar(Path jarPath) throws IOException {
-        checkLicense(jarPath);
-    }
-
-    private static void checkLicense(Path jarPath) throws IOException {
-        // TODO: Handle NOTICE files in Bazel (b/64921827).
+    private void checkSourcesJar(Path jarPath) throws IOException {
         if (TestUtils.runningFromBazel()) {
             return;
         }
+        checkLicense(jarPath);
+    }
 
-        try (JarFile jarFile = new JarFile(jarPath.toFile())) {
-            for (String possibleName : LICENSE_NAMES) {
-                if (jarFile.getEntry(possibleName) != null) {
-                    return;
+    private void checkLicense(Path jarPath) throws IOException {
+        boolean found = false;
+        try (ZipInputStream zipInputStream =
+                new ZipInputStream(new BufferedInputStream(Files.newInputStream(jarPath)))) {
+            ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                if (LICENSE_NAMES.contains(entry.getName())) {
+                    found = true;
                 }
             }
-
-            Assert.fail("No license file in " + jarPath);
+        }
+        if (!found) {
+            expect.fail("No license file in " + jarPath + " from " + jarPath.getFileSystem());
         }
     }
 
@@ -1278,11 +1279,6 @@ public class JarContentsTest {
             return false;
         }
 
-        if (LICENSE_NAMES.contains(fileName) && TestUtils.runningFromBazel()) {
-            // TODO: Handle NOTICE files in Bazel (b/64921827).
-            return false;
-        }
-
         if (fileName.endsWith(".kotlin_module")) {
             // TODO: Handle kotlin modules in Bazel. (b/64921827)
             return false;
@@ -1318,7 +1314,7 @@ public class JarContentsTest {
         return files;
     }
 
-    private static void checkJar(Path jar, Path repo) throws Exception {
+    private void checkJar(Path jar, Path repo) throws Exception {
         checkLicense(jar);
 
         String key =
@@ -1327,11 +1323,6 @@ public class JarContentsTest {
         Set<String> expected = EXPECTED.get(key);
         if (expected == null) {
             expected = Collections.emptySet();
-        }
-
-        if (TestUtils.runningFromBazel()) {
-            // TODO: Handle NOTICE files in Bazel (b/64921827).
-            expected = Sets.difference(expected, LICENSE_NAMES);
         }
 
         Set<String> actual = new HashSet<>();
@@ -1345,7 +1336,8 @@ public class JarContentsTest {
                                 entry, new NonClosingInputStream(zipInputStream), ""));
             }
 
-            assertThat(actual).named(jar.toString() + " with key " + key)
+            expect.that(actual)
+                    .named(jar.toString() + " with key " + key)
                     .containsExactlyElementsIn(expected);
         }
     }
@@ -1380,7 +1372,7 @@ public class JarContentsTest {
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
             // Do nothing.
         }
     }

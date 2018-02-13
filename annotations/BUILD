@@ -14,6 +14,7 @@ maven_java_library(
     name = "annotations",
     srcs = glob(["src/main/java/**"]),
     pom = ":pom",
+    resource_strip_prefix = "tools/base/annotations",
     visibility = ["//visibility:public"],
 )
 

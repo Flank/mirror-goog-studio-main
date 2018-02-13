@@ -5,6 +5,7 @@ kotlin_library(
     name = "lint-tests",
     srcs = ["src/main/java"],
     pom = ":pom",
+    resource_strip_prefix = "tools/base/lint/libs/lint-tests",
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/lint-psi/intellij-core",

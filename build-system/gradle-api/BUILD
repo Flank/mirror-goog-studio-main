@@ -7,6 +7,7 @@ kotlin_library(
         "src/main/java",
     ],
     pom = ":pom",
+    resource_strip_prefix = "tools/base/build-system/gradle-api",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

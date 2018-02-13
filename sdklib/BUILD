@@ -1,3 +1,4 @@
+load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
@@ -36,15 +37,29 @@ iml_module(
     ],
 )
 
+fileset(
+    name = "tools.resources",
+    # TODO: Why are the xml files not under resources?
+    srcs = glob(
+        include = [
+            "src/main/java/**",
+        ],
+        exclude = [
+            "**/*.java",
+            "**/*.kt",
+        ],
+    ),
+    mappings = {
+        "src/main/java/": "",
+    },
+)
+
 maven_java_library(
     name = "tools.sdklib",
-    # TODO: Why are the xml files not under resources?
     srcs = glob(["src/main/java/**/*.java"]),
     pom = ":pom",
-    resources = glob(
-        include = ["src/main/java/**"],
-        exclude = ["src/main/java/**/*.java"],
-    ),
+    resource_strip_prefix = "tools/base/sdklib",
+    resources = ["tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

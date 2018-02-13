@@ -53,6 +53,8 @@ kotlin_library(
     srcs = ["manifest-merger/src/main/java"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     pom = ":manifest-merger.pom",
+    resource_strip_prefix = "tools/base/build-system/manifest-merger",
+    resources = ["manifest-merger/NOTICE"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

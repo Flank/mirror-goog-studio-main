@@ -1,3 +1,4 @@
+load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
@@ -17,11 +18,20 @@ iml_module(
     ],
 )
 
+fileset(
+    name = "tools.resources",
+    srcs = glob(["dvlib/src/main/resources/**"]) + ["dvlib/NOTICE"],
+    mappings = {
+        "dvlib/src/main/resources/": "dvlib/",
+    },
+)
+
 maven_java_library(
     name = "tools.dvlib",
     srcs = glob(["dvlib/src/main/java/**"]),
     pom = ":pom",
-    resources = glob(["dvlib/src/main/resources/**"]),
+    resource_strip_prefix = "tools/base/device_validator/dvlib",
+    resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

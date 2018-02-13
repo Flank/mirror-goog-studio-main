@@ -28,6 +28,7 @@ kotlin_library(
     name = "tools.common",
     srcs = ["src/main/java"],
     pom = ":pom",
+    resource_strip_prefix = "tools/base/common",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
