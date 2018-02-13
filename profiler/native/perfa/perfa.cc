@@ -71,6 +71,8 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
          (strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 &&
           energy_profiler_enabled) ||
          (strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0 &&
+          energy_profiler_enabled) ||
+         (strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 &&
           energy_profiler_enabled);
 }
 
@@ -190,6 +192,35 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     if (!mi_rel.InstrumentMethod(
             ir::MethodId(desc.c_str(), "release", "(I)V"))) {
       Log::E("Error instrumenting WakeLock.release");
+    }
+  } else if (strcmp(name, "android/app/AlarmManager") == 0) {
+    // Instrument setImpl.
+    slicer::MethodInstrumenter mi_set(dex_ir);
+    mi_set.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/AlarmManagerWrapper;",
+        "wrapSetImpl"));
+    if (!mi_set.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "setImpl",
+            "(IJJJILandroid/app/PendingIntent;"
+            "Landroid/app/AlarmManager$OnAlarmListener;Ljava/lang/String;"
+            "Landroid/os/Handler;Landroid/os/WorkSource;"
+            "Landroid/app/AlarmManager$AlarmClockInfo;)V"))) {
+      Log::E("Error instrumenting AlarmManager.setImpl");
+    }
+
+    // Instrument cancel(PendingIntent) and cancel(OnAlarmListener).
+    slicer::MethodInstrumenter mi_cancel(dex_ir);
+    mi_cancel.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/AlarmManagerWrapper;",
+        "wrapCancel"));
+    if (!mi_cancel.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "cancel", "(Landroid/app/PendingIntent;)V"))) {
+      Log::E("Error instrumenting AlarmManager.cancel(PendingIntent)");
+    }
+    if (!mi_cancel.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "cancel",
+                         "(Landroid/app/AlarmManager$OnAlarmListener;)V"))) {
+      Log::E("Error instrumenting AlarmManager.cancel(OnAlarmListener)");
     }
   } else {
     Log::V("No transformation applied for class: %s", name);
