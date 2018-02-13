@@ -44,7 +44,7 @@ dependencies {
     compile libs.jopt
     compile libs.proguard
     compile libs.bundle_tool
-
+    compile libs.jetifier_core
 
     compileOnly libs.jacoco_core
     compileOnly libs.jacoco_report

@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.dependency.AndroidTypeAttrCompatRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
+import com.android.build.gradle.internal.dependency.JetifyTransform;
 import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTransform;
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
@@ -600,11 +601,31 @@ public class VariantManager implements VariantModel {
     public void configureDependencies() {
         final DependencyHandler dependencies = project.getDependencies();
 
-        // register transforms.
+        // If Jetifier is enabled, replace old support libraries with new ones.
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+            JetifyTransform.replaceOldSupportLibraries(project);
+        }
+
+        /*
+         * Register transforms.
+         */
+        String maybeJetifiedAar;
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+            dependencies.registerTransform(
+                    reg -> {
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_AAR);
+                        reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JETIFIED_AAR);
+                        reg.artifactTransform(JetifyTransform.class);
+                    });
+            maybeJetifiedAar = AndroidArtifacts.TYPE_JETIFIED_AAR;
+        } else {
+            maybeJetifiedAar = AndroidArtifacts.TYPE_AAR;
+        }
+
         final String explodedAarType = ArtifactType.EXPLODED_AAR.getType();
         dependencies.registerTransform(
                 reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_AAR);
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, maybeJetifiedAar);
                     reg.getTo().attribute(ARTIFACT_FORMAT, explodedAarType);
                     reg.artifactTransform(ExtractAarTransform.class);
                 });
@@ -654,10 +675,23 @@ public class VariantManager implements VariantModel {
                     });
         }
 
+        String maybeJetifiedJar;
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+            dependencies.registerTransform(
+                    reg -> {
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JAR);
+                        reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JETIFIED_JAR);
+                        reg.artifactTransform(JetifyTransform.class);
+                    });
+            maybeJetifiedJar = AndroidArtifacts.TYPE_JETIFIED_JAR;
+        } else {
+            maybeJetifiedJar = AndroidArtifacts.TYPE_JAR;
+        }
+
         for (String transformTarget : JarTransform.getTransformTargets()) {
             dependencies.registerTransform(
                     reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, "jar");
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, maybeJetifiedJar);
                         reg.getTo().attribute(ARTIFACT_FORMAT, transformTarget);
                         reg.artifactTransform(JarTransform.class);
                     });

@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.MoreTruth
 import org.junit.Rule
 import org.junit.Test
@@ -34,7 +35,7 @@ class JetifierTest {
     @Test
     fun testJetifierDisabled() {
         // Build the project with Jetifier disabled
-        project.executor().run("assembleDebug")
+        project.executor().with(BooleanOption.ENABLE_JETIFIER, false).run("assembleDebug")
         val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
         val dex = apk.mainDexFile.get()
 
@@ -46,5 +47,22 @@ class JetifierTest {
         val classToRefactor =
             MoreTruth.assertThat(dex).containsClass("Lcom/example/androidlib/MyPreference;")
         classToRefactor.that().hasSuperclass("Landroid/support/v7/preference/Preference;")
+    }
+
+    @Test
+    fun testJetifierEnabled() {
+        // Build the project with Jetifier enabled
+        project.executor().with(BooleanOption.ENABLE_JETIFIER, true).run("assembleDebug")
+        val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
+        val dex = apk.mainDexFile.get()
+
+        // 1. Check that the old support library has been replaced with a new one
+        MoreTruth.assertThat(dex).doesNotContainClasses("Landroid/support/v7/preference/Preference;")
+        MoreTruth.assertThat(dex).containsClasses("Landroidx/preference/Preference;")
+
+        // 2. Check that the library to refactor has been refactored
+        val classToRefactor =
+            MoreTruth.assertThat(dex).containsClass("Lcom/example/androidlib/MyPreference;")
+        classToRefactor.that().hasSuperclass("Landroidx/preference/Preference;")
     }
 }
