@@ -44,13 +44,13 @@ import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBuilder;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
-import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
@@ -97,7 +97,6 @@ public class ApplicationTaskManager extends TaskManager {
     @Override
     public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
         BaseVariantData variantData = variantScope.getVariantData();
-        assert variantData instanceof ApplicationVariantData;
 
         createAnchorTasks(variantScope);
         createCheckManifestTask(variantScope);
@@ -200,7 +199,6 @@ public class ApplicationTaskManager extends TaskManager {
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
         // Add external native build tasks
-
         recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_EXTERNAL_NATIVE_BUILD_TASK,
                 project.getPath(),
@@ -227,7 +225,12 @@ public class ApplicationTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> createCompileTask(variantScope));
 
-        createStripNativeLibraryTask(taskFactory, variantScope);
+        recorder.record(
+                ExecutionType.APP_TASK_MANAGER_CREATE_STRIP_NATIVE_LIBRARY_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
+                () -> createStripNativeLibraryTask(taskFactory, variantScope));
+
 
         if (variantScope.getVariantData().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
             if (extension.getBuildToolsRevision().getMajor() < 21) {
@@ -252,7 +255,7 @@ public class ApplicationTaskManager extends TaskManager {
                     createPackagingTask(variantScope, buildInfoWriterTask);
                 });
 
-        // create the lint tasks.
+        // Create the lint tasks, if enabled
         recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_LINT_TASK,
                 project.getPath(),
@@ -421,7 +424,7 @@ public class ApplicationTaskManager extends TaskManager {
 
     @NonNull
     @Override
-    protected Set<Scope> getResMergingScopes(@NonNull VariantScope variantScope) {
+    protected Set<? super Scope> getResMergingScopes(@NonNull VariantScope variantScope) {
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 
@@ -429,45 +432,71 @@ public class ApplicationTaskManager extends TaskManager {
     private void handleMicroApp(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
-        Boolean unbundledWearApp = variantConfiguration.getMergedFlavor().getWearAppUnbundled();
 
-        if (!Boolean.TRUE.equals(unbundledWearApp)
-                && variantConfiguration.getBuildType().isEmbedMicroApp()) {
-            Configuration wearApp = variantData.getVariantDependency().getWearAppConfiguration();
-            assert wearApp != null : "Wear app with no wearApp configuration";
-            if (!wearApp.getAllDependencies().isEmpty()) {
-                Action<AttributeContainer> setApkArtifact =
-                        container -> container.attribute(ARTIFACT_TYPE, APK.getType());
-                FileCollection files =
-                        wearApp.getIncoming()
-                                .artifactView(config -> config.attributes(setApkArtifact))
-                                .getFiles();
-                createGenerateMicroApkDataTask(scope, files);
-            }
-        } else {
-            if (Boolean.TRUE.equals(unbundledWearApp)) {
-                createGenerateMicroApkDataTask(scope, null);
+        if (variantConfiguration.getType() != VariantType.FEATURE) {
+            Boolean unbundledWearApp = variantConfiguration.getMergedFlavor().getWearAppUnbundled();
+
+            if (!Boolean.TRUE.equals(unbundledWearApp)
+                    && variantConfiguration.getBuildType().isEmbedMicroApp()) {
+                Configuration wearApp =
+                        variantData.getVariantDependency().getWearAppConfiguration();
+                assert wearApp != null : "Wear app with no wearApp configuration";
+                if (!wearApp.getAllDependencies().isEmpty()) {
+                    Action<AttributeContainer> setApkArtifact =
+                            container -> container.attribute(ARTIFACT_TYPE, APK.getType());
+                    FileCollection files =
+                            wearApp.getIncoming()
+                                    .artifactView(config -> config.attributes(setApkArtifact))
+                                    .getFiles();
+                    createGenerateMicroApkDataTask(scope, files);
+                }
+            } else {
+                if (Boolean.TRUE.equals(unbundledWearApp)) {
+                    createGenerateMicroApkDataTask(scope, null);
+                }
             }
         }
     }
 
     private void createApplicationIdWriterTask(@NonNull VariantScope variantScope) {
+        if (variantScope.getVariantConfiguration().getType() == VariantType.FEATURE) {
+            if (!variantScope.isBaseFeature()) {
+                return;
+            }
 
-        File applicationIdOutputDirectory =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "applicationId",
-                        variantScope.getVariantConfiguration().getDirName());
+            File applicationIdOutputDirectory =
+                    FileUtils.join(
+                            globalScope.getIntermediatesDir(),
+                            "feature-split",
+                            "applicationId",
+                            variantScope.getVariantConfiguration().getDirName());
 
-        ApplicationIdWriterTask writeTask =
-                taskFactory.create(
-                        new ApplicationIdWriterTask.ConfigAction(
-                                variantScope, applicationIdOutputDirectory));
+            ApplicationIdWriterTask writeTask =
+                    taskFactory.create(
+                            new ApplicationIdWriterTask.BaseFeatureConfigAction(
+                                    variantScope, applicationIdOutputDirectory));
 
-        variantScope.addTaskOutput(
-                InternalArtifactType.METADATA_APP_ID_DECLARATION,
-                ApplicationId.getOutputFile(applicationIdOutputDirectory),
-                writeTask.getName());
+            variantScope.addTaskOutput(
+                    InternalArtifactType.FEATURE_APPLICATION_ID_DECLARATION,
+                    ApplicationId.getOutputFile(applicationIdOutputDirectory),
+                    writeTask.getName());
+        } else {
+            File applicationIdOutputDirectory =
+                    FileUtils.join(
+                            globalScope.getIntermediatesDir(),
+                            "applicationId",
+                            variantScope.getVariantConfiguration().getDirName());
+
+            ApplicationIdWriterTask writeTask =
+                    taskFactory.create(
+                            new ApplicationIdWriterTask.ConfigAction(
+                                    variantScope, applicationIdOutputDirectory));
+
+            variantScope.addTaskOutput(
+                    InternalArtifactType.METADATA_APP_ID_DECLARATION,
+                    ApplicationId.getOutputFile(applicationIdOutputDirectory),
+                    writeTask.getName());
+        }
     }
 
     private static File getIncrementalFolder(VariantScope variantScope, String taskName) {

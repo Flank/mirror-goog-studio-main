@@ -40,6 +40,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_M
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
@@ -1137,17 +1138,17 @@ public abstract class TaskManager {
 
             @NonNull VariantScope scope) {
 
-        createProcessResTask(
+        VariantType variantType = scope.getVariantData().getVariantConfiguration().getType();
+        InternalArtifactType packageOutputType =
+                variantType == FEATURE ? FEATURE_RESOURCE_PKG : null;
 
+        createProcessResTask(
                 scope,
-                        new File(
-                                globalScope.getIntermediatesDir(),
-                                "symbols/"
-                                        + scope.getVariantData()
-                                                .getVariantConfiguration()
-                                                .getDirName()),
+                new File(
+                        globalScope.getIntermediatesDir(),
+                        "symbols/" + scope.getVariantData().getVariantConfiguration().getDirName()),
                 scope.getProcessResourcePackageOutputDirectory(),
-                null,
+                packageOutputType,
                 MergeType.MERGE,
                 scope.getGlobalScope().getProjectBaseName());
     }
