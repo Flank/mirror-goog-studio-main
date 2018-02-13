@@ -70,6 +70,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     protected final Project project;
     @NonNull protected final AndroidBuilder androidBuilder;
     @NonNull private final AaptGeneration aaptGeneration;
+    @Nullable private FileCollection aapt2FromMaven;
     @NonNull protected final InstantRunBuildContext buildContext;
     @NonNull
     protected final File outputDirectory;
@@ -98,6 +99,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull Project project,
             @NonNull InstantRunBuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
+            @Nullable FileCollection aapt2FromMaven,
             @NonNull String applicationId,
             @Nullable CoreSigningConfig signingConf,
             @NonNull AaptGeneration aaptGeneration,
@@ -113,6 +115,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         this.project = project;
         this.buildContext = buildContext;
         this.androidBuilder = androidBuilder;
+        this.aapt2FromMaven = aapt2FromMaven;
         this.applicationId = applicationId;
         this.signingConf = signingConf;
         this.aaptGeneration = aaptGeneration;
@@ -130,6 +133,9 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
         ImmutableList.Builder<SecondaryFile> list = ImmutableList.builder();
+        if (aapt2FromMaven != null) {
+            list.add(SecondaryFile.nonIncremental(aapt2FromMaven));
+        }
         resourcesWithMainManifest
                 .getAsFileTree()
                 .getFiles()
@@ -382,18 +388,21 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     }
 
     protected CloseableBlockingResourceLinker getLinker() {
-        return getLinker(aaptGeneration, androidBuilder, aaptIntermediateDirectory);
+        return getLinker(aapt2FromMaven, aaptGeneration, androidBuilder, aaptIntermediateDirectory);
     }
 
     @NonNull
     public static CloseableBlockingResourceLinker getLinker(
+            @Nullable FileCollection aapt2FromMaven,
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File intermediateFolder) {
         if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
             Aapt2ServiceKey aapt2ServiceKey =
                     Aapt2DaemonManagerService.registerAaptService(
-                            androidBuilder.getBuildToolInfo(), androidBuilder.getLogger());
+                            aapt2FromMaven,
+                            androidBuilder.getBuildToolInfo(),
+                            androidBuilder.getLogger());
             return Aapt2DaemonManagerService.getAaptDaemon(aapt2ServiceKey);
         }
         return AaptGradleFactory.make(

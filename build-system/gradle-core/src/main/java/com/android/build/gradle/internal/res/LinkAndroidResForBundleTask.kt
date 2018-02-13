@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.res.namespaced.Aapt2LinkRunnable
+import com.android.build.gradle.internal.res.namespaced.getAapt2FromMavenIfEnabled
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -105,6 +106,12 @@ open class LinkAndroidResForBundleTask
     lateinit var mainSplit: ApkInfo
         private set
 
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    var aapt2FromMaven: FileCollection? = null
+        private set
+
     @TaskAction
     fun taskAction() {
 
@@ -130,8 +137,9 @@ open class LinkAndroidResForBundleTask
         }
         if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
             val aapt2ServiceKey = registerAaptService(
-                builder.targetInfo!!.buildTools,
-                builder.logger
+                aapt2FromMaven = aapt2FromMaven,
+                buildToolInfo = builder.targetInfo!!.buildTools,
+                logger = builder.logger
             )
             //TODO: message rewriting.
             workerExecutor.submit(Aapt2ProcessResourcesRunnable::class.java) {
@@ -242,6 +250,7 @@ open class LinkAndroidResForBundleTask
             processResources.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
             processResources.mergeBlameLogFolder = variantScope.resourceBlameLogDir
+            processResources.aapt2FromMaven = getAapt2FromMavenIfEnabled(variantScope.globalScope)
         }
     }
 

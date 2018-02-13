@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
 import com.android.build.gradle.internal.api.sourcesets.FilesProvider;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
+import com.android.build.gradle.internal.res.namespaced.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -156,6 +157,8 @@ public class MergeResources extends IncrementalTask {
 
     private AaptGeneration aaptGeneration;
 
+    @Nullable private FileCollection aapt2FromMaven;
+
     @Nullable private SingleFileProcessor dataBindingLayoutProcessor;
 
     /** Where data binding exports its outputs after parsing layout files. */
@@ -171,6 +174,7 @@ public class MergeResources extends IncrementalTask {
     private static ResourceCompilationService getResourceProcessor(
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidBuilder builder,
+            @Nullable FileCollection aapt2FromMaven,
             @Nullable WorkerExecutor workerExecutor,
             boolean crunchPng,
             @NonNull VariantScope scope,
@@ -193,7 +197,7 @@ public class MergeResources extends IncrementalTask {
         if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
             Aapt2ServiceKey aapt2ServiceKey =
                     Aapt2DaemonManagerService.registerAaptService(
-                            builder.getBuildToolInfo(), builder.getLogger());
+                            aapt2FromMaven, builder.getBuildToolInfo(), builder.getLogger());
             return new WorkerExecutorResourceCompilationService(
                     Objects.requireNonNull(workerExecutor), aapt2ServiceKey);
         }
@@ -284,6 +288,7 @@ public class MergeResources extends IncrementalTask {
                 getResourceProcessor(
                         aaptGeneration,
                         getBuilder(),
+                        aapt2FromMaven,
                         workerExecutor,
                         crunchPng,
                         variantScope,
@@ -386,6 +391,7 @@ public class MergeResources extends IncrementalTask {
                     getResourceProcessor(
                             aaptGeneration,
                             getBuilder(),
+                            aapt2FromMaven,
                             workerExecutor,
                             crunchPng,
                             variantScope,
@@ -674,6 +680,14 @@ public class MergeResources extends IncrementalTask {
         return aaptGeneration.name();
     }
 
+    @InputFiles
+    @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @Nullable
+    public FileCollection getAapt2FromMaven() {
+        return aapt2FromMaven;
+    }
+
     @Nullable
     @OutputDirectory
     @Optional
@@ -838,6 +852,8 @@ public class MergeResources extends IncrementalTask {
 
             mergeResourcesTask.aaptGeneration =
                     AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());
+            mergeResourcesTask.aapt2FromMaven =
+                    Aapt2MavenUtils.getAapt2FromMavenIfEnabled(scope.getGlobalScope());
             mergeResourcesTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             mergeResourcesTask.setVariantName(scope.getVariantConfiguration().getFullName());
             mergeResourcesTask.setIncrementalFolder(scope.getIncrementalDir(getName()));

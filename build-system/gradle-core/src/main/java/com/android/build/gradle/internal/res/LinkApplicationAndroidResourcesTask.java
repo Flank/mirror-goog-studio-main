@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
+import com.android.build.gradle.internal.res.namespaced.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -133,6 +134,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     private VariantType type;
 
     private AaptGeneration aaptGeneration;
+
+    @Nullable private FileCollection aapt2FromMaven;
 
     private boolean debuggable;
 
@@ -242,7 +245,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
                 aapt2ServiceKey =
                         Aapt2DaemonManagerService.registerAaptService(
-                                getBuildTools(), getILogger());
+                                aapt2FromMaven, getBuildTools(), getILogger());
             } else {
                 aapt2ServiceKey = null;
             }
@@ -699,6 +702,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             processResources.setVariantName(config.getFullName());
             processResources.resPackageOutputFolder = resPackageOutputFolder;
             processResources.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);
+            processResources.aapt2FromMaven =
+                    Aapt2MavenUtils.getAapt2FromMavenIfEnabled(variantScope.getGlobalScope());
 
             if (variantData.getType() == VariantType.LIBRARY) {
                 throw new IllegalArgumentException("Use GenerateLibraryRFileTask");
@@ -877,6 +882,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.setVariantName(config.getFullName());
             task.resPackageOutputFolder = resPackageOutputDir;
             task.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);
+            task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(variantScope.getGlobalScope());
             task.setEnableAapt2(true);
 
             task.applicationId = config.getApplicationId();
@@ -1099,6 +1105,14 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     @Input
     public String getAaptGeneration() {
         return aaptGeneration.name();
+    }
+
+    @InputFiles
+    @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @Nullable
+    public FileCollection getAapt2FromMaven() {
+        return aapt2FromMaven;
     }
 
     @Input

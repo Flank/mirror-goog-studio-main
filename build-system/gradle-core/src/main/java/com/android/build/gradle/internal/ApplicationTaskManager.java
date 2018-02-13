@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.res.namespaced.Aapt2MavenUtils;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -289,6 +290,7 @@ public class ApplicationTaskManager extends TaskManager {
                         project,
                         variantScope.getInstantRunBuildContext(),
                         variantScope.getGlobalScope().getAndroidBuilder(),
+                        Aapt2MavenUtils.getAapt2FromMavenIfEnabled(globalScope),
                         variantScope.getVariantConfiguration().getApplicationId(),
                         variantScope.getVariantConfiguration().getSigningConfig(),
                         AaptGeneration.fromProjectOptions(projectOptions),
@@ -321,6 +323,7 @@ public class ApplicationTaskManager extends TaskManager {
                         project,
                         variantScope.getInstantRunBuildContext(),
                         variantScope.getGlobalScope().getAndroidBuilder(),
+                        Aapt2MavenUtils.getAapt2FromMavenIfEnabled(globalScope),
                         variantScope.getVariantConfiguration().getApplicationId(),
                         variantScope.getVariantConfiguration().getSigningConfig(),
                         AaptGeneration.fromProjectOptions(projectOptions),

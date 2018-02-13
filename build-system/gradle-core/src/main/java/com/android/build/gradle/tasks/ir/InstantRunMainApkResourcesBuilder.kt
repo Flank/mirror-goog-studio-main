@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks.ir
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.aapt.AaptGeneration
+import com.android.build.gradle.internal.res.namespaced.getAapt2FromMavenIfEnabled
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
@@ -34,6 +35,7 @@ import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -68,6 +70,12 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
     @get:InputFiles
     lateinit var manifestFiles: FileCollection private set
 
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    var aapt2FromMaven: FileCollection? = null
+        private set
+
     @TaskAction
     @Throws(IOException::class)
     fun doFullTaskAction() {
@@ -86,9 +94,10 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
             return null
         }
 
-        try {
-            return InstantRunSplitApkBuilder.getLinker(
-                        aaptGeneration, builder, aaptIntermediateFolder).use { aapt ->
+        return try {
+            InstantRunSplitApkBuilder.getLinker(
+                aapt2FromMaven, aaptGeneration, builder, aaptIntermediateFolder
+            ).use { aapt ->
                 processSplit(manifestFile, aapt)
             }
         } catch (e: InterruptedException) {
@@ -132,7 +141,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
                     variantScope.globalScope.projectOptions)
             task.fileCache = variantScope.globalScope.buildCache!!
             task.aaptIntermediateFolder = File(variantScope.getIncrementalDir(name), "aapt-temp")
-
+            task.aapt2FromMaven = getAapt2FromMavenIfEnabled(variantScope.globalScope)
             variantScope.addTaskOutput(INSTANT_RUN_MAIN_APK_RESOURCES, task.outputDirectory, name)
         }
 

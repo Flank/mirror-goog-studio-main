@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable;
 import com.android.build.gradle.internal.res.namespaced.Aapt2CompileRunnable;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
+import com.android.build.gradle.internal.res.namespaced.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -75,6 +76,7 @@ import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -90,6 +92,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
     private FileCollection manifestFiles;
 
     private AaptGeneration aaptGeneration;
+    @Nullable private FileCollection aapt2FromMaven;
 
     private final WorkerExecutor workerExecutor;
 
@@ -149,7 +152,8 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
 
         if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
             Aapt2ServiceKey aapt2ServiceKey =
-                    Aapt2DaemonManagerService.registerAaptService(getBuildTools(), getILogger());
+                    Aapt2DaemonManagerService.registerAaptService(
+                            aapt2FromMaven, getBuildTools(), getILogger());
             // If we're using AAPT2 we need to compile the resources into the compiled directory
             // first as we need the .flat files for linking.
             compileResources(
@@ -355,7 +359,8 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
 
             verifyLibraryResources.aaptGeneration =
                     AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());
-
+            verifyLibraryResources.aapt2FromMaven =
+                    Aapt2MavenUtils.getAapt2FromMavenIfEnabled(scope.getGlobalScope());
             verifyLibraryResources.setIncrementalFolder(scope.getIncrementalDir(getName()));
 
             Preconditions.checkState(
@@ -383,6 +388,14 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
     @Input
     public String getAaptGeneration() {
         return aaptGeneration.name();
+    }
+
+    @InputFiles
+    @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @Nullable
+    public FileCollection getAapt2FromMaven() {
+        return aapt2FromMaven;
     }
 
     @NonNull

@@ -18,6 +18,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.SdkConstants
 import com.android.annotations.concurrency.GuardedBy
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.builder.internal.aapt.v2.Aapt2DaemonImpl
@@ -27,7 +28,10 @@ import com.android.ide.common.process.ProcessException
 import com.android.repository.Revision
 import com.android.sdklib.BuildToolInfo
 import com.android.utils.ILogger
+import org.gradle.api.file.FileCollection
+import java.io.File
 import java.io.IOException
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -47,6 +51,8 @@ sealed class Aapt2ServiceKey : WorkerActionServiceRegistry.ServiceKey<Aapt2Daemo
 }
 
 private data class Aapt2SdkServiceKey(val aapt2Version: Revision) : Aapt2ServiceKey()
+
+private data class Aapt2FileServiceKey(val file: File) : Aapt2ServiceKey()
 
 private class RegisteredAaptService(override val service: Aapt2DaemonManager)
     : WorkerActionServiceRegistry.RegisteredService<Aapt2DaemonManager> {
@@ -71,20 +77,34 @@ fun getAaptDaemon(
     serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE) : Aapt2DaemonManager.LeasedAaptDaemon =
     serviceRegistry.getService(aapt2ServiceKey).service.leaseDaemon()
 
-/** Registers an AAPT2 daemon manager for the given build tools, keyed from version. Idempotent. */
 @JvmOverloads
 fun registerAaptService(
-        buildToolInfo: BuildToolInfo,
-        logger: ILogger,
-        serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE): Aapt2ServiceKey {
-    val key = Aapt2SdkServiceKey(buildToolInfo.revision)
+    aapt2FromMaven: FileCollection?,
+    buildToolInfo: BuildToolInfo? = null,
+    logger: ILogger,
+    serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE
+): Aapt2ServiceKey {
+    val key: Aapt2ServiceKey
+    val aaptExecutablePath: Path
+    when {
+        aapt2FromMaven != null -> {
+            val dir = aapt2FromMaven.singleFile
+            key = Aapt2FileServiceKey(dir)
+            aaptExecutablePath =  dir.toPath().resolve(SdkConstants.FN_AAPT2)
+        }
+        buildToolInfo != null -> {
+            key = Aapt2SdkServiceKey(buildToolInfo.revision)
+            aaptExecutablePath = Paths.get(buildToolInfo.getPath(BuildToolInfo.PathId.AAPT2))
+        }
+        else -> throw IllegalArgumentException("Must supply one of aapt2 from maven or build tool info.")
+    }
+
     serviceRegistry.registerService(key, {
-        val aaptExecutablePath = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT2)
         val manager = Aapt2DaemonManager(logger = logger,
                 daemonFactory = { displayId ->
                     Aapt2DaemonImpl(
                             displayId = "#$displayId",
-                            aaptExecutable = Paths.get(aaptExecutablePath),
+                            aaptExecutable = aaptExecutablePath,
                             daemonTimeouts = daemonTimeouts,
                             logger = logger)
                 },

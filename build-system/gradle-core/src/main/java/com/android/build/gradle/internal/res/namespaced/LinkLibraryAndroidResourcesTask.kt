@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.SdkConstants
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -61,7 +60,11 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional var tested: FileCollection? = null; private set
 
     @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
-    @get:Input val packageForR get() = packageForRSupplier.get()
+    @Input fun getPackageForR() = packageForRSupplier.get()
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    lateinit var aapt2FromMaven: FileCollection private set
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:Optional var rClassSource: File? = null; private set
@@ -96,13 +99,13 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
                 sourceOutputDir = rClassSource,
                 resourceOutputApk = staticLibApk,
                 variantType = VariantType.LIBRARY,
-                customPackageForR = packageForR,
+                customPackageForR = getPackageForR(),
                 symbolOutputDir = rDotTxt.parentFile,
                 intermediateDir = aaptIntermediateDir)
 
         val aapt2ServiceKey = registerAaptService(
-            builder.targetInfo!!.buildTools,
-            builder.logger
+            aapt2FromMaven = aapt2FromMaven,
+            logger = iLogger
         )
         workerExecutor.submit(Aapt2LinkRunnable::class.java) {
             it.isolationMode = IsolationMode.NONE
@@ -156,6 +159,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
             task.setAndroidBuilder(scope.globalScope.androidBuilder)
             task.packageForRSupplier = Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
             task.rDotTxt = rDotTxt
+            task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
         }
     }
 

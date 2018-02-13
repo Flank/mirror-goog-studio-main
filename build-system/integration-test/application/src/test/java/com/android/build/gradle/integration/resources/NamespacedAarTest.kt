@@ -37,7 +37,6 @@ class NamespacedAarTest {
      */
     private val buildScriptContent = """
         android.aaptOptions.namespaced = true
-        android.buildToolsVersion = '4509860'
     """
 
     val publishedLib = MinimalSubProject.lib("com.example.publishedLib")

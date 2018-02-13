@@ -63,6 +63,7 @@ TEST_DATA = [
     "//prebuilts/tools/common/cmake:cmake-3.8.2",
     "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//tools/base/build-system:gradle-distrib",
+    "//tools/base/build-system/aapt2:aapt2_for_tests",
 ]
 
 gradle_integration_test(

@@ -27,6 +27,8 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
@@ -42,6 +44,9 @@ import javax.inject.Inject
  */
 open class CompileSourceSetResources
 @Inject constructor(private val workerExecutor: WorkerExecutor) : IncrementalTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    lateinit var aapt2FromMaven: FileCollection private set
 
     @get:InputFiles @get:SkipWhenEmpty lateinit var inputDirectories: FileCollection private set
     @get:Input var isPngCrunching: Boolean = false; private set
@@ -129,8 +134,8 @@ open class CompileSourceSetResources
             return
         }
         val aapt2ServiceKey = registerAaptService(
-            builder.targetInfo!!.buildTools,
-            builder.logger
+            aapt2FromMaven = aapt2FromMaven,
+            logger = iLogger
         )
         for (request in requests) {
             workerExecutor.submit(Aapt2CompileRunnable::class.java) {
@@ -165,7 +170,7 @@ open class CompileSourceSetResources
             task.isPngCrunching = variantScope.isCrunchPngs
             task.isPseudoLocalize = variantScope.variantData.variantConfiguration.buildType.isPseudoLocalesEnabled
             task.aaptIntermediateDirectory = aaptIntermediateDirectory
-            task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
+            task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
         }
     }
 
