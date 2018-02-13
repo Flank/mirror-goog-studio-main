@@ -157,12 +157,15 @@ public final class FileListingService {
 
         /**
          * Creates a new file entry.
+         *
          * @param parent parent entry or null if entry is root
          * @param name name of the entry.
-         * @param type entry type. Can be one of the following: {@link FileListingService#TYPE_FILE},
-         * {@link FileListingService#TYPE_DIRECTORY}, {@link FileListingService#TYPE_OTHER}.
+         * @param type entry type. Can be one of the following: {@link
+         *     FileListingService#TYPE_FILE}, {@link FileListingService#TYPE_DIRECTORY}, {@link
+         *     FileListingService#TYPE_OTHER}.
+         * @param isRoot whether this is the root dir or not.
          */
-        private FileEntry(FileEntry parent, String name, int type, boolean isRoot) {
+        public FileEntry(FileEntry parent, String name, int type, boolean isRoot) {
             this.parent = parent;
             this.name = name;
             this.type = type;
