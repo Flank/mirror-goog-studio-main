@@ -13,25 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.layoutinspector;
+package com.android.layoutinspector
 
-import com.android.annotations.NonNull;
-
-public class LayoutInspectorResult {
-    private final String myError;
-    private final byte[] myData;
-
-    public LayoutInspectorResult(byte[] data, @NonNull String error) {
-        myData = data;
-        myError = error;
-    }
-
-    @NonNull
-    public String getError() {
-        return myError;
-    }
-
-    public byte[] getData() {
-        return myData;
-    }
-}
+/**
+ * Represents result of a capture
+ * Success: data is not null, and error is the empty string
+ * Error: data is null, and error a non empty error message
+ */
+class LayoutInspectorResult(val data: ByteArray?, val error: String)
