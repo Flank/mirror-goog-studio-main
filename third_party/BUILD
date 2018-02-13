@@ -18,6 +18,31 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "com.android.tools.build.jetifier_jetifier-core",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/jetifier/jetifier-core/0.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.code.gson_gson",
+        ":org.jetbrains.kotlin_kotlin-stdlib",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.android.tools.build.jetifier_jetifier-processor",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/jetifier/jetifier-processor/0.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.android.tools.build.jetifier_jetifier-core",
+        ":org.jdom_jdom2",
+        ":org.jetbrains.kotlin_kotlin-stdlib",
+        ":org.ow2.asm_asm",
+        ":org.ow2.asm_asm-commons",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "com.android.tools.build_aapt2-proto",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/aapt2-proto/0.3.0:jar",
     visibility = ["//visibility:public"],
@@ -1067,6 +1092,14 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "org.jdom_jdom2",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jdom/jdom2/2.0.6:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-android-extensions",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.2.0:jar",
     visibility = ["//visibility:public"],
@@ -1168,7 +1201,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-stdlib",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.2.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.2.20:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains_annotations"],
 )

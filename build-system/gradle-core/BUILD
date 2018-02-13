@@ -59,6 +59,8 @@ kotlin_library(
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-core",
+        "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-processor",
         "//tools/base/third_party:com.android.tools.build_bundletool",
         "//tools/base/third_party:com.android.tools.build_transform-api",
         "//tools/base/third_party:com.google.code.gson_gson",

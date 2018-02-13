@@ -72,5 +72,7 @@
     <orderEntry type="library" scope="TEST" name="intellij-annotations" level="project" />
     <orderEntry type="library" name="commons-io" level="project" />
     <orderEntry type="library" name="bundletool" level="project" />
+    <orderEntry type="library" name="jetifier-core" level="project" />
+    <orderEntry type="library" name="jetifier-processor" level="project" />
   </component>
 </module>
