@@ -10,16 +10,15 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public final class LocationTaskCategory extends TaskCategory {
     @NonNull private final Activity mHostActivity;
@@ -44,10 +43,21 @@ public final class LocationTaskCategory extends TaskCategory {
 
     @Override
     protected boolean shouldRunTask(@NonNull Task taskToRun) {
-        ActivityCompat.requestPermissions(
-                mHostActivity,
-                new String[] {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION},
-                ActivityRequestCodes.LOCATION.ordinal());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && (ActivityCompat.checkSelfPermission(
+                                        mHostActivity.getApplicationContext(),
+                                        Manifest.permission.ACCESS_COARSE_LOCATION)
+                                != PackageManager.PERMISSION_GRANTED
+                        || ActivityCompat.checkSelfPermission(
+                                        mHostActivity.getApplicationContext(),
+                                        Manifest.permission.ACCESS_FINE_LOCATION)
+                                != PackageManager.PERMISSION_GRANTED)) {
+            ActivityCompat.requestPermissions(
+                    mHostActivity,
+                    new String[] {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION},
+                    ActivityRequestCodes.LOCATION.ordinal());
+            return false;
+        }
 
         return true;
     }

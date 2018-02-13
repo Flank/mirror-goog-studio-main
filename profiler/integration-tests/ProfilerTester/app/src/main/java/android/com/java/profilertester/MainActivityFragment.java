@@ -7,6 +7,7 @@ import android.com.java.profilertester.taskcategory.EventTaskCategory;
 import android.com.java.profilertester.taskcategory.LocationTaskCategory;
 import android.com.java.profilertester.taskcategory.MemoryTaskCategory;
 import android.com.java.profilertester.taskcategory.NetworkTaskCategory;
+import android.com.java.profilertester.taskcategory.ScreenBrightnessTaskCategory;
 import android.com.java.profilertester.taskcategory.TaskCategory;
 import android.content.Intent;
 import android.os.Bundle;
@@ -57,21 +58,23 @@ public class MainActivityFragment extends Fragment {
         mFragmentView = inflater.inflate(R.layout.fragment_main, container, false);
 
         mCategorySpinner = (Spinner) mFragmentView.findViewById(R.id.category_spinner);
+        final Activity host = getActivity();
         mTaskCategories =
                 new TaskCategory[] {
-                    new CpuTaskCategory(getActivity().getFilesDir()),
+                    new CpuTaskCategory(host.getFilesDir()),
                     new MemoryTaskCategory(),
-                    new NetworkTaskCategory(getActivity()),
+                    new NetworkTaskCategory(host),
                     new EventTaskCategory(
                             new Callable<Activity>() {
                                 @Override
                                 public Activity call() {
-                                    return getActivity();
+                                    return host;
                                 }
                             },
                             (EditText) mFragmentView.findViewById(R.id.section_editor)),
-                    new BluetoothTaskCategory(getActivity()),
-                    new LocationTaskCategory(getActivity(), mMainLooperThread.getLooper())
+                    new BluetoothTaskCategory(host),
+                    new LocationTaskCategory(host, mMainLooperThread.getLooper()),
+                    new ScreenBrightnessTaskCategory(host)
                 };
         ArrayAdapter<TaskCategory> categoryAdapters =
                 new ArrayAdapter<>(
@@ -188,7 +191,7 @@ public class MainActivityFragment extends Fragment {
             return;
         }
 
-        Object taskObject = mTaskSpinner.getSelectedItem();
+        final Object taskObject = mTaskSpinner.getSelectedItem();
         if (taskObject == null) {
             return;
         }

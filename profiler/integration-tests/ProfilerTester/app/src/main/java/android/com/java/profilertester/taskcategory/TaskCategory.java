@@ -6,14 +6,22 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class TaskCategory {
     public abstract static class Task {
+        /** Method that is called just prior to {@link Task#execute()} begins running. */
+        public void preExecute() {}
+
         @Nullable
         protected abstract String execute() throws Exception;
+
+        /**
+         * Method that is called when {@link Task#execute()} finishes running. User is responsible
+         * for determining under what conditions should the contents be run.
+         */
+        public void postExecute() {}
 
         @Override
         public final String toString() {
@@ -46,7 +54,7 @@ public abstract class TaskCategory {
             @NonNull TaskCategory taskCategory,
             @NonNull Task target,
             @Nullable PostExecuteRunner postExecuteRunner) {
-        new AsyncTaskWrapper(taskCategory, postExecuteRunner).execute(target);
+        new AsyncTaskWrapper(taskCategory, target, postExecuteRunner).execute();
     }
 
     @NonNull
@@ -83,24 +91,38 @@ public abstract class TaskCategory {
      */
     public void onActivityResult(int requestCode, int resultCode, Intent data) {}
 
-    private static final class AsyncTaskWrapper extends AsyncTask<Task, Void, String> {
-        private TaskCategory mTaskCategory;
+    private static final class AsyncTaskWrapper extends AsyncTask<Void, Void, String> {
+        private final TaskCategory mTaskCategory;
+        private final Task mTask;
         private final PostExecuteRunner mPostExecuteRunner;
 
         private AsyncTaskWrapper(
-                @NonNull TaskCategory taskCategory, @Nullable PostExecuteRunner postExecuteRunner) {
+                @NonNull TaskCategory taskCategory,
+                @NonNull Task task,
+                @Nullable PostExecuteRunner postExecuteRunner) {
             mTaskCategory = taskCategory;
+            mTask = task;
             mPostExecuteRunner = postExecuteRunner;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            try {
+                if (!mTaskCategory.shouldRunTask(mTask)) {
+                    cancel(true);
+                    return;
+                }
+                mTask.preExecute();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
         @Override
-        protected String doInBackground(Task... tasks) {
+        protected String doInBackground(Void... voids) {
             try {
-                if (!mTaskCategory.shouldRunTask(tasks[0])) {
-                    return "TaskCategory prevented task to run!";
-                }
-                return tasks[0].execute();
+                return mTask.execute();
             } catch (Exception e) {
                 e.printStackTrace();
                 return e.toString();
@@ -109,6 +131,7 @@ public abstract class TaskCategory {
 
         @Override
         protected void onPostExecute(String s) {
+            mTask.postExecute();
             if (mPostExecuteRunner != null) {
                 mPostExecuteRunner.accept(s);
             }

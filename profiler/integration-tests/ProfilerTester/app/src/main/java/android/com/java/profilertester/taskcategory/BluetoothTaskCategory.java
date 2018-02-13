@@ -1,5 +1,7 @@
 package android.com.java.profilertester.taskcategory;
 
+import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
+
 import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -13,9 +15,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,18 +26,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static android.app.Activity.RESULT_OK;
-import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
-
 public class BluetoothTaskCategory extends TaskCategory {
     private final List<? extends Task> mTasks =
             Arrays.asList(new ScanningTask(), new LeScanningTask());
     private final Activity mHostActivity;
-
-    // Latch to wait for user to accept/reject Bluetooth access prompt.
-    private CountDownLatch mPredicateCountdownLatch;
-    // Volatile because this is crossing thread boundaries.
-    private volatile boolean mBluetoothEnabled = false;
 
     public BluetoothTaskCategory(@NonNull Activity hostActivity) {
         mHostActivity = hostActivity;
@@ -54,47 +48,38 @@ public class BluetoothTaskCategory extends TaskCategory {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == ActivityRequestCodes.REQUEST_ENABLE_BT.ordinal()) {
-            mBluetoothEnabled = (resultCode == RESULT_OK);
-            mPredicateCountdownLatch.countDown();
-        }
-    }
-
-    @Override
     protected boolean shouldRunTask(@NonNull Task taskToRun) {
-        mPredicateCountdownLatch = new CountDownLatch(1);
-
-        ActivityCompat.requestPermissions(
-                mHostActivity,
-                new String[]{
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && (ActivityCompat.checkSelfPermission(
+                                        mHostActivity.getApplicationContext(),
+                                        Manifest.permission.ACCESS_COARSE_LOCATION)
+                                != PackageManager.PERMISSION_GRANTED
+                        || ActivityCompat.checkSelfPermission(
+                                        mHostActivity.getApplicationContext(),
+                                        Manifest.permission.ACCESS_FINE_LOCATION)
+                                != PackageManager.PERMISSION_GRANTED)) {
+            ActivityCompat.requestPermissions(
+                    mHostActivity,
+                    new String[] {
                         Manifest.permission.ACCESS_COARSE_LOCATION,
                         Manifest.permission.ACCESS_FINE_LOCATION
-                },
-                1);
+                    },
+                    ActivityRequestCodes.LOCATION.ordinal());
+            return false;
+        }
 
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
             return false;
         }
         if (!bluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             mHostActivity.startActivityForResult(
-                    enableBtIntent, ActivityRequestCodes.REQUEST_ENABLE_BT.ordinal());
-
-            try {
-                mPredicateCountdownLatch.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                Thread.currentThread().interrupt();
-                return false;
-            }
-        } else {
-            mBluetoothEnabled = true;
+                    new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),
+                    ActivityRequestCodes.REQUEST_ENABLE_BT.ordinal());
+            return false;
         }
 
-        // Presumably bluetooth is enabled by the time the Activity resumes?
-        return mBluetoothEnabled;
+        return true;
     }
 
     private final class ScanningTask extends Task {
@@ -117,7 +102,7 @@ public class BluetoothTaskCategory extends TaskCategory {
             final List<BluetoothDevice> devices = new ArrayList<>();
 
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (!mBluetoothEnabled || bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+            if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
                 return "Bluetooth adapter disabled!";
             }
 
@@ -202,7 +187,7 @@ public class BluetoothTaskCategory extends TaskCategory {
             }
 
             BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (!mBluetoothEnabled || bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+            if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
                 return "Bluetooth adapter disabled!";
             }
 
