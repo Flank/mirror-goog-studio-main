@@ -163,7 +163,7 @@ public class BluetoothTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Bluetooth Scan";
         }
     }
@@ -222,7 +222,7 @@ public class BluetoothTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Bluetooth LE Scan";
         }
     }

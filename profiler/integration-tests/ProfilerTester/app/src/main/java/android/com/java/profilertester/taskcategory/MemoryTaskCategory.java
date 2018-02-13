@@ -1,7 +1,6 @@
 package android.com.java.profilertester.taskcategory;
 
 import android.support.annotation.NonNull;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +40,7 @@ public class MemoryTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Java Memory Allocation";
         }
     }
@@ -57,7 +56,7 @@ public class MemoryTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Native Memory Allocation";
         }
     }
@@ -79,7 +78,7 @@ public class MemoryTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Object Allocation";
         }
     }

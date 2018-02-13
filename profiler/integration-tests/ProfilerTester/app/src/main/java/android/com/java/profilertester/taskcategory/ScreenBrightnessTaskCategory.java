@@ -132,7 +132,7 @@ public class ScreenBrightnessTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return mTaskName;
         }
     }

@@ -9,7 +9,6 @@ import android.support.annotation.Nullable;
 import android.view.Menu;
 import android.view.View;
 import android.widget.EditText;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -52,7 +51,7 @@ public class EventTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Switch Activity";
         }
     }
@@ -72,7 +71,7 @@ public class EventTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Type Words";
         }
 

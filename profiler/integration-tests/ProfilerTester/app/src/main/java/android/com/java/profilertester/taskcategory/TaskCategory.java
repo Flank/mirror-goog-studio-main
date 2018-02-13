@@ -25,11 +25,11 @@ public abstract class TaskCategory {
 
         @Override
         public final String toString() {
-            return getTaskName();
+            return getTaskDescription();
         }
 
         @NonNull
-        protected abstract String getTaskName();
+        protected abstract String getTaskDescription();
 
         @Nullable
         protected SelectionListener getSelectionListener() {

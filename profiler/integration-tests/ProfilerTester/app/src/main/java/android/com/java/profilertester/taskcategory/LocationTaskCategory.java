@@ -32,7 +32,13 @@ public final class LocationTaskCategory extends TaskCategory {
     @NonNull
     @Override
     public List<? extends Task> getTasks() {
-        return Arrays.asList(new CoarseLocationUpdateTask(), new FineLocationUpdateTask());
+        return Arrays.asList(
+                new LocationUpdateTask(
+                        "Coarse location",
+                        "Update coarse location",
+                        LocationManager.NETWORK_PROVIDER),
+                new LocationUpdateTask(
+                        "Fine location", "Update fine location", LocationManager.GPS_PROVIDER));
     }
 
     @NonNull
@@ -62,7 +68,20 @@ public final class LocationTaskCategory extends TaskCategory {
         return true;
     }
 
-    private abstract class LocationUpdateTask extends Task {
+    private final class LocationUpdateTask extends Task {
+        @NonNull private final String mTaskName;
+        @NonNull private final String mTaskDescription;
+        @NonNull private final String mLocationServiceProvider;
+
+        private LocationUpdateTask(
+                @NonNull String taskName,
+                @NonNull String taskDescription,
+                @NonNull String locationServiceProvider) {
+            mTaskName = taskName;
+            mTaskDescription = taskDescription;
+            mLocationServiceProvider = locationServiceProvider;
+        }
+
         @NonNull
         @Override
         protected final String execute() {
@@ -112,62 +131,34 @@ public final class LocationTaskCategory extends TaskCategory {
                 Thread.sleep(TimeUnit.SECONDS.toMillis(30));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                return getName() + " update interrupted!";
+                return getTaskName() + " update interrupted!";
             } finally {
                 manager.removeUpdates(locationListener);
             }
-            return getName()
+            return getTaskName()
                     + " update completed, changed "
                     + locations.size()
                     + " times"
-                    + (times.size() > 0 ? ", last one at " + (times.get(times.size() - 1) - startTime) : "")
+                    + (times.size() > 0
+                            ? ", last one at " + (times.get(times.size() - 1) - startTime)
+                            : "")
                     + ".";
         }
 
         @NonNull
-        protected abstract String getProvider();
-
-        @NonNull
-        protected abstract String getName();
-    }
-
-    private final class CoarseLocationUpdateTask extends LocationUpdateTask {
-        @NonNull
         @Override
-        protected String getTaskName() {
-            return "Update coarse location";
+        protected String getTaskDescription() {
+            return mTaskDescription;
         }
 
         @NonNull
-        @Override
-        protected String getProvider() {
-            return LocationManager.NETWORK_PROVIDER;
+        private String getProvider() {
+            return mLocationServiceProvider;
         }
 
         @NonNull
-        @Override
-        protected String getName() {
-            return "Coarse location";
-        }
-    }
-
-    private final class FineLocationUpdateTask extends LocationUpdateTask {
-        @NonNull
-        @Override
-        protected String getTaskName() {
-            return "Update fine location";
-        }
-
-        @NonNull
-        @Override
-        protected String getProvider() {
-            return LocationManager.GPS_PROVIDER;
-        }
-
-        @NonNull
-        @Override
-        protected String getName() {
-            return "Fine location";
+        private String getTaskName() {
+            return mTaskName;
         }
     }
 }

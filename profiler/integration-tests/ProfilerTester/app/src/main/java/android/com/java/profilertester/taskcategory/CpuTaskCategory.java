@@ -3,7 +3,6 @@ package android.com.java.profilertester.taskcategory;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -126,7 +125,7 @@ public class CpuTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "File Read and Write";
         }
 
@@ -223,7 +222,7 @@ public class CpuTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Periodic Usage";
         }
 
