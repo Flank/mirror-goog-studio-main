@@ -17,7 +17,7 @@ package com.android.ide.common.resources;
 
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.ide.common.res2.AbstractResourceRepository.MAX_RESOURCE_INDIRECTION;
+import static com.android.ide.common.resources.AbstractResourceRepository.MAX_RESOURCE_INDIRECTION;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.android.annotations.NonNull;

@@ -33,8 +33,8 @@ import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.annotations.VisibleForTesting
 import com.android.ide.common.repository.ResourceVisibilityLookup
-import com.android.ide.common.res2.AbstractResourceRepository
-import com.android.ide.common.res2.ResourceItem
+import com.android.ide.common.resources.AbstractResourceRepository
+import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER
 import com.android.repository.api.ProgressIndicator
 import com.android.resources.ResourceFolderType

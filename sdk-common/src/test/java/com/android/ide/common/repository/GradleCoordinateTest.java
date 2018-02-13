@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import com.android.ide.common.res2.BaseTestCase;
+import com.android.ide.common.resources.BaseTestCase;
 import com.google.common.collect.Lists;
 import java.util.List;
 import org.junit.Test;

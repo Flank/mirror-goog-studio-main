@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.ide.common.build.ApkInfo;
-import com.android.ide.common.res2.FileStatus;
+import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

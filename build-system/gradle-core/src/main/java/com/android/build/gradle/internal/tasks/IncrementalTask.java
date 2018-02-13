@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.internal.tasks;
 
-import com.android.ide.common.res2.FileStatus;
+import com.android.ide.common.resources.FileStatus;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Map;

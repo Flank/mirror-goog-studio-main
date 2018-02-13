@@ -23,17 +23,15 @@ import com.android.ide.common.blame.parser.ToolOutputParser;
 import com.android.ide.common.blame.parser.util.OutputLineReader;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutput;
-import com.android.ide.common.res2.RecordingLogger;
+import com.android.ide.common.resources.RecordingLogger;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
-
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.mockito.Mockito;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 public class ParsingProcessOutputHandlerTest {
 

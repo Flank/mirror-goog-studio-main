@@ -29,8 +29,8 @@ import com.android.SdkConstants.RES_FOLDER
 import com.android.SdkConstants.SRC_FOLDER
 import com.android.builder.model.AndroidLibrary
 import com.android.ide.common.repository.ResourceVisibilityLookup
-import com.android.ide.common.res2.AbstractResourceRepository
-import com.android.ide.common.res2.ResourceItem
+import com.android.ide.common.resources.AbstractResourceRepository
+import com.android.ide.common.resources.ResourceItem
 import com.android.manifmerger.Actions
 import com.android.prefs.AndroidLocation
 import com.android.repository.api.ProgressIndicator

@@ -18,7 +18,7 @@ package com.android.builder.merge;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.res2.FileStatus;
+import com.android.ide.common.resources.FileStatus;
 import com.google.common.collect.ImmutableSet;
 import java.io.InputStream;
 

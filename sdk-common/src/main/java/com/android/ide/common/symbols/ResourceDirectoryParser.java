@@ -20,8 +20,8 @@ import static com.android.SdkConstants.DOT_XML;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.res2.FileResourceNameValidator;
-import com.android.ide.common.res2.MergingException;
+import com.android.ide.common.resources.FileResourceNameValidator;
+import com.android.ide.common.resources.MergingException;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;

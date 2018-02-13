@@ -17,7 +17,7 @@
 package com.android.builder.merge;
 
 import com.android.annotations.NonNull;
-import com.android.ide.common.res2.FileStatus;
+import com.android.ide.common.resources.FileStatus;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.HashSet;

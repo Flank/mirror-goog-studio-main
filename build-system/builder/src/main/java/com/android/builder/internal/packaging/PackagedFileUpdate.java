@@ -18,7 +18,7 @@ package com.android.builder.internal.packaging;
 
 import com.android.annotations.NonNull;
 import com.android.builder.files.RelativeFile;
-import com.android.ide.common.res2.FileStatus;
+import com.android.ide.common.resources.FileStatus;
 import com.google.common.base.Objects;
 
 

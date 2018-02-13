@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.aapt
 
 import com.android.build.gradle.internal.res.Aapt2CompileWithBlameRunnable
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
-import com.android.ide.common.res2.CompileResourceRequest
-import com.android.ide.common.res2.ResourceCompilationService
+import com.android.ide.common.resources.CompileResourceRequest
+import com.android.ide.common.resources.ResourceCompilationService
 import com.android.repository.Revision
 import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor

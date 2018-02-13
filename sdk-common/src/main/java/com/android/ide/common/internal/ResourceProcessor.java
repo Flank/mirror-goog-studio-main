@@ -19,7 +19,7 @@ package com.android.ide.common.internal;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.process.ProcessOutputHandler;
-import com.android.ide.common.res2.CompileResourceRequest;
+import com.android.ide.common.resources.CompileResourceRequest;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 

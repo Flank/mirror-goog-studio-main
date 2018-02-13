@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
 import com.android.annotations.VisibleForTesting
-import com.android.ide.common.res2.CompileResourceRequest
-import com.android.ide.common.res2.ResourceCompilationService
+import com.android.ide.common.resources.CompileResourceRequest
+import com.android.ide.common.resources.ResourceCompilationService
 import com.android.ide.common.xml.XmlFormatPreferences
 import com.android.ide.common.xml.XmlFormatStyle
 import com.android.ide.common.xml.XmlPrettyPrinter

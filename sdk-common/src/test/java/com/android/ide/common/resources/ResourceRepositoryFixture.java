@@ -6,11 +6,6 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.ide.common.res2.MergingException;
-import com.android.ide.common.res2.RecordingLogger;
-import com.android.ide.common.res2.ResourceMerger;
-import com.android.ide.common.res2.ResourceRepository;
-import com.android.ide.common.res2.ResourceSet;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;

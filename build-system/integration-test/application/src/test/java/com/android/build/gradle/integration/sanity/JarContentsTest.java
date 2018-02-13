@@ -579,7 +579,6 @@ public class JarContentsTest {
                 "com/android/ide/common/process/",
                 "com/android/ide/common/rendering/",
                 "com/android/ide/common/repository/",
-                "com/android/ide/common/res2/",
                 "com/android/ide/common/resources/",
                 "com/android/ide/common/resources/configuration/",
                 "com/android/ide/common/resources/deprecated/",

@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.res
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.namespaced.useAaptDaemon
 import com.android.builder.internal.aapt.v2.Aapt2Exception
-import com.android.ide.common.res2.CompileResourceRequest
+import com.android.ide.common.resources.CompileResourceRequest
 import com.android.repository.Revision
 import org.gradle.api.logging.Logging
 import java.io.Serializable

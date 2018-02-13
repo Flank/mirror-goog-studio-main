@@ -20,7 +20,7 @@ package com.android.builder.internal.aapt.v2
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.CloseableBlockingResourceLinker
 import com.android.builder.internal.aapt.v2.Aapt2DaemonManager.LeasedAaptDaemon
-import com.android.ide.common.res2.CompileResourceRequest
+import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.ILogger
 import com.google.common.base.Preconditions
 import com.google.common.base.Ticker
