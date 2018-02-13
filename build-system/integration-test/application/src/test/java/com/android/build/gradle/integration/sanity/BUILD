@@ -27,6 +27,7 @@ java_test(
     ],
     tags = [
         "block-network",
+        "no_test_windows",  # b/73306170
     ],
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = [

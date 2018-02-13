@@ -10,8 +10,8 @@ load('//tools/base/bazel:kotlin.bzl', 'kotlin_library', 'kotlin_jar')
 #     data = test data: SDK parts and test projects.
 #     maven_repos = Absolute targets for maven repos containing the plugin(s) under test
 #     shard_count = 8)
-def gradle_integration_test(
-    name, srcs, deps, data, maven_repos, dirs=["src/test/java"], resources=[], runtime_deps=[], shard_count=1, **kwargs):
+def gradle_integration_test(name, srcs, deps, data, maven_repos, dirs=["src/test/java"], resources=[],
+                            runtime_deps=[], shard_count=1, tags=[], **kwargs):
 
   kotlin_srcs = [src for src in srcs if src.endswith('.kt')]
   java_srcs = [src for src in srcs if src.endswith('.java')]
@@ -74,9 +74,8 @@ def gradle_integration_test(
           'block-network',
           'cpu:3',
           'gradle_integration',
-          'no_test_mac',  # b/69151132 Time out frequently when run on mac.
           'slow',
-      ],
+      ] + tags,
       test_class = 'com.android.build.gradle.integration.BazelIntegrationTestsSuite',
       runtime_deps = [
           # Need to put this on the classpath before TestRunner_deploy.jar which contains

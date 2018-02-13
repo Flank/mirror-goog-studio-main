@@ -257,6 +257,7 @@ kotlin_test(
         "-Dtest.suite.jar=tests.jar",
         "-Duser.home=/tmp",
     ],
+    tags = ["no_test_windows"],  # b/73306170
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.lint-gradle",

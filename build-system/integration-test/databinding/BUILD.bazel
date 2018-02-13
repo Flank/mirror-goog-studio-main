@@ -84,6 +84,7 @@ java_test(
         "cpu:3",
         "gradle_integration",
         "no_test_mac",  # b/69151132 Time out frequently when run on mac.
+        "no_test_windows",  # b/73306170
         "slow",
     ],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",

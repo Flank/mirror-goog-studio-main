@@ -46,6 +46,7 @@ kotlin_test(
         # TODO: Inject the cache directory into tests.
         "-Duser.home=/tmp",
     ],
+    tags = ["no_test_windows"],  # b/73306170
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":lint-tests",
