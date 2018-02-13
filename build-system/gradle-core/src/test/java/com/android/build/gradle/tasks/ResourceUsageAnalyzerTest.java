@@ -28,12 +28,13 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.resources.ResourceType;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
+import com.android.resources.ResourceType;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import com.google.common.io.Resources;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -53,40 +54,65 @@ import org.junit.rules.TemporaryFolder;
 @SuppressWarnings("SpellCheckingInspection")
 public class ResourceUsageAnalyzerTest {
 
+    enum CodeInput {
+        NO_SHRINKER,
+        PROGUARD,
+        R8
+    }
+
     @ClassRule
     public static TemporaryFolder sTemporaryFolder = new TemporaryFolder();
 
     @Test
     public void testObfuscatedInPlace() throws Exception {
-        check(true, true);
+        check(CodeInput.PROGUARD, true);
     }
 
     @Test
     public void testObfuscatedCopy() throws Exception {
-        check(true, false);
+        check(CodeInput.PROGUARD, false);
     }
 
     @Test
     public void testNoProGuardInPlace() throws Exception {
-        check(false, true);
+        check(CodeInput.NO_SHRINKER, true);
     }
 
     @Test
     public void testNoProGuardCopy() throws Exception {
-        check(false, false);
+        check(CodeInput.NO_SHRINKER, false);
     }
 
-    private static void check(boolean useProguard, boolean inPlace) throws Exception {
+    @Test
+    public void testR8InPlace() throws Exception {
+        check(CodeInput.R8, true);
+    }
+
+    @Test
+    public void testR8Copy() throws Exception {
+        check(CodeInput.R8, false);
+    }
+
+    private static void check(CodeInput codeInput, boolean inPlace) throws Exception {
         File dir = sTemporaryFolder.newFolder();
 
         File mapping;
         File classes;
-        if (useProguard) {
-            classes = createProguardedClasses(dir);
-            mapping = createMappingFile(dir);
-        } else {
-            classes = createUnproguardedClasses(dir);
-            mapping = null;
+        switch (codeInput) {
+            case PROGUARD:
+                classes = createProguardedClasses(dir);
+                mapping = createMappingFile(dir);
+                break;
+            case NO_SHRINKER:
+                classes = createUnproguardedClasses(dir);
+                mapping = null;
+                break;
+            case R8:
+                classes = createR8Dex(dir);
+                mapping = createMappingFile(dir);
+                break;
+            default:
+                throw new AssertionError();
         }
         File rDir = createResourceClassFolder(dir);
         File mergedManifest = createMergedManifest(dir);
@@ -991,6 +1017,38 @@ public class ResourceUsageAnalyzerTest {
                 (byte)0, (byte)39, (byte)6, (byte)0, (byte)0, (byte)0, (byte)0,
         };
         return createFile(dir, "app/build/intermediates/classes/debug/classes.jar", bytecode);
+    }
+
+    private static File createR8Dex(File dir) throws IOException {
+        /*
+         Dex file contain the activity below, it has been produced with R8 with minSdkVersion 25.
+
+         package com.example.shrinkunittest.app;
+         import android.app.Activity;
+         import android.os.Bundle;
+         import android.view.Menu;
+         import android.view.MenuItem;
+         public class MainActivity extends Activity {
+           public MainActivity() {
+           }
+           protected void onCreate(Bundle var1) {
+             super.onCreate(var1);
+             this.setContentView(2130903040);
+           }
+           public boolean onCreateOptionsMenu(Menu var1) {
+             this.getMenuInflater().inflate(2131165184, var1);
+             return true;
+           }
+           public boolean onOptionsItemSelected(MenuItem var1) {
+             int var2 = var1.getItemId();
+             return var2 == 2131230720 ? true : super.onOptionsItemSelected(var1);
+           }
+         }
+        */
+        byte[] dexContent =
+                Resources.toByteArray(Resources.getResource("resourceShrinker/classes.dex"));
+        return createFile(
+                dir, "app/build/intermediates/transforms/r8/debug/0/classes.dex", dexContent);
     }
 
     private static File createMappingFile(File dir) throws IOException {

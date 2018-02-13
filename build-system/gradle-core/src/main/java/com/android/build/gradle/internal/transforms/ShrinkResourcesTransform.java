@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent.ContentType;
+import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Transform;
@@ -30,6 +31,7 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
+import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -143,7 +145,9 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull
     @Override
     public Set<ContentType> getInputTypes() {
-        return TransformManager.CONTENT_CLASS;
+        // When R8 produces dex files, this transform analyzes them. If R8 or Proguard produce
+        // class files, this transform will analyze those. That is why both types are specified.
+        return ImmutableSet.of(ExtendedContentType.DEX, DefaultContentType.CLASSES);
     }
 
     @NonNull

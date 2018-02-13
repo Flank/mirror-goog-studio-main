@@ -321,7 +321,7 @@ public class AppPluginDslTest {
         plugin.createAndroidTasks(false);
 
         assertThat(project.getTasks().getNames())
-                .containsAllOf(SHRINKER_RELEASE, "transformClassesWithShrinkResForRelease");
+                .containsAllOf(SHRINKER_RELEASE, "transformClassesAndDexWithShrinkResForRelease");
     }
 
     @Test

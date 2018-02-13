@@ -2282,16 +2282,11 @@ public abstract class TaskManager {
 
         // ----- Minify next -----
         CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTransform(variantScope);
+        maybeCreateResourcesShrinkerTransform(variantScope);
         if (shrinker == CodeShrinker.R8) {
-            Preconditions.checkState(
-                    !variantScope.useResourceShrinker(),
-                    "Please disable resource shrinker, as R8 is being used. See "
-                            + " https://issuetracker.google.com/72370175.");
             publishTransformOutputs(variantScope, transformManager);
             return;
         }
-
-        maybeCreateResourcesShrinkerTransform(variantScope);
 
         // ----- 10x support
 

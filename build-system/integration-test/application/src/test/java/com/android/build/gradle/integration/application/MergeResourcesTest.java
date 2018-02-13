@@ -424,7 +424,6 @@ public class MergeResourcesTest {
                         + "'\n"
                         + "}\n");
 
-        // resource shrinker and R8 support missing - http://b/72370175
         // Run a full build with shrinkResources enabled
         GradleBuildResult result =
                 project.executor()

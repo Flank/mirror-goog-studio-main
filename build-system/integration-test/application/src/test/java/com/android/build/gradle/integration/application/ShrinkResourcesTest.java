@@ -26,12 +26,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
@@ -61,21 +61,21 @@ public class ShrinkResourcesTest {
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("shrink").create();
 
-    @Parameterized.Parameters(name = "useProguard {0}")
-    public static List<Boolean> data() {
-        return ImmutableList.of(true, false);
+    @Parameterized.Parameters(name = "shrinker {0}")
+    public static CodeShrinker[] data() {
+        return CodeShrinker.values();
     }
 
-    @Parameterized.Parameter public boolean useProguard;
+    @Parameterized.Parameter public CodeShrinker shrinker;
 
     @Test
     public void checkShrinkResources() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
-                project.getBuildFile(), "android.buildTypes.release.useProguard = " + useProguard);
+                project.getBuildFile(),
+                "android.buildTypes.release.useProguard = " + (shrinker == CodeShrinker.PROGUARD));
 
-        // resource shrinker and R8 support missing - http://b/72370175
         project.executor()
-                .with(BooleanOption.ENABLE_R8, false)
+                .with(BooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
                 .run("clean", "assembleRelease", "assembleDebug", "assembleMinifyDontShrink");
 
         File intermediates = project.file("build/" + AndroidProject.FD_INTERMEDIATES);

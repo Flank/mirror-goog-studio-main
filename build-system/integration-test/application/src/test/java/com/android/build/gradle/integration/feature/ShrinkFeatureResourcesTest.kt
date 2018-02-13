@@ -19,12 +19,23 @@ package com.android.build.gradle.integration.feature
 import com.android.testutils.truth.PathSubject.assertThat
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.scope.CodeShrinker
 import com.android.build.gradle.options.BooleanOption
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class ShrinkFeatureResourcesTest {
+@RunWith(FilterableParameterized::class)
+class ShrinkFeatureResourcesTest(val shrinker: CodeShrinker) {
+
+    companion object {
+        @JvmStatic @Parameterized.Parameters(name="shrinker {0}")
+        fun setUps() = listOf(CodeShrinker.PROGUARD, CodeShrinker.R8)
+    }
+
     @JvmField @Rule
     var project : GradleTestProject =
             GradleTestProject.builder()
@@ -46,8 +57,9 @@ class ShrinkFeatureResourcesTest {
                         + "    }\n"
                         + "}\n")
 
-        // resource shrinker and R8 support missing - http://b/72370175
-        project.executor().with(BooleanOption.ENABLE_R8, false).run("clean", "assembleRelease")
+        project.executor()
+            .with(BooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
+            .run("clean", "assembleRelease")
         val releaseApk = project.getSubproject(":feature").getFeatureApk(GradleTestProject.ApkType.RELEASE)
         assertThat(releaseApk.file).isFile()
     }

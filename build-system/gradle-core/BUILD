@@ -73,6 +73,7 @@ kotlin_library(
         "//tools/base/third_party:org.ow2.asm_asm-analysis",
         "//tools/base/third_party:org.ow2.asm_asm-commons",
         "//tools/base/third_party:org.ow2.asm_asm-util",
+        "//tools/base/third_party:org.smali_dexlib2",
         "//tools/data-binding:tools.compilerCommon",
     ],
 )
