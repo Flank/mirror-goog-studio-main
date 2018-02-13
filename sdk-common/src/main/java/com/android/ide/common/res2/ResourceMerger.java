@@ -145,66 +145,71 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
 
         try {
             if (touched || (previouslyWrittenItem == null && !removed)) {
-                DocumentBuilder builder = mFactory.newDocumentBuilder();
-                Document document = builder.newDocument();
+                ResourceItem newItem = sourceItem;
+                if (items.size() > 1) {
+                    DocumentBuilder builder = mFactory.newDocumentBuilder();
+                    Document document = builder.newDocument();
 
-                Node declareStyleableNode = document.createElementNS(null, TAG_DECLARE_STYLEABLE);
+                    Node declareStyleableNode =
+                            document.createElementNS(null, TAG_DECLARE_STYLEABLE);
 
-                Attr nameAttr = document.createAttribute(ATTR_NAME);
-                nameAttr.setValue(itemName);
-                declareStyleableNode.getAttributes().setNamedItem(nameAttr);
+                    Attr nameAttr = document.createAttribute(ATTR_NAME);
+                    nameAttr.setValue(itemName);
+                    declareStyleableNode.getAttributes().setNamedItem(nameAttr);
 
-                // loop through all the items and gather a unique list of nodes.
-                // because we start with the lower priority items, this means that attr with
-                // format inside declare-styleable will be processed first, and added first
-                // while the redundant attr (with no format) will be ignored.
-                Set<String> attrs = Sets.newHashSet();
+                    // loop through all the items and gather a unique list of nodes.
+                    // because we start with the lower priority items, this means that attr with
+                    // format inside declare-styleable will be processed first, and added first
+                    // while the redundant attr (with no format) will be ignored.
+                    Set<String> attrs = Sets.newHashSet();
 
-                for (ResourceItem item : items) {
-                    if (!item.isRemoved()) {
-                        Node oldDeclareStyleable = item.getValue();
-                        if (oldDeclareStyleable != null) {
-                            NodeList children = oldDeclareStyleable.getChildNodes();
-                            for (int i = 0; i < children.getLength(); i++) {
-                                Node attrNode = children.item(i);
-                                if (attrNode.getNodeType() != Node.ELEMENT_NODE) {
-                                    continue;
+                    for (ResourceItem item : items) {
+                        if (!item.isRemoved()) {
+                            Node oldDeclareStyleable = item.getValue();
+                            if (oldDeclareStyleable != null) {
+                                NodeList children = oldDeclareStyleable.getChildNodes();
+                                for (int i = 0; i < children.getLength(); i++) {
+                                    Node attrNode = children.item(i);
+                                    if (attrNode.getNodeType() != Node.ELEMENT_NODE) {
+                                        continue;
+                                    }
+
+                                    if (SdkConstants.TAG_EAT_COMMENT.equals(
+                                            attrNode.getLocalName())) {
+                                        continue;
+                                    }
+
+                                    // get the name
+                                    NamedNodeMap attributes = attrNode.getAttributes();
+                                    nameAttr = (Attr) attributes.getNamedItemNS(null, ATTR_NAME);
+                                    if (nameAttr == null) {
+                                        continue;
+                                    }
+
+                                    String name = nameAttr.getNodeValue();
+                                    if (attrs.contains(name)) {
+                                        continue;
+                                    }
+
+                                    // duplicate the node.
+                                    attrs.add(name);
+                                    Node newAttrNode = NodeUtils.duplicateNode(document, attrNode);
+                                    declareStyleableNode.appendChild(newAttrNode);
                                 }
-
-                                if (SdkConstants.TAG_EAT_COMMENT.equals(attrNode.getLocalName())) {
-                                    continue;
-                                }
-
-                                // get the name
-                                NamedNodeMap attributes = attrNode.getAttributes();
-                                nameAttr = (Attr) attributes.getNamedItemNS(null, ATTR_NAME);
-                                if (nameAttr == null) {
-                                    continue;
-                                }
-
-                                String name = nameAttr.getNodeValue();
-                                if (attrs.contains(name)) {
-                                    continue;
-                                }
-
-                                // duplicate the node.
-                                attrs.add(name);
-                                Node newAttrNode = NodeUtils.duplicateNode(document, attrNode);
-                                declareStyleableNode.appendChild(newAttrNode);
                             }
                         }
                     }
-                }
 
-                // always write it for now.
-                MergedResourceItem newItem =
-                        new MergedResourceItem(
-                                itemName,
-                                namespace,
-                                sourceItem.getType(),
-                                qualifier,
-                                declareStyleableNode,
-                                libraryName);
+                    // always write it for now.
+                    newItem =
+                            new MergedResourceItem(
+                                    itemName,
+                                    namespace,
+                                    sourceItem.getType(),
+                                    qualifier,
+                                    declareStyleableNode,
+                                    libraryName);
+                }
 
                 // check whether the result of the merge is new or touched compared
                 // to the previous state.
