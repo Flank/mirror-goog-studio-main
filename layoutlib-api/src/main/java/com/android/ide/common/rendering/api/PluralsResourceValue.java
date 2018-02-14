@@ -100,13 +100,13 @@ public class PluralsResourceValue extends ResourceValue {
         // layout libs, return the first plurals element's value instead.
 
         //noinspection VariableNotUsedInsideIf
-        if (mValue == null) {
+        if (super.getValue() == null) {
             if (!mValues.isEmpty()) {
                 return getValue(0);
             }
 
         }
 
-        return mValue;
+        return super.getValue();
     }
 }

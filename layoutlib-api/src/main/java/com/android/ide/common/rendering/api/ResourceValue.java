@@ -20,15 +20,18 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
+import com.android.utils.HashCodes;
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
-/**
- * Represents an android resource with a name and a string value.
- */
-public class ResourceValue extends ResourceReference {
-    @Nullable private final String mLibraryName;
-    @Nullable protected String mValue;
+/** Represents an android resource with a name and a string value. */
+public class ResourceValue {
+    @NonNull private final ResourceType resourceType;
+    @NonNull private final ResourceNamespace namespace;
+    @NonNull private final String name;
+
+    @Nullable private final String libraryName;
+    @Nullable private String value;
 
     @NonNull
     protected ResourceNamespace.Resolver mNamespaceResolver =
@@ -78,16 +81,35 @@ public class ResourceValue extends ResourceReference {
             @NonNull String name,
             @Nullable String value,
             @Nullable String libraryName) {
-        super(namespace, type, name);
-        mValue = value;
-        mLibraryName = libraryName;
+        this.namespace = namespace;
+        this.resourceType = type;
+        this.name = name;
+        this.value = value;
+        this.libraryName = libraryName;
+    }
+
+    @NonNull
+    public ResourceType getResourceType() {
+        return resourceType;
+    }
+
+    @NonNull
+    public ResourceNamespace getNamespace() {
+        return namespace;
+    }
+
+    @NonNull
+    public String getName() {
+        return name;
     }
 
     /**
-     * Returns the name of the library where this resource was found or null if it is not from a library.
+     * Returns the name of the library where this resource was found or null if it is not from a
+     * library.
      */
+    @Nullable
     public String getLibraryName() {
-        return mLibraryName;
+        return libraryName;
     }
 
     /**
@@ -95,7 +117,11 @@ public class ResourceValue extends ResourceReference {
      */
     public boolean isUserDefined() {
         // TODO: namespaces
-        return !isFramework() && mLibraryName == null;
+        return !isFramework() && libraryName == null;
+    }
+
+    public boolean isFramework() {
+        return namespace == ResourceNamespace.ANDROID;
     }
 
     /**
@@ -104,7 +130,17 @@ public class ResourceValue extends ResourceReference {
      */
     @Nullable
     public String getValue() {
-        return mValue;
+        return value;
+    }
+
+    @NonNull
+    public ResourceReference asReference() {
+        return new ResourceReference(namespace, resourceType, name);
+    }
+
+    @NonNull
+    public ResourceUrl getResourceUrl() {
+        return asReference().getResourceUrl();
     }
 
     /**
@@ -116,11 +152,11 @@ public class ResourceValue extends ResourceReference {
      */
     @Nullable
     public ResourceReference getReference() {
-        if (mValue == null) {
+        if (value == null) {
             return null;
         }
 
-        ResourceUrl url = ResourceUrl.parse(mValue);
+        ResourceUrl url = ResourceUrl.parse(value);
         if (url == null) {
             return null;
         }
@@ -142,10 +178,11 @@ public class ResourceValue extends ResourceReference {
 
     /**
      * Sets the value of the resource.
+     *
      * @param value the new value
      */
-    public void setValue(String value) {
-        mValue = value;
+    public void setValue(@Nullable String value) {
+        this.value = value;
     }
 
     /**
@@ -153,7 +190,7 @@ public class ResourceValue extends ResourceReference {
      * @param value the resource value
      */
     public void replaceWith(ResourceValue value) {
-        mValue = value.mValue;
+        this.value = value.value;
     }
 
     /**
@@ -174,22 +211,22 @@ public class ResourceValue extends ResourceReference {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        if (!super.equals(o)) {
-            return false;
-        }
-
         ResourceValue that = (ResourceValue) o;
-
-        return Objects.equals(mLibraryName, that.mLibraryName)
-                && Objects.equals(mValue, that.mValue);
+        return resourceType == that.resourceType
+                && Objects.equals(namespace, that.namespace)
+                && Objects.equals(name, that.name)
+                && Objects.equals(libraryName, that.libraryName)
+                && Objects.equals(value, that.value);
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + Objects.hashCode(mLibraryName);
-        result = 31 * result + Objects.hashCode(mValue);
-        return result;
+        return HashCodes.mix(
+                resourceType.hashCode(),
+                namespace.hashCode(),
+                name.hashCode(),
+                Objects.hashCode(libraryName),
+                Objects.hashCode(value));
     }
 
     @Override
@@ -198,7 +235,7 @@ public class ResourceValue extends ResourceReference {
                 .add("namespace", getNamespace())
                 .add("type", getResourceType())
                 .add("name", getName())
-                .add("value", mValue)
+                .add("value", getValue())
                 .toString();
     }
 }

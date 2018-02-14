@@ -23,29 +23,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.ide.common.rendering.api.ArrayResourceValue;
-import com.android.ide.common.rendering.api.ItemResourceValue;
-import com.android.ide.common.rendering.api.LayoutLog;
-import com.android.ide.common.rendering.api.RenderResources;
-import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.ide.common.rendering.api.ResourceReference;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.rendering.api.SampleDataResourceValue;
-import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.rendering.api.*;
 import com.android.ide.common.resources.sampledata.SampleDataManager;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -252,7 +236,8 @@ public class ResourceResolver extends RenderResources {
 
             if (from != null && to != null) {
                 StyleResourceValue newStyle =
-                        new StyleResourceValue(from, parentName, from.getLibraryName());
+                        new StyleResourceValue(
+                                from.asReference(), parentName, from.getLibraryName());
                 newStyle.replaceWith(from);
                 mStyleInheritanceMap.put(newStyle, to);
             }
