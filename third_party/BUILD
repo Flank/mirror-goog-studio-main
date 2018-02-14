@@ -1285,7 +1285,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.mockito_mockito-core",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/2.7.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/2.11.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
     runtime_deps = [
