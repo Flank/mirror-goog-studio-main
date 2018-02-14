@@ -16,11 +16,9 @@
 
 package com.android.ide.common.rendering.api;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -229,7 +227,7 @@ public class RenderResources {
             return null;
         }
 
-        // Type is ignored. We don't call setNamespaceLookup, because this method is called from code that's not namespace aware anyway.
+        // Type is ignored. We don't call setNamespaceResolver, because this method is called from code that's not namespace aware anyway.
         return dereference(
                 new ResourceValue(
                         ResourceType.ID,
@@ -281,32 +279,6 @@ public class RenderResources {
         }
 
         return resolveResValue(referencedValue);
-    }
-
-    /**
-     * Context used when dealing with old layoutlib code.
-     *
-     * <p>Historically we assumed that "tools:" means {@link SdkConstants#TOOLS_URI}, so need to
-     * keep doing that, at least in non-namespaced projects.
-     *
-     * @see #resolveValue(ResourceType, String, String, boolean)
-     */
-    @Deprecated
-    private static final ResourceNamespace.Resolver LEGACY_TOOLS_RESOLVER =
-            Collections.singletonMap(SdkConstants.TOOLS_NS_NAME, SdkConstants.TOOLS_URI)::get;
-
-    /**
-     * Kept for layoutlib. Remove ASAP.
-     *
-     * @deprecated Use {@link #resolveResValue(ResourceValue)}
-     */
-    @Nullable
-    @Deprecated
-    public ResourceValue resolveValue(
-            ResourceType type, String name, String value, boolean isFrameworkValue) {
-        ResourceValue resourceValue = new ResourceValue(type, name, value, isFrameworkValue);
-        resourceValue.setNamespaceLookup(LEGACY_TOOLS_RESOLVER);
-        return resolveResValue(resourceValue);
     }
 
     /**

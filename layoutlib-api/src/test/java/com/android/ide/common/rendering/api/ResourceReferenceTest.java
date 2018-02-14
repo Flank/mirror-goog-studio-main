@@ -17,7 +17,9 @@ package com.android.ide.common.rendering.api;
 
 import static org.junit.Assert.assertEquals;
 
+import com.android.SdkConstants;
 import com.android.resources.ResourceType;
+import com.google.common.collect.ImmutableBiMap;
 import org.junit.Test;
 
 /** Unit tests for the {@link ResourceReference} class. */
@@ -48,7 +50,19 @@ public class ResourceReferenceTest {
         ResourceReference inLib = new ResourceReference(libNs, ResourceType.STRING, "app_name");
 
         assertEquals("@string/app_name", inLib.getRelativeResourceUrl(libNs).toString());
+        assertEquals("@android:color/black", inAndroid.getRelativeResourceUrl(libNs).toString());
         assertEquals(
                 "@com.example.lib:string/app_name", inLib.getRelativeResourceUrl(appNs).toString());
+
+        ResourceNamespace.Resolver resolver =
+                ResourceNamespace.Resolver.fromBiMap(
+                        ImmutableBiMap.of(
+                                "lib", libNs.getXmlNamespaceUri(), "a", SdkConstants.ANDROID_URI));
+
+        assertEquals("@string/app_name", inLib.getRelativeResourceUrl(libNs, resolver).toString());
+        assertEquals(
+                "@lib:string/app_name", inLib.getRelativeResourceUrl(appNs, resolver).toString());
+        assertEquals(
+                "@a:color/black", inAndroid.getRelativeResourceUrl(appNs, resolver).toString());
     }
 }

@@ -17,6 +17,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Strings;
+import com.google.common.collect.BiMap;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -53,13 +54,54 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
      *
      * @see ResourceNamespace#fromNamespacePrefix(String, ResourceNamespace, Resolver)
      */
-    @FunctionalInterface
     public interface Resolver {
         /** Returns the full URI of an XML namespace for a given prefix, if defined. */
         @Nullable
         String prefixToUri(@NonNull String namespacePrefix);
 
-        Resolver EMPTY_RESOLVER = prefix -> null;
+        @Nullable
+        default String uriToPrefix(@NonNull String namespaceUri) {
+            // TODO(namespaces): remove the default implementation once layoutlib provides one.
+            return null;
+        }
+
+        Resolver EMPTY_RESOLVER =
+                new Resolver() {
+                    @Nullable
+                    @Override
+                    public String uriToPrefix(@NonNull String namespaceUri) {
+                        return null;
+                    }
+
+                    @Nullable
+                    @Override
+                    public String prefixToUri(@NonNull String namespacePrefix) {
+                        return null;
+                    }
+                };
+
+        /**
+         * Creates a new {@link Resolver} which looks up prefix definitions in the given {@link
+         * BiMap}.
+         *
+         * @param prefixes a {@link BiMap} mapping prefix strings to full namespace URIs
+         */
+        @NonNull
+        static Resolver fromBiMap(@NonNull BiMap<String, String> prefixes) {
+            return new Resolver() {
+                @Nullable
+                @Override
+                public String uriToPrefix(@NonNull String namespaceUri) {
+                    return prefixes.inverse().get(namespaceUri);
+                }
+
+                @Nullable
+                @Override
+                public String prefixToUri(@NonNull String namespacePrefix) {
+                    return prefixes.get(namespacePrefix);
+                }
+            };
+        }
     }
 
     @NonNull private final String uri;

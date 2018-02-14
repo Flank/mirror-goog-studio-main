@@ -464,14 +464,26 @@ public class ResourceItem extends DataItem<ResourceFile>
                 break;
         }
 
-        value.setNamespaceLookup(getNamespaceResolver(this.mValue));
+        value.setNamespaceResolver(getNamespaceResolver(this.mValue));
         return value;
     }
 
     @NonNull
     private static ResourceNamespace.Resolver getNamespaceResolver(Node node) {
         // TODO(namespaces): precompute this?
-        return node::lookupNamespaceURI;
+        return new ResourceNamespace.Resolver() {
+            @Nullable
+            @Override
+            public String uriToPrefix(@NonNull String namespaceUri) {
+                return node.lookupPrefix(namespaceUri);
+            }
+
+            @Nullable
+            @Override
+            public String prefixToUri(@NonNull String namespacePrefix) {
+                return node.lookupNamespaceURI(namespacePrefix);
+            }
+        };
     }
 
     @Nullable
@@ -512,7 +524,7 @@ public class ResourceItem extends DataItem<ResourceFile>
                                     ValueXmlHelper.unescapeResourceString(
                                             getTextNode(child.getChildNodes()), false, true),
                                     styleValue.getLibraryName());
-                    resValue.setNamespaceLookup(getNamespaceResolver(child));
+                    resValue.setNamespaceResolver(getNamespaceResolver(child));
                     styleValue.addItem(resValue);
                 }
             }
@@ -613,7 +625,7 @@ public class ResourceItem extends DataItem<ResourceFile>
                                             new ResourceReference(
                                                     namespace, ResourceType.ATTR, name),
                                             mLibraryName));
-                    attr.setNamespaceLookup(getNamespaceResolver(child));
+                    attr.setNamespaceResolver(getNamespaceResolver(child));
                     declareStyleable.addValue(attr);
                 }
             }

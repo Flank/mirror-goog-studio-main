@@ -193,14 +193,37 @@ public class ResourceValue {
         this.value = value.value;
     }
 
+    @NonNull
+    public ResourceNamespace.Resolver getNamespaceResolver() {
+        return mNamespaceResolver;
+    }
+
     /**
      * Specifies logic used to resolve namespace aliases for values that come from XML files.
      *
      * <p>This method is meant to be called by the XML parser that created this {@link
      * ResourceValue}.
      */
-    public void setNamespaceLookup(@NonNull ResourceNamespace.Resolver resolver) {
+    public void setNamespaceResolver(@NonNull ResourceNamespace.Resolver resolver) {
         this.mNamespaceResolver = resolver;
+    }
+
+    @Deprecated // TODO(namespaces): Called by layoutlib.
+    public void setNamespaceLookup(@NonNull ResourceNamespace.Resolver resolver) {
+        setNamespaceResolver(
+                new ResourceNamespace.Resolver() {
+                    @Nullable
+                    @Override
+                    public String uriToPrefix(@NonNull String namespaceUri) {
+                        return null;
+                    }
+
+                    @Nullable
+                    @Override
+                    public String prefixToUri(@NonNull String namespacePrefix) {
+                        return resolver.prefixToUri(namespacePrefix);
+                    }
+                });
     }
 
     @Override
