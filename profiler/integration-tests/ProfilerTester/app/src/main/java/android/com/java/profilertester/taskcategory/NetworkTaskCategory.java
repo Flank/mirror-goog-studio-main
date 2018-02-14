@@ -43,19 +43,20 @@ public class NetworkTaskCategory extends TaskCategory {
     private static final int ITERATION_NUMBER = 5;
     private static final int PERIOD_TIME = 3;
 
-    private final List<Task> mTasks = Arrays.asList(
-            new HttpUrlConnectionDownloadTask(),
-            new OkHttpDownloadTask(),
-            new OkHttp2DownloadTask(),
-            new HttpPostJsonTask(),
-            new OkHttpPostJsonTask(),
-            new HttpPostFormDataTask(),
-            new OkHttpPostFormDataTask(),
-            new WifiScanningTask(),
-            new WifiHighPerformanceModeTask(),
-            new WifiFullModeTask(),
-            new WifiScanModeTask()
-    );
+    private final List<Task> mTasks =
+            Arrays.asList(
+                    new HttpUrlConnectionDownloadTask(),
+                    new OkHttpDownloadTask(),
+                    new OkHttp2DownloadTask(),
+                    new HttpPostJsonTask(),
+                    new OkHttpPostJsonTask(),
+                    new HttpPostFormDataTask(),
+                    new OkHttpPostFormDataTask(),
+                    new OkHttp2LargeDownloadTask(),
+                    new WifiScanningTask(),
+                    new WifiHighPerformanceModeTask(),
+                    new WifiFullModeTask(),
+                    new WifiScanModeTask());
     @NonNull
     private final Activity mHostActivity;
 
@@ -248,6 +249,30 @@ public class NetworkTaskCategory extends TaskCategory {
         }
     }
 
+    private static class OkHttp2LargeDownloadTask extends Task {
+        @Nullable
+        @Override
+        protected String execute() throws Exception {
+            Request request =
+                    new Request.Builder()
+                            .url(URL_STRING)
+                            .addHeader("Range", "bytes=0-" + (1 << 27))
+                            .build();
+            Response response = new OkHttpClient().newCall(request).execute();
+            InputStream in = response.body().byteStream();
+            //noinspection StatementWithEmptyBody
+            while (in.read() != -1) ;
+            in.close();
+            return "Large download complete!";
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "Large Download";
+        }
+    }
+
     private static class HttpUrlConnectionDownloadTask extends Task {
         @Override
         @Nullable
@@ -262,7 +287,7 @@ public class NetworkTaskCategory extends TaskCategory {
                 in.close();
                 TimeUnit.SECONDS.sleep(PERIOD_TIME);
             }
-            return null;
+            return "HttpUrlConnection download complete!";
         }
 
         @NonNull
@@ -289,7 +314,7 @@ public class NetworkTaskCategory extends TaskCategory {
                 in.close();
                 TimeUnit.SECONDS.sleep(PERIOD_TIME);
             }
-            return null;
+            return "OkHttp download complete!";
         }
 
         @NonNull
@@ -316,7 +341,7 @@ public class NetworkTaskCategory extends TaskCategory {
                 in.close();
                 TimeUnit.SECONDS.sleep(PERIOD_TIME);
             }
-            return null;
+            return "OkHttp2 download complete!";
         }
 
         @NonNull
