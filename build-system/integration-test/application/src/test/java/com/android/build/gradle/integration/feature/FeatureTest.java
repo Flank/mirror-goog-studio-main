@@ -271,7 +271,6 @@ public class FeatureTest {
         multi = sProject.model().fetchMulti(ProjectBuildOutput.class);
 
         assertThat(assemble.getNotUpToDateTasks()).contains(":feature:assembleDebug");
-        assertThat(assemble.getNotUpToDateTasks()).contains(":baseFeature:assemble");
 
         Map<String, File> modifiedApks =
                 getVariantNameToOutputFileMap(multi.get(":feature").getVariantsBuildOutput());
@@ -328,7 +327,6 @@ public class FeatureTest {
         multi = sProject.model().fetchMulti(ProjectBuildOutput.class);
 
         assertThat(assembleDebug.getNotUpToDateTasks()).contains(":feature:assembleDebug");
-        assertThat(assembleDebug.getNotUpToDateTasks()).contains(":baseFeature:assembleDebug");
 
         Map<String, File> modifiedApks =
                 getVariantNameToOutputFileMap(multi.get(":feature").getVariantsBuildOutput());
