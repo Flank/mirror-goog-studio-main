@@ -16,6 +16,7 @@
 package com.android.ide.common.gradle.model.stubs;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.SourceProvider;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -37,19 +38,24 @@ public class SourceProviderStub extends BaseStub implements SourceProvider {
     @NonNull private final Collection<File> myShadersDirectories;
 
     public SourceProviderStub() {
+        this("name", null, "manifest");
+    }
+
+    public SourceProviderStub(
+            @NonNull String name, @Nullable File rootDirectory, @NonNull String manifestFileName) {
         this(
-                "name",
-                new File("manifest"),
-                new File("java"),
-                new File("resources"),
-                new File("aidl"),
-                new File("renderscript"),
-                new File("c"),
-                new File("cpp"),
-                new File("res"),
-                new File("assets"),
-                new File("jniLibs"),
-                new File("shaders"));
+                name,
+                new File(rootDirectory, manifestFileName),
+                new File(rootDirectory, "java"),
+                new File(rootDirectory, "resources"),
+                new File(rootDirectory, "aidl"),
+                new File(rootDirectory, "renderscript"),
+                new File(rootDirectory, "c"),
+                new File(rootDirectory, "cpp"),
+                new File(rootDirectory, "res"),
+                new File(rootDirectory, "assets"),
+                new File(rootDirectory, "jniLibs"),
+                new File(rootDirectory, "shaders"));
     }
 
     public SourceProviderStub(
