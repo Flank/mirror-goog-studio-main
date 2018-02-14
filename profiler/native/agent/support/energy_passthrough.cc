@@ -63,7 +63,7 @@ Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockAcqui
   energy_event.set_pid(getpid());
   energy_event.set_event_id(wake_lock_id);
   auto wake_lock_acquired = energy_event.mutable_wake_lock_acquired();
-  wake_lock_acquired->set_level_and_flags(flags);
+  // TODO(b/73376728): parse level and creation flags and set value in event.
   wake_lock_acquired->set_tag(tag_string.get());
   wake_lock_acquired->set_timeout(timeout);
   SubmitEnergyEvent(energy_event);
@@ -76,7 +76,7 @@ Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockRelea
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(wake_lock_id);
-  energy_event.mutable_wake_lock_released()->set_flags(flags);
+  // TODO(b/73376728): parse release flags and set value in event.
   energy_event.mutable_wake_lock_released()->set_is_held(is_held);
   SubmitEnergyEvent(energy_event);
 }

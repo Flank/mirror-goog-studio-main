@@ -108,20 +108,41 @@ message EnergyEvent {
 }
 
 message WakeLockAcquired {
-  // Level and optional flags for the wake lock instance initialization.
+  enum Level {
+    UNDEFINED_WAKE_LOCK_LEVEL = 0;
+    PARTIAL_WAKE_LOCK = 1;
+    SCREEN_DIM_WAKE_LOCK = 2;
+    SCREEN_BRIGHT_WAKE_LOCK = 3;
+    FULL_WAKE_LOCK = 4;
+  }
+
+  enum CreationFlag {
+    UNDEFINED_WAKE_LOCK_CREATION_FLAG = 0;
+    ACQUIRE_CAUSES_WAKEUP = 1;
+    ON_AFTER_RELEASE = 2;
+  }
+
+  // Level for the wake lock instance initialization.
   // https://developer.android.com/reference/android/os/PowerManager.html#newWakeLock(int, java.lang.String)
-  int32 level_and_flags = 1;
+  Level level = 1;
+  // Optional flags for the wake lock instance initialization, empty if no flag is set.
+  repeated CreationFlag flags = 2;
   // Tag of the wake lock (which users may have set for debugging purposes).
-  string tag = 2;
+  string tag = 3;
   // An optional timeout in milliseconds given to the acquire call. The lock
   // will be released after the given timeout expires.
-  int64 timeout = 3;
+  int64 timeout = 4;
 }
 
 message WakeLockReleased {
-  // Optional flags that modify the release behavior.
+  enum ReleaseFlag {
+    UNDEFINED_WAKE_LOCK_RELEASE_FLAG = 0;
+    RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY = 1;
+  }
+
+  // Optional flags that modify the release behavior, empty if no flag is set.
   // https://developer.android.com/reference/android/os/PowerManager.WakeLock.html#release(int)
-  int32 flags = 1;
+  repeated ReleaseFlag flags = 1;
   // True if the wake lock is still held after the release. This may happen if
   // the wake lock is reference counted and has been acquired multiple times.
   bool is_held = 2;

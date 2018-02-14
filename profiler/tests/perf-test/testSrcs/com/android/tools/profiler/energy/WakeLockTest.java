@@ -75,7 +75,7 @@ public class WakeLockTest {
         assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(energyEvent.getEventId()).isGreaterThan(0);
         assertThat(energyEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
-        assertThat(energyEvent.getWakeLockAcquired().getLevelAndFlags()).isEqualTo(0x1);
+        // TODO(b/73376728): assert level and creation flags.
         assertThat(energyEvent.getWakeLockAcquired().getTag()).isEqualTo("Foo");
         assertThat(energyEvent.getWakeLockAcquired().getTimeout()).isEqualTo(0);
     }
@@ -101,7 +101,7 @@ public class WakeLockTest {
         assertThat(acquiredEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(acquiredEvent.getEventId()).isGreaterThan(0);
         assertThat(acquiredEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
-        assertThat(acquiredEvent.getWakeLockAcquired().getLevelAndFlags()).isEqualTo(0x0);
+        // TODO(b/73376728): assert level and creation flags.
         assertThat(acquiredEvent.getWakeLockAcquired().getTag()).isEqualTo("Bar");
         assertThat(acquiredEvent.getWakeLockAcquired().getTimeout()).isEqualTo(1000);
 
@@ -110,7 +110,7 @@ public class WakeLockTest {
         assertThat(releasedEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(releasedEvent.getEventId()).isEqualTo(acquiredEvent.getEventId());
         assertThat(releasedEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_RELEASED);
-        assertThat(releasedEvent.getWakeLockReleased().getFlags()).isEqualTo(0x10);
+        // TODO(b/73376728): assert release flags.
         assertThat(releasedEvent.getWakeLockReleased().getIsHeld()).isTrue();
     }
 
