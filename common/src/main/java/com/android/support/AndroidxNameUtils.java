@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.logging.Logger;
 
 public class AndroidxNameUtils {
@@ -97,15 +98,13 @@ public class AndroidxNameUtils {
 
     /** Ordered list of old android support packages sorted by decreasing length */
     static final ImmutableList<String> ANDROIDX_OLD_PKGS =
-            ImmutableList.sortedCopyOf(
-                    new Ordering<String>() {
-                        @Override
-                        public int compare(String left, String right) {
-                            // Short with the longest names first
-                            return Ints.compare(right.length(), left.length());
-                        }
-                    },
-                    ANDROIDX_PKG_MAPPING.keySet());
+            Ordering.from(
+                            (Comparator<String>)
+                                    (left, right) -> {
+                                        // Short with the longest names first
+                                        return Ints.compare(right.length(), left.length());
+                                    })
+                    .immutableSortedCopy(ANDROIDX_PKG_MAPPING.keySet());
 
     @NonNull
     static String getPackageMapping(@NonNull String oldPkgName, boolean strictChecking) {
