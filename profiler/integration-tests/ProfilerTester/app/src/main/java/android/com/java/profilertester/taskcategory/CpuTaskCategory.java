@@ -1,14 +1,17 @@
 package android.com.java.profilertester.taskcategory;
 
+import android.com.java.profilertester.util.Lookup3;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -17,11 +20,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class CpuTaskCategory extends TaskCategory {
     private final static int CORE_COUNT = Runtime.getRuntime().availableProcessors();
+    private static final int RUNNING_TIME_S = 20;
 
     private final List<Task> mTasks;
 
     public CpuTaskCategory(@NonNull File filesDir) {
-        mTasks = Arrays.asList(new PeriodicRunningTask(), new FileWritingTask(filesDir));
+        mTasks =
+                Arrays.asList(
+                        new PeriodicRunningTask(),
+                        new FileWritingTask(filesDir),
+                        new MaximumPowerTask(new SingleThreadIntegerTask(RUNNING_TIME_S)),
+                        new MaximumPowerTask(new SingleThreadFpuTask(RUNNING_TIME_S)),
+                        new MaximumPowerTask(new SingleThreadMemoryTask(RUNNING_TIME_S)));
     }
 
     private static ThreadPoolExecutor getDefaultThreadPoolExecutor(int corePoolSize) {
@@ -186,7 +196,7 @@ public class CpuTaskCategory extends TaskCategory {
 
     public static class PeriodicRunningTask extends Task {
         private static int ITERATION_COUNT = 5;
-        private static int PERIOD_TIME = 2;
+        private static int PERIOD_TIME_S = 2;
 
         @Nullable
         public String execute() {
@@ -198,15 +208,15 @@ public class CpuTaskCategory extends TaskCategory {
                     threadPoolExecutor = getDefaultThreadPoolExecutor(singleTaskNumber);
 
                     for (int k = 0; k < singleTaskNumber; ++k) {
-                        new SingleCoreRunningTask().executeOnExecutor(threadPoolExecutor, PERIOD_TIME);
+                        threadPoolExecutor.execute(new SingleThreadFpuTask(PERIOD_TIME_S));
                     }
 
-                    TimeUnit.SECONDS.sleep(PERIOD_TIME);
+                    TimeUnit.SECONDS.sleep(PERIOD_TIME_S);
                     if (lastThreadPoolExecutor != null) {
                         lastThreadPoolExecutor.shutdown();
                     }
                     lastThreadPoolExecutor = threadPoolExecutor;
-                    TimeUnit.SECONDS.sleep(PERIOD_TIME);
+                    TimeUnit.SECONDS.sleep(PERIOD_TIME_S);
                 }
 
                 TimeUnit.SECONDS.sleep(2);
@@ -225,23 +235,141 @@ public class CpuTaskCategory extends TaskCategory {
         protected String getTaskDescription() {
             return "Periodic Usage";
         }
+    }
 
-        private static class SingleCoreRunningTask extends AsyncTask<Integer, Void, Void> {
-            void meaninglessRunning() {
-                double value = Math.E;
-                for (int i = 0; i < 10000; ++i) {
-                    value += Math.sin(value) + Math.cos(value);
-                }
+    private static class MaximumPowerTask extends Task {
+        private static final int NUM_CORES = Runtime.getRuntime().availableProcessors();
+        @NonNull private final ComputationTask mComputationTask;
+
+        private MaximumPowerTask(@NonNull ComputationTask computationTask) {
+            mComputationTask = computationTask;
+        }
+
+        @Nullable
+        @Override
+        protected String execute() throws Exception {
+            ThreadPoolExecutor executor = getDefaultThreadPoolExecutor(NUM_CORES);
+            List<Future<?>> futures = new ArrayList<>(NUM_CORES);
+            for (int i = 0; i < NUM_CORES; i++) {
+                futures.add(executor.submit(mComputationTask));
+            }
+            for (Future<?> future : futures) {
+                future.get();
+            }
+            return "Computation finished.";
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return mComputationTask.getTaskDescription();
+        }
+    }
+
+    private abstract static class ComputationTask implements Runnable {
+        protected static final int NUM_ITERATIONS = 10000;
+        private final int mSecondsToRun;
+
+        protected ComputationTask(int secondsToRun) {
+            mSecondsToRun = secondsToRun;
+        }
+
+        protected abstract void doComputation();
+
+        @NonNull
+        protected abstract String getTaskDescription();
+
+        @Override
+        public void run() {
+            long stopTime = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(mSecondsToRun);
+            while (System.currentTimeMillis() < stopTime) {
+                doComputation();
+            }
+        }
+    }
+
+    private static final class SingleThreadFpuTask extends ComputationTask {
+        private SingleThreadFpuTask(int secondsToRun) {
+            super(secondsToRun);
+        }
+
+        @Override
+        protected void doComputation() {
+            double value = Math.E;
+            for (int i = 0; i < NUM_ITERATIONS; i++) {
+                value += Math.sin(value) + Math.cos(value);
+            }
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "Full Power FPU Task";
+        }
+    }
+
+    private static final class SingleThreadIntegerTask extends ComputationTask {
+        private final int[] mValues;
+        private int mSeed = 0;
+
+        private SingleThreadIntegerTask(int secondsToRun) {
+            super(secondsToRun);
+            mValues = new int[NUM_ITERATIONS];
+            for (int i = 0; i < mValues.length; i++) {
+                mValues[i] = i;
+            }
+        }
+
+        @Override
+        protected void doComputation() {
+            mSeed = Lookup3.hashwords(mValues, mSeed);
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "Full Power Integer Task";
+        }
+    }
+
+    private static final class SingleThreadMemoryTask extends ComputationTask {
+        private static final int MEM_SIZE = 16 * 1024 * 1024;
+        private final int[] mValues;
+        private int mIndex = 0;
+
+        private SingleThreadMemoryTask(int secondsToRun) {
+            super(secondsToRun);
+
+            if ((MEM_SIZE & (MEM_SIZE - 1)) > 0) {
+                throw new RuntimeException("MEM_SIZE needs to be power of 2!");
             }
 
-            @Override
-            protected Void doInBackground(Integer... paras) {
-                long stopTime = System.currentTimeMillis() + paras[0] * 1000;
-                while (System.currentTimeMillis() < stopTime) {
-                    meaninglessRunning();
-                }
-                return null;
+            int size = MEM_SIZE;
+            mValues = new int[size];
+            // Most of the non-power of 2 numbers hardcoded are just random primes.
+            for (int i = 0; i < mValues.length; i++, size += 17) {
+                mValues[i] = size; // Start with something bigger.
             }
+        }
+
+        @Override
+        protected void doComputation() {
+            for (int i = 0; i < NUM_ITERATIONS; i++) {
+                int newValue = stupidHash(mValues[mIndex], mIndex);
+                mValues[mIndex] = newValue;
+                mIndex = newValue & (MEM_SIZE - 1);
+            }
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "Full Power Memory Pressure Task";
+        }
+
+        private int stupidHash(int input, int offset) {
+            int s1 = (input * 103 + offset) % 65521;
+            return s1 * 21179 + s1;
         }
     }
 }
