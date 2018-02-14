@@ -1337,6 +1337,7 @@ public final class SdkConstants {
     public static final String ATTR_PARENT_TAG = "parentTag"; //$NON-NLS-1$
     public static final String ATTR_WIDTH = "width"; //$NON-NLS-1$
     public static final String ATTR_HEIGHT = "height"; //$NON-NLS-1$
+    public static final String ATTR_NAV_GRAPH = "navGraph";
 
     // Attributes: Navigation
     public static final String ATTR_GRAPH = "graph";
@@ -2232,6 +2233,9 @@ public final class SdkConstants {
 
     /** The fully qualified class name of an ImageView view */
     public static final String FQCN_IMAGE_VIEW = "android.widget.ImageView"; //$NON-NLS-1$
+
+    /** The fully qualified class name of NavHostFragment Fragment subclass */
+    public static final String FQCN_NAV_HOST_FRAGMENT = "android.arch.navigation.NavHostFragment";
 
     public static final String ATTR_SRC = "src"; //$NON-NLS-1$
     public static final String ATTR_SRC_COMPAT = "srcCompat"; //$NON-NLS-1$
