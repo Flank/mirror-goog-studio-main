@@ -53,7 +53,7 @@ import javax.inject.Inject
 open class LinkLibraryAndroidResourcesTask @Inject constructor(private val workerExecutor: WorkerExecutor) :
         AndroidBuilderTask() {
 
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFiles: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFile: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDirectories: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
@@ -61,7 +61,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional var tested: FileCollection? = null; private set
 
     @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
-    @get:Input private val packageForR get() = packageForRSupplier.get()
+    @get:Input val packageForR get() = packageForRSupplier.get()
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:Optional var rClassSource: File? = null; private set
@@ -87,7 +87,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
         val request = AaptPackageConfig(
                 androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
-                manifestFile = manifestFiles.singleFile,
+                manifestFile = manifestFile.singleFile,
                 options = AaptOptions(null, false, null),
                 resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.asIterable()),
                 staticLibrary = true,
@@ -122,7 +122,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
         override fun execute(task: LinkLibraryAndroidResourcesTask) {
             task.variantName = scope.fullVariantName
-            task.manifestFiles = scope.getOutput(InternalArtifactType.STATIC_LIBRARY_MANIFESTS)
+            task.manifestFile = scope.getOutput(InternalArtifactType.STATIC_LIBRARY_MANIFEST)
             task.inputResourcesDirectories = scope.getOutput(InternalArtifactType.RES_COMPILED_FLAT_FILES)
             task.libraryDependencies =
                     scope.getArtifactFileCollection(

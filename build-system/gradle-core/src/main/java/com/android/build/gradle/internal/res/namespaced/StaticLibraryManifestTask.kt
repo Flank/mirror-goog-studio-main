@@ -28,21 +28,8 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStreamWriter
 import java.util.function.Supplier
 import javax.inject.Inject
-
-fun createStaticLibraryManifest(manifestFile: File, packageName: String) {
-
-    OutputStreamWriter(FileOutputStream(manifestFile), "UTF-8").use { fileWriter ->
-        fileWriter
-            .append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-            .append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
-            .append("    package=\"$packageName\"/>\n")
-            .flush()
-    }
-}
 
 /**
  * Task to write an android manifest for the res.apk static library
@@ -52,7 +39,7 @@ open class StaticLibraryManifestTask @Inject constructor(
         private val workerExecutor: WorkerExecutor) : DefaultTask() {
 
     @get:Internal lateinit var packageNameSupplier: Supplier<String> private set
-    @get:Input private val packageName get() = packageNameSupplier.get()
+    @get:Input val packageName get() = packageNameSupplier.get()
     @get:OutputFile lateinit var manifestFile: File private set
 
     @TaskAction

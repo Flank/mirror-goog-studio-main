@@ -244,7 +244,7 @@ class NamespacedResourcesTaskManager(
         val task = taskFactory.create(
                 StaticLibraryManifestTask.ConfigAction(variantScope, staticLibraryManifest))
         variantScope.addTaskOutput(
-                InternalArtifactType.STATIC_LIBRARY_MANIFESTS,
+                InternalArtifactType.STATIC_LIBRARY_MANIFEST,
                 staticLibraryManifest,
                 task.name)
     }
