@@ -22,12 +22,12 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,14 +48,10 @@ public final class PathUtils {
     public static void deleteRecursivelyIfExists(@NonNull Path path) throws IOException {
         if (Files.isDirectory(path)) {
             try (Stream<Path> pathsInDir = Files.list(path)) {
-                pathsInDir.forEach(
-                        pathInDir -> {
-                            try {
-                                deleteRecursivelyIfExists(pathInDir);
-                            } catch (IOException e) {
-                                throw new UncheckedIOException(e);
-                            }
-                        });
+                Iterator<Path> iterator = pathsInDir.iterator();
+                while (iterator.hasNext()) {
+                    deleteRecursivelyIfExists(iterator.next());
+                }
             }
         }
 

@@ -56,6 +56,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -485,7 +486,15 @@ public final class GradleTestProject implements TestRule {
         buildFile = new File(testDir, "build.gradle");
         sourceDir = new File(testDir, "src");
 
-        FileUtils.deleteRecursivelyIfExists(testDir);
+        try {
+            FileUtils.deleteRecursivelyIfExists(testDir);
+        } catch (DirectoryNotEmptyException e) {
+            // https://issuetracker.google.com/69271554
+            // This exception is unexpected, let's investigate further.
+            // This handling can be removed once the root cause has been found and fixed.
+            forceDeleteDirectory(testDir);
+        }
+
         FileUtils.mkdirs(testDir);
         FileUtils.mkdirs(sourceDir);
 
@@ -515,6 +524,30 @@ public final class GradleTestProject implements TestRule {
 
         localProp = createLocalProp();
         createGradleProp();
+    }
+
+    /**
+     * Deletes an existing directory and all its contents, and logs debugging info as much as
+     * possible when it fails. This method should typically be used when a prior attempt to delete
+     * the directory did not succeed and we want to try again and find out the root cause.
+     */
+    private static void forceDeleteDirectory(@NonNull File directory) throws IOException {
+        Preconditions.checkArgument(directory.isDirectory());
+        String[] filesInDirBefore = checkNotNull(directory.list());
+        try {
+            FileUtils.deleteRecursivelyIfExists(directory);
+        } catch (IOException e) {
+            String[] filesInDirAfter = checkNotNull(directory.list());
+            throw new IOException(
+                    String.format(
+                            "Failed to delete directory %s.\n"
+                                    + "Files in directory before deletion: %s.\n"
+                                    + "Files in directory after deletion: %s.",
+                            directory.getAbsolutePath(),
+                            Joiner.on(", ").join(filesInDirBefore),
+                            Joiner.on(", ").join(filesInDirAfter)),
+                    e);
+        }
     }
 
     @NonNull
