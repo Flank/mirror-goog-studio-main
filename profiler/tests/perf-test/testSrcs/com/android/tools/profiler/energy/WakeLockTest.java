@@ -111,6 +111,7 @@ public class WakeLockTest {
         assertThat(releasedEvent.getEventId()).isEqualTo(acquiredEvent.getEventId());
         assertThat(releasedEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_RELEASED);
         assertThat(releasedEvent.getWakeLockReleased().getFlags()).isEqualTo(0x10);
+        assertThat(releasedEvent.getWakeLockReleased().getIsHeld()).isTrue();
     }
 
     /**

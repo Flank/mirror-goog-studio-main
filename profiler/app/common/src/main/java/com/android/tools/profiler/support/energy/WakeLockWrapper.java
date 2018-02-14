@@ -31,10 +31,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class WakeLockWrapper {
 
+    /** Data structure for wake lock creation parameters. */
     private static final class CreationParams {
-
-        int myLevelAndFlags;
-        String myTag;
+        final int myLevelAndFlags;
+        final String myTag;
 
         CreationParams(int levelAndFlags, String tag) {
             myLevelAndFlags = levelAndFlags;
@@ -42,30 +42,39 @@ public final class WakeLockWrapper {
         }
     }
 
-    private static final CreationParams DEFAULT_CREATION_PARAMS = new CreationParams(0, "");
+    /** Data structure for wake lock release parameters. */
+    private static final class ReleaseParams {
+        final WakeLock myWakeLock;
+        final int myFlags;
+
+        ReleaseParams(WakeLock wakeLock, int flags) {
+            myWakeLock = wakeLock;
+            myFlags = flags;
+        }
+    }
 
     /** For generating wake lock IDs. */
     private static final AtomicInteger atomicInteger = new AtomicInteger();
 
     /**
-     * Use a thread-local variable for wake lock creation flags, so a value can be temporarily
+     * Use a thread-local variable for wake lock creation parameters, so a value can be temporarily
      * stored when we enter a wakelock's constructor and retrieved when we exit it. Using a
      * ThreadLocal protects against the situation when multiple threads create wake locks at the
      * same time.
      */
-    private static final ThreadLocal<CreationParams> newWakeLockData =
-            new ThreadLocal<CreationParams>() {
-                @Override
-                protected CreationParams initialValue() {
-                    return DEFAULT_CREATION_PARAMS;
-                }
-            };
+    private static final ThreadLocal<CreationParams> newWakeLockData = new ThreadLocal<>();
 
-    /** Maps a wake lock instance to its generated ID. */
+    /**
+     * Use a thread-local variable for wake lock release parameters, so a value can be temporarily
+     * stored when we enter the release method and retrieved when we exit it.
+     */
+    private static final ThreadLocal<ReleaseParams> releaseWakeLockData = new ThreadLocal<>();
+
+    /** Used by acquire and release hooks to look up the generated ID by wake lock instance. */
     private static final Map<WakeLock, Integer> wakeLockIdMap = new HashMap<>();
 
-    /** Maps a wake lock instance to its creation data (flags and tag). */
-    private static final Map<WakeLock, CreationParams> wakeLockCreationDataMap = new HashMap<>();
+    /** Used by acquire hooks to retrieve wake lock creation parameters. */
+    private static final Map<WakeLock, CreationParams> wakeLockCreationParamsMap = new HashMap<>();
 
     /**
      * Entry hook for {@link PowerManager#newWakeLock(int, String)}. Captures the flags and myTag
@@ -87,7 +96,7 @@ public final class WakeLockWrapper {
      * @return the same wrapped return value.
      */
     public static WakeLock onNewWakeLockExit(WakeLock wrapped) {
-        wakeLockCreationDataMap.put(wrapped, newWakeLockData.get());
+        wakeLockCreationParamsMap.put(wrapped, newWakeLockData.get());
         return wrapped;
     }
 
@@ -114,28 +123,43 @@ public final class WakeLockWrapper {
             wakeLockIdMap.put(wrapped, atomicInteger.incrementAndGet());
         }
         int wakeLockId = wakeLockIdMap.get(wrapped);
-        CreationParams creationData =
-                wakeLockCreationDataMap.containsKey(wrapped)
-                        ? wakeLockCreationDataMap.get(wrapped)
-                        : DEFAULT_CREATION_PARAMS;
-
-        sendWakeLockAcquired(wakeLockId, creationData.myLevelAndFlags, creationData.myTag, timeout);
+        if (wakeLockCreationParamsMap.containsKey(wrapped)) {
+            CreationParams creationParams = wakeLockCreationParamsMap.get(wrapped);
+            sendWakeLockAcquired(
+                    wakeLockId, creationParams.myLevelAndFlags, creationParams.myTag, timeout);
+        }
     }
 
     /**
-     * Wraps {@link WakeLock#release(int)}.
+     * Entry hook for {@link WakeLock#release(int)}. Capture the flags passed to the method and the
+     * "this" instance so the exit hook can retrieve them back.
      *
      * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
      * @param flags the flags parameter passed to the original method.
      */
-    public static void wrapRelease(WakeLock wrapped, int flags) {
-        sendWakeLockReleased(
-                wakeLockIdMap.containsKey(wrapped) ? wakeLockIdMap.get(wrapped) : 0, flags);
+    public static void onReleaseEntry(WakeLock wrapped, int flags) {
+        releaseWakeLockData.set(new ReleaseParams(wrapped, flags));
+    }
+
+    /**
+     * Exit hook for {@link WakeLock#release(int)}. {@link WakeLock#isHeld()} may be updated in the
+     * method, so we should retrieve the value in an exit hook. Then we send the held state along
+     * with the flags from the entry hook to Studio Profiler.
+     */
+    public static void onReleaseExit() {
+        ReleaseParams releaseParams = releaseWakeLockData.get();
+        if (wakeLockIdMap.containsKey(releaseParams.myWakeLock)) {
+            sendWakeLockReleased(
+                    wakeLockIdMap.get(releaseParams.myWakeLock),
+                    releaseParams.myFlags,
+                    releaseParams.myWakeLock.isHeld());
+        }
     }
 
     // Native functions to send wake lock events to perfd.
     private static native void sendWakeLockAcquired(
             int wakeLockId, int flags, String tag, long timeout);
 
-    private static native void sendWakeLockReleased(int wakeLockId, int releaseFlags);
+    private static native void sendWakeLockReleased(
+            int wakeLockId, int releaseFlags, boolean isHeld);
 }

@@ -33,6 +33,7 @@ public class WakeLockActivity extends PerfdTestActivity {
     public void runAcquireAndRelease() throws Exception {
         PowerManager.WakeLock wakeLock = getPowerManager().newWakeLock(0x0, "Bar");
         wakeLock.acquire(1000);
+        wakeLock.setHeld(true);
         wakeLock.release(0x10);
         System.out.println("WAKE LOCK RELEASED");
     }

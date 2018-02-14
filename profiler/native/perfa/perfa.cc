@@ -188,7 +188,10 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     slicer::MethodInstrumenter mi_rel(dex_ir);
     mi_rel.AddTransformation<slicer::EntryHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
-        "wrapRelease"));
+        "onReleaseEntry"));
+    mi_rel.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
+        "onReleaseExit"));
     if (!mi_rel.InstrumentMethod(
             ir::MethodId(desc.c_str(), "release", "(I)V"))) {
       Log::E("Error instrumenting WakeLock.release");
@@ -280,7 +283,7 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
                   "sendWakeLockAcquired", "(IILjava/lang/String;J)V");
     BindJNIMethod(jni,
                   "com/android/tools/profiler/support/energy/WakeLockWrapper",
-                  "sendWakeLockReleased", "(II)V");
+                  "sendWakeLockReleased", "(IIZ)V");
   }
 
   BindJNIMethod(jni,

@@ -99,4 +99,7 @@ message WakeLockReleased {
   // Optional flags that modify the release behavior.
   // https://developer.android.com/reference/android/os/PowerManager.WakeLock.html#release(int)
   int32 flags = 1;
+  // True if the wake lock is still held after the release. This may happen if
+  // the wake lock is reference counted and has been acquired multiple times.
+  bool is_held = 2;
 }

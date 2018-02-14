@@ -21,10 +21,12 @@ public final class PowerManager {
     public final class WakeLock {
         private int mFlags;
         private String mTag;
+        private boolean mHeld;
 
         WakeLock(int flags, String tag) {
             mFlags = flags;
             mTag = tag;
+            mHeld = false;
         }
 
         public void acquire() {}
@@ -36,6 +38,19 @@ public final class PowerManager {
         }
 
         public void release(int flags) {}
+
+        public boolean isHeld() {
+            return mHeld;
+        }
+
+        /**
+         * This is not an actual API but just for mocking the value.
+         *
+         * @param isHeld new value for isHeld.
+         */
+        public void setHeld(boolean isHeld) {
+            mHeld = isHeld;
+        }
     }
 
     public WakeLock newWakeLock(int levelAndFlags, String tag) {
