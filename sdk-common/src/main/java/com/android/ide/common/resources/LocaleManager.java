@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import static java.util.Locale.US;
@@ -21,18 +20,18 @@ import static java.util.Locale.US;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.resources.ResourceType;
 import com.android.utils.SdkUtils;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
- * The {@linkplain LocaleManager} provides access to locale information such as
- * language names and language to region name mappings for the various locales.
+ * Provides access to locale information such as language names and
+ * language to region name mappings for the various locales.
  */
 public class LocaleManager {
     /** Utility methods only */
@@ -125,7 +124,7 @@ public class LocaleManager {
         if (!include3) {
             return Arrays.asList(ISO_639_1_CODES);
         } else {
-            List<String> codes = Lists.newArrayListWithExpectedSize(ISO_639_2_CODES.length);
+            List<String> codes = new ArrayList<>(ISO_639_2_CODES.length);
             for (int i = 0; i < ISO_639_2_TO_1.length; i++) {
                 int iso2 = ISO_639_2_TO_1[i];
                 if (iso2 != -1) {
@@ -160,7 +159,7 @@ public class LocaleManager {
         if (!include3) {
             return Arrays.asList(ISO_3166_1_CODES);
         } else {
-            List<String> codes = Lists.newArrayListWithExpectedSize(ISO_3166_2_CODES.length);
+            List<String> codes = new ArrayList<>(ISO_3166_2_CODES.length);
             for (int i = 0; i < ISO_3166_2_TO_1.length; i++) {
                 int iso2 = ISO_3166_2_TO_1[i];
                 if (iso2 != -1) {
@@ -218,19 +217,6 @@ public class LocaleManager {
     }
 
     /**
-     * Returns the region code for the given language. <b>Note that there can be
-     * many regions that speak a given language; this just picks one</b> based
-     * on a set of heuristics.
-     *
-     * @param languageCode the language to look up
-     * @return the corresponding region code, if any
-     */
-    @Nullable
-    public static String getLanguageRegion(@NonNull String languageCode) {
-        return getLanguageRegion(languageCode, null);
-    }
-
-    /**
      * Like {@link #getLanguageRegion(String)}, but does not take user preferences
      * and locations into consideration.
      */
@@ -277,8 +263,7 @@ public class LocaleManager {
      * @return the corresponding region code, if any
      */
     @Nullable
-    public static String getLanguageRegion(@NonNull String languageCode,
-            @Nullable ResourceRepository resources) {
+    public static String getLanguageRegion(@NonNull String languageCode) {
         // Try to pick one language based on various heuristics:
 
         // (1) Check to see if the user has deliberately picked a preferred
@@ -400,41 +385,7 @@ public class LocaleManager {
             }
 
             //
-            // (7) Consult the project to see which locales are used there.
-            //     If for example your project has resources in "en-rUS", it's
-            //     unlikely that you intend for "US" to be the region for en
-            //     (since that's a region specific overlay) so pick for example GB
-            //     instead.
-            if (resources != null) {
-                synchronized (AbstractResourceRepository.ITEM_MAP_LOCK) {
-                    // TODO: namespaces
-                    ListMultimap<String, ResourceItem> strings =
-                            resources.getItems().get(ResourceNamespace.TODO, ResourceType.STRING);
-                    if (strings != null) {
-                        Set<String> specified = Sets.newHashSet();
-                        for (ResourceItem item : strings.values()) {
-                            String qualifiers = item.getQualifiers();
-                            if (qualifiers.startsWith(languageCode)
-                                    && qualifiers.length() == 6
-                                    && qualifiers.charAt(3) == 'r') {
-                                specified.add(qualifiers.substring(4));
-                            }
-                        }
-                        if (!specified.isEmpty()) {
-                            // Remove the specified locales from consideration
-                            Set<String> all = Sets.newHashSet(regions);
-                            all.removeAll(specified);
-                            // Only one left?
-                            if (all.size() == 1) {
-                                return all.iterator().next();
-                            }
-                        }
-                    }
-                }
-            }
-
-            //
-            // (8) Give preference to a region that has the same region code
+            // (7) Give preference to a region that has the same region code
             //     as the language code; this is usually where the language is named
             //     after a region
             char first = Character.toUpperCase(languageCode.charAt(0));
@@ -516,11 +467,11 @@ public class LocaleManager {
         if (regionIndices == null) { // only returns non-null when there are multiple
             String regionCode = getRegionCode(LANGUAGE_REGION[languageIndex]);
             return regionCode != null ? Collections.singletonList(regionCode)
-                    : Collections.<String>emptyList();
+                    : Collections.emptyList();
 
         }
 
-        List<String> result = Lists.newArrayListWithExpectedSize(regionIndices.length);
+        List<String> result = new ArrayList<>(regionIndices.length);
         for (int regionIndex : regionIndices) {
             String regionCode = getRegionCode(regionIndex);
             if (regionCode != null) {
