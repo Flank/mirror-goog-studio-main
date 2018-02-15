@@ -229,7 +229,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                             if (occurrences != null && !occurrences.isEmpty()) {
                                 for (Occurrence occurrence : occurrences) {
                                     Location location = context.getLocation(element);
-                                    location.setClientData(element);
+                                    location.setData(element);
                                     location.setMessage(occurrence.message);
                                     location.setSecondary(occurrence.location);
                                     occurrence.location = location;
@@ -319,7 +319,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                                     return;
                                 }
                                 Location location = context.getLocation(attribute);
-                                location.setClientData(attribute);
+                                location.setData(attribute);
                                 location.setMessage(occurrence.message);
                                 location.setSecondary(occurrence.location);
                                 occurrence.location = location;

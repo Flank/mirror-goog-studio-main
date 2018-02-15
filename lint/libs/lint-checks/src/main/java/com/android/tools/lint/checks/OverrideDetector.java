@@ -264,7 +264,7 @@ public class OverrideDetector extends Detector implements ClassScanner {
                     methods.put(signature, location);
                     String description = ClassContext.createSignature(classNode.name,
                             method.name, method.desc);
-                    location.setClientData(description);
+                    location.setData(description);
                 }
             }
         }
