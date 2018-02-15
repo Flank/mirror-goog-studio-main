@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
@@ -40,27 +41,27 @@ class BuildArtifactReportTaskTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
     private lateinit var project : Project
-    private val artifactTypes = listOf(JAVAC_CLASSES, JAVA_COMPILE_CLASSPATH)
     private lateinit var artifactsHolder: BuildArtifactsHolder
     private val dslScope = DslScopeImpl(
             FakeEvalIssueReporter(throwOnError = true),
             FakeDeprecationReporter(),
             FakeObjectFactory())
+    private lateinit var task0: Task
+    private lateinit var task1: Task
     @Before
     fun setUp() {
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()
         artifactsHolder =
                 BuildArtifactsHolder(
-                project,
-                "debug",
-                project.file("root"),
-                "debug",
-                artifactTypes,
-                dslScope)
-        val task0 = project.tasks.create("task0")
-        val task1 = project.tasks.create("task1")
-        artifactsHolder.createFirstArtifactFiles(JAVAC_CLASSES, task0, "javac_classes")
-        artifactsHolder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, task1, "java_compile_classpath")
+                    project,
+                    "debug",
+                    project.file("root"),
+                    "debug",
+                    dslScope)
+        task0 = project.tasks.create("task0")
+        task1 = project.tasks.create("task1")
+        artifactsHolder.appendArtifact(JAVAC_CLASSES, task0, "javac_classes")
+        artifactsHolder.appendArtifact(JAVA_COMPILE_CLASSPATH, task1, "java_compile_classpath")
         BuildableArtifactImpl.enableResolution()
     }
 
@@ -77,7 +78,7 @@ class BuildArtifactReportTaskTest {
         val outputFile = project.file("report.txt")
         task.init(artifactsHolder::createReport, outputFile)
 
-        artifactsHolder.replaceArtifact(JAVAC_CLASSES, listOf("classes"), "task1")
+        artifactsHolder.replaceArtifact(JAVAC_CLASSES, project.files("classes").files, task1)
 
         task.report()
 

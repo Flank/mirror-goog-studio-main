@@ -1,18 +1,15 @@
+com.android.build.api.artifact.ArtifactConfigurationException
+com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
 com.android.build.api.artifact.ArtifactType
 com.android.build.api.artifact.ArtifactType.name: java.lang.String ()
 com.android.build.api.artifact.BuildArtifactTransformBuilder
 com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction
 com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction.accept: void (T, com.android.build.api.artifact.InputArtifactProvider, com.android.build.api.artifact.OutputFileProvider)
-com.android.build.api.artifact.BuildArtifactTransformBuilder$OperationType
-com.android.build.api.artifact.BuildArtifactTransformBuilder$OperationType.valueOf: com.android.build.api.artifact.BuildArtifactTransformBuilder$OperationType (java.lang.String)
-com.android.build.api.artifact.BuildArtifactTransformBuilder$OperationType.values: com.android.build.api.artifact.BuildArtifactTransformBuilder$OperationType[] ()
-com.android.build.api.artifact.BuildArtifactTransformBuilder$SimpleConfigurationAction
-com.android.build.api.artifact.BuildArtifactTransformBuilder$SimpleConfigurationAction.accept: void (T, com.android.build.api.artifact.BuildableArtifact, java.io.File)
+com.android.build.api.artifact.BuildArtifactTransformBuilder.append: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (com.android.build.api.artifact.ArtifactType) throws com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.BuildArtifactTransformBuilder.create: T (com.android.build.api.artifact.BuildArtifactTransformBuilder.com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction<? super T>)
 com.android.build.api.artifact.BuildArtifactTransformBuilder.create: T (kotlin.jvm.functions.Function3<? super T, ? super com.android.build.api.artifact.InputArtifactProvider, ? super com.android.build.api.artifact.OutputFileProvider, kotlin.Unit>)
-com.android.build.api.artifact.BuildArtifactTransformBuilder.input: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (com.android.build.api.artifact.ArtifactType)
-com.android.build.api.artifact.BuildArtifactTransformBuilder.output: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (com.android.build.api.artifact.ArtifactType, com.android.build.api.artifact.BuildArtifactTransformBuilder$OperationType)
-com.android.build.api.artifact.BuildArtifactTransformBuilder.outputFile: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (java.lang.String, com.android.build.api.artifact.ArtifactType[])
+com.android.build.api.artifact.BuildArtifactTransformBuilder.input: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (com.android.build.api.artifact.ArtifactType) throws com.android.build.api.artifact.ArtifactConfigurationException
+com.android.build.api.artifact.BuildArtifactTransformBuilder.replace: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (com.android.build.api.artifact.ArtifactType) throws com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.BuildArtifactType
 com.android.build.api.artifact.BuildArtifactType.valueOf: com.android.build.api.artifact.BuildArtifactType (java.lang.String)
 com.android.build.api.artifact.BuildArtifactType.values: com.android.build.api.artifact.BuildArtifactType[] ()
@@ -21,10 +18,10 @@ com.android.build.api.artifact.BuildableArtifact.getFiles: java.util.Set<java.io
 com.android.build.api.artifact.BuildableArtifact.isEmpty: boolean ()
 com.android.build.api.artifact.InputArtifactProvider
 com.android.build.api.artifact.InputArtifactProvider.getArtifact: com.android.build.api.artifact.BuildableArtifact ()
-com.android.build.api.artifact.InputArtifactProvider.getArtifact: com.android.build.api.artifact.BuildableArtifact (com.android.build.api.artifact.BuildArtifactType)
+com.android.build.api.artifact.InputArtifactProvider.getArtifact: com.android.build.api.artifact.BuildableArtifact (com.android.build.api.artifact.ArtifactType)
 com.android.build.api.artifact.OutputFileProvider
 com.android.build.api.artifact.OutputFileProvider.getFile: java.io.File ()
-com.android.build.api.artifact.OutputFileProvider.getFile: java.io.File (java.lang.String)
+com.android.build.api.artifact.OutputFileProvider.getFile: java.io.File (java.lang.String, com.android.build.api.artifact.ArtifactType[]) throws com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.dsl.ApiVersion
 com.android.build.api.dsl.ApiVersion.getApiLevel: java.lang.Integer ()
 com.android.build.api.dsl.ApiVersion.getApiString: java.lang.String ()
@@ -317,10 +314,10 @@ com.android.build.api.dsl.options.AnnotationProcessorOptions.setArguments: void 
 com.android.build.api.dsl.options.AnnotationProcessorOptions.setClassNames: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.options.AnnotationProcessorOptions.setIncludeCompileClasspath: void (java.lang.Boolean)
 com.android.build.api.dsl.options.BuildArtifactsOptions
-com.android.build.api.dsl.options.BuildArtifactsOptions.appendTo: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, com.android.build.api.artifact.BuildArtifactTransformBuilder.com.android.build.api.artifact.BuildArtifactTransformBuilder$SimpleConfigurationAction<? super T>)
+com.android.build.api.dsl.options.BuildArtifactsOptions.appendTo: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, com.android.build.api.artifact.BuildArtifactTransformBuilder.com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction<? super T>)
 com.android.build.api.dsl.options.BuildArtifactsOptions.appendTo: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, kotlin.jvm.functions.Function3<? super T, ? super com.android.build.api.artifact.BuildableArtifact, ? super java.io.File, kotlin.Unit>)
 com.android.build.api.dsl.options.BuildArtifactsOptions.builder: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (java.lang.String, java.lang.Class<T>)
-com.android.build.api.dsl.options.BuildArtifactsOptions.replace: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, com.android.build.api.artifact.BuildArtifactTransformBuilder.com.android.build.api.artifact.BuildArtifactTransformBuilder$SimpleConfigurationAction<? super T>)
+com.android.build.api.dsl.options.BuildArtifactsOptions.replace: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, com.android.build.api.artifact.BuildArtifactTransformBuilder.com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction<? super T>)
 com.android.build.api.dsl.options.BuildArtifactsOptions.replace: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, kotlin.jvm.functions.Function3<? super T, ? super com.android.build.api.artifact.BuildableArtifact, ? super java.io.File, kotlin.Unit>)
 com.android.build.api.dsl.options.DensitySplitOptions
 com.android.build.api.dsl.options.DensitySplitOptions.getAuto: boolean ()

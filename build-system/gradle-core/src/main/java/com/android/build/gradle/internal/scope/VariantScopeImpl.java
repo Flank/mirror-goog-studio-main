@@ -245,7 +245,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         getFullVariantName(),
                         new File(globalScope.getIntermediatesDir(), "artifact_transform"),
                         getVariantConfiguration().getDirName(),
-                        ImmutableList.of(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST),
                         globalScope.getDslScope());
 
         validatePostprocessingOptions();

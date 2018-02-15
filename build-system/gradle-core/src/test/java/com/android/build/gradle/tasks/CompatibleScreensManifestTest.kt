@@ -73,7 +73,7 @@ class CompatibleScreensManifestTest {
         `when`(scope.variantConfiguration).thenReturn(variantConfiguration)
         `when`(scope.outputScope).thenReturn(outputScope)
         `when`(scope.buildArtifactsHolder).thenReturn(buildArtifactsHolder)
-        `when`(buildArtifactsHolder.createFirstArtifactFiles(
+        `when`(buildArtifactsHolder.appendArtifact(
                         InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, task))
             .thenReturn(temporaryFolder.root)
         `when`<ApiVersion>(productFlavor.minSdkVersion).thenReturn(DefaultApiVersion(21, null))

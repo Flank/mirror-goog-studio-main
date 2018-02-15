@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.api.artifact
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactTransformBuilder
-import com.android.build.api.artifact.BuildArtifactTransformBuilder.OperationType
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.artifact.InputArtifactProvider
 import com.android.build.api.artifact.OutputFileProvider
@@ -28,7 +27,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
-import com.google.common.collect.HashMultimap
 import org.gradle.api.Project
 import org.gradle.api.Task
 import java.io.File
@@ -45,44 +43,54 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
         dslScope: DslScope)
     : SealableObject(dslScope), BuildArtifactTransformBuilder<T> {
 
-    private val inputs = mutableListOf<ArtifactType>()
-    private val outputFiles = HashMultimap.create<ArtifactType, String>()
+    private val finalInputs = mutableListOf<ArtifactType>()
     private val replacedOutput = mutableListOf<ArtifactType>()
     private val appendedOutput = mutableListOf<ArtifactType>()
-    private val unassociatedFiles = mutableListOf<String>() // files that do not have an ArtifactType
 
-    override fun output(artifactType: ArtifactType, operationType : OperationType)
-            : BuildArtifactTransformBuilderImpl<T> {
+    override fun append(artifactType: ArtifactType): BuildArtifactTransformBuilderImpl<T> {
         if (!checkSeal()) {
             return this
         }
-        if (replacedOutput.contains(artifactType) || appendedOutput.contains(artifactType)) {
+
+        if (replacedOutput.contains(artifactType)) {
             dslScope.issueReporter.reportError(
-                    EvalIssueReporter.Type.GENERIC,
-                    EvalIssueException("Output type '$artifactType' was already specified as an output."))
+                EvalIssueReporter.Type.GENERIC,
+                EvalIssueException("""Output type '$artifactType' has already been specified to be
+                    replaced with the replace() API"""))
             return this
         }
         val spec = BuildArtifactSpec.get(artifactType)
-        when (operationType) {
-            OperationType.REPLACE -> {
-                if (!spec.replaceable) {
-                    dslScope.issueReporter.reportError(
-                            EvalIssueReporter.Type.GENERIC,
-                            EvalIssueException("Replacing ArtifactType '$artifactType' is not allowed."))
-                    return this
-                }
-                replacedOutput.add(artifactType)
-            }
-            OperationType.APPEND -> {
-                if (!spec.appendable) {
-                    dslScope.issueReporter.reportError(
-                            EvalIssueReporter.Type.GENERIC,
-                        EvalIssueException("Append to ArtifactType '$artifactType' is not allowed."))
-                    return this
-                }
-                appendedOutput.add(artifactType)
-            }
+        if (!spec.appendable) {
+            dslScope.issueReporter.reportError(
+                EvalIssueReporter.Type.GENERIC,
+                EvalIssueException("Appending to ArtifactType '$artifactType' is not allowed."))
+            return this
         }
+        appendedOutput.add(artifactType)
+        return this
+    }
+
+    override fun replace(artifactType: ArtifactType): BuildArtifactTransformBuilderImpl<T> {
+        if (!checkSeal()) {
+            return this
+        }
+
+        if (appendedOutput.contains(artifactType)) {
+            dslScope.issueReporter.reportError(
+                EvalIssueReporter.Type.GENERIC,
+                EvalIssueException(
+                """Output type '$artifactType' has already been specified to be
+                    appended with the append() API"""))
+            return this
+        }
+        val spec = BuildArtifactSpec.get(artifactType)
+        if (!spec.replaceable) {
+            dslScope.issueReporter.reportError(
+                EvalIssueReporter.Type.GENERIC,
+                EvalIssueException("Replacing ArtifactType '$artifactType' is not allowed."))
+            return this
+        }
+        replacedOutput.add(artifactType)
         return this
     }
 
@@ -90,41 +98,13 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
         if (!checkSeal()) {
             return this
         }
-        if (inputs.contains(artifactType)) {
+        if (finalInputs.contains(artifactType)) {
             dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                EvalIssueException("Output type '$artifactType' was already specified as an input."))
+                    EvalIssueException("Output type '$artifactType' was already specified as an input."))
             return this
         }
-        inputs.add(artifactType)
-        return this
-    }
-
-    override fun outputFile(filename : String, vararg consumers : ArtifactType)
-            : BuildArtifactTransformBuilderImpl<T> {
-        if (!checkSeal()) {
-            return this
-        }
-        if (outputFiles.containsValue(filename)) {
-            dslScope.issueReporter.reportError(
-                    EvalIssueReporter.Type.GENERIC,
-                EvalIssueException("Output file '$filename' was already created."))
-            return this
-        }
-        if (consumers.isEmpty()) {
-            unassociatedFiles.add(filename)
-        } else {
-            for (consumer in consumers) {
-                outputFiles.put(consumer, filename)
-
-                val spec = BuildArtifactSpec.get(consumer)
-                if (!spec.appendable && outputFiles[consumer].size > 1) {
-                    dslScope.issueReporter.reportError(
-                            EvalIssueReporter.Type.GENERIC,
-                        EvalIssueException("OutputType '$consumer' does not support multiple output files."))
-                }
-            }
-        }
+        finalInputs.add(artifactType)
         return this
     }
 
@@ -144,16 +124,15 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
         if (!checkSeal()) {
             return task
         }
-        val inputProvider = InputArtifactProviderImpl(artifactsHolder, inputs, dslScope)
+        val chainInputs = appendedOutput.plus(replacedOutput)
+        val inputProvider = InputArtifactProviderImpl(artifactsHolder,
+            finalInputs, chainInputs, dslScope)
         val outputProvider =
                 OutputFileProviderImpl(
                         artifactsHolder,
                         replacedOutput,
                         appendedOutput,
-                        outputFiles,
-                        unassociatedFiles,
-                        taskName,
-                        dslScope)
+                        task)
 
         artifactsActionsExecutor.addAction {
             try {
@@ -161,6 +140,10 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
                     action != null -> action.accept(task, inputProvider, outputProvider)
                     function != null -> function(task, inputProvider, outputProvider)
                 }
+                // once the config action has run, the outputProvider should have been used
+                // to declare the output files, it's time to use this information to
+                // append or replace the current BuildableArtifact with it.
+                outputProvider.commit()
             } catch (e: Exception) {
                 dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
@@ -178,25 +161,10 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
     }
 
     /**
-     * Wrapper to convert a [BuildArtifactTransformBuilder.SimpleConfigurationAction] to a
-     * [BuildArtifactTransformBuilder.ConfigurationAction].
-     */
-    private class ConfigurationActionWrapper<in T : Task>(
-            val action : BuildArtifactTransformBuilder.SimpleConfigurationAction<T>)
-        : BuildArtifactTransformBuilder.ConfigurationAction<T> {
-        override fun accept(task: T, input: InputArtifactProvider, output: OutputFileProvider) {
-            action.accept(task, input.artifact, output.file)
-        }
-    }
-    fun create(action : BuildArtifactTransformBuilder.SimpleConfigurationAction<T>) : T {
-        return create(ConfigurationActionWrapper(action))
-    }
-
-    /**
      * Convert function that is used in the simple transform case to function that is used in the
      * generic case.
      */
-    inline private fun <T>convertFunction(
+    private inline fun <T>convertFunction(
             crossinline function : T.(input: BuildableArtifact, output: File) -> Unit) :
             T.(InputArtifactProvider, OutputFileProvider) -> Unit {
         return { input, output -> function(this, input.artifact, output.file) }

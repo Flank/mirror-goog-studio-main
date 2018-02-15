@@ -27,10 +27,11 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.api.file.FileCollection
 import java.io.File
 import java.util.Locale
 import com.google.gson.annotations.SerializedName
+import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.TaskDependency
 import java.io.FileReader
 
 typealias Report = Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifactData>>
@@ -40,41 +41,30 @@ typealias Report = Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifact
  *
  * This class manages buildable artifacts, allowing users to transform [ArtifactType].
  *
- * When the class is constructed, it creates [BuildableArtifact] for all of the
- * initialArtifactTypes.  [BuildArtifactTransformBuilder] can then use these [BuildableArtifact] to
- * allow users to create transform task.  The [BuildableArtifact] will be initially empty and will
- * need to be initialized with the appropriate file and task dependencies using
- * [createFirstArtifactFiles] or [initializeFirstArtifactFiles].
+ * [BuildArtifactTransformBuilder] can then use these [BuildableArtifact] to
+ * allow users to create transform task.
  *
  * @param project the Gradle [Project]
  * @param variantName name of the Variant
  * @param rootOutputDir the intermediate directories to place output files.
  * @param variantDirName the subdirectory where outputs should be placed for the variant
- * @param initialArtifactTypes the list of external artifact types to initialize the holder with.
- *         This list determines all artifact types available to an external user.
  */
 class BuildArtifactsHolder(
-        private val project : Project,
-        private val variantName : String,
-        private val rootOutputDir : File,
-        private val variantDirName : String,
-        initialArtifactTypes: List<ArtifactType>,
-        private val dslScope: DslScope) {
+    private val project: Project,
+    private val variantName: String,
+    private val rootOutputDir: File,
+    private val variantDirName: String,
+    private val dslScope: DslScope) {
 
-    private val artifactRecordMap =
-            initialArtifactTypes.associateTo(mutableMapOf()){
-                it to ArtifactRecord(BuildableArtifactImpl(null, dslScope))
-            }
+    private val artifactRecordMap = mutableMapOf<ArtifactType, ArtifactRecord>()
 
     /**
      * Internal private class for storing [BuildableArtifact] created for a [ArtifactType]
      */
-    private class ArtifactRecord(first : BuildableArtifactImpl) {
-        // Artifact is initialized when setFirst is called.
-        var initialized = false
+    private class ArtifactRecord(first : BuildableArtifact) {
 
-        // A list of all BuildableFiles for the artifact.  Technically, only the first and the
-        // last BuildableFiles are needed.  Storing the all BuildableFiles allows better error
+        // A list of all BuildableFiles for the artifact.  Technically, only the last
+        // BuildableFiles are needed.  Storing the all BuildableFiles allows better error
         // messages to be generated in the future.
         var history: MutableList<BuildableArtifact> = mutableListOf(first)
 
@@ -85,17 +75,19 @@ class BuildArtifactsHolder(
                 history.add(value)
             }
 
-        /** The first [BuildableArtifact] created for this artifact */
-        val first : BuildableArtifact
-            get() = history.first()
-
-        fun modifyFirst(collection: FileCollection) {
-            initialized = true
-            (history.first() as BuildableArtifactImpl).fileCollection = collection
-        }
-
         val size : Int
             get() = history.size
+
+        fun final() : BuildableArtifact {
+            return object : BuildableArtifact {
+                override val files: Set<File>
+                    get() = last.files
+
+                override fun isEmpty(): Boolean = last.isEmpty()
+                override fun iterator(): Iterator<File> = last.iterator()
+                override fun getBuildDependencies(): TaskDependency = last.buildDependencies
+            }
+        }
     }
 
     /**
@@ -106,15 +98,30 @@ class BuildArtifactsHolder(
     }
 
     /**
-     * Returns the [BuildableArtifact] associated with the artifactType.
+     * Returns the current [BuildableArtifact] associated with the artifactType.
+     * When a chain of tasks are registered to append or replace the artifact, this API will return
+     * the current (possibly intermediary) version of the BuildableArtifact at the time of this
+     * call.
      *
-     * @param artifactType the requested artifactType.
-     * @throws MissingTaskOutputException if the artifactType is not created.
+     * @param artifactType the requested artifact type.
+     * @return the possibly empty [BuildableArtifact] for this artifact type.
      */
-    fun getArtifactFiles(artifactType : ArtifactType) : BuildableArtifact {
-        val output = artifactRecordMap[artifactType]
-                ?: throw MissingBuildableArtifactException(artifactType)
-        return output.last
+    fun getArtifactFiles(artifactType: ArtifactType): BuildableArtifact {
+        return getArtifactRecord(artifactType).last
+    }
+
+    /**
+     * Returns the final [BuildableArtifact] associated with the artifactType.
+     * Irrespective of the timing of this method call, it will always return the final version of
+     * the [BuildableArtifact] for the passed artifact type.
+     *
+     * This should not be used to transform further the artifact type.
+     *
+     * @param artifactType the requested [BuildableArtifact] artifact type.
+     * @return the possibly empty final [BuildableArtifact] for this artifact type.
+     */
+    fun getFinalArtifactFiles(artifactType: ArtifactType) : BuildableArtifact {
+        return getArtifactRecord(artifactType).final()
     }
 
     /**
@@ -133,16 +140,15 @@ class BuildArtifactsHolder(
      * generate these files.
      *
      * @param artifactType artifactType to be replaced.
-     * @param filenames names of the new files.
-     * @param taskName name of the Task that will create the new files.
+     * @param newFiles names of the new files.
+     * @param task [Task] that will create the new files.
      * @return BuildableFiles containing files that the specified task should create.
      */
     fun replaceArtifact(
             artifactType: ArtifactType,
-            filenames : Collection<String>,
-            taskName : String)
-            : BuildableArtifact {
-        val collection = project.files(filenames.map{ createFile(taskName, it)}).builtBy(taskName)
+            newFiles : Collection<File>,
+            task : Task) : BuildableArtifact {
+        val collection = project.files(newFiles).builtBy(task)
         val files = BuildableArtifactImpl(collection, dslScope)
         createOutput(artifactType, files)
         return files
@@ -156,119 +162,110 @@ class BuildArtifactsHolder(
      * The path of File are created from the supplied filenames and the name of the Task that will
      * generate these files.
      *
-     * @param artifactType artifactType that new files will be associated with.
-     * @param filenames names of the new files.
-     * @param taskName name of the Task that will create the new files.
+     * @param artifactType [ArtifactType] the new files will be classified under.
+     * @param newFiles names of the new files.
+     * @param task [Task] that responsible for producing or updating the new files.
      * @return BuildableFiles containing files that the specified task should create.
      */
     fun appendArtifact(
             artifactType: ArtifactType,
-            filenames : Collection<String>,
-            taskName : String)
-            : BuildableArtifact {
+            newFiles : Collection<File>,
+            task : Task) : BuildableArtifact {
+        val artifactRecord = artifactRecordMap[artifactType]
         val collection =
-                project.files(
-                        filenames.map{ createFile(taskName, it) },
-                        getArtifactFiles(artifactType))
-                    .builtBy(taskName)
-        val files = BuildableArtifactImpl(collection, dslScope)
-        createOutput(artifactType, files)
-        return files
-    }
-
-    private fun createOutput(artifactType: ArtifactType, artifact: BuildableArtifact) {
-        val output = artifactRecordMap[artifactType]
-                ?: throw MissingBuildableArtifactException(artifactType)
-        output.last = artifact
+            if (artifactRecord != null) {
+                project.files(newFiles, artifactRecord.last)
+            } else {
+                project.files(newFiles)
+            }.builtBy(task)
+        return _appendArtifact(artifactType, collection)
     }
 
     /**
-     * Create Files and modify the first [BuildableArtifact] for the artifactType.
+     * Append existing files to a specified artifact type.
      *
-     * When a [BuildArtifactsHolder], a set of [BuildableArtifact] are created, but not populated.
-     * The content of the [BuildableArtifact] should come from a source from the Android Gradle plugin.
-     * This method modifies the initial [BuildableArtifact] with the appropriate files.
+     * This should only be called when files already exists during configuration time (which usually
+     * is the case with source directory files) or when dependency information is embedded inside
+     * the file collection.
      *
-     * @artifactType type of the artifact
-     * @filenames names of the files to be created.
-     * @taskName name of the Task that will generate the files.
-     * @return the initial [BuildableArtifact] that is now populated with the new files.
+     * @param artifactType [ArtifactType] for the existing files
+     * @param existingFiles existing files' [FileCollection] with
      */
-    fun createFirstArtifactFiles(
-            artifactType: ArtifactType, filenames : Collection<String>, taskName : String)
-            : BuildableArtifact {
+    fun appendArtifact(
+        artifactType: ArtifactType,
+        existingFiles: FileCollection) {
+
+        val artifactRecord = artifactRecordMap[artifactType]
         val collection =
-                project.files(
-                        filenames.map{ createFile(artifactType.name().toLowerCase(Locale.US), it) })
-                    .builtBy(taskName)
-        return initializeFirstArtifactFiles(artifactType, collection)
+            if (artifactRecord != null) {
+                project.files(existingFiles, artifactRecord.last)
+            } else {
+                project.files(existingFiles)
+            }
+        _appendArtifact(artifactType, collection)
     }
 
     /**
-     * Same as the other [createFirstArtifactFiles], but for the a single file.
+     * Append a new file or folder to a specified artifact type.
      *
-     * @artifactType type of the artifact.
-     * @task Task that will generate the output.
-     * @fileName name of the file to be created, or null if "out" should be used.
-     * @return the [File] for the output location to used.
+     * @param artifactType [ArtifactType] the new file or folder will be classified under.
+     * @param task [Task] producing the file or folder.
+     * @param fileName expected file name for the file (location is determined by the build)
+     * @return [File] handle to use to create the file or folder (potentially with subfolders
+     * or multiple files)
      */
-    fun createFirstArtifactFiles(artifactType: ArtifactType,
-        task: Task,
-        fileName: String = "out"): File {
-
-        val output = createFile(artifactType.name().toLowerCase(Locale.US), fileName)
-        val collection = project.files(output)
-        collection.builtBy(task)
-        initializeFirstArtifactFiles(artifactType, collection)
+    fun appendArtifact(
+        artifactType: ArtifactType,
+        task : Task,
+        fileName: String = "out") : File {
+        val output = createFile(task, fileName)
+        appendArtifact(artifactType, listOf(output), task)
         return output
     }
 
+    private fun _appendArtifact(artifactType: ArtifactType, files: FileCollection) : BuildableArtifact {
+        val newBuildableArtifact = BuildableArtifactImpl(files, dslScope)
+        createOutput(artifactType, newBuildableArtifact)
+        return newBuildableArtifact
+    }
 
-    /**
-     * Initialize the first output with the specified FileCollection.
-     *
-     * Similar to createFirstArtifactFiles, this method modifies the content of the
-     * [BuildableArtifact] that were created during construction of [BuildArtifactsHolder].  Unlike
-     * createFirstOutput, this methods does not determine the location of the generated files.
-     * Instead, a FileCollection has to be supplied.  This allows outputs not created from a task to
-     * be added (e.g. Configuration, SourceSet, etc).
-     */
-    fun initializeFirstArtifactFiles(
-            artifactType: ArtifactType, collection : FileCollection)
-            : BuildableArtifact {
-        val output = artifactRecordMap.getOrPut(artifactType) {
-            ArtifactRecord((BuildableArtifactImpl(null, dslScope)))
-        }
-        if (output.initialized) {
-            throw RuntimeException("Artifact already registered for type: $artifactType")
-        }
-        output.modifyFirst(collection)
-        return output.first
+    private fun createOutput(artifactType: ArtifactType, artifact: BuildableArtifact) : ArtifactRecord {
+        synchronized(artifactRecordMap,  {
+            var output = artifactRecordMap[artifactType]
+            if (output == null) {
+                output = ArtifactRecord(artifact)
+                artifactRecordMap[artifactType] = output
+            } else {
+                output.last = artifact
+            }
+            return output
+        })
+    }
+
+    private fun getArtifactRecord(artifactType : ArtifactType) : ArtifactRecord {
+        return artifactRecordMap[artifactType] ?:
+        createOutput(artifactType, BuildableArtifactImpl(project.files(), dslScope))
     }
 
     fun createReport() : Report =
-            artifactRecordMap.entries.associate {
+            artifactRecordMap.entries.associate {artifactRecordMap
                 it.key to it.value.history.map(this::newArtifact)
             }
 
     /**
      * Creates a File for a task.
      *
-     * @param identifier identifier for the file.  This should be the task name prefix when creating
-     *                   a file for external user, and the artifact type name when creating for
-     *                   internal task.
+     * @param task the task creating the output file.
      * @param filename name of the file.
      */
-    internal fun createFile(identifier: String, filename : String) =
+    internal fun createFile(task: Task, filename : String) =
             FileUtils.join(
                     rootOutputDir,
-                    identifier,
-                    variantDirName,
+                    task.name,
                     filename)
 
     internal fun getArtifactFilename(artifactType: ArtifactType) : String {
-        val record = artifactRecordMap[artifactType]
-                ?: throw MissingBuildableArtifactException(artifactType)
+        val record = getArtifactRecord(artifactType)
         return artifactType.name().toLowerCase(Locale.US) + record.size.toString()
     }
 
@@ -276,8 +273,7 @@ class BuildArtifactsHolder(
      * Return history of all [BuildableArtifact] for an [ArtifactType].
      */
     internal fun getHistory(artifactType: ArtifactType) : List<BuildableArtifact> {
-        val record = artifactRecordMap[artifactType]
-                ?: throw MissingBuildableArtifactException(artifactType)
+        val record = getArtifactRecord(artifactType)
         return record.history
     }
 

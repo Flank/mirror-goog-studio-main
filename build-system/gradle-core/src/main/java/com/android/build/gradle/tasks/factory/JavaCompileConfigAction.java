@@ -108,8 +108,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
 
         javacTask.setDestinationDir(
                 scope.getBuildArtifactsHolder()
-                        .createFirstArtifactFiles(
-                                InternalArtifactType.JAVAC, javacTask, "classes"));
+                        .appendArtifact(InternalArtifactType.JAVAC, javacTask, "classes"));
 
         CompileOptions compileOptions = globalScope.getExtension().getCompileOptions();
 

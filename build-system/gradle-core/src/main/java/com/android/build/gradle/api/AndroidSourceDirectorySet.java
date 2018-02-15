@@ -111,14 +111,14 @@ public interface AndroidSourceDirectorySet extends PatternFilterable {
     <T extends Task> void appendTo(
             String taskName,
             Class<T> taskType,
-            BuildArtifactTransformBuilder.SimpleConfigurationAction<T> configurationAction);
+            BuildArtifactTransformBuilder.ConfigurationAction<T> configurationAction);
 
     /** Create a Task that replaces sources for this source set. */
     @Incubating
     <T extends Task> void replace(
             String taskName,
             Class<T> taskType,
-            BuildArtifactTransformBuilder.SimpleConfigurationAction<T> configurationAction);
+            BuildArtifactTransformBuilder.ConfigurationAction<T> configurationAction);
 
     /** Returns the [BuildableArtifact] that represents this source sets. */
     @Incubating

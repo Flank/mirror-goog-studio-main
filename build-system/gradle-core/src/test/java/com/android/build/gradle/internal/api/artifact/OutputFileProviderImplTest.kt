@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
-import com.android.ide.common.util.multimapOf
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
@@ -60,12 +60,11 @@ class OutputFileProviderImplTest {
                         holder,
                         listOf(JAVAC_CLASSES),
                         listOf(),
-                        multimapOf(JAVAC_CLASSES to "foo"),
-                        listOf(),
-                        "task",
-                        dslScope)
-        holder.createFirstArtifactFiles(JAVAC_CLASSES, task, "bar")
-        assertThat(output.file).hasName("foo")
+                        task)
+        val outputFile = output.getFile("foo")
+        holder.appendArtifact(JAVAC_CLASSES, listOf(outputFile), task)
+        assertThat(outputFile).hasName("foo")
+        BuildableArtifactImpl.enableResolution()
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES).single()).hasName("foo")
     }
 
@@ -77,13 +76,12 @@ class OutputFileProviderImplTest {
                         holder,
                         listOf(),
                         listOf(JAVAC_CLASSES),
-                        multimapOf(JAVAC_CLASSES to "foo"),
-                        listOf(),
-                        "task",
-                        dslScope)
-        holder.createFirstArtifactFiles(JAVAC_CLASSES, task, "bar")
+                        task)
+        val fooFile = output.getFile("foo")
+        holder.appendArtifact(JAVAC_CLASSES, listOf(fooFile), task)
+        holder.appendArtifact(JAVAC_CLASSES, task, "bar")
         BuildableArtifactImpl.enableResolution()
-        assertThat(output.file).hasName("foo")
+        assertThat(fooFile).hasName("foo")
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES).map(File::getName)).containsExactly("foo", "bar")
     }
 
@@ -95,20 +93,17 @@ class OutputFileProviderImplTest {
                         holder,
                         listOf(JAVAC_CLASSES),
                         listOf(JAVA_COMPILE_CLASSPATH),
-                        multimapOf(
-                                JAVAC_CLASSES to "foo",
-                                JAVA_COMPILE_CLASSPATH to "foo",
-                                JAVA_COMPILE_CLASSPATH to "bar"),
-                        listOf(),
-                        "task",
-                        dslScope)
-        holder.createFirstArtifactFiles(JAVAC_CLASSES, task, "javac")
-        holder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, task, "classpath")
+                        task)
+        val fooFile = output.getFile("foo", JAVAC_CLASSES, JAVA_COMPILE_CLASSPATH)
+        val barFile = output.getFile("bar", JAVA_COMPILE_CLASSPATH)
+        holder.appendArtifact(JAVAC_CLASSES, listOf(fooFile), task)
+        holder.appendArtifact(JAVA_COMPILE_CLASSPATH, task, "classpath")
+        holder.appendArtifact(JAVA_COMPILE_CLASSPATH, listOf(barFile, fooFile), task)
         BuildableArtifactImpl.enableResolution()
 
         assertThat(output.getFile("foo")).hasName("foo")
         assertThat(output.getFile("bar")).hasName("bar")
-        assertFailsWith<RuntimeException> { output.getFile("baz") }
+        assertFailsWith<RuntimeException> { output.getFile("baz", InternalArtifactType.JAVAC) }
 
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES).map(File::getName)).containsExactly("foo")
         assertThat(holder.getArtifactFiles(JAVA_COMPILE_CLASSPATH).map(File::getName))
@@ -117,10 +112,9 @@ class OutputFileProviderImplTest {
 
     private fun newTaskOutputHolder() =
             BuildArtifactsHolder(
-                    project,
-                    "debug",
-                    project.file("root"),
-                    "debug",
-                    listOf(JAVAC_CLASSES, JAVA_COMPILE_CLASSPATH),
-                    dslScope)
+                project,
+                "debug",
+                project.file("root"),
+                "debug",
+                dslScope)
 }

@@ -16,49 +16,80 @@
 
 package com.android.build.gradle.internal.api.artifact
 
+import com.android.build.api.artifact.ArtifactConfigurationException
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.BuildArtifactType
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.artifact.InputArtifactProvider
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
+import com.google.common.base.Joiner
 
 /**
  * Implementation for InputProvider
+ *
+ * @param artifactsHolder singleton holding all [BuildableArtifact]s
+ * @param referencedInputTypes list of [ArtifactType] that are declared as references to this
+ * transform. The "final" version of these artifacts will be returned from the [getArtifact]
+ * method.
+ * @param transformedInputTypes list of [ArtifactType] that are declared to be appended to or
+ * replaced by this transform. The "current" version of these artifacts will be returned from the
+ * [getArtifact] method.
+ * @param dslScope scoping object for all DSL parsing error reporting.
  */
 class InputArtifactProviderImpl(
         private var artifactsHolder: BuildArtifactsHolder,
-        private var inputTypes : Collection<ArtifactType>,
+        private var referencedInputTypes: Collection<ArtifactType>,
+        private var transformedInputTypes: Collection<ArtifactType>,
         private val dslScope: DslScope) : InputArtifactProvider {
-    private val collections = inputTypes.map { artifactsHolder.getArtifactFiles(it) }
+
+    private fun mapOfInputs() : Map<ArtifactType, BuildableArtifact> {
+        return transformedInputTypes.map { it to artifactsHolder.getArtifactFiles(it) }.toMap().plus(
+            referencedInputTypes.map { it to artifactsHolder.getFinalArtifactFiles(it) }.toMap())
+    }
+
+    init {
+        // make sure there are not types requested as final values and as intermediate values.
+        val common = referencedInputTypes.intersect(transformedInputTypes)
+        if (!common.isEmpty()) {
+            throw ArtifactConfigurationException(Joiner.on(",").join(common)
+                    + " types are requested as intermediates and final types input")
+        }
+    }
 
     override val artifact: BuildableArtifact
-        get() = when {
-            collections.isEmpty() -> {
-                dslScope.issueReporter.reportError(
+        get() = with(mapOfInputs()) {
+            when {
+                isEmpty() -> {
+                    dslScope.issueReporter.reportError(
                         EvalIssueReporter.Type.GENERIC,
-                    EvalIssueException("No artifacts was defined for input."))
-                BuildableArtifactImpl(null, dslScope)
-            }
-            collections.size > 1 -> {
-                dslScope.issueReporter.reportError(
+                        EvalIssueException("No artifacts was defined for input.")
+                    )
+                    BuildableArtifactImpl(null, dslScope)
+                }
+                size > 1 -> {
+                    dslScope.issueReporter.reportError(
                         EvalIssueReporter.Type.GENERIC,
-                    EvalIssueException("Multiple inputs types was defined."))
-                BuildableArtifactImpl(null, dslScope)
+                        EvalIssueException("Multiple inputs types were defined, use getArtifact(ArtifactType) " +
+                                "method to disambiguate : " +
+                                Joiner.on(",").join(mapOfInputs().keys))
+                    )
+                    BuildableArtifactImpl(null, dslScope)
+                }
+                else -> mapOfInputs().values.single()
             }
-            else -> collections.single()
         }
 
-    override fun getArtifact(type : BuildArtifactType): BuildableArtifact {
-        val index = inputTypes.indexOf(type)
-        if (index == -1) {
+    override fun getArtifact(type : ArtifactType): BuildableArtifact {
+        val buildableArtifact = mapOfInputs()[type]
+        if (buildableArtifact == null) {
             dslScope.issueReporter.reportError(
-                    EvalIssueReporter.Type.GENERIC,
-                EvalIssueException("Artifact was not defined for input of type: $type."))
+                EvalIssueReporter.Type.GENERIC,
+                EvalIssueException("Artifact was not defined for input of type: $type.")
+            )
             return BuildableArtifactImpl(null, dslScope)
         }
-        return collections[inputTypes.indexOf(type)]
+        return buildableArtifact
     }
 }
