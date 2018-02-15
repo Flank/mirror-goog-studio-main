@@ -26,7 +26,14 @@ maven_pom(
 )
 
 java_library(
+    name = "notice",
+    resource_strip_prefix = "tools/base/build-system/aapt2",
+    resources = ["NOTICE"],
+)
+
+java_library(
     name = "darwin_zip",
+    resource_jars = [":notice"],
     resource_strip_prefix = "prebuilts/tools/common/aapt/darwin",
     #  resources = [":darwin_files"],
     resources = [
@@ -37,6 +44,7 @@ java_library(
 
 java_library(
     name = "linux_zip",
+    resource_jars = [":notice"],
     resource_strip_prefix = "prebuilts/tools/common/aapt/linux",
     #    resources = [":linux_files"],
     resources = [
@@ -47,6 +55,7 @@ java_library(
 
 java_library(
     name = "windows_zip",
+    resource_jars = [":notice"],
     resource_strip_prefix = "prebuilts/tools/common/aapt/windows",
     resources = [
         "//prebuilts/tools/common/aapt:windows/aapt2.exe",
