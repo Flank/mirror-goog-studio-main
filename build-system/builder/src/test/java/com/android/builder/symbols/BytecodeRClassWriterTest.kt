@@ -227,10 +227,11 @@ class BytecodeRClassWriterTest {
     }
 
     private fun files(dir: Path) =
-            Files.walk(dir)
-                    .filter { Files.isRegularFile(it) }
+            Files.walk(dir).use {
+                it.filter { Files.isRegularFile(it) }
                     .map { className(dir.relativize(it)) }
                     .toList()
+            }
 
     private fun className(relativePath: Path): String =
             PathUtils.toSystemIndependentPath(relativePath)

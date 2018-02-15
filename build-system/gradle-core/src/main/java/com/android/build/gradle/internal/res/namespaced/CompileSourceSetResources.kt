@@ -61,20 +61,25 @@ open class CompileSourceSetResources
             }
 
             /** Only look at files in first level subdirectories of the input directory */
-            Files.list(inputDirectory.toPath()).forEach { subDir ->
-                if (Files.isDirectory(subDir)) {
-                    Files.list(subDir).forEach { resFile ->
-                        if (Files.isRegularFile(resFile)) {
-                            val relativePath = inputDirectory.toPath().relativize(resFile)
-                            if (addedFiles.contains(relativePath)) {
-                                throw RuntimeException(
-                                        "Duplicated resource '$relativePath' found in a source " +
-                                                "set:\n" +
-                                                "    - ${addedFiles[relativePath]}\n" +
-                                                "    - $resFile")
+            Files.list(inputDirectory.toPath()).use { fstLevel ->
+                fstLevel.forEach { subDir ->
+                    if (Files.isDirectory(subDir)) {
+                        Files.list(subDir).use {
+                            it.forEach { resFile ->
+                                if (Files.isRegularFile(resFile)) {
+                                    val relativePath = inputDirectory.toPath().relativize(resFile)
+                                    if (addedFiles.contains(relativePath)) {
+                                        throw RuntimeException(
+                                                "Duplicated resource '$relativePath' found in a " +
+                                                        "source set:\n" +
+                                                        "    - ${addedFiles[relativePath]}\n" +
+                                                        "    - $resFile"
+                                        )
+                                    }
+                                    requests.add(compileRequest(resFile.toFile()))
+                                    addedFiles.put(relativePath, resFile)
+                                }
                             }
-                            requests.add(compileRequest(resFile.toFile()))
-                            addedFiles.put(relativePath, resFile)
                         }
                     }
                 }

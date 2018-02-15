@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.concurrent.NotThreadSafe;
 
 /**
@@ -63,7 +64,10 @@ public final class DirectoryPoller {
             return Collections.emptySet();
         }
 
-        Set<Path> present = Files.walk(directory).filter(filter).collect(Collectors.toSet());
+        Set<Path> present;
+        try (Stream<Path> paths = Files.walk(directory)) {
+            present = paths.filter(filter).collect(Collectors.toSet());
+        }
         Set<Path> diff = ImmutableSet.copyOf(Sets.difference(present, known));
 
         known.addAll(diff);

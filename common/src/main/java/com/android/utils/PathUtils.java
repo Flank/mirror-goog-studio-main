@@ -104,8 +104,8 @@ public final class PathUtils {
                 classPathJars.add(componentPath);
             } else {
                 // this is a directory containing zips or jars, get them all
-                try {
-                    Files.walk(componentPath).filter(zipOrJar::matches).forEach(classPathJars::add);
+                try (Stream<Path> paths = Files.walk(componentPath)) {
+                    paths.filter(zipOrJar::matches).forEach(classPathJars::add);
                 } catch (IOException ignored) {
                     // just ignore, users can specify non-existing dirs as class path
                 }

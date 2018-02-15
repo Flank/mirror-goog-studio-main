@@ -69,6 +69,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
@@ -104,10 +105,12 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
     @Override
     protected final void doFullTaskAction() throws Exception {
         // Mark all files as NEW and continue with the verification.
-        Map<File, FileStatus> fileStatusMap =
-                Files.walk(inputDirectory.getSingleFile().toPath())
-                        .filter(Files::isRegularFile)
-                        .collect(Collectors.toMap(Path::toFile, file -> FileStatus.NEW));
+        Map<File, FileStatus> fileStatusMap;
+        try (Stream<Path> paths = Files.walk(inputDirectory.getSingleFile().toPath())) {
+            fileStatusMap =
+                    paths.filter(Files::isRegularFile)
+                            .collect(Collectors.toMap(Path::toFile, file -> FileStatus.NEW));
+        }
 
         FileUtils.cleanOutputDir(compiledDirectory);
         compileAndVerifyResources(fileStatusMap);

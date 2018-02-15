@@ -36,11 +36,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
  * Builds the command lines for use with {@code aapt2}.
@@ -143,19 +145,19 @@ public final class AaptV2CommandBuilder {
                     FileUtils.deleteIfExists(resourceListFile);
                     for (File dir : config.getResourceDirs()) {
                         try (FileOutputStream fos = new FileOutputStream(resourceListFile);
-                                PrintWriter pw = new PrintWriter(fos)) {
-
-                            Files.walk(dir.toPath())
-                                    .filter(Files::isRegularFile)
+                                PrintWriter pw = new PrintWriter(fos);
+                                Stream<Path> paths = Files.walk(dir.toPath())) {
+                            paths.filter(Files::isRegularFile)
                                     .forEach((p) -> pw.print(p.toString() + " "));
                         }
                     }
                     builder.add("-R", "@" + resourceListFile.getAbsolutePath());
                 } else {
                     for (File dir : config.getResourceDirs()) {
-                        Files.walk(dir.toPath())
-                                .filter(Files::isRegularFile)
-                                .forEach((p) -> builder.add("-R", p.toString()));
+                        try (Stream<Path> paths = Files.walk(dir.toPath())) {
+                            paths.filter(Files::isRegularFile)
+                                    .forEach((p) -> builder.add("-R", p.toString()));
+                        }
                     }
                 }
             } catch (IOException e) {
