@@ -62,6 +62,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals(24, getApiByBuildCode("N", false));
         assertEquals(26, getApiByBuildCode("O", false));
         assertEquals(27, getApiByBuildCode("O_MR1", false));
+        assertEquals(28, getApiByBuildCode("P", true));
 
         for (int api = 1; api <= HIGHEST_KNOWN_API; api++) {
             assertEquals(api, getApiByBuildCode(getBuildCode(api), false));
