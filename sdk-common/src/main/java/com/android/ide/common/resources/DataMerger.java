@@ -13,24 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.utils.XmlUtils;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,7 +49,6 @@ import org.xml.sax.SAXException;
  */
 abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extends DataSet<I,F>>
         implements DataMap<I> {
-
     static final String FN_MERGER_XML = "merger.xml";
     static final String NODE_MERGER = "merger";
     static final String NODE_DATA_SET = "dataSet";
@@ -63,10 +61,8 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
     @NonNull
     protected final DocumentBuilderFactory mFactory;
 
-    /**
-     * All the DataSets.
-     */
-    private final List<S> mDataSets = Lists.newArrayList();
+    /** All the DataSets. */
+    private final List<S> mDataSets = new ArrayList<>();
 
     public DataMerger() {
         mFactory = DocumentBuilderFactory.newInstance();
@@ -125,7 +121,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
     @Override
     public int size() {
         // put all the resource keys in a set.
-        Set<String> keys = Sets.newHashSet();
+        Set<String> keys = new HashSet<>();
 
         for (S resourceSet : mDataSets) {
             ListMultimap<String, I> map = resourceSet.getDataMap();
@@ -174,7 +170,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
 
         try {
             // get all the items keys.
-            Set<String> dataItemKeys = Sets.newHashSet();
+            Set<String> dataItemKeys = new HashSet<>();
 
             for (S dataSet : mDataSets) {
                 // quick check on duplicates in the resource set.
@@ -188,7 +184,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
                 if (requiresMerge(dataItemKey)) {
                     // get all the available items, from the lower priority, to the higher
                     // priority
-                    List<I> items = Lists.newArrayListWithExpectedSize(mDataSets.size());
+                    List<I> items = new ArrayList<>(mDataSets.size());
                     for (S dataSet : mDataSets) {
 
                         // look for the resource key in the set
@@ -316,8 +312,8 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
      *
      * @see #loadFromBlob(File, boolean)
      */
-    public void writeBlobTo(@NonNull File blobRootFolder, @NonNull MergeConsumer<I> consumer, boolean includeTimestamps)
-            throws MergingException {
+    public void writeBlobTo(@NonNull File blobRootFolder, @NonNull MergeConsumer<I> consumer,
+            boolean includeTimestamps) throws MergingException {
         // write "compact" blob
         DocumentBuilder builder;
 
@@ -350,7 +346,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
             }
             File file = new File(blobRootFolder, FN_MERGER_XML);
             try {
-                Files.write(content, file, Charsets.UTF_8);
+                Files.write(content, file, StandardCharsets.UTF_8);
             } catch (IOException ioe) {
                 throw MergingException.wrapException(ioe).withFile(file).build();
             }
@@ -360,8 +356,8 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
     }
 
     /**
-     * Writes a single blob file to store all that the DataMerger knows about, and tag file entries with
-     * lastModified timestamps.
+     * Writes a single blob file to store all that the DataMerger knows about, and tag file entries
+     * with lastModified timestamps.
      *
      * @param blobRootFolder the root folder where blobs are store.
      * @param consumer the merge consumer that was used by the merge.
@@ -370,29 +366,28 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
      *
      * @see #loadFromBlob(File, boolean)
      */
-    public void writeBlobToWithTimestamps(@NonNull File blobRootFolder, @NonNull MergeConsumer<I> consumer)
-            throws MergingException {
+    public void writeBlobToWithTimestamps(@NonNull File blobRootFolder,
+            @NonNull MergeConsumer<I> consumer) throws MergingException {
         writeBlobTo(blobRootFolder, consumer, true);
     }
 
     /**
      * Loads the merger state from a blob file.
      *
-     * This can be loaded into two different ways that differ only by the state on the
-     * {@link DataItem} objects.
+     * <p>This can be loaded into two different ways that differ only by the state on
+     * the {@link DataItem} objects.
      *
-     * If <var>incrementalState</var> is <code>true</code> then the items that are on disk are
-     * marked as written ({@link DataItem#isWritten()} returning <code>true</code>.
-     * This is to be used by {@link MergeWriter} to update a merged res folder.
+     * <p>If <var>incrementalState</var> is <code>true</code> then the items that are on disk are
+     * marked as written ({@link DataItem#isWritten()} returning <code>true</code>. This is to be
+     * used by {@link MergeWriter} to update a merged res folder.
      *
-     * If <code>false</code>, the items are marked as touched, and this can be used to feed a new
-     * {@link ResourceRepository} object.
+     * <p>If <code>false</code>, the items are marked as touched, and this can be used to feed a new
+     * {@link AbstractResourceRepository} object.
      *
      * @param blobRootFolder the folder containing the blob.
      * @param incrementalState whether to load into an incremental state or a new state.
      * @return true if the blob was loaded.
      * @throws MergingException if something goes wrong
-     *
      * @see #writeBlobTo(File, MergeConsumer, boolean)
      */
     public boolean loadFromBlob(@NonNull File blobRootFolder, boolean incrementalState)
@@ -556,7 +551,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
         for (S dataSet : mDataSets) {
             ListMultimap<String, I> map = dataSet.getDataMap();
 
-            List<String> keys = Lists.newArrayList(map.keySet());
+            List<String> keys = new ArrayList<>(map.keySet());
             for (String key : keys) {
                 List<I> list = map.get(key);
                 for (int i = 0 ; i < list.size() ;) {
@@ -609,9 +604,9 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
             // compare the source files. The order is not important so it should be normalized
             // before it's compared.
             // make copies to sort.
-            localSourceFiles = Lists.newArrayList(localSourceFiles);
+            localSourceFiles = new ArrayList<>(localSourceFiles);
             Collections.sort(localSourceFiles);
-            newSourceFiles = Lists.newArrayList(newSourceFiles);
+            newSourceFiles = new ArrayList<>(newSourceFiles);
             Collections.sort(newSourceFiles);
 
             if (!localSourceFiles.equals(newSourceFiles)) {
@@ -669,7 +664,7 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
     public FileValidity<S> findDataSetContaining(@NonNull File file,
                                                  @Nullable FileValidity<S> fileValidity) {
         if (fileValidity == null) {
-            fileValidity = new FileValidity<S>();
+            fileValidity = new FileValidity<>();
         }
 
         if (mDataSets.isEmpty()) {
@@ -717,5 +712,4 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
     protected boolean filterAccept(@NonNull I dataItem) {
         return true;
     }
-
 }
