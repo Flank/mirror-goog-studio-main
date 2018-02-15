@@ -104,6 +104,10 @@ message EnergyEvent {
     WakeLockAcquired wake_lock_acquired = 101;
     // A wake lock was released, indicating it's not needed anymore.
     WakeLockReleased wake_lock_released = 102;
+    // An alarm was set.
+    AlarmSet alarm_set = 103;
+    // An alarm was cancelled.
+    AlarmCancelled alarm_cancelled = 104;
   }
 }
 
@@ -126,7 +130,8 @@ message WakeLockAcquired {
   // Level for the wake lock instance initialization.
   // https://developer.android.com/reference/android/os/PowerManager.html#newWakeLock(int, java.lang.String)
   Level level = 1;
-  // Optional flags for the wake lock instance initialization, empty if no flag is set.
+  // Optional flags for the wake lock instance initialization, empty if no flag
+  // is set.
   repeated CreationFlag flags = 2;
   // Tag of the wake lock (which users may have set for debugging purposes).
   string tag = 3;
@@ -147,4 +152,58 @@ message WakeLockReleased {
   // True if the wake lock is still held after the release. This may happen if
   // the wake lock is reference counted and has been acquired multiple times.
   bool is_held = 2;
+}
+
+message AlarmSet {
+  enum Type {
+    UNDEFINED_ALARM_TYPE = 0;
+    RTC = 1;
+    RTC_WAKEUP = 2;
+    ELAPSED_REALTIME = 3;
+    ELAPSED_REALTIME_WAKEUP = 4;
+  }
+
+  // Type of alarm.
+  Type type = 1;
+  // Time in milliseconds that the alarm should go off, using the appropriate
+  // clock (depending on the alarm type). Used by all AlarmManager.set*()
+  // methods.
+  int64 trigger_ms = 2;
+  // The length of the requested delivery window, in milliseconds. The alarm
+  // will be delivered no later than this many milliseconds after trigger_ms.
+  // Used by AlarmManager.setWindow().
+  int64 window_ms = 3;
+  // Interval in milliseconds between subsequent repeats of the alarm. Used by
+  // AlarmManager.setRepeating() and AlarmManager.setInexactRepeating().
+  int64 interval_ms = 4;
+  oneof action {
+    // Metadata of the action to perform when the alarm goes off.
+    PendingIntent operation = 5;
+    // Metadata of the alarm listener whose onAlarm() method will be called when
+    // the alarm goes off.
+    AlarmListener listener = 6;
+  }
+}
+
+message AlarmCancelled {
+  oneof action {
+    // A previously set operation.
+    PendingIntent operation = 1;
+    // A previously set listener.
+    AlarmListener listener = 2;
+  }
+}
+
+message PendingIntent {
+  // The package name of the PendingIntent, or empty if there is none
+  // associated with it.
+  string creator_package = 1;
+  // The uid of the PendingIntent, or -1 if there is none associated with it.
+  int32 creator_uid = 2;
+}
+
+message AlarmListener {
+  // String describing the alarm listener, used for logging and battery-use
+  // attribution.
+  string listener_tag = 1;
 }
