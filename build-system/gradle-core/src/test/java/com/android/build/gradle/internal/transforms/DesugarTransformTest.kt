@@ -325,7 +325,7 @@ class DesugarTransformTest {
         val executor = WaitableExecutor.useDirectExecutor()
         val transform = DesugarTransform(
                 Supplier<List<File>> { listOf() },
-                "",
+                tmp.newFolder().toString(),
                 null,
                 19,
                 processExecutor,
