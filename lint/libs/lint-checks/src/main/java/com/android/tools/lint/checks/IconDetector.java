@@ -2538,7 +2538,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
 
     private boolean handleSelect(UElement select) {
         ResourceUrl url = ResourceEvaluator.getResourceConstant(select);
-        if (url != null && url.type == ResourceType.DRAWABLE && !url.framework) {
+        if (url != null && url.type == ResourceType.DRAWABLE && !url.isFramework()) {
             if (notificationIcons == null) {
                 notificationIcons = Maps.newHashMap();
             }
@@ -2575,7 +2575,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
         @Override
         public boolean visitSimpleNameReferenceExpression(USimpleNameReferenceExpression node) {
             ResourceUrl url = ResourceEvaluator.getResourceConstant(node);
-            if (url != null && url.type == ResourceType.MENU && !url.framework) {
+            if (url != null && url.type == ResourceType.MENU && !url.isFramework()) {
                 // Reclassify icons in the given menu as action bar icons
                 if (menuToIcons != null) {
                     Collection<String> icons = menuToIcons.get(url.name);

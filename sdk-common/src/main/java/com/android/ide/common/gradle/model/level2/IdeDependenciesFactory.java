@@ -222,16 +222,19 @@ public class IdeDependenciesFactory {
     }
 
     /**
-     * Populate global library map from {@link GlobalLibraryMap} by making a deep copy.
+     * Populate global library map from the list of {@link GlobalLibraryMap} by merging and making
+     * deep copies of each entry.
      *
-     * @param globalLibraryMap GlobalLibraryMap model returned from Android Plugin.
+     * @param globalLibraryMaps List of GlobalLibraryMap model returned from Android Plugin.
      */
-    public void setUpGlobalLibraryMap(@NonNull GlobalLibraryMap globalLibraryMap) {
+    public void setUpGlobalLibraryMap(@NonNull List<GlobalLibraryMap> globalLibraryMaps) {
         ModelCache modelCache = new ModelCache();
-        for (Library library : globalLibraryMap.getLibraries().values()) {
-            myLibrariesById.computeIfAbsent(
-                    library.getArtifactAddress(),
-                    k -> myLibraryFactory.create(library, modelCache));
+        for (GlobalLibraryMap globalLibraryMap : globalLibraryMaps) {
+            for (Library library : globalLibraryMap.getLibraries().values()) {
+                myLibrariesById.computeIfAbsent(
+                        library.getArtifactAddress(),
+                        k -> myLibraryFactory.create(library, modelCache));
+            }
         }
     }
 }

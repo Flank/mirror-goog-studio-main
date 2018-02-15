@@ -16,13 +16,18 @@
 
 package com.android.build.gradle.integration.common.fixture;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
 import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.TestUtils;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
@@ -51,6 +56,10 @@ public final class GradleTestProjectBuilder {
     private boolean withCmakeDirInLocalProp = false;
     @NonNull String cmakeVersion;
     @Nullable private List<Path> repoDirectories;
+    @Nullable private File androidHome;
+    @Nullable private File androidNdkHome;
+    @Nullable private File gradleDistributionDirectory;
+    @Nullable private String kotlinVersion;
 
     private boolean withDeviceProvider = true;
     private boolean withSdk = true;
@@ -64,6 +73,37 @@ public final class GradleTestProjectBuilder {
         if (targetGradleVersion == null) {
             targetGradleVersion = GradleTestProject.GRADLE_TEST_VERSION;
         }
+
+        if (androidHome == null && withSdk) {
+            androidHome = SdkHelper.findSdkDir();
+        }
+
+        if (androidNdkHome == null) {
+            String envCustomAndroidNdkHome =
+                    Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_NDK_HOME"));
+            if (envCustomAndroidNdkHome != null) {
+                androidNdkHome = new File(envCustomAndroidNdkHome);
+                Preconditions.checkState(
+                        androidNdkHome.isDirectory(),
+                        "CUSTOM_ANDROID_NDK_HOME must point to a directory, "
+                                + androidNdkHome.getAbsolutePath()
+                                + " is not a directory");
+            } else {
+                androidNdkHome =
+                        TestUtils.runningFromBazel()
+                                ? BazelIntegrationTestsSuite.NDK_IN_TMP.toFile()
+                                : new File(androidHome, SdkConstants.FD_NDK);
+            }
+        }
+
+        if (gradleDistributionDirectory == null) {
+            gradleDistributionDirectory = TestUtils.getWorkspaceFile("tools/external/gradle");
+        }
+
+        if (kotlinVersion == null) {
+            kotlinVersion = TestUtils.getKotlinVersionForTests();
+        }
+
         return new GradleTestProject(
                 name,
                 testProject,
@@ -81,7 +121,11 @@ public final class GradleTestProjectBuilder {
                 withAndroidGradlePlugin,
                 withIncludedBuilds,
                 testDir,
-                repoDirectories);
+                repoDirectories,
+                androidHome,
+                androidNdkHome,
+                gradleDistributionDirectory,
+                kotlinVersion);
     }
 
     /**
@@ -97,6 +141,22 @@ public final class GradleTestProjectBuilder {
     /** Create a project without setting ndk.dir in local.properties. */
     public GradleTestProjectBuilder withoutNdk() {
         this.withoutNdk = true;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withAndroidHome(File androidHome) {
+        this.androidHome = androidHome;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withGradleDistributionDirectory(
+            File gradleDistributionDirectory) {
+        this.gradleDistributionDirectory = gradleDistributionDirectory;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withKotlinVersion(String kotlinVersion) {
+        this.kotlinVersion = kotlinVersion;
         return this;
     }
 
@@ -153,20 +213,22 @@ public final class GradleTestProjectBuilder {
         return fromTestApp(app);
     }
 
+    public GradleTestProjectBuilder fromDir(@NonNull File dir) {
+        Preconditions.checkArgument(dir.isDirectory(), "passed dir must be a directory");
+        AndroidTestApp app = new EmptyTestApp();
+        addAllFiles(app, dir);
+        return fromTestApp(app);
+    }
+
     /** Create GradleTestProject from an existing test project. */
     public GradleTestProjectBuilder fromExternalProject(@NonNull String project) {
-        AndroidTestApp app = new EmptyTestApp();
         name = project;
         File parentDir = TestUtils.getWorkspaceFile("external");
         File projectDir = new File(parentDir, project);
         if (!projectDir.exists()) {
             projectDir = new File(parentDir, project.replace('-', '_'));
         }
-        if (!projectDir.exists()) {
-            throw new RuntimeException("Project " + project + " not found in " + projectDir + ".");
-        }
-        addAllFiles(app, projectDir);
-        return fromTestApp(app);
+        return fromDir(projectDir);
     }
 
     /** Create GradleTestProject from a data binding integration test. */

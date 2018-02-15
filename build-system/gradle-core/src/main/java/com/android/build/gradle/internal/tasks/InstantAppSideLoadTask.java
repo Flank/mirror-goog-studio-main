@@ -113,33 +113,37 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
                 };
 
         String appId = outputScope.getApplicationId();
-
         File bundleFile = outputScope.getInstantAppBundle();
+
         deviceProvider.init();
 
-        List<? extends DeviceConnector> devices = deviceProvider.getDevices();
-        for (DeviceConnector device : devices) {
-            if (device instanceof ConnectedDevice) {
-                IDevice iDevice = ((ConnectedDevice) device).getIDevice();
+        try {
+            List<? extends DeviceConnector> devices = deviceProvider.getDevices();
+            for (DeviceConnector device : devices) {
+                if (device instanceof ConnectedDevice) {
+                    IDevice iDevice = ((ConnectedDevice) device).getIDevice();
 
-                InstantAppSideLoader sideLoader;
-                if (iDevice.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.O)) {
-                    // List of apks to install in postO rather than unzipping the bundle
-                    // It will be computed only if there's at least one device postO
-                    final List<File> apks = new ArrayList<>();
-                    for (File apkDirectory : outputScope.getApkDirectories()) {
-                        for (BuildOutput buildOutput :
-                                ExistingBuildElements.from(
-                                        InternalArtifactType.APK, apkDirectory)) {
-                            apks.add(buildOutput.getOutputFile());
+                    InstantAppSideLoader sideLoader;
+                    if (iDevice.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.O)) {
+                        // List of apks to install in postO rather than unzipping the bundle
+                        // It will be computed only if there's at least one device postO
+                        final List<File> apks = new ArrayList<>();
+                        for (File apkDirectory : outputScope.getApkDirectories()) {
+                            for (BuildOutput buildOutput :
+                                    ExistingBuildElements.from(
+                                            InternalArtifactType.APK, apkDirectory)) {
+                                apks.add(buildOutput.getOutputFile());
+                            }
                         }
+                        sideLoader = new InstantAppSideLoader(appId, apks, runListener);
+                    } else {
+                        sideLoader = new InstantAppSideLoader(appId, bundleFile, runListener);
                     }
-                    sideLoader = new InstantAppSideLoader(appId, apks, runListener);
-                } else {
-                    sideLoader = new InstantAppSideLoader(appId, bundleFile, runListener);
+                    sideLoader.install(iDevice);
                 }
-                sideLoader.install(iDevice);
             }
+        } finally {
+            deviceProvider.terminate();
         }
     }
 

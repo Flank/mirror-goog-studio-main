@@ -568,15 +568,8 @@ public final class SymbolIo {
 
     /** Writes tye symbol table with the package name as the first line. */
     public static void writeSymbolTableWithPackage(
-            @NonNull SymbolTable symbolTable, @NonNull Path manifest, @NonNull File outputFile)
-            throws IOException {
-        String packageName;
-        try (InputStream is = new BufferedInputStream(Files.newInputStream(manifest))) {
-            packageName = AndroidManifestParser.parse(is).getPackage();
-        } catch (SAXException | ParserConfigurationException e) {
-            throw new IOException(e);
-        }
-        write(symbolTable, outputFile.toPath(), packageName);
+            @NonNull SymbolTable symbolTable, @NonNull String pkg, @NonNull File outputFile) {
+        write(symbolTable, outputFile.toPath(), pkg);
     }
 
     /**

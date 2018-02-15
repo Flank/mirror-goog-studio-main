@@ -57,7 +57,7 @@ public class PlatformLoaderTest {
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
 
         // Copy all necessary prebuilts
-        File realAndroidHome = GradleTestProject.ANDROID_HOME;
+        File realAndroidHome = project.getAndroidHome();
 
         FileUtils.copyDirectoryContentToDirectory(
                 FileUtils.join(

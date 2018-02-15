@@ -59,13 +59,10 @@ import java.util.Collections
 class LintBaseline(
         /** Client to log to  */
         private val client: LintClient?,
+
         /**
          * The file to read the baselines from, and if [.writeOnClose] is set, to write
          * to when the baseline is [.close]'ed.
-         */
-        /**
-         * Returns the file which records the data in this baseline
-         * @return the baseline file
          */
         val file: File) {
 

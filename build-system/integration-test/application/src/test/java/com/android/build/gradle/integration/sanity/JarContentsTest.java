@@ -168,16 +168,25 @@ public class JarContentsTest {
                 "META-INF/",
                 "Twofish/");
         expected.putAll(
+                "com/android/tools/build/apkzlib",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/build/",
+                "com/android/tools/build/apkzlib/",
+                "com/android/tools/build/apkzlib/sign/",
+                "com/android/tools/build/apkzlib/utils/",
+                "com/android/tools/build/apkzlib/zfile/",
+                "com/android/tools/build/apkzlib/zip/",
+                "com/android/tools/build/apkzlib/zip/compress/",
+                "com/android/tools/build/apkzlib/zip/utils/",
+                "META-INF/MANIFEST.MF",
+                "META-INF/",
+                "NOTICE");
+        expected.putAll(
                 "com/android/tools/build/builder",
                 "com/",
                 "com/android/",
-                "com/android/apkzlib/",
-                "com/android/apkzlib/sign/",
-                "com/android/apkzlib/utils/",
-                "com/android/apkzlib/zfile/",
-                "com/android/apkzlib/zip/",
-                "com/android/apkzlib/zip/compress/",
-                "com/android/apkzlib/zip/utils/",
                 "com/android/builder/",
                 "com/android/builder/compiling/",
                 "com/android/builder/core/",
@@ -418,7 +427,8 @@ public class JarContentsTest {
                 "META-INF/gradle-plugins/com.android.library.properties",
                 "META-INF/gradle-plugins/com.android.lint.properties",
                 "META-INF/gradle-plugins/com.android.test.properties",
-                "META-INF/gradle-plugins/com.android.bundle.properties");
+                "META-INF/gradle-plugins/com.android.bundle.properties",
+                "META-INF/gradle-plugins/com.android.dynamic-feature.properties");
         expected.putAll(
                 "com/android/tools/build/apksig",
                 "com/",
@@ -470,6 +480,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/cxx/",
                 "com/android/build/gradle/internal/cxx/json/",
                 "com/android/build/gradle/internal/cxx/configure/",
+                "com/android/build/gradle/internal/cxx/stripping/",
                 "com/android/build/gradle/internal/dependency/",
                 "com/android/build/gradle/internal/dsl/",
                 "com/android/build/gradle/internal/errors/",

@@ -128,6 +128,7 @@ public enum InternalArtifactType implements ArtifactType {
     INSTANT_RUN_MERGED_MANIFESTS,
     MANIFEST_METADATA,
     MANIFEST_MERGE_REPORT,
+    STATIC_LIBRARY_MANIFESTS,
 
     // List of annotation processors for metrics.
     ANNOTATION_PROCESSOR_LIST,

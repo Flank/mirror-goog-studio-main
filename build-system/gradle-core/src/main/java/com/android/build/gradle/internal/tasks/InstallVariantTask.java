@@ -89,31 +89,37 @@ public class InstallVariantTask extends AndroidBuilderTask {
     }
 
     @TaskAction
-    public void install() throws DeviceException, ProcessException, InterruptedException {
+    public void install() throws DeviceException, ProcessException {
         final ILogger iLogger = getILogger();
         DeviceProvider deviceProvider = new ConnectedDeviceProvider(adbExe.get(),
                 getTimeOutInMs(),
                 iLogger);
         deviceProvider.init();
-        BaseVariantData variantData = getVariantData();
-        GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
-        List<OutputFile> outputs =
-                ImmutableList.copyOf(
-                        ExistingBuildElements.from(InternalArtifactType.APK, getApkDirectory()));
+        try {
+            BaseVariantData variantData = getVariantData();
+            GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
-        install(
-                getProjectName(),
-                variantConfig.getFullName(),
-                deviceProvider,
-                variantConfig.getMinSdkVersion(),
-                getProcessExecutor(),
-                getSplitSelectExe(),
-                outputs,
-                variantConfig.getSupportedAbis(),
-                getInstallOptions(),
-                getTimeOutInMs(),
-                getLogger());
+            List<OutputFile> outputs =
+                    ImmutableList.copyOf(
+                            ExistingBuildElements.from(
+                                    InternalArtifactType.APK, getApkDirectory()));
+
+            install(
+                    getProjectName(),
+                    variantConfig.getFullName(),
+                    deviceProvider,
+                    variantConfig.getMinSdkVersion(),
+                    getProcessExecutor(),
+                    getSplitSelectExe(),
+                    outputs,
+                    variantConfig.getSupportedAbis(),
+                    getInstallOptions(),
+                    getTimeOutInMs(),
+                    getLogger());
+        } finally {
+            deviceProvider.terminate();
+        }
     }
 
     static void install(

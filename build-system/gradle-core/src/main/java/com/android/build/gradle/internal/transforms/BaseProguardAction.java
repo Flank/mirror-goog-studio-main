@@ -94,6 +94,7 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
         configuration.preverify = false;
     }
 
+    @Override
     public void keepattributes() {
         configuration.keepAttributes = Lists.newArrayListWithExpectedSize(0);
     }

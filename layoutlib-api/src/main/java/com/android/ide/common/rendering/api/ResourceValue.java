@@ -31,7 +31,7 @@ public class ResourceValue extends ResourceReference {
     @Nullable protected String mValue;
 
     @NonNull
-    private ResourceNamespace.Resolver mNamespaceResolver =
+    protected ResourceNamespace.Resolver mNamespaceResolver =
             ResourceNamespace.Resolver.EMPTY_RESOLVER;
 
     /**

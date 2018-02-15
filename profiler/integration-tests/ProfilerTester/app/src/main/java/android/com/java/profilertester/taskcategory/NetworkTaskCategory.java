@@ -168,7 +168,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Scan Wifi";
         }
     }
@@ -217,7 +217,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Turn on Wifi high performance mode";
         }
     }
@@ -230,7 +230,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Turn on Wifi full mode";
         }
     }
@@ -243,7 +243,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Turn on Wifi scan mode";
         }
     }
@@ -267,7 +267,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Http Request";
         }
     }
@@ -294,7 +294,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "OkHttp Request";
         }
     }
@@ -321,7 +321,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "OkHttp2 Request";
         }
     }
@@ -356,7 +356,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Http Post JSON Request";
         }
     }
@@ -394,7 +394,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "OkHttp Post JSON Request";
         }
     }
@@ -430,7 +430,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "Http Post FormData Request";
         }
     }
@@ -469,7 +469,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
         @NonNull
         @Override
-        protected String getTaskName() {
+        protected String getTaskDescription() {
             return "OkHttp Post FormData Request";
         }
     }

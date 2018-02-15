@@ -26,7 +26,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.sdklib.SdkVersionInfo;
-import com.android.testutils.TestUtils;
 import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -42,9 +41,9 @@ import java.util.stream.Stream;
 
 public class PerformanceTestProjects {
 
-    private static String generateLocalRepositoriesSnippet() {
+    private static String generateLocalRepositoriesSnippet(GradleTestProject project) {
         StringBuilder localRepositoriesSnippet = new StringBuilder();
-        for (Path repo : GradleTestProject.getLocalRepositories()) {
+        for (Path repo : project.getRepoDirectories()) {
             localRepositoriesSnippet.append(GradleTestProject.mavenSnippet(repo));
         }
         return localRepositoriesSnippet.toString();
@@ -71,7 +70,7 @@ public class PerformanceTestProjects {
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
                 "jcenter\\(\\)",
-                generateLocalRepositoriesSnippet().replace("\\", "\\\\"));
+                generateLocalRepositoriesSnippet(mainProject).replace("\\", "\\\\"));
 
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
@@ -172,7 +171,7 @@ public class PerformanceTestProjects {
                 project.file("WordPress/gradle.properties").toPath());
 
 
-        String localRepositoriesSnippet = generateLocalRepositoriesSnippet();
+        String localRepositoriesSnippet = generateLocalRepositoriesSnippet(project);
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -185,7 +184,7 @@ public class PerformanceTestProjects {
                                 + "        classpath 'com.android.tools.build:gradle:%2$s'\n"
                                 + "    }\n"
                                 + "}\n",
-                        localRepositoriesSnippet,
+                        project.generateProjectRepoScript(),
                         GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION));
 
         List<Path> buildGradleFiles =
@@ -309,7 +308,7 @@ public class PerformanceTestProjects {
                 "\ndependencies \\{\n",
                 "dependencies {\n"
                         + "    compile 'org.jetbrains.kotlin:kotlin-stdlib:"
-                        + TestUtils.getKotlinVersionForTests()
+                        + project.getKotlinVersion()
                         + "'\n"
                         + "    compile 'com.android.support:support-v4:"
                         + GradleTestProject.SUPPORT_LIB_VERSION
@@ -416,7 +415,7 @@ public class PerformanceTestProjects {
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
                 "jcenter\\(\\)",
-                PerformanceTestProjects.generateLocalRepositoriesSnippet());
+                PerformanceTestProjects.generateLocalRepositoriesSnippet(project));
 
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),

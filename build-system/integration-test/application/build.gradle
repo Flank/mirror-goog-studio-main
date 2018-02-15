@@ -207,6 +207,64 @@ configure([connectedIntegrationTestQuarantine, connectedIntegrationTestPrebuilts
     }
 }
 
+task zipSdk(type: Zip) {
+    from('../../../../../prebuilts/studio/sdk/linux/') {
+        exclude 'ndk-bundle/**'
+    }
+
+    archiveName "android_sdk.zip"
+}
+
+task zipPrebuiltsRepo(type: Zip) {
+    from '../../../../../prebuilts/tools/common/m2/repository/'
+    archiveName "prebuilts_repo.zip"
+}
+
+task zipProjects(type: Zip) {
+    from('../../../../../external/') {
+        include 'AntennaPod/**'
+        include 'gradle-perf-android-medium/**'
+        include 'android-studio-gradle-test/**'
+    }
+    archiveName "projects.zip"
+}
+
+task zipGradle(type: Zip) {
+    from('../../../../../tools/external/gradle/') {
+        include 'gradle-4.5-bin.zip'
+    }
+    archiveName "gradle.zip"
+}
+
+task performanceTestJar(type: Jar, dependsOn: [':zipOfflineRepo', zipPrebuiltsRepo, zipSdk, zipProjects, zipGradle]) {
+    from sourceSets.test.runtimeClasspath
+    from(configurations.testCompile.collect { it.isDirectory() ? it : zipTree(it) }) {
+        exclude 'META-INF/MANIFEST.MF'
+        exclude 'META-INF/*.SF'
+        exclude 'META-INF/*.DSA'
+        exclude 'META-INF/*.RSA'
+    }
+    from zipPrebuiltsRepo
+    from zipSdk
+    from zipProjects
+    from zipGradle
+    doFirst {
+        // currently the zipOfflineRepo task lists its zip file twice, so we take only one of them.
+        // They're identical and this is a bug we should fix at some point in
+        // OfflineRepoPlugin.groovy.
+        from rootProject.getTasksByName('zipOfflineRepo', false).outputs[0]
+    }
+
+    zip64 = true
+
+    baseName = "performance-test"
+
+    manifest {
+        attributes(
+                'Main-Class': 'com.android.build.gradle.integration.performance.BenchmarkTest'
+        )
+    }
+}
 
 task performanceTest(type: Test) {
     include "com/android/build/gradle/integration/performance/**"

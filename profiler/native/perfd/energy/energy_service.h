@@ -22,24 +22,26 @@
 #include "proto/energy.grpc.pb.h"
 
 namespace profiler {
-
-using grpc::ServerContext;
-using grpc::Status;
-using proto::EnergyDataResponse;
-using proto::EnergyEventsResponse;
-using proto::EnergyRequest;
-using proto::EnergyService;
-
-class EnergyServiceImpl final : public EnergyService::Service {
+class EnergyServiceImpl final : public proto::EnergyService::Service {
  public:
   explicit EnergyServiceImpl(EnergyCache* energy_cache)
       : energy_cache_(*energy_cache) {}
 
-  Status GetData(ServerContext* context, const EnergyRequest* request,
-                 EnergyDataResponse* response) override;
+  grpc::Status StartMonitoringApp(
+      grpc::ServerContext* context, const proto::EnergyStartRequest* request,
+      proto::EnergyStartResponse* response) override;
 
-  Status GetEvents(ServerContext* context, const EnergyRequest* request,
-                   EnergyEventsResponse* response) override;
+  grpc::Status StopMonitoringApp(grpc::ServerContext* context,
+                                 const proto::EnergyStopRequest* request,
+                                 proto::EnergyStopResponse* response) override;
+
+  grpc::Status GetData(grpc::ServerContext* context,
+                       const proto::EnergyRequest* request,
+                       proto::EnergyDataResponse* response) override;
+
+  grpc::Status GetEvents(grpc::ServerContext* context,
+                         const proto::EnergyRequest* request,
+                         proto::EnergyEventsResponse* response) override;
 
  private:
   EnergyCache& energy_cache_;

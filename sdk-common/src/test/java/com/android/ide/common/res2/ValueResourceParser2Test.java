@@ -112,23 +112,23 @@ public class ValueResourceParser2Test extends BaseTestCase {
         List<ResourceItem> resources = getParsedResources();
         // Test tools:quantity parsing in plurals.
         ResourceItem plurals = Iterables.find(resources, new ResourceFinder("plurals/plurals"));
-        ResourceValue pluralsValue = plurals.getResourceValue(false);
+        ResourceValue pluralsValue = plurals.getResourceValue();
         assertNotNull(pluralsValue);
         assertEquals("@string/two", pluralsValue.getValue());
 
         ResourceItem pluralsWithBadQuantity = Iterables.find(resources, new ResourceFinder("plurals/plurals_with_bad_quantity"));
-        ResourceValue pluralsValueBadQuantity = pluralsWithBadQuantity.getResourceValue(false);
+        ResourceValue pluralsValueBadQuantity = pluralsWithBadQuantity.getResourceValue();
         assertNotNull(pluralsValueBadQuantity);
         assertEquals("one", pluralsValueBadQuantity.getValue());
 
         // Test tools:index parsing in arrays.
         ResourceItem stringArray = Iterables.find(resources, new ResourceFinder("array/string_array"));
-        ResourceValue stringArrayValue = stringArray.getResourceValue(false);
+        ResourceValue stringArrayValue = stringArray.getResourceValue();
         assertNotNull(stringArrayValue);
         assertEquals("GHI", stringArrayValue.getValue());
 
         ResourceItem integerArray = Iterables.find(resources, new ResourceFinder("array/integer_array"));
-        ResourceValue integerArrayValue = integerArray.getResourceValue(false);
+        ResourceValue integerArrayValue = integerArray.getResourceValue();
         assertNotNull(integerArrayValue);
         assertEquals("3", integerArrayValue.getValue());
     }
@@ -239,7 +239,7 @@ public class ValueResourceParser2Test extends BaseTestCase {
         assertNotNull(
                 ValueResourceNameValidator.getErrorText(publicTag.getName(), publicTag.getType()));
 
-        ResourceValue resourceValue = publicTag.getResourceValue(false);
+        ResourceValue resourceValue = publicTag.getResourceValue();
         assertNotNull(resourceValue);
         assertEquals(ResourceType.PUBLIC, resourceValue.getResourceType());
         assertEquals("", resourceValue.getValue());

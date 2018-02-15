@@ -59,6 +59,7 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.util.PatternSet;
 
 /** Task to compile aidl files. Supports incremental update. */
@@ -85,6 +86,7 @@ public class AidlCompile extends IncrementalTask {
     }
 
     @InputFiles
+    @SkipWhenEmpty
     @PathSensitive(PathSensitivity.RELATIVE)
     public FileTree getSourceFiles() {
         // this is because aidl may be in the same folder as Java and we want to restrict to

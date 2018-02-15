@@ -27,7 +27,10 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import java.io.File;
 
 /**
@@ -39,7 +42,22 @@ public class SdkHelper {
      * Returns the SDK folder as built from the Android source tree.
      */
     public static File findSdkDir() {
-        return GradleTestProject.getAndroidHome();
+        File androidHome;
+        String envCustomAndroidHome =
+                Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_HOME"));
+
+        if (envCustomAndroidHome != null) {
+            androidHome = new File(envCustomAndroidHome);
+            Preconditions.checkState(
+                    androidHome.isDirectory(),
+                    "CUSTOM_ANDROID_HOME must point to a directory, "
+                            + androidHome.getAbsolutePath()
+                            + " is not a directory");
+        } else {
+            androidHome = TestUtils.getSdk();
+        }
+
+        return androidHome;
     }
 
     @NonNull

@@ -246,7 +246,7 @@ public class PxUsageDetector extends LayoutDetector {
                         List<ResourceItem> items = resources.getResourceItem(url.type, url.name);
                         if (items != null) {
                             for (ResourceItem item : items) {
-                                ResourceValue resourceValue = item.getResourceValue(false);
+                                ResourceValue resourceValue = item.getResourceValue();
                                 if (resourceValue != null) {
                                     String dimenValue = resourceValue.getValue();
                                     if (dimenValue != null && isDpUnit(dimenValue)

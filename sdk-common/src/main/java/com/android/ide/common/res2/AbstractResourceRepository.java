@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ResourceValueMap;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
@@ -161,6 +162,12 @@ public abstract class AbstractResourceRepository {
         return Collections.emptyList();
     }
 
+    @NonNull
+    public List<ResourceItem> getResourceItems(@NonNull ResourceReference reference) {
+        return getResourceItems(
+                reference.getNamespace(), reference.getResourceType(), reference.getName());
+    }
+
     /** @deprecated Use {@link #getItemsOfType(ResourceNamespace, ResourceType)} instead. */
     @Deprecated
     @NonNull
@@ -242,8 +249,7 @@ public abstract class AbstractResourceRepository {
             ResourceNamespace namespace = ResourceNamespace.RES_AUTO;
             if (colon >= 0) {
                 if (colon - typeBegin == ANDROID_NS_NAME.length()
-                        && url.regionMatches(
-                                typeBegin, ANDROID_NS_NAME, 0, ANDROID_NS_NAME.length())) {
+                        && url.startsWith(ANDROID_NS_NAME, typeBegin)) {
                     namespace = ResourceNamespace.ANDROID;
                 } else {
                     // TODO: namespaces
@@ -425,12 +431,12 @@ public abstract class AbstractResourceRepository {
             List<ResourceItem> matches = config.findMatchingConfigurables(matchingItems);
             for (ResourceItem match : matches) {
                 // if match is an alias, check if the name is in seen names.
-                ResourceValue resourceValue = match.getResourceValue(isFramework());
+                ResourceValue resourceValue = match.getResourceValue();
                 if (resourceValue != null) {
                     String value = resourceValue.getValue();
                     if (value != null && value.startsWith(PREFIX_RESOURCE_REF)) {
                         ResourceUrl url = ResourceUrl.parse(value);
-                        if (url != null && url.type == type && url.framework == isFramework()) {
+                        if (url != null && url.type == type && url.isFramework() == isFramework()) {
                             if (!seenNames.contains(url.name)) {
                                 // This resource alias needs to be resolved again.
                                 output.addAll(getMatchingFiles(
@@ -519,7 +525,7 @@ public abstract class AbstractResourceRepository {
                 // Look for the best match for the given configuration.
                 ResourceItem match = referenceConfig.findMatchingConfigurable(keyItems);
                 if (match != null) {
-                    ResourceValue value = match.getResourceValue(isFramework());
+                    ResourceValue value = match.getResourceValue();
                     if (value != null) {
                         map.put(match.getName(), value);
                     }
@@ -551,7 +557,7 @@ public abstract class AbstractResourceRepository {
             // look for the best match for the given configuration
             // the match has to be of type ResourceFile since that's what the input list contains
             ResourceItem match = (ResourceItem) referenceConfig.findMatchingConfigurable(keyItems);
-            return match != null ? match.getResourceValue(isFramework()) : null;
+            return match != null ? match.getResourceValue() : null;
         }
     }
 

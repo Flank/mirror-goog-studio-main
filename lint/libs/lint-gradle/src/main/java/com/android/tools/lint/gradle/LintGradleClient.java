@@ -291,28 +291,36 @@ public class LintGradleClient extends LintCliClient {
 
         List<Warning> merged = Lists.newArrayListWithExpectedSize(2 * maxCount);
 
-        // Map fro issue to message to line number to file name to canonical warning
-        Map<Issue,Map<String, Map<Integer, Map<String, Warning>>>> map =
+        // Map fro issue to message to line number to column number to
+        // file name to canonical warning
+        Map<Issue,Map<String, Map<Integer, Map<Integer, Map<String, Warning>>>>> map =
                 Maps.newHashMapWithExpectedSize(2 * maxCount);
 
         for (Map.Entry<Variant,List<Warning>> entry : warningMap.entrySet()) {
             Variant variant = entry.getKey();
             List<Warning> warnings = entry.getValue();
             for (Warning warning : warnings) {
-                Map<String,Map<Integer,Map<String,Warning>>> messageMap = map.get(warning.issue);
+                Map<String, Map<Integer, Map<Integer, Map<String, Warning>>>> messageMap = map.get(warning.issue);
                 if (messageMap == null) {
                     messageMap = Maps.newHashMap();
                     map.put(warning.issue, messageMap);
                 }
-                Map<Integer, Map<String, Warning>> lineMap = messageMap.get(warning.message);
+                Map<Integer, Map<Integer, Map<String, Warning>>> lineMap = messageMap.get(warning.message);
                 if (lineMap == null) {
                     lineMap = Maps.newHashMap();
                     messageMap.put(warning.message, lineMap);
                 }
-                Map<String, Warning> fileMap = lineMap.get(warning.line);
+
+                Map<Integer, Map<String, Warning>> columnMap = lineMap.get(warning.line);
+                if (columnMap == null) {
+                    columnMap = Maps.newHashMap();
+                    lineMap.put(warning.line, columnMap);
+                }
+
+                Map<String, Warning> fileMap = columnMap.get(warning.offset);
                 if (fileMap == null) {
                     fileMap = Maps.newHashMap();
-                    lineMap.put(warning.line, fileMap);
+                    columnMap.put(warning.offset, fileMap);
                 }
                 String fileName = warning.file != null ? warning.file.getName() : "<unknown>";
                 Warning canonical = fileMap.get(fileName);

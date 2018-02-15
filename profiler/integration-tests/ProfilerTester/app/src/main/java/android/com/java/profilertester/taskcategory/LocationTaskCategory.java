@@ -10,14 +10,15 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public final class LocationTaskCategory extends TaskCategory {
     @NonNull private final Activity mHostActivity;
@@ -31,7 +32,13 @@ public final class LocationTaskCategory extends TaskCategory {
     @NonNull
     @Override
     public List<? extends Task> getTasks() {
-        return Arrays.asList(new CoarseLocationUpdateTask(), new FineLocationUpdateTask());
+        return Arrays.asList(
+                new LocationUpdateTask(
+                        "Coarse location",
+                        "Update coarse location",
+                        LocationManager.NETWORK_PROVIDER),
+                new LocationUpdateTask(
+                        "Fine location", "Update fine location", LocationManager.GPS_PROVIDER));
     }
 
     @NonNull
@@ -42,15 +49,39 @@ public final class LocationTaskCategory extends TaskCategory {
 
     @Override
     protected boolean shouldRunTask(@NonNull Task taskToRun) {
-        ActivityCompat.requestPermissions(
-                mHostActivity,
-                new String[] {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION},
-                ActivityRequestCodes.LOCATION.ordinal());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && (ActivityCompat.checkSelfPermission(
+                                        mHostActivity.getApplicationContext(),
+                                        Manifest.permission.ACCESS_COARSE_LOCATION)
+                                != PackageManager.PERMISSION_GRANTED
+                        || ActivityCompat.checkSelfPermission(
+                                        mHostActivity.getApplicationContext(),
+                                        Manifest.permission.ACCESS_FINE_LOCATION)
+                                != PackageManager.PERMISSION_GRANTED)) {
+            ActivityCompat.requestPermissions(
+                    mHostActivity,
+                    new String[] {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION},
+                    ActivityRequestCodes.LOCATION.ordinal());
+            return false;
+        }
 
         return true;
     }
 
-    private abstract class LocationUpdateTask extends Task {
+    private final class LocationUpdateTask extends Task {
+        @NonNull private final String mTaskName;
+        @NonNull private final String mTaskDescription;
+        @NonNull private final String mLocationServiceProvider;
+
+        private LocationUpdateTask(
+                @NonNull String taskName,
+                @NonNull String taskDescription,
+                @NonNull String locationServiceProvider) {
+            mTaskName = taskName;
+            mTaskDescription = taskDescription;
+            mLocationServiceProvider = locationServiceProvider;
+        }
+
         @NonNull
         @Override
         protected final String execute() {
@@ -74,12 +105,15 @@ public final class LocationTaskCategory extends TaskCategory {
                 return "Could not acquire both coarse and fine location permission!";
             }
 
-            final AtomicInteger locationChangedCount = new AtomicInteger(0);
+            final List<Location> locations = new ArrayList<>();
+            final List<Long> times = new ArrayList<>();
+            long startTime = System.currentTimeMillis();
             LocationListener locationListener =
                     new LocationListener() {
                         @Override
                         public void onLocationChanged(Location location) {
-                            locationChangedCount.incrementAndGet();
+                            times.add(System.currentTimeMillis());
+                            locations.add(location);
                         }
 
                         @Override
@@ -94,63 +128,37 @@ public final class LocationTaskCategory extends TaskCategory {
             manager.requestLocationUpdates(getProvider(), 0, 0, locationListener, mLooper);
 
             try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+                Thread.sleep(TimeUnit.SECONDS.toMillis(30));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                return getName() + " update interrupted!";
+                return getTaskName() + " update interrupted!";
             } finally {
                 manager.removeUpdates(locationListener);
             }
-            return getName()
+            return getTaskName()
                     + " update completed, changed "
-                    + locationChangedCount.get()
-                    + " times.";
-        }
-
-        @NonNull
-        protected abstract String getProvider();
-
-        @NonNull
-        protected abstract String getName();
-    }
-
-    private final class CoarseLocationUpdateTask extends LocationUpdateTask {
-        @NonNull
-        @Override
-        protected String getTaskName() {
-            return "Update coarse location";
+                    + locations.size()
+                    + " times"
+                    + (times.size() > 0
+                            ? ", last one at " + (times.get(times.size() - 1) - startTime)
+                            : "")
+                    + ".";
         }
 
         @NonNull
         @Override
-        protected String getProvider() {
-            return LocationManager.NETWORK_PROVIDER;
+        protected String getTaskDescription() {
+            return mTaskDescription;
         }
 
         @NonNull
-        @Override
-        protected String getName() {
-            return "Coarse location";
-        }
-    }
-
-    private final class FineLocationUpdateTask extends LocationUpdateTask {
-        @NonNull
-        @Override
-        protected String getTaskName() {
-            return "Update fine location";
+        private String getProvider() {
+            return mLocationServiceProvider;
         }
 
         @NonNull
-        @Override
-        protected String getProvider() {
-            return LocationManager.GPS_PROVIDER;
-        }
-
-        @NonNull
-        @Override
-        protected String getName() {
-            return "Fine location";
+        private String getTaskName() {
+            return mTaskName;
         }
     }
 }

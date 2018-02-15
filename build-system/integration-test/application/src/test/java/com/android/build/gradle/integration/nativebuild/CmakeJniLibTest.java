@@ -107,7 +107,7 @@ public class CmakeJniLibTest {
         assertThat(model.getBuildFiles()).hasSize(1);
         assertThat(model.getName()).isEqualTo("lib");
         assertThat(model.getArtifacts())
-                .hasSize(NdkHelper.getNdkInfo().getDefaultAbis().size() * 2);
+                .hasSize(NdkHelper.getNdkInfo(project).getDefaultAbis().size() * 2);
         assertThat(model.getFileExtensions()).hasSize(1);
 
         for (File file : model.getBuildFiles()) {

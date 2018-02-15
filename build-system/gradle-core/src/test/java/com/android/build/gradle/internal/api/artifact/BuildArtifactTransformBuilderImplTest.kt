@@ -27,6 +27,7 @@ import com.android.build.api.artifact.OutputFileProvider
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.testutils.truth.PathSubject.assertThat
@@ -51,6 +52,7 @@ class BuildArtifactTransformBuilderImplTest {
             FakeEvalIssueReporter(throwOnError = true),
             FakeDeprecationReporter(),
             FakeObjectFactory())
+    private val buildableArtifactsActions = DelayedActionsExecutor()
     lateinit private var builder : BuildArtifactTransformBuilder<TestTask>
     lateinit private var taskHolder : BuildArtifactsHolder
 
@@ -68,6 +70,7 @@ class BuildArtifactTransformBuilderImplTest {
         builder = BuildArtifactTransformBuilderImpl(
                 project,
                 taskHolder,
+                buildableArtifactsActions,
                 "test",
                 TestTask::class.java,
                 dslScope)
@@ -86,6 +89,8 @@ class BuildArtifactTransformBuilderImplTest {
                     assertFailsWith<RuntimeException> { output.file }
                     assertFailsWith<RuntimeException> { output.getFile("output.txt") }
                 }
+        buildableArtifactsActions.runAll()
+
         assertThat(task).isSameAs(configuredTask)
     }
 
@@ -107,6 +112,8 @@ class BuildArtifactTransformBuilderImplTest {
                         assertFailsWith<RuntimeException> { output.getFile("output.txt") }
                     }
                 })
+        buildableArtifactsActions.runAll()
+
         assertThat(task).isSameAs(configuredTask)
     }
 
@@ -123,6 +130,7 @@ class BuildArtifactTransformBuilderImplTest {
                 }
         taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, task, "javac")
         BuildableArtifactImpl.enableResolution()
+        buildableArtifactsActions.runAll()
         assertThat(input!!.artifact.map(File::getName)).containsExactly("javac")
     }
 
@@ -142,6 +150,7 @@ class BuildArtifactTransformBuilderImplTest {
         taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, task ,"javac")
         taskHolder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, task,"classpath")
         BuildableArtifactImpl.enableResolution()
+        buildableArtifactsActions.runAll()
 
         assertThat(input!!.getArtifact(JAVAC_CLASSES).map(File::getName))
                 .containsExactly("javac")
@@ -169,6 +178,7 @@ class BuildArtifactTransformBuilderImplTest {
         taskHolder.createFirstArtifactFiles(JAVAC_CLASSES, task, "javac")
         taskHolder.createFirstArtifactFiles(JAVA_COMPILE_CLASSPATH, task, "classpath")
         BuildableArtifactImpl.enableResolution()
+        buildableArtifactsActions.runAll()
 
         assertThat(output!!.getFile("foo")).hasName("foo")
         assertThat(output!!.getFile("bar")).hasName("bar")

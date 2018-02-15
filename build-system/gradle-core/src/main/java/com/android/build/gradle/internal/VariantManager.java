@@ -59,6 +59,7 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -500,10 +501,7 @@ public class VariantManager implements VariantModel {
                                             testedVariantData.getVariantConfiguration().getType()))
                             .addSourceSets(testVariantSourceSets)
                             .setFlavorSelection(getFlavorSelection(variantConfig))
-                            .setTestedVariantDependencies(testedVariantData.getVariantDependency())
-                            .setBaseSplit(
-                                    variantType == VariantType.FEATURE
-                                            && extension.getBaseFeature());
+                            .setTestedVariantDependencies(testedVariantData.getVariantDependency());
 
             final VariantDependencies variantDep = builder.build();
             variantData.setVariantDependency(variantDep);
@@ -980,8 +978,7 @@ public class VariantManager implements VariantModel {
                                 getPublishingType(variantData.getVariantConfiguration().getType()))
                         .setFlavorSelection(getFlavorSelection(variantConfig))
                         .addSourceSets(variantSourceSets)
-                        .setBaseSplit(
-                                variantType == VariantType.FEATURE && extension.getBaseFeature());
+                        .setBaseSplit(isBaseSplit(variantData));
 
         final VariantDependencies variantDep = builder.build();
         variantData.setVariantDependency(variantDep);
@@ -1007,6 +1004,14 @@ public class VariantManager implements VariantModel {
 
 
         return variantData;
+    }
+
+    private boolean isBaseSplit(BaseVariantData variantData) {
+        if (variantData instanceof ApplicationVariantData) {
+            return ((ApplicationVariantData) variantData).isBaseApplication();
+        }
+
+        return variantData.getType() == VariantType.FEATURE && extension.getBaseFeature();
     }
 
     private static void createCompoundSourceSets(

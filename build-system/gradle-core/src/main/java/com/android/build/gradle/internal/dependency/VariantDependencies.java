@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
+import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.EvalIssueReporter;
 import com.google.common.base.MoreObjects;
@@ -71,6 +72,8 @@ public class VariantDependencies {
     public static final String CONFIG_NAME_APPLICATION = "application";
 
     public static final String CONFIG_NAME_LINTCHECKS = "lintChecks";
+
+    public static final String CONFIG_NAME_TESTED_APKS = "testedApks";
 
     public static final String USAGE_BUNDLE = "android-bundle";
 
@@ -260,6 +263,22 @@ public class VariantDependencies {
             runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
             runtimeAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
 
+            Configuration globalTestedApks = configurations.findByName(CONFIG_NAME_TESTED_APKS);
+            if (variantType == VariantType.APK && globalTestedApks != null) {
+                // this configuration is created only for test-only project
+                Configuration testedApks =
+                        configurations.maybeCreate(
+                                TestVariantFactory.getTestedApksConfigurationName(variantName));
+                testedApks.setVisible(false);
+                testedApks.setDescription(
+                        "Resolved configuration for tested apks for variant: " + variantName);
+                testedApks.extendsFrom(globalTestedApks);
+                final AttributeContainer testedApksAttributes = testedApks.getAttributes();
+                applyVariantAttributes(testedApksAttributes, buildType, consumptionFlavorMap);
+                testedApksAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
+                testedApksAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
+            }
+
             Configuration apiElements = null;
             Configuration runtimeElements = null;
             Configuration metadataElements = null;
@@ -331,11 +350,10 @@ public class VariantDependencies {
                 // apiElements only extends the api classpaths.
                 apiElements.setExtendsFrom(apiClasspaths);
 
-                if (variantType != VariantType.LIBRARY) {
-                    // FIXME: we should create this configuration unconditionally. This is a quick
-                    // workaround so we don't end up with ambiguous resolution between feature
-                    // and libraries. This is fine for now as libraries do not publish anything
-                    // there.
+                if (variantType == VariantType.APK
+                        || (variantType == VariantType.FEATURE && !baseSplit)) {
+                    // Variant-specific metadata publishing configuration. Only published to by app
+                    // modules and non-base feature modules.
 
                     metadataElements = configurations.maybeCreate(variantName + "MetadataElements");
                     metadataElements.setDescription("Metadata elements for " + variantName);
@@ -350,15 +368,17 @@ public class VariantDependencies {
                     metadataElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
                 }
 
-                if (variantType == VariantType.FEATURE && baseSplit) {
+                if (baseSplit) {
                     // The variant-specific configuration that will contain the non-base feature
                     // metadata and the application metadata. It's per-variant to contain the
                     // right attribute. It'll be used to get the applicationId and to consume
                     // the manifest.
                     metadataValues = configurations.maybeCreate(variantName + "MetadataValues");
-                    metadataValues.extendsFrom(
-                            configurations.getByName(CONFIG_NAME_FEATURE),
-                            configurations.getByName(CONFIG_NAME_APPLICATION));
+                    metadataValues.extendsFrom(configurations.getByName(CONFIG_NAME_FEATURE));
+                    if (variantType == VariantType.FEATURE) {
+                        metadataValues.extendsFrom(
+                                configurations.getByName(CONFIG_NAME_APPLICATION));
+                    }
                     metadataValues.setDescription(
                             "Metadata Values dependencies for the base Split");
                     metadataValues.setCanBeConsumed(false);

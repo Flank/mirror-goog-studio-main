@@ -935,6 +935,15 @@ class LintDriver
                                         binaryChecks)
                             }
                         }
+                        if (isCheckGeneratedSources) {
+                            val generatedResourceFolders = project.generatedResourceFolders
+                            if (!generatedResourceFolders.isEmpty()) {
+                                for (res in generatedResourceFolders) {
+                                    checkResFolder(project, main, res, xmlDetectors, dirChecks,
+                                        binaryChecks)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -957,6 +966,7 @@ class LintDriver
                         project.testSourceFolders
                     else
                         emptyList<File>()
+
                     val generatedFolders = if (isCheckGeneratedSources)
                         project.generatedSourceFolders
                     else
@@ -2447,6 +2457,10 @@ class LintDriver
             sb.append("Unexpected failure during lint analysis")
             context?.file?.name?.let { sb.append(" of ").append(it) }
             sb.append(" (this is a bug in lint or one of the libraries it depends on)\n\n")
+            if (throwable.message?.isNotBlank() == true) {
+                sb.append("Message: ${throwable.message}\n")
+            }
+            sb.append("Stack: ")
             sb.append("`")
             sb.append(throwable.javaClass.simpleName)
             sb.append(':')

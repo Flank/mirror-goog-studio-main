@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.tasks;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.apkzlib.utils.CachedFileContents;
 import com.android.builder.files.RelativeFile;
+import com.android.tools.build.apkzlib.utils.CachedFileContents;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;

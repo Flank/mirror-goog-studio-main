@@ -87,16 +87,20 @@ public class InstantAppProvisioner {
 
         deviceProvider.init();
 
-        List<? extends DeviceConnector> devices = deviceProvider.getDevices();
-        List<IDevice> iDevices = Lists.newArrayList();
-        for (DeviceConnector device : devices) {
-            if (device instanceof ConnectedDevice) {
-                iDevices.add(((ConnectedDevice) device).getIDevice());
+        try {
+            List<? extends DeviceConnector> devices = deviceProvider.getDevices();
+            List<IDevice> iDevices = Lists.newArrayList();
+            for (DeviceConnector device : devices) {
+                if (device instanceof ConnectedDevice) {
+                    iDevices.add(((ConnectedDevice) device).getIDevice());
+                }
             }
-        }
 
-        for (IDevice device : iDevices) {
-            provisionRunner.runProvision(device);
+            for (IDevice device : iDevices) {
+                provisionRunner.runProvision(device);
+            }
+        } finally {
+            deviceProvider.terminate();
         }
     }
 

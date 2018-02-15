@@ -245,7 +245,7 @@ protected constructor(
      *
      * @return this, for constructor chaining
      */
-    open fun setClientData(clientData: Any?): Location {
+    open fun setData(clientData: Any?): Location {
         this.clientData = clientData
         return this
     }
@@ -433,7 +433,7 @@ protected constructor(
         val NONE: Location = object : Location(File("NONE"), null, null) {
             override fun setMessage(message: String, selfExplanatory: Boolean): Location = this
 
-            override fun setClientData(clientData: Any?): Location = this
+            override fun setData(clientData: Any?): Location = this
 
             override fun setSelfExplanatory(selfExplanatory: Boolean): Location = this
 

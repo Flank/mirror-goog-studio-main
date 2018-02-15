@@ -21,6 +21,7 @@ test --sandbox_tmpfs_path=/tmp
 build --sandbox_tmpfs_path=/tmp
 build --javacopt="-g:source,lines,vars"  # Keep debug info
 build --javacopt=-Xep:FallThrough:OFF  # enforcing Google style, essentially
+build --javacopt=-Xep:StreamResourceLeak:WARN # has been downgraded on Error Prone HEAD
 build --cxxopt=-std=c++11
 build --copt=-fvisibility=hidden
 

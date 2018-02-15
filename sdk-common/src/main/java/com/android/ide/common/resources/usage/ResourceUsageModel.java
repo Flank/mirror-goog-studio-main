@@ -157,7 +157,7 @@ public class ResourceUsageModel {
     @Nullable
     Resource getResourceFromUrl(@NonNull String possibleUrlReference) {
         ResourceUrl url = ResourceUrl.parse(possibleUrlReference);
-        if (url != null && !url.framework) {
+        if (url != null && !url.isFramework()) {
             return addResource(url.type, SdkUtils.getResourceFieldName(url.name), null);
         }
 
@@ -583,7 +583,7 @@ public class ResourceUsageModel {
         }
 
         ResourceUrl url = ResourceUrl.parse(value);
-        if (url == null || url.framework) {
+        if (url == null || url.isFramework()) {
             return;
         }
 
@@ -620,7 +620,7 @@ public class ResourceUsageModel {
         }
 
         ResourceUrl url = ResourceUrl.parse(value);
-        if (url == null || url.framework) {
+        if (url == null || url.isFramework()) {
             return;
         }
 
@@ -863,9 +863,9 @@ public class ResourceUsageModel {
                         continue;
                     }
                     ResourceUrl url = ResourceUrl.parse(value);
-                    if (url != null && !url.framework) {
+                    if (url != null && !url.isFramework()) {
                         Resource resource;
-                        if (url.create) {
+                        if (url.isCreate()) {
                             boolean isId = ATTR_ID.equals(attr.getLocalName());
                             if (isId && TAG_LAYOUT.equals(
                                    element.getOwnerDocument().getDocumentElement().getTagName())) {
@@ -917,9 +917,9 @@ public class ResourceUsageModel {
                                 end++;
                             }
                             url = ResourceUrl.parse(value.substring(index, end));
-                            if (url != null && !url.framework) {
+                            if (url != null && !url.isFramework()) {
                                 Resource resource;
-                                if (url.create) {
+                                if (url.isCreate()) {
                                     resource = declareResource(url.type, url.name, attr);
                                 } else {
                                     resource = addResource(url.type, url.name, null);

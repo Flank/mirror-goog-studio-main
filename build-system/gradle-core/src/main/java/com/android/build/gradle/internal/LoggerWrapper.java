@@ -35,7 +35,9 @@ public class LoggerWrapper implements ILogger {
     // Mapping from ILogger method call to gradle log level.
     private static final LogLevel ILOGGER_ERROR = LogLevel.ERROR;
     private static final LogLevel ILOGGER_WARNING = LogLevel.WARN;
-    private static final LogLevel ILOGGER_INFO = LogLevel.LIFECYCLE;
+    private static final LogLevel ILOGGER_QUIET = LogLevel.QUIET;
+    private static final LogLevel ILOGGER_LIFECYCLE = LogLevel.LIFECYCLE;
+    private static final LogLevel ILOGGER_INFO = LogLevel.INFO;
     private static final LogLevel ILOGGER_VERBOSE = LogLevel.INFO;
 
     private final Logger logger;
@@ -83,6 +85,16 @@ public class LoggerWrapper implements ILogger {
     @Override
     public void warning(@NonNull String s, Object... objects) {
         log(ILOGGER_WARNING, s, objects);
+    }
+
+    @Override
+    public void quiet(@NonNull String s, Object... objects) {
+        log(ILOGGER_QUIET, s, objects);
+    }
+
+    @Override
+    public void lifecycle(@NonNull String s, Object... objects) {
+        log(ILOGGER_LIFECYCLE, s, objects);
     }
 
     @Override

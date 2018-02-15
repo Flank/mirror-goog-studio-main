@@ -16,14 +16,18 @@
 package com.android.ide.common.util;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
-import java.util.ArrayList;
+import com.google.common.math.IntMath;
+import java.util.AbstractCollection;
 import java.util.Collection;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import org.jetbrains.annotations.NotNull;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * Read-only map that delegates read operations to two disjoint maps.
@@ -32,11 +36,13 @@ import org.jetbrains.annotations.NotNull;
  * maps in a single object, not to implement an overlay.
  */
 public class LazyUnionMap<K, V> implements Map<K, V> {
-
     private final Map<K, V> first;
     private final Map<K, V> second;
+    private Set<K> keySet;
+    private Set<Map.Entry<K, V>> entrySet;
+    private Collection<V> values;
 
-    public LazyUnionMap(Map<K, V> first, Map<K, V> second) {
+    public LazyUnionMap(@NonNull Map<K, V> first, @NonNull Map<K, V> second) {
         Preconditions.checkArgument(
                 Sets.intersection(first.keySet(), second.keySet()).isEmpty(),
                 "Key sets are not disjoint.");
@@ -65,6 +71,7 @@ public class LazyUnionMap<K, V> implements Map<K, V> {
     }
 
     @Override
+    @Nullable
     public V get(Object key) {
         V result = first.get(key);
         if (result == null) {
@@ -74,33 +81,31 @@ public class LazyUnionMap<K, V> implements Map<K, V> {
         return result;
     }
 
-    @NotNull
     @Override
-    public Set<K> keySet() {
-        return unionOfDisjointSets(first.keySet(), second.keySet());
-    }
-
-    @NotNull
-    @Override
-    public Set<Entry<K, V>> entrySet() {
-        return unionOfDisjointSets(first.entrySet(), second.entrySet());
-    }
-
     @NonNull
-    private static <T> Set<T> unionOfDisjointSets(Set<T> first, Set<T> second) {
-        Set<T> allKeys = Sets.newHashSetWithExpectedSize(first.size() + second.size());
-        allKeys.addAll(first);
-        allKeys.addAll(second);
-        return allKeys;
+    public Set<K> keySet() {
+        if (keySet == null) {
+            keySet = new UnionOfDisjointSets<>(first.keySet(), second.keySet());
+        }
+        return keySet;
     }
 
-    @NotNull
     @Override
+    @NonNull
+    public Set<Entry<K, V>> entrySet() {
+        if (entrySet == null) {
+            entrySet = new UnionOfDisjointSets<>(first.entrySet(), second.entrySet());
+        }
+        return entrySet;
+    }
+
+    @Override
+    @NonNull
     public Collection<V> values() {
-        List<V> allValues = new ArrayList<>(first.size() + second.size());
-        allValues.addAll(first.values());
-        allValues.addAll(second.values());
-        return allValues;
+        if (values == null) {
+            values = new Concatenation<>(first.values(), second.values());
+        }
+        return values;
     }
 
     @Override
@@ -114,12 +119,110 @@ public class LazyUnionMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public void putAll(@NotNull Map<? extends K, ? extends V> m) {
+    public void putAll(@NonNull Map<? extends K, ? extends V> m) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void clear() {
         throw new UnsupportedOperationException();
+    }
+
+    private static class UnionOfDisjointSets<E> extends Concatenation<E> implements Set<E> {
+        public UnionOfDisjointSets(Set<E> first, Set<E> second) {
+            super(first, second);
+        }
+    }
+
+    private static class Concatenation<E> extends AbstractCollection<E> {
+        private final Collection<E> first;
+        private final Collection<E> second;
+
+        public Concatenation(Collection<E> first, Collection<E> second) {
+            this.first = first;
+            this.second = second;
+        }
+
+        @Override
+        public final int size() {
+            return IntMath.saturatedAdd(first.size(), second.size());
+        }
+
+        @Override
+        public final boolean isEmpty() {
+            return first.isEmpty() && second.isEmpty();
+        }
+
+        @Override
+        public final Iterator<E> iterator() {
+            return Iterators.concat(first.iterator(), second.iterator());
+        }
+
+        @Override
+        public final Stream<E> stream() {
+            return Stream.concat(first.stream(), second.stream());
+        }
+
+        @Override
+        public final Stream<E> parallelStream() {
+            return Stream.concat(first.parallelStream(), second.parallelStream());
+        }
+
+        @Override
+        public final boolean contains(Object object) {
+            return first.contains(object) || second.contains(object);
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Concatenation<?> that = (Concatenation<?>) o;
+            return first.equals(that.first) && second.equals(that.second);
+        }
+
+        @Override
+        public final int hashCode() {
+            return first.hashCode() + second.hashCode();
+        }
+
+        @Override
+        public final boolean add(E e) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public final boolean remove(Object object) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public final boolean addAll(Collection<? extends E> newElements) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public final boolean removeAll(Collection<?> oldElements) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public final boolean removeIf(Predicate<? super E> filter) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public final boolean retainAll(Collection<?> elementsToKeep) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public final void clear() {
+            throw new UnsupportedOperationException();
+        }
     }
 }

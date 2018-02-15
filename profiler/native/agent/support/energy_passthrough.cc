@@ -41,7 +41,8 @@ const SteadyClock& GetClock() {
 void SubmitEnergyEvent(const EnergyEvent& energy_event) {
   int64_t timestamp = GetClock().GetCurrentTime();
   Agent::Instance().SubmitEnergyTasks(
-      {[energy_event, timestamp](InternalEnergyService::Stub& stub, ClientContext& ctx) {
+      {[energy_event, timestamp](InternalEnergyService::Stub& stub,
+                                 ClientContext& ctx) {
         AddEnergyEventRequest request;
         request.mutable_energy_event()->CopyFrom(energy_event);
         request.mutable_energy_event()->set_timestamp(timestamp);
@@ -70,11 +71,13 @@ Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockAcqui
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockReleased(
-    JNIEnv* env, jclass clazz, jint wake_lock_id, jint flags) {
+    JNIEnv* env, jclass clazz, jint wake_lock_id, jint flags,
+    jboolean is_held) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(wake_lock_id);
   energy_event.mutable_wake_lock_released()->set_flags(flags);
+  energy_event.mutable_wake_lock_released()->set_is_held(is_held);
   SubmitEnergyEvent(energy_event);
 }
 };

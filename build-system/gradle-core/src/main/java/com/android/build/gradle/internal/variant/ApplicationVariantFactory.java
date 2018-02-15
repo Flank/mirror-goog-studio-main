@@ -61,11 +61,15 @@ import org.gradle.api.NamedDomainObjectContainer;
  */
 public class ApplicationVariantFactory extends BaseVariantFactory implements VariantFactory {
 
+    private final boolean isBaseApplication;
+
     public ApplicationVariantFactory(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull AndroidConfig extension) {
+            @NonNull AndroidConfig extension,
+            boolean isBaseApplication) {
         super(globalScope, androidBuilder, extension);
+        this.isBaseApplication = isBaseApplication;
     }
 
     @Override
@@ -80,7 +84,8 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
                         extension,
                         variantConfiguration,
                         taskManager,
-                        recorder);
+                        recorder,
+                        isBaseApplication);
 
         variant.calculateFilters(extension.getSplits());
 

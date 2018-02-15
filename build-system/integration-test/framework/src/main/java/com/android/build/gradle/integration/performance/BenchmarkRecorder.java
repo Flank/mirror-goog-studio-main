@@ -270,6 +270,10 @@ public final class BenchmarkRecorder {
         }
     }
 
+    public static void shutdownExecutor() {
+        EXECUTOR.shutdown();
+    }
+
     /**
      * Attempts to find commit information about a result and attach it as a Commit proto.
      *

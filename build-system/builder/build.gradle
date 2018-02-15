@@ -17,6 +17,7 @@ dependencies {
     compile project(':analytics-library:shared')
     compile project(':analytics-library:tracker')
     compile project(':apksig')
+    compile project(':apkzlib')
 
     compile libs.kotlin_stdlib
     compile libs.javawriter
@@ -93,14 +94,6 @@ dependencies {
     }
 
     sourcesProvided(project(path:':base:profile', configuration:'sourcesOnly')) {
-        transitive = false
-    }
-
-    provided(project(':apkzlib')) {
-        transitive = false
-    }
-
-    sourcesProvided(project(path:':apkzlib', configuration:'sourcesOnly')) {
         transitive = false
     }
 

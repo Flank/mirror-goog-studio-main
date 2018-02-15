@@ -53,7 +53,7 @@ import javax.inject.Inject
 open class LinkLibraryAndroidResourcesTask @Inject constructor(private val workerExecutor: WorkerExecutor) :
         AndroidBuilderTask() {
 
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFiles: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDirectories: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
@@ -87,8 +87,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
         val request = AaptPackageConfig(
                 androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
-                manifestFile = File(manifestFileDirectory.singleFile,
-                        SdkConstants.ANDROID_MANIFEST_XML),
+                manifestFile = manifestFiles.singleFile,
                 options = AaptOptions(null, false, null),
                 resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.asIterable()),
                 staticLibrary = true,
@@ -119,12 +118,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
         override fun execute(task: LinkLibraryAndroidResourcesTask) {
             task.variantName = scope.fullVariantName
-            task.manifestFileDirectory =
-                    if (scope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
-                        scope.getOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
-                    } else {
-                        scope.getOutput(InternalArtifactType.MERGED_MANIFESTS)
-                    }
+            task.manifestFiles = scope.getOutput(InternalArtifactType.STATIC_LIBRARY_MANIFESTS)
             task.inputResourcesDirectories = scope.getOutput(InternalArtifactType.RES_COMPILED_FLAT_FILES)
             task.libraryDependencies =
                     scope.getArtifactFileCollection(

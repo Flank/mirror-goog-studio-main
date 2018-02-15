@@ -90,6 +90,10 @@ service MemoryService {
   // related to creations and deletions of global JNI references.
   rpc GetJNIGlobalRefsEvents(JNIGlobalRefsEventsRequest)
       returns (BatchJNIGlobalRefEvent) {}
+
+  // Turn list of addresses into symbolized native callstack frames.
+  rpc ResolveNativeBacktrace(ResolveNativeBacktraceRequest)
+      returns (NativeCallStack) {}
 }
 
 message MemoryStartRequest {
@@ -459,12 +463,19 @@ message NativeBacktrace {
   repeated uint64 addresses = 1;
 }
 
+message ResolveNativeBacktraceRequest {
+  Session session = 1;
+  NativeBacktrace backtrace = 2;
+}
+
 message NativeCallStack {
   message NativeFrame {
-    string module_name = 1;
-    string symbol_name = 2;
-    string file_name = 3;
-    int32 line_number = 4;
+    int64 address = 1;
+    int64 module_offset = 2;
+    string module_name = 3;
+    string symbol_name = 4;
+    string file_name = 5;
+    int32 line_number = 6;
   }
 
   repeated NativeFrame frames = 1;

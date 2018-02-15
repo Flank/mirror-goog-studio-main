@@ -18,7 +18,6 @@ package com.android.utils;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.util.Formatter;
 
 /**
@@ -59,6 +58,34 @@ public interface ILogger {
      * @param args provides the arguments for warningFormat.
      */
     void warning(@NonNull String msgFormat, Object... args);
+
+    /**
+     * Prints an important information message. Defaults to info, but mapped to quiet in the Android
+     * Gradle Plugin.
+     *
+     * <p>See <a href="https://docs.gradle.org/current/userguide/logging.html">Gradle Logging
+     * Documentation.</a>.
+     *
+     * @param msgFormat is a string format to be used with a {@link Formatter}. Cannot be null.
+     * @param args provides the arguments for msgFormat.
+     */
+    default void quiet(@NonNull String msgFormat, Object... args) {
+        info(msgFormat, args);
+    }
+
+    /**
+     * Prints a progress information message. Defaults to info, but mapped to lifecycle in the
+     * Android Gradle Plugin.
+     *
+     * <p>See <a href="https://docs.gradle.org/current/userguide/logging.html">Gradle Logging
+     * Documentation.</a>.
+     *
+     * @param msgFormat is a string format to be used with a {@link Formatter}. Cannot be null.
+     * @param args provides the arguments for msgFormat.
+     */
+    default void lifecycle(@NonNull String msgFormat, Object... args) {
+        info(msgFormat, args);
+    }
 
     /**
      * Prints an information message.

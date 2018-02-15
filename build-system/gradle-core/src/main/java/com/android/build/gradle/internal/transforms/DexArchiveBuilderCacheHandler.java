@@ -156,7 +156,7 @@ class DexArchiveBuilderCacheHandler {
                                 });
                 if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
                     Verify.verifyNotNull(result.getCauseOfCorruption());
-                    logger.info(
+                    logger.lifecycle(
                             "The build cache at '%1$s' contained an invalid cache entry.\n"
                                     + "Cause: %2$s\n"
                                     + "We have recreated the cache entry.\n"

@@ -25,6 +25,7 @@ import java.io.File
 
 /**
  * Options to create task for a variant.
+ * See [BuildArtifactTransformBuilder] for constrained on the configuration actions for those tasks.
  */
 @Incubating
 interface BuildArtifactsOptions {

@@ -141,6 +141,7 @@ public class Project {
     protected List<File> testSourceFolders;
     protected List<File> testLibraries;
     protected List<File> resourceFolders;
+    protected List<File> generatedResourceFolders;
     protected List<File> assetFolders;
     protected List<Project> directLibraries;
     protected List<Project> allLibraries;
@@ -588,6 +589,15 @@ public class Project {
         }
 
         return resourceFolders;
+    }
+
+    @NonNull
+    public List<File> getGeneratedResourceFolders() {
+        if (generatedResourceFolders == null) {
+            generatedResourceFolders = client.getGeneratedResourceFolders(this);
+        }
+
+        return generatedResourceFolders;
     }
 
     /**

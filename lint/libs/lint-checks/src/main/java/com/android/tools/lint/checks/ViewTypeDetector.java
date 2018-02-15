@@ -276,8 +276,9 @@ public class ViewTypeDetector extends ResourceXmlDetector implements SourceCodeS
             UExpression first = args.get(0);
             ResourceUrl resourceUrl = ResourceEvaluator.getResource(context.getEvaluator(),
                     first);
-            if (resourceUrl != null && resourceUrl.type == ResourceType.ID &&
-                    !resourceUrl.framework) {
+            if (resourceUrl != null
+                    && resourceUrl.type == ResourceType.ID
+                    && !resourceUrl.isFramework()) {
                 String id = resourceUrl.name;
 
                 if (client.supportsProjectResources()) {

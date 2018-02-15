@@ -24,7 +24,6 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.feature.BundleFeatureClasses;
-import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -44,8 +43,6 @@ import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.MainApkListPersistence;
-import com.android.build.gradle.tasks.ManifestProcessorTask;
-import com.android.build.gradle.tasks.MergeManifests;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
@@ -309,15 +306,7 @@ public class FeatureTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> {
-                    @NonNull
-                    BuildInfoWriterTask buildInfoWriterTask =
-                            taskFactory.create(
-                                    new BuildInfoWriterTask.ConfigAction(
-                                            variantScope, getLogger()));
-
-                    // FIXME: Re-enable when we support instant run with feature splits.
-                    //createInstantRunPackagingTasks(tasks, buildInfoWriterTask, variantScope);
-                    createPackagingTask(variantScope, buildInfoWriterTask);
+                    createPackagingTask(variantScope, null);
                 });
     }
 

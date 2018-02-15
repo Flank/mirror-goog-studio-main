@@ -13,4 +13,5 @@ public enum ActivityRequestCodes {
     REQUEST_ENABLE_BT, // Request code for enabling Bluetooth.
     ACTION_REQUEST_SCAN_ALWAYS_AVAILABLE, // Request code for making Wifi scanning always available.
     LOCATION, // Request code for enabling location services.
+    WRITE_SETTINGS, // Request code to allow writing to system settings.
 }

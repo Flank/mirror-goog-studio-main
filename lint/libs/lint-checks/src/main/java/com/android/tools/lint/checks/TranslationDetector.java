@@ -557,7 +557,7 @@ public class TranslationDetector extends ResourceXmlDetector {
                     }
 
                     Location location = context.getLocation(attribute);
-                    location.setClientData(element);
+                    location.setData(element);
                     location.setSecondary(mMissingLocations.get(name));
                     mMissingLocations.put(name, location);
                 }
@@ -570,7 +570,7 @@ public class TranslationDetector extends ResourceXmlDetector {
                         return;
                     }
                     Location location = context.getLocation(attribute);
-                    location.setClientData(element);
+                    location.setData(element);
                     location.setMessage("Also translated here");
                     location.setSecondary(mExtraLocations.get(name));
                     mExtraLocations.put(name, location);

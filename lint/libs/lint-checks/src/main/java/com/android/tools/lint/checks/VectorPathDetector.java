@@ -102,7 +102,7 @@ public class VectorPathDetector extends ResourceXmlDetector {
         String value = attribute.getValue();
         if (value.startsWith(PREFIX_RESOURCE_REF)) {
             ResourceUrl url = ResourceUrl.parse(value);
-            if (url == null || url.framework) {
+            if (url == null || url.isFramework()) {
                 return;
             }
             AbstractResourceRepository repository = context.getClient()

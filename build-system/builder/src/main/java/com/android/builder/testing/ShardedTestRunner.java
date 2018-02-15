@@ -83,7 +83,7 @@ public class ShardedTestRunner extends BaseTestRunner {
                         return numShards;
                     }
                 };
-        logger.info("will shard tests into %d shards", numShards);
+        logger.lifecycle("will shard tests into %d shards", numShards);
         for (Map.Entry<DeviceConnector, ImmutableList<File>> runners : apksForDevice.entrySet()) {
             ShardedTestCallable shardedTestCallable =
                     new ShardedTestCallable(

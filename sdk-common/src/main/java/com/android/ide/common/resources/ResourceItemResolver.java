@@ -22,10 +22,10 @@ import static com.android.ide.common.res2.AbstractResourceRepository.MAX_RESOURC
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
-import com.android.ide.common.rendering.api.ItemResourceValue;
 import com.android.ide.common.rendering.api.LayoutLog;
 import com.android.ide.common.rendering.api.RenderResources;
 import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.res2.AbstractResourceRepository;
@@ -143,7 +143,7 @@ public class ResourceItemResolver extends RenderResources {
 
         ResourceUrl url = ResourceUrl.parse(valueText);
         if (url != null && url.hasValidName()) {
-            if (url.theme) {
+            if (url.isTheme()) {
                 // Do theme lookup? We can't do that here; requires full global analysis,
                 // so just use a real resource resolver.
                 ResourceResolver resolver = getFullResolver();
@@ -166,7 +166,7 @@ public class ResourceItemResolver extends RenderResources {
     private ResourceValue findResValue(ResourceUrl url) {
         // map of ResourceValue for the given type
         // if allowed, search in the project resources first.
-        if (!url.framework) {
+        if (!url.isFramework()) {
             if (myAppResources == null) {
                 assert myResourceProvider != null;
                 myAppResources = myResourceProvider.getAppResources();
@@ -195,7 +195,7 @@ public class ResourceItemResolver extends RenderResources {
                     myFrameworkResources.getResourceItems(
                             ResourceNamespace.ANDROID, url.type, url.name);
             if (!items.isEmpty()) {
-                ResourceValue value = items.get(0).getResourceValue(true);
+                ResourceValue value = items.get(0).getResourceValue();
                 if (value != null && myLookupChain != null) {
                     myLookupChain.add(value);
                 }
@@ -234,31 +234,18 @@ public class ResourceItemResolver extends RenderResources {
         return super.themeIsParentOf(parentTheme, childTheme);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public ResourceValue findItemInTheme(String itemName) {
+    public ResourceValue findItemInTheme(@NonNull ResourceReference attr) {
         ResourceResolver resolver = getFullResolver();
-        return resolver != null ? resolver.findItemInTheme(itemName) : null;
+        return resolver != null ? resolver.findItemInTheme(attr) : null;
     }
 
     @Override
-    public ResourceValue findItemInTheme(String attrName, boolean isFrameworkAttr) {
+    @Nullable
+    public ResourceValue findItemInStyle(
+            @NonNull StyleResourceValue style, @NonNull ResourceReference attr) {
         ResourceResolver resolver = getFullResolver();
-        return resolver != null ? resolver.findItemInTheme(attrName, isFrameworkAttr) : null;
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public ItemResourceValue findItemInStyle(StyleResourceValue style, String attrName) {
-        ResourceResolver resolver = getFullResolver();
-        return resolver != null ? resolver.findItemInStyle(style, attrName) : null;
-    }
-
-    @Override
-    public ItemResourceValue findItemInStyle(
-            StyleResourceValue style, String attrName, boolean isFrameworkAttr) {
-        ResourceResolver resolver = getFullResolver();
-        return resolver != null ? resolver.findItemInStyle(style, attrName, isFrameworkAttr) : null;
+        return resolver != null ? resolver.findItemInStyle(style, attr) : null;
     }
 
     @Override

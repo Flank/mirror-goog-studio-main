@@ -198,7 +198,9 @@ class BuildArtifactsHolder(
             artifactType: ArtifactType, filenames : Collection<String>, taskName : String)
             : BuildableArtifact {
         val collection =
-                project.files(filenames.map{ createFile(artifactType.name(), it)}).builtBy(taskName)
+                project.files(
+                        filenames.map{ createFile(artifactType.name().toLowerCase(Locale.US), it) })
+                    .builtBy(taskName)
         return initializeFirstArtifactFiles(artifactType, collection)
     }
 

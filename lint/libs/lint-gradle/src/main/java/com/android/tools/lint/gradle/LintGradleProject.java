@@ -328,14 +328,22 @@ public class LintGradleProject extends Project {
                             .filter(File::exists)
                             .collect(Collectors.toList()));
                 }
-
-                resourceFolders.addAll(
-                        mVariant.getMainArtifact().getGeneratedResourceFolders().stream()
-                                .filter(File::exists)
-                                .collect(Collectors.toList()));
             }
 
             return resourceFolders;
+        }
+
+        @NonNull
+        @Override
+        public List<File> getGeneratedResourceFolders() {
+            if (generatedResourceFolders == null) {
+                generatedResourceFolders =
+                        mVariant.getMainArtifact().getGeneratedResourceFolders().stream()
+                                .filter(File::exists)
+                                .collect(Collectors.toList());
+            }
+
+            return generatedResourceFolders;
         }
 
         @NonNull

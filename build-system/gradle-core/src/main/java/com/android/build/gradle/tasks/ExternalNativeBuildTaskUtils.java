@@ -548,7 +548,7 @@ public class ExternalNativeBuildTaskUtils {
                     }
                     if (logToInfo) {
                         String line = new String(buffer, 0, nextByteIndex, "UTF-8");
-                        logger.info(line);
+                        logger.lifecycle(line);
                     }
                     nextByteIndex = 0;
                 }

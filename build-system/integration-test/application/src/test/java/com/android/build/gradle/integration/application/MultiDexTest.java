@@ -31,10 +31,11 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.Dex;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -105,13 +106,12 @@ public class MultiDexTest {
         executor().run("assembleDebug", "assembleAndroidTest");
 
         List<String> mandatoryClasses =
-                Lists.newArrayList("android/support/multidex/MultiDexApplication",
-                        "com/android/tests/basic/MyAnnotation");
+                Lists.newArrayList("Lcom/android/tests/basic/MyAnnotation;");
         if (keepRuntimeAnnotatedClasses) {
-            mandatoryClasses.add("com/android/tests/basic/ClassWithRuntimeAnnotation");
+            mandatoryClasses.add("Lcom/android/tests/basic/ClassWithRuntimeAnnotation;");
         }
 
-        assertMainDexListContains("debug", mandatoryClasses);
+        assertMainDexContains("debug", mandatoryClasses);
 
         // manually inspect the apk to ensure that the classes.dex that was created is the same
         // one in the apk. This tests that the packaging didn't rename the multiple dex files
@@ -161,8 +161,7 @@ public class MultiDexTest {
     public void checkMinifiedBuild(String buildType) throws Exception {
         executor().run(StringHelper.appendCapitalized("assemble", buildType));
 
-        assertMainDexListContains(
-                buildType, ImmutableList.of("android/support/multidex/MultiDexApplication"));
+        assertMainDexContains(buildType, ImmutableList.of());
 
         commonApkChecks(buildType);
 
@@ -259,39 +258,20 @@ public class MultiDexTest {
         }
     }
 
-    private void assertMainDexListContains(
+    private void assertMainDexContains(
             @NonNull String buildType, @NonNull List<String> mandatoryClasses) throws Exception {
-        File listFile =
-                FileUtils.join(
-                        project.getIntermediatesDir(),
-                        "multi-dex",
-                        "ics",
-                        buildType,
-                        "maindexlist.txt");
+        Apk apk = project.getApk("ics", buildType);
+        Dex mainDex = apk.getMainDexFile().orElseThrow(AssertionError::new);
 
-        Set<String> lines =
-                Files.readAllLines(listFile.toPath(), Charsets.UTF_8)
+        ImmutableSet<String> mainDexClasses = mainDex.getClasses().keySet();
+        assertThat(mainDexClasses).contains("Landroid/support/multidex/MultiDexApplication;");
+
+        Set<String> nonMultidexSupportClasses =
+                mainDexClasses
                         .stream()
-                        .filter(line -> !line.isEmpty())
-                        .map(line -> line.replace(".class", ""))
+                        .filter(c -> !c.startsWith("Landroid/support/multidex"))
                         .collect(Collectors.toSet());
-
-        // MultiDexApplication needs to be there
-        assertThat(lines).containsAllIn(mandatoryClasses);
-
-        // it may contain only classes from the support library
-        // Check that the main dex list only contains:
-        //  - The multidex support libray
-        //  - The mandatory classes
-        //  - The permittedToBeInMainDex classes.
-        Set<String> unwantedExtraClasses =
-                lines.stream()
-                        .filter(line -> !line.startsWith("android/support/multidex"))
-                        .collect(Collectors.toSet());
-        unwantedExtraClasses.removeAll(mandatoryClasses);
-
-        assertThat(unwantedExtraClasses).named("Unwanted classes in main dex").isEmpty();
-
+        assertThat(nonMultidexSupportClasses).containsExactlyElementsIn(mandatoryClasses);
     }
 
     @NonNull

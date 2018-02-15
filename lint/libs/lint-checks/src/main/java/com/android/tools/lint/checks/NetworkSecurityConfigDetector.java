@@ -403,7 +403,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                     ResourceUrl resourceUrl = ResourceUrl.parse(sourceId);
                     if (context.getClient().supportsProjectResources()
                             && resourceUrl != null
-                            && !resourceUrl.framework) {
+                            && !resourceUrl.isFramework()) {
                         // ensure that this is a valid resource
                         AbstractResourceRepository resources = context.getClient()
                           .getResourceRepository(context.getProject(), true, false);

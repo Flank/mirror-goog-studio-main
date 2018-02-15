@@ -67,7 +67,7 @@ public enum ResourceType {
     AAPT("_aapt", "Aapt Attribute"),
 
     /** Represents item tags inside a style definition. */
-    STYLE_ITEM("_style_item", "Style Item"),
+    STYLE_ITEM("item", "Style Item"),
 
     /**
      * Not an actual resource type from AAPT. Used to provide sample data values in the tools

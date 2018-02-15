@@ -1,0 +1,5 @@
+This module contains code for capturing and parse Android view files.
+
+This is mainly used by Android Studio's Layout Inspector tool. However this module has no dependency
+on Intellij or Android Studio code and can be used anywhere else to capture view information from
+an Android device. 

@@ -508,7 +508,7 @@ public class ResourceMergerTest extends BaseTestCase {
         // Also check that the layout item's ResourceValue makes sense.
         ResourceItem layoutItem = Iterables.getFirst(layoutItems, null);
         assertNotNull(layoutItem);
-        ResourceValue layoutValue = layoutItem.getResourceValue(false);
+        ResourceValue layoutValue = layoutItem.getResourceValue();
         assertNotNull(layoutValue);
         assertEquals(layoutFile.getAbsolutePath(), layoutValue.getValue());
         Collection<ResourceItem> idItems =
@@ -535,7 +535,7 @@ public class ResourceMergerTest extends BaseTestCase {
         assertEquals(1, loadedLayoutItems.size());
         layoutItem = Iterables.getFirst(loadedLayoutItems, null);
         assertNotNull(layoutItem);
-        layoutValue = layoutItem.getResourceValue(false);
+        layoutValue = layoutItem.getResourceValue();
         assertNotNull(layoutValue);
         assertEquals(layoutFile.getAbsolutePath(), layoutValue.getValue());
 
@@ -545,7 +545,7 @@ public class ResourceMergerTest extends BaseTestCase {
         assertEquals(1, loadedIdItems.size());
         ResourceItem idItem = Iterables.getFirst(loadedIdItems, null);
         assertNotNull(idItem);
-        ResourceValue idValue = idItem.getResourceValue(false);
+        ResourceValue idValue = idItem.getResourceValue();
         assertNotNull(idValue);
         assertTrue(Strings.isNullOrEmpty(idValue.getValue()));
 

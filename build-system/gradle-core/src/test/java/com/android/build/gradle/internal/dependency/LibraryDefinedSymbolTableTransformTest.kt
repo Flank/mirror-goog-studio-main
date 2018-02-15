@@ -80,6 +80,7 @@ class LibraryDefinedSymbolTableTransformTest {
         val result = transform.transform(explodedAar)
 
         Truth.assertThat(result).hasSize(1)
+        Truth.assertThat(result[0].name).isEqualTo("com.example.mylibrary-R-def.txt")
         val lines = Files.readAllLines(result[0].toPath())
         Truth.assertThat(lines).containsExactly(
                 "com.example.mylibrary",

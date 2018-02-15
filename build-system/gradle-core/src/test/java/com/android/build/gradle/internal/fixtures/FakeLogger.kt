@@ -20,7 +20,7 @@ import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logger
 import org.slf4j.Marker
 
-class FakeLogger: Logger {
+open class FakeLogger: Logger {
     override fun debug(p0: String?, p1: Any?) {
         // ignore
     }

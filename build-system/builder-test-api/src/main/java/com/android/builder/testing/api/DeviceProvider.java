@@ -36,11 +36,20 @@ public abstract class DeviceProvider {
     public abstract String getName();
 
     /**
-     * Initializes the provider. This is called before any other method (except {@link #getName()}).
-     * @throws DeviceException
+     * Initializes the provider. This must be called before any other method (except {@link
+     * #getName()}). Each successful call to {@link #init()} MUST be followed by a call to {@link
+     * #terminate()}.
+     *
+     * @throws DeviceException if initialization fails.
      */
     public abstract void init() throws DeviceException;
 
+    /**
+     * Terminates the provider and cleans up resources. Each successful call to {@link #init()} MUST
+     * be followed by a call to {@link #terminate()}.
+     *
+     * @throws DeviceException if termination fails. Resources will still be cleaned up.
+     */
     public abstract void terminate() throws DeviceException;
 
     /**

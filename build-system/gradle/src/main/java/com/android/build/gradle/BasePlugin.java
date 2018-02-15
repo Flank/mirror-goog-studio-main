@@ -63,6 +63,7 @@ import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
+import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -639,7 +640,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         }
 
         @Override
-        public void execute(Object o) {
+        public void execute(@NonNull Object o) {
             throw new UnsupportedOperationException(message);
         }
     }
@@ -652,12 +653,15 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 () -> taskManager.createTasksBeforeEvaluate());
 
         project.afterEvaluate(
-                project ->
-                        threadRecorder.record(
-                                ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS,
-                                project.getPath(),
-                                null,
-                                () -> createAndroidTasks(false)));
+                project -> {
+                    sourceSetManager.runBuildableArtifactsActions();
+
+                    threadRecorder.record(
+                            ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS,
+                            project.getPath(),
+                            null,
+                            () -> createAndroidTasks(false));
+                });
     }
 
 
@@ -992,7 +996,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 try {
                     port = Integer.parseInt(maybePort);
                 } catch (NumberFormatException e) {
-                    logger.info("Invalid https.proxyPort '" + maybePort + "', using default 443");
+                    logger.lifecycle(
+                            "Invalid https.proxyPort '" + maybePort + "', using default 443");
                 }
             }
         }
@@ -1006,7 +1011,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     try {
                         port = Integer.parseInt(maybePort);
                     } catch (NumberFormatException e) {
-                        logger.info("Invalid http.proxyPort '" + maybePort + "', using default 80");
+                        logger.lifecycle(
+                                "Invalid http.proxyPort '" + maybePort + "', using default 80");
                     }
                 }
             }
@@ -1065,7 +1071,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 new DslScopeImpl(
                         extraModelInfo.getSyncIssueHandler(),
                         extraModelInfo.getDeprecationReporter(),
-                        project.getObjects()));
+                        project.getObjects()),
+                new DelayedActionsExecutor());
     }
 
     /**

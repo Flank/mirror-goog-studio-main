@@ -117,7 +117,7 @@ public final class RemoteSdkUpdater {
         }
 
         System.out.format("Downloading SDK package files into '%1$s'", dest);
-        PathUtils.deleteIfExists(dest);
+        PathUtils.deleteRecursivelyIfExists(dest);
         downloadSdkPackages(dest, packages);
         System.out.format(
                 "Done: invocation took %1$.1f seconds%n",

@@ -677,7 +677,7 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
             return str;
         }
         ResourceUrl url = ResourceUrl.parse(str);
-        if (url == null || url.framework) {
+        if (url == null || url.isFramework()) {
             return str;
         }
         Project project = context.getProject();
@@ -689,7 +689,7 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
         if (items == null || items.isEmpty()) {
             return str;
         }
-        ResourceValue resourceValue = items.get(0).getResourceValue(false);
+        ResourceValue resourceValue = items.get(0).getResourceValue();
         if (resourceValue == null) {
             return str;
         }

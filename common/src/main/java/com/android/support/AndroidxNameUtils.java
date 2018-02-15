@@ -16,7 +16,7 @@
 
 package com.android.support;
 
-import static com.android.SdkConstants.ANDROIDX_PKG_PREFIX;
+import static com.android.SdkConstants.*;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableBiMap;
@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.logging.Logger;
 
 public class AndroidxNameUtils {
@@ -76,31 +77,34 @@ public class AndroidxNameUtils {
     private static final ImmutableBiMap<String, String> ANDROIDX_COORDINATES_MAPPING =
             ImmutableBiMap.<String, String>builder()
                     .put(
+                            "com.android.support:support-vector-drawable",
+                            "androidx.graphics.vectordrawable:animatedvectordrawable")
+                    .put(
                             "com.android.support:animated-vector-drawable",
-                            "androidx:animatedvectordrawable")
+                            "androidx.graphics.animatedvectordrawable:vectordrawable")
                     .put(
                             "com.android.support:multidex-instrumentation",
                             "androidx.multidex:instrumentation")
                     .put(
                             "com.android.support:preference-leanback-v17",
                             "androidx.leanback:preference")
+                    .put("com.android.support:appcompat", "androidx.appcompat:appcompat")
+                    .put("com.android.support:design", ANDROIDX_MATERIAL_ARTIFACT)
+                    .put("com.android.support:recyclerview-v7", ANDROIDX_RECYCLER_VIEW_ARTIFACT)
+                    .put("com.android.support:support-annotations", ANDROIDX_ANNOTATIONS_ARTIFACT)
                     // Just for testing
-                    .put("com.android.support:appcompat", "androidx:appcompat")
-                    .put("com.android.support:design", "androidx:design")
-                    .put("com.android.support:recyclerview-v7", "androidx:recyclerview")
+
                     .build();
 
     /** Ordered list of old android support packages sorted by decreasing length */
     static final ImmutableList<String> ANDROIDX_OLD_PKGS =
-            ImmutableList.sortedCopyOf(
-                    new Ordering<String>() {
-                        @Override
-                        public int compare(String left, String right) {
-                            // Short with the longest names first
-                            return Ints.compare(right.length(), left.length());
-                        }
-                    },
-                    ANDROIDX_PKG_MAPPING.keySet());
+            Ordering.from(
+                            (Comparator<String>)
+                                    (left, right) -> {
+                                        // Short with the longest names first
+                                        return Ints.compare(right.length(), left.length());
+                                    })
+                    .immutableSortedCopy(ANDROIDX_PKG_MAPPING.keySet());
 
     @NonNull
     static String getPackageMapping(@NonNull String oldPkgName, boolean strictChecking) {
@@ -131,7 +135,7 @@ public class AndroidxNameUtils {
      * coordinate.
      */
     @NonNull
-    public static String getCoordinateMapping(String coordinate) {
+    public static String getCoordinateMapping(@NonNull String coordinate) {
         return ANDROIDX_COORDINATES_MAPPING.getOrDefault(coordinate, coordinate);
     }
 
@@ -141,11 +145,12 @@ public class AndroidxNameUtils {
      * coordinate.
      */
     @NonNull
-    public static String getCoordinateReverseMapping(String coordinate) {
+    public static String getCoordinateReverseMapping(@NonNull String coordinate) {
         return ANDROIDX_COORDINATES_MAPPING.inverse().getOrDefault(coordinate, coordinate);
     }
 
-    public static String getNewName(String oldName) {
+    @NonNull
+    public static String getNewName(@NonNull String oldName) {
         String newName = ANDROIDX_FULL_CLASS_MAPPING.get(oldName);
         if (newName != null) {
             return newName;

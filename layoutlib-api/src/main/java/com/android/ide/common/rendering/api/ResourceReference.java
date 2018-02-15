@@ -62,7 +62,7 @@ public class ResourceReference implements Serializable {
 
     /** Returns the name of the resource, as defined in the XML. */
     @NonNull
-    public final String getName() {
+    public String getName() {
         return mName;
     }
 
@@ -90,6 +90,16 @@ public class ResourceReference implements Serializable {
     @NonNull
     public ResourceUrl getResourceUrl() {
         return ResourceUrl.create(mNamespace.getPackageName(), mResourceType, mName);
+    }
+
+    @NonNull
+    public ResourceUrl getRelativeResourceUrl(@NonNull ResourceNamespace context) {
+        // TODO(namespaces): extend ResourceNamespace.Resolver to map from URIs back to prefixes
+        // as well.
+        return ResourceUrl.create(
+                mNamespace.equals(context) ? null : mNamespace.getPackageName(),
+                mResourceType,
+                mName);
     }
 
     @Override

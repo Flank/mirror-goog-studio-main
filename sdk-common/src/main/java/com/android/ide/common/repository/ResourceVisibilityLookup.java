@@ -86,7 +86,7 @@ public abstract class ResourceVisibilityLookup {
      * @return true if the given resource is private
      */
     public boolean isPrivate(@NonNull ResourceUrl url) {
-        assert !url.framework; // Framework resources are not part of the library
+        assert !url.isFramework(); // Framework resources are not part of the library
         return isPrivate(url.type, url.name);
     }
 

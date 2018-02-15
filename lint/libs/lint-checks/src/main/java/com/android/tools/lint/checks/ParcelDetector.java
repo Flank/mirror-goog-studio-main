@@ -24,16 +24,20 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiModifier;
+import com.intellij.psi.PsiModifierList;
 import java.util.Collections;
 import java.util.List;
 import org.jetbrains.uast.UAnonymousClass;
 import org.jetbrains.uast.UClass;
+import org.jetbrains.uast.UElement;
 
 /**
  * Looks for Parcelable classes that are missing a CREATOR field
@@ -91,12 +95,53 @@ public class ParcelDetector extends Detector implements SourceCodeScanner {
             return;
         }
 
+        boolean isKotlin = LintUtils.isKotlin(declaration);
+        if (isKotlin) {
+            PsiModifierList modifierList = declaration.getModifierList();
+            if (modifierList != null &&
+                    modifierList.findAnnotation("kotlinx.android.parcel.Parcelize") != null) {
+                // Already using @Parcelize: nothing to suggest (and don't warn about missing
+                // CREATOR field below)
+                return;
+            }
+        }
+
         PsiField field = declaration.findFieldByName("CREATOR", true);
         if (field == null) {
             Location location = context.getNameLocation(declaration);
-            context.report(ISSUE, declaration, location,
-                    "This class implements `Parcelable` but does not "
-                            + "provide a `CREATOR` field");
+            String message = "This class implements `Parcelable` but does not "
+                    + "provide a `CREATOR` field";
+            context.report(ISSUE, declaration, location, message, null);
+        } else if (isKotlin && !hasCreatorInnerClass(declaration)) {
+            // Make sure fields in Kotlin are marked @JvmField
+            PsiModifierList modifierList = field.getModifierList();
+            if (modifierList != null &&
+                    modifierList.findAnnotation("kotlin.jvm.JvmField") == null) {
+                Location location = context.getNameLocation(field);
+                LintFix fix = fix()
+                        .name("Add @JvmField")
+                        .replace()
+                        .text("val")
+                        .with("@JvmField val")
+                        .range(context.getLocation(field))
+                        .build();
+                context.report(ISSUE, field, location,
+                        "Field should be annotated with `@JvmField`", fix);
+            }
         }
+    }
+
+    private static boolean hasCreatorInnerClass(@NonNull UClass declaration) {
+        // Might be using a companion object; we can't see that in UAST
+        for (UClass inner : declaration.getInnerClasses()) {
+            String name = inner.getName();
+            if ("CREATOR".equals(name)) {
+                // Yes, there is an inner class also called CREATOR;
+                // it's likely our CREATOR field was generated from
+                // a companion object
+                return true;
+            }
+        }
+        return false;
     }
 }

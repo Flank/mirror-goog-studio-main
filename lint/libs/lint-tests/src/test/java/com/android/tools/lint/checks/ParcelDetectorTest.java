@@ -262,4 +262,133 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                         "      ~~~~~~~~~~~~~~~~~~~\n" +
                         "1 errors, 0 warnings\n");
     }
+
+    public void testKotlinMissingJvmField() {
+        lint().files(
+                // Error: CREATOR field is missing @JvmField
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.os.Parcel\n" +
+                        "import android.os.Parcelable\n" +
+                        "\n" +
+                        "class MyClass(val something: String) : Parcelable {\n" +
+                        "\n" +
+                        "    private constructor(p: Parcel) : this(\n" +
+                        "            something = p.readString()\n" +
+                        "    )\n" +
+                        "\n" +
+                        "    override fun writeToParcel(dest: Parcel, flags: Int) {\n" +
+                        "        dest.writeString(something)\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    override fun describeContents() = 0\n" +
+                        "\n" +
+                        "    companion object {\n" +
+                        "        val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR\n" +
+                        "            override fun createFromParcel(parcel: Parcel) = MyClass(parcel)\n" +
+                        "            override fun newArray(size: Int) = arrayOfNulls<MyClass>(size)\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "}"),
+
+                // OK: It's there
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.os.Parcel\n" +
+                        "import android.os.Parcelable\n" +
+                        "\n" +
+                        "class MyClass2(val something: String) : Parcelable {\n" +
+                        "\n" +
+                        "    private constructor(p: Parcel) : this(\n" +
+                        "            something = p.readString()\n" +
+                        "    )\n" +
+                        "\n" +
+                        "    override fun writeToParcel(dest: Parcel, flags: Int) {\n" +
+                        "        dest.writeString(something)\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    override fun describeContents() = 0\n" +
+                        "\n" +
+                        "    companion object {\n" +
+                        "        @JvmField val CREATOR = object : Parcelable.Creator<MyClass2> { // OK\n" +
+                        "            override fun createFromParcel(parcel: Parcel) = MyClass2(parcel)\n" +
+                        "            override fun newArray(size: Int) = arrayOfNulls<MyClass2>(size)\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "}"),
+                // OK: It's not using a field but a companion object
+                kotlin("" +
+                        "package tet.pkg\n" +
+                        "\n" +
+                        "import android.os.Parcel\n" +
+                        "import android.os.Parcelable\n" +
+                        "\n" +
+                        "class MyClass3() : Parcelable {\n" +
+                        "    constructor(parcel: Parcel) : this() {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    override fun writeToParcel(parcel: Parcel, flags: Int) {\n" +
+                        "\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    override fun describeContents(): Int {\n" +
+                        "        return 0\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    companion object CREATOR : Parcelable.Creator<KotlinParc> {\n" +
+                        "        override fun createFromParcel(parcel: Parcel): KotlinParc {\n" +
+                        "            return KotlinParc(parcel)\n" +
+                        "        }\n" +
+                        "\n" +
+                        "        override fun newArray(size: Int): Array<KotlinParc?> {\n" +
+                        "            return arrayOfNulls(size)\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "\n" +
+                        "}"))
+                .run()
+                .expect("src/test/pkg/MyClass.kt:19: Error: Field should be annotated with @JvmField [ParcelCreator]\n" +
+                        "        val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR\n" +
+                        "            ~~~~~~~\n" +
+                        "1 errors, 0 warnings")
+                .expectFixDiffs("" +
+                        "Fix for src/test/pkg/MyClass.kt line 18: Add @JvmField:\n" +
+                        "@@ -19 +19\n" +
+                        "-         val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR\n" +
+                        "+         @JvmField val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR");
+    }
+
+    public void testParcelizeSuggestions() {
+        lint().files(
+                kotlin("" +
+                        "@file:JvmName(\"TestKt\")\n" +
+                        "package test\n" +
+                        "\n" +
+                        "import kotlinx.android.parcel.*\n" +
+                        "import android.os.Parcel\n" +
+                        "import android.os.Parcelable\n" +
+                        "\n" +
+                        "@Parcelize\n" +
+                        "data class Test(val a: List<String>) : Parcelable // OK: Has parcelable\n" +
+                        "\n" +
+                        "class Test2(val a: List<String>) : Parcelable // Missing field but don't suggest @Parcelize\n" +
+                        "\n" +
+                        "data class Test3(val a: List<String>) : Parcelable // Warn: Missing @Parcelize\n" +
+                        "\n"),
+                kotlin("" +
+                        "package kotlinx.android.parcel\n" +
+                        "@Target(AnnotationTarget.CLASS)\n" +
+                        "@Retention(AnnotationRetention.BINARY)\n" +
+                        "annotation class Parcelize"))
+                .run()
+                .expect("src/test/Test.kt:11: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n" +
+                        "class Test2(val a: List<String>) : Parcelable // Missing field but don't suggest @Parcelize\n" +
+                        "      ~~~~~\n" +
+                        "src/test/Test.kt:13: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n" +
+                        "data class Test3(val a: List<String>) : Parcelable // Warn: Missing @Parcelize\n" +
+                        "           ~~~~~\n" +
+                        "2 errors, 0 warnings");
+    }
 }

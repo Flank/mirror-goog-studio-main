@@ -19,11 +19,24 @@ package com.android.build.gradle.integration.testing;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(FilterableParameterized.class)
 public class SeparateTestModuleWithMinifiedAppConnectedTest {
+
+    @Parameterized.Parameters(name = "codeShrinker = {0}")
+    public static CodeShrinker[] getShrinkers() {
+        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+    }
+
+    @Parameterized.Parameter public CodeShrinker codeShrinker;
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
@@ -36,6 +49,6 @@ public class SeparateTestModuleWithMinifiedAppConnectedTest {
     @Category(DeviceTests.class)
     public void checkRunOnDevice() throws Exception {
         adb.exclusiveAccess();
-        project.execute(":test:connectedAndroidTest");
+        project.executor().run(":test:connectedAndroidTest");
     }
 }

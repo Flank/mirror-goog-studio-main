@@ -90,7 +90,6 @@ import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
-import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
@@ -236,7 +235,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 new BuildArtifactsHolder(
                         getProject(),
                         getFullVariantName(),
-                        intermediate("artifact_transform"),
+                        new File(globalScope.getIntermediatesDir(), "artifact_transform"),
                         getVariantConfiguration().getDirName(),
                         ImmutableList.of(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST),
                         globalScope.getDslScope());

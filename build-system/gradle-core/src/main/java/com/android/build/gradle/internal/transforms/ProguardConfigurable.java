@@ -40,8 +40,13 @@ public abstract class ProguardConfigurable extends Transform {
     private final VariantType variantType;
 
     ProguardConfigurable(@NonNull VariantScope scope) {
-        configurationFiles = scope.getGlobalScope().getProject().files();
-        this.variantType = scope.getVariantData().getType();
+        this(scope.getGlobalScope().getProject().files(), scope.getVariantData().getType());
+    }
+
+    ProguardConfigurable(
+            @NonNull ConfigurableFileCollection configurationFiles, @NonNull VariantType type) {
+        this.configurationFiles = configurationFiles;
+        this.variantType = type;
     }
 
     public void setConfigurationFiles(FileCollection configFiles) {
@@ -81,6 +86,8 @@ public abstract class ProguardConfigurable extends Transform {
     }
 
     public abstract void keep(@NonNull String keep);
+
+    public abstract void keepattributes();
 
     public abstract void dontwarn(@NonNull String dontwarn);
 

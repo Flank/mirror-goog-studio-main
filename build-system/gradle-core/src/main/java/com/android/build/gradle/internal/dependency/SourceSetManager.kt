@@ -20,6 +20,7 @@ import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.build.gradle.internal.variant2.DeprecatedConfigurationAction
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
@@ -33,10 +34,11 @@ import org.gradle.api.logging.Logging
 class SourceSetManager(
         project: Project,
         private val publishPackage: Boolean,
-        private val dslScope : DslScope) {
+        private val dslScope : DslScope,
+        private val buildArtifactActions: DelayedActionsExecutor) {
     val sourceSetsContainer: NamedDomainObjectContainer<AndroidSourceSet> = project.container(
             AndroidSourceSet::class.java,
-            AndroidSourceSetFactory(project, publishPackage, dslScope))
+            AndroidSourceSetFactory(project, publishPackage, dslScope, buildArtifactActions))
     private val configurations: ConfigurationContainer = project.configurations
     private val logger: Logger = Logging.getLogger(this.javaClass)
 
@@ -80,14 +82,14 @@ class SourceSetManager(
                                 DeprecationReporter.DeprecationTarget.CONFIG_NAME))
 
         val packageConfigDescription: String
-        if (publishPackage) {
-            packageConfigDescription = getDeprecatedConfigDesc("Publish",
-                    sourceSet.name,
-                    runtimeOnlyName)
+        packageConfigDescription = if (publishPackage) {
+            getDeprecatedConfigDesc("Publish",
+                sourceSet.name,
+                runtimeOnlyName)
         } else {
-            packageConfigDescription = getDeprecatedConfigDesc("Apk",
-                    sourceSet.name,
-                    runtimeOnlyName)
+            getDeprecatedConfigDesc("Apk",
+                sourceSet.name,
+                runtimeOnlyName)
         }
 
         val apkName = sourceSet.packageConfigurationName
@@ -196,5 +198,9 @@ class SourceSetManager(
 
     fun executeAction(action: Action<NamedDomainObjectContainer<AndroidSourceSet>>) {
         action.execute(sourceSetsContainer)
+    }
+
+    fun runBuildableArtifactsActions() {
+        buildArtifactActions.runAll()
     }
 }

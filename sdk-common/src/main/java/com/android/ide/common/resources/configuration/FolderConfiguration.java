@@ -904,13 +904,12 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         return result.toString();
     }
 
-    /**
-     * Returns the folder configuration as a unique key.
-     */
+    // TODO: Remove.
+    /** @deprecated Use {@link #getQualifierString()} instead. */
+    @Deprecated
     @NonNull
     public String getUniqueKey() {
         String qualifierString = getQualifierString();
-        // TODO: Do we need the dash at the beginning?
         return qualifierString.isEmpty() ? "" : SdkConstants.RES_QUALIFIER_SEP + qualifierString;
     }
 

@@ -25,8 +25,8 @@ import static org.junit.Assert.fail;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.apkzlib.zip.ZFile;
 import com.android.testutils.apk.Dex;
+import com.android.tools.build.apkzlib.zip.ZFile;
 import com.android.utils.PathUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;

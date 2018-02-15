@@ -86,6 +86,7 @@ import com.android.utils.SdkUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
@@ -1046,14 +1047,16 @@ public class LintUtils {
     }
 
     /**
-     * Looks up the resource values for the given attribute given a style. Note that
-     * this only looks project-level style values, it does not resume into the framework
-     * styles.
+     * Looks up the resource values for the given attribute given a style. Note that this only looks
+     * project-level style values, it does not resume into the framework styles.
      */
     @Nullable
     public static List<ResourceValue> getStyleAttributes(
-            @NonNull Project project, @NonNull LintClient client,
-            @NonNull String styleUrl, @NonNull String namespace, @NonNull String attribute) {
+            @NonNull Project project,
+            @NonNull LintClient client,
+            @NonNull String styleUrl,
+            @NonNull String namespaceUri,
+            @NonNull String attribute) {
         if (!client.supportsProjectResources()) {
             return null;
         }
@@ -1064,7 +1067,7 @@ public class LintUtils {
         }
 
         ResourceUrl style = ResourceUrl.parse(styleUrl);
-        if (style == null || style.framework) {
+        if (style == null || style.isFramework()) {
             return null;
         }
 
@@ -1074,7 +1077,6 @@ public class LintUtils {
         queue.add(new ResourceValue(ResourceNamespace.RES_AUTO, style.type, style.name, null));
         Set<String> seen = new HashSet<>();
         int count = 0;
-        boolean isFrameworkAttribute = ANDROID_URI.equals(namespace);
         while (count < 30 && !queue.isEmpty()) {
             ResourceValue front = queue.remove();
             String name = front.getName();
@@ -1082,10 +1084,14 @@ public class LintUtils {
             List<ResourceItem> items = resources.getResourceItem(front.getResourceType(), name);
             if (items != null) {
                 for (ResourceItem item : items) {
-                    ResourceValue rv = item.getResourceValue(false);
+                    ResourceValue rv = item.getResourceValue();
                     if (rv instanceof StyleResourceValue) {
                         StyleResourceValue srv = (StyleResourceValue) rv;
-                        ItemResourceValue value = srv.getItem(attribute, isFrameworkAttribute);
+                        ResourceNamespace namespace =
+                                MoreObjects.firstNonNull(
+                                        ResourceNamespace.fromNamespaceUri(namespaceUri),
+                                        ResourceNamespace.TODO);
+                        ItemResourceValue value = srv.getItem(namespace, attribute);
                         if (value != null) {
                             if (result == null) {
                                 result = new ArrayList<>();
@@ -1095,10 +1101,11 @@ public class LintUtils {
                             }
                         }
 
-                        String parent = srv.getParentStyle();
+                        // TODO: namespaces
+                        String parent = srv.getParentStyleName();
                         if (parent != null && !parent.startsWith(ANDROID_PREFIX)) {
                             ResourceUrl p = ResourceUrl.parse(parent);
-                            if (p != null && !p.framework && !seen.contains(p.name)) {
+                            if (p != null && !p.isFramework() && !seen.contains(p.name)) {
                                 seen.add(p.name);
                                 queue.add(
                                         new ResourceValue(
@@ -1146,7 +1153,7 @@ public class LintUtils {
         }
 
         ResourceUrl style = ResourceUrl.parse(styleUrl);
-        if (style == null || style.framework) {
+        if (style == null || style.isFramework()) {
             return null;
         }
 
@@ -1163,7 +1170,7 @@ public class LintUtils {
             List<ResourceItem> items = resources.getResourceItem(front.getResourceType(), name);
             if (items != null) {
                 for (ResourceItem item : items) {
-                    ResourceValue rv = item.getResourceValue(false);
+                    ResourceValue rv = item.getResourceValue();
                     if (rv instanceof StyleResourceValue) {
                         StyleResourceValue srv = (StyleResourceValue) rv;
                         if (result == null) {
@@ -1171,10 +1178,11 @@ public class LintUtils {
                         }
                         result.add(srv);
 
-                        String parent = srv.getParentStyle();
+                        // TODO: namespaces
+                        String parent = srv.getParentStyleName();
                         if (parent != null && !parent.startsWith(ANDROID_PREFIX)) {
                             ResourceUrl p = ResourceUrl.parse(parent);
-                            if (p != null && !p.framework && !seen.contains(p.name)) {
+                            if (p != null && !p.isFramework() && !seen.contains(p.name)) {
                                 seen.add(p.name);
                                 queue.add(
                                         new ResourceValue(
@@ -1982,6 +1990,11 @@ public class LintUtils {
             return methodIdentifier.getName();
         }
         return call.getMethodName();
+    }
+
+    /** Returns true if the given element is written in Kotlin */
+    public static boolean isKotlin(@Nullable PsiElement element) {
+        return element != null && isKotlin(element.getLanguage());
     }
 
     /** Returns true if the given language is Kotlin */

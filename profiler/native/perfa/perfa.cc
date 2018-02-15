@@ -68,7 +68,11 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
   return (strcmp(sig_mutf8, "Ljava/net/URL;") == 0) ||
          (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
          (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0) ||
+         (strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 &&
+          energy_profiler_enabled) ||
          (strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0 &&
+          energy_profiler_enabled) ||
+         (strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 &&
           energy_profiler_enabled);
 }
 
@@ -97,22 +101,23 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                const unsigned char* class_data,
                                jint* new_class_data_len,
                                unsigned char** new_class_data) {
-  bool transformed = true;
+  // The tooling interface will specify class names like "java/net/URL"
+  // however, in .dex these classes are stored using the "Ljava/net/URL;"
+  // format.
+  std::string desc = "L" + std::string(name) + ";";
+  if (!IsRetransformClassSignature(desc.c_str())) return;
+
+  dex::Reader reader(class_data, class_data_len);
+  auto class_index = reader.FindClassIndex(desc.c_str());
+  if (class_index == dex::kNoIndex) {
+    Log::V("Could not find class index for %s", name);
+    return;
+  }
+
+  reader.CreateClassIr(class_index);
+  auto dex_ir = reader.GetIr();
+
   if (strcmp(name, "java/net/URL") == 0) {
-    dex::Reader reader(class_data, class_data_len);
-    // The tooling interface will specify class names like "java/net/URL"
-    // however, in .dex these classes are stored using the "Ljava/net/URL;"
-    // format.
-    std::string desc = "L" + std::string(name) + ";";
-    auto class_index = reader.FindClassIndex(desc.c_str());
-    if (class_index == dex::kNoIndex) {
-      Log::V("Could not find class index for %s", name);
-      return;
-    }
-
-    reader.CreateClassIr(class_index);
-    auto dex_ir = reader.GetIr();
-
     slicer::MethodInstrumenter mi(dex_ir);
     mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/network/httpurl/HttpURLWrapper;",
@@ -121,28 +126,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                           "()Ljava/net/URLConnection;"))) {
       Log::E("Error instrumenting URL.openConnection");
     }
-
-    size_t new_image_size = 0;
-    dex::u1* new_image = nullptr;
-    dex::Writer writer(dex_ir);
-
-    JvmtiAllocator allocator(jvmti_env);
-    new_image = writer.CreateImage(&allocator, &new_image_size);
-
-    *new_class_data_len = new_image_size;
-    *new_class_data = new_image;
   } else if (strcmp(name, "okhttp3/OkHttpClient") == 0) {
-    dex::Reader reader(class_data, class_data_len);
-    std::string desc = "L" + std::string(name) + ";";
-    auto class_index = reader.FindClassIndex(desc.c_str());
-    if (class_index == dex::kNoIndex) {
-      Log::V("Could not find class index for %s", name);
-      return;
-    }
-
-    reader.CreateClassIr(class_index);
-    auto dex_ir = reader.GetIr();
-
     slicer::MethodInstrumenter mi(dex_ir);
     // Add Entry hook method with this argument passed as type Object.
     mi.AddTransformation<slicer::EntryHook>(
@@ -157,28 +141,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                           "()Ljava/util/List;"))) {
       Log::E("Error instrumenting OkHttp3 OkHttpClient");
     }
-
-    size_t new_image_size = 0;
-    dex::u1* new_image = nullptr;
-    dex::Writer writer(dex_ir);
-
-    JvmtiAllocator allocator(jvmti_env);
-    new_image = writer.CreateImage(&allocator, &new_image_size);
-
-    *new_class_data_len = new_image_size;
-    *new_class_data = new_image;
   } else if (strcmp(name, "com/squareup/okhttp/OkHttpClient") == 0) {
-    dex::Reader reader(class_data, class_data_len);
-    std::string desc = "L" + std::string(name) + ";";
-    auto class_index = reader.FindClassIndex(desc.c_str());
-    if (class_index == dex::kNoIndex) {
-      Log::V("Could not find class index for %s", name);
-      return;
-    }
-
-    reader.CreateClassIr(class_index);
-    auto dex_ir = reader.GetIr();
-
     slicer::MethodInstrumenter mi(dex_ir);
     // Add Entry hook method with this argument passed as type Object.
     mi.AddTransformation<slicer::EntryHook>(
@@ -193,28 +156,20 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                           "()Ljava/util/List;"))) {
       Log::E("Error instrumenting OkHttp2 OkHttpClient");
     }
-
-    size_t new_image_size = 0;
-    dex::u1* new_image = nullptr;
-    dex::Writer writer(dex_ir);
-
-    JvmtiAllocator allocator(jvmti_env);
-    new_image = writer.CreateImage(&allocator, &new_image_size);
-
-    *new_class_data_len = new_image_size;
-    *new_class_data = new_image;
-  } else if (strcmp(name, "android/os/PowerManager$WakeLock") == 0) {
-    dex::Reader reader(class_data, class_data_len);
-    std::string desc = "L" + std::string(name) + ";";
-    auto class_index = reader.FindClassIndex(desc.c_str());
-    if (class_index == dex::kNoIndex) {
-      Log::V("Could not find class index for %s", name);
-      return;
+  } else if (strcmp(name, "android/os/PowerManager") == 0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
+        "onNewWakeLockEntry"));
+    mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
+        "onNewWakeLockExit"));
+    if (!mi.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "newWakeLock",
+            "(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;"))) {
+      Log::E("Error instrumenting PowerManager.newWakeLock");
     }
-
-    reader.CreateClassIr(class_index);
-    auto dex_ir = reader.GetIr();
-
+  } else if (strcmp(name, "android/os/PowerManager$WakeLock") == 0) {
     // Instrument acquire() and acquire(long).
     slicer::MethodInstrumenter mi_acq(dex_ir);
     mi_acq.AddTransformation<slicer::EntryHook>(ir::MethodId(
@@ -233,28 +188,58 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     slicer::MethodInstrumenter mi_rel(dex_ir);
     mi_rel.AddTransformation<slicer::EntryHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
-        "wrapRelease"));
+        "onReleaseEntry"));
+    mi_rel.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/WakeLockWrapper;",
+        "onReleaseExit"));
     if (!mi_rel.InstrumentMethod(
             ir::MethodId(desc.c_str(), "release", "(I)V"))) {
       Log::E("Error instrumenting WakeLock.release");
     }
+  } else if (strcmp(name, "android/app/AlarmManager") == 0) {
+    // Instrument setImpl.
+    slicer::MethodInstrumenter mi_set(dex_ir);
+    mi_set.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/AlarmManagerWrapper;",
+        "wrapSetImpl"));
+    if (!mi_set.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "setImpl",
+            "(IJJJILandroid/app/PendingIntent;"
+            "Landroid/app/AlarmManager$OnAlarmListener;Ljava/lang/String;"
+            "Landroid/os/Handler;Landroid/os/WorkSource;"
+            "Landroid/app/AlarmManager$AlarmClockInfo;)V"))) {
+      Log::E("Error instrumenting AlarmManager.setImpl");
+    }
 
-    size_t new_image_size = 0;
-    dex::u1* new_image = nullptr;
-    dex::Writer writer(dex_ir);
-
-    JvmtiAllocator allocator(jvmti_env);
-    new_image = writer.CreateImage(&allocator, &new_image_size);
-
-    *new_class_data_len = new_image_size;
-    *new_class_data = new_image;
+    // Instrument cancel(PendingIntent) and cancel(OnAlarmListener).
+    slicer::MethodInstrumenter mi_cancel(dex_ir);
+    mi_cancel.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/AlarmManagerWrapper;",
+        "wrapCancel"));
+    if (!mi_cancel.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "cancel", "(Landroid/app/PendingIntent;)V"))) {
+      Log::E("Error instrumenting AlarmManager.cancel(PendingIntent)");
+    }
+    if (!mi_cancel.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "cancel",
+                         "(Landroid/app/AlarmManager$OnAlarmListener;)V"))) {
+      Log::E("Error instrumenting AlarmManager.cancel(OnAlarmListener)");
+    }
   } else {
-    transformed = false;
+    Log::V("No transformation applied for class: %s", name);
+    return;
   }
 
-  if (transformed) {
-    Log::V("Transformed class: %s", name);
-  }
+  size_t new_image_size = 0;
+  dex::u1* new_image = nullptr;
+  dex::Writer writer(dex_ir);
+
+  JvmtiAllocator allocator(jvmti_env);
+  new_image = writer.CreateImage(&allocator, &new_image_size);
+
+  *new_class_data_len = new_image_size;
+  *new_class_data = new_image;
+  Log::V("Transformed class: %s", name);
 }
 
 void BindJNIMethod(JNIEnv* jni, const char* class_name, const char* method_name,
@@ -298,7 +283,7 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
                   "sendWakeLockAcquired", "(IILjava/lang/String;J)V");
     BindJNIMethod(jni,
                   "com/android/tools/profiler/support/energy/WakeLockWrapper",
-                  "sendWakeLockReleased", "(II)V");
+                  "sendWakeLockReleased", "(IIZ)V");
   }
 
   BindJNIMethod(jni,

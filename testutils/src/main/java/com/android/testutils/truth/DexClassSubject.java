@@ -94,6 +94,12 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
         }
     }
 
+    public void hasFieldWithType(@NonNull String name, @NonNull String type) {
+        if (assertSubjectIsNonNull() && !checkHasField(name, type)) {
+            fail("contains field", name + ":" + type);
+        }
+    }
+
     public void doesNotHaveField(@NonNull String name) {
         if (assertSubjectIsNonNull() && checkHasField(name)) {
             fail("does not contain field", name);
@@ -106,9 +112,7 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
         }
     }
 
-    /**
-     * Should not be called when the subject is null.
-     */
+    /** Check if the class has method with the specified name. */
     private boolean checkHasMethod(@NonNull String name) {
         for (DexBackedMethod method : getSubject().getMethods()) {
             if (method.getName().equals(name)) {
@@ -118,12 +122,20 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
         return false;
     }
 
-    /**
-     * Should not be called when the subject is null.
-     */
+    /** Check if the class has field with the specified name. */
     private boolean checkHasField(@NonNull String name) {
         for (DexBackedField field : getSubject().getFields()) {
             if (field.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Check if the class has field with the specified name and type. */
+    private boolean checkHasField(@NonNull String name, @NonNull String type) {
+        for (DexBackedField field : getSubject().getFields()) {
+            if (field.getName().equals(name) && field.getType().equals(type)) {
                 return true;
             }
         }

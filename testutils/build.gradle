@@ -7,6 +7,7 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     compile project(':base:common')
+    compile libs.kotlin_stdlib
     compile libs.junit
     compile libs.easymock
     compile libs.mockito_core

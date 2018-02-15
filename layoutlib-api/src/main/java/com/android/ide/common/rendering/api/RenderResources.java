@@ -161,24 +161,18 @@ public class RenderResources {
     }
 
     /**
-     * Returns the {@link ResourceValue} matching a given name in the all themes returned by
-     * {@link #getAllThemes()}. If the item is not directly available in the a theme, its parent
-     * theme is used before checking the next theme from the list.
-     *
-     * @param itemName the name of the item to search for.
-     * @return the {@link ResourceValue} object or <code>null</code>
-     *
-     * @deprecated Use {@link #findItemInTheme(String, boolean)}
+     * Returns the {@link ResourceValue} for a given attr in the all themes returned by {@link
+     * #getAllThemes()}. If the item is not directly available in the a theme, its parent theme is
+     * used before checking the next theme from the list.
      */
-    @Deprecated
-    public ResourceValue findItemInTheme(String itemName) {
+    @Nullable
+    public ResourceValue findItemInTheme(@NonNull ResourceReference attr) {
         List<StyleResourceValue> allThemes = getAllThemes();
         if (allThemes == null) {
             return null;
         }
         for (StyleResourceValue theme : allThemes) {
-            //noinspection deprecation
-            ResourceValue value = findItemInStyle(theme, itemName);
+            ResourceValue value = findItemInStyle(theme, attr);
             if (value != null) {
                 return value;
             }
@@ -186,60 +180,38 @@ public class RenderResources {
         return null;
     }
 
-    /**
-     * Returns the {@link ResourceValue} matching a given name in the all themes returned by
-     * {@link #getAllThemes()}. If the item is not directly available in the a theme, its parent
-     * theme is used before checking the next theme from the list.
-     *
-     * @param attrName the name of the attribute to search for.
-     * @param isFrameworkAttr whether the attribute is a framework attribute
-     * @return the {@link ResourceValue} object or <code>null</code>
-     */
-    public ResourceValue findItemInTheme(String attrName, boolean isFrameworkAttr) {
-        List<StyleResourceValue> allThemes = getAllThemes();
-        if (allThemes == null) {
-            return null;
-        }
-        for (StyleResourceValue theme : allThemes) {
-            ResourceValue value = findItemInStyle(theme, attrName, isFrameworkAttr);
-            if (value != null) {
-                return value;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Returns the {@link ResourceValue} matching a given name in a given style. If the
-     * item is not directly available in the style, the method looks in its parent style.
-     *
-     * This version of doesn't support providing the namespace of the attribute so it'll search
-     * in both the project's namespace and then in the android namespace.
-     *
-     * @param style the style to search in
-     * @param attrName the name of the attribute to search for.
-     * @return the {@link ResourceValue} object or <code>null</code>
-     *
-     * @deprecated Use {@link #findItemInStyle(StyleResourceValue, String, boolean)} since this
-     * method doesn't know the item namespace.
-     */
+    /** @deprecated Use {@link #findItemInTheme(ResourceReference)}. */
+    @Nullable
     @Deprecated
-    public ResourceValue findItemInStyle(StyleResourceValue style, String attrName) {
-        return null;
+    public final ResourceValue findItemInTheme(String attrName, boolean isFrameworkAttr) {
+        return findItemInTheme(
+                new ResourceReference(
+                        ResourceNamespace.fromBoolean(isFrameworkAttr),
+                        ResourceType.ATTR,
+                        attrName));
     }
 
     /**
-     * Returns the {@link ResourceValue} matching a given attribute in a given style. If the
-     * item is not directly available in the style, the method looks in its parent style.
-     *
-     * @param style the style to search in
-     * @param attrName the name of the attribute to search for.
-     * @param isFrameworkAttr whether the attribute is a framework attribute
-     * @return the {@link ResourceValue} object or <code>null</code>
+     * Returns the {@link ResourceValue} matching a given attribute in a given style. If the item is
+     * not directly available in the style, the method looks in its parent style.
      */
-    public ResourceValue findItemInStyle(StyleResourceValue style, String attrName,
-            boolean isFrameworkAttr) {
+    @Nullable
+    public ResourceValue findItemInStyle(
+            @NonNull StyleResourceValue style, @NonNull ResourceReference attr) {
         return null;
+    }
+
+    /** @deprecated Use {@link #findItemInStyle(StyleResourceValue, ResourceReference)}. */
+    @Nullable
+    @Deprecated
+    public final ResourceValue findItemInStyle(
+            StyleResourceValue style, String attrName, boolean isFrameworkAttr) {
+        return findItemInStyle(
+                style,
+                new ResourceReference(
+                        ResourceNamespace.fromBoolean(isFrameworkAttr),
+                        ResourceType.ATTR,
+                        attrName));
     }
 
     /**
@@ -372,7 +344,7 @@ public class RenderResources {
      * @deprecated Use {@link #getStyle(ResourceReference)}
      */
     @Deprecated
-    public StyleResourceValue getStyle(String styleName, boolean isFramework) {
+    public final StyleResourceValue getStyle(String styleName, boolean isFramework) {
         return getStyle(
                 new ResourceReference(
                         ResourceNamespace.fromBoolean(isFramework), ResourceType.STYLE, styleName));

@@ -321,7 +321,7 @@ public class DesugarTransform extends Transform {
             for (DirectoryInput dirInput : input.getDirectoryInputs()) {
                 Path output = getOutputPath(transformInvocation.getOutputProvider(), dirInput);
                 if (!dirInput.getFile().isDirectory()) {
-                    PathUtils.deleteIfExists(output);
+                    PathUtils.deleteRecursivelyIfExists(output);
                 }
                 processDirectory(
                         output, additionalPaths, dirInput, transformInvocation.isIncremental());
@@ -335,7 +335,7 @@ public class DesugarTransform extends Transform {
                 }
 
                 Path output = getOutputPath(outputProvider, jarInput);
-                PathUtils.deleteIfExists(output);
+                PathUtils.deleteRecursivelyIfExists(output);
                 processSingle(jarInput.getFile().toPath(), output, jarInput.getScopes());
             }
         }
@@ -356,7 +356,7 @@ public class DesugarTransform extends Transform {
         Path dirPath = dirInput.getFile().toPath();
 
         if (!isIncremental) {
-            PathUtils.deleteIfExists(output);
+            PathUtils.deleteRecursivelyIfExists(output);
             processSingle(dirPath, output, dirInput.getScopes());
             return;
         }
@@ -379,7 +379,7 @@ public class DesugarTransform extends Transform {
 
         if (totalSize < MIN_INPUT_SIZE_TO_COPY_TO_TMP || cntFilesToProcess > totalSize / 10) {
             // input size too small, or too many files changed
-            PathUtils.deleteIfExists(output);
+            PathUtils.deleteRecursivelyIfExists(output);
             processSingle(dirPath, output, dirInput.getScopes());
             return;
         }
@@ -402,7 +402,7 @@ public class DesugarTransform extends Transform {
             if (!parentFile.isDirectory()) {
                 // parent dir was removed, just remove the output mapped to that dir
                 Path relativeDirPath = dirPath.relativize(parentFile.toPath());
-                PathUtils.deleteIfExists(relativeDirPath);
+                PathUtils.deleteRecursivelyIfExists(relativeDirPath);
                 continue;
             }
 

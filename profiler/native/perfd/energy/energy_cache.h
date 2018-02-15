@@ -25,28 +25,25 @@
 
 namespace profiler {
 
-using profiler::proto::EnergyEvent;
-using profiler::proto::EnergyEventsResponse;
-using std::vector;
-
 class EnergyCache {
  public:
   EnergyCache() = default;
 
   // Add an energy event to internal cache.
-  void AddEnergyEvent(const EnergyEvent& data);
+  void AddEnergyEvent(const proto::EnergyEvent& data);
 
   // Query for all the energy events for a given app within the time range
   // (start_time_excl, end_time_incl].
-  const vector<EnergyEvent> GetEnergyEvents(int32_t app_id,
-                                            int64_t start_time_excl,
-                                            int64_t end_time_incl);
+  const std::vector<proto::EnergyEvent> GetEnergyEvents(int32_t app_id,
+                                                        int64_t start_time_excl,
+                                                        int64_t end_time_incl);
 
  private:
   // Mutex that guards the cache.
   std::mutex energy_events_mutex_;
   // Map of app_id to buffer of energy events
-  std::unordered_map<int32_t, CircularBuffer<EnergyEvent>> energy_events_;
+  std::unordered_map<int32_t, CircularBuffer<proto::EnergyEvent>>
+      energy_events_;
 };
 
 }  // end of namespace profiler

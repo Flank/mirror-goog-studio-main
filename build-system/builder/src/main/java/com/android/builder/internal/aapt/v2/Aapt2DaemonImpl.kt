@@ -240,7 +240,7 @@ class Aapt2DaemonImpl(
         private var foundError: Boolean = false
 
         override fun out(line: String?) {
-            line?.let { logger.info("%1\$s: %2\$s", displayName, it) }
+            line?.let { logger.lifecycle("%1\$s: %2\$s", displayName, it) }
         }
 
         override fun err(line: String?) {

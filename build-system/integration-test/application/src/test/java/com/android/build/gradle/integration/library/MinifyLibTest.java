@@ -19,23 +19,23 @@ package com.android.build.gradle.integration.library;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.ANDROIDTEST_DEBUG;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,12 +44,12 @@ import org.junit.runners.Parameterized;
 /** Assemble tests for minifyLib. */
 @RunWith(FilterableParameterized.class)
 public class MinifyLibTest {
-    @Parameterized.Parameters(name = "useProguard = {0}")
-    public static Collection<Boolean> data() {
-        return ImmutableList.of(true, false);
+    @Parameterized.Parameters(name = "codeShrinker = {0}")
+    public static CodeShrinker[] data() {
+        return CodeShrinker.values();
     }
 
-    @Parameterized.Parameter public Boolean useProguard;
+    @Parameterized.Parameter public CodeShrinker codeShrinker;
 
     @Rule
     public GradleTestProject project =
@@ -57,11 +57,11 @@ public class MinifyLibTest {
 
     @Test
     public void consumerProguardFile() throws Exception {
-        if (!useProguard) {
+        if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
             ShrinkerTestUtils.enableShrinker(project.getSubproject(":app"), "debug");
         }
 
-        project.executor().run(":app:assembleDebug");
+        getExecutor().run(":app:assembleDebug");
         Apk apk = project.getSubproject(":app").getApk(DEBUG);
         TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
         TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/UnusedClass;");
@@ -91,7 +91,7 @@ public class MinifyLibTest {
     public void shrinkingTheLibrary() throws Exception {
         enableLibShrinking();
 
-        GradleBuildResult result = project.executor().run(":app:assembleDebug");
+        GradleBuildResult result = getExecutor().run(":app:assembleDebug");
 
         assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))
                 .wasExecuted();
@@ -120,7 +120,7 @@ public class MinifyLibTest {
                 project.getSubproject(":app").getBuildFile(),
                 "api project\\(':lib'\\)",
                 "androidTestImplementation project\\(':lib'\\)");
-        GradleBuildResult result = project.executor().run(":app:assembleAndroidTest");
+        GradleBuildResult result = getExecutor().run(":app:assembleAndroidTest");
 
         assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))
                 .wasExecuted();
@@ -128,6 +128,7 @@ public class MinifyLibTest {
                         result.getTask(
                                 ":app:transformClassesAndResourcesWithProguardForDebugAndroidTest"))
                 .wasExecuted();
+
 
         Apk apk = project.getSubproject(":app").getApk(ANDROIDTEST_DEBUG);
         assertThat(apk).exists();
@@ -144,7 +145,7 @@ public class MinifyLibTest {
         File config = project.getSubproject(":lib").file("config.pro");
         FileUtils.deleteIfExists(config);
         TestFileUtils.appendToFile(config, "");
-        project.executor().run(":lib:assembleDebug");
+        getExecutor().run(":lib:assembleDebug");
     }
 
     private void enableLibShrinking() throws IOException {
@@ -166,8 +167,13 @@ public class MinifyLibTest {
                         + "    }\n"
                         + "}\n");
 
-        if (!useProguard) {
+        if (codeShrinker == CodeShrinker.ANDROID_GRADLE) {
             ShrinkerTestUtils.enableShrinker(project.getSubproject(":lib"), "release");
         }
+    }
+
+    @NonNull
+    private GradleTaskExecutor getExecutor() {
+        return project.executor();
     }
 }

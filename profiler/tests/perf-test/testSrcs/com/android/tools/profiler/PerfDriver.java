@@ -185,6 +185,7 @@ public class PerfDriver {
                             .setServiceAddress(LOCAL_HOST + ":" + myPort)
                             .setSocketType(Agent.SocketType.UNSPECIFIED_SOCKET)
                             .setProfilerNetworkRequestPayload(true)
+                            .setEnergyProfilerEnabled(true)
                             .build();
             config.writeTo(outputStream);
             outputStream.flush();

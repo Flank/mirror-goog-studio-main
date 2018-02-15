@@ -20,7 +20,6 @@ import com.android.annotations.Nullable;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.ProgressIndicatorAdapter;
 import com.android.utils.ILogger;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -62,7 +61,7 @@ public class LoggerProgressIndicatorWrapper extends ProgressIndicatorAdapter {
 
     @Override
     public void logInfo(@NonNull String s) {
-        mWrapped.info(s);
+        mWrapped.lifecycle(s);
     }
 
     @Override

@@ -40,7 +40,7 @@ public class RenderscriptNdkTest {
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        Revision ndkRevision = NdkHandler.findRevision(GradleTestProject.ANDROID_NDK_HOME);
+        Revision ndkRevision = NdkHandler.findRevision(project.getAndroidNdkHome());
         // ndk r11, r12 are missing renderscript, ndk r10 does support it and has null revision
         assume().that(ndkRevision).isNull();
 

@@ -61,6 +61,7 @@ class NamespacedResourcesTaskManager(
                 "Resource Namespacing can only be used with aapt2")
         // Compile
         createCompileResourcesTask()
+        createStaticLibraryManifestTask()
         createLinkResourcesTask()
         createNamespacedLibraryRFiles()
 
@@ -234,5 +235,17 @@ class NamespacedResourcesTaskManager(
                 InternalArtifactType.SYMBOL_LIST,
                 rDotTxt,
                 link.name)
+    }
+
+    private fun createStaticLibraryManifestTask() {
+        val staticLibraryManifest = File(globalScope.intermediatesDir,
+                "/manifests/static_lib/" + variantScope.variantConfiguration.dirName +
+                        "/" + SdkConstants.ANDROID_MANIFEST_XML)
+        val task = taskFactory.create(
+                StaticLibraryManifestTask.ConfigAction(variantScope, staticLibraryManifest))
+        variantScope.addTaskOutput(
+                InternalArtifactType.STATIC_LIBRARY_MANIFESTS,
+                staticLibraryManifest,
+                task.name)
     }
 }

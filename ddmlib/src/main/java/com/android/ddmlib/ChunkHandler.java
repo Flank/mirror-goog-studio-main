@@ -24,10 +24,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-/**
- * Subclass this with a class that handles one or more chunk types.
- */
-abstract class ChunkHandler extends JdwpInterceptor {
+/** Subclass this with a class that handles one or more chunk types. */
+public abstract class ChunkHandler extends JdwpInterceptor {
 
     public static final int CHUNK_HEADER_LEN = 8;   // 4-byte type, 4-byte len
     public static final ByteOrder CHUNK_ORDER = ByteOrder.BIG_ENDIAN;

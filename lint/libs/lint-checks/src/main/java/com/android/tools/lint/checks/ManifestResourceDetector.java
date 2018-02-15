@@ -199,7 +199,7 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
             @NonNull String value,
             @Nullable AbstractResourceRepository repository) {
         ResourceUrl url = ResourceUrl.parse(value);
-        if (url != null && !url.framework) {
+        if (url != null && !url.isFramework()) {
             if (repository != null) {
                 List<ResourceItem> items = repository.getResourceItem(url.type, url.name);
                 if (items != null && items.size() > 1) {

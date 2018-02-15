@@ -1096,6 +1096,43 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testGeneratedResourcesIncluded() {
+        // Regression test for https://issuetracker.google.com/72790641
+        mEnableIds = false;
+        lint().files(
+                gradle(""
+                        + "android {\n"
+                        + "    lintOptions {\n"
+                        + "        checkGeneratedSources true\n"
+                        + "    }\n"
+                        + "}\n"),
+                xml("generated/res/raw/something.xml", ""
+                        + "<resources\n"
+                        + "        xmlns:tools=\"http://schemas.android.com/tools\" />\n"))
+                .run()
+                .expect("generated/res/raw/something.xml:1: Warning: The resource R.raw.something appears to be unused [UnusedResources]\n" +
+                        "<resources\n" +
+                        "^\n" +
+                        "0 errors, 1 warnings");
+    }
+
+    public void testGeneratedResourcesExcluded() {
+        // Regression test for https://issuetracker.google.com/72790641
+        mEnableIds = false;
+        lint().files(
+                gradle(""
+                        + "android {\n"
+                        + "    lintOptions {\n"
+                        + "        checkGeneratedSources false\n"
+                        + "    }\n"
+                        + "}\n"),
+                xml("generated/res/raw/something.xml", ""
+                        + "<resources\n"
+                        + "        xmlns:tools=\"http://schemas.android.com/tools\" />\n")
+
+        ).run().expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mAccessibility = xml("res/layout/accessibility.xml", ""
             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

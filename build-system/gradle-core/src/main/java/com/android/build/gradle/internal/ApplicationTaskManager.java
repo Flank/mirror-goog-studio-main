@@ -24,6 +24,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
@@ -354,7 +355,8 @@ public class ApplicationTaskManager extends TaskManager {
 
     @Override
     protected void postJavacCreation(@NonNull VariantScope scope) {
-        final FileCollection javacOutput = scope.getOutput(JAVAC);
+        final BuildableArtifact javacOutput =
+                scope.getBuildArtifactsHolder().getArtifactFiles(JAVAC);
         final FileCollection preJavacGeneratedBytecode =
                 scope.getVariantData().getAllPreJavacGeneratedBytecode();
         final FileCollection postJavacGeneratedBytecode =

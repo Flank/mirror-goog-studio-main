@@ -18,11 +18,11 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
-import com.android.apkzlib.utils.CachedFileContents;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.ide.common.res2.FileStatus;
+import com.android.tools.build.apkzlib.utils.CachedFileContents;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Verify;

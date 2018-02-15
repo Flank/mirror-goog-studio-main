@@ -22,6 +22,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
+import java.io.File
 import java.util.function.Supplier
 
 object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
@@ -134,7 +135,7 @@ object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                 },
                 projectFactory = { projectBuilder ->
                     projectBuilder
-                            .fromExternalProject("gradle-perf-android-medium")
+                            .fromDir(File(BenchmarkTest.getProjectDir().toFile(), "gradle-perf-android-medium"))
                             .withHeap("1536M")
                             .create()
                 },

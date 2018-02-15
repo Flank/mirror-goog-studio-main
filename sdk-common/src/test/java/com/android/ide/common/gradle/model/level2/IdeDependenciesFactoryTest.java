@@ -16,6 +16,7 @@
 package com.android.ide.common.gradle.model.level2;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.Collections.singletonList;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -86,11 +87,12 @@ public class IdeDependenciesFactoryTest {
                         Collections.emptyList(), Collections.emptyList());
 
         myDependenciesFactory.setUpGlobalLibraryMap(
-                new GlobalLibraryMapStub(
-                        ImmutableMap.of(
-                                "javaLibrary", level2JavaLibrary,
-                                "androidLibrary", level2AndroidLibrary,
-                                "moduleLibrary", level2ModuleLibrary)));
+                singletonList(
+                        new GlobalLibraryMapStub(
+                                ImmutableMap.of(
+                                        "javaLibrary", level2JavaLibrary,
+                                        "androidLibrary", level2AndroidLibrary,
+                                        "moduleLibrary", level2ModuleLibrary))));
         IdeDependencies level2Dependencies =
                 myDependenciesFactory.createFromDependencyGraphs(dependencyGraphsStub);
 
@@ -139,7 +141,7 @@ public class IdeDependenciesFactoryTest {
                     @Override
                     @NonNull
                     public List<? extends JavaLibrary> getDependencies() {
-                        return Collections.singletonList(javaLibraryA);
+                        return singletonList(javaLibraryA);
                     }
 
                     @Override
@@ -182,7 +184,7 @@ public class IdeDependenciesFactoryTest {
         DependenciesStub dependenciesStub =
                 new DependenciesStub(
                         Collections.emptyList(),
-                        Collections.singletonList(javaLibraryB),
+                        singletonList(javaLibraryB),
                         Collections.emptyList(),
                         Lists.newArrayList(identifier1, identifier2));
 

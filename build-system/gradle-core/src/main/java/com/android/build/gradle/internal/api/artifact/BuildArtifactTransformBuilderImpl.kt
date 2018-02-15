@@ -25,6 +25,7 @@ import com.android.build.api.artifact.OutputFileProvider
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.HashMultimap
 import org.gradle.api.Project
@@ -37,6 +38,7 @@ import java.io.File
 class BuildArtifactTransformBuilderImpl<out T : Task>(
         private val project: Project,
         private val artifactsHolder: BuildArtifactsHolder,
+        private val artifactsActionsExecutor: DelayedActionsExecutor,
         private val taskNamePrefix: String,
         private val taskType: Class<T>,
         dslScope: DslScope)
@@ -151,17 +153,21 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
                         unassociatedFiles,
                         taskName,
                         dslScope)
-        try {
-            when {
-                action != null -> action.accept(task, inputProvider, outputProvider)
-                function != null -> function(task, inputProvider, outputProvider)
-            }
-        } catch (e : Exception) {
-            dslScope.issueReporter.reportError(
+
+        artifactsActionsExecutor.addAction {
+            try {
+                when {
+                    action != null -> action.accept(task, inputProvider, outputProvider)
+                    function != null -> function(task, inputProvider, outputProvider)
+                }
+            } catch (e: Exception) {
+                dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
                     """Exception thrown while configuring task '$taskName'.
                             |Type: ${e.javaClass.name}
-                            |Message: ${e.message}""".trimMargin())
+                            |Message: ${e.message}""".trimMargin()
+                )
+            }
         }
         return task
     }

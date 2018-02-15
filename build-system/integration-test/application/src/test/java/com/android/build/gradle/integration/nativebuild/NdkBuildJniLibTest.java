@@ -134,7 +134,7 @@ public class NdkBuildJniLibTest {
         assertThat(model.getBuildFiles()).hasSize(1);
         assertThat(model.getName()).isEqualTo("lib");
         assertThat(model.getArtifacts())
-                .hasSize(2 * NdkHelper.getNdkInfo().getDefaultAbis().size());
+                .hasSize(2 * NdkHelper.getNdkInfo(project).getDefaultAbis().size());
         assertThat(model.getFileExtensions()).hasSize(1);
 
         for (File file : model.getBuildFiles()) {
