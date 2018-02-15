@@ -7,9 +7,6 @@ iml_module(
     name = "studio.sdk-common",
     srcs = ["src/main/java"],
     iml_files = ["sdk-common.iml"],
-    plugins = [
-        "//tools/base:auto-value-plugin",
-    ],
     resources = ["src/main/resources"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],
@@ -40,7 +37,6 @@ iml_module(
         "//tools/idea/.idea/libraries:bouncy-castle",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
-        "//tools/idea/.idea/libraries:auto-value-1.4.1",
         "//tools/idea/.idea/libraries:jimfs[test]",
         "//tools/base/annotations:studio.android-annotations[module]",
         "//tools/base/ddmlib:studio.ddmlib[module]",
@@ -64,15 +60,11 @@ kotlin_library(
     bundled_deps = [
         "//tools/base/sdk-common/aia-manifest-jar-generator:proto",
     ],
-    plugins = [
-        "//tools/base:auto-value-plugin",
-    ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/sdk-common",
     resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base:com.google.auto.value_auto-value_neverlink",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",

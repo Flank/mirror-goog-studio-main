@@ -9,8 +9,6 @@ archivesBaseName = 'sdk-common'
 version = rootProject.ext.baseVersion
 
 dependencies {
-    compileOnly libs.auto_value
-
     compile project(':base:sdklib')
     compile project(':base:builder-test-api')
     compile project(':base:builder-model')
