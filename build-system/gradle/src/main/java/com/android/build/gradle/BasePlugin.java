@@ -182,8 +182,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
         this.registry = registry;
         creator = "Android Gradle " + Version.ANDROID_GRADLE_PLUGIN_VERSION;
         NonFinalPluginExpiry.verifyRetirementAge();
-
-        ModelBuilder.clearCaches();
     }
 
     @NonNull
@@ -603,6 +601,10 @@ public abstract class BasePlugin<E extends BaseExtension2>
             @NonNull VariantManager variantManager,
             @NonNull AndroidConfig config,
             @NonNull ExtraModelInfo extraModelInfo) {
+        // The call to ModelBuilder to clear caches should take place after the Gradle version check
+        // (https://issuetracker.google.com/73383831) but before the builder is used.
+        ModelBuilder.clearCaches();
+
         // Register a builder for the custom tooling model
         ModelBuilder modelBuilder =
                 new ModelBuilder(

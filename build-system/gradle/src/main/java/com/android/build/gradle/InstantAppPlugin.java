@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ide.InstantAppModelBuilder;
+import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -123,6 +124,10 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
             @NonNull VariantManager variantManager,
             @NonNull AndroidConfig config,
             @NonNull ExtraModelInfo extraModelInfo) {
+        // The call to ModelBuilder to clear caches should take place after the Gradle version check
+        // (https://issuetracker.google.com/73383831) but before the builder is used.
+        ModelBuilder.clearCaches();
+
         InstantAppModelBuilder instantAppModelBuilder =
                 new InstantAppModelBuilder(
                         variantManager, config, extraModelInfo, AndroidProject.GENERATION_ORIGINAL);
