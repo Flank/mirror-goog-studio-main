@@ -578,7 +578,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "net.bytebuddy_byte-buddy",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy/1.6.5:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy/1.7.4:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -586,7 +586,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "net.bytebuddy_byte-buddy-agent",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy-agent/1.6.5:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy-agent/1.7.4:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1287,8 +1287,7 @@ maven_java_library(
     name = "org.mockito_mockito-core",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/2.11.0:jar",
     visibility = ["//visibility:public"],
-    exports = [],
-    runtime_deps = [
+    exports = [
         ":net.bytebuddy_byte-buddy",
         ":net.bytebuddy_byte-buddy-agent",
         ":org.objenesis_objenesis",
@@ -1298,7 +1297,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.objenesis_objenesis",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/objenesis/objenesis/2.5:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/objenesis/objenesis/2.6:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
