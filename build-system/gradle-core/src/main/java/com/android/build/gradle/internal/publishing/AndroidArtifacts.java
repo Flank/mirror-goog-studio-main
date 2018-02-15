@@ -43,6 +43,7 @@ public class AndroidArtifacts {
 
     // types for AAR content
     private static final String TYPE_CLASSES = "android-classes";
+    private static final String TYPE_NON_NAMESPACED_CLASSES = "non-namespaced-android-classes";
     private static final String TYPE_SHARED_CLASSES = "android-shared-classes";
     private static final String TYPE_DEX = "android-dex";
     private static final String TYPE_JAVA_RES = "android-java-res";
@@ -137,6 +138,9 @@ public class AndroidArtifacts {
 
     public enum ArtifactType {
         CLASSES(TYPE_CLASSES),
+        // classes.jar files from libraries that are not namespaced yet, and need to be rewritten to
+        // be namespace aware.
+        NON_NAMESPACED_CLASSES(TYPE_NON_NAMESPACED_CLASSES),
         SHARED_CLASSES(TYPE_SHARED_CLASSES),
         // Jar file for annotation processor as both classes and resources are needed, and for building model
         JAR(TYPE_JAR),
