@@ -373,4 +373,14 @@ public interface AndroidProject {
      * @since 2.4
      */
     boolean isBaseSplit();
+
+    /**
+     * Returns the list of dynamic features.
+     *
+     * <p>The values are Gradle path. Only valid for base splits.
+     *
+     * @return
+     */
+    @NonNull
+    Collection<String> getDynamicFeatures();
 }

@@ -18,10 +18,16 @@ package com.android.build.gradle;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.MultiTypeTaskManager;
+import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.ide.BaseModuleModelBuilder;
+import com.android.build.gradle.internal.ide.ModelBuilder;
+import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.MultiTypeVariantFactory;
@@ -111,5 +117,57 @@ public class FeaturePlugin extends LibraryPlugin {
                 sdkHandler,
                 toolingRegistry,
                 recorder);
+    }
+
+    @NonNull
+    @Override
+    protected ModelBuilder instantiateModelBuilder(
+            @NonNull GlobalScope globalScope,
+            @NonNull VariantManager variantManager,
+            @NonNull AndroidConfig config,
+            @NonNull ExtraModelInfo extraModelInfo) {
+        return new FeatureModelBuilder(
+                globalScope,
+                androidBuilder,
+                variantManager,
+                taskManager,
+                config,
+                extraModelInfo,
+                ndkHandler,
+                new NativeLibraryFactoryImpl(ndkHandler),
+                getProjectType(),
+                AndroidProject.GENERATION_ORIGINAL);
+    }
+
+    private static final class FeatureModelBuilder extends BaseModuleModelBuilder {
+
+        public FeatureModelBuilder(
+                @NonNull GlobalScope globalScope,
+                @NonNull AndroidBuilder androidBuilder,
+                @NonNull VariantManager variantManager,
+                @NonNull TaskManager taskManager,
+                @NonNull AndroidConfig config,
+                @NonNull ExtraModelInfo extraModelInfo,
+                @NonNull NdkHandler ndkHandler,
+                @NonNull NativeLibraryFactory nativeLibraryFactory,
+                int projectType,
+                int generation) {
+            super(
+                    globalScope,
+                    androidBuilder,
+                    variantManager,
+                    taskManager,
+                    config,
+                    extraModelInfo,
+                    ndkHandler,
+                    nativeLibraryFactory,
+                    projectType,
+                    generation);
+        }
+
+        @Override
+        protected boolean isBaseSplit() {
+            return config.getBaseFeature();
+        }
     }
 }

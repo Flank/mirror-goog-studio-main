@@ -26,7 +26,11 @@ import org.gradle.api.Named;
 import org.gradle.api.attributes.AttributeDisambiguationRule;
 import org.gradle.api.attributes.MultipleCandidatesDetails;
 
-/** Custom Disambiguation rule to handle the different values of AndroidTypeAttr. */
+/**
+ * Custom Disambiguation rule to handle the different values of AndroidTypeAttr.
+ *
+ * <p>Only FEATURE and AAR can be both present in a module, so only need to disambiguate on these.
+ */
 public final class AndroidTypeAttrDisambRule
         implements AttributeDisambiguationRule<AndroidTypeAttr> {
 

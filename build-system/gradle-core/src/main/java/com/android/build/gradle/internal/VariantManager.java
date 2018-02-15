@@ -498,7 +498,8 @@ public class VariantManager implements VariantModel {
                                     variantConfig)
                             .setConsumeType(
                                     getConsumeType(
-                                            testedVariantData.getVariantConfiguration().getType()))
+                                            testedVariantData.getVariantConfiguration().getType(),
+                                            variantScope.getVariantData()))
                             .addSourceSets(testVariantSourceSets)
                             .setFlavorSelection(getFlavorSelection(variantConfig))
                             .setTestedVariantDependencies(testedVariantData.getVariantDependency());
@@ -589,10 +590,11 @@ public class VariantManager implements VariantModel {
     }
 
     @NonNull
-    private AndroidTypeAttr getConsumeType(@NonNull VariantType type) {
+    private AndroidTypeAttr getConsumeType(
+            @NonNull VariantType type, @NonNull BaseVariantData variantData) {
         switch (type) {
             case APK:
-                if (variantFactory instanceof TestVariantFactory) {
+                if (!isBaseSplit(variantData) || variantFactory instanceof TestVariantFactory) {
                     return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.APK);
                 }
                 return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.AAR);
@@ -973,7 +975,9 @@ public class VariantManager implements VariantModel {
                                 variantData.getScope().getGlobalScope().getErrorHandler(),
                                 variantConfig)
                         .setConsumeType(
-                                getConsumeType(variantData.getVariantConfiguration().getType()))
+                                getConsumeType(
+                                        variantData.getVariantConfiguration().getType(),
+                                        variantData))
                         .setPublishType(
                                 getPublishingType(variantData.getVariantConfiguration().getType()))
                         .setFlavorSelection(getFlavorSelection(variantConfig))

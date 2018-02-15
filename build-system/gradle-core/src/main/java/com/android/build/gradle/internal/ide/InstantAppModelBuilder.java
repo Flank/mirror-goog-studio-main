@@ -192,7 +192,8 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                 PROJECT_TYPE_INSTANTAPP,
                 Version.BUILDER_MODEL_API_VERSION,
                 generation,
-                false);
+                false,
+                ImmutableList.of());
     }
 
     private Object buildMinimalisticModel() {
