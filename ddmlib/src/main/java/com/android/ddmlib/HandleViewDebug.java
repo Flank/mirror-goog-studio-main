@@ -18,7 +18,6 @@ package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
@@ -137,14 +136,22 @@ public final class HandleViewDebug extends ChunkHandler {
         client.send(packet, replyHandler);
     }
 
-    public static void dumpViewHierarchy(@NonNull Client client, @NonNull String viewRoot,
-            boolean skipChildren, boolean includeProperties, @NonNull ViewDumpHandler handler)
-                    throws IOException {
-        ByteBuffer buf = allocBuffer(4      // opcode
-                + 4                         // view root length
-                + viewRoot.length() * 2     // view root
-                + 4                         // skip children
-                + 4);                       // include view properties
+    public static void dumpViewHierarchy(
+            @NonNull Client client,
+            @NonNull String viewRoot,
+            boolean skipChildren,
+            boolean includeProperties,
+            boolean useV2,
+            @NonNull ViewDumpHandler handler)
+            throws IOException {
+        ByteBuffer buf =
+                allocBuffer(
+                        4 // opcode
+                                + 4 // view root length
+                                + viewRoot.length() * 2 // view root
+                                + 4 // skip children
+                                + 4 // include view properties
+                                + 4); // use Version 2
         JdwpPacket packet = new JdwpPacket(buf);
         ByteBuffer chunkBuf = getChunkDataBuf(buf);
 
@@ -153,6 +160,7 @@ public final class HandleViewDebug extends ChunkHandler {
         ByteBufferUtil.putString(chunkBuf, viewRoot);
         chunkBuf.putInt(skipChildren ? 1 : 0);
         chunkBuf.putInt(includeProperties ? 1 : 0);
+        chunkBuf.putInt(useV2 ? 1 : 0);
 
         finishChunkPacket(packet, CHUNK_VURT, chunkBuf.position());
         client.send(packet, handler);
@@ -174,9 +182,14 @@ public final class HandleViewDebug extends ChunkHandler {
         client.send(packet, handler);
     }
 
-    private static void sendViewOpPacket(@NonNull Client client, int op, @NonNull String viewRoot,
-            @NonNull String view, @Nullable byte[] extra, @Nullable ViewDumpHandler handler)
-                    throws IOException {
+    private static void sendViewOpPacket(
+            @NonNull Client client,
+            int op,
+            @NonNull String viewRoot,
+            @NonNull String view,
+            @Nullable byte[] extra,
+            @Nullable ViewDumpHandler handler)
+            throws IOException {
         int bufLen = 4 +                        // opcode
                 4 + viewRoot.length() * 2 +     // view root strlen + view root
                 4 + view.length() * 2;          // view strlen + view

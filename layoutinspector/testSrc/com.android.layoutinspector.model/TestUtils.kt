@@ -20,3 +20,6 @@ import java.io.File
 
 fun getTestFile() : File =
     TestUtils.getWorkspaceFile("tools/base/layoutinspector/testData/LayoutCaptureV1.li")
+
+fun getTestFileV2() : File =
+    TestUtils.getWorkspaceFile("tools/base/layoutinspector/testData/LayoutCaptureV2.li")

@@ -36,4 +36,19 @@ class LayoutFileDataTest {
         assertNotNull(fileData.node)
         assertEquals(3, fileData.node!!.childCount)
     }
+
+    @Test
+    @Throws(IOException::class)
+    fun testParsingLayoutFileV2() {
+        val file = getTestFileV2()
+        assert(file.exists())
+
+        val fileData = LayoutFileData(file)
+        val node = fileData.node!!
+        assertEquals("com.android.internal.policy.PhoneWindow\$DecorView", node.name)
+        assertEquals("a63a1d0", node.hash)
+        assertEquals("NO_ID", node.id)
+        assertEquals(3, node.childCount)
+
+    }
 }

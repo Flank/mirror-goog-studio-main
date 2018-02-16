@@ -48,7 +48,7 @@ data class ViewNode internal constructor(private val parent: ViewNode?, val name
 
     // default in case properties are not available
     var index: Int = 0
-    var id: String = "unknown"
+    var id: String? = null
 
     lateinit var displayInfo: DisplayInfo // set in setup method
 
@@ -61,7 +61,6 @@ data class ViewNode internal constructor(private val parent: ViewNode?, val name
     // TODO(kelvinhanma) change displayInfo to not take a ViewNode so we can remove this method
     internal fun setup() {
         displayInfo = DisplayInfo(this)
-        parent?.children?.add(this)
     }
 
     fun addPropertyToGroup(property: ViewProperty) {

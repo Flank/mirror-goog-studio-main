@@ -22,7 +22,6 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import java.io.InputStream
 import java.io.ObjectInputStream
 import javax.imageio.ImageIO
 
@@ -45,7 +44,7 @@ constructor(file: File) {
             // Parse view node
             val nodeBytes = ByteArray(input.readInt())
             input.readFully(nodeBytes)
-            node = ViewNodeParser.parse(nodeBytes)
+            node = ViewNodeParser.parse(nodeBytes, options.version)
             if (node == null) {
                 throw IOException("Error parsing view node")
             }

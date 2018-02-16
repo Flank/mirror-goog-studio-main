@@ -16,6 +16,7 @@
 
 package com.android.layoutinspector.parser
 
+import com.android.layoutinspector.ProtocolVersion
 import com.android.layoutinspector.model.ViewNode
 import com.google.common.base.Charsets
 import java.io.BufferedReader
@@ -27,7 +28,22 @@ import java.util.Stack
 object ViewNodeParser {
     /** Parses the flat string representation of a view node and returns the root node.  */
     @JvmStatic
-    fun parse(bytes: ByteArray): ViewNode? {
+    @JvmOverloads
+    fun parse(
+        bytes: ByteArray,
+        version: ProtocolVersion = ProtocolVersion.Version1
+    ): ViewNode? {
+        return when (version) {
+            ProtocolVersion.Version1 -> parseV1ViewNode(bytes)
+            ProtocolVersion.Version2 -> parseV2ViewNode(bytes)
+        }
+    }
+
+    private fun parseV2ViewNode(bytes: ByteArray): ViewNode? {
+        return ViewNodeV2Parser().parse(bytes)
+    }
+
+    private fun parseV1ViewNode(bytes: ByteArray): ViewNode? {
         var root: ViewNode? = null
         var lastNode: ViewNode? = null
         var lastWhitespaceCount = Integer.MIN_VALUE
@@ -91,6 +107,9 @@ object ViewNodeParser {
             node.id = node.getProperty("mID", "id")!!.value
         }
         node.setup()
+        parent?.let {
+            it.children.add(node)
+        }
         return node
     }
 
