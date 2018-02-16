@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
     daemon.RegisterComponent(&io_component);
   }
 
-  profiler::EnergyProfilerComponent energy_component;
+  profiler::EnergyProfilerComponent energy_component{&daemon.utilities()};
   if (agent_config.energy_profiler_enabled()) {
     daemon.RegisterComponent(&energy_component);
   }

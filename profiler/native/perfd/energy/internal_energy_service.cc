@@ -21,14 +21,21 @@ using grpc::ServerContext;
 using grpc::Status;
 using profiler::proto::AddEnergyEventRequest;
 using profiler::proto::EmptyEnergyReply;
+using profiler::proto::EnergyEvent;
 
-InternalEnergyServiceImpl::InternalEnergyServiceImpl(EnergyCache *energy_cache)
-    : energy_cache_(*energy_cache) {}
+InternalEnergyServiceImpl::InternalEnergyServiceImpl(
+    EnergyCache *energy_cache, FileCache *file_cache)
+    : energy_cache_(*energy_cache), file_cache_(*file_cache) {}
 
 Status InternalEnergyServiceImpl::AddEnergyEvent(
     ServerContext *context, const AddEnergyEventRequest *request,
     EmptyEnergyReply *reply) {
-  energy_cache_.AddEnergyEvent(request->energy_event());
+  std::string trace_id;
+  if (!request->callstack().empty()) {
+    trace_id = file_cache_.AddString(request->callstack());
+  }
+  auto event = energy_cache_.AddEnergyEvent(request->energy_event());
+  event->set_trace_id(trace_id);
   return Status::OK;
 }
 

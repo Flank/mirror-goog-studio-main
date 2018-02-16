@@ -58,14 +58,15 @@ const SteadyClock& GetClock() {
 // Enqueue and submit the target |energy_event|. The event's timestamp will be
 // set as a side-effect of calling this method, but all other fields and
 // appropriate metadata must be set by the caller.
-void SubmitEnergyEvent(const EnergyEvent& energy_event) {
+void SubmitEnergyEvent(const EnergyEvent& energy_event, const std::string& stack = {}) {
   int64_t timestamp = GetClock().GetCurrentTime();
   Agent::Instance().SubmitEnergyTasks(
-      {[energy_event, timestamp](InternalEnergyService::Stub& stub,
-                                 ClientContext& ctx) {
+      {[energy_event, stack, timestamp](InternalEnergyService::Stub& stub,
+                                        ClientContext& ctx) {
         AddEnergyEventRequest request;
         request.mutable_energy_event()->CopyFrom(energy_event);
         request.mutable_energy_event()->set_timestamp(timestamp);
+        request.set_callstack(stack);
 
         EmptyEnergyReply response;
         return stub.AddEnergyEvent(&ctx, request, &response);
@@ -77,8 +78,9 @@ extern "C" {
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockAcquired(
     JNIEnv* env, jclass clazz, jint wake_lock_id, jint flags, jstring tag,
-    jlong timeout) {
+    jlong timeout, jstring stack) {
   JStringWrapper tag_string(env, tag);
+  JStringWrapper stack_string(env, stack);
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(wake_lock_id);
@@ -115,13 +117,13 @@ Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockAcqui
   }
   wake_lock_acquired->set_tag(tag_string.get());
   wake_lock_acquired->set_timeout(timeout);
-  SubmitEnergyEvent(energy_event);
+  SubmitEnergyEvent(energy_event, stack_string.get());
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockReleased(
     JNIEnv* env, jclass clazz, jint wake_lock_id, jint flags,
-    jboolean is_held) {
+    jboolean is_held, jstring stack) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(wake_lock_id);
@@ -130,6 +132,7 @@ Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockRelea
         WakeLockReleased::RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
   }
   energy_event.mutable_wake_lock_released()->set_is_held(is_held);
-  SubmitEnergyEvent(energy_event);
+  JStringWrapper stack_string(env, stack);
+  SubmitEnergyEvent(energy_event, stack_string.get());
 }
 };

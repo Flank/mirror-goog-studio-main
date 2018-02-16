@@ -93,6 +93,9 @@ message EnergyEvent {
   // Optional ID. If set, use to correlate two related events together. Will be
   // unique only to an app.
   int32 event_id = 3;
+  // ID to fetch a code stack trace for where this event was generated
+  // Use with |ProfilerService.GetBytes|
+  string trace_id = 4;
 
   // Metadata for this specific event. Additionally, use
   // |EnergyEvent.metadata_case()| as a way to see what this event's type is.

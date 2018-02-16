@@ -130,7 +130,11 @@ public final class WakeLockWrapper {
         if (wakeLockCreationParamsMap.containsKey(wakeLock)) {
             CreationParams creationParams = wakeLockCreationParamsMap.get(wakeLock);
             sendWakeLockAcquired(
-                    wakeLockId, creationParams.myLevelAndFlags, creationParams.myTag, timeout);
+                    wakeLockId,
+                    creationParams.myLevelAndFlags,
+                    creationParams.myTag,
+                    timeout,
+                    getStackTrace());
         }
     }
 
@@ -156,14 +160,35 @@ public final class WakeLockWrapper {
             sendWakeLockReleased(
                     wakeLockIdMap.get(releaseParams.myWakeLock),
                     releaseParams.myFlags,
-                    releaseParams.myWakeLock.isHeld());
+                    releaseParams.myWakeLock.isHeld(),
+                    getStackTrace());
         }
+    }
+
+    /**
+     * Returns a stacktrace for wake lock method call, where profiler wrapper methods and framework
+     * method are filter out and user code will be the first one.
+     */
+    private static String getStackTrace() {
+        StackTraceElement[] stackTraceElements = new Throwable().getStackTrace();
+        int firstNonProfilerTraceIndex = 0;
+        for (int i = 0; i < stackTraceElements.length; i++) {
+            if (!stackTraceElements[i].getClassName().startsWith("com.android.tools.profiler")) {
+                firstNonProfilerTraceIndex = i;
+                break;
+            }
+        }
+        StringBuilder s = new StringBuilder();
+        for (int i = firstNonProfilerTraceIndex; i < stackTraceElements.length; i++) {
+            s.append(stackTraceElements[i]).append('\n');
+        }
+        return s.toString();
     }
 
     // Native functions to send wake lock events to perfd.
     private static native void sendWakeLockAcquired(
-            int wakeLockId, int flags, String tag, long timeout);
+            int wakeLockId, int flags, String tag, long timeout, String stack);
 
     private static native void sendWakeLockReleased(
-            int wakeLockId, int releaseFlags, boolean isHeld);
+            int wakeLockId, int releaseFlags, boolean isHeld, String stack);
 }

@@ -28,6 +28,7 @@ import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.CreationFlag;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.Level;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockReleased.ReleaseFlag;
+import com.android.tools.profiler.proto.Profiler.BytesRequest;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -70,10 +71,12 @@ public class WakeLockTest {
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runAcquire");
         assertThat(myAndroidDriver.waitForInput("WAKE LOCK ACQUIRED")).isTrue();
 
-        EnergyEventsResponse response = myStubWrapper.getAllEnergyEvents(mySession);
-        assertThat(response.getEventsCount()).isEqualTo(1);
+        EnergyEventsResponse response =
+                waitForAndReturn(
+                        () -> myStubWrapper.getAllEnergyEvents(mySession),
+                        resp -> resp.getEventsCount() == 1);
 
-        EnergyEvent energyEvent = response.getEvents(0);
+        final EnergyEvent energyEvent = response.getEvents(0);
         assertThat(energyEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(energyEvent.getEventId()).isGreaterThan(0);
@@ -84,6 +87,12 @@ public class WakeLockTest {
                 .containsExactly(CreationFlag.ACQUIRE_CAUSES_WAKEUP, CreationFlag.ON_AFTER_RELEASE);
         assertThat(energyEvent.getWakeLockAcquired().getTag()).isEqualTo("Foo");
         assertThat(energyEvent.getWakeLockAcquired().getTimeout()).isEqualTo(0);
+
+        String traceId = energyEvent.getTraceId();
+        assertThat(energyEvent.getTraceId()).isNotEmpty();
+        BytesRequest stackRequest = BytesRequest.newBuilder().setId(traceId).build();
+        String stack = myGrpc.getProfilerStub().getBytes(stackRequest).getContents().toStringUtf8();
+        assertThat(stack).contains(ACTIVITY_CLASS);
     }
 
     @Test
@@ -121,6 +130,12 @@ public class WakeLockTest {
         assertThat(releasedEvent.getWakeLockReleased().getFlagsList())
                 .containsExactly(ReleaseFlag.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
         assertThat(releasedEvent.getWakeLockReleased().getIsHeld()).isTrue();
+
+        String traceId = releasedEvent.getTraceId();
+        assertThat(releasedEvent.getTraceId()).isNotEmpty();
+        BytesRequest stackRequest = BytesRequest.newBuilder().setId(traceId).build();
+        String stack = myGrpc.getProfilerStub().getBytes(stackRequest).getContents().toStringUtf8();
+        assertThat(stack).contains(ACTIVITY_CLASS);
     }
 
     /**

@@ -329,10 +329,11 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
   if (agent_config->energy_profiler_enabled()) {
     BindJNIMethod(jni,
                   "com/android/tools/profiler/support/energy/WakeLockWrapper",
-                  "sendWakeLockAcquired", "(IILjava/lang/String;J)V");
+                  "sendWakeLockAcquired",
+                  "(IILjava/lang/String;JLjava/lang/String;)V");
     BindJNIMethod(jni,
                   "com/android/tools/profiler/support/energy/WakeLockWrapper",
-                  "sendWakeLockReleased", "(IIZ)V");
+                  "sendWakeLockReleased", "(IIZLjava/lang/String;)V");
   }
 
   BindJNIMethod(jni,

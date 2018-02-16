@@ -20,13 +20,14 @@
 
 #include "perfd/energy/energy_cache.h"
 #include "proto/internal_energy.grpc.pb.h"
+#include "utils/file_cache.h"
 
 namespace profiler {
 
 class InternalEnergyServiceImpl final
     : public proto::InternalEnergyService::Service {
  public:
-  InternalEnergyServiceImpl(EnergyCache* energy_cache);
+  InternalEnergyServiceImpl(EnergyCache* energy_cache, FileCache* file_cache);
 
   // RPC to send a wake lock acquire or release event.
   grpc::Status AddEnergyEvent(grpc::ServerContext* context,
@@ -35,6 +36,7 @@ class InternalEnergyServiceImpl final
 
  private:
   EnergyCache& energy_cache_;
+  FileCache &file_cache_;
 };
 
 }  // namespace profiler
