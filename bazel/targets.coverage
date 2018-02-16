@@ -21,7 +21,6 @@
 //tools/base/instant-run:instant-run-client_tests
 //tools/base/instant-run/instant-run-runtime:tests
 //tools/base/jack/jack-api:tests
-//tools/base/layoutinspector:tools.tests
 //tools/base/layoutlib-api:tools.tests
 //tools/base/lint:tests.test
 //tools/base/lint/libs/lint-tests:tests.test
