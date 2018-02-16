@@ -1084,7 +1084,7 @@ public final class SdkConstants {
 
     // Tags: Navigation
     public static final String TAG_INCLUDE = "include";
-    public static final String TAG_DEEPLINK = "deeplink";
+    public static final String TAG_DEEP_LINK = "deepLink";
 
     public static final String VIEW = "View"; //$NON-NLS-1$
     public static final String VIEW_GROUP = "ViewGroup"; //$NON-NLS-1$

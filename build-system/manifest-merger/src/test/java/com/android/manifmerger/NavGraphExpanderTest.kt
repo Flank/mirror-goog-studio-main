@@ -54,10 +54,10 @@ class NavGraphExpanderTest {
                     |    xmlns:android="http://schemas.android.com/apk/res/android"
                     |    xmlns:app="http://schemas.android.com/apk/res-auto">
                     |    <include app:graph="@navigation/nav2" />
-                    |    <deeplink app:uri="www.example.com"
+                    |    <deepLink app:uri="www.example.com"
                     |            android:autoVerify="true" />
                     |    <navigation>
-                    |        <deeplink app:uri="http://www.example.com:120/foo/{placeholder}" />
+                    |        <deepLink app:uri="http://www.example.com:120/foo/{placeholder}" />
                     |    </navigation>
                     |</navigation>""".trimMargin()
 
@@ -67,7 +67,7 @@ class NavGraphExpanderTest {
                     |<navigation
                     |    xmlns:android="http://schemas.android.com/apk/res/android"
                     |    xmlns:app="http://schemas.android.com/apk/res-auto">
-                    |    <deeplink app:uri="https://.*.example.com/.*/bar" />
+                    |    <deepLink app:uri="https://.*.example.com/.*/bar" />
                     |</navigation>""".trimMargin()
 
         val inputManifestString =
@@ -192,7 +192,7 @@ class NavGraphExpanderTest {
                     |    xmlns:android="http://schemas.android.com/apk/res/android"
                     |    xmlns:app="http://schemas.android.com/apk/res-auto">
                     |    <include app:graph="@navigation/nav1" />
-                    |    <deeplink app:uri="www.example.com" />
+                    |    <deepLink app:uri="www.example.com" />
                     |</navigation>""".trimMargin()
 
         val inputManifestString =
@@ -235,7 +235,7 @@ class NavGraphExpanderTest {
                     |    xmlns:android="http://schemas.android.com/apk/res/android"
                     |    xmlns:app="http://schemas.android.com/apk/res-auto">
                     |    <include app:graph="@navigation/nav2" />
-                    |    <deeplink app:uri="http://www.example.com" />
+                    |    <deepLink app:uri="http://www.example.com" />
                     |</navigation>""".trimMargin()
 
         val navigationId2 = "nav2"
@@ -244,7 +244,7 @@ class NavGraphExpanderTest {
                     |<navigation
                     |    xmlns:android="http://schemas.android.com/apk/res/android"
                     |    xmlns:app="http://schemas.android.com/apk/res-auto">
-                    |    <deeplink app:uri="www.example.com" />
+                    |    <deepLink app:uri="www.example.com" />
                     |</navigation>""".trimMargin()
 
         val inputManifestString =

@@ -112,7 +112,7 @@ constructor(
                     || compliantScheme.contains(pathWildcardEncoder)
                     || compliantScheme.contains(wildcardEncoder)) {
                 throw DeepLinkException(
-                        "Improper use of wildcards and/or placeholders in deeplink URI scheme")
+                        "Improper use of wildcards and/or placeholders in deepLink URI scheme")
             } else {
                 ImmutableList.of(compliantScheme)
             }
@@ -128,7 +128,7 @@ constructor(
                 if (compliantHost.contains(pathWildcardEncoder) || compliantHost.contains(
                         wildcardEncoder)) {
                     throw DeepLinkException(
-                            "Improper use of wildcards and/or placeholders in deeplink URI host")
+                            "Improper use of wildcards and/or placeholders in deepLink URI host")
                 }
             }
             host = compliantHost

@@ -19,5 +19,5 @@
 <navigation
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto" >
-    <deeplink app:uri="www.example.com/f1/nav4" />
+    <deepLink app:uri="www.example.com/f1/nav4" />
 </navigation>
