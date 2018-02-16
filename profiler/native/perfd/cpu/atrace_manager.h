@@ -31,8 +31,7 @@ namespace profiler {
 struct AtraceProfilingMetadata {
   // File path where trace will be made available.
   std::string trace_path;
-  // If something happen while atrace is running, store logs in this file.
-  std::string app_name;
+  std::string app_pkg_name;
 };
 
 class AtraceManager {
