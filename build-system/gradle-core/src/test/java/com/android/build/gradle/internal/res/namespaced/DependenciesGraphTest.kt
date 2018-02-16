@@ -28,6 +28,7 @@ import org.gradle.api.artifacts.result.ComponentSelectionReason
 import org.gradle.api.artifacts.result.DependencyResult
 import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -49,6 +50,7 @@ class DependenciesGraphTest {
         assertThat(result.allNodes).isEmpty()
     }
 
+    @Ignore
     @Test
     fun noArtifactsTest() {
         //        a    b
