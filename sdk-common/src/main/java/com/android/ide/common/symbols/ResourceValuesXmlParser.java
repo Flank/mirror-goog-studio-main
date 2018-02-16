@@ -18,6 +18,7 @@ package com.android.ide.common.symbols;
 
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN;
+import static com.android.SdkConstants.TAG_EAT_COMMENT;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -313,6 +314,11 @@ public final class ResourceValuesXmlParser {
 
             if (!tagName.equals(ResourceType.ATTR.getName())
                     || attrElement.getNamespaceURI() != null) {
+                if (tagName.equals(TAG_EAT_COMMENT)) {
+                    attrNode = attrNode.getNextSibling();
+                    continue;
+                }
+
                 throw new ResourceValuesXmlParseException(
                         String.format(
                                 "Illegal type under declare-styleable:"
