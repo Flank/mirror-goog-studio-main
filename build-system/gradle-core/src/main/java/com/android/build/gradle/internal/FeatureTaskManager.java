@@ -221,13 +221,6 @@ public class FeatureTaskManager extends ApplicationTaskManager {
         scope.addTaskOutput(InternalArtifactType.FEATURE_CLASSES, classesJar, task.getName());
     }
 
-    @NonNull
-    @Override
-    protected Set<? super QualifiedContent.Scope> getResMergingScopes(
-            @NonNull VariantScope variantScope) {
-        return TransformManager.SCOPE_FULL_PROJECT;
-    }
-
     @Override
     protected TaskConfigAction<LinkApplicationAndroidResourcesTask>
             createProcessAndroidResourcesConfigAction(

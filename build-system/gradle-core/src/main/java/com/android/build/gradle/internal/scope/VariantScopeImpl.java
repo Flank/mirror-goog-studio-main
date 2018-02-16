@@ -723,12 +723,15 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     /**
-     * Determine if the feature module is the base feature module.
+     * Determine if the module is a base feature module.
      *
-     * @return true if this feature module is the base feature module. False otherwise.
+     * @return true if this module is a base feature module. False otherwise.
      */
     @Override
     public boolean isBaseFeature() {
+        if (variantData instanceof ApplicationVariantData) {
+            return ((ApplicationVariantData) variantData).isBaseApplication();
+        }
         return globalScope.getExtension().getBaseFeature();
     }
 

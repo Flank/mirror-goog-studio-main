@@ -21,8 +21,11 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.builder.core.VariantType;
+import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import org.gradle.api.file.FileCollection;
@@ -72,11 +75,9 @@ public class ApplicationIdWriterTask extends AndroidVariantTask {
     public static class ConfigAction implements TaskConfigAction<ApplicationIdWriterTask> {
 
         @NonNull protected final VariantScope variantScope;
-        @NonNull protected final File outputDirectory;
 
-        public ConfigAction(@NonNull VariantScope variantScope, @NonNull File outputDirectory) {
+        public ConfigAction(@NonNull VariantScope variantScope) {
             this.variantScope = variantScope;
-            this.outputDirectory = outputDirectory;
         }
 
         @NonNull
@@ -95,23 +96,29 @@ public class ApplicationIdWriterTask extends AndroidVariantTask {
         public void execute(@NonNull ApplicationIdWriterTask task) {
             task.setVariantName(variantScope.getFullVariantName());
             task.applicationId = variantScope.getVariantConfiguration().getApplicationId();
-            task.outputDirectory = outputDirectory;
-        }
-    }
+            task.outputDirectory =
+                    FileUtils.join(
+                            variantScope.getGlobalScope().getIntermediatesDir(),
+                            "applicationId",
+                            variantScope.getVariantConfiguration().getDirName());
 
-    public static class BaseFeatureConfigAction extends ConfigAction {
+            variantScope.addTaskOutput(
+                    InternalArtifactType.FEATURE_APPLICATION_ID_DECLARATION,
+                    ApplicationId.getOutputFile(task.outputDirectory),
+                    getName());
 
-        public BaseFeatureConfigAction(
-                @NonNull VariantScope variantScope, @NonNull File outputDirectory) {
-            super(variantScope, outputDirectory);
-        }
-
-        @Override
-        public void execute(@NonNull ApplicationIdWriterTask task) {
-            super.execute(task);
-            task.packageManifest =
-                    variantScope.getArtifactFileCollection(
-                            METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
+            if (variantScope.getVariantConfiguration().getType() == VariantType.FEATURE) {
+                //if this is a feature, get the Application ID from the metadata config
+                task.packageManifest =
+                        variantScope.getArtifactFileCollection(
+                                METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
+            } else {
+                //if this is the base application, publish the feature to the metadata config
+                variantScope.addTaskOutput(
+                        InternalArtifactType.METADATA_APP_ID_DECLARATION,
+                        ApplicationId.getOutputFile(task.outputDirectory),
+                        getName());
+            }
         }
     }
 }

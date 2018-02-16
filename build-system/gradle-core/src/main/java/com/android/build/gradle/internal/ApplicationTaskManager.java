@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
-import com.android.build.gradle.internal.tasks.ApplicationId;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBuilder;
@@ -459,43 +458,8 @@ public class ApplicationTaskManager extends TaskManager {
     }
 
     private void createApplicationIdWriterTask(@NonNull VariantScope variantScope) {
-        if (variantScope.getVariantConfiguration().getType() == VariantType.FEATURE) {
-            if (!variantScope.isBaseFeature()) {
-                return;
-            }
-
-            File applicationIdOutputDirectory =
-                    FileUtils.join(
-                            globalScope.getIntermediatesDir(),
-                            "feature-split",
-                            "applicationId",
-                            variantScope.getVariantConfiguration().getDirName());
-
-            ApplicationIdWriterTask writeTask =
-                    taskFactory.create(
-                            new ApplicationIdWriterTask.BaseFeatureConfigAction(
-                                    variantScope, applicationIdOutputDirectory));
-
-            variantScope.addTaskOutput(
-                    InternalArtifactType.FEATURE_APPLICATION_ID_DECLARATION,
-                    ApplicationId.getOutputFile(applicationIdOutputDirectory),
-                    writeTask.getName());
-        } else {
-            File applicationIdOutputDirectory =
-                    FileUtils.join(
-                            globalScope.getIntermediatesDir(),
-                            "applicationId",
-                            variantScope.getVariantConfiguration().getDirName());
-
-            ApplicationIdWriterTask writeTask =
-                    taskFactory.create(
-                            new ApplicationIdWriterTask.ConfigAction(
-                                    variantScope, applicationIdOutputDirectory));
-
-            variantScope.addTaskOutput(
-                    InternalArtifactType.METADATA_APP_ID_DECLARATION,
-                    ApplicationId.getOutputFile(applicationIdOutputDirectory),
-                    writeTask.getName());
+        if (variantScope.isBaseFeature()) {
+            taskFactory.create(new ApplicationIdWriterTask.ConfigAction(variantScope));
         }
     }
 
