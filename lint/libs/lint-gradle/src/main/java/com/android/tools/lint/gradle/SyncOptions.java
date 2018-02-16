@@ -18,6 +18,8 @@ package com.android.tools.lint.gradle;
 
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.builder.core.BuilderConstants.FD_REPORTS;
+import static com.android.tools.lint.Reporter.STDERR;
+import static com.android.tools.lint.Reporter.STDOUT;
 import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
@@ -45,8 +47,6 @@ import org.gradle.api.Project;
 
 // TODO: Move into LintCliFlags?
 public class SyncOptions {
-    public static final String STDOUT = "stdout";
-    public static final String STDERR = "stderr";
 
     public static void syncTo(
             @NonNull LintOptions options,

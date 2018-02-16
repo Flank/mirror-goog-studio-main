@@ -540,6 +540,44 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testStringCycle() {
+        String expected = "" +
+                "res/values/aliases3.xml:3: Error: String string2 should not reference itself [ResourceCycle]\n" +
+                "    <string name=\"string2\">@string/string2</string> <!-- ERROR: self reference -->\n" +
+                "                           ^\n" +
+                "res/values/aliases3.xml:4: Error: String Resource definition cycle: string3 => string4 => string5 => string3 [ResourceCycle]\n" +
+                "    <string name=\"string3\">@string/string4</string> <!-- ERROR: cycle 3-4-5-3 -->\n" +
+                "                           ^\n" +
+                "    res/values/aliases3.xml:6: Reference from @string/string5 to string/string3 here\n" +
+                "    res/values/aliases3.xml:5: Reference from @string/string4 to string/string5 here\n" +
+                "res/values/aliases3.xml:8: Error: Dimension Resource definition cycle: dimen1 => dimen2 => dimen3 => dimen1 [ResourceCycle]\n" +
+                "    <dimen name=\"dimen1\">@dimen/dimen2</dimen> <!-- ERROR: Cycle 1-2-3-1 -->\n" +
+                "                         ^\n" +
+                "    res/values/aliases3.xml:10: Reference from @dimen/dimen3 to dimen/dimen1 here\n" +
+                "    res/values/aliases3.xml:9: Reference from @dimen/dimen2 to dimen/dimen3 here\n" +
+                "3 errors, 0 warnings";
+        lint().files(
+                xml("res/values/aliases3.xml", ""
+                        + "<resources>\n"
+                        + "    <string name=\"string1\">String 1</string> <!-- OK -->\n"
+                        + "    <string name=\"string2\">@string/string2</string> <!-- ERROR: self reference -->\n"
+                        + "    <string name=\"string3\">@string/string4</string> <!-- ERROR: cycle 3-4-5-3 -->\n"
+                        + "    <string name=\"string4\">@string/string5</string>\n"
+                        + "    <string name=\"string5\">@string/string3</string>\n"
+                        + "\n"
+                        + "    <dimen name=\"dimen1\">@dimen/dimen2</dimen> <!-- ERROR: Cycle 1-2-3-1 -->\n"
+                        + "    <item name=\"dimen2\" type=\"dimen\">@dimen/dimen3</item>\n"
+                        + "    <dimen name=\"dimen3\">@dimen/dimen1</dimen>\n"
+                        + "\n"
+                        + "    <!-- not cycles: unrelated resource types -->\n"
+                        + "    <dimen name=\"abc\">@dimen/def</dimen>\n"
+                        + "    <string name=\"def\">@string/abc</string>\n"
+                        + "    <string name=\"ghi\">@dimen/ghi</string>\n"
+                        + "</resources>"))
+                .run()
+                .expect(expected);
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mAliases2 = xml("res/values/aliases2.xml", ""
             + "<resources>\n"

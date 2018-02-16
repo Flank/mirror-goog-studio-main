@@ -103,6 +103,10 @@ public class LintGradleClient extends LintCliClient {
     @NonNull
     @Override
     public Configuration getConfiguration(@NonNull Project project, @Nullable LintDriver driver) {
+        if (overrideConfiguration != null) {
+            return overrideConfiguration;
+        }
+
         // Look up local lint configuration for this project, either via Gradle lintOptions
         // or via local lint.xml
         AndroidProject gradleProjectModel = project.getGradleProjectModel();

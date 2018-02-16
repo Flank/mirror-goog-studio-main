@@ -35,8 +35,10 @@ import com.android.SdkConstants.NEW_ID_PREFIX
 import com.android.SdkConstants.PREFIX_RESOURCE_REF
 import com.android.SdkConstants.STYLE_RESOURCE_PREFIX
 import com.android.SdkConstants.TAG_COLOR
+import com.android.SdkConstants.TAG_DIMEN
 import com.android.SdkConstants.TAG_FONT
 import com.android.SdkConstants.TAG_ITEM
+import com.android.SdkConstants.TAG_STRING
 import com.android.SdkConstants.TAG_STYLE
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VIEW_INCLUDE
@@ -66,7 +68,6 @@ import org.w3c.dom.Attr
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.util.Arrays
-import java.util.Collections
 import java.util.TreeMap
 
 /**
@@ -112,7 +113,15 @@ class ResourceCycleDetector : ResourceXmlDetector() {
     }
 
     override fun getApplicableElements(): Collection<String>? {
-        return Arrays.asList(VIEW_INCLUDE, TAG_STYLE, TAG_COLOR, TAG_ITEM, TAG_FONT)
+        return Arrays.asList(
+            VIEW_INCLUDE,
+            TAG_STYLE,
+            TAG_COLOR,
+            TAG_ITEM,
+            TAG_FONT,
+            TAG_STRING,
+            TAG_DIMEN
+        )
     }
 
     override fun getApplicableAttributes(): Collection<String>? = ALL
@@ -150,7 +159,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
         val newMap: Multimap<String, String> = Multimaps.newListMultimap(TreeMap()) {
             Lists.newArrayListWithExpectedSize<String>(6)
         }
-        references.put(type, newMap)
+        references[type] = newMap
 
         return newMap
     }
@@ -174,7 +183,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
 
         // Multimap which preserves insert order (for predictable output order)
         val newMap: Multimap<String, Location> = ArrayListMultimap.create(30, 4)
-        locations.put(type, newMap)
+        locations[type] = newMap
         return newMap
     }
 
@@ -309,7 +318,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                             layout)
                 }
             }
-        } else if (tagName == TAG_COLOR) {
+        } else if (tagName == TAG_COLOR || tagName == TAG_STRING || tagName == TAG_DIMEN) {
             val childNodes = element.childNodes
             var i = 0
             val n = childNodes.length
@@ -323,10 +332,13 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                         val c = text[k]
                         if (Character.isWhitespace(c)) {
                             break
-                        } else if (text.startsWith(COLOR_RESOURCE_PREFIX, k)) {
-                            val color = text.trim { it <= ' ' }.substring(COLOR_RESOURCE_PREFIX.length)
+                        } else if (c == '@' && text.startsWith(tagName, k + 1)) {
+                            val to = text.trim { it <= ' ' }.substring(tagName.length + 2)
                             val name = element.getAttribute(ATTR_NAME)
-                            handleReference(context, child, ResourceType.COLOR, name, color)
+                            val type = ResourceType.getEnum(tagName)
+                            if (type != null) {
+                                handleReference(context, child, type, name, to)
+                            }
                         } else {
                             break
                         }
@@ -497,7 +509,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
             val chain = dfs(map, from, visiting, visited)
             if (chain != null && chain.size > 2) { // size 1 chains are handled directly
                 seen.addAll(chain)
-                Collections.reverse(chain)
+                chain.reverse()
                 val chains: MutableMap<ResourceType, MutableList<MutableList<String>>> =
                         mChains ?: run {
                             val newMap = Maps.newEnumMap<ResourceType,
@@ -510,7 +522,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
 
                 val list = chains[type]
                 if (list == null) {
-                    chains.put(type, mutableListOf(chain))
+                    chains[type] = mutableListOf(chain)
                 } else {
                     list.add(chain)
                 }

@@ -15,6 +15,8 @@
  */
 package com.android.tools.lint.client.api;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
@@ -80,6 +82,42 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         assertEquals(Severity.IGNORE, configuration.getSeverity(FieldGetterDetector.ISSUE));
         assertEquals(Severity.IGNORE, configuration.getSeverity(HardcodedValuesDetector.ISSUE));
         assertEquals(Severity.ERROR, configuration.getSeverity(MathDetector.ISSUE));
+    }
+
+    public void testNoFlags() throws Exception {
+        DefaultConfiguration configuration = getConfiguration(""
+                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<lint>\n"
+                + "</lint>");
+        assertThat(configuration.getAbortOnError()).isNull();
+    }
+
+    public void testFlags() throws Exception {
+        DefaultConfiguration configuration = getConfiguration("" +
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<lint\n" +
+                "    checkAllWarnings='true'\n" +
+                "    ignoreWarnings='true'\n" +
+                "    warningsAsErrors='true'\n" +
+                "    fatalOnly='true'\n" +
+                "    checkTestSources='true'\n" +
+                "    checkGeneratedSources='true'\n" +
+                "    checkDependencies='true'\n" +
+                "    explainIssues='true'\n" +
+                "    removeFixedBaselineIssues='true'\n" +
+                "    abortOnError='true'\n" +
+                ">\n" +
+                "</lint>");
+        assertThat(configuration.getCheckAllWarnings()).isTrue();
+        assertThat(configuration.getIgnoreWarnings()).isTrue();
+        assertThat(configuration.getWarningsAsErrors()).isTrue();
+        assertThat(configuration.getFatalOnly()).isTrue();
+        assertThat(configuration.getCheckTestSources()).isTrue();
+        assertThat(configuration.getCheckGeneratedSources()).isTrue();
+        assertThat(configuration.getCheckDependencies()).isTrue();
+        assertThat(configuration.getExplainIssues()).isTrue();
+        assertThat(configuration.getRemoveFixedBaselineIssues()).isTrue();
+        assertThat(configuration.getAbortOnError()).isTrue();
     }
 
     public void testPathIgnore() throws Exception {

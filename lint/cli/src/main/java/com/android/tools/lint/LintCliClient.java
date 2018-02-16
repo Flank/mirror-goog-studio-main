@@ -21,6 +21,7 @@ import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_KTS;
 import static com.android.SdkConstants.FD_TOOLS;
 import static com.android.SdkConstants.FN_SOURCE_PROP;
+import static com.android.SdkConstants.VALUE_NONE;
 import static com.android.manifmerger.MergingReport.MergedManifestKind.MERGED;
 import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
@@ -154,12 +155,39 @@ public class LintCliClient extends LintClient {
         TextReporter reporter = new TextReporter(this, flags, new PrintWriter(System.out, true),
                 false);
         flags.getReporters().add(reporter);
+        initialize();
     }
 
     /** Creates a CLI driver */
     public LintCliClient(@NonNull LintCliFlags flags, @NonNull String clientName) {
         super(clientName);
         this.flags = flags;
+        initialize();
+    }
+
+    @Nullable
+    protected DefaultConfiguration overrideConfiguration;
+
+    // Environment variable, system property and internal system property used to tell lint to
+    // override the configuration
+    private static final String LINT_OVERRIDE_CONFIGURATION_ENV_VAR = "LINT_OVERRIDE_CONFIGURATION";
+    private static final String LINT_CONFIGURATION_OVERRIDE_PROP = "lint.configuration.override";
+
+    private void initialize() {
+        String configuration = System.getenv(LINT_OVERRIDE_CONFIGURATION_ENV_VAR);
+        if (configuration == null) {
+            configuration = System.getProperty(LINT_CONFIGURATION_OVERRIDE_PROP);
+        }
+        if (configuration != null) {
+            File file = new File(configuration);
+            if (file.exists()) {
+                overrideConfiguration = createConfigurationFromFile(file);
+                System.out.println("Overriding configuration from " + file);
+            } else {
+                log(Severity.ERROR, null,
+                        "Configuration override requested but does not exist: " + file);
+            }
+        }
     }
 
     /**
@@ -338,6 +366,10 @@ public class LintCliClient extends LintClient {
     @NonNull
     @Override
     public Configuration getConfiguration(@NonNull Project project, @Nullable LintDriver driver) {
+        if (overrideConfiguration != null) {
+            return overrideConfiguration;
+        }
+
         return new CliConfiguration(getConfiguration(), project, flags.isFatalOnly());
     }
 
@@ -921,6 +953,11 @@ public class LintCliClient extends LintClient {
     /** Returns the configuration used by this client */
     protected Configuration getConfiguration() {
         if (configuration == null) {
+            if (overrideConfiguration != null) {
+                configuration = overrideConfiguration;
+                return configuration;
+            }
+
             File configFile = flags.getDefaultConfiguration();
             if (configFile != null) {
                 if (!configFile.exists()) {
@@ -945,10 +982,9 @@ public class LintCliClient extends LintClient {
         return flags.getSuppressedIds().contains(issue.getId());
     }
 
-    public Configuration createConfigurationFromFile(File file) {
+    public DefaultConfiguration createConfigurationFromFile(File file) {
         return new CliConfiguration(file, flags.isFatalOnly());
     }
-
 
     @Nullable LintCoreProjectEnvironment projectEnvironment;
     @Nullable private com.intellij.openapi.project.Project ideaProject;
@@ -1085,6 +1121,62 @@ public class LintCliClient extends LintClient {
         projectDisposer = null;
 
         super.disposeProjects(knownProjects);
+    }
+
+    public boolean isOverridingConfiguration() {
+        return overrideConfiguration != null;
+    }
+
+    /** Synchronizes any options specified in lint.xml with the {@link LintCliFlags} object */
+    public void syncConfigOptions() {
+        Configuration configuration = getConfiguration();
+        if (configuration instanceof DefaultConfiguration) {
+            DefaultConfiguration config = (DefaultConfiguration) configuration;
+            Boolean checkAllWarnings = config.getCheckAllWarnings();
+            if (checkAllWarnings != null) {
+                flags.setCheckAllWarnings(checkAllWarnings);
+            }
+            Boolean ignoreWarnings = config.getIgnoreWarnings();
+            if (ignoreWarnings != null) {
+                flags.setIgnoreWarnings(ignoreWarnings);
+            }
+            Boolean warningsAsErrors = config.getWarningsAsErrors();
+            if (warningsAsErrors != null) {
+                flags.setWarningsAsErrors(warningsAsErrors);
+            }
+            Boolean fatalOnly = config.getFatalOnly();
+            if (fatalOnly != null) {
+                flags.setFatalOnly(fatalOnly);
+            }
+            Boolean checkTestSources = config.getCheckTestSources();
+            if (checkTestSources != null) {
+                flags.setCheckTestSources(checkTestSources);
+            }
+            Boolean checkGeneratedSources = config.getCheckGeneratedSources();
+            if (checkGeneratedSources != null) {
+                flags.setCheckGeneratedSources(checkGeneratedSources);
+            }
+            Boolean checkDependencies = config.getCheckDependencies();
+            if (checkDependencies != null) {
+                flags.setCheckDependencies(checkDependencies);
+            }
+            Boolean explainIssues = config.getExplainIssues();
+            if (explainIssues != null) {
+                flags.setExplainIssues(explainIssues);
+            }
+            Boolean removeFixedBaselineIssues = config.getRemoveFixedBaselineIssues();
+            if (removeFixedBaselineIssues != null) {
+                flags.setRemovedFixedBaselineIssues(removeFixedBaselineIssues);
+            }
+            Boolean abortOnError = config.getAbortOnError();
+            if (abortOnError != null) {
+                flags.setSetExitCode(abortOnError);
+            }
+            File baselineFile = config.getBaselineFile();
+            if (baselineFile != null) {
+                flags.setBaselineFile(baselineFile.getPath().equals(VALUE_NONE) ? null : baselineFile);
+            }
+        }
     }
 
     @Override
@@ -1343,7 +1435,7 @@ public class LintCliClient extends LintClient {
 
             boolean ok = super.prepare(contexts, testContexts);
 
-            if (project == null || contexts.isEmpty()) {
+            if (project == null || contexts.isEmpty() && testContexts.isEmpty()) {
                 return ok;
             }
 
