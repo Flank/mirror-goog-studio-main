@@ -59,7 +59,7 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
         @VisibleForTesting
         fun create(
             roots: Iterable<DependencyResult>,
-            foundNodes: HashMap<ComponentIdentifier, Node>,
+            foundNodes: HashMap<String, Node>,
             artifacts: ArtifactFiles
         ): DependenciesGraph {
             val rootNodes = mutableSetOf<Node>()
@@ -67,7 +67,7 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
             for (dependency in roots) {
                 dependency as ResolvedDependencyResult
                 val node = collect(dependency, foundNodes, artifacts)
-                foundNodes.put(dependency.selected.id, node)
+                foundNodes.put(dependency.selected.id.displayName, node)
                 rootNodes.add(node)
             }
             return DependenciesGraph(
@@ -78,7 +78,7 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
 
         private fun collect(
             dependencyResult: DependencyResult,
-            foundNodes: HashMap<ComponentIdentifier, Node>,
+            foundNodes: HashMap<String, Node>,
             artifacts: ArtifactFiles
         ): Node {
             dependencyResult as ResolvedDependencyResult
@@ -88,7 +88,7 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
                     dependencyResult.selected.dependencies.mapNotNull { dependency ->
                         dependency as ResolvedDependencyResult
                         foundNodes.computeIfAbsent(
-                                dependency.selected.id,
+                                dependency.selected.id.displayName,
                                 { collect(dependency, foundNodes, artifacts) }
                         )
                     }

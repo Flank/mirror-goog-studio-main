@@ -38,7 +38,6 @@ class DependenciesGraphTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    @Ignore
     @Test
     fun emptyGraph() {
         val result = DependenciesGraph.create(
@@ -51,7 +50,6 @@ class DependenciesGraphTest {
         assertThat(result.allNodes).isEmpty()
     }
 
-    @Ignore
     @Test
     fun noArtifactsTest() {
         //        a    b
@@ -78,7 +76,6 @@ class DependenciesGraphTest {
         assertThat(visit(result.rootNodes)).containsAllIn(listOf("a", "b", "c", "d", "e", "f", "g"))
     }
 
-    @Ignore
     @Test
     fun graphWithArtifacts() {
         //     a
