@@ -273,6 +273,11 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
                 }
             }
 
+            if (jarFile.getName().startsWith("junit-")) {
+                // Deliberately whitelisted; see b/73555280
+                return;
+            }
+
             String message = String.format(
                     "Invalid package reference in library; not included in Android: `%1$s`. " +
                     "Referenced from `%2$s`.", pkg, ClassContext.getFqcn(referencedIn));
