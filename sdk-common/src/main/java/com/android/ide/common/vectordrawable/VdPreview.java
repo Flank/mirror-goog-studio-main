@@ -110,16 +110,16 @@ public class VdPreview {
      * the original size and aspect ratio.
      */
     public static class SourceSize {
-        public int getHeight() {
+        public float getHeight() {
             return mSourceHeight;
         }
 
-        public int getWidth() {
+        public float getWidth() {
             return mSourceWidth;
         }
 
-        private int mSourceWidth;
-        private int mSourceHeight;
+        private float mSourceWidth;
+        private float mSourceHeight;
     }
 
 
@@ -180,16 +180,16 @@ public class VdPreview {
         NamedNodeMap attr = root.getAttributes();
         if (info.needsOverrideWidth()) {
             Node nodeAttr = attr.getNamedItem(ANDROID_WIDTH);
-            int overrideValue = info.getWidth();
-            int originalValue = parseDimension(overrideValue, nodeAttr, true);
+            float overrideValue = info.getWidth();
+            float originalValue = parseDimension(overrideValue, nodeAttr, true);
             if (originalValue != overrideValue) {
                 isXmlFileContentChanged = true;
             }
         }
         if (info.needsOverrideHeight()) {
             Node nodeAttr = attr.getNamedItem(ANDROID_HEIGHT);
-            int overrideValue = info.getHeight();
-            int originalValue = parseDimension(overrideValue, nodeAttr, true);
+            float overrideValue = info.getHeight();
+            float originalValue = parseDimension(overrideValue, nodeAttr, true);
             if (originalValue != overrideValue) {
                 isXmlFileContentChanged = true;
             }
@@ -255,16 +255,16 @@ public class VdPreview {
      * @param override if true then override the dimension.
      * @return the original dimension value.
      */
-    private static int parseDimension(int overrideValue, Node nodeAttr, boolean override) {
+    private static float parseDimension(float overrideValue, Node nodeAttr, boolean override) {
         assert nodeAttr != null;
         String content = nodeAttr.getTextContent();
         assert content.endsWith("dp");
-        int originalValue = Integer.parseInt(content.substring(0, content.length() - 2));
+        double originalValue = Double.parseDouble(content.substring(0, content.length() - 2));
 
         if (override) {
-            nodeAttr.setTextContent(overrideValue + "dp");
+            nodeAttr.setTextContent(XmlUtils.formatFloatAttribute(overrideValue) + "dp");
         }
-        return originalValue;
+        return (float) originalValue;
     }
 
     /**
@@ -338,10 +338,13 @@ public class VdPreview {
             float ratioToForceImageSize = forceImageSize / maxVdSize;
             float scaledWidth = ratioToForceImageSize * vdWidth;
             float scaledHeight = ratioToForceImageSize * vdHeight;
-            imageWidth = Math.max(MIN_PREVIEW_IMAGE_SIZE, Math.min(MAX_PREVIEW_IMAGE_SIZE, scaledWidth));
-            imageHeight = Math.max(MIN_PREVIEW_IMAGE_SIZE, Math.min(MAX_PREVIEW_IMAGE_SIZE, scaledHeight));
+            imageWidth =
+                    limitToInterval(scaledWidth, MIN_PREVIEW_IMAGE_SIZE, MAX_PREVIEW_IMAGE_SIZE);
+            imageHeight =
+                    limitToInterval(scaledHeight, MIN_PREVIEW_IMAGE_SIZE, MAX_PREVIEW_IMAGE_SIZE);
             if (errorLog != null && (scaledWidth != imageWidth || scaledHeight != imageHeight)) {
-                errorLog.append("Invalid image size, can't fit in a square whose size is ").append(forceImageSize);
+                errorLog.append("Invalid image size, can't fit in a square whose size is ")
+                        .append(forceImageSize);
             }
         } else {
             imageWidth = vdWidth * imageScale;
@@ -352,5 +355,9 @@ public class VdPreview {
         BufferedImage image = AssetUtil.newArgbBufferedImage((int)imageWidth, (int)imageHeight);
         vdTree.drawIntoImage(image);
         return image;
+    }
+
+    private static float limitToInterval(float value, float begin, float end) {
+        return Math.max(begin, Math.min(end, value));
     }
 }
