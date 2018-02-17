@@ -30,11 +30,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIdsWriterTask;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
@@ -43,7 +38,6 @@ import com.android.builder.profile.Recorder;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
-import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -122,85 +116,6 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                                         + "to true.");
             }
         }
-
-        if (variantScope.isBaseFeature()) {
-            // Base feature specific tasks.
-            recorder.record(
-                    ExecutionType.FEATURE_TASK_MANAGER_CREATE_BASE_TASKS,
-                    project.getPath(),
-                    variantScope.getFullVariantName(),
-                    () -> {
-                        createFeatureIdsWriterTask(variantScope);
-                    });
-        } else {
-            // Non-base feature specific task.
-            recorder.record(
-                    ExecutionType.FEATURE_TASK_MANAGER_CREATE_NON_BASE_TASKS,
-                    project.getPath(),
-                    variantScope.getFullVariantName(),
-                    () -> createFeatureDeclarationTasks(variantScope));
-        }
-
-        createFeatureTransitiveDepsTask(variantScope);
-    }
-
-    /**
-     * Creates feature declaration task. Task will produce artifacts consumed by the base feature.
-     */
-    private void createFeatureDeclarationTasks(@NonNull VariantScope variantScope) {
-
-        File featureSplitDeclarationOutputDirectory =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "feature-split",
-                        "declaration",
-                        variantScope.getVariantConfiguration().getDirName());
-
-        FeatureSplitDeclarationWriterTask featureSplitWriterTaskAndroidTask =
-                taskFactory.create(
-                        new FeatureSplitDeclarationWriterTask.ConfigAction(
-                                variantScope, featureSplitDeclarationOutputDirectory));
-
-        variantScope.addTaskOutput(
-                InternalArtifactType.METADATA_FEATURE_DECLARATION,
-                FeatureSplitDeclaration.getOutputFile(featureSplitDeclarationOutputDirectory),
-                featureSplitWriterTaskAndroidTask.getName());
-    }
-
-    private void createFeatureIdsWriterTask(@NonNull VariantScope variantScope) {
-        File featureIdsOutputDirectory =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "feature-split",
-                        "ids",
-                        variantScope.getVariantConfiguration().getDirName());
-
-        FeatureSplitPackageIdsWriterTask writeTask =
-                taskFactory.create(
-                        new FeatureSplitPackageIdsWriterTask.ConfigAction(
-                                variantScope, featureIdsOutputDirectory));
-
-        variantScope.addTaskOutput(
-                InternalArtifactType.FEATURE_IDS_DECLARATION,
-                FeatureSplitPackageIds.getOutputFile(featureIdsOutputDirectory),
-                writeTask.getName());
-    }
-
-    private void createFeatureTransitiveDepsTask(@NonNull VariantScope scope) {
-        File textFile =
-                new File(
-                        FileUtils.join(
-                                globalScope.getIntermediatesDir(),
-                                "feature-split",
-                                "transitive-deps",
-                                scope.getVariantConfiguration().getDirName()),
-                        "deps.txt");
-
-        FeatureSplitTransitiveDepsWriterTask task =
-                taskFactory.create(
-                        new FeatureSplitTransitiveDepsWriterTask.ConfigAction(scope, textFile));
-
-        scope.addTaskOutput(InternalArtifactType.FEATURE_TRANSITIVE_DEPS, textFile, task.getName());
     }
 
     @Override
@@ -220,36 +135,4 @@ public class FeatureTaskManager extends ApplicationTaskManager {
 
         scope.addTaskOutput(InternalArtifactType.FEATURE_CLASSES, classesJar, task.getName());
     }
-
-    @Override
-    protected TaskConfigAction<LinkApplicationAndroidResourcesTask>
-            createProcessAndroidResourcesConfigAction(
-                    @NonNull VariantScope scope,
-                    @NonNull Supplier<File> symbolLocation,
-                    @NonNull File symbolsWithPackageName,
-                    @NonNull File resPackageOutputFolder,
-                    boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                    @NonNull MergeType sourceArtifactType,
-                    @NonNull String baseName) {
-        if (scope.isBaseFeature()) {
-            return super.createProcessAndroidResourcesConfigAction(
-                    scope,
-                    symbolLocation,
-                    symbolsWithPackageName,
-                    resPackageOutputFolder,
-                    useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                    sourceArtifactType,
-                    baseName);
-        } else {
-            return new LinkApplicationAndroidResourcesTask.FeatureSplitConfigAction(
-                    scope,
-                    symbolLocation,
-                    symbolsWithPackageName,
-                    resPackageOutputFolder,
-                    useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                    sourceArtifactType,
-                    baseName);
-        }
-    }
-
 }

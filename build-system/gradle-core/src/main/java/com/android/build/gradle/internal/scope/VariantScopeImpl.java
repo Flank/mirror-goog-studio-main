@@ -746,7 +746,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (variantData instanceof ApplicationVariantData) {
             return ((ApplicationVariantData) variantData).isBaseApplication();
         }
-        return globalScope.getExtension().getBaseFeature();
+        return getVariantConfiguration().getType() == VariantType.FEATURE
+                && globalScope.getExtension().getBaseFeature();
     }
 
     @NonNull

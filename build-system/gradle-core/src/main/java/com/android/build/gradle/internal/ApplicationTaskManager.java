@@ -42,6 +42,11 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIdsWriterTask;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask;
 import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBuilder;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -261,6 +266,16 @@ public class ApplicationTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> createLintTasks(variantScope));
+
+        if (variantScope.isBaseFeature()) {
+            // Base feature specific tasks.
+            createFeatureIdsWriterTask(variantScope);
+        } else {
+            // Non-base feature specific task.
+            createFeatureDeclarationTasks(variantScope);
+        }
+
+        createTransitiveDepsTask(variantScope);
     }
 
     /** Create tasks related to creating pure split APKs containing sharded dex files. */
@@ -468,5 +483,64 @@ public class ApplicationTaskManager extends TaskManager {
 
     private static File getIncrementalFolder(VariantScope variantScope, String taskName) {
         return new File(variantScope.getIncrementalDir(taskName), variantScope.getDirName());
+    }
+
+    /**
+     * Creates feature declaration task. Task will produce artifacts consumed by the base feature.
+     */
+    private void createFeatureDeclarationTasks(@NonNull VariantScope variantScope) {
+
+        File featureSplitDeclarationOutputDirectory =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "feature-split",
+                        "declaration",
+                        variantScope.getVariantConfiguration().getDirName());
+
+        FeatureSplitDeclarationWriterTask featureSplitWriterTaskAndroidTask =
+                taskFactory.create(
+                        new FeatureSplitDeclarationWriterTask.ConfigAction(
+                                variantScope, featureSplitDeclarationOutputDirectory));
+
+        variantScope.addTaskOutput(
+                InternalArtifactType.METADATA_FEATURE_DECLARATION,
+                FeatureSplitDeclaration.getOutputFile(featureSplitDeclarationOutputDirectory),
+                featureSplitWriterTaskAndroidTask.getName());
+    }
+
+    private void createFeatureIdsWriterTask(@NonNull VariantScope variantScope) {
+        File featureIdsOutputDirectory =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "feature-split",
+                        "ids",
+                        variantScope.getVariantConfiguration().getDirName());
+
+        FeatureSplitPackageIdsWriterTask writeTask =
+                taskFactory.create(
+                        new FeatureSplitPackageIdsWriterTask.ConfigAction(
+                                variantScope, featureIdsOutputDirectory));
+
+        variantScope.addTaskOutput(
+                InternalArtifactType.FEATURE_IDS_DECLARATION,
+                FeatureSplitPackageIds.getOutputFile(featureIdsOutputDirectory),
+                writeTask.getName());
+    }
+
+    private void createTransitiveDepsTask(@NonNull VariantScope scope) {
+        File textFile =
+                new File(
+                        FileUtils.join(
+                                globalScope.getIntermediatesDir(),
+                                "feature-split",
+                                "transitive-deps",
+                                scope.getVariantConfiguration().getDirName()),
+                        "deps.txt");
+
+        FeatureSplitTransitiveDepsWriterTask task =
+                taskFactory.create(
+                        new FeatureSplitTransitiveDepsWriterTask.ConfigAction(scope, textFile));
+
+        scope.addTaskOutput(InternalArtifactType.FEATURE_TRANSITIVE_DEPS, textFile, task.getName());
     }
 }

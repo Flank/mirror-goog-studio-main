@@ -797,37 +797,13 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             processResources.isLibrary = isLibrary;
             processResources.supportDirectory =
                     new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");
-        }
-    }
 
-    public static class FeatureSplitConfigAction extends ConfigAction {
-
-        public FeatureSplitConfigAction(
-                @NonNull VariantScope scope,
-                @NonNull Supplier<File> symbolLocation,
-                @Nullable File symbolsWithPackageName,
-                @NonNull File resPackageOutputFolder,
-                boolean generateLegacyMultidexMainDexProguardRules,
-                @NonNull TaskManager.MergeType mergeType,
-                @NonNull String baseName) {
-            super(
-                    scope,
-                    symbolLocation,
-                    symbolsWithPackageName,
-                    resPackageOutputFolder,
-                    generateLegacyMultidexMainDexProguardRules,
-                    mergeType,
-                    baseName,
-                    false);
-        }
-
-        @Override
-        public void execute(@NonNull LinkApplicationAndroidResourcesTask processResources) {
-            super.execute(processResources);
-            // sets the packageIds list.
-            processResources.packageIdsFiles =
-                    variantScope.getArtifactCollection(
-                            COMPILE_CLASSPATH, MODULE, FEATURE_IDS_DECLARATION);
+            if (!variantScope.isBaseFeature()) {
+                // sets the packageIds list.
+                processResources.packageIdsFiles =
+                        variantScope.getArtifactCollection(
+                                COMPILE_CLASSPATH, MODULE, FEATURE_IDS_DECLARATION);
+            }
         }
     }
 
