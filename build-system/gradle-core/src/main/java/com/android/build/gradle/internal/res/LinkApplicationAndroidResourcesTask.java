@@ -816,7 +816,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         protected final VariantScope variantScope;
         @NonNull private final File resPackageOutputDir;
         @NonNull private final File sourceOutputDir;
-        private final boolean isLibrary;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         @Nullable private final String baseName;
 
@@ -824,13 +823,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 @NonNull VariantScope scope,
                 @NonNull File sourceOutputDir,
                 @NonNull File resPackageOutputDir,
-                boolean isLibrary,
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @Nullable String baseName) {
             this.variantScope = scope;
             this.resPackageOutputDir = resPackageOutputDir;
             this.sourceOutputDir = sourceOutputDir;
-            this.isLibrary = isLibrary;
             this.generateLegacyMultidexMainDexProguardRules =
                     generateLegacyMultidexMainDexProguardRules;
             this.baseName = baseName;
@@ -936,7 +933,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             }
 
             task.projectBaseName = baseName;
-            task.isLibrary = isLibrary;
+            task.isLibrary = false;
             task.supportDirectory =
                     new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");
             task.isNamespaced = true;

@@ -98,10 +98,10 @@ open class ProcessAndroidAppResourcesTask
     }
 
     class ConfigAction(
-            private val scope: VariantScope,
-            private val rClassSource: File,
-            private val resourceApUnderscore: File,
-            val isLibrary: Boolean) : TaskConfigAction<ProcessAndroidAppResourcesTask> {
+        private val scope: VariantScope,
+        private val rClassSource: File,
+        private val resourceApUnderscore: File
+    ) : TaskConfigAction<ProcessAndroidAppResourcesTask> {
 
         override fun getName(): String {
             return scope.getTaskName("process", "Resources")
