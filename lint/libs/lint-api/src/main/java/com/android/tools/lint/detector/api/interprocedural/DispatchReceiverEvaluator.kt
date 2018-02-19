@@ -99,9 +99,11 @@ abstract class DispatchReceiverEvaluator(
 }
 
 /** Represents a potential call handler, such as a class or lambda expression. */
-sealed class DispatchReceiver(open val element: UElement) {
+sealed class DispatchReceiver {
 
-    data class Class(override val element: UClass) : DispatchReceiver(element) {
+    abstract val element: UElement
+
+    data class Class(override val element: UClass) : DispatchReceiver() {
         /**
          * Refines the given method to the overriding method that would appear
          * in the virtual method table of this class.
@@ -123,7 +125,7 @@ sealed class DispatchReceiver(open val element: UElement) {
 
     // In the next version of Kotlin we will be able to declare subclasses of a sealed class
     // at the top level of the same file, which would help reduce the nesting here.
-    sealed class Functional(override val element: UElement) : DispatchReceiver(element) {
+    sealed class Functional(override val element: UElement) : DispatchReceiver() {
 
         abstract fun toTarget(): CallTarget?
 

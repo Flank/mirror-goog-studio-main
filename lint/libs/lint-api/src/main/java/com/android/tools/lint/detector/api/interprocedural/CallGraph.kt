@@ -46,10 +46,12 @@ import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
 
-sealed class CallTarget(open val element: UElement) {
-    data class Method(override val element: UMethod) : CallTarget(element)
-    data class Lambda(override val element: ULambdaExpression) : CallTarget(element)
-    data class DefaultCtor(override val element: UClass) : CallTarget(element)
+sealed class CallTarget {
+    abstract val element: UElement
+
+    data class Method(override val element: UMethod) : CallTarget()
+    data class Lambda(override val element: ULambdaExpression) : CallTarget()
+    data class DefaultCtor(override val element: UClass) : CallTarget()
 }
 
 /**
