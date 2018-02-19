@@ -81,7 +81,7 @@ message EnergySamplesResponse {
 
 message EnergyEventsResponse {
   // Energy event details information in time order.
-  repeated EnergyEvent event = 1;
+  repeated EnergyEvent events = 1;
 }
 
 // Energy event data or state change for WakeLock, Alarm, etc.

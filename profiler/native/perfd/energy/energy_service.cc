@@ -55,7 +55,7 @@ Status EnergyServiceImpl::GetEvents(ServerContext* context,
                                                      request->start_timestamp(),
                                                      request->end_timestamp());
   for (const auto& energy_event : energy_events) {
-    response->add_event()->CopyFrom(energy_event);
+    response->add_events()->CopyFrom(energy_event);
   }
   return Status::OK;
 }

@@ -68,9 +68,9 @@ public class WakeLockTest {
         assertThat(myAndroidDriver.waitForInput("WAKE LOCK ACQUIRED")).isTrue();
 
         EnergyEventsResponse response = myStubWrapper.getAllEnergyEvents(mySession);
-        assertThat(response.getEventCount()).isEqualTo(1);
+        assertThat(response.getEventsCount()).isEqualTo(1);
 
-        EnergyEvent energyEvent = response.getEvent(0);
+        EnergyEvent energyEvent = response.getEvents(0);
         assertThat(energyEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(energyEvent.getEventId()).isGreaterThan(0);
@@ -88,10 +88,10 @@ public class WakeLockTest {
         EnergyEventsResponse response =
                 waitForAndReturn(
                         () -> myStubWrapper.getAllEnergyEvents(mySession),
-                        resp -> resp.getEventCount() == 2);
-        assertThat(response.getEventCount()).isEqualTo(2);
+                        resp -> resp.getEventsCount() == 2);
+        assertThat(response.getEventsCount()).isEqualTo(2);
         List<EnergyEvent> sortedEnergyEvents =
-                response.getEventList()
+                response.getEventsList()
                         .stream()
                         .sorted((o1, o2) -> o1.getMetadataCase().compareTo(o2.getMetadataCase()))
                         .collect(Collectors.toList());
