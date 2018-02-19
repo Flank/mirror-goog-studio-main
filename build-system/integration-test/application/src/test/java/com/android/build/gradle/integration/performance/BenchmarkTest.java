@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.common.category.PerformanceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Preconditions;
@@ -43,7 +42,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -108,12 +106,11 @@ import org.junit.runners.JUnit4;
  */
 @NotThreadSafe
 public class BenchmarkTest {
-    private static ProfileCapturer PROFILE_CAPTURER;
-    private static BenchmarkRecorder BENCHMARK_RECORDER;
     @Nullable private static List<Path> MAVEN_REPOS;
     @Nullable private static Path PROJECT_DIR;
     @Nullable private static Path SDK_DIR;
     @Nullable private static Path GRADLE_DIR;
+    @Nullable private static List<ProfileUploader> UPLOADERS;
 
     /**
      * Takes an InputStream in zip format and unzips it, returning the directory to which it was
@@ -224,24 +221,46 @@ public class BenchmarkTest {
     }
 
     @NonNull
-    public static ProfileCapturer getProfileCapturer() throws IOException {
-        if (PROFILE_CAPTURER == null) {
-            PROFILE_CAPTURER = new ProfileCapturer(getProfileDirectory());
-        }
-        return PROFILE_CAPTURER;
-    }
+    private static List<ProfileUploader> getUploaders() {
+        if (UPLOADERS == null) {
+            List<ProfileUploader> uploaders = new ArrayList<>();
 
-    @NonNull
-    public static BenchmarkRecorder getBenchmarkRecorder() throws IOException {
-        if (BENCHMARK_RECORDER == null) {
-            BENCHMARK_RECORDER = new BenchmarkRecorder(getProfileCapturer());
+            try {
+                uploaders.add(GoogleStorageProfileUploader.getInstance());
+            } catch (Exception e) {
+                System.out.println(
+                        "couldn't add GoogleStorageProfileUploader to the list of default uploaders, reason: "
+                                + e
+                                + ", this means that benchmark results will not be uploaded to GCS");
+            }
+
+            try {
+                uploaders.add(DanaProfileUploader.fromEnvironment());
+            } catch (Exception e) {
+                System.out.println(
+                        "couldn't add DanaProfileUploader to the list of default uploaders, reason: "
+                                + e
+                                + ", this means that benchmark results will not be uploaded to Dana");
+            }
+
+            try {
+                uploaders.add(LocalCSVProfileUploader.fromEnvironment());
+            } catch (Exception e) {
+                System.out.println(
+                        "couldn't add LocalCSVProfileUploader to the list of default uploaders, reason: "
+                                + e
+                                + ", this means that benchmark results will not be saved locally as CSVs");
+            }
+
+            UPLOADERS = ImmutableList.copyOf(uploaders);
         }
-        return BENCHMARK_RECORDER;
+
+        return UPLOADERS;
     }
 
     @Test
     @Category(PerformanceTests.class)
-    public void run() throws Exception {
+    public void run() {
         /*
          * Sometimes the version of Gradle checked in to our repo is the same as their current
          * nightly version. In this scenario, we want to avoid running the same set of tests twice
@@ -375,6 +394,7 @@ public class BenchmarkTest {
         Duration recordedDuration = Duration.ofNanos(0);
 
         List<BenchmarkResult> failed = new ArrayList<>();
+        List<BenchmarkResult> succeeded = new ArrayList<>();
         for (Benchmark b : shard) {
             i++;
 
@@ -399,17 +419,62 @@ public class BenchmarkTest {
 
                 if (result.getException() != null) {
                     failed.add(result);
+                } else {
+                    succeeded.add(result);
                 }
             }
         }
 
         /*
-         * The Benchmark.run method will call uploadAsync() on its BenchmarkRecorder when the test
-         * completely successfully and a profile is found. We need to wait for these uploads to
-         * complete before shutting down the process.
+         * Each BenchmarkResult that was successful will have a GradleBuildProfile proto attached to
+         * it, representing the profile data gathered during that benchmark. There's a lot of
+         * metadata we need to attach to the result to identify what machine the benchmark ran on,
+         * what commit it pertains to, what set of flags it used and so on. The ProfileWrapper does
+         * all of that and gives us a GradleBenchmarkResult proto in return.
          */
-        BenchmarkRecorder.awaitUploads(15, TimeUnit.MINUTES);
-        BenchmarkRecorder.shutdownExecutor();
+        ProfileWrapper wrapper = new ProfileWrapper();
+        List<Logging.GradleBenchmarkResult> protos =
+                succeeded
+                        .stream()
+                        .map(
+                                result ->
+                                        wrapper.wrap(
+                                                result.getProfile(),
+                                                result.getBenchmark().getBenchmark(),
+                                                result.getBenchmark().getBenchmarkMode(),
+                                                result.getBenchmark().getScenario()))
+                        .collect(Collectors.toList());
+
+        /*
+         * The last meaningful step in this benchmarking process is to upload the results somewhere.
+         * For this we grab the list of ProfileUploader objects and pass all of the results in to
+         * each for them to upload to wherever they want to.
+         */
+        List<ProfileUploader> uploaders = getUploaders();
+        if (!uploaders.isEmpty()) {
+            System.out.println("captured " + protos.size() + " profiles to be uploaded");
+
+            for (ProfileUploader uploader : uploaders) {
+                String uploaderName = uploader.getClass().getSimpleName();
+                System.out.println(
+                        "uploading "
+                                + protos.size()
+                                + " profiles with uploader "
+                                + uploaderName
+                                + "...");
+
+                try {
+                    uploader.uploadData(protos);
+                    System.out.println("done");
+                } catch (IOException e) {
+                    System.out.println(
+                            "failed to upload with uploader "
+                                    + uploaderName
+                                    + ": "
+                                    + e.getMessage());
+                }
+            }
+        }
 
         Duration totalDuration = Duration.ofNanos(System.nanoTime() - start);
         System.out.println("Total recorded duration: " + recordedDuration);

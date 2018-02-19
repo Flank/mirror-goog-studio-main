@@ -20,10 +20,12 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilder
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
+import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.options.BooleanOption
 import com.google.common.collect.Iterables
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
+import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.nio.file.Path
@@ -60,7 +62,7 @@ data class Benchmark(
                         .withGradleDistributionDirectory(BenchmarkTest.getGradleDir().toFile())
                         .withKotlinVersion(KotlinVersion.CURRENT.toString()))
 
-        var profileLocation: Path? = null
+        var profile: GradleBuildProfile? = null
 
         val statement =
                 object : Statement() {
@@ -83,7 +85,7 @@ data class Benchmark(
                                 .with(BooleanOption.ENABLE_D8, scenario.useD8())
                                 .withUseDexArchive(scenario.useDexArchive())
 
-                        val recorder = BenchmarkTest.getBenchmarkRecorder()
+                        val capturer = ProfileCapturer(project)
                         val recordCalled = AtomicBoolean(false)
                         val record = { r: () -> Unit ->
                             recordStart = System.nanoTime()
@@ -93,12 +95,12 @@ data class Benchmark(
                                 }
                                 recordCalled.set(true)
 
-                                val numProfiles = recorder.record(scenario, benchmark, benchmarkMode, r)
-                                if (numProfiles != 1) {
+                                val profiles = capturer.capture(r)
+                                if (profiles.size != 1) {
                                     throw IllegalStateException("record lambda generated more than one profile, this is not allowed")
                                 }
 
-                                profileLocation = Iterables.getOnlyElement(BenchmarkTest.getProfileCapturer().lastPoll)
+                                profile = Iterables.getOnlyElement(profiles)
                             } finally {
                                 recordEnd = System.nanoTime()
                             }
@@ -108,8 +110,6 @@ data class Benchmark(
                         if (!recordCalled.get()) {
                             throw IllegalStateException("no recorded section in your benchmark, did you forget to use the record function?")
                         }
-
-                        recorder.uploadAsync()
                     }
                 }
 
@@ -124,7 +124,7 @@ data class Benchmark(
                 benchmark = this,
                 recordedDuration = Duration.ofNanos(recordEnd - recordStart),
                 totalDuration = Duration.ofNanos(System.nanoTime() - totalStart),
-                profileLocation = profileLocation,
+                profile = profile,
                 exception = exception
         )
     }
