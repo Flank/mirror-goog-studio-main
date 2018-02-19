@@ -96,7 +96,18 @@ public class TestOptions {
         this.reportDir = reportDir;
     }
 
-    /** Disables animations during instrumented tests. */
+    /**
+     * Disables animations during instrumented tests you run from the cammand line.
+     *
+     * <p>If you set this property to {@code true}, running instrumented tests with Gradle from the
+     * command line executes {@code am instrument} with the {@code --no-window-animation} flag.
+     * By default, this property is set to {@code false}.</p>
+     *
+     * <p>This property does not affect tests that you run using Android Studio. To learn more about
+     * running tests from the command line, see
+     * <a href="https://d.android.com/studio/test/command-line.html">Test from the Command Line</a>.
+     * </p>
+     */
     public boolean getAnimationsDisabled() {
         return animationsDisabled;
     }
