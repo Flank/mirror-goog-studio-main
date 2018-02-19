@@ -32,14 +32,14 @@ service EnergyService {
   rpc StopMonitoringApp(EnergyStopRequest) returns (EnergyStopResponse) {
   }
 
-  // Requests energy data from app with given |process_id|, in the time range
+  // Requests energy samples from app with given |process_id|, in the time range
   // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
   // mathematically written as in interval (start_timestamp, end_timestamp].
-  rpc GetData(EnergyRequest) returns (EnergyDataResponse) {
+  rpc GetSamples(EnergyRequest) returns (EnergySamplesResponse) {
   }
 
   // Requests energy event data such as WakeLock, Alarm with given time range.
-  // Request data range is same as #GetData (start_timestamp, end_timestamp].
+  // Request data range is same as |GetSamples(start_timestamp, end_timestamp]|.
   // Response data includes repeated data in time order.
   rpc GetEvents(EnergyRequest) returns (EnergyEventsResponse) {
   }
@@ -74,9 +74,9 @@ message EnergySample {
   int32 network_usage = 3;
 }
 
-message EnergyDataResponse {
+message EnergySamplesResponse {
   // List of Energy usage sample data.
-  repeated EnergySample sample_data = 1;
+  repeated EnergySample samples = 1;
 }
 
 message EnergyEventsResponse {

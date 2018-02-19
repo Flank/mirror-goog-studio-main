@@ -35,9 +35,9 @@ class EnergyServiceImpl final : public proto::EnergyService::Service {
                                  const proto::EnergyStopRequest* request,
                                  proto::EnergyStopResponse* response) override;
 
-  grpc::Status GetData(grpc::ServerContext* context,
-                       const proto::EnergyRequest* request,
-                       proto::EnergyDataResponse* response) override;
+  grpc::Status GetSamples(grpc::ServerContext* context,
+                          const proto::EnergyRequest* request,
+                          proto::EnergySamplesResponse* response) override;
 
   grpc::Status GetEvents(grpc::ServerContext* context,
                          const proto::EnergyRequest* request,
