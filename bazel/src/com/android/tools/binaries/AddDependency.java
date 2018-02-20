@@ -16,6 +16,8 @@
 
 package com.android.tools.binaries;
 
+import static java.util.Collections.emptyList;
+
 import com.android.tools.maven.AetherUtils;
 import com.android.tools.maven.MavenCoordinates;
 import com.android.tools.maven.MavenRepository;
@@ -30,6 +32,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.DependencyCollectionContext;
+import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
@@ -74,6 +78,7 @@ public class AddDependency {
         JavaImportGenerator imports = new JavaImportGenerator(mRepo);
         List<RemoteRepository> repositories = Lists.newArrayList(AetherUtils.REPOSITORIES);
 
+        boolean ignoreDeps = false;
         Map<Boolean, List<String>> argsByFlag =
                 args.stream().collect(Collectors.partitioningBy(s -> s.startsWith("--")));
 
@@ -83,19 +88,43 @@ public class AddDependency {
                 String repoUrl = flag.substring("--repo=".length());
                 repositories.add(
                         0, new RemoteRepository.Builder(repoUrl, "default", repoUrl).build());
+            } else if (flag.equals("--ignore-deps")) {
+                ignoreDeps = true;
             } else {
                 System.err.println("Unknown flag " + flag);
                 System.exit(1);
             }
         }
 
-        CollectRequest request = new CollectRequest();
-        request.setDependencies(
+        List<Dependency> roots =
                 coordinates
                         .stream()
                         .map(DefaultArtifact::new)
                         .map(artifact -> new Dependency(artifact, JavaScopes.COMPILE))
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList());
+
+        DependencySelector dependencySelector;
+        if (ignoreDeps) {
+            dependencySelector =
+                    new DependencySelector() {
+                        @Override
+                        public boolean selectDependency(Dependency dependency) {
+                            return roots.contains(dependency);
+                        }
+
+                        @Override
+                        public DependencySelector deriveChildSelector(
+                                DependencyCollectionContext context) {
+                            return this;
+                        }
+                    };
+        } else {
+            dependencySelector = AetherUtils.buildDependencySelector(emptyList());
+        }
+        mRepo.getRepositorySystemSession().setDependencySelector(dependencySelector);
+
+        CollectRequest request = new CollectRequest();
+        request.setDependencies(roots);
         request.setRepositories(repositories);
 
         DependencyResult result = mRepo.resolveDependencies(new DependencyRequest(request, null));

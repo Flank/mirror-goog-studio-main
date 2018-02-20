@@ -88,12 +88,15 @@ public class AetherUtils {
         return session;
     }
 
-    public static AndDependencySelector buildDependencySelector(
-            ImmutableList<Exclusion> exclusions) {
+    public static AndDependencySelector buildDependencySelector(List<Exclusion> exclusions) {
         return new AndDependencySelector(
                 new OptionalDependencySelector(),
                 new ScopeDependencySelector(
                         ImmutableList.of(JavaScopes.COMPILE, JavaScopes.RUNTIME), null),
+                new ExclusionDependencySelector(
+                        ImmutableList.of(
+                                new Exclusion("maven-plugins", "*", "*", "*"),
+                                new Exclusion("*", "*", "*", "plugin"))),
                 new ExclusionDependencySelector(exclusions));
     }
 }
