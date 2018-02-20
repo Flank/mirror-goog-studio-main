@@ -234,15 +234,6 @@ public class BenchmarkTest {
                                 + ", this means that benchmark results will not be uploaded to GCS");
             }
 
-            try {
-                uploaders.add(LocalCSVProfileUploader.fromEnvironment());
-            } catch (Exception e) {
-                System.out.println(
-                        "couldn't add LocalCSVProfileUploader to the list of default uploaders, reason: "
-                                + e
-                                + ", this means that benchmark results will not be saved locally as CSVs");
-            }
-
             UPLOADERS = ImmutableList.copyOf(uploaders);
         }
 
