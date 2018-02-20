@@ -127,11 +127,15 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "<metadata>\n"
                 + "  <com.android.tools.build/>"
                 + "</metadata>");
-        task.networkData("https://maven.google.com/com/android/tools/build/group-index.xml", ""
-                + "<?xml version='1.0' encoding='UTF-8'?>\n"
-                + "<com.android.tools.build>\n"
-                + "  <gradle versions=\"3.0.0-alpha1,3.0.0-alpha2,3.0.0-alpha3,3.0.0-alpha4,3.0.0-alpha5,3.0.0-alpha6,3.0.0-alpha7,3.0.0-alpha8,3.0.0-alpha9,3.0.0-beta1,3.0.0-beta2,3.0.0-beta3,3.0.0-beta4,3.0.0-beta5,3.0.0-beta6,3.0.0-beta7,3.0.0-rc1,3.0.0-rc2,3.0.0,3.1.0-alpha01,3.1.0-alpha02,3.1.0-alpha03\"/>\n"
-                + "</com.android.tools.build>");
+        task.networkData(
+                "https://maven.google.com/com/android/tools/build/group-index.xml",
+                ""
+                        + "<?xml version='1.0' encoding='UTF-8'?>\n"
+                        + "<com.android.tools.build>\n"
+                        + "  <gradle versions=\"3.0.0-alpha1,3.0.0-alpha2,3.0.0-alpha3,3.0.0-alpha4,3.0.0-alpha5,3.0.0-alpha6,3.0.0-alpha7,3.0.0-alpha8,3.0.0-alpha9,3.0.0-beta1,3.0.0-beta2,3.0.0-beta3,3.0.0-beta4,3.0.0-beta5,3.0.0-beta6,3.0.0-beta7,3.0.0-rc1,3.0.0-rc2,3.0.0,"
+                        + "3.1.0-alpha01,3.1.0-alpha02,3.1.0-alpha03,3.1.0-alpha04,3.1.0-alpha05,3.1.0-alpha06,3.1.0-alpha07,3.1.0-alpha08,3.1.0-alpha09,3.1.0-beta1,3.1.0-beta2,3.1.0-beta3,3.1.0-beta4,3.1.0-rc1,3.1.0,"
+                        + "3.2.0-alpha01,3.2.0-alpha02,3.2.0-alpha03\"/>\n"
+                        + "</com.android.tools.build>");
 
         // Also ensure we don't have a stale cache on disk.
         File cacheDir = new TestLintClient().getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true);
@@ -334,57 +338,60 @@ public class GradleDetectorTest extends AbstractCheckTest {
     }
 
     public void testVersionsFromGradleCache() {
-        String expected = ""
-                + "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.1.0-alpha03 [GradleDependency]\n"
-                + "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:10: Warning: A newer version of org.apache.httpcomponents:httpcomponents-core than 4.2 is available: 4.4 [GradleDependency]\n"
-                + "    compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:11: Warning: A newer version of com.android.support:recyclerview-v7 than 25.0.0 is available: 26.0.0 [GradleDependency]\n"
-                + "    compile 'com.android.support:recyclerview-v7:25.0.0'\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:12: Warning: A newer version of com.google.firebase:firebase-messaging than 10.2.1 is available: 11.0.0 [GradleDependency]\n"
-                + "    compile 'com.google.firebase:firebase-messaging:10.2.1'\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 4 warnings\n";
+        String expected =
+                ""
+                        + "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.2.0-alpha03 [GradleDependency]\n"
+                        + "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "build.gradle:10: Warning: A newer version of org.apache.httpcomponents:httpcomponents-core than 4.2 is available: 4.4 [GradleDependency]\n"
+                        + "    compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "build.gradle:11: Warning: A newer version of com.android.support:recyclerview-v7 than 25.0.0 is available: 26.0.0 [GradleDependency]\n"
+                        + "    compile 'com.android.support:recyclerview-v7:25.0.0'\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "build.gradle:12: Warning: A newer version of com.google.firebase:firebase-messaging than 10.2.1 is available: 11.0.0 [GradleDependency]\n"
+                        + "    compile 'com.google.firebase:firebase-messaging:10.2.1'\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 4 warnings\n";
 
         lint().files(
-                gradle(""
-                        + "buildscript {\n"
-                        + "    repositories {\n"
-                        + "        jcenter()\n"
-                        + "    }\n"
-                        + "    dependencies {\n"
-                        + "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n"
-                        + "    }\n"
-                        + "}\n"
-                        + "dependencies {\n"
-                        + "    compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n"
-                        + "    compile 'com.android.support:recyclerview-v7:25.0.0'\n"
-                        + "    compile 'com.google.firebase:firebase-messaging:10.2.1'\n"
-                        + "}\n"))
+                        gradle(
+                                ""
+                                        + "buildscript {\n"
+                                        + "    repositories {\n"
+                                        + "        jcenter()\n"
+                                        + "    }\n"
+                                        + "    dependencies {\n"
+                                        + "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "dependencies {\n"
+                                        + "    compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n"
+                                        + "    compile 'com.android.support:recyclerview-v7:25.0.0'\n"
+                                        + "    compile 'com.google.firebase:firebase-messaging:10.2.1'\n"
+                                        + "}\n"))
                 .issues(DEPENDENCY)
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
                 .expect(expected)
-                .expectFixDiffs(""
-                        + "Fix for build.gradle line 5: Change to 3.1.0-alpha03:\n"
-                        + "@@ -6 +6\n"
-                        + "-         classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n"
-                        + "+         classpath 'com.android.tools.build:gradle:3.1.0-alpha03'\n"
-                        + "Fix for build.gradle line 9: Change to 4.4:\n"
-                        + "@@ -10 +10\n"
-                        + "-     compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n"
-                        + "+     compile 'org.apache.httpcomponents:httpcomponents-core:4.4'\n"
-                        + "Fix for build.gradle line 10: Change to 26.0.0:\n"
-                        + "@@ -11 +11\n"
-                        + "-     compile 'com.android.support:recyclerview-v7:25.0.0'\n"
-                        + "+     compile 'com.android.support:recyclerview-v7:26.0.0'\n"
-                        + "Fix for build.gradle line 11: Change to 11.0.0:\n"
-                        + "@@ -12 +12\n"
-                        + "-     compile 'com.google.firebase:firebase-messaging:10.2.1'\n"
-                        + "+     compile 'com.google.firebase:firebase-messaging:11.0.0'\n");
+                .expectFixDiffs(
+                        ""
+                                + "Fix for build.gradle line 5: Change to 3.2.0-alpha03:\n"
+                                + "@@ -6 +6\n"
+                                + "-         classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n"
+                                + "+         classpath 'com.android.tools.build:gradle:3.2.0-alpha03'\n"
+                                + "Fix for build.gradle line 9: Change to 4.4:\n"
+                                + "@@ -10 +10\n"
+                                + "-     compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n"
+                                + "+     compile 'org.apache.httpcomponents:httpcomponents-core:4.4'\n"
+                                + "Fix for build.gradle line 10: Change to 26.0.0:\n"
+                                + "@@ -11 +11\n"
+                                + "-     compile 'com.android.support:recyclerview-v7:25.0.0'\n"
+                                + "+     compile 'com.android.support:recyclerview-v7:26.0.0'\n"
+                                + "Fix for build.gradle line 11: Change to 11.0.0:\n"
+                                + "@@ -12 +12\n"
+                                + "-     compile 'com.google.firebase:firebase-messaging:10.2.1'\n"
+                                + "+     compile 'com.google.firebase:firebase-messaging:11.0.0'\n");
     }
 
     public void testVersionFromIDE() {
@@ -1127,17 +1134,22 @@ public class GradleDetectorTest extends AbstractCheckTest {
     }
 
     public void testPreviewVersions() {
-        String expected = ""
-                + "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is " + GRADLE_PLUGIN_RECOMMENDED_VERSION + " [GradlePluginVersion]\n"
-                + "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: " + GRADLE_PLUGIN_RECOMMENDED_VERSION + " [GradleDependency]\n"
-                + "        classpath 'com.android.tools.build:gradle:1.0.0'\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:8: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.1.0-alpha03 [GradleDependency]\n"
-                + "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 2 warnings\n";
+        String expected =
+                ""
+                        + "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is "
+                        + GRADLE_PLUGIN_RECOMMENDED_VERSION
+                        + " [GradlePluginVersion]\n"
+                        + "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "build.gradle:7: Warning: A newer version of com.android.tools.build:gradle than 1.0.0 is available: "
+                        + GRADLE_PLUGIN_RECOMMENDED_VERSION
+                        + " [GradleDependency]\n"
+                        + "        classpath 'com.android.tools.build:gradle:1.0.0'\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "build.gradle:8: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.2.0-alpha03 [GradleDependency]\n"
+                        + "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 2 warnings\n";
 
         //noinspection all // Sample code
         lint().files(
