@@ -21,6 +21,7 @@ cc_library(
         "cpu_service.h",
         "cpu_usage_sampler.h",
         "internal_cpu_service.h",
+        "profiling_app.h",
         "simpleperf.h",
         "simpleperf_manager.h",
         "thread_monitor.h",
