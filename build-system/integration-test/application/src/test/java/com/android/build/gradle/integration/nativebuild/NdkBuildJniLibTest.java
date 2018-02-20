@@ -93,8 +93,6 @@ public class NdkBuildJniLibTest {
                 .hasVersionCode(1000123);
         assertThatApk(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "gingerbread"))
                 .hasVersionCode(1100123);
-        assertThatApk(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "gingerbread"))
-                .hasVersionCode(1200123);
         assertThatApk(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "gingerbread"))
                 .hasVersionCode(1300123);
         assertThatApk(app.getApk("universal", GradleTestProject.ApkType.DEBUG, "icecreamSandwich"))
@@ -103,8 +101,6 @@ public class NdkBuildJniLibTest {
                         app.getApk(
                                 "armeabi-v7a", GradleTestProject.ApkType.DEBUG, "icecreamSandwich"))
                 .hasVersionCode(2100123);
-        assertThatApk(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "icecreamSandwich"))
-                .hasVersionCode(2200123);
         assertThatApk(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "icecreamSandwich"))
                 .hasVersionCode(2300123);
     }

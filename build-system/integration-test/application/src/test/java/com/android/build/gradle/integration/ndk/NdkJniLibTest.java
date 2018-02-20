@@ -57,16 +57,12 @@ public class NdkJniLibTest {
                 .hasVersionCode(1000123);
         TruthHelper.assertThat(app.getApk("armeabi-v7a", ApkType.DEBUG, "gingerbread"))
                 .hasVersionCode(1100123);
-        TruthHelper.assertThat(app.getApk("mips", ApkType.DEBUG, "gingerbread"))
-                .hasVersionCode(1200123);
         TruthHelper.assertThat(app.getApk("x86", ApkType.DEBUG, "gingerbread"))
                 .hasVersionCode(1300123);
         TruthHelper.assertThat(app.getApk("universal", ApkType.DEBUG, "icecreamSandwich"))
                 .hasVersionCode(2000123);
         TruthHelper.assertThat(app.getApk("armeabi-v7a", ApkType.DEBUG, "icecreamSandwich"))
                 .hasVersionCode(2100123);
-        TruthHelper.assertThat(app.getApk("mips", ApkType.DEBUG, "icecreamSandwich"))
-                .hasVersionCode(2200123);
         TruthHelper.assertThat(app.getApk("x86", ApkType.DEBUG, "icecreamSandwich"))
                 .hasVersionCode(2300123);
     }

@@ -57,11 +57,9 @@ public class CmakeJniPureSplitLibTest {
         GradleTestProject app = project.getSubproject("app");
         assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "free"))
                 .hasVersionCode(123);
-        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123);
         assertThat(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123);
         assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "paid"))
                 .hasVersionCode(123);
-        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123);
         assertThat(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123);
     }
 
