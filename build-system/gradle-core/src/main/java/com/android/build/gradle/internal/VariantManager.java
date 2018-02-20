@@ -548,7 +548,7 @@ public class VariantManager implements VariantModel {
                     outputSpec.getOutputType();
             if (buildArtifactsHolder.hasArtifact(buildArtifactType)) {
                 BuildableArtifact artifact =
-                        buildArtifactsHolder.getArtifactFiles(buildArtifactType);
+                        buildArtifactsHolder.getFinalArtifactFiles(buildArtifactType);
 
                 // Gradle only support publishing single file.  Therefore, unless Gradle starts
                 // supporting publishing multiple files, PublishingSpecs should not contain any

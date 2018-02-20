@@ -29,7 +29,7 @@ import org.apache.commons.io.FileUtils;
 /** Information containing a module application ID. */
 public class ApplicationId {
 
-    @VisibleForTesting static final String PERSISTED_FILE_NAME = "application-id.json";
+    static final String PERSISTED_FILE_NAME = "application-id.json";
 
     @NonNull private final String applicationId;
 
@@ -42,8 +42,7 @@ public class ApplicationId {
         return applicationId;
     }
 
-    public void save(@NonNull File outputDirectory) throws IOException {
-        File outputFile = new File(outputDirectory, PERSISTED_FILE_NAME);
+    public void save(@NonNull File outputFile) throws IOException {
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gson = gsonBuilder.create();
         FileUtils.write(outputFile, gson.toJson(this));
@@ -59,10 +58,5 @@ public class ApplicationId {
         try (FileReader fileReader = new FileReader(input)) {
             return gson.fromJson(fileReader, ApplicationId.class);
         }
-    }
-
-    @NonNull
-    public static File getOutputFile(@NonNull File directory) {
-        return new File(directory, PERSISTED_FILE_NAME);
     }
 }

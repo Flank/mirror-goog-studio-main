@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.api.artifact
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType
 
 /**
  * Specification to define supported features of [BuildArtifactType]
@@ -31,7 +32,8 @@ data class BuildArtifactSpec(
                 //   type                                      appendable  replaceable
                 spec(BuildArtifactType.JAVAC_CLASSES,          true,       true),
                 spec(BuildArtifactType.JAVA_COMPILE_CLASSPATH, true,       false),
-                spec(SourceArtifactType.ANDROID_RESOURCES,     true,       true))
+                spec(SourceArtifactType.ANDROID_RESOURCES,     true,       true),
+                spec(InternalArtifactType.METADATA_APP_ID_DECLARATION, false, true))
 
         fun spec(type : ArtifactType, appendable : Boolean, replaceable: Boolean) =
             type to BuildArtifactSpec(type, appendable, replaceable)
