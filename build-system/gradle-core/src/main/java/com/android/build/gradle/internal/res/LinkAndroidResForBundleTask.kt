@@ -170,12 +170,11 @@ open class LinkAndroidResForBundleTask
                         builder.messageReceiver))
 
         return AaptGradleFactory.make(
-                aaptGeneration!!,
-                builder,
-                processOutputHandler,
-                true,
-                FileUtils.mkdirs(File(incrementalFolder, "aapt-temp")),
-                aaptOptions.cruncherProcesses)
+            aaptGeneration!!,
+            builder,
+            processOutputHandler,
+            true,
+            aaptOptions.cruncherProcesses)
     }
 
     @get:InputFiles

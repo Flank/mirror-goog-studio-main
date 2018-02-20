@@ -410,7 +410,6 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                 androidBuilder,
                 null,
                 true,
-                FileUtils.mkdirs(intermediateFolder),
                 0);
     }
 

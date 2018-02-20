@@ -209,7 +209,6 @@ public class MergeResources extends IncrementalTask {
                         builder,
                         createProcessOutputHandler(aaptGeneration, builder, blameLog),
                         crunchPng,
-                        intermediateDir,
                         scope.getGlobalScope()
                                 .getExtension()
                                 .getAaptOptions()

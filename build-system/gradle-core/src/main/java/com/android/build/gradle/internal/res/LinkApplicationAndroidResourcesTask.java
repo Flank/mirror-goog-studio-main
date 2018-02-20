@@ -602,7 +602,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 builder,
                 processOutputHandler,
                 true,
-                FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
                 aaptOptions.getCruncherProcesses());
     }
 

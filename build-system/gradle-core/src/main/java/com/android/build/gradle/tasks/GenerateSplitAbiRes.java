@@ -240,7 +240,6 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                 new LoggedProcessOutputHandler(
                         new AaptGradleFactory.FilteringLogger(builder.getLogger())),
                 true,
-                FileUtils.mkdirs(new File(variantScope.getIncrementalDir(getName()), "aapt-temp")),
                 variantScope
                         .getGlobalScope()
                         .getExtension()

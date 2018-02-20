@@ -181,7 +181,6 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                         builder,
                         processOutputHandler,
                         true,
-                        FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
                         0)) {
 
             if (aapt instanceof AaptV1) {
