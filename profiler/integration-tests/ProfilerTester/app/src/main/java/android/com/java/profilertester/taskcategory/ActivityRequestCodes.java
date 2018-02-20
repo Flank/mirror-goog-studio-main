@@ -14,4 +14,5 @@ public enum ActivityRequestCodes {
     ACTION_REQUEST_SCAN_ALWAYS_AVAILABLE, // Request code for making Wifi scanning always available.
     LOCATION, // Request code for enabling location services.
     WRITE_SETTINGS, // Request code to allow writing to system settings.
+    CAMERA, // Request code for accessing the camera.
 }

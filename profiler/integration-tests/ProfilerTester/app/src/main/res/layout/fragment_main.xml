@@ -52,4 +52,10 @@
         android:textSize="22sp"
         android:inputType="textMultiLine"
         />
+
+    <SurfaceView
+        android:id="@+id/preview_surface"
+        android:layout_width="1dip"
+        android:layout_height="1dip" />
+
 </android.support.constraint.ConstraintLayout>

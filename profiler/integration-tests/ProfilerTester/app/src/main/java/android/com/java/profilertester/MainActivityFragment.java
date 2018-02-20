@@ -2,6 +2,7 @@ package android.com.java.profilertester;
 
 import android.app.Activity;
 import android.com.java.profilertester.taskcategory.BluetoothTaskCategory;
+import android.com.java.profilertester.taskcategory.CameraTaskCategory;
 import android.com.java.profilertester.taskcategory.CpuTaskCategory;
 import android.com.java.profilertester.taskcategory.EventTaskCategory;
 import android.com.java.profilertester.taskcategory.LocationTaskCategory;
@@ -74,7 +75,8 @@ public class MainActivityFragment extends Fragment {
                             (EditText) mFragmentView.findViewById(R.id.section_editor)),
                     new BluetoothTaskCategory(host),
                     new LocationTaskCategory(host, mMainLooperThread.getLooper()),
-                    new ScreenBrightnessTaskCategory(host)
+                    new ScreenBrightnessTaskCategory(host),
+                    new CameraTaskCategory(host)
                 };
         ArrayAdapter<TaskCategory> categoryAdapters =
                 new ArrayAdapter<>(
