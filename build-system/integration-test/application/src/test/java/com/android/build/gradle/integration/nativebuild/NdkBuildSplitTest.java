@@ -127,10 +127,6 @@ public class NdkBuildSplitTest {
                 .hasVersionCode(3100123);
         assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "current"))
                 .contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(project.getApk("mips64", GradleTestProject.ApkType.DEBUG, "current"))
-                .hasVersionCode(3400123);
-        assertThatApk(project.getApk("mips64", GradleTestProject.ApkType.DEBUG, "current"))
-                .contains("lib/mips64/libhello-jni.so");
     }
 
     @Test
@@ -151,7 +147,7 @@ public class NdkBuildSplitTest {
 
         assertThat(model).isNotNull();
         assertThat(model.getName()).isEqualTo("project");
-        assertThat(model.getArtifacts()).hasSize(24); // # of ABI (4) * # of variants (6)
+        assertThat(model.getArtifacts()).hasSize(12); // # of ABI (2) * # of variants (6)
         assertThat(model.getFileExtensions()).hasSize(1);
 
         for (File file : model.getBuildFiles()) {

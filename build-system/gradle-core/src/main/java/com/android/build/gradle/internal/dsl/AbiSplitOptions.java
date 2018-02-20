@@ -38,7 +38,7 @@ public class AbiSplitOptions extends SplitOptions {
     @Override
     protected Set<String> getDefaultValues() {
         Set<String> values = Sets.newHashSet();
-        for (Abi abi : NdkHandler.getAbiList()) {
+        for (Abi abi : NdkHandler.getDefaultAbiList()) {
             values.add(abi.getName());
         }
         return values;

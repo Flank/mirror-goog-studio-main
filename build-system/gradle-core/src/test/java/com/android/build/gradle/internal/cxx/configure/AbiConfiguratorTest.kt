@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
+import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.Sets
 import com.google.common.truth.Truth.assertThat
@@ -25,8 +26,8 @@ import org.junit.Test
 
 class AbiConfiguratorTest {
     companion object {
-        val ALL_ABI = Abi.values().toList()
-        val ALL_ABI_AS_STRING = Abi.values().map(Abi::getName)
+        val ALL_ABI = Abi.getDefaultValues().toList()
+        val ALL_ABI_AS_STRING = ALL_ABI.map(Abi::getName)
         val ALL_ABI_COMMA_STRING = ALL_ABI_AS_STRING.sorted().joinToString(", ")
     }
 
@@ -39,10 +40,13 @@ class AbiConfiguratorTest {
             ndkHandlerDefaultAbis: Collection<Abi> = AbiConfiguratorTest.ALL_ABI,
             externalNativeBuildAbiFilters: Set<String> = setOf(),
             ndkConfigAbiFilters: Set<String> = setOf(),
-            splitsFilterAbis: Set<String> = setOf(),
+            splitsFilterAbis: Set<String> = NdkHandler
+                    .getDefaultAbiList()
+                    .map { abi : Abi -> abi.getName() }
+                    .toSet(),
             ideBuildOnlyTargetAbi: Boolean = false,
             ideBuildTargetAbi: String? = null): AbiConfigurator {
-        return AbiConfigurator(evalIssueReporter,
+        val result = AbiConfigurator(evalIssueReporter,
                 variantName,
                 ndkHandlerSupportedAbis,
                 ndkHandlerDefaultAbis,
@@ -51,7 +55,7 @@ class AbiConfiguratorTest {
                 splitsFilterAbis,
                 ideBuildOnlyTargetAbi,
                 ideBuildTargetAbi)
-
+        return result
     }
 
     @Test
@@ -114,6 +118,7 @@ class AbiConfiguratorTest {
     fun testValidAbiThatIsNotInNdk() {
         val configurator = configure(
                 evalIssueReporter,
+                splitsFilterAbis = setOf(),
                 ndkHandlerSupportedAbis = listOf(Abi.X86_64),
                 externalNativeBuildAbiFilters = setOf("x86"))
         assertThat(evalIssueReporter.messages).containsExactly(
@@ -203,5 +208,40 @@ class AbiConfiguratorTest {
                 ideBuildTargetAbi = null)
         assertThat(configurator.validAbis).containsExactlyElementsIn(ALL_ABI)
         assertThat(configurator.allAbis).containsExactlyElementsIn(ALL_ABI_AS_STRING)
+    }
+
+    @Test
+    fun testAbiSplitsLookDefaulted() {
+        // Empty list should not error
+        val configurator = configure(
+                evalIssueReporter,
+                ideBuildOnlyTargetAbi = true,
+                ideBuildTargetAbi = null)
+        assertThat(configurator.validAbis).containsExactlyElementsIn(ALL_ABI)
+        assertThat(configurator.allAbis).containsExactlyElementsIn(ALL_ABI_AS_STRING)
+    }
+
+    @Test
+    fun testPeopleCanSpecifyMipsIfTheyReallyWantTo() {
+        // Empty list should not error
+        val configurator = configure(
+                evalIssueReporter,
+                splitsFilterAbis = setOf("mips"),
+                ideBuildOnlyTargetAbi = true,
+                ideBuildTargetAbi = null)
+        assertThat(configurator.validAbis).containsExactly(Abi.MIPS)
+        assertThat(configurator.allAbis).containsExactly("mips")
+    }
+
+    @Test
+    fun testMispelledMips() {
+        // Empty list should not error
+        val configurator = configure(
+                evalIssueReporter,
+                splitsFilterAbis = setOf("misp"),
+                ideBuildOnlyTargetAbi = true,
+                ideBuildTargetAbi = null)
+        assertThat(configurator.validAbis).isEmpty()
+        assertThat(configurator.allAbis).containsExactly("misp")
     }
 }
