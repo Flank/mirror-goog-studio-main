@@ -70,6 +70,11 @@ public class BenchmarkLogger {
         return Logger.getInstance(BenchmarkLogger.class);
     }
 
+
+    // Our perf data upload script does not permit a certain set of characters in the file names.
+    private static final String INVALID_CHARACTERS = "[\\[\\]]";
+    private static final String REPLACEMENT_CHARACTER = "-";
+
     @NotNull private final String myMetricName;
     @NotNull private final File myOutputDirectory;
     @NotNull private final Map<Benchmark, List<MetricSample>> mySamples;
@@ -79,11 +84,27 @@ public class BenchmarkLogger {
      *     for a line series on a dashboard (usually the name of a test).
      */
     public BenchmarkLogger(@NotNull String metricName) {
-        myMetricName = metricName;
+        String replacedMetricName =
+                metricName.replaceAll(INVALID_CHARACTERS, REPLACEMENT_CHARACTER);
+        if (!replacedMetricName.equals(metricName)) {
+            getLogger()
+                    .info(
+                            String.format(
+                                    "Metric name contains disallowed characters and have been renamed to %s",
+                                    replacedMetricName));
+        }
+
+        myMetricName = replacedMetricName;
         myOutputDirectory = TestUtils.getTestOutputDir();
 
         // Preserve insertion order - mostly for test purposes.
         mySamples = new LinkedHashMap<>();
+    }
+
+    @TestOnly
+    @NotNull
+    String getMetricName() {
+        return myMetricName;
     }
 
     @TestOnly
