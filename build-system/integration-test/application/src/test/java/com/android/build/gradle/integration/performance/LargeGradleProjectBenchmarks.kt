@@ -33,14 +33,16 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
 import java.io.File
 import java.util.function.Supplier
 
-object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
-    private val SCENARIOS = listOf(ProjectScenario.D8_NATIVE_MULTIDEX,
+class LargeGradleProjectBenchmarks(private val benchmarkEnvironment: BenchmarkEnvironment) : Supplier<List<Benchmark>> {
+    companion object {
+        private val SCENARIOS = listOf(ProjectScenario.D8_NATIVE_MULTIDEX,
             ProjectScenario.DEX_ARCHIVE_NATIVE_MULTIDEX)
 
-    private const val ACTIVITY_PATH =
+        private const val ACTIVITY_PATH =
             "outissue/carnally/src/main/java/com/studio/carnally/LoginActivity.java"
-    private const val RES_PATH =
+        private const val RES_PATH =
             "outissue/carnally/src/main/res/values/strings.xml"
+    }
 
     override fun get(): List<Benchmark> {
         var benchmarks: List<Benchmark> = mutableListOf()
@@ -134,14 +136,15 @@ object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
         return benchmarks
     }
 
-    fun benchmark(scenario: ProjectScenario, benchmarkMode: BenchmarkMode, action: BenchmarkAction): Benchmark {
+    private fun benchmark(scenario: ProjectScenario, benchmarkMode: BenchmarkMode, action: BenchmarkAction): Benchmark {
         return Benchmark(
+                benchmarkEnvironment = benchmarkEnvironment,
                 scenario = scenario,
                 benchmark = Logging.Benchmark.PERF_ANDROID_LARGE,
                 benchmarkMode = benchmarkMode,
                 projectFactory = {
                     it
-                        .fromDir(File(BenchmarkTest.getProjectDir().toFile(), "android-studio-gradle-test"))
+                        .fromDir(File(benchmarkEnvironment.projectDir.toFile(), "android-studio-gradle-test"))
                         .withHeap("20G")
                         .create()
                 },

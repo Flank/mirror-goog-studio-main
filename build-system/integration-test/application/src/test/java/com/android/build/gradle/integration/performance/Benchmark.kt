@@ -35,6 +35,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 typealias BenchmarkAction = (((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, ModelBuilder) -> Unit)
 
 data class Benchmark(
+        private val benchmarkEnvironment: BenchmarkEnvironment,
+
         // These first three parameters should uniquely identify your benchmark
         val scenario: ProjectScenario,
         val benchmark: Logging.Benchmark,
@@ -53,14 +55,7 @@ data class Benchmark(
          * a subproject until _after_ project.apply has been called, so if you do need to do that
          * you'll have to supply a postApplyProject function and do it in there.
          */
-        var project = projectFactory(
-                GradleTestProject.builder()
-                        .enableProfileOutputInDirectory(BenchmarkTest.getProfileDirectory())
-                        .withTestDir(projectDir().toFile())
-                        .withRepoDirectories(BenchmarkTest.getMavenRepos())
-                        .withAndroidHome(BenchmarkTest.getSdkDir().toFile())
-                        .withGradleDistributionDirectory(BenchmarkTest.getGradleDir().toFile())
-                        .withKotlinVersion(KotlinVersion.CURRENT.toString()))
+        var project = projectFactory(benchmarkEnvironment.projectBuilder)
 
         var profile: GradleBuildProfile? = null
 
@@ -154,7 +149,7 @@ data class Benchmark(
     }
 
     fun projectDir(): Path =
-            BenchmarkTest.getBenchmarkTestRootDirectory()
+            benchmarkEnvironment.scratchDir
                     .resolve(scenario.name)
                     .resolve(benchmark.name)
                     .resolve(benchmarkMode.name)

@@ -21,20 +21,14 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.common.category.PerformanceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.SdkHelper;
-import com.android.testutils.TestUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 import com.google.common.io.MoreFiles;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,8 +37,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import javax.annotation.concurrent.NotThreadSafe;
 import org.junit.AssumptionViolatedException;
 import org.junit.Test;
@@ -106,118 +98,25 @@ import org.junit.runners.JUnit4;
  */
 @NotThreadSafe
 public class BenchmarkTest {
-    @Nullable private static List<Path> MAVEN_REPOS;
-    @Nullable private static Path PROJECT_DIR;
-    @Nullable private static Path SDK_DIR;
-    @Nullable private static Path GRADLE_DIR;
     @Nullable private static List<ProfileUploader> UPLOADERS;
-
-    /**
-     * Takes an InputStream in zip format and unzips it, returning the directory to which it was
-     * unzipped.
-     */
-    private static Path unzip(InputStream in) throws IOException {
-        File out = Files.createTempDir();
-        byte[] buffer = new byte[4096];
-
-        try (ZipInputStream zis = new ZipInputStream(in)) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-
-                File entryFile = new File(out.getAbsolutePath() + File.separator + entry.getName());
-                Files.createParentDirs(entryFile);
-
-                try (FileOutputStream fos = new FileOutputStream(entryFile)) {
-                    int len;
-                    while ((len = zis.read(buffer)) > 0) {
-                        fos.write(buffer, 0, len);
-                    }
-                }
-            }
-        }
-
-        return out.getAbsoluteFile().toPath();
-    }
+    @Nullable private static BenchmarkEnvironment BENCHMARK_ENVIRONMENT;
 
     public static void main(String... args) throws Exception {
+        Path tmp = Files.createTempDirectory("BenchmarkTest");
+
         try {
-            MAVEN_REPOS =
-                    ImmutableList.of(
-                            unzip(ClassLoader.getSystemResourceAsStream("offline_repo.zip")),
-                            unzip(ClassLoader.getSystemResourceAsStream("prebuilts_repo.zip")));
-
-            SDK_DIR = unzip(ClassLoader.getSystemResourceAsStream("android_sdk.zip"));
-            PROJECT_DIR = unzip(ClassLoader.getSystemResourceAsStream("projects.zip"));
-            GRADLE_DIR = unzip(ClassLoader.getSystemResourceAsStream("gradle.zip"));
-
-            new BenchmarkTest().run();
+            System.out.println("inflating benchmark environment from jar...");
+            BENCHMARK_ENVIRONMENT = BenchmarkEnvironment.fromJar(tmp);
+            BenchmarkTest benchmarkTest = new BenchmarkTest();
+            System.out.println("done, beginning benchmark tests...");
+            benchmarkTest.run();
         } finally {
-            if (MAVEN_REPOS != null) {
-                MAVEN_REPOS.forEach(BenchmarkTest::tryDeleteRecursively);
+            try {
+                MoreFiles.deleteRecursively(tmp);
+            } catch (IOException e) {
+                // we tried
             }
-            tryDeleteRecursively(SDK_DIR);
-            tryDeleteRecursively(PROJECT_DIR);
-            tryDeleteRecursively(GRADLE_DIR);
         }
-    }
-
-    private static void tryDeleteRecursively(@Nullable Path p) {
-        try {
-            if (p != null) {
-                MoreFiles.deleteRecursively(p);
-            }
-        } catch (IOException e) {
-            // we tried
-        }
-    }
-
-    @NonNull
-    public static List<Path> getMavenRepos() {
-        if (MAVEN_REPOS != null) {
-            return MAVEN_REPOS;
-        } else {
-            return GradleTestProject.getLocalRepositories();
-        }
-    }
-
-    @NonNull
-    public static Path getProjectDir() {
-        if (PROJECT_DIR != null) {
-            return PROJECT_DIR;
-        } else {
-            return TestUtils.getWorkspaceFile("external").toPath();
-        }
-    }
-
-    @NonNull
-    public static Path getSdkDir() {
-        if (SDK_DIR != null) {
-            return SDK_DIR;
-        } else {
-            return SdkHelper.findSdkDir().toPath();
-        }
-    }
-
-    @NonNull
-    public static Path getGradleDir() {
-        if (GRADLE_DIR != null) {
-            return GRADLE_DIR;
-        } else {
-            return TestUtils.getWorkspaceFile("tools/external/gradle").toPath();
-        }
-    }
-
-    @NonNull
-    public static Path getBenchmarkTestRootDirectory() {
-        return Paths.get(GradleTestProject.BUILD_DIR.getAbsolutePath(), "BenchmarkTest");
-    }
-
-    @NonNull
-    public static Path getProfileDirectory() {
-        return getBenchmarkTestRootDirectory().resolve("profiles");
     }
 
     @NonNull
@@ -257,6 +156,14 @@ public class BenchmarkTest {
             throw new AssumptionViolatedException(msg);
         }
 
+        if (BENCHMARK_ENVIRONMENT == null) {
+            BENCHMARK_ENVIRONMENT = BenchmarkEnvironment.fromRepo();
+        }
+
+        System.out.println("running benchmarks with BenchmarkEnvironment:");
+        System.out.println(BENCHMARK_ENVIRONMENT);
+        System.out.println();
+
         long start = System.nanoTime();
         List<Benchmark> benchmarks = new ArrayList<>();
 
@@ -264,9 +171,9 @@ public class BenchmarkTest {
          * Add all Benchmark objects to the list here. If you're wanting to create new Benchmarks,
          * this is the place to add them to make sure that they're correctly filtered and sharded.
          */
-        benchmarks.addAll(AntennaPodBenchmarks.INSTANCE.get());
-        benchmarks.addAll(LargeGradleProjectBenchmarks.INSTANCE.get());
-        benchmarks.addAll(MediumGradleProjectBenchmarks.INSTANCE.get());
+        benchmarks.addAll(new AntennaPodBenchmarks(BENCHMARK_ENVIRONMENT).get());
+        benchmarks.addAll(new LargeGradleProjectBenchmarks(BENCHMARK_ENVIRONMENT).get());
+        benchmarks.addAll(new MediumGradleProjectBenchmarks(BENCHMARK_ENVIRONMENT).get());
 
         /*
          * We sort the benchmarks to make sure they're in a predictable, stable order. This is
@@ -433,7 +340,7 @@ public class BenchmarkTest {
          * each for them to upload to wherever they want to.
          */
         List<ProfileUploader> uploaders = getUploaders();
-        if (!uploaders.isEmpty()) {
+        if (!uploaders.isEmpty() && !protos.isEmpty()) {
             System.out.println("captured " + protos.size() + " profiles to be uploaded");
 
             for (ProfileUploader uploader : uploaders) {

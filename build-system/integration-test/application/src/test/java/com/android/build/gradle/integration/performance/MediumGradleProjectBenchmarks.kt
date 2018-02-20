@@ -25,8 +25,9 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
 import java.io.File
 import java.util.function.Supplier
 
-object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
-    private val SCENARIOS = listOf(
+class MediumGradleProjectBenchmarks(private val benchmarkEnvironment: BenchmarkEnvironment) : Supplier<List<Benchmark>> {
+    companion object {
+        private val SCENARIOS = listOf(
             ProjectScenario.LEGACY_MULTIDEX,
             ProjectScenario.DEX_ARCHIVE_LEGACY_MULTIDEX,
             ProjectScenario.NATIVE_MULTIDEX,
@@ -34,7 +35,9 @@ object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
             ProjectScenario.D8_NATIVE_MULTIDEX,
             ProjectScenario.D8_LEGACY_MULTIDEX)
 
-    private const val ACTIVITY = "WordPress/src/main/java/org/wordpress/android/ui/WebViewActivity.java"
+        private const val ACTIVITY = "WordPress/src/main/java/org/wordpress/android/ui/WebViewActivity.java"
+
+    }
 
     override fun get(): List<Benchmark> {
         var benchmarks: List<Benchmark> = mutableListOf()
@@ -122,11 +125,12 @@ object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
         return benchmarks
     }
 
-    fun benchmark(
+    private fun benchmark(
             scenario: ProjectScenario,
             benchmarkMode: BenchmarkMode,
             action: BenchmarkAction): Benchmark {
         return Benchmark(
+                benchmarkEnvironment = benchmarkEnvironment,
                 scenario = scenario,
                 benchmark = Logging.Benchmark.PERF_ANDROID_MEDIUM,
                 benchmarkMode = benchmarkMode,
@@ -135,7 +139,7 @@ object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                 },
                 projectFactory = { projectBuilder ->
                     projectBuilder
-                            .fromDir(File(BenchmarkTest.getProjectDir().toFile(), "gradle-perf-android-medium"))
+                            .fromDir(File(benchmarkEnvironment.projectDir.toFile(), "gradle-perf-android-medium"))
                             .withHeap("1536M")
                             .create()
                 },
