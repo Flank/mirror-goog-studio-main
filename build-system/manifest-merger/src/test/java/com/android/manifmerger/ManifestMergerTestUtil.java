@@ -138,7 +138,7 @@ public class ManifestMergerTestUtil {
             @NonNull String filename,
             @NonNull String className) throws Exception {
 
-        String resName = testDataDirectory + File.separator + filename;
+        String resName = testDataDirectory + "/" + filename;
         InputStream is = null;
         BufferedReader reader = null;
         BufferedWriter writer = null;
@@ -159,7 +159,7 @@ public class ManifestMergerTestUtil {
                     filename = resName3;
                 }
             }
-            assertNotNull("Test data file not found for " + filename, is);
+            assertNotNull("Test data file not found for " + resName, is);
 
             reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 

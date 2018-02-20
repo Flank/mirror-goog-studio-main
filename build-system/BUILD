@@ -14,7 +14,6 @@ iml_module(
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     tags = [
         "managed",
-        "no_test_windows",  # b/73306170
     ],
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
@@ -90,7 +89,6 @@ kotlin_test(
             "manifest-merger/src/test/java/**/*.kt",
         ],
     ),
-    tags = ["no_test_windows"],
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
