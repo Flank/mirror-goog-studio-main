@@ -57,7 +57,9 @@ public enum RemovedOptions implements Option<String> {
     OVERRIDE_PATH_CHECK_PROPERTY_OLD(
             "com.android.build.gradle.overridePathCheck",
             "This property has been replaced by android.overridePathCheck"),
-    ;
+    AAPT_NAMESPACING(
+            "android.aaptNamespacing",
+            "This property has been replaced by android.aaptOptions.namespaced");
 
     @NonNull private final String propertyName;
     @NonNull private final String errorMessage;
