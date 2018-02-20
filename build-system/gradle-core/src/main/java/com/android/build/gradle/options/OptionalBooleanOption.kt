@@ -14,76 +14,39 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.options;
+package com.android.build.gradle.options
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.builder.model.AndroidProject
 
-public enum OptionalBooleanOption implements Option<Boolean> {
+enum class OptionalBooleanOption(
+    override val propertyName: String,
+    override val deprecationTarget: DeprecationReporter.DeprecationTarget? = null
+) : Option<Boolean> {
     SIGNING_V1_ENABLED(AndroidProject.PROPERTY_SIGNING_V1_ENABLED),
     SIGNING_V2_ENABLED(AndroidProject.PROPERTY_SIGNING_V2_ENABLED),
     IDE_TEST_ONLY(AndroidProject.PROPERTY_TEST_ONLY),
-    SERIAL_AAPT2(AndroidProject.PROPERTY_INVOKE_JNI_AAPT2_LINK_SERIALLY)
+    SERIAL_AAPT2(AndroidProject.PROPERTY_INVOKE_JNI_AAPT2_LINK_SERIALLY),
     ;
 
-    @NonNull private final String propertyName;
-    @Nullable private final DeprecationReporter.DeprecationTarget deprecationTarget;
-
-    OptionalBooleanOption(@NonNull String propertyName) {
-        this(propertyName, null);
-    }
-
-    OptionalBooleanOption(
-            @NonNull String propertyName,
-            @Nullable DeprecationReporter.DeprecationTarget deprecationTarget) {
-        this.propertyName = propertyName;
-        this.deprecationTarget = deprecationTarget;
-    }
-
-    @Override
-    @NonNull
-    public String getPropertyName() {
-        return propertyName;
-    }
-
-    @Nullable
-    @Override
-    public Boolean getDefaultValue() {
-        return null;
-    }
-
-    @NonNull
-    @Override
-    public Boolean parse(@NonNull Object value) {
-        if (value instanceof CharSequence) {
-            return Boolean.parseBoolean(value.toString());
+    override fun parse(value: Any): Boolean {
+        if (value is CharSequence) {
+            return java.lang.Boolean.parseBoolean(value.toString())
         }
-        if (value instanceof Boolean) {
-            return (Boolean) value;
+        if (value is Boolean) {
+            return value
         }
-        if (value instanceof Number) {
-            return ((Number) value).intValue() != 0;
+        if (value is Number) {
+            return value.toInt() != 0
         }
-        throw new IllegalArgumentException(
-                "Cannot parse project property "
-                        + this.getPropertyName()
-                        + "='"
-                        + value
-                        + "' of type '"
-                        + value.getClass()
-                        + "' as boolean.");
-    }
-
-    @Override
-    public boolean isDeprecated() {
-        return (deprecationTarget != null);
-    }
-
-    @Nullable
-    @Override
-    public DeprecationReporter.DeprecationTarget getDeprecationTarget() {
-        return deprecationTarget;
+        throw IllegalArgumentException(
+            "Cannot parse project property "
+                    + this.propertyName
+                    + "='"
+                    + value
+                    + "' of type '"
+                    + value.javaClass
+                    + "' as boolean."
+        )
     }
 }

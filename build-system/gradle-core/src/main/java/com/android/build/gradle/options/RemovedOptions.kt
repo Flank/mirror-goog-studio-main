@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.options;
+package com.android.build.gradle.options
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.errors.DeprecationReporter
 
 /**
  * The list of options that have been removed.
  *
  * <p>If any of the deprecated options are set, a sync error will be raised.
  */
-public enum RemovedOptions implements Option<String> {
+enum class RemovedOptions(
+    override val propertyName: String,
+    private val errorMessage: String
+) : Option<String> {
     INCREMENTAL_JAVA_COMPILE(
             "android.incrementalJavaCompile",
             "The android.incrementalJavaCompile property has been replaced by a DSL property. "
@@ -61,43 +62,12 @@ public enum RemovedOptions implements Option<String> {
             "android.aaptNamespacing",
             "This property has been replaced by android.aaptOptions.namespaced");
 
-    @NonNull private final String propertyName;
-    @NonNull private final String errorMessage;
+    /** The option is already removed, so it shouldn't be counted as deprecated (but not yet removed).*/
+    override
+    val deprecationTarget: DeprecationReporter.DeprecationTarget?
+        get() = null
 
-    RemovedOptions(@NonNull String propertyName, @NonNull String errorMessage) {
-        this.propertyName = propertyName;
-        this.errorMessage = errorMessage;
-    }
-
-    @NonNull
-    @Override
-    public String getPropertyName() {
-        return propertyName;
-    }
-
-    @Nullable
-    @Override
-    public String getDefaultValue() {
-        return null;
-    }
-
-    @NonNull
-    @Override
-    public String parse(@NonNull Object value) {
-        return errorMessage;
-    }
-
-    @Override
-    public boolean isDeprecated() {
-        // The option is already removed, so it shouldn't be counted as deprecated (but not yet
-        // removed).
-        return false;
-    }
-
-    @Nullable
-    @Override
-    public DeprecationReporter.DeprecationTarget getDeprecationTarget() {
-        // Already removed.
-        return null;
+    override fun parse(value: Any): String {
+        return errorMessage
     }
 }

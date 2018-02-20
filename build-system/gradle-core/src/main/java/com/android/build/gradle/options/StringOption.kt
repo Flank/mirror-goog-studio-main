@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.options;
+package com.android.build.gradle.options
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.builder.model.AndroidProject
 
-public enum StringOption implements Option<String> {
+enum class StringOption(
+    override val propertyName: String,
+    override val deprecationTarget: DeprecationReporter.DeprecationTarget? = null
+) : Option<String> {
     BUILD_CACHE_DIR("android.buildCacheDir"),
 
     IDE_BUILD_TARGET_DENSITY(AndroidProject.PROPERTY_BUILD_DENSITY),
@@ -43,7 +44,7 @@ public enum StringOption implements Option<String> {
     IDE_OPTIONAL_COMPILATION_STEPS(AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS),
     IDE_COLD_SWAP_MODE(AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE),
     IDE_VERSION_NAME_OVERRIDE(AndroidProject.PROPERTY_VERSION_NAME),
-    
+
     IDE_TARGET_DEVICE_CODENAME(AndroidProject.PROPERTY_BUILD_API_CODENAME),
 
     // Profiler plugin
@@ -56,56 +57,18 @@ public enum StringOption implements Option<String> {
     BUILD_ARTIFACT_REPORT_FILE("android.buildartifact.reportfile"),
     ;
 
-    @NonNull private final String propertyName;
-    @Nullable private final DeprecationReporter.DeprecationTarget deprecationTarget;
-
-    StringOption(@NonNull String propertyName) {
-        this(propertyName, null);
-    }
-
-    StringOption(
-            @NonNull String propertyName,
-            @Nullable DeprecationReporter.DeprecationTarget deprecationTarget) {
-        this.propertyName = propertyName;
-        this.deprecationTarget = deprecationTarget;
-    }
-
-    @Override
-    @NonNull
-    public String getPropertyName() {
-        return propertyName;
-    }
-
-    @Nullable
-    @Override
-    public String getDefaultValue() {
-        return null;
-    }
-
-    @NonNull
-    @Override
-    public String parse(@NonNull Object value) {
-        if (value instanceof CharSequence || value instanceof Number) {
-            return value.toString();
+    override fun parse(value: Any): String {
+        if (value is CharSequence || value is Number) {
+            return value.toString()
         }
-        throw new IllegalArgumentException(
-                "Cannot parse project property "
-                        + this.getPropertyName()
-                        + "='"
-                        + value
-                        + "' of type '"
-                        + value.getClass()
-                        + "' as string.");
-    }
-
-    @Override
-    public boolean isDeprecated() {
-        return (deprecationTarget != null);
-    }
-
-    @Nullable
-    @Override
-    public DeprecationReporter.DeprecationTarget getDeprecationTarget() {
-        return deprecationTarget;
+        throw IllegalArgumentException(
+            "Cannot parse project property "
+                    + this.propertyName
+                    + "='"
+                    + value
+                    + "' of type '"
+                    + value.javaClass
+                    + "' as string."
+        )
     }
 }

@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.options;
+package com.android.build.gradle.options
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.builder.model.AndroidProject
 
-public enum IntegerOption implements Option<Integer> {
+enum class IntegerOption(
+    override val propertyName: String,
+    override val deprecationTarget: DeprecationReporter.DeprecationTarget? = null
+) : Option<Int> {
     ANDROID_TEST_SHARD_COUNT("android.androidTest.numShards"),
     ANDROID_SDK_CHANNEL("android.sdk.channel"),
 
     /**
      * Returns the level of model-only mode.
      *
-     * <p>The model-only mode is triggered when the IDE does a sync, and therefore we do things a
+     * The model-only mode is triggered when the IDE does a sync, and therefore we do things a
      * bit differently (don't throw exceptions for instance). Things evolved a bit over versions and
      * the behavior changes. This reflects the mode to use.
      *
@@ -56,63 +57,26 @@ public enum IntegerOption implements Option<Integer> {
     DEXING_READ_BUFFER_SIZE("android.dexingReadBuffer.size"),
     DEXING_WRITE_BUFFER_SIZE("android.dexingWriteBuffer.size");
 
-    @NonNull private final String propertyName;
-    @Nullable private final DeprecationReporter.DeprecationTarget deprecationTarget;
-
-    IntegerOption(@NonNull String propertyName) {
-        this(propertyName, null);
-    }
-
-    IntegerOption(
-            @NonNull String propertyName,
-            @Nullable DeprecationReporter.DeprecationTarget deprecationTarget) {
-        this.propertyName = propertyName;
-        this.deprecationTarget = deprecationTarget;
-    }
-
-    @Override
-    @NonNull
-    public String getPropertyName() {
-        return propertyName;
-    }
-
-    @Nullable
-    @Override
-    public Integer getDefaultValue() {
-        return null;
-    }
-
-    @NonNull
-    @Override
-    public Integer parse(@NonNull Object value) {
-        if (value instanceof CharSequence) {
+    override fun parse(value: Any): Int {
+        if (value is CharSequence) {
             try {
-                return Integer.parseInt(value.toString());
-            } catch (NumberFormatException ignored) {
+                return Integer.parseInt(value.toString())
+            } catch (ignored: NumberFormatException) {
                 // Throws below.
             }
-        }
-        if (value instanceof Number) {
-            return ((Number) value).intValue();
-        }
-        throw new IllegalArgumentException(
-                "Cannot parse project property "
-                        + this.getPropertyName()
-                        + "='"
-                        + value
-                        + "' of type '"
-                        + value.getClass()
-                        + "' as integer.");
-    }
 
-    @Override
-    public boolean isDeprecated() {
-        return (deprecationTarget != null);
-    }
-
-    @Nullable
-    @Override
-    public DeprecationReporter.DeprecationTarget getDeprecationTarget() {
-        return deprecationTarget;
+        }
+        if (value is Number) {
+            return value.toInt()
+        }
+        throw IllegalArgumentException(
+            "Cannot parse project property "
+                    + this.propertyName
+                    + "='"
+                    + value
+                    + "' of type '"
+                    + value.javaClass
+                    + "' as integer."
+        )
     }
 }

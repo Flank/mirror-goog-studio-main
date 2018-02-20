@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.options;
+package com.android.build.gradle.options
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.errors.DeprecationReporter
 
-public interface Option<T> {
+interface Option<out T> {
 
-    @NonNull
-    String getPropertyName();
+    val propertyName: String
 
-    @Nullable
-    T getDefaultValue();
+    val defaultValue: T?
+        get() = null
 
-    @NonNull
-    T parse(@NonNull Object value);
+    fun isDeprecated(): Boolean {
+        return deprecationTarget != null
+    }
 
-    boolean isDeprecated();
+    val deprecationTarget: DeprecationReporter.DeprecationTarget?
 
-    @Nullable
-    DeprecationReporter.DeprecationTarget getDeprecationTarget();
+    fun parse(value: Any): T
 }

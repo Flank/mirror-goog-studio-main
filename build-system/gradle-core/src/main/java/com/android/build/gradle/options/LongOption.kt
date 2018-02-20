@@ -14,73 +14,37 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.options;
+package com.android.build.gradle.options
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.errors.DeprecationReporter
 
-public enum LongOption implements Option<Long> {
+enum class LongOption(
+    override val propertyName: String,
+    override val deprecationTarget: DeprecationReporter.DeprecationTarget? = null
+) : Option<Long> {
     DEPRECATED_NDK_COMPILE_LEASE("android.deprecatedNdkCompileLease"),
     ;
 
-    @NonNull private final String propertyName;
-    @Nullable private final DeprecationReporter.DeprecationTarget deprecationTarget;
-
-    LongOption(@NonNull String propertyName) {
-        this(propertyName, null);
-    }
-
-    LongOption(
-            @NonNull String propertyName,
-            @Nullable DeprecationReporter.DeprecationTarget deprecationTarget) {
-        this.propertyName = propertyName;
-        this.deprecationTarget = deprecationTarget;
-    }
-
-    @Override
-    @NonNull
-    public final String getPropertyName() {
-        return propertyName;
-    }
-
-    @Nullable
-    @Override
-    public final Long getDefaultValue() {
-        return null;
-    }
-
-    @NonNull
-    @Override
-    public final Long parse(@NonNull Object value) {
-        if (value instanceof CharSequence) {
+    override fun parse(value: Any): Long {
+        if (value is CharSequence) {
             try {
-                return Long.parseLong(value.toString());
-            } catch (NumberFormatException ignored) {
+                return java.lang.Long.parseLong(value.toString())
+            } catch (ignored: NumberFormatException) {
                 // Throws below.
             }
         }
-        if (value instanceof Number) {
-            return ((Number) value).longValue();
+        if (value is Number) {
+            return value.toLong()
         }
-        throw new IllegalArgumentException(
-                "Cannot parse project property "
-                        + this.getPropertyName()
-                        + "='"
-                        + value
-                        + "' of type '"
-                        + value.getClass()
-                        + "' as long.");
+        throw IllegalArgumentException(
+            "Cannot parse project property "
+                    + this.propertyName
+                    + "='"
+                    + value
+                    + "' of type '"
+                    + value.javaClass
+                    + "' as long."
+        )
     }
 
-    @Override
-    public boolean isDeprecated() {
-        return (deprecationTarget != null);
-    }
-
-    @Nullable
-    @Override
-    public DeprecationReporter.DeprecationTarget getDeprecationTarget() {
-        return deprecationTarget;
-    }
 }
