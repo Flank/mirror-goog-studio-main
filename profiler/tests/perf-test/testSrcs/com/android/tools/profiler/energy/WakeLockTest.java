@@ -25,6 +25,9 @@ import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent.MetadataCase;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
+import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.CreationFlag;
+import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.Level;
+import com.android.tools.profiler.proto.EnergyProfiler.WakeLockReleased.ReleaseFlag;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -75,7 +78,10 @@ public class WakeLockTest {
         assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(energyEvent.getEventId()).isGreaterThan(0);
         assertThat(energyEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
-        // TODO(b/73376728): assert level and creation flags.
+        assertThat(energyEvent.getWakeLockAcquired().getLevel())
+                .isEqualTo(Level.SCREEN_DIM_WAKE_LOCK);
+        assertThat(energyEvent.getWakeLockAcquired().getFlagsList())
+                .containsExactly(CreationFlag.ACQUIRE_CAUSES_WAKEUP, CreationFlag.ON_AFTER_RELEASE);
         assertThat(energyEvent.getWakeLockAcquired().getTag()).isEqualTo("Foo");
         assertThat(energyEvent.getWakeLockAcquired().getTimeout()).isEqualTo(0);
     }
@@ -101,7 +107,9 @@ public class WakeLockTest {
         assertThat(acquiredEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(acquiredEvent.getEventId()).isGreaterThan(0);
         assertThat(acquiredEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
-        // TODO(b/73376728): assert level and creation flags.
+        assertThat(acquiredEvent.getWakeLockAcquired().getLevel())
+                .isEqualTo(Level.PARTIAL_WAKE_LOCK);
+        assertThat(acquiredEvent.getWakeLockAcquired().getFlagsCount()).isEqualTo(0);
         assertThat(acquiredEvent.getWakeLockAcquired().getTag()).isEqualTo("Bar");
         assertThat(acquiredEvent.getWakeLockAcquired().getTimeout()).isEqualTo(1000);
 
@@ -110,7 +118,8 @@ public class WakeLockTest {
         assertThat(releasedEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(releasedEvent.getEventId()).isEqualTo(acquiredEvent.getEventId());
         assertThat(releasedEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_RELEASED);
-        // TODO(b/73376728): assert release flags.
+        assertThat(releasedEvent.getWakeLockReleased().getFlagsList())
+                .containsExactly(ReleaseFlag.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
         assertThat(releasedEvent.getWakeLockReleased().getIsHeld()).isTrue();
     }
 

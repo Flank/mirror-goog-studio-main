@@ -114,6 +114,7 @@ message WakeLockAcquired {
     SCREEN_DIM_WAKE_LOCK = 2;
     SCREEN_BRIGHT_WAKE_LOCK = 3;
     FULL_WAKE_LOCK = 4;
+    PROXIMITY_SCREEN_OFF_WAKE_LOCK = 5;
   }
 
   enum CreationFlag {
