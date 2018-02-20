@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CPU_SIMPLEPERFMANAGER_H_
-#define CPU_SIMPLEPERFMANAGER_H_
+#ifndef PERFD_CPU_SIMPLEPERFMANAGER_H_
+#define PERFD_CPU_SIMPLEPERFMANAGER_H_
 
 #include <map>
 #include <mutex>
@@ -96,4 +96,4 @@ class SimpleperfManager {
 };
 }  // namespace profiler
 
-#endif  // CPU_SIMPLEPERFMANAGER_H_
+#endif  // PERFD_CPU_SIMPLEPERFMANAGER_H_
