@@ -44,6 +44,10 @@ service MemoryService {
   rpc ListHeapDumpInfos(ListDumpInfosRequest) returns (ListHeapDumpInfosResponse) {
   }
 
+  // Import heap dump data
+  rpc ImportHeapDump(ImportHeapDumpRequest) returns (ImportHeapDumpResponse) {
+  }
+
   // Enable or disable an allocation tracking session.
   // Note that for pre-O, this call is handled on Studio side within the proxy
   // layer, and allocation records are fetched upon the completion of a tracking
@@ -213,6 +217,21 @@ message DumpDataResponse {
   }
   Status status = 1;
   bytes data = 2;
+}
+
+message ImportHeapDumpRequest {
+  Session session = 1;
+  bytes data = 2;
+  HeapDumpInfo info = 3;
+}
+
+message ImportHeapDumpResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    FAILURE = 2;
+  }
+  Status status = 1;
 }
 
 message ListDumpInfosRequest {
