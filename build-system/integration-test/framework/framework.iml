@@ -29,11 +29,11 @@
     <orderEntry type="module" module-name="gradle-core" />
     <orderEntry type="module" module-name="layoutlib-api-base" />
     <orderEntry type="library" name="gradle-api" level="project" />
-    <orderEntry type="library" name="commons-io-2.4" level="project" />
     <orderEntry type="module" module-name="gradle" />
     <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="library" name="google-api-client" level="project" />
     <orderEntry type="library" name="dexlib2" level="project" />
+    <orderEntry type="library" name="commons-io" level="project" />
     <orderEntry type="module" module-name="gradle-api" />
     <orderEntry type="module" module-name="apksig" />
     <orderEntry type="module" module-name="device-provider" />

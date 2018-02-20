@@ -61,8 +61,7 @@
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="module" module-name="ddmlib" />
     <orderEntry type="module" module-name="lint-gradle-api" />
-    <orderEntry type="library" name="commons-io-2.4" level="project" />
     <orderEntry type="library" scope="TEST" name="intellij-annotations" level="project" />
-    <orderEntry type="library" name="commons-io-2.4" level="project" />
+    <orderEntry type="library" name="commons-io" level="project" />
   </component>
 </module>
