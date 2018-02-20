@@ -235,15 +235,6 @@ public class BenchmarkTest {
             }
 
             try {
-                uploaders.add(DanaProfileUploader.fromEnvironment());
-            } catch (Exception e) {
-                System.out.println(
-                        "couldn't add DanaProfileUploader to the list of default uploaders, reason: "
-                                + e
-                                + ", this means that benchmark results will not be uploaded to Dana");
-            }
-
-            try {
                 uploaders.add(LocalCSVProfileUploader.fromEnvironment());
             } catch (Exception e) {
                 System.out.println(

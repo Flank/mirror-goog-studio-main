@@ -17,10 +17,8 @@
 package com.android.build.gradle.integration.common.fixture;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.performance.DanaProfileUploader;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
-import com.google.common.collect.Lists;
 import com.google.protobuf.ProtocolMessageEnum;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.Benchmark;
@@ -34,27 +32,13 @@ import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import com.google.wireless.android.sdk.stats.GradleTaskExecution;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class RandomGradleBenchmark {
     @NonNull private static final ThreadLocalRandom RAND = ThreadLocalRandom.current();
 
-    public static List<Logging.GradleBenchmarkResult> randomBenchmarkResults() {
-        return randomBenchmarkResults(RAND.nextLong(1, Long.MAX_VALUE));
-    }
-
     public static Logging.GradleBenchmarkResult randomBenchmarkResult() {
         return randomBenchmarkResult(RAND.nextLong(1, Long.MAX_VALUE));
-    }
-
-    private static List<Logging.GradleBenchmarkResult> randomBenchmarkResults(long buildId) {
-        int count = RAND.nextInt(5, 15);
-        List<Logging.GradleBenchmarkResult> results = Lists.newArrayListWithCapacity(count);
-        for (int i = 0; i < count; i++) {
-            results.add(randomBenchmarkResult(buildId));
-        }
-        return results;
     }
 
     private static Logging.GradleBenchmarkResult randomBenchmarkResult(long buildId) {
@@ -157,15 +141,6 @@ public final class RandomGradleBenchmark {
     }
 
     private static long randomDuration() {
-        long value = RAND.nextLong(1, 10000);
-
-        // To make sure samples aren't filtered out, we add the lower threshold if our value is
-        // below it. This is something of an implementation detail, but if the implementation is
-        // ever removed, this code should fail to compile. I'm okay with that.
-        if (value < DanaProfileUploader.BENCHMARK_VALUE_THRESHOLD_MILLIS) {
-            value += DanaProfileUploader.BENCHMARK_VALUE_THRESHOLD_MILLIS;
-        }
-
-        return value;
+        return RAND.nextLong(1, 10000);
     }
 }
