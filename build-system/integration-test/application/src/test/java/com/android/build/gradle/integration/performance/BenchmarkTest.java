@@ -18,27 +18,16 @@ package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.common.category.PerformanceTests;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
+import java.util.function.Supplier;
 import javax.annotation.concurrent.NotThreadSafe;
-import org.junit.AssumptionViolatedException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -149,20 +138,6 @@ public class BenchmarkTest {
     @Test
     @Category(PerformanceTests.class)
     public void run() {
-        /*
-         * Sometimes the version of Gradle checked in to our repo is the same as their current
-         * nightly version. In this scenario, we want to avoid running the same set of tests twice
-         * and wasting lots of time, so we just bail out at this point.
-         */
-        if (GradleTestProject.USE_LATEST_NIGHTLY_GRADLE_VERSION
-                && GradleTestProject.GRADLE_TEST_VERSION.equals(
-                        BasePlugin.GRADLE_MIN_VERSION.toString())) {
-            String msg =
-                    "Running tests with gradle nightly skipped as the minimum plugin version is equal to the latest nightly version.";
-            System.err.println(msg);
-            throw new AssumptionViolatedException(msg);
-        }
-
         if (BENCHMARK_ENVIRONMENT == null) {
             BENCHMARK_ENVIRONMENT = BenchmarkEnvironment.fromRepo();
         }
@@ -171,272 +146,23 @@ public class BenchmarkTest {
         System.out.println(BENCHMARK_ENVIRONMENT);
         System.out.println();
 
-        long start = System.nanoTime();
-        List<Benchmark> benchmarks = new ArrayList<>();
-
-        /*
-         * Add all Benchmark objects to the list here. If you're wanting to create new Benchmarks,
-         * this is the place to add them to make sure that they're correctly filtered and sharded.
-         */
-        benchmarks.addAll(new AntennaPodBenchmarks(BENCHMARK_ENVIRONMENT).get());
-        benchmarks.addAll(new LargeGradleProjectBenchmarks(BENCHMARK_ENVIRONMENT).get());
-        benchmarks.addAll(new MediumGradleProjectBenchmarks(BENCHMARK_ENVIRONMENT).get());
-
-        /*
-         * We sort the benchmarks to make sure they're in a predictable, stable order. This is
-         * important because when we shard the running of these tests across machines, all of the
-         * machines need this list to be in the same order so that they can run a non-overlapping
-         * subset of them.
-         */
-        benchmarks.sort(
-                Comparator.comparing(Benchmark::getScenario)
-                        .thenComparing(Benchmark::getBenchmark)
-                        .thenComparing(Benchmark::getBenchmarkMode));
-
-        /*
-         * Figure out which shard we are, or default to being the only shard, and then get the
-         * correct sub-list of benchmarks to run based on that information.
-         */
-        int shardNum = Integer.parseInt(env("PERF_SHARD_NUM", "0"));
-        int shardTotal = Integer.parseInt(env("PERF_SHARD_TOTAL", "1"));
-        List<Benchmark> shard = PerformanceTestUtil.shard(benchmarks, shardNum, shardTotal);
-
-        System.out.println(
-                "got shard of size "
-                        + shard.size()
-                        + " with parameters PERF_SHARD_NUM="
-                        + shardNum
-                        + " and PERF_SHARD_TOTAL="
-                        + shardTotal);
-
-        /*
-         * Allow the user to filter by scenario, benchmark and benchmarkMode. This makes it
-         * easier to run specific benchmarks locally.
-         */
-        String scenario = System.getenv("PERF_SCENARIO");
-        if (!Strings.isNullOrEmpty(scenario)) {
-            int before = shard.size();
-            shard = filterByScenario(shard, scenario);
-            int after = shard.size();
-            System.out.println(
-                    "Filtered by ProjectScenario="
-                            + scenario
-                            + ", excluded "
-                            + (before - after)
-                            + " benchmarks");
-        }
-
-        String benchmark = System.getenv("PERF_BENCHMARK");
-        if (!Strings.isNullOrEmpty(benchmark)) {
-            int before = shard.size();
-            shard = filterByBenchmark(shard, benchmark);
-            int after = shard.size();
-            System.out.println(
-                    "Filtered by Benchmark="
-                            + benchmark
-                            + ", excluded "
-                            + (before - after)
-                            + " benchmarks");
-        }
-
-        String benchmarkMode = System.getenv("PERF_BENCHMARK_MODE");
-        if (!Strings.isNullOrEmpty(benchmarkMode)) {
-            int before = shard.size();
-            shard = filterByBenchmarkMode(shard, benchmarkMode);
-            int after = shard.size();
-            System.out.println(
-                    "Filtered by BenchmarkMode="
-                            + benchmarkMode
-                            + ", excluded "
-                            + (before - after)
-                            + " benchmarks");
-        }
-
-        if (shard.isEmpty()) {
-            System.out.println("Found no benchmarks to run, exiting");
-            return;
-        }
-
-        /*
-         * After all of the sharding and filtering, we want to randomise the order that the
-         * benchmarks run in, in order to make sure there are no temporal dependencies between them.
-         *
-         * We generate a seed beforehand and print it to the logs to make temporal dependencies
-         * easier to debug when they happen, as the user will then be able to reproduce the order
-         * the benchmarks were run in by setting the PERF_SHUFFLE_SEED environment variable.
-         */
-        Long shuffleSeed = shuffleSeed();
-        System.out.println(
-                "Shuffling benchmarks with seed: "
-                        + shuffleSeed
-                        + ", specify PERF_SHUFFLE_SEED="
-                        + shuffleSeed
-                        + " when re-running locally if you need to ensure that the benchmarks run in the same order");
-        Collections.shuffle(shard, new Random(shuffleSeed));
-
-        /*
-         * Run the benchmarks.
-         */
-        int i = 0;
-        int runsPerBenchmark = Integer.parseInt(env("RUNS_PER_BENCHMARK", "1"));
-        Preconditions.checkArgument(
-                runsPerBenchmark > 0, "you must set RUNS_PER_BENCHMARK to a number greater than 0");
-
-        System.out.println(
-                "Running " + shard.size() + " benchmarks, " + runsPerBenchmark + " times each...");
-        System.out.println();
-
-        Duration benchmarkDuration = Duration.ofNanos(0);
-        Duration recordedDuration = Duration.ofNanos(0);
-
-        List<BenchmarkResult> failed = new ArrayList<>();
-        List<BenchmarkResult> succeeded = new ArrayList<>();
-        for (Benchmark b : shard) {
-            i++;
-
-            for (int j = 0; j < runsPerBenchmark; j++) {
-                BenchmarkResult result = b.run();
-
-                benchmarkDuration = benchmarkDuration.plus(result.getTotalDuration());
-                recordedDuration = recordedDuration.plus(result.getRecordedDuration());
-
-                System.out.println(
-                        "Benchmark "
-                                + i
-                                + "/"
-                                + shard.size()
-                                + " (run "
-                                + (j + 1)
-                                + "/"
-                                + runsPerBenchmark
-                                + ")");
-                System.out.println(result);
-                System.out.println();
-
-                if (result.getException() != null) {
-                    failed.add(result);
-                } else {
-                    succeeded.add(result);
-                }
-            }
-        }
-
-        /*
-         * Each BenchmarkResult that was successful will have a GradleBuildProfile proto attached to
-         * it, representing the profile data gathered during that benchmark. There's a lot of
-         * metadata we need to attach to the result to identify what machine the benchmark ran on,
-         * what commit it pertains to, what set of flags it used and so on. The ProfileWrapper does
-         * all of that and gives us a GradleBenchmarkResult proto in return.
-         */
-        ProfileWrapper wrapper = new ProfileWrapper();
-        List<Logging.GradleBenchmarkResult> protos =
-                succeeded
-                        .stream()
-                        .map(
-                                result ->
-                                        wrapper.wrap(
-                                                result.getProfile(),
-                                                result.getBenchmark().getBenchmark(),
-                                                result.getBenchmark().getBenchmarkMode(),
-                                                result.getBenchmark().getScenario()))
-                        .collect(Collectors.toList());
-
-        /*
-         * The last meaningful step in this benchmarking process is to upload the results somewhere.
-         * For this we grab the list of ProfileUploader objects and pass all of the results in to
-         * each for them to upload to wherever they want to.
-         */
-        List<ProfileUploader> uploaders = getUploaders();
-        if (!uploaders.isEmpty() && !protos.isEmpty()) {
-            System.out.println("captured " + protos.size() + " profiles to be uploaded");
-
-            for (ProfileUploader uploader : uploaders) {
-                String uploaderName = uploader.getClass().getSimpleName();
-                System.out.println(
-                        "uploading "
-                                + protos.size()
-                                + " profiles with uploader "
-                                + uploaderName
-                                + "...");
-
-                try {
-                    uploader.uploadData(protos);
-                    System.out.println("done");
-                } catch (IOException e) {
-                    System.out.println(
-                            "failed to upload with uploader "
-                                    + uploaderName
-                                    + ": "
-                                    + e.getMessage());
-                }
-            }
-        }
-
-        Duration totalDuration = Duration.ofNanos(System.nanoTime() - start);
-        System.out.println("Total recorded duration: " + recordedDuration);
-        System.out.println("Total benchmark duration: " + benchmarkDuration);
-        System.out.println("Overall duration: " + totalDuration);
-
-        if (!failed.isEmpty()) {
-            System.out.println();
-            System.out.println("Some benchmarks did not complete successfully: ");
-            System.out.println();
-
-            for (BenchmarkResult result : failed) {
-                System.out.println(result);
-                System.out.println();
-                System.out.println("Command to re-run locally: " + result.getBenchmark().command());
-                System.out.println();
-                System.out.println("full stack trace:");
-                result.getException().printStackTrace();
-                System.out.println();
-            }
-
-            throw new AssertionError(failed.size() + " benchmarks failed");
-        }
+        BenchmarkRunner benchmarkRunner =
+                new BenchmarkRunner(getUploaders(), new StandardBenchmarks().get());
+        benchmarkRunner.run();
     }
 
-    private static List<Benchmark> filterByScenario(
-            List<Benchmark> benchmarks, String scenarioStr) {
-        ProjectScenario scenario = ProjectScenario.valueOf(scenarioStr);
-        return benchmarks
-                .stream()
-                .filter(b -> b.getScenario().equals(scenario))
-                .collect(Collectors.toList());
-    }
+    /*
+     * Shared logic to supply the complete list of benchmarks to both the standalone and JUnit codepaths
+     */
+    private static class StandardBenchmarks implements Supplier<List<Benchmark>> {
 
-    private static List<Benchmark> filterByBenchmark(
-            List<Benchmark> benchmarks, String benchmarkStr) {
-        Logging.Benchmark benchmark = Logging.Benchmark.valueOf(benchmarkStr);
-        return benchmarks
-                .stream()
-                .filter(b -> b.getBenchmark().equals(benchmark))
-                .collect(Collectors.toList());
-    }
-
-    private static List<Benchmark> filterByBenchmarkMode(
-            List<Benchmark> benchmarks, String benchmarkModeStr) {
-        Logging.BenchmarkMode benchmarkMode = Logging.BenchmarkMode.valueOf(benchmarkModeStr);
-        return benchmarks
-                .stream()
-                .filter(b -> b.getBenchmarkMode().equals(benchmarkMode))
-                .collect(Collectors.toList());
-    }
-
-    private static String env(String name, String def) {
-        String val = System.getenv(name);
-        if (Strings.isNullOrEmpty(val)) {
-            val = def;
+        @Override
+        public List<Benchmark> get() {
+            List<Benchmark> benchmarks = new ArrayList<>();
+            benchmarks.addAll(new AntennaPodBenchmarks(BENCHMARK_ENVIRONMENT).get());
+            benchmarks.addAll(new LargeGradleProjectBenchmarks(BENCHMARK_ENVIRONMENT).get());
+            benchmarks.addAll(new MediumGradleProjectBenchmarks(BENCHMARK_ENVIRONMENT).get());
+            return benchmarks;
         }
-        return val;
-    }
-
-    private static Long shuffleSeed() {
-        String shuffleSeed = System.getenv("PERF_SHUFFLE_SEED");
-        if (!Strings.isNullOrEmpty(shuffleSeed)) {
-            return Long.parseLong(shuffleSeed);
-        }
-
-        return ThreadLocalRandom.current().nextLong();
     }
 }
