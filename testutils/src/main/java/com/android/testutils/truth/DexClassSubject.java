@@ -46,6 +46,12 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
         super(failureStrategy, subject);
     }
 
+    public void hasSuperclass(@NonNull String name) {
+        if (assertSubjectIsNonNull() && !name.equals(actual().getSuperclass())) {
+            fail("has superclass", name);
+        }
+    }
+
     public void hasMethod(@NonNull String name) {
         if (assertSubjectIsNonNull() && !checkHasMethod(name)) {
             fail("contains method", name);
