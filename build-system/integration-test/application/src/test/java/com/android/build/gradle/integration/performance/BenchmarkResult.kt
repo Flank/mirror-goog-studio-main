@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.performance
 
+import com.google.common.base.Throwables
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import java.nio.file.Path
 import java.time.Duration
@@ -36,7 +37,7 @@ data class BenchmarkResult(
             totalDuration: $totalDuration
             testDir: ${benchmark.projectDir()}
             hasProfile: ${if (profile != null) "yes" else "no" }
-            exception: ${exception ?: "none"}
+            exception: ${if (exception != null) Throwables.getRootCause(exception) else "none"}
         """.trimIndent()
     }
 }

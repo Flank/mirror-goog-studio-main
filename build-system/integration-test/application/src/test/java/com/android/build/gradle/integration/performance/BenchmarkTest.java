@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.category.PerformanceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
@@ -387,8 +388,8 @@ public class BenchmarkTest {
                 System.out.println();
                 System.out.println("Command to re-run locally: " + result.getBenchmark().command());
                 System.out.println();
-                System.out.println("full stack trace:");
-                result.getException().printStackTrace();
+                System.out.println("exception root cause:");
+                Throwables.getRootCause(result.getException()).printStackTrace();
                 System.out.println();
             }
 
