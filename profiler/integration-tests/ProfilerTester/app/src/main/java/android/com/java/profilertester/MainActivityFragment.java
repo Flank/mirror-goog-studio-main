@@ -1,6 +1,7 @@
 package android.com.java.profilertester;
 
 import android.app.Activity;
+import android.com.java.profilertester.taskcategory.AudioTaskCategory;
 import android.com.java.profilertester.taskcategory.BluetoothTaskCategory;
 import android.com.java.profilertester.taskcategory.CameraTaskCategory;
 import android.com.java.profilertester.taskcategory.CpuTaskCategory;
@@ -76,7 +77,8 @@ public class MainActivityFragment extends Fragment {
                     new BluetoothTaskCategory(host),
                     new LocationTaskCategory(host, mMainLooperThread.getLooper()),
                     new ScreenBrightnessTaskCategory(host),
-                    new CameraTaskCategory(host)
+                    new CameraTaskCategory(host),
+                    new AudioTaskCategory(host)
                 };
         ArrayAdapter<TaskCategory> categoryAdapters =
                 new ArrayAdapter<>(

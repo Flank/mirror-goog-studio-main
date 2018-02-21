@@ -15,4 +15,5 @@ public enum ActivityRequestCodes {
     LOCATION, // Request code for enabling location services.
     WRITE_SETTINGS, // Request code to allow writing to system settings.
     CAMERA, // Request code for accessing the camera.
+    MICROPHONE, // Request code for accessing the microphone to record sounds.
 }
