@@ -36,7 +36,7 @@ public final class AlarmManagerWrapper {
     /**
      * Wraps the implementation method of various set alarm methods in {@link AlarmManager}.
      *
-     * @param wrapped the wrapped {@link AlarmManager} instance, i.e. "this".
+     * @param alarmManager the wrapped {@link AlarmManager} instance, i.e. "this".
      * @param type the type parameter passed to the original method.
      * @param triggerAtMillis the type parameter passed to the original method.
      * @param windowMillis the windowMillis parameter passed to the original method.
@@ -50,7 +50,7 @@ public final class AlarmManagerWrapper {
      * @param alarmClock the alarmClock parameter passed to the original method.
      */
     public static void wrapSetImpl(
-            AlarmManager wrapped,
+            AlarmManager alarmManager,
             int type,
             long triggerAtMillis,
             long windowMillis,
@@ -68,20 +68,20 @@ public final class AlarmManagerWrapper {
     /**
      * Wraps {@link AlarmManager#cancel(PendingIntent)}.
      *
-     * @param wrapped the wrapped {@link AlarmManager} instance, i.e. "this".
+     * @param alarmManager the wrapped {@link AlarmManager} instance, i.e. "this".
      * @param operation the operation parameter passed to the original method.
      */
-    public static void wrapCancel(AlarmManager wrapped, PendingIntent operation) {
+    public static void wrapCancel(AlarmManager alarmManager, PendingIntent operation) {
         StudioLog.v("Calling cancel(PendingIntent)");
     }
 
     /**
      * Wraps {@link AlarmManager#cancel(OnAlarmListener)}.
      *
-     * @param wrapped the wrapped {@link AlarmManager} instance, i.e. "this".
+     * @param alarmManager the wrapped {@link AlarmManager} instance, i.e. "this".
      * @param listener the listener parameter passed to the original method.
      */
-    public static void wrapCancel(AlarmManager wrapped, OnAlarmListener listener) {
+    public static void wrapCancel(AlarmManager alarmManager, OnAlarmListener listener) {
         StudioLog.v("Calling cancel(OnAlarmListener)");
     }
 }

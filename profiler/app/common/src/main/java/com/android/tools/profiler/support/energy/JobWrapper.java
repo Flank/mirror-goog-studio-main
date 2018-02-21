@@ -43,21 +43,21 @@ public final class JobWrapper {
     /**
      * Exit hook for {@link JobScheduler#schedule(JobInfo)}. Capture the result from return value.
      *
-     * @param wrapped the wrapped return value.
+     * @param scheduleResult the wrapped return value.
      * @return the same wrapped return value.
      */
-    public static int onScheduleJobExit(int wrapped) {
+    public static int onScheduleJobExit(int scheduleResult) {
         StudioLog.v(
                 "Job scheduled. Result: "
-                        + (wrapped == JobScheduler.RESULT_SUCCESS ? "success" : "failure"));
-        return wrapped;
+                        + (scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure"));
+        return scheduleResult;
     }
 
     /**
      * Wraps JobHandler#ackStartMessage, which is called when {@link
      * JobService#onStartJob(JobParameters)} is called.
      *
-     * @param jobHandler the wrapped JobHandler instance.
+     * @param jobHandler the wrapped JobHandler instance, i.e. "this".
      * @param params the params parameter passed to the original method.
      * @param workOngoing the workOngoing parameter passed to the original method.
      */
@@ -72,7 +72,7 @@ public final class JobWrapper {
      * Wraps JobHandler#ackStopMessage, which is called when {@link
      * JobService#onStopJob(JobParameters)} is called.
      *
-     * @param jobHandler the wrapped JobHandler instance.
+     * @param jobHandler the wrapped JobHandler instance, i.e. "this".
      * @param params the params parameter passed to the original method.
      * @param reschedule the reschedule parameter passed to the original method.
      */
@@ -85,12 +85,12 @@ public final class JobWrapper {
     /**
      * Wraps {@link JobService#jobFinished(JobParameters, boolean)}.
      *
-     * @param wrapped the wrapped {@link JobService} instance.
+     * @param jobService the wrapped {@link JobService} instance, i.e. "this".
      * @param params the params parameter passed to the original method.
      * @param wantsReschedule the wantsReschedule parameter passed to the original method.
      */
     public static void wrapJobFinished(
-            JobService wrapped, JobParameters params, boolean wantsReschedule) {
+            JobService jobService, JobParameters params, boolean wantsReschedule) {
         StudioLog.v(
                 String.format(
                         "jobFinished (JobId=%d, wantsReschedule=%b)",

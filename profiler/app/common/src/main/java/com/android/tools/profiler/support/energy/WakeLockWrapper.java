@@ -62,29 +62,33 @@ public final class WakeLockWrapper {
      * ThreadLocal protects against the situation when multiple threads create wake locks at the
      * same time.
      */
-    private static final ThreadLocal<CreationParams> newWakeLockData = new ThreadLocal<>();
+    private static final ThreadLocal<CreationParams> newWakeLockData =
+            new ThreadLocal<CreationParams>();
 
     /**
      * Use a thread-local variable for wake lock release parameters, so a value can be temporarily
      * stored when we enter the release method and retrieved when we exit it.
      */
-    private static final ThreadLocal<ReleaseParams> releaseWakeLockData = new ThreadLocal<>();
+    private static final ThreadLocal<ReleaseParams> releaseWakeLockData =
+            new ThreadLocal<ReleaseParams>();
 
     /** Used by acquire and release hooks to look up the generated ID by wake lock instance. */
-    private static final Map<WakeLock, Integer> wakeLockIdMap = new HashMap<>();
+    private static final Map<WakeLock, Integer> wakeLockIdMap = new HashMap<WakeLock, Integer>();
 
     /** Used by acquire hooks to retrieve wake lock creation parameters. */
-    private static final Map<WakeLock, CreationParams> wakeLockCreationParamsMap = new HashMap<>();
+    private static final Map<WakeLock, CreationParams> wakeLockCreationParamsMap =
+            new HashMap<WakeLock, CreationParams>();
 
     /**
      * Entry hook for {@link PowerManager#newWakeLock(int, String)}. Captures the flags and myTag
      * parameters.
      *
-     * @param wrapped the wrapped PowerManager instance.
+     * @param powerManager the wrapped PowerManager instance, i.e. "this".
      * @param levelAndFlags the myLevelAndFlags parameter passed to the original method.
      * @param tag the myTag parameter passed to the original method.
      */
-    public static void onNewWakeLockEntry(PowerManager wrapped, int levelAndFlags, String tag) {
+    public static void onNewWakeLockEntry(
+            PowerManager powerManager, int levelAndFlags, String tag) {
         newWakeLockData.set(new CreationParams(levelAndFlags, tag));
     }
 
@@ -92,21 +96,21 @@ public final class WakeLockWrapper {
      * Exit hook for {@link PowerManager#newWakeLock(int, String)}. Associates wake lock instance
      * with the previously captured flags and myTag parameters.
      *
-     * @param wrapped the wrapped return value.
+     * @param returnedWakeLock the wrapped return value.
      * @return the same wrapped return value.
      */
-    public static WakeLock onNewWakeLockExit(WakeLock wrapped) {
-        wakeLockCreationParamsMap.put(wrapped, newWakeLockData.get());
-        return wrapped;
+    public static WakeLock onNewWakeLockExit(WakeLock returnedWakeLock) {
+        wakeLockCreationParamsMap.put(returnedWakeLock, newWakeLockData.get());
+        return returnedWakeLock;
     }
 
     /**
      * Wraps {@link WakeLock#acquire()}.
      *
-     * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
+     * @param wakeLock the wrapped {@link WakeLock} instance, i.e. "this".
      */
-    public static void wrapAcquire(WakeLock wrapped) {
-        wrapAcquire(wrapped, 0);
+    public static void wrapAcquire(WakeLock wakeLock) {
+        wrapAcquire(wakeLock, 0);
     }
 
     /**
@@ -115,16 +119,16 @@ public final class WakeLockWrapper {
      * <p>Since {@link WakeLock#acquire(long)} does not call {@link WakeLock#acquire()} (vice
      * versa), this will not cause double-instrumentation.
      *
-     * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
+     * @param wakeLock the wrapped {@link WakeLock} instance, i.e. "this".
      * @param timeout the timeout parameter passed to the original method.
      */
-    public static void wrapAcquire(WakeLock wrapped, long timeout) {
-        if (!wakeLockIdMap.containsKey(wrapped)) {
-            wakeLockIdMap.put(wrapped, atomicInteger.incrementAndGet());
+    public static void wrapAcquire(WakeLock wakeLock, long timeout) {
+        if (!wakeLockIdMap.containsKey(wakeLock)) {
+            wakeLockIdMap.put(wakeLock, atomicInteger.incrementAndGet());
         }
-        int wakeLockId = wakeLockIdMap.get(wrapped);
-        if (wakeLockCreationParamsMap.containsKey(wrapped)) {
-            CreationParams creationParams = wakeLockCreationParamsMap.get(wrapped);
+        int wakeLockId = wakeLockIdMap.get(wakeLock);
+        if (wakeLockCreationParamsMap.containsKey(wakeLock)) {
+            CreationParams creationParams = wakeLockCreationParamsMap.get(wakeLock);
             sendWakeLockAcquired(
                     wakeLockId, creationParams.myLevelAndFlags, creationParams.myTag, timeout);
         }
@@ -134,11 +138,11 @@ public final class WakeLockWrapper {
      * Entry hook for {@link WakeLock#release(int)}. Capture the flags passed to the method and the
      * "this" instance so the exit hook can retrieve them back.
      *
-     * @param wrapped the wrapped {@link WakeLock} instance, i.e. "this".
+     * @param wakeLock the wrapped {@link WakeLock} instance, i.e. "this".
      * @param flags the flags parameter passed to the original method.
      */
-    public static void onReleaseEntry(WakeLock wrapped, int flags) {
-        releaseWakeLockData.set(new ReleaseParams(wrapped, flags));
+    public static void onReleaseEntry(WakeLock wakeLock, int flags) {
+        releaseWakeLockData.set(new ReleaseParams(wakeLock, flags));
     }
 
     /**
