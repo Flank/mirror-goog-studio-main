@@ -30,6 +30,7 @@ TEST_DEPS = [
     "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
     "//tools/base/third_party:com.google.truth_truth",
     "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
+    "//tools/base/third_party:org.apache.commons_commons-compress",
     "//tools/base/third_party:org.codehaus.groovy_groovy-all",
     "//tools/base/third_party:org.mockito_mockito-core",
     "//tools/base/third_party:org.ow2.asm_asm",

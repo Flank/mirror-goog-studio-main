@@ -27,6 +27,7 @@ dependencies {
     testCompile gradleApi()
     testCompile libs.apache_commons_io
     testCompile libs.apache_commons_lang
+    testCompile libs.apache_compress
     testCompile libs.google_api_client
     testCompile libs.google_storage_client
     testCompile libs.groovy
@@ -207,36 +208,36 @@ configure([connectedIntegrationTestQuarantine, connectedIntegrationTestPrebuilts
     }
 }
 
-task zipSdk(type: Zip) {
+task tarSdk(type: Tar) {
     from('../../../../../prebuilts/studio/sdk/linux/') {
         exclude 'ndk-bundle/**'
     }
 
-    archiveName "android_sdk.zip"
+    archiveName "android_sdk.tar"
 }
 
-task zipPrebuiltsRepo(type: Zip) {
+task tarPrebuiltsRepo(type: Tar) {
     from '../../../../../prebuilts/tools/common/m2/repository/'
-    archiveName "prebuilts_repo.zip"
+    archiveName "prebuilts_repo.tar"
 }
 
-task zipProjects(type: Zip) {
+task tarProjects(type: Tar) {
     from('../../../../../external/') {
         include 'AntennaPod/**'
         include 'gradle-perf-android-medium/**'
         include 'android-studio-gradle-test/**'
     }
-    archiveName "projects.zip"
+    archiveName "projects.tar"
 }
 
-task zipGradle(type: Zip) {
+task tarGradle(type: Tar) {
     from('../../../../../tools/external/gradle/') {
         include 'gradle-4.5-bin.zip'
     }
-    archiveName "gradle.zip"
+    archiveName "gradle.tar"
 }
 
-task performanceTestJar(type: Jar, dependsOn: [':zipOfflineRepo', zipPrebuiltsRepo, zipSdk, zipProjects, zipGradle]) {
+task performanceTestJar(type: Jar, dependsOn: [':zipOfflineRepo', tarPrebuiltsRepo, tarSdk, tarProjects, tarGradle]) {
     doFirst {
         if (System.getenv('COMMIT_JSON') == null) {
             throw new GradleException(
@@ -258,10 +259,10 @@ task performanceTestJar(type: Jar, dependsOn: [':zipOfflineRepo', zipPrebuiltsRe
         exclude 'META-INF/*.DSA'
         exclude 'META-INF/*.RSA'
     }
-    from zipPrebuiltsRepo
-    from zipSdk
-    from zipProjects
-    from zipGradle
+    from tarPrebuiltsRepo
+    from tarSdk
+    from tarProjects
+    from tarGradle
     doFirst {
         // currently the zipOfflineRepo task lists its zip file twice, so we take only one of them.
         // They're identical and this is a bug we should fix at some point in

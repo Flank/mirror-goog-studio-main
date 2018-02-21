@@ -24,6 +24,7 @@ import com.android.testutils.TestUtils;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -31,9 +32,11 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import kotlin.KotlinVersion;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 
 /**
  * When we run the Gradle performance benchmarks, there's a lot of state we need around us on local
@@ -81,18 +84,23 @@ public class BenchmarkEnvironment {
      * @param dest the directory to unzip files to locally.
      * @throws IOException if something goes wrong while unzipping.
      */
-    public static BenchmarkEnvironment fromJar(Path dest) throws IOException {
-        unzip(
+    public static BenchmarkEnvironment fromJar(Path dest) throws IOException, ArchiveException {
+        unpack(
                 dest.resolve("offline_repo"),
-                ClassLoader.getSystemResourceAsStream("offline_repo.zip"));
-        unzip(
+                new BufferedInputStream(ClassLoader.getSystemResourceAsStream("offline_repo.zip")));
+        unpack(
                 dest.resolve("prebuilts_repo"),
-                ClassLoader.getSystemResourceAsStream("prebuilts_repo.zip"));
-        unzip(dest.resolve("projects"), ClassLoader.getSystemResourceAsStream("projects.zip"));
-        unzip(
+                new BufferedInputStream(
+                        ClassLoader.getSystemResourceAsStream("prebuilts_repo.tar")));
+        unpack(
+                dest.resolve("projects"),
+                new BufferedInputStream(ClassLoader.getSystemResourceAsStream("projects.tar")));
+        unpack(
                 dest.resolve("android_sdk"),
-                ClassLoader.getSystemResourceAsStream("android_sdk.zip"));
-        unzip(dest.resolve("gradle"), ClassLoader.getSystemResourceAsStream("gradle.zip"));
+                new BufferedInputStream(ClassLoader.getSystemResourceAsStream("android_sdk.tar")));
+        unpack(
+                dest.resolve("gradle"),
+                new BufferedInputStream(ClassLoader.getSystemResourceAsStream("gradle.tar")));
 
         return new BenchmarkEnvironment(
                 dest.resolve("profiles"),
@@ -103,28 +111,21 @@ public class BenchmarkEnvironment {
                 dest.resolve("scratch"));
     }
 
-    /**
-     * Takes an InputStream in zip format and unzips it, returning the directory to which it was
-     * unzipped.
-     */
-    private static void unzip(Path dest, InputStream in) throws IOException {
+    private static void unpack(Path dest, InputStream in) throws IOException, ArchiveException {
         byte[] buffer = new byte[4096];
-
-        try (ZipInputStream zis = new ZipInputStream(in)) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
+        try (ArchiveInputStream ais = new ArchiveStreamFactory().createArchiveInputStream(in)) {
+            ArchiveEntry entry;
+            while ((entry = ais.getNextEntry()) != null) {
                 if (entry.isDirectory()) {
                     continue;
                 }
 
-                File entryFile =
-                        new File(
-                                dest.toFile().getAbsolutePath() + File.separator + entry.getName());
+                File entryFile = dest.resolve(entry.getName()).toFile();
                 Files.createParentDirs(entryFile);
 
                 try (FileOutputStream fos = new FileOutputStream(entryFile)) {
                     int len;
-                    while ((len = zis.read(buffer)) > 0) {
+                    while ((len = ais.read(buffer)) > 0) {
                         fos.write(buffer, 0, len);
                     }
                 }
