@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.transforms;
 
 import static com.android.build.api.transform.Status.CHANGED;
 import static com.android.build.api.transform.Status.REMOVED;
-import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -50,8 +49,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -87,7 +86,7 @@ public class DexArchiveBuilderTransformDesugaringTest {
                         .addInput(dirInput)
                         .setIncremental(false)
                         .build();
-        getTransform(null, 15, true).transform(invocation);
+        getTransform(null, 15, true, false).transform(invocation);
 
         // it should contain Cat and synthesized lambda class
         MoreTruth.assertThatDex(getDex(Cat.class)).hasClassesCount(2);
@@ -99,6 +98,14 @@ public class DexArchiveBuilderTransformDesugaringTest {
 
     interface WithStatic {
         static void bar() {}
+    }
+
+    static class ImplementsWithDefault implements WithDefault {}
+
+    static class InvokesDefault {
+        public static void main(String[] args) {
+            new ImplementsWithDefault().foo();
+        }
     }
 
     @Test
@@ -115,7 +122,7 @@ public class DexArchiveBuilderTransformDesugaringTest {
                         .addInput(dirInput)
                         .setIncremental(false)
                         .build();
-        getTransform(null, 23, true).transform(invocation);
+        getTransform(null, 23, true, false).transform(invocation);
 
         // it contains both original and synthesized
         MoreTruth.assertThatDex(getDex(WithDefault.class)).hasClassesCount(2);
@@ -136,7 +143,7 @@ public class DexArchiveBuilderTransformDesugaringTest {
                         .addInput(dirInput)
                         .setIncremental(false)
                         .build();
-        getTransform(null, 24, true).transform(invocation);
+        getTransform(null, 24, true, false).transform(invocation);
 
         // it contains only the original class
         MoreTruth.assertThatDex(getDex(WithDefault.class)).hasClassesCount(1);
@@ -415,11 +422,54 @@ public class DexArchiveBuilderTransformDesugaringTest {
         assertThat(cache.getCacheDirectory().list()).named("cache entries").isEqualTo(numEntries);
     }
 
+    @Test
+    public void test_duplicateClasspathEntries() throws Exception {
+
+        Path lib1 = tmpDir.getRoot().toPath().resolve("lib1.jar");
+        TestInputsGenerator.pathWithClasses(
+                lib1, ImmutableSet.of(ImplementsWithDefault.class, WithDefault.class));
+        Path lib2 = tmpDir.getRoot().toPath().resolve("lib2.jar");
+        TestInputsGenerator.pathWithClasses(lib2, ImmutableSet.of(WithDefault.class));
+        Path app = tmpDir.getRoot().toPath().resolve("app");
+        TestInputsGenerator.pathWithClasses(app, ImmutableSet.of(InvokesDefault.class));
+
+        TransformInput lib1Input =
+                TransformTestHelper.singleJarBuilder(lib1.toFile())
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
+        TransformInput lib2Input =
+                TransformTestHelper.singleJarBuilder(lib2.toFile())
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
+        TransformInput appInput = TransformTestHelper.directoryBuilder(app.toFile()).build();
+
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setTransformOutputProvider(outputProvider)
+                        .addInput(lib1Input)
+                        .addInput(lib2Input)
+                        .addInput(appInput)
+                        .setIncremental(false)
+                        .build();
+        getTransform(null, 15, true, true).transform(invocation);
+
+        MoreTruth.assertThatDex(getDex(InvokesDefault.class)).hasClassesCount(1);
+    }
+
     @NonNull
     private DexArchiveBuilderTransform getTransform(
-            @Nullable FileCache userCache, int minSdkVersion, boolean isDebuggable) {
+            @Nullable FileCache userCache,
+            int minSdkVersion,
+            boolean isDebuggable,
+            boolean includeAndroidJar) {
+        List<File> androidJasClasspath =
+                includeAndroidJar
+                        ? ImmutableList.of(TestUtils.getPlatformFile("android.jar"))
+                        : ImmutableList.of();
         return new DexArchiveBuilderTransformBuilder()
-                .setAndroidJarClasspath(Collections::emptyList)
+                .setAndroidJarClasspath(() -> androidJasClasspath)
                 .setDexOptions(new DefaultDexOptions())
                 .setMessageReceiver(new NoOpMessageReceiver())
                 .setUserLevelCache(userCache)
@@ -437,7 +487,7 @@ public class DexArchiveBuilderTransformDesugaringTest {
 
     @NonNull
     private DexArchiveBuilderTransform getTransform(@Nullable FileCache userCache) {
-        return getTransform(userCache, 15, true);
+        return getTransform(userCache, 15, true, false);
     }
 
     @NonNull
