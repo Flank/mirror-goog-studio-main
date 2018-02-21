@@ -22,7 +22,6 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.AaptTestUtils
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.repository.testframework.FakeProgressIndicator
-import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.testutils.MockLog
@@ -44,7 +43,6 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import kotlin.test.assertFailsWith
@@ -355,7 +353,7 @@ class Aapt2DaemonImplTest {
 
     private fun createDaemon(
             daemonTimeouts: Aapt2DaemonTimeouts = Aapt2DaemonTimeouts(),
-            executable: Path = aaptExecutable): Aapt2Daemon {
+            executable: Path = TestUtils.getAapt2()): Aapt2Daemon {
         val daemon = Aapt2DaemonImpl(
                 displayId = "'Aapt2DaemonImplTest.${testName.methodName}'",
                 aaptExecutable = executable,
@@ -380,12 +378,6 @@ class Aapt2DaemonImplTest {
                     .toFile()
 
     companion object {
-        private val aaptExecutable: Path by lazy(LazyThreadSafetyMode.NONE) {
-            Paths.get(AndroidSdkHandler.getInstance(TestUtils.getSdk())
-                    .getLatestBuildTool(FakeProgressIndicator(), true)!!
-                    .getPath(BuildToolInfo.PathId.AAPT2))
-        }
-
         private val target: IAndroidTarget by lazy(LazyThreadSafetyMode.NONE) {
             AndroidSdkHandler.getInstance(TestUtils.getSdk())
                     .getAndroidTargetManager(FakeProgressIndicator())
