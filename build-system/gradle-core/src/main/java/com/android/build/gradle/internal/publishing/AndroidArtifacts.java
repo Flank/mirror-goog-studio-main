@@ -141,7 +141,8 @@ public class AndroidArtifacts {
         // be namespace aware.
         NON_NAMESPACED_CLASSES(TYPE_NON_NAMESPACED_CLASSES),
         SHARED_CLASSES(TYPE_SHARED_CLASSES),
-        // Jar file for annotation processor as both classes and resources are needed, and for building model
+        // Jar file for annotation processor as both classes and resources are needed, and for
+        // building model
         JAR(TYPE_JAR),
         // published dex folder for bundle
         DEX(TYPE_DEX),

@@ -98,9 +98,14 @@ private class MockComponentIdentifier(val name: String) : ComponentIdentifier {
 }
 
 class MockLogger : FakeLogger() {
-    val messages = ArrayList<String>()
+    val warnings = ArrayList<String>()
+    val infos = ArrayList<String>()
 
     override fun warn(p0: String?) {
-        messages.add(p0!!)
+        warnings.add(p0!!)
+    }
+
+    override fun info(p0: String?) {
+        infos.add(p0!!)
     }
 }

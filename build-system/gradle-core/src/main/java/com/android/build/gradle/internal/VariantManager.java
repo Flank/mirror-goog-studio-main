@@ -613,6 +613,10 @@ public class VariantManager implements VariantModel {
                 globalScope
                         .getProjectOptions()
                         .get(BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES);
+        boolean autoNamespaceDependencies =
+                globalScope
+                        .getProjectOptions()
+                        .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES);
         for (ArtifactType transformTarget : AarTransform.getTransformTargets()) {
             dependencies.registerTransform(
                     reg -> {
@@ -620,7 +624,11 @@ public class VariantManager implements VariantModel {
                         reg.getTo().attribute(ARTIFACT_FORMAT, transformTarget.getType());
                         reg.artifactTransform(
                                 AarTransform.class,
-                                config -> config.params(transformTarget, sharedLibSupport));
+                                config ->
+                                        config.params(
+                                                transformTarget,
+                                                sharedLibSupport,
+                                                autoNamespaceDependencies));
                     });
         }
 
@@ -634,8 +642,7 @@ public class VariantManager implements VariantModel {
                     reg.artifactTransform(LibrarySymbolTableTransform.class);
                 });
 
-        if (globalScope.getProjectOptions()
-                .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
+        if (autoNamespaceDependencies) {
             dependencies.registerTransform(
                     reg -> {
                         reg.getFrom().attribute(ARTIFACT_FORMAT, explodedAarType);

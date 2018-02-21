@@ -16,6 +16,7 @@
 
 package com.android.ide.common.symbols
 
+import com.android.SdkConstants
 import com.android.annotations.concurrency.Immutable
 import com.android.resources.ResourceAccessibility
 import com.android.resources.ResourceType
@@ -43,6 +44,8 @@ import javax.lang.model.SourceVersion
  */
 @Immutable
 abstract class SymbolTable protected constructor() {
+
+    private val ANDROID_ATTR_PREFIX = "android_"
 
     abstract val tablePackage: String
     abstract val symbols: ImmutableTable<ResourceType, String, Symbol>
@@ -125,6 +128,57 @@ abstract class SymbolTable protected constructor() {
                         symbols.values().filter { it.resourceAccessibility == accessibility })
         symbols.sortWith(compareBy { it.name })
         return Collections.unmodifiableList(symbols)
+    }
+
+    /**
+     * Checks if the table contains a resource with matching type and name.
+     */
+    fun containsSymbol(type: ResourceType, name: String): Boolean {
+        var found = symbols.contains(type, name)
+        if (!found && type == ResourceType.STYLEABLE && name.contains('_')) {
+            // If the symbol is a styleable and contains the underscore character, it is very likely
+            // that we're looking for a styleable child. These are stored under the parent's symbol,
+            // so try finding the parent first and then the child under it.
+            found = containsStyleableSymbol(name)
+        }
+        return found
+    }
+
+    /**
+     * Checks if the table contains a declare-styleable's child with the given name. For example:
+     * <pre>
+     *     <declare-styleable name="s1">
+     *         <item name="foo"/>
+     *     </declare-styleable>
+     * </pre>
+     * Calling {@code containsStyleableSymbol("s1_foo")} would return {@code true}, but calling
+     * {@code containsStyleableSymbol("foo")} or {@code containsSymbol(STYLEABLE, "foo")} would
+     * both return {@code false}.
+     */
+    private fun containsStyleableSymbol(name: String, start: Int = 0): Boolean {
+        var found = false
+        val index = name.indexOf('_', start)
+        if (index > -1) {
+            val parentName = name.substring(0, index)
+            if (symbols.contains(ResourceType.STYLEABLE, parentName)) {
+                var childName = name.substring(index + 1, name.length)
+                val parent = symbols.get(ResourceType.STYLEABLE, parentName)
+                found = parent.children.any { it == childName }
+                // styleable children of the format <parent>_android_<child> could have been either
+                // declared as <item name="android_foo"/> or <item name="android:foo>.
+                // If we didn't find the "android_" child, look for one in the "android:" namespace.
+                if (!found && childName.startsWith(ANDROID_ATTR_PREFIX)) {
+                    childName =
+                            SdkConstants.ANDROID_NS_NAME_PREFIX +
+                                    childName.substring(ANDROID_ATTR_PREFIX.length)
+                    found = parent.children.any { it == childName }
+                }
+            }
+            if (!found) {
+                found = containsStyleableSymbol(name, index + 1)
+            }
+        }
+        return found
     }
 
     /** Builder that creates a symbol table.  */

@@ -591,7 +591,7 @@ public final class SymbolIo {
                     // listed in
                     // the children list.
                     if (s.getResourceType() == ResourceType.STYLEABLE) {
-                        List<String> children = ((Symbol.StyleableSymbol) s).getChildren();
+                        List<String> children = s.getChildren();
                         for (String child : children) {
                             pw.print(s.getResourceAccessibility().getName());
                             pw.print(' ');
