@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import java.io.File
@@ -47,6 +48,8 @@ class NamespacedResourcesTaskManager(
      *  final ids in apps are a vital feature.
      *  2. Links the app and its dependency to produce the final APK. This re-uses the same
      *  [LinkApplicationAndroidResourcesTask] task, as it needs to be split aware.
+     *  3. If rewriting non-namespaced dependencies is enabled, the [AutoNamespaceDependenciesTask]
+     *  will rewrite classes.jar files from these libraries to be fully namespaced.
      *
      * TODO: Test support, Synthesize non-namespaced output.
      */
@@ -58,6 +61,13 @@ class NamespacedResourcesTaskManager(
         val aaptGeneration = AaptGeneration.fromProjectOptions(globalScope.projectOptions)
         Preconditions.checkState(aaptGeneration != AaptGeneration.AAPT_V1,
                 "Resource Namespacing can only be used with aapt2")
+
+        // Process dependencies making sure everything we consume will be fully namespaced.
+        if (globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
+            // TODO: also rewrite the resources
+            createAutoNamespaceDependenciesTask()
+        }
+
         // Compile
         createCompileResourcesTask()
         createStaticLibraryManifestTask()
@@ -229,5 +239,9 @@ class NamespacedResourcesTaskManager(
                 InternalArtifactType.STATIC_LIBRARY_MANIFEST,
                 staticLibraryManifest,
                 task.name)
+    }
+
+    private fun createAutoNamespaceDependenciesTask() {
+        taskFactory.create(AutoNamespaceDependenciesTask.ConfigAction(variantScope))
     }
 }

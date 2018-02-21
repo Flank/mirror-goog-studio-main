@@ -26,6 +26,7 @@ import static org.junit.Assert.fail;
 
 import com.android.resources.ResourceAccessibility;
 import com.android.resources.ResourceType;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -238,5 +239,65 @@ public class SymbolTableTest {
         assertThat(table.getSymbolByAccessibility(ResourceAccessibility.DEFAULT)).hasSize(2);
         assertThat(table.getSymbolByAccessibility(ResourceAccessibility.PRIVATE)).hasSize(1);
         assertThat(table.getSymbolByAccessibility(ResourceAccessibility.PUBLIC)).hasSize(3);
+    }
+
+    @Test
+    public void testContainsSymbols() {
+        SymbolTable table =
+                SymbolTable.builder()
+                        .add(createSymbol("string", "s1", "int", "0"))
+                        .add(createSymbol("integer", "s1", "int", "0"))
+                        .add(
+                                createSymbol(
+                                        "styleable",
+                                        "s1",
+                                        "int[]",
+                                        "{ 0, 0, 0, 0}",
+                                        ImmutableList.of(
+                                                "android_name",
+                                                "android_type",
+                                                "name",
+                                                "description")))
+                        .add(
+                                createSymbol(
+                                        "styleable",
+                                        "s1_s2",
+                                        "int[]",
+                                        "{ 0, 0}",
+                                        ImmutableList.of("android_name", "type")))
+                        .add(
+                                createSymbol(
+                                        "styleable",
+                                        "s3",
+                                        "int[]",
+                                        "{ 0, 0}",
+                                        ImmutableList.of("android:color", "android:image")))
+                        .build();
+
+        // Basic checks first.
+        assertThat(table.containsSymbol(ResourceType.STRING, "s1")).isTrue();
+        assertThat(table.containsSymbol(ResourceType.INTEGER, "s1")).isTrue();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1")).isTrue();
+        assertThat(table.containsSymbol(ResourceType.ID, "s1")).isFalse();
+
+        // Check various combination of styleables' names.
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_android_name")).isTrue();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_android_type")).isTrue();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_android_description"))
+                .isFalse();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_name")).isTrue();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_type")).isFalse();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_description")).isTrue();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_")).isFalse();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_android")).isFalse();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_s2")).isTrue();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_s2_name")).isFalse();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_s2_android_name")).isTrue();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s2_android_name")).isFalse();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_s2_type")).isTrue();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s1_s2_description")).isFalse();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s3_android_color")).isTrue();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s3_android:color")).isTrue();
+        assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s3_android_name")).isFalse();
     }
 }

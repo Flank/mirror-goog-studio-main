@@ -55,7 +55,7 @@ class NamespaceRewriter(
         Files.write(output, rewrittenClass)
     }
 
-    fun rewriteClass(originalClass: ByteArray) : ByteArray {
+    private fun rewriteClass(originalClass: ByteArray) : ByteArray {
         val cw = ClassWriter(0)
         val crw = ClassReWriter(ASM5, cw, symbolTables, logger)
         val cr = ClassReader(originalClass)
@@ -65,13 +65,26 @@ class NamespaceRewriter(
         return cw.toByteArray()
     }
 
+    /**
+     * Rewrites all classes from the input JAR file to be fully resource namespace aware and places
+     * them in the output JAR; it will also filter out all non .class files, so that the output JAR
+     * contains only the namespaced classes.
+     */
     fun rewriteJar(classesJar: File, outputJar: File) {
         ZFile(classesJar).use { classes ->
             ZFile(outputJar).use { output ->
                 classes.entries().forEach { entry ->
-                    if (entry.type == StoredEntryType.FILE) {
-                        val outputBytes = rewriteClass(entry.read())
-                        output.add(entry.centralDirectoryHeader.name, outputBytes.inputStream())
+                    val name = entry.centralDirectoryHeader.name
+                    if (entry.type == StoredEntryType.FILE && name.endsWith(".class")) {
+                        try {
+                            val outputBytes = rewriteClass(entry.read())
+                            output.add(name, outputBytes.inputStream())
+                        } catch (e: Exception) {
+                            throw IllegalStateException(
+                                    "Failed rewriting class $name from ${classesJar.absolutePath}",
+                                    e
+                            )
+                        }
                     }
                 }
             }
@@ -100,7 +113,7 @@ class NamespaceRewriter(
             // Do not write any original R packages for now, as they might not exist anymore
             // after resource namespacing is applied. If they still exists and are referenced in
             // this class, they will be written at the end.
-            if (!outerName!!.endsWith("/R")) {
+            if (outerName != null && !outerName.endsWith("/R")) {
                 cv.visitInnerClass(name, outerName, innerName, access)
             }
         }
@@ -146,7 +159,7 @@ class NamespaceRewriter(
 
             // Go through R.txt files and find the proper package.
             for (table in symbolTables) {
-                if (table.symbols.contains(ResourceType.getEnum(type), name)) {
+                if (table.containsSymbol(ResourceType.getEnum(type)!!, name)) {
                     if (result == null) {
                         result = table.tablePackage
                     }

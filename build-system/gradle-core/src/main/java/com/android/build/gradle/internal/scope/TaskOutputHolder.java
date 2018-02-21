@@ -31,7 +31,7 @@ public interface TaskOutputHolder {
     /**
      * a Type of output that serves as an anchor for multiple tasks.
      *
-     * <p>This ised when a single task consumes outputs (of the same type) coming from different
+     * <p>This is used when a single task consumes outputs (of the same type) coming from different
      * tasks, especially if the number of tasks generating this is be dynamic (either because some
      * tasks are optional based on some parameters or if the API allows for user-added tasks
      * generating the same content.)

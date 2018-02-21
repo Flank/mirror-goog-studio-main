@@ -27,6 +27,10 @@ public enum InternalArtifactType implements ArtifactType {
     // module, use AnchorOutputType.ALL_CLASSES
     // Javac task output.
     JAVAC,
+    // Rewritten classes from non-namespaced dependencies. Fully resource namespaced now.
+    NAMESPACED_CLASSES,
+    // Rewritten classes from non-namespaced dependencies put together into one JAR.
+    NAMESPACED_CLASSES_JAR,
 
     // --- Published classes ---
     // Class-type task output for tasks that generate published classes.
@@ -72,6 +76,7 @@ public enum InternalArtifactType implements ArtifactType {
     SYMBOL_LIST,
     // Synthetic artifacts
     SYMBOL_LIST_WITH_PACKAGE_NAME,
+    // Resources defined within the AAR.
     DEFINED_ONLY_SYMBOL_LIST,
     // public.txt output
     PUBLIC_RES,
@@ -91,6 +96,12 @@ public enum InternalArtifactType implements ArtifactType {
     RES_STATIC_LIBRARY,
     // Compiled R class jar (for compilation only, packaged in AAR)
     COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
+    // JAR file containing all of the auto-namespaced classes from dependencies.
+    COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR,
+    // JARs containing auto-namespaced classes from dependencies.
+    COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JARS,
+    // Classes JAR files from dependencies that need to be auto-namespaced.
+    NON_NAMESPACED_CLASSES,
     // res-ids.txt
     NAMESPACED_SYMBOL_LIST_WITH_PACKAGE_NAME,
     // Final R class sources (to package)

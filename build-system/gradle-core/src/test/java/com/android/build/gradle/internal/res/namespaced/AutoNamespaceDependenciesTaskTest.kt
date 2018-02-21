@@ -93,16 +93,29 @@ class AutoNamespaceDependenciesTaskTest {
 
         val dependencies = wrapDependencies(set(node))
         val outputRewrittenClasses = tempFolder.newFolder("output")
+        val outputRClasses = tempFolder.newFolder("rClasses")
+        val classesJar = tempFolder.newFile("namespaced-classes.jar")
+        val rJar = tempFolder.newFile("r.jar")
         val rFiles = getArtifactCollection(map("libA", rDef))
         val jarFiles = getArtifactCollection(map("libA", testClassesJar))
         task.log = log
 
-        task.namespaceDependencies(dependencies, rFiles, jarFiles, outputRewrittenClasses)
+        task.namespaceDependencies(
+                dependencies,
+                rFiles,
+                jarFiles,
+                outputRewrittenClasses,
+                outputRClasses,
+                classesJar,
+                rJar)
 
-        Truth.assertThat(log.messages).isEmpty()
+        Truth.assertThat(log.warnings).isEmpty()
 
         val namespacedJar = File(outputRewrittenClasses, "namespaced-libA-classes.jar")
         FileSubject.assertThat(namespacedJar).exists()
+        FileSubject.assertThat(File(outputRClasses, "namespaced-libA-R.jar")).exists()
+        FileSubject.assertThat(rJar).exists()
+        FileSubject.assertThat(classesJar).exists()
 
         ZFile(namespacedJar).use {
             it.add("com/example/mymodule/R.class", testRClass.inputStream())
@@ -196,15 +209,25 @@ class AutoNamespaceDependenciesTaskTest {
         // Fill task inputs.
         val dependencies = wrapDependencies(set(nodeA, nodeB))
         val outputRewrittenClasses = tempFolder.newFolder("output")
+        val outputRClasses = tempFolder.newFolder("rClasses")
+        val classesJar = tempFolder.newFile("namespaced-classes.jar")
+        val rJar = tempFolder.newFile("r.jar")
         val rFilesArtifact = getArtifactCollection(rFiles)
         val jarFiles = getArtifactCollection(classesJars)
         task.log = log
 
         // Execute the task.
-        task.namespaceDependencies(dependencies, rFilesArtifact, jarFiles, outputRewrittenClasses)
+        task.namespaceDependencies(
+                dependencies,
+                rFilesArtifact,
+                jarFiles,
+                outputRewrittenClasses,
+                outputRClasses,
+                classesJar,
+                rJar)
 
         // Verify warnings about overrides were printed.
-        Truth.assertThat(log.messages).isNotEmpty()
+        Truth.assertThat(log.warnings).isNotEmpty()
 
         // Verify that the namespaced classes.jar were generated for each package and collect them.
         val urls = ArrayList<URL>()
