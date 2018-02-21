@@ -190,7 +190,7 @@ public class BenchmarkEnvironment {
     public GradleTestProjectBuilder getProjectBuilder() {
         return GradleTestProject.builder()
                 .enableProfileOutputInDirectory(profileDir)
-                .withTestDir(projectDir.toFile())
+                .withTestDir(scratchDir.resolve("testDir").toFile())
                 .withRepoDirectories(mavenRepos)
                 .withAndroidHome(sdkDir.toFile())
                 .withGradleDistributionDirectory(gradleDir.toFile())

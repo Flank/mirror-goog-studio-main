@@ -91,6 +91,11 @@ import org.junit.runners.JUnit4;
  *      In order to get a good, clear signal of how long a benchmark really takes you need to run
  *      the benchmark more than once. This environment variable tells the code how many times you
  *      want to run each benchmark, and you should assume that the lowest value is the best signal.
+ *
+ *   PERF_SKIP_CLEANUP
+ *
+ *      Set this to any non-null value in order to leave environment files around when running this
+ *      from the standalone jar.
  * </pre>
  *
  * You can set all or none of these environment variables to run whatever subset of benchmarks you
@@ -112,7 +117,9 @@ public class BenchmarkTest {
             benchmarkTest.run();
         } finally {
             try {
-                MoreFiles.deleteRecursively(tmp);
+                if (System.getenv("PERF_SKIP_CLEANUP") == null) {
+                    MoreFiles.deleteRecursively(tmp);
+                }
             } catch (IOException e) {
                 // we tried
             }
