@@ -93,7 +93,7 @@ class Aapt2DaemonManager(
     @Synchronized
     fun shutdown() {
         if (pool.any { it.busy }) {
-            throw IllegalStateException("AAPT Process manager cannot be shut down while daemons are in use")
+            error("AAPT Process manager cannot be shut down while daemons are in use")
         }
         if (!pool.isEmpty()) {
             listener.lastDaemonStopped()

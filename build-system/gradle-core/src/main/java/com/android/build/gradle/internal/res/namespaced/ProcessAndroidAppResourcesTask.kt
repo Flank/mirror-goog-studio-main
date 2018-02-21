@@ -138,8 +138,6 @@ open class ProcessAndroidAppResourcesTask
             task.rClassSource = rClassSource
             task.resourceApUnderscore = resourceApUnderscore
             task.setAndroidBuilder(scope.globalScope.androidBuilder)
-
-
             task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
         }
     }
