@@ -479,6 +479,14 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "io.netty_netty-all",
+    export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-all/4.1.13.Final:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "io.netty_netty-buffer",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/netty/netty-buffer/4.1.3.Final:jar",
     visibility = ["//visibility:public"],
