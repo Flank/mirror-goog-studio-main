@@ -19,6 +19,7 @@ package com.android.build.api.transform;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.io.File;
+import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 
@@ -53,6 +54,16 @@ public class SecondaryFile {
     }
 
     /**
+     * Creates a {@link SecondaryFile} instance that, when modified, will not trigger a full
+     * non-incremental build.
+     *
+     * @param file a supplier of file collection.
+     */
+    public static SecondaryFile incremental(@NonNull Supplier<FileCollection> file) {
+        return new SecondaryFile(file, null, true);
+    }
+
+    /**
      * Creates a {@link SecondaryFile} instance that, when modified, will always trigger a full,
      * non-incremental build.
      *
@@ -71,11 +82,20 @@ public class SecondaryFile {
         return new SecondaryFile(file, false);
     }
 
+    /**
+     * Creates a {@link SecondaryFile} instance that, when modified, will always trigger a full
+     * non-incremental build.
+     *
+     * @param file a supplier of file collection.
+     */
+    public static SecondaryFile nonIncremental(@NonNull Supplier<FileCollection> file) {
+        return new SecondaryFile(file, null, false);
+    }
+
     private final boolean supportsIncrementalBuild;
     @Nullable
     private final File secondaryInputFile;
-    @Nullable
-    private final FileCollection secondaryInputFileCollection;
+    @Nullable private final Supplier<FileCollection> secondaryInputFileCollection;
 
     /**
      * @param secondaryInputFile the {@link File} this {@link SecondaryFile} will point to
@@ -99,11 +119,11 @@ public class SecondaryFile {
     private SecondaryFile(
             @NonNull FileCollection secondaryInputFile,
             boolean supportsIncrementalBuild) {
-        this(secondaryInputFile, null, supportsIncrementalBuild);
+        this(() -> secondaryInputFile, null, supportsIncrementalBuild);
     }
 
     private SecondaryFile(
-            @Nullable FileCollection secondaryInputFileCollection,
+            @Nullable Supplier<FileCollection> secondaryInputFileCollection,
             @Nullable File secondaryInputFile,
             boolean supportsIncrementalBuild) {
         this.secondaryInputFileCollection = secondaryInputFileCollection;
@@ -131,7 +151,7 @@ public class SecondaryFile {
      */
     public FileCollection getFileCollection(@NonNull Project project) {
         if (secondaryInputFileCollection != null) {
-            return secondaryInputFileCollection;
+            return secondaryInputFileCollection.get();
         }
 
         return project.files(secondaryInputFile);

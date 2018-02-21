@@ -25,6 +25,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -221,7 +222,10 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     protected ManifestProcessorTask createMergeManifestTask(@NonNull VariantScope variantScope) {
         return taskFactory.create(
                 new ProcessTestManifest.ConfigAction(
-                        variantScope, getTestedManifestMetadata(variantScope.getVariantData())));
+                        variantScope,
+                        new BuildableArtifactImpl(
+                                getTestedManifestMetadata(variantScope.getVariantData()),
+                                variantScope.getGlobalScope().getDslScope())));
     }
 
     @Override

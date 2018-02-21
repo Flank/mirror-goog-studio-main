@@ -23,6 +23,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.ALL_CLASSES;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -48,7 +49,7 @@ import org.gradle.api.tasks.testing.TestTaskReports;
 public class AndroidUnitTest extends Test {
 
     private String sdkPlatformDirPath;
-    private FileCollection mergedManifest;
+    private BuildableArtifact mergedManifest;
     private FileCollection resCollection;
     private FileCollection assetsCollection;
 
@@ -70,7 +71,7 @@ public class AndroidUnitTest extends Test {
     }
 
     @InputFiles
-    public FileCollection getMergedManifest() {
+    public BuildableArtifact getMergedManifest() {
         return mergedManifest;
     }
 
@@ -135,7 +136,9 @@ public class AndroidUnitTest extends Test {
                         testedScope.getOutput(InternalArtifactType.MERGED_NOT_COMPILED_RES);
             }
             runTestsTask.mergedManifest =
-                    testedScope.getOutput(InternalArtifactType.MERGED_MANIFESTS);
+                    testedScope
+                            .getBuildArtifactsHolder()
+                            .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
 
             // Put the variant name in the report path, so that different testing tasks don't
             // overwrite each other's reports. For component model plugin, the report tasks are not

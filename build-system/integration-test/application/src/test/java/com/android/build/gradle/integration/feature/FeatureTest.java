@@ -95,7 +95,10 @@ public class FeatureTest {
         // Check the feature manifest contains only the feature data.
         File featureManifest =
                 featureProject.getIntermediateFile(
-                        "manifests", "full", "feature", "release", "AndroidManifest.xml");
+                        "artifact_transform",
+                        "processReleaseFeatureManifest",
+                        "merged",
+                        "AndroidManifest.xml");
         assertThat(featureManifest).exists();
 
         assertThat(featureManifest)
@@ -157,7 +160,10 @@ public class FeatureTest {
         // Check that the base feature manifest contains the expected content.
         File baseFeatureManifest =
                 baseProject.getIntermediateFile(
-                        "manifests", "full", "feature", "release", "AndroidManifest.xml");
+                        "artifact_transform",
+                        "processReleaseFeatureManifest",
+                        "merged",
+                        "AndroidManifest.xml");
         assertThat(baseFeatureManifest).exists();
         assertThat(baseFeatureManifest)
                 .containsAllOf(

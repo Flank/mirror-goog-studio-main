@@ -50,7 +50,7 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     @Internal
     public abstract File getAaptFriendlyManifestOutputFile();
 
-    /** The processed Manifest. */
+    /** The processed Manifests files folder. */
     @OutputDirectory
     public File getManifestOutputDirectory() {
         return manifestOutputDirectory;

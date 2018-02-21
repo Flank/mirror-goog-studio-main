@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_ASSETS;
 import static com.android.SdkConstants.FD_RES;
-import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.FN_SPLIT_LIST;
@@ -34,7 +33,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
@@ -44,7 +42,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATU
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINKED_RES_FOR_BUNDLE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
@@ -67,6 +64,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
@@ -806,26 +804,12 @@ public abstract class TaskManager {
 
     public ProcessManifest createMergeLibManifestsTask(@NonNull VariantScope scope) {
 
-        // for library, there is only one manifest (no split).
-        File libraryProcessedManifest =
-                new File(scope.getManifestOutputDirectory(), FN_ANDROID_MANIFEST_XML);
-
         final File reportFile = computeManifestReportFile(scope);
         ProcessManifest processManifest =
-                taskFactory.create(
-                        new ProcessManifest.ConfigAction(
-                                scope, libraryProcessedManifest, reportFile));
+                taskFactory.create(new ProcessManifest.ConfigAction(scope, reportFile));
 
         final String taskName = processManifest.getName();
 
-        scope.addTaskOutput(MERGED_MANIFESTS, scope.getManifestOutputDirectory(), taskName);
-
-        scope.addTaskOutput(
-                AAPT_FRIENDLY_MERGED_MANIFESTS,
-                scope.getAaptFriendlyManifestOutputDirectory(),
-                taskName);
-
-        scope.addTaskOutput(LIBRARY_MANIFEST, libraryProcessedManifest, taskName);
         scope.addTaskOutput(MANIFEST_MERGE_REPORT, reportFile, taskName);
 
         processManifest.dependsOn(scope.getCheckManifestTask());
@@ -842,7 +826,10 @@ public abstract class TaskManager {
         ProcessTestManifest processTestManifestTask =
                 taskFactory.create(
                         new ProcessTestManifest.ConfigAction(
-                                scope, testedScope.getOutput(MERGED_MANIFESTS)));
+                                scope,
+                                testedScope
+                                        .getBuildArtifactsHolder()
+                                        .getFinalArtifactFiles(MERGED_MANIFESTS)));
 
         if (scope.getCheckManifestTask() != null) {
             processTestManifestTask.dependsOn(scope.getCheckManifestTask());
@@ -2716,8 +2703,10 @@ public abstract class TaskManager {
                         taskFactory,
                         recorder);
 
-        FileCollection instantRunMergedManifests =
-                variantScope.getOutput(INSTANT_RUN_MERGED_MANIFESTS);
+        BuildableArtifact instantRunMergedManifests =
+                variantScope
+                        .getBuildArtifactsHolder()
+                        .getFinalArtifactFiles(INSTANT_RUN_MERGED_MANIFESTS);
 
         variantScope.setInstantRunTaskManager(instantRunTaskManager);
         AndroidVersion minSdkForDx = variantScope.getMinSdkVersion();
@@ -3044,7 +3033,8 @@ public abstract class TaskManager {
         final boolean splitsArePossible =
                 variantScope.getVariantData().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
 
-        FileCollection manifests = variantScope.getOutput(manifestType);
+        BuildableArtifact manifests =
+                variantScope.getBuildArtifactsHolder().getFinalArtifactFiles(manifestType);
         // this is where the final APKs will be located.
         File finalApkLocation = variantScope.getApkLocation();
         // if we are not dealing with possible splits, we can generate in the final folder

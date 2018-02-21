@@ -49,7 +49,9 @@ public class SeparateTestModuleWithVariantsTest {
         addInstrumentationToManifest();
         project.execute("clean", ":test:assembleDebug");
 
-        assertThat(testProject.file("build/intermediates/manifests/full/debug/AndroidManifest.xml"))
+        assertThat(
+                        testProject.file(
+                                "build/intermediates/artifact_transform/processDebugManifest/merged/AndroidManifest.xml"))
                 .containsAllOf(
                         "package=\"com.example.android.testing.blueprint.test\"",
                         "android:name=\"android.support.test.runner.AndroidJUnitRunner\"",
@@ -61,7 +63,9 @@ public class SeparateTestModuleWithVariantsTest {
         GradleTestProject testProject = project.getSubproject("test");
         project.execute("clean", ":test:assembleDebug");
 
-        assertThat(testProject.file("build/intermediates/manifests/full/debug/AndroidManifest.xml"))
+        assertThat(
+                        testProject.file(
+                                "build/intermediates/artifact_transform/processDebugManifest/merged/AndroidManifest.xml"))
                 .containsAllOf(
                         "package=\"com.example.android.testing.blueprint.test\"",
                         "<instrumentation",

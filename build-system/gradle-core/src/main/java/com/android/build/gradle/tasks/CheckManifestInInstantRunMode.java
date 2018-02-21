@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.scope.BuildElements;
@@ -50,7 +51,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
 
     private InstantRunBuildContext buildContext;
     private File manifestCheckerDir;
-    private FileCollection instantRunManifests;
+    private BuildableArtifact instantRunManifests;
     private FileCollection processedRes;
     private InternalArtifactType resInputType;
 
@@ -60,7 +61,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
     }
 
     @InputFiles
-    FileCollection getInstantRunManifests() {
+    BuildableArtifact getInstantRunManifests() {
         return instantRunManifests;
     }
 
@@ -222,7 +223,10 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
         public void execute(@NonNull CheckManifestInInstantRunMode task) {
 
             task.instantRunManifests =
-                    variantScope.getOutput(InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS);
+                    variantScope
+                            .getBuildArtifactsHolder()
+                            .getFinalArtifactFiles(
+                                    InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS);
             task.resInputType =
                     variantScope.getInstantRunBuildContext().useSeparateApkForResources()
                             ? InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES

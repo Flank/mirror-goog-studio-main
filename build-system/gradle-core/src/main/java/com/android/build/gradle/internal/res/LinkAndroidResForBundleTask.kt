@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res
 
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.aapt.AaptGradleFactory
@@ -180,7 +181,7 @@ open class LinkAndroidResForBundleTask
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var manifestFiles: FileCollection
+    lateinit var manifestFiles: BuildableArtifact
         private set
 
     private var inputResourcesDir: FileCollection? = null
@@ -243,7 +244,8 @@ open class LinkAndroidResForBundleTask
 
             processResources.mainSplit = variantData.outputScope.mainSplit
 
-            processResources.manifestFiles = variantScope.getOutput(MERGED_MANIFESTS)
+            processResources.manifestFiles = variantScope.buildArtifactsHolder
+                .getFinalArtifactFiles(MERGED_MANIFESTS)
 
             processResources.inputResourcesDir = variantScope.getOutput(InternalArtifactType.MERGED_RES)
 

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent.ContentType;
@@ -94,7 +95,7 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final File sourceDir;
     @NonNull private final FileCollection resourceDir;
     @Nullable private final FileCollection mappingFileSrc;
-    @NonNull private final FileCollection mergedManifests;
+    @NonNull private final BuildableArtifact mergedManifests;
     @NonNull private final FileCollection uncompressedResources;
 
     @NonNull private final AaptGeneration aaptGeneration;
@@ -124,7 +125,10 @@ public class ShrinkResourcesTransform extends Transform {
                 variantScope.hasOutput(InternalArtifactType.APK_MAPPING)
                         ? variantScope.getOutput(InternalArtifactType.APK_MAPPING)
                         : null;
-        this.mergedManifests = variantScope.getOutput(InternalArtifactType.MERGED_MANIFESTS);
+        this.mergedManifests =
+                variantScope
+                        .getBuildArtifactsHolder()
+                        .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
         this.uncompressedResources = uncompressedResources;
 
         this.aaptGeneration = aaptGeneration;
@@ -181,7 +185,7 @@ public class ShrinkResourcesTransform extends Transform {
             secondaryFiles.add(SecondaryFile.nonIncremental(mappingFileSrc));
         }
 
-        secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests));
+        secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests::get));
         secondaryFiles.add(SecondaryFile.nonIncremental(uncompressedResources));
 
         return secondaryFiles;

@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.incremental.AsmUtils;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildElements;
@@ -31,15 +32,14 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.ide.common.build.ApkInfo;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.apache.commons.io.Charsets;
 import org.gradle.api.Project;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileTree;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -55,8 +55,8 @@ public class GenerateInstantRunAppInfoTaskTest {
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Mock ApkInfo apkInfo;
-    @Mock FileCollection fileCollection;
-    @Mock FileTree fileTree;
+    @Mock BuildableArtifact fileCollection;
+    Set<File> fileTree = new HashSet<>();
     @Mock InstantRunBuildContext buildContext;
     @Mock ILogger logger;
 
@@ -71,7 +71,6 @@ public class GenerateInstantRunAppInfoTaskTest {
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
         task = project.getTasks().create("test", GenerateInstantRunAppInfoTask.class);
         task.setMergedManifests(fileCollection);
-        when(fileCollection.getAsFileTree()).thenReturn(fileTree);
         File outputFile = temporaryFolder.newFile();
         task.setOutputFile(outputFile);
         task.setBuildContext(buildContext);
@@ -84,16 +83,15 @@ public class GenerateInstantRunAppInfoTaskTest {
     public void testGeneration() throws IOException {
 
         File androidManifest = temporaryFolder.newFile();
-        Files.write(
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "      package=\"com.example.generateappinfo\"\n"
-                        + "      android:versionCode=\"1\"\n"
-                        + "      android:versionName=\"1.0\"\n"
-                        + "      split=\"lib_slice_1_apk\">\n"
-                        + "</manifest>",
-                androidManifest,
-                Charsets.UTF_8);
+        Files.asCharSink(androidManifest, Charsets.UTF_8)
+                .write(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "      package=\"com.example.generateappinfo\"\n"
+                                + "      android:versionCode=\"1\"\n"
+                                + "      android:versionName=\"1.0\"\n"
+                                + "      split=\"lib_slice_1_apk\">\n"
+                                + "</manifest>");
 
         File buildOutputs = temporaryFolder.newFolder("buildOutputs");
         new BuildElements(
@@ -104,8 +102,8 @@ public class GenerateInstantRunAppInfoTaskTest {
                                         androidManifest)))
                 .save(buildOutputs);
 
-        when(fileTree.getFiles())
-                .thenReturn(ImmutableSet.of(ExistingBuildElements.getMetadataFile(buildOutputs)));
+        fileTree.add(ExistingBuildElements.getMetadataFile(buildOutputs));
+        when(fileCollection.getFiles()).thenReturn(fileTree);
 
         task.generateInfoTask();
 
@@ -125,8 +123,8 @@ public class GenerateInstantRunAppInfoTaskTest {
         File buildOutputs = temporaryFolder.newFolder("buildOutputs");
         new BuildElements(ImmutableList.of()).save(buildOutputs);
 
-        when(fileTree.getFiles())
-                .thenReturn(ImmutableSet.of(ExistingBuildElements.getMetadataFile(buildOutputs)));
+        fileTree.add(ExistingBuildElements.getMetadataFile(buildOutputs));
+        when(fileCollection.getFiles()).thenReturn(fileTree);
 
         assertThat(task.getOutputFile().delete()).isTrue();
 

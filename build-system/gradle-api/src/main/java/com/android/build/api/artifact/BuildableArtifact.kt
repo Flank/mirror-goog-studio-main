@@ -18,7 +18,9 @@ package com.android.build.api.artifact
 
 import org.gradle.api.Buildable
 import org.gradle.api.Incubating
+import org.gradle.api.file.FileCollection
 import java.io.File
+import java.util.function.Supplier
 
 /**
  * A Iterable<File> that implements [Buildable]
@@ -26,7 +28,7 @@ import java.io.File
  * [BuildableArtifact] can be used as Task inputs.
  */
 @Incubating
-interface BuildableArtifact : Iterable<File>, Buildable {
+interface BuildableArtifact : Iterable<File>, Buildable, Supplier<FileCollection> {
     val files : Set<File>
     fun isEmpty() : Boolean
 }

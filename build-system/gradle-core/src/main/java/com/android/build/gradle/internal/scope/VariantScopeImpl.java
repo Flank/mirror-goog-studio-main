@@ -1579,26 +1579,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getAaptFriendlyManifestOutputDirectory() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "manifests",
-                "aapt",
-                getVariantConfiguration().getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getInstantRunManifestOutputDirectory() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "manifests",
-                "instant-run",
-                getVariantConfiguration().getDirName());
-    }
-
-    @NonNull
-    @Override
     public File getInstantRunResourceApkFolder() {
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
@@ -1631,16 +1611,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope.getGeneratedDir(),
                 "res",
                 "microapk",
-                getVariantConfiguration().getDirName());
-    }
-
-    @Override
-    @NonNull
-    public File getCompatibleScreensManifestDirectory() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "manifests",
-                "density",
                 getVariantConfiguration().getDirName());
     }
 

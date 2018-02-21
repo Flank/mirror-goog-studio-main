@@ -880,6 +880,7 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
         }
     }
 
+    // is it still used by IDE ? at this point, it becomes impossible to set this up accurately.
     private static BuildOutputSupplier<Collection<EarlySyncBuildOutput>> getManifestsSupplier(
             BaseVariantData variantData) {
 

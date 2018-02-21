@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -57,7 +58,7 @@ public class GenerateTestConfig extends DefaultTask {
     Path sdkHome;
     File generatedJavaResourcesDirectory;
     ApkInfo mainApkInfo;
-    FileCollection manifests;
+    BuildableArtifact manifests;
     String packageForR;
 
     @Input
@@ -66,7 +67,7 @@ public class GenerateTestConfig extends DefaultTask {
     }
 
     @InputFiles
-    FileCollection getManifests() {
+    BuildableArtifact getManifests() {
         return manifests;
     }
 
@@ -179,7 +180,10 @@ public class GenerateTestConfig extends DefaultTask {
             task.dependsOn(task.resourcesDirectory);
             task.assetsDirectory = testedScope.getOutput(MERGED_ASSETS);
             task.dependsOn(task.assetsDirectory);
-            task.manifests = testedScope.getOutput(InternalArtifactType.MERGED_MANIFESTS);
+            task.manifests =
+                    testedScope
+                            .getBuildArtifactsHolder()
+                            .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
             task.mainApkInfo = testedScope.getOutputScope().getMainSplit();
             task.sdkHome =
                     Paths.get(scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation());

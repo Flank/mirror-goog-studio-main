@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
@@ -55,7 +56,6 @@ import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.execution.TaskExecutionAdapter;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.TaskState;
 
@@ -98,7 +98,7 @@ public class InstantRunTaskManager {
             @Nullable Task preTask,
             Task anchorTask,
             Set<? super QualifiedContent.Scope> resMergingScopes,
-            FileCollection instantRunMergedManifests,
+            BuildableArtifact instantRunMergedManifests,
             boolean addDependencyChangeChecker,
             int minSdkForDx) {
         final Project project = variantScope.getGlobalScope().getProject();

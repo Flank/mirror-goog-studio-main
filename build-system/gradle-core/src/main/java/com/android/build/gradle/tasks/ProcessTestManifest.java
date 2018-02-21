@@ -24,6 +24,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
@@ -71,8 +72,7 @@ import org.gradle.api.tasks.Optional;
  */
 public class ProcessTestManifest extends ManifestProcessorTask {
 
-    @Nullable
-    private FileCollection testTargetMetadata;
+    @Nullable private BuildableArtifact testTargetMetadata;
 
     @Nullable
     private File testManifestFile;
@@ -238,7 +238,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     @InputFiles
     @Optional
     @Nullable
-    public FileCollection getTestTargetMetadata() {
+    public BuildableArtifact getTestTargetMetadata() {
         return testTargetMetadata;
     }
 
@@ -269,12 +269,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         @NonNull
         private final VariantScope scope;
 
-        @Nullable
-        private final FileCollection testTargetMetadata;
+        @Nullable private final BuildableArtifact testTargetMetadata;
 
         public ConfigAction(
-                @NonNull VariantScope scope,
-                @Nullable FileCollection testTargetMetadata){
+                @NonNull VariantScope scope, @Nullable BuildableArtifact testTargetMetadata) {
             this.scope = scope;
             this.testTargetMetadata = testTargetMetadata;
         }
@@ -339,17 +337,20 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             processTestManifestTask.manifests = scope.getArtifactCollection(
                     RUNTIME_CLASSPATH, ALL, MANIFEST);
 
-            processTestManifestTask.setManifestOutputDirectory(scope.getManifestOutputDirectory());
+            processTestManifestTask.setManifestOutputDirectory(
+                    scope.getBuildArtifactsHolder()
+                            .appendArtifact(
+                                    InternalArtifactType.MERGED_MANIFESTS,
+                                    processTestManifestTask,
+                                    "merged"));
 
             processTestManifestTask.placeholdersValues =
                     TaskInputHelper.memoize(config::getManifestPlaceholders);
 
-            // set outputs.
-            scope.addTaskOutput(MERGED_MANIFESTS, scope.getManifestOutputDirectory(), getName());
-
             scope.addTaskOutput(
                     InternalArtifactType.MANIFEST_METADATA,
-                    ExistingBuildElements.getMetadataFile(scope.getManifestOutputDirectory()),
+                    ExistingBuildElements.getMetadataFile(
+                            processTestManifestTask.getManifestOutputDirectory()),
                     getName());
 
             scope.getVariantData()

@@ -80,6 +80,8 @@ class BuildArtifactsHolder(
 
         fun final() : BuildableArtifact {
             return object : BuildableArtifact {
+                override fun get(): FileCollection = last.get()
+
                 override val files: Set<File>
                     get() = last.files
 

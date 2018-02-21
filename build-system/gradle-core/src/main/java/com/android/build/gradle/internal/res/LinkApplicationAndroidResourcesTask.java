@@ -770,7 +770,9 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                     TaskInputHelper.memoize(config::getOriginalApplicationId);
 
             boolean aaptFriendlyManifestsFilePresent =
-                    variantScope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
+                    variantScope
+                            .getBuildArtifactsHolder()
+                            .hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
             processResources.taskInputType =
                     aaptFriendlyManifestsFilePresent
                             ? InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
@@ -778,7 +780,9 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                     ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
                                     : InternalArtifactType.MERGED_MANIFESTS;
             processResources.setManifestFiles(
-                    variantScope.getOutput(processResources.taskInputType));
+                    variantScope
+                            .getBuildArtifactsHolder()
+                            .getFinalArtifactFiles(processResources.taskInputType));
 
             processResources.inputResourcesDir =
                     variantScope.getOutput(sourceArtifactType.getOutputType());
@@ -899,14 +903,19 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.originalApplicationId = TaskInputHelper.memoize(config::getOriginalApplicationId);
 
             boolean aaptFriendlyManifestsFilePresent =
-                    variantScope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
+                    variantScope
+                            .getBuildArtifactsHolder()
+                            .hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
             task.taskInputType =
                     aaptFriendlyManifestsFilePresent
                             ? InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
                             : variantScope.getInstantRunBuildContext().isInInstantRunMode()
                                     ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
                                     : InternalArtifactType.MERGED_MANIFESTS;
-            task.setManifestFiles(variantScope.getOutput(task.taskInputType));
+            task.setManifestFiles(
+                    variantScope
+                            .getBuildArtifactsHolder()
+                            .getFinalArtifactFiles(task.taskInputType));
 
             List<FileCollection> dependencies = new ArrayList<>(2);
             dependencies.add(variantScope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY));

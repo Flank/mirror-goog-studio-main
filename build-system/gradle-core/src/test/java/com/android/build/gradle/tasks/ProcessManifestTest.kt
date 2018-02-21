@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
@@ -53,6 +54,7 @@ class ProcessManifestTest {
     @Mock lateinit var globalScope: GlobalScope
     @Mock lateinit var outputScope: OutputScope
     @Mock lateinit var variantConfiguration : GradleVariantConfiguration
+    @Mock lateinit var buildArtifactsHolder : BuildArtifactsHolder
     @Mock lateinit var variantData : BaseVariantData
     @Mock lateinit var mainSplit: ApkData
     @Mock lateinit var androidBuilder: AndroidBuilder
@@ -66,6 +68,7 @@ class ProcessManifestTest {
         `when`(variantScope.globalScope).thenReturn(globalScope)
         `when`(variantScope.outputScope).thenReturn(outputScope)
         `when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
+        `when`(variantScope.buildArtifactsHolder).thenReturn(buildArtifactsHolder)
         `when`(variantScope.variantData).thenReturn(variantData)
         `when`(variantScope.fullVariantName).thenReturn("fullVariantName")
         `when`(variantScope.getTaskName(any(), any())).thenReturn("processManifest")
@@ -81,7 +84,7 @@ class ProcessManifestTest {
         val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
         val configAction =
                 ProcessManifest.ConfigAction(
-                        variantScope, temporaryFolder.newFile(), temporaryFolder.newFile())
+                        variantScope, temporaryFolder.newFile())
         task = project!!.tasks.create(configAction.name, configAction.type, configAction)
     }
 

@@ -218,19 +218,16 @@ public class ProcessManifest extends ManifestProcessorTask {
     public static class ConfigAction implements TaskConfigAction<ProcessManifest> {
 
         private final VariantScope scope;
-        private final File libraryProcessedManifest;
         private final File reportFile;
 
         /**
          * {@code TaskConfigAction} for the library process manifest task.
          *
          * @param scope The library variant scope.
-         * @param libraryProcessedManifest The library manifest output file. This must be a file
-         *     inside {@link VariantScope#getManifestOutputDirectory()}.
+         * @param reportFile TODO : to be removed ?
          */
-        public ConfigAction(VariantScope scope, File libraryProcessedManifest, File reportFile) {
+        public ConfigAction(VariantScope scope, File reportFile) {
             this.scope = scope;
-            this.libraryProcessedManifest = libraryProcessedManifest;
             this.reportFile = reportFile;
         }
 
@@ -254,7 +251,6 @@ public class ProcessManifest extends ManifestProcessorTask {
 
             processManifest.setAndroidBuilder(androidBuilder);
             processManifest.setVariantName(config.getFullName());
-            processManifest.manifestOutputFile = libraryProcessedManifest;
 
             processManifest.variantConfiguration = config;
 
@@ -282,10 +278,30 @@ public class ProcessManifest extends ManifestProcessorTask {
 
             processManifest.maxSdkVersion = TaskInputHelper.memoize(mergedFlavor::getMaxSdkVersion);
 
-            processManifest.setManifestOutputDirectory(scope.getManifestOutputDirectory());
+            processManifest.setManifestOutputDirectory(
+                    scope.getBuildArtifactsHolder()
+                            .appendArtifact(
+                                    InternalArtifactType.MERGED_MANIFESTS,
+                                    processManifest,
+                                    "merged"));
 
             processManifest.setAaptFriendlyManifestOutputDirectory(
-                    scope.getAaptFriendlyManifestOutputDirectory());
+                    scope.getBuildArtifactsHolder()
+                            .appendArtifact(
+                                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                                    processManifest,
+                                    "aapt"));
+
+            processManifest.manifestOutputFile =
+                    new File(
+                            processManifest.getManifestOutputDirectory(),
+                            SdkConstants.FN_ANDROID_MANIFEST_XML);
+
+            scope.addTaskOutput(
+                    InternalArtifactType.LIBRARY_MANIFEST,
+                    processManifest.manifestOutputFile,
+                    getName());
+
             processManifest.outputScope = scope.getOutputScope();
 
             processManifest.setReportFile(reportFile);

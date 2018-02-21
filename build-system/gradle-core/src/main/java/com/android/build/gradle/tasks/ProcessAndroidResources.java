@@ -17,13 +17,13 @@
 package com.android.build.gradle.tasks;
 
 import com.android.SdkConstants;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import java.io.File;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -33,15 +33,15 @@ public abstract class ProcessAndroidResources extends IncrementalTask {
 
 
     protected OutputScope outputScope;
-    protected FileCollection manifestFiles;
+    protected BuildableArtifact manifestFiles;
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getManifestFiles() {
+    public BuildableArtifact getManifestFiles() {
         return manifestFiles;
     }
 
-    protected void setManifestFiles(FileCollection manifestFiles) {
+    protected void setManifestFiles(BuildableArtifact manifestFiles) {
         this.manifestFiles = manifestFiles;
     }
 
@@ -49,7 +49,7 @@ public abstract class ProcessAndroidResources extends IncrementalTask {
     public abstract File getSourceOutputDir();
 
     public File getManifestFile() {
-        File manifestDirectory = Iterables.getFirst(manifestFiles.getFiles(), null);
+        File manifestDirectory = Iterables.getFirst(manifestFiles.get().getFiles(), null);
         Preconditions.checkNotNull(manifestDirectory);
         Preconditions.checkNotNull(outputScope.getMainSplit());
         return FileUtils.join(

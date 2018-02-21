@@ -308,12 +308,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getSplitSupportDirectory();
 
     @NonNull
-    File getAaptFriendlyManifestOutputDirectory();
-
-    @NonNull
-    File getInstantRunManifestOutputDirectory();
-
-    @NonNull
     File getMicroApkManifestFile();
 
     @NonNull
@@ -324,9 +318,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getAnnotationProcessorOutputDir();
-
-    @NonNull
-    File getCompatibleScreensManifestDirectory();
 
     @NonNull
     File getManifestOutputDirectory();

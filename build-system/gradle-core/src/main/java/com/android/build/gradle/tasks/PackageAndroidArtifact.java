@@ -25,6 +25,7 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
@@ -110,7 +111,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     // Path sensitivity here and below is absolute due to http://b/72085541
     @InputFiles
     @PathSensitive(PathSensitivity.ABSOLUTE)
-    public FileCollection getManifests() {
+    public BuildableArtifact getManifests() {
         return manifests;
     }
 
@@ -189,7 +190,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected Supplier<InstantRunBuildContext> instantRunContext;
 
-    protected FileCollection manifests;
+    protected BuildableArtifact manifests;
 
     @Nullable protected Collection<String> aaptOptionsNoCompress;
 
@@ -858,7 +859,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
         protected final Project project;
         protected final VariantScope variantScope;
-        @NonNull protected final FileCollection manifests;
+        @NonNull protected final BuildableArtifact manifests;
         @NonNull protected final InternalArtifactType inputResourceFilesType;
         @NonNull protected final File outputDirectory;
         @NonNull protected final OutputScope outputScope;
@@ -869,7 +870,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 @NonNull VariantScope variantScope,
                 @NonNull File outputDirectory,
                 @NonNull InternalArtifactType inputResourceFilesType,
-                @NonNull FileCollection manifests,
+                @NonNull BuildableArtifact manifests,
                 @NonNull InternalArtifactType manifestType,
                 @Nullable FileCache fileCache,
                 @NonNull OutputScope outputScope) {

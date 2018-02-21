@@ -18,7 +18,9 @@
 package com.android.build.gradle.internal.api.artifact
 
 import com.android.build.api.artifact.BuildableArtifact
+import org.gradle.api.file.FileCollection
 import java.io.File
+import java.util.function.Supplier
 
 /**
  * Returns the first file in the [BuildableArtifact] by name if it exists, or null otherwise.
@@ -26,5 +28,15 @@ import java.io.File
  * @name the file name
  */
 fun BuildableArtifact.forName(name: String) : File? {
-    return files.find { it.name == name }
+    return forNameInFolder(files.toTypedArray(), name)
+}
+
+private fun forNameInFolder(files: Array<File>, name:String): File? {
+    files.filter { it.isDirectory }.forEach {
+        val file = forNameInFolder(it.listFiles(), name)
+        if (file != null) {
+            return file
+        }
+    }
+    return files.filter { it.isFile }.find { it.name == name }
 }

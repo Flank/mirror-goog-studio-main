@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -490,10 +491,10 @@ public class MergeManifests extends ManifestProcessorTask {
                 processManifestTask.microApkManifest = project.files(
                         variantScope.getMicroApkManifestFile());
             }
+            BuildArtifactsHolder buildArtifactsHolder = variantScope.getBuildArtifactsHolder();
             processManifestTask.compatibleScreensManifest =
-                    variantScope
-                            .getBuildArtifactsHolder()
-                            .getArtifactFiles(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST);
+                    buildArtifactsHolder.getFinalArtifactFiles(
+                            InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST);
 
             processManifestTask.minSdkVersion =
                     TaskInputHelper.memoize(
@@ -513,11 +514,15 @@ public class MergeManifests extends ManifestProcessorTask {
             processManifestTask.maxSdkVersion =
                     TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
 
-            File manifestOutputDirectory = variantScope.getManifestOutputDirectory();
-            processManifestTask.setManifestOutputDirectory(manifestOutputDirectory);
+            processManifestTask.setManifestOutputDirectory(
+                    buildArtifactsHolder.appendArtifact(
+                            InternalArtifactType.MERGED_MANIFESTS, processManifestTask, "merged"));
 
             processManifestTask.setInstantRunManifestOutputDirectory(
-                    variantScope.getInstantRunManifestOutputDirectory());
+                    buildArtifactsHolder.appendArtifact(
+                            InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
+                            processManifestTask,
+                            "instant-run"));
 
             processManifestTask.setReportFile(reportFile);
             processManifestTask.optionalFeatures =
@@ -554,24 +559,18 @@ public class MergeManifests extends ManifestProcessorTask {
 
             // when dealing with a non-base feature, output is under a different type.
             if (!variantType.isBaseModule()) {
-                variantScope.addTaskOutput(
+                buildArtifactsHolder.appendArtifact(
                         InternalArtifactType.METADADA_FEATURE_MANIFEST,
-                        manifestOutputDirectory,
-                        getName());
+                        ImmutableList.of(processManifestTask.getManifestOutputDirectory()),
+                        processManifestTask);
             }
 
-            variantScope.addTaskOutput(
-                    InternalArtifactType.MERGED_MANIFESTS, manifestOutputDirectory, getName());
-
-            variantScope.addTaskOutput(
-                    InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
-                    variantScope.getInstantRunManifestOutputDirectory(),
-                    getName());
-
-            variantScope.addTaskOutput(
+            buildArtifactsHolder.appendArtifact(
                     InternalArtifactType.MANIFEST_METADATA,
-                    ExistingBuildElements.getMetadataFile(manifestOutputDirectory),
-                    getName());
+                    ImmutableList.of(
+                            ExistingBuildElements.getMetadataFile(
+                                    processManifestTask.getManifestOutputDirectory())),
+                    processManifestTask);
 
             variantScope
                     .getVariantData()

@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
@@ -89,7 +90,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
     private FileCollection inputDirectory;
     private File mergeBlameLogFolder;
     private InternalArtifactType taskInputType;
-    private FileCollection manifestFiles;
+    private BuildableArtifact manifestFiles;
 
     private AaptGeneration aaptGeneration;
     @Nullable private FileCollection aapt2FromMaven;
@@ -372,7 +373,8 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
             verifyLibraryResources.mergeBlameLogFolder = scope.getResourceBlameLogDir();
 
             boolean aaptFriendlyManifestsFilePresent =
-                    scope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
+                    scope.getBuildArtifactsHolder()
+                            .hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
             verifyLibraryResources.taskInputType =
                     aaptFriendlyManifestsFilePresent
                             ? InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
@@ -380,7 +382,8 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                                     ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
                                     : InternalArtifactType.MERGED_MANIFESTS;
             verifyLibraryResources.manifestFiles =
-                    scope.getOutput(verifyLibraryResources.taskInputType);
+                    scope.getBuildArtifactsHolder()
+                            .getFinalArtifactFiles(verifyLibraryResources.taskInputType);
         }
     }
 
@@ -399,7 +402,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
 
     @NonNull
     @InputFiles
-    public FileCollection getManifestFiles() {
+    public BuildableArtifact getManifestFiles() {
         return manifestFiles;
     }
 

@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
@@ -95,7 +96,7 @@ public class PackageApplication extends PackageAndroidArtifact {
                 @NonNull VariantScope packagingScope,
                 @NonNull File outputDirectory,
                 @NonNull InternalArtifactType inputResourceFilesType,
-                @NonNull FileCollection manifests,
+                @NonNull BuildableArtifact manifests,
                 @NonNull InternalArtifactType manifestType,
                 @NonNull OutputScope outputScope,
                 @Nullable FileCache fileCache,
@@ -143,7 +144,7 @@ public class PackageApplication extends PackageAndroidArtifact {
                 @NonNull File outputFile,
                 @NonNull VariantScope scope,
                 @NonNull InternalArtifactType inputResourceFilesType,
-                @NonNull FileCollection manifests,
+                @NonNull BuildableArtifact manifests,
                 @NonNull InternalArtifactType manifestType,
                 @Nullable FileCache fileCache,
                 @NonNull OutputScope outputScope) {

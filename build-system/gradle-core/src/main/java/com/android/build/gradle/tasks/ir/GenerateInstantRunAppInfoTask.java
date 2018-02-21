@@ -29,6 +29,7 @@ import static org.objectweb.asm.Opcodes.V1_6;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -47,7 +48,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
@@ -70,7 +70,7 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
     private static final String SERVER_PACKAGE = "com/android/tools/ir/server";
 
     private File outputFile;
-    private FileCollection mergedManifests;
+    private BuildableArtifact mergedManifests;
     private InstantRunBuildContext buildContext;
 
     @OutputFile
@@ -84,12 +84,12 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
     }
 
     @InputFiles
-    public FileCollection getMergedManifests() {
+    public BuildableArtifact getMergedManifests() {
         return mergedManifests;
     }
 
     @VisibleForTesting
-    void setMergedManifests(FileCollection mergedManifests) {
+    void setMergedManifests(BuildableArtifact mergedManifests) {
         this.mergedManifests = mergedManifests;
     }
 
@@ -197,12 +197,12 @@ public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
         @NonNull private final VariantScope variantScope;
         @NonNull
         private final TransformVariantScope transformVariantScope;
-        @NonNull private final FileCollection manifests;
+        @NonNull private final BuildableArtifact manifests;
 
         public ConfigAction(
                 @NonNull TransformVariantScope transformVariantScope,
                 @NonNull VariantScope variantScope,
-                @NonNull FileCollection manifests) {
+                @NonNull BuildableArtifact manifests) {
             this.transformVariantScope = transformVariantScope;
             this.variantScope = variantScope;
             this.manifests = manifests;

@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.res
 
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -184,7 +185,8 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
             }
 
-            task.manifestFiles = variantScope.getOutput(InternalArtifactType.MERGED_MANIFESTS)
+            task.manifestFiles = variantScope.buildArtifactsHolder.getFinalArtifactFiles(
+                InternalArtifactType.MERGED_MANIFESTS)
 
             task.inputResourcesDir = variantScope.getOutput(InternalArtifactType.PACKAGED_RES)
 

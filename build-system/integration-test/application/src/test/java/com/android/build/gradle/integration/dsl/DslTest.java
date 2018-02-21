@@ -118,7 +118,8 @@ public class DslTest {
         project.execute("processDebugManifest");
 
         File manifestFile =
-                project.file("build/intermediates/manifests/full/debug/AndroidManifest.xml");
+                project.file(
+                        "build/intermediates/artifact_transform/processDebugManifest/merged/AndroidManifest.xml");
 
         Document document =
                 XmlUtils.parseDocument(

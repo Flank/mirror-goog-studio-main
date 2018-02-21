@@ -125,8 +125,12 @@ class BuildArtifactTransformBuilderImpl<out T : Task>(
             return task
         }
         val chainInputs = appendedOutput.plus(replacedOutput)
-        val inputProvider = InputArtifactProviderImpl(artifactsHolder,
-            finalInputs, chainInputs, dslScope)
+        val inputProvider = InputArtifactProviderImpl(
+            artifactsHolder,
+            finalInputs,
+            chainInputs,
+            project.files(),
+            dslScope)
         val outputProvider =
                 OutputFileProviderImpl(
                         artifactsHolder,
