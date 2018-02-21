@@ -245,8 +245,10 @@ task performanceTestJar(type: Jar, dependsOn: [':zipOfflineRepo', zipPrebuiltsRe
                             'time. See tools/buildSrc/servers/build_perf_tests.sh for an example')
         }
     }
-    from(System.getenv('COMMIT_JSON')) {
-        rename { "commit.json" }
+    if (System.getenv('COMMIT_JSON') != null) {
+        from(System.getenv('COMMIT_JSON')) {
+            rename { "commit.json" }
+        }
     }
 
     from sourceSets.test.runtimeClasspath
