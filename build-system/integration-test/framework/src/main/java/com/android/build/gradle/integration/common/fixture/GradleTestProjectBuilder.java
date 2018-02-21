@@ -214,7 +214,8 @@ public final class GradleTestProjectBuilder {
     }
 
     public GradleTestProjectBuilder fromDir(@NonNull File dir) {
-        Preconditions.checkArgument(dir.isDirectory(), "passed dir must be a directory");
+        Preconditions.checkArgument(
+                dir.isDirectory(), dir.getAbsolutePath() + " is not a directory");
         AndroidTestApp app = new EmptyTestApp();
         addAllFiles(app, dir);
         return fromTestApp(app);
