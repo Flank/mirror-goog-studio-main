@@ -14,7 +14,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class ScreenBrightnessTaskCategory extends TaskCategory {
     private final List<? extends Task> mTasks =
@@ -106,7 +105,7 @@ public class ScreenBrightnessTaskCategory extends TaskCategory {
         @Override
         protected String execute() {
             try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+                Thread.sleep(DEFAULT_TASK_TIME_MS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

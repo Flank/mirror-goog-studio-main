@@ -8,9 +8,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public abstract class TaskCategory {
     public abstract static class Task {
+        protected static final long DEFAULT_TASK_TIME_MS = TimeUnit.SECONDS.toMillis(10);
+
         /** Method that is called just prior to {@link Task#execute()} begins running. */
         public void preExecute() {}
 

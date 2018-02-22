@@ -333,18 +333,18 @@ public class CpuTaskCategory extends TaskCategory {
     }
 
     private static final class SingleThreadMemoryTask extends ComputationTask {
-        private static final int MEM_SIZE = 16 * 1024 * 1024;
+        private static final int INT_COUNT = 4 * 1024 * 1024;
         private final int[] mValues;
         private int mIndex = 0;
 
         private SingleThreadMemoryTask(int secondsToRun) {
             super(secondsToRun);
 
-            if ((MEM_SIZE & (MEM_SIZE - 1)) > 0) {
-                throw new RuntimeException("MEM_SIZE needs to be power of 2!");
+            if ((INT_COUNT & (INT_COUNT - 1)) > 0) {
+                throw new RuntimeException("INT_COUNT needs to be power of 2!");
             }
 
-            int size = MEM_SIZE;
+            int size = INT_COUNT;
             mValues = new int[size];
             // Most of the non-power of 2 numbers hardcoded are just random primes.
             for (int i = 0; i < mValues.length; i++, size += 17) {
@@ -357,7 +357,7 @@ public class CpuTaskCategory extends TaskCategory {
             for (int i = 0; i < NUM_ITERATIONS; i++) {
                 int newValue = stupidHash(mValues[mIndex], mIndex);
                 mValues[mIndex] = newValue;
-                mIndex = newValue & (MEM_SIZE - 1);
+                mIndex = newValue & (INT_COUNT - 1);
             }
         }
 

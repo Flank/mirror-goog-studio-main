@@ -16,4 +16,5 @@ public enum ActivityRequestCodes {
     WRITE_SETTINGS, // Request code to allow writing to system settings.
     CAMERA, // Request code for accessing the camera.
     MICROPHONE, // Request code for accessing the microphone to record sounds.
+    BODY_SENSORS, // Request code for gyros and accelerometers.
 }
