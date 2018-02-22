@@ -372,6 +372,12 @@ public class NdkHandler {
         return ImmutableList.copyOf(Abi.values());
     }
 
+    /** Returns a list of default ABIs. */
+    @NonNull
+    public static Collection<Abi> getDefaultAbiList() {
+        return Abi.getDefaultValues();
+    }
+
     /**
      * Returns a list of 32-bits ABI.
      */

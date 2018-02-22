@@ -19,19 +19,62 @@ package com.android.build.gradle.internal.core;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.collect.ImmutableList;
+import java.util.Collection;
 
 /**
  * Enum of valid ABI you can specify for NDK.
  */
 public enum Abi {
-    //          name                           architecture                        gccToolchainPrefix        gccExecutablePrefix       supports64Bits
-    ARMEABI    (SdkConstants.ABI_ARMEABI,      SdkConstants.CPU_ARCH_ARM,          "arm-linux-androideabi",  "arm-linux-androideabi",  false),
-    ARMEABI_V7A(SdkConstants.ABI_ARMEABI_V7A,  SdkConstants.CPU_ARCH_ARM,          "arm-linux-androideabi",  "arm-linux-androideabi",  false),
-    ARM64_V8A  (SdkConstants.ABI_ARM64_V8A,    SdkConstants.CPU_ARCH_ARM64,        "aarch64-linux-android",  "aarch64-linux-android",  true),
-    X86        (SdkConstants.ABI_INTEL_ATOM,   SdkConstants.CPU_ARCH_INTEL_ATOM,   "x86",                    "i686-linux-android",     false),
-    X86_64     (SdkConstants.ABI_INTEL_ATOM64, SdkConstants.CPU_ARCH_INTEL_ATOM64, "x86_64",                 "x86_64-linux-android",   true),
-    MIPS       (SdkConstants.ABI_MIPS,         SdkConstants.CPU_ARCH_MIPS,         "mipsel-linux-android",   "mipsel-linux-android",   false),
-    MIPS64     (SdkConstants.ABI_MIPS64,       SdkConstants.CPU_ARCH_MIPS64,       "mips64el-linux-android", "mips64el-linux-android", true);
+    ARMEABI(
+            SdkConstants.ABI_ARMEABI,
+            SdkConstants.CPU_ARCH_ARM,
+            "arm-linux-androideabi",
+            "arm-linux-androideabi",
+            false,
+            false),
+    ARMEABI_V7A(
+            SdkConstants.ABI_ARMEABI_V7A,
+            SdkConstants.CPU_ARCH_ARM,
+            "arm-linux-androideabi",
+            "arm-linux-androideabi",
+            false,
+            true),
+    ARM64_V8A(
+            SdkConstants.ABI_ARM64_V8A,
+            SdkConstants.CPU_ARCH_ARM64,
+            "aarch64-linux-android",
+            "aarch64-linux-android",
+            true,
+            true),
+    X86(
+            SdkConstants.ABI_INTEL_ATOM,
+            SdkConstants.CPU_ARCH_INTEL_ATOM,
+            "x86",
+            "i686-linux-android",
+            false,
+            true),
+    X86_64(
+            SdkConstants.ABI_INTEL_ATOM64,
+            SdkConstants.CPU_ARCH_INTEL_ATOM64,
+            "x86_64",
+            "x86_64-linux-android",
+            true,
+            true),
+    MIPS(
+            SdkConstants.ABI_MIPS,
+            SdkConstants.CPU_ARCH_MIPS,
+            "mipsel-linux-android",
+            "mipsel-linux-android",
+            false,
+            false),
+    MIPS64(
+            SdkConstants.ABI_MIPS64,
+            SdkConstants.CPU_ARCH_MIPS64,
+            "mips64el-linux-android",
+            "mips64el-linux-android",
+            true,
+            false);
 
 
     @NonNull
@@ -43,14 +86,23 @@ public enum Abi {
     @NonNull
     private final String gccExecutablePrefix;
     private final boolean supports64Bits;
+    private final boolean isDefault;
 
-    Abi(@NonNull String name, @NonNull String architecture,
-            @NonNull String gccToolchainPrefix, @NonNull String gccExecutablePrefix, boolean supports64Bits) {
+    private static ImmutableList<Abi> defaultValues = null;
+
+    Abi(
+            @NonNull String name,
+            @NonNull String architecture,
+            @NonNull String gccToolchainPrefix,
+            @NonNull String gccExecutablePrefix,
+            boolean supports64Bits,
+            boolean isDefault) {
         this.name = name;
         this.architecture = architecture;
         this.gccToolchainPrefix = gccToolchainPrefix;
         this.gccExecutablePrefix = gccExecutablePrefix;
         this.supports64Bits = supports64Bits;
+        this.isDefault = isDefault;
     }
 
     /**
@@ -103,6 +155,26 @@ public enum Abi {
      */
     public boolean supports64Bits() {
         return supports64Bits;
+    }
+
+
+    /**
+     * Return the list of values that should be used when a user requests the default list of ABIs.
+     */
+    @NonNull
+    public static Collection<Abi> getDefaultValues() {
+        if (defaultValues != null) {
+            return defaultValues;
+        }
+
+        ImmutableList.Builder<Abi> builder = ImmutableList.builder();
+        for (Abi abi : Abi.values()) {
+            if (abi.isDefault) {
+                builder.add(abi);
+            }
+        }
+        defaultValues = builder.build();
+        return defaultValues;
     }
 }
 
