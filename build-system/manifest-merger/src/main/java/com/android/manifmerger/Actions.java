@@ -83,7 +83,7 @@ public class Actions {
      * passed key.
      */
     @NonNull
-    public ImmutableList<NodeRecord> getNodeRecords(XmlNode.NodeKey key) {
+    public ImmutableList<NodeRecord> getNodeRecords(@NonNull XmlNode.NodeKey key) {
         return mRecords.containsKey(key)
                 ? mRecords.get(key).getNodeRecords()
                 : ImmutableList.<NodeRecord>of();
