@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.external;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.LoggingLevel;
@@ -24,9 +24,9 @@ import com.android.build.gradle.integration.common.utils.ModelContainerUtils;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import java.io.IOException;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -44,10 +44,15 @@ public class WordPressAppSmokeTest {
     }
 
     @Test
-    @Ignore("issuetracker.google.com/65646366")
     public void build() throws Exception {
         ModelContainer<AndroidProject> modelContainer =
-                project.model().withLoggingLevel(LoggingLevel.DEBUG).fetchAndroidProjects();
+                project.model()
+                        // Project uses 'compile' configurations
+                        // rather than 'api' and 'implementation'
+                        // Therefore, ignore the warning given.
+                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                        .withLoggingLevel(LoggingLevel.DEBUG)
+                        .fetchAndroidProjects();
 
         project.executor().withLoggingLevel(LoggingLevel.DEBUG).run("clean");
 

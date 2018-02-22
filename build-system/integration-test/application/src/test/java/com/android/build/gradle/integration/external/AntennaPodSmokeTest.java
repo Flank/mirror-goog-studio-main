@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.external;
 
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,10 +40,11 @@ public class AntennaPodSmokeTest {
 
     @Parameterized.Parameter public VariantScope.Java8LangSupport java8LangSupport;
 
-    @Parameterized.Parameters(name = "{0}")
+    @Parameterized.Parameters(name = "{1}")
     public static List<VariantScope.Java8LangSupport> getJava8LangSupport() {
         return ImmutableList.of(
-                VariantScope.Java8LangSupport.RETROLAMBDA, VariantScope.Java8LangSupport.DESUGAR);
+                //VariantScope.Java8LangSupport.RETROLAMBDA, // issuetracker.google.com/63940887
+                VariantScope.Java8LangSupport.DESUGAR);
     }
 
     @Rule
@@ -63,7 +63,6 @@ public class AntennaPodSmokeTest {
     }
 
     @Test
-    @Ignore("issuetracker.google.com/63940887")
     public void buildAntennaPod() throws Exception {
         ModelContainer<AndroidProject> modelContainer =
                 project.model().ignoreSyncIssues().fetchAndroidProjects();
