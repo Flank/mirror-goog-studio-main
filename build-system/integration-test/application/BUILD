@@ -403,7 +403,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/apache/ant/ant/1.8.0:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/commons/commons-lang3/3.4:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.1.1:jar",
-        "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.5.2:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.1:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.4.4:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/logging/log4j/log4j-api/2.5:jar",

@@ -76,6 +76,8 @@ maven_java_library(
         "//tools/base/third_party:commons-logging_commons-logging",
         "//tools/base/third_party:org.apache.commons_commons-compress",
         "//tools/base/third_party:org.apache.httpcomponents_httpclient",
+        # Include explicitly in order to depend on httpcore 4.4.5 instead of 4.4.4
+        "//tools/base/third_party:org.apache.httpcomponents_httpcore",
     ],
 )
 

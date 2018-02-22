@@ -15,8 +15,8 @@ dependencies {
 
     compile libs.gson
     compile libs.apache_compress
-    compile libs.apache_httpclient
     compile libs.apache_httpmime
+    compile libs.apache_httpcore
 
     testCompile libs.junit
     testCompile libs.truth
