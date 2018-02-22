@@ -37,6 +37,7 @@ import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 
 /**
  * When we run the Gradle performance benchmarks, there's a lot of state we need around us on local
@@ -127,6 +128,27 @@ public class BenchmarkEnvironment {
                     int len;
                     while ((len = ais.read(buffer)) > 0) {
                         fos.write(buffer, 0, len);
+                    }
+                }
+
+                if (entry instanceof TarArchiveEntry) {
+                    TarArchiveEntry tarEntry = (TarArchiveEntry) entry;
+
+                    boolean read = (tarEntry.getMode() & 0b100000000) != 0;
+                    boolean write = (tarEntry.getMode() & 0b010000000) != 0;
+                    boolean execute = (tarEntry.getMode() & 0b001000000) != 0;
+
+                    if (!entryFile.setReadable(read)) {
+                        throw new IOException(
+                                "unable to make " + entryFile.getAbsolutePath() + " readable");
+                    }
+                    if (!entryFile.setWritable(write)) {
+                        throw new IOException(
+                                "unable to make " + entryFile.getAbsolutePath() + " writeable");
+                    }
+                    if (!entryFile.setExecutable(execute)) {
+                        throw new IOException(
+                                "unable to make " + entryFile.getAbsolutePath() + " executable");
                     }
                 }
             }
