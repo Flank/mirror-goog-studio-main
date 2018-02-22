@@ -123,6 +123,19 @@ public class ProguardParserTest {
                         + "}");
     }
 
+    @Test
+    public void parseProguard60Flags() throws Exception {
+        parse("-assumenoexternalsideeffects class com.example.Test");
+        parse("-assumenoescapingparameters class com.example.Test");
+        parse("-assumenoexternalreturnvalues class com.example.Test");
+        parse("-android");
+        parse("-addconfigurationdebugging");
+
+        parse("-if class com.example.Test\n-keep class com.exaple.TestUtil");
+
+        parse("-if class com.example.**_Test\n-keep class com.example.<1>");
+    }
+
     private static void parse(String input) throws RecognitionException {
         ProguardFlags flags = new ProguardFlags();
         GrammarActions.parse(input, flags, UnsupportedFlagsHandler.NO_OP);
