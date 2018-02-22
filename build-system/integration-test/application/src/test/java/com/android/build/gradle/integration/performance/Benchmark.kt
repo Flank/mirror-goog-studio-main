@@ -74,12 +74,7 @@ data class Benchmark(
                         val model = project.model().ignoreSyncIssues().withoutOfflineFlag()
                         PerformanceTestProjects.assertNoSyncErrors(model.fetchAndroidProjects().onlyModelMap)
 
-                        val executor = project.executor()
-                                .withEnableInfoLogging(false)
-                                .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
-                                .with(BooleanOption.ENABLE_D8, scenario.useD8())
-                                .withUseDexArchive(scenario.useDexArchive())
-
+                        val executor = scenario.configureExecutor(project.executor())
                         val capturer = ProfileCapturer(project)
                         val recordCalled = AtomicBoolean(false)
                         val record = { r: () -> Unit ->
