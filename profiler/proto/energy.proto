@@ -111,6 +111,21 @@ message EnergyEvent {
     AlarmSet alarm_set = 103;
     // An alarm was cancelled.
     AlarmCancelled alarm_cancelled = 104;
+    // A job is scheduled by JobScheduler.
+    JobScheduled job_scheduled = 105;
+    // JobService.onStartJob is called.
+    JobStarted job_started = 106;
+    // JobService.onStopJob is called. This is called if the system has
+    // determined that the application must stop execution of this job even
+    // before it has had a chance to call jobFinished(JobParameters, boolean).
+    // For example, JobScheduler.cancel() will trigger this event. This will
+    // also happen if the constraints specified at schedule time (e.g. requires
+    // charging) are no longer met.
+    JobStopped job_stopped = 107;
+    // JobService.jobFinished is called. Application must call this to inform
+    // the JobScheduler the application has finished executing. When the system
+    // receives this message it will release the wakelock being held.
+    JobFinished job_finished = 108;
   }
 }
 
@@ -211,4 +226,136 @@ message AlarmListener {
   // String describing the alarm listener, used for logging and battery-use
   // attribution.
   string tag = 1;
+}
+
+message JobScheduled {
+  enum Result {
+    UNDEFINED_JOB_SCHEDULE_RESULT = 0;
+    RESULT_FAILURE = 1;
+    RESULT_SUCCESS = 2;
+  }
+
+  // Contains the parameters required to schedule a job, e.g. constraint.
+  JobInfo job = 1;
+  // The result of the schedule request.
+  Result result = 2;
+}
+
+message JobStarted {
+  // Contains the parameters used to configure the job.
+  JobParameters params = 1;
+  // True if the service needs to process the work (on a separate thread). False
+  // if there's no more work to be done for this job.
+  bool work_ongoing = 2;
+}
+
+message JobStopped {
+  // Contains the parameters used to configure the job.
+  JobParameters params = 1;
+  // True to indicate to the JobScheduler whether the job needs to be
+  // rescheduled based on the retry criteria provided at job creation-time.
+  // False to drop the job.
+  bool reschedule = 2;
+}
+
+message JobFinished {
+  // Contains the parameters used to configure the job.
+  JobParameters params = 1;
+  // True if this job should be rescheduled according to the back-off criteria
+  // specified at schedule-time.
+  bool needs_reschedule = 2;
+}
+
+// The data passed to the JobScheduler encapsulating the parameters required to
+// schedule work against the calling application.
+message JobInfo {
+  enum BackoffPolicy {
+    UNDEFINED_BACKOFF_POLICY = 0;
+    BACKOFF_POLICY_LINEAR = 1;
+    BACKOFF_POLICY_EXPONENTIAL = 2;
+  }
+
+  enum NetworkType {
+    UNDEFINED_NETWORK_TYPE = 0;
+    NETWORK_TYPE_NONE =1;
+    NETWORK_TYPE_ANY = 2;
+    NETWORK_TYPE_UNMETERED = 3;
+    NETWORK_TYPE_NOT_ROAMING = 4;
+    NETWORK_TYPE_METERED = 5;
+  }
+
+  // Application-provided id for this job.
+  int32 job_id = 1;
+  // Name of the service endpoint that will be called back into by the
+  // JobScheduler.
+  string service_name = 2;
+  // The backoff policy of this job.
+  BackoffPolicy backoff_policy = 3;
+  // The amount of time the JobScheduler will wait before rescheduling a failed
+  // job.
+  int64 initial_backoff_ms = 4;
+  // True if this job will repeat with a given period.
+  bool is_periodic = 5;
+  // Flex time in milliseconds for a periodic job. The job can execute at any
+  // time in a window of flex length at the end of the period.
+  int64 flex_ms = 6;
+  // Millisecond interval for which this job will repeat. For periodic jobs
+  // only.
+  int64 interval_ms = 7;
+  // Delay in miliseconds after which this job will be eligible for execution.
+  // For non-periodic jobs only.
+  int64 min_latency_ms = 8;
+  // Deadline in miliseconds which is the maximum scheduling latency. The job
+  // will be run by this deadline even if other requirements are not met. For
+  // non-periodic jobs only.
+  int64 max_execution_delay_ms = 9;
+  // The kind of connectivity requirements that the job has.
+  NetworkType network_type = 10;
+  // Which content URIs must change for the job to be scheduled.
+  repeated string trigger_content_uris = 11;
+  // When triggering on content URI changes, this is the maximum delay before
+  // the job is scheduled.
+  int64 trigger_content_max_delay = 12;
+  // When triggering on content URI changes, this is the delay from when a
+  // change is detected until the job is scheduled.
+  int64 trigger_content_update_delay = 13;
+  // Whether or not this job should be persisted across device reboots.
+  bool is_persisted = 14;
+  // Whether this job needs the device's battery level to not be at below the
+  // critical threshold.
+  bool is_require_battery_not_low = 15;
+  // Whether this job needs the device to be plugged in.
+  bool is_require_charging = 16;
+  // Whether this job needs the device to be in an Idle maintenance window.
+  bool is_require_device_idle = 17;
+  // Whether this job needs the device's storage to not be low.
+  bool is_require_storage_not_low = 18;
+  // String representation of the extras which are returned to the application
+  // at execution time.
+  string extras = 19;
+  // String representation of the transient extras which are returned to the
+  // application at execution time, but not persisted by the system.
+  string transient_extras = 20;
+}
+
+// The parameters used to configure/identify the job. This is not created by the
+// application, instead it is handed in to the application by the System.
+message JobParameters {
+  // The unique id of this job, specified at creation time.
+  int32 job_id = 1;
+  // For jobs with JobInfo.trigger_content_uris set, this reports which content
+  // authorities have triggered the job.
+  repeated string trigger_content_authorities = 2;
+  // For jobs with JobInfo.trigger_content_uris set, this reports which URIs
+  // have triggered the job.
+  repeated string trigger_content_uris = 3;
+  // For jobs with setOverrideDeadline(long) set, this provides an easy way to
+  // tell whether the job is being executed due to the deadline expiring.
+  bool is_override_deadline_expired = 4;
+  // String representation of the extras which are returned to the application
+  // at execution time.
+  string extras = 5;
+  // String representation of the transient extras which are returned to the
+  // application at execution time, but not persisted by the system.
+  string transient_extras = 6;
 }
