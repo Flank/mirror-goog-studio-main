@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
@@ -185,7 +185,7 @@ public class InstantRunSplitApkBuilderTest {
         AaptPackageConfig build = builder.build();
         File resourceOutputApk = build.getResourceOutputApk();
         assertThat(resourceOutputApk.getName()).isEqualTo("resources_ap");
-        assertThat(build.getVariantType()).isEqualTo(VariantType.APK);
+        assertThat(build.getVariantType()).isEqualTo(VariantTypeImpl.BASE_APK);
         assertThat(build.getDebuggable()).isTrue();
     }
 

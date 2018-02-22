@@ -44,8 +44,7 @@ public class BuilderConstants {
     public static final String DEVICE = "device";
 
     public static final String FD_ANDROID_TESTS = "androidTests";
-    public static final String FD_ANDROID_RESULTS =
-            VariantType.ANDROID_TEST.getPrefix() + "-results";
+    public static final String FD_ANDROID_RESULTS = VariantType.ANDROID_TEST_PREFIX + "-results";
 
     public static final String FD_FLAVORS = "flavors";
     public static final String FD_FLAVORS_ALL = "all";

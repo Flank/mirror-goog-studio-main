@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreLocati
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueException
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.EvalIssueReporter.Type
 import com.android.utils.StringHelper
 import org.gradle.api.Action
@@ -165,7 +166,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
 
         mainVariantType = variantTypes
                 .stream()
-                .filter { !it.isForTesting }
+                .filter { !it.isTestComponent }
                 .reduce(toSingleItem())
                 .orElseThrow { RuntimeException("No main variant type") }
 
@@ -173,7 +174,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 DefaultAndroidSourceSet::class.java,
                 AndroidSourceSetFactory(
                         filesProvider,
-                        mainVariantType == VariantType.LIBRARY,
+                        mainVariantType.isAar,
                         dslScope))
 
         sourceSets = createSealableContainer(
@@ -181,8 +182,8 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 DefaultAndroidSourceSet::class.java,
                 _sourceSets)
 
-        hasAndroidTests = variantTypes.contains(VariantType.ANDROID_TEST)
-        hasUnitTests = variantTypes.contains(VariantType.UNIT_TEST)
+        hasAndroidTests = variantTypes.contains(VariantTypeImpl.ANDROID_TEST)
+        hasUnitTests = variantTypes.contains(VariantTypeImpl.UNIT_TEST)
 
         // setup callback to generate source sets on the fly, as well as the associated
         // configurations
@@ -243,8 +244,8 @@ class DslModelDataImpl<in E: BaseExtension2>(
         return DimensionData(
                 data,
                 sourceSets.getByName(name), // this one must exist, so use getByName
-                sourceSets.findByName(computeSourceSetName(name, VariantType.ANDROID_TEST)), // this one might not, so use findByName
-                sourceSets.findByName(computeSourceSetName(name, VariantType.UNIT_TEST)), // this one might not, so use findByName
+                sourceSets.findByName(computeSourceSetName(name, VariantTypeImpl.ANDROID_TEST)), // this one might not, so use findByName
+                sourceSets.findByName(computeSourceSetName(name, VariantTypeImpl.UNIT_TEST)), // this one might not, so use findByName
                 configurationContainer)
     }
 
@@ -305,11 +306,11 @@ class DslModelDataImpl<in E: BaseExtension2>(
         _sourceSets.maybeCreate(name)
 
         if (hasAndroidTests) {
-            _sourceSets.maybeCreate(computeSourceSetName(name, VariantType.ANDROID_TEST))
+            _sourceSets.maybeCreate(computeSourceSetName(name, VariantTypeImpl.ANDROID_TEST))
         }
 
         if (hasUnitTests) {
-            _sourceSets.maybeCreate(computeSourceSetName(name, VariantType.UNIT_TEST))
+            _sourceSets.maybeCreate(computeSourceSetName(name, VariantTypeImpl.UNIT_TEST))
         }
     }
 
@@ -339,7 +340,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 .whenObjectAdded(
                         DeprecatedConfigurationAction(implementationName, compileName, dslScope.deprecationReporter))
 
-        val packageConfigDescription = if (mainVariantType == VariantType.LIBRARY) {
+        val packageConfigDescription = if (mainVariantType.isAar) {
             getConfigDescriptionOld("publish", sourceSet.name, runtimeOnlyName)
         } else {
             getConfigDescriptionOld("apk", sourceSet.name, runtimeOnlyName)
@@ -435,10 +436,10 @@ class DslModelDataImpl<in E: BaseExtension2>(
     }
 
     private fun checkName(name: String, displayName: String): Boolean {
-        if (!checkPrefix(name, displayName, VariantType.ANDROID_TEST.prefix)) {
+        if (!checkPrefix(name, displayName, VariantType.ANDROID_TEST_PREFIX)) {
             return false
         }
-        if (!checkPrefix(name, displayName, VariantType.UNIT_TEST.prefix)) {
+        if (!checkPrefix(name, displayName, VariantType.UNIT_TEST_PREFIX)) {
             return false
         }
 

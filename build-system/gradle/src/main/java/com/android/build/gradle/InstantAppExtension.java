@@ -55,7 +55,8 @@ class InstantAppExtension extends BaseExtension {
                 signingConfigs,
                 buildOutputs,
                 sourceSetManager,
-                extraModelInfo);
+                extraModelInfo,
+                false);
     }
 
     @Override

@@ -18,7 +18,6 @@ package com.android.builder.internal.aapt.v2;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptUtils;
@@ -193,14 +192,13 @@ public final class AaptV2CommandBuilder {
         }
 
         // options controlled by build variants
-        if (config.getVariantType() != VariantType.ANDROID_TEST
-                && config.getCustomPackageForR() != null) {
+        if (!config.getVariantType().isTestComponent() && config.getCustomPackageForR() != null) {
             builder.add("--custom-package", config.getCustomPackageForR());
         }
 
         // bundle specific options
         boolean generateFinalIds = true;
-        if (config.getVariantType() == VariantType.LIBRARY) {
+        if (config.getVariantType().isAar()) {
             generateFinalIds = false;
         }
         if (!generateFinalIds) {
@@ -289,7 +287,7 @@ public final class AaptV2CommandBuilder {
         }
 
         if (config.getSymbolOutputDir() != null
-                && (config.getVariantType() == VariantType.LIBRARY
+                && (config.getVariantType().isAar()
                         || !config.getLibrarySymbolTableFiles().isEmpty())) {
             File rDotTxt = new File(config.getSymbolOutputDir(), "R.txt");
             builder.add("--output-text-symbols", rDotTxt.getAbsolutePath());

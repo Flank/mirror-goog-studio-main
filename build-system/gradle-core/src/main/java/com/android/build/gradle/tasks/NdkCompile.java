@@ -456,7 +456,7 @@ public class NdkCompile extends NdkTask {
             ndkCompile.setVariantName(variantData.getName());
             ndkCompile.setNdkDirectory(
                     variantScope.getGlobalScope().getSdkHandler().getNdkFolder());
-            ndkCompile.setForTesting(variantData.getType().isForTesting());
+            ndkCompile.setForTesting(variantData.getType().isTestComponent());
             ndkCompile.isUseDeprecatedNdkFlag =
                     variantScope
                             .getGlobalScope()

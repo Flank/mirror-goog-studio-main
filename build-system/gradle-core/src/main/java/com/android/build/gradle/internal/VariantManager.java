@@ -17,9 +17,8 @@
 package com.android.build.gradle.internal;
 
 import static com.android.builder.core.BuilderConstants.LINT;
-import static com.android.builder.core.VariantType.ANDROID_TEST;
-import static com.android.builder.core.VariantType.FEATURE;
-import static com.android.builder.core.VariantType.UNIT_TEST;
+import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
+import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
 import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT;
 
 import com.android.annotations.NonNull;
@@ -59,11 +58,9 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
@@ -71,6 +68,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.DefaultProductFlavor.DimensionRequest;
@@ -171,17 +169,18 @@ public class VariantManager implements VariantModel {
         this.isInExecutionPhase = () -> globalScope.isInExectionPhase();
 
         DefaultAndroidSourceSet mainSourceSet =
-                (DefaultAndroidSourceSet) extension.getSourceSets().getByName(extension.getDefaultConfig().getName());
+                (DefaultAndroidSourceSet)
+                        extension.getSourceSets().getByName(BuilderConstants.MAIN);
 
         DefaultAndroidSourceSet androidTestSourceSet = null;
         DefaultAndroidSourceSet unitTestSourceSet = null;
         if (variantFactory.hasTestScope()) {
             androidTestSourceSet =
-                    (DefaultAndroidSourceSet) extension.getSourceSets()
-                            .getByName(ANDROID_TEST.getPrefix());
+                    (DefaultAndroidSourceSet)
+                            extension.getSourceSets().getByName(VariantType.ANDROID_TEST_PREFIX);
             unitTestSourceSet =
-                    (DefaultAndroidSourceSet) extension.getSourceSets()
-                            .getByName(UNIT_TEST.getPrefix());
+                    (DefaultAndroidSourceSet)
+                            extension.getSourceSets().getByName(VariantType.UNIT_TEST_PREFIX);
         }
 
         this.defaultConfigData =
@@ -369,7 +368,7 @@ public class VariantManager implements VariantModel {
     /** Create assemble task for VariantData. */
     private void createAssembleTaskForVariantData(final BaseVariantData variantData) {
         final VariantScope variantScope = variantData.getScope();
-        if (variantData.getType().isForTesting()) {
+        if (variantData.getType().isTestComponent()) {
             variantScope.setAssembleTask(taskManager.createAssembleTask(variantData));
         } else {
             BuildTypeData buildTypeData =
@@ -446,7 +445,7 @@ public class VariantManager implements VariantModel {
                         });
 
         createAssembleTaskForVariantData(variantData);
-        if (variantType.isForTesting()) {
+        if (variantType.isTestComponent()) {
             final BaseVariantData testedVariantData =
                     (BaseVariantData) ((TestVariantData) variantData).getTestedVariantData();
 
@@ -502,21 +501,13 @@ public class VariantManager implements VariantModel {
                                     variantConfig)
                             .setConsumeType(
                                     getConsumeType(
-                                            testedVariantData.getVariantConfiguration().getType(),
-                                            variantScope.getVariantData()))
+                                            testedVariantData.getVariantConfiguration().getType()))
                             .addSourceSets(testVariantSourceSets)
                             .setFlavorSelection(getFlavorSelection(variantConfig))
                             .setTestedVariantDependencies(testedVariantData.getVariantDependency());
 
             final VariantDependencies variantDep = builder.build();
             variantData.setVariantDependency(variantDep);
-
-            if (variantType == VariantType.ANDROID_TEST && variantConfig.isLegacyMultiDexMode()) {
-                project.getDependencies().add(
-                        variantDep.getCompileClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
-                project.getDependencies().add(
-                        variantDep.getRuntimeClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
-            }
 
             if (testedVariantData.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
                 project.getDependencies()
@@ -525,16 +516,23 @@ public class VariantManager implements VariantModel {
                                 project.files(androidBuilder.getRenderScriptSupportJar()));
             }
 
-            switch (variantType) {
-                case ANDROID_TEST:
-                    taskManager.createAndroidTestVariantTasks((TestVariantData) variantData);
-                    break;
-                case UNIT_TEST:
-                    taskManager.createUnitTestVariantTasks((TestVariantData) variantData);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unknown test type " + variantType);
+            if (variantType.isApk()) { // ANDROID_TEST
+                if (variantConfig.isLegacyMultiDexMode()) {
+                    project.getDependencies()
+                            .add(
+                                    variantDep.getCompileClasspath().getName(),
+                                    COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
+                    project.getDependencies()
+                            .add(
+                                    variantDep.getRuntimeClasspath().getName(),
+                                    COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
+                }
+
+                taskManager.createAndroidTestVariantTasks((TestVariantData) variantData);
+            } else { // UNIT_TEST
+                taskManager.createUnitTestVariantTasks((TestVariantData) variantData);
             }
+
         } else {
             taskManager.createTasksForVariantScope(variantScope);
             publishBuildArtifacts(variantScope);
@@ -594,45 +592,13 @@ public class VariantManager implements VariantModel {
     }
 
     @NonNull
-    private AndroidTypeAttr getConsumeType(
-            @NonNull VariantType type, @NonNull BaseVariantData variantData) {
-        switch (type) {
-            case APK:
-                if (!isBaseSplit(variantData) || variantFactory instanceof TestVariantFactory) {
-                    return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.APK);
-                }
-                return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.AAR);
-            case LIBRARY:
-                return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.AAR);
-            case FEATURE:
-            case INSTANTAPP:
-                return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.FEATURE);
-            case ANDROID_TEST:
-            case UNIT_TEST:
-                throw new IllegalStateException(
-                        "Variant type '" + type + "' should not be publishing anything");
-        }
-        throw new IllegalStateException(
-                "Unsupported VariantType requested in getConsumeType(): " + type);
+    private AndroidTypeAttr getConsumeType(@NonNull VariantType type) {
+        return project.getObjects().named(AndroidTypeAttr.class, type.getConsumeType());
     }
 
     @NonNull
     private AndroidTypeAttr getPublishingType(@NonNull VariantType type) {
-        switch (type) {
-            case APK:
-                return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.APK);
-            case LIBRARY:
-                return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.AAR);
-            case FEATURE:
-            case INSTANTAPP:
-                return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.FEATURE);
-            case ANDROID_TEST:
-            case UNIT_TEST:
-                throw new IllegalStateException(
-                        "Variant type '" + type + "' should not be publishing anything");
-        }
-        throw new IllegalStateException(
-                "Unsupported VariantType requested in getPublishingType(): " + type);
+        return project.getObjects().named(AndroidTypeAttr.class, type.getPublishType());
     }
 
     public void configureDependencies() {
@@ -981,14 +947,11 @@ public class VariantManager implements VariantModel {
                                 variantData.getScope().getGlobalScope().getErrorHandler(),
                                 variantConfig)
                         .setConsumeType(
-                                getConsumeType(
-                                        variantData.getVariantConfiguration().getType(),
-                                        variantData))
+                                getConsumeType(variantData.getVariantConfiguration().getType()))
                         .setPublishType(
                                 getPublishingType(variantData.getVariantConfiguration().getType()))
                         .setFlavorSelection(getFlavorSelection(variantConfig))
-                        .addSourceSets(variantSourceSets)
-                        .setBaseSplit(isBaseSplit(variantData));
+                        .addSourceSets(variantSourceSets);
 
         final VariantDependencies variantDep = builder.build();
         variantData.setVariantDependency(variantDep);
@@ -1006,22 +969,13 @@ public class VariantManager implements VariantModel {
             final ConfigurableFileCollection fileCollection = project.files(renderScriptSupportJar);
             project.getDependencies()
                     .add(variantDep.getCompileClasspath().getName(), fileCollection);
-            if (variantType == VariantType.APK || variantType == VariantType.FEATURE) {
+            if (variantType.isApk() && !variantType.isForTesting()) {
                 project.getDependencies()
                         .add(variantDep.getRuntimeClasspath().getName(), fileCollection);
             }
         }
 
-
         return variantData;
-    }
-
-    private boolean isBaseSplit(BaseVariantData variantData) {
-        if (variantData instanceof ApplicationVariantData) {
-            return ((ApplicationVariantData) variantData).isBaseApplication();
-        }
-
-        return variantData.getType() == VariantType.FEATURE && extension.getBaseFeature();
     }
 
     private static void createCompoundSourceSets(
@@ -1034,7 +988,7 @@ public class VariantManager implements VariantModel {
                             sourceSetManager.setUpSourceSet(
                                     computeSourceSetName(
                                             variantConfig.getFullName(), variantConfig.getType()),
-                                    variantConfig.getType().isForTesting());
+                                    variantConfig.getType().isTestComponent());
             variantConfig.setVariantSourceProvider(variantSourceSet);
         }
 
@@ -1044,7 +998,7 @@ public class VariantManager implements VariantModel {
                             sourceSetManager.setUpSourceSet(
                                     computeSourceSetName(
                                             variantConfig.getFlavorName(), variantConfig.getType()),
-                                    variantConfig.getType().isForTesting());
+                                    variantConfig.getType().isTestComponent());
             variantConfig.setMultiFlavorSourceProvider(multiFlavorSourceSet);
         }
     }
@@ -1172,9 +1126,7 @@ public class VariantManager implements VariantModel {
         final boolean projectMatch;
         final String restrictedVariantName;
         if (restrictVariants) {
-            projectMatch =
-                    variantType != VariantType.LIBRARY
-                            && project.getPath().equals(restrictedProject);
+            projectMatch = variantType.isApk() && project.getPath().equals(restrictedProject);
             restrictedVariantName = projectOptions.get(StringOption.IDE_RESTRICT_VARIANT_NAME);
         } else {
             projectMatch = false;
@@ -1259,7 +1211,7 @@ public class VariantManager implements VariantModel {
                         variantForAndroidTest = variantData;
                     }
 
-                    if (variantType != FEATURE) {
+                    if (!variantType.isHybrid()) { // BASE_FEATURE/FEATURE
                         // There's nothing special about unit testing the feature variant, so
                         // there's no point creating the duplicate unit testing variant. This only
                         // causes tests to run twice when running "testDebug".
@@ -1273,7 +1225,7 @@ public class VariantManager implements VariantModel {
 
         if (variantForAndroidTest != null) {
             // TODO: b/34624400
-            if (variantType != FEATURE) {
+            if (!variantType.isHybrid()) { // BASE_FEATURE/FEATURE
                 TestVariantData androidTestVariantData =
                         createTestVariantData(variantForAndroidTest, ANDROID_TEST);
                 addVariant(androidTestVariantData);
@@ -1282,8 +1234,8 @@ public class VariantManager implements VariantModel {
     }
 
     private static void checkName(@NonNull String name, @NonNull String displayName) {
-        checkPrefix(name, displayName, ANDROID_TEST.getPrefix());
-        checkPrefix(name, displayName, UNIT_TEST.getPrefix());
+        checkPrefix(name, displayName, VariantType.ANDROID_TEST_PREFIX);
+        checkPrefix(name, displayName, VariantType.UNIT_TEST_PREFIX);
 
         if (LINT.equals(name)) {
             throw new RuntimeException(String.format(

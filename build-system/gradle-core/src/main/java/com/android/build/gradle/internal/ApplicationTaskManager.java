@@ -223,7 +223,7 @@ public class ApplicationTaskManager extends TaskManager {
                 () -> createMergeJniLibFoldersTasks(variantScope));
 
         // Add feature related tasks if necessary
-        if (variantScope.isBaseFeature()) {
+        if (variantScope.getType().isBaseModule()) {
             // Base feature specific tasks.
             createFeatureIdsWriterTask(variantScope);
             if (extension.getDataBinding().isEnabled()) {
@@ -438,14 +438,17 @@ public class ApplicationTaskManager extends TaskManager {
 
     @Override
     protected DefaultTask createVariantPreBuildTask(@NonNull VariantScope scope) {
-        switch (scope.getVariantConfiguration().getType()) {
-            case APK:
-                return taskFactory.create(new AppPreBuildTask.ConfigAction(scope));
-            case ANDROID_TEST:
+        final VariantType variantType = scope.getVariantConfiguration().getType();
+
+        if (variantType.isApk()) {
+            if (variantType.isTestComponent()) { // ANDROID_TEST
                 return taskFactory.create(new TestPreBuildTask.ConfigAction(scope));
-            default:
-                return super.createVariantPreBuildTask(scope);
+            }
+
+            return taskFactory.create(new AppPreBuildTask.ConfigAction(scope));
         }
+
+        return super.createVariantPreBuildTask(scope);
     }
 
     @NonNull
@@ -458,8 +461,9 @@ public class ApplicationTaskManager extends TaskManager {
     private void handleMicroApp(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
+        final VariantType variantType = variantConfiguration.getType();
 
-        if (variantConfiguration.getType() != VariantType.FEATURE) {
+        if (!variantType.isHybrid() && variantType.isBaseModule()) {
             Boolean unbundledWearApp = variantConfiguration.getMergedFlavor().getWearAppUnbundled();
 
             if (!Boolean.TRUE.equals(unbundledWearApp)
@@ -485,7 +489,7 @@ public class ApplicationTaskManager extends TaskManager {
     }
 
     private void createApplicationIdWriterTask(@NonNull VariantScope variantScope) {
-        if (variantScope.isBaseFeature()) {
+        if (variantScope.getType().isBaseModule()) {
             taskFactory.create(new ApplicationIdWriterTask.ConfigAction(variantScope));
         }
     }

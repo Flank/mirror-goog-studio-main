@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
-import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.sdklib.IAndroidTarget
@@ -82,7 +82,7 @@ open class ProcessAndroidAppResourcesTask
                 imports = ImmutableList.copyOf(sharedLibraryDependencies.asIterable()),
                 sourceOutputDir = rClassSource,
                 resourceOutputApk = resourceApUnderscore,
-                variantType = VariantType.LIBRARY,
+                variantType = VariantTypeImpl.LIBRARY,
                 intermediateDir = aaptIntermediateDir)
 
         val aapt2ServiceKey = registerAaptService(

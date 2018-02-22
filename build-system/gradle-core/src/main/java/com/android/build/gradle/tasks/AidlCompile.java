@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.builder.compiling.DependencyFileProcessor;
-import com.android.builder.core.VariantType;
+import com.android.builder.internal.compiler.AidlProcessor;
 import com.android.builder.internal.incremental.DependencyData;
 import com.android.builder.internal.incremental.DependencyDataStore;
 import com.android.ide.common.internal.WaitableExecutor;
@@ -124,8 +124,7 @@ public class AidlCompile extends IncrementalTask {
      * Action methods to compile all the files.
      *
      * <p>The method receives a {@link DependencyFileProcessor} to be used by the {@link
-     * com.android.builder.internal.compiler.SourceSearcher.SourceFileProcessor} during the
-     * compilation.
+     * AidlProcessor} during the compilation.
      *
      * @param dependencyFileProcessor a DependencyFileProcessor
      */
@@ -382,7 +381,7 @@ public class AidlCompile extends IncrementalTask {
 
             compileTask.setSourceOutputDir(scope.getAidlSourceOutputDir());
 
-            if (variantConfiguration.getType() == VariantType.LIBRARY) {
+            if (variantConfiguration.getType().isAar()) {
                 compileTask.setPackagedDir(
                         scope.getBuildArtifactsHolder()
                                 .appendArtifact(

@@ -28,8 +28,12 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.utils.StringHelper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Collection;
 import java.util.Map;
 import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -44,7 +48,7 @@ public class TestVariantFactory extends ApplicationVariantFactory {
             @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension) {
-        super(globalScope, androidBuilder, extension, false);
+        super(globalScope, androidBuilder, extension);
     }
 
     @Override
@@ -97,5 +101,11 @@ public class TestVariantFactory extends ApplicationVariantFactory {
     @NonNull
     public static String getTestedApksConfigurationName(@NonNull String variantName) {
         return StringHelper.appendCapitalized(variantName, CONFIG_NAME_TESTED_APKS);
+    }
+
+    @NonNull
+    @Override
+    public Collection<VariantType> getVariantConfigurationTypes() {
+        return ImmutableList.of(VariantTypeImpl.TEST_APK);
     }
 }

@@ -60,7 +60,7 @@ public abstract class ProguardConfigurable extends Transform {
     @NonNull
     @Override
     public Set<? super Scope> getScopes() {
-        if (variantType == VariantType.LIBRARY) {
+        if (variantType.isAar()) {
             return TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS;
         }
 
@@ -71,12 +71,12 @@ public abstract class ProguardConfigurable extends Transform {
     @Override
     public Set<Scope> getReferencedScopes() {
         Set<Scope> set = Sets.newHashSetWithExpectedSize(5);
-        if (variantType == VariantType.LIBRARY) {
+        if (variantType.isAar()) {
             set.add(Scope.SUB_PROJECTS);
             set.add(Scope.EXTERNAL_LIBRARIES);
         }
 
-        if (variantType.isForTesting()) {
+        if (variantType.isTestComponent()) {
             set.add(Scope.TESTED_CODE);
         }
 

@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
 import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
 import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueException
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.EvalIssueReporter.Type
 import com.android.utils.StringHelper
@@ -343,8 +344,8 @@ class VariantBuilder<in E: BaseExtension2>(
             val shim = _shims[generatedVariant]!!
 
             when (factory.generatedType) {
-                VariantType.UNIT_TEST -> variantDispatcher.unitTestVariant = shim as UnitTestVariant
-                VariantType.ANDROID_TEST -> variantDispatcher.androidTestVariant = shim as AndroidTestVariant
+                VariantTypeImpl.UNIT_TEST -> variantDispatcher.unitTestVariant = shim as UnitTestVariant
+                VariantTypeImpl.ANDROID_TEST -> variantDispatcher.androidTestVariant = shim as AndroidTestVariant
                 else -> variantDispatcher.productionVariant = shim
             }
         }
@@ -654,12 +655,12 @@ private fun computeVariantName(
         append(buildTypeName)
     }
 
-    if (type == VariantType.FEATURE) {
+    if (type.isHybrid) {
         append("Feature")
     }
 
-    if (type.isForTesting) {
-        if (testedType == VariantType.FEATURE) {
+    if (type.isTestComponent) {
+        if (testedType?.isHybrid == true) {
             append("Feature")
         }
         append(type.suffix)

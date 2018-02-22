@@ -37,6 +37,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.profile.Recorder;
@@ -62,15 +63,11 @@ import org.gradle.api.NamedDomainObjectContainer;
  */
 public class ApplicationVariantFactory extends BaseVariantFactory implements VariantFactory {
 
-    private final boolean isBaseApplication;
-
     public ApplicationVariantFactory(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull AndroidConfig extension,
-            boolean isBaseApplication) {
+            @NonNull AndroidConfig extension) {
         super(globalScope, androidBuilder, extension);
-        this.isBaseApplication = isBaseApplication;
     }
 
     @Override
@@ -81,12 +78,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             @NonNull Recorder recorder) {
         ApplicationVariantData variant =
                 new ApplicationVariantData(
-                        globalScope,
-                        extension,
-                        variantConfiguration,
-                        taskManager,
-                        recorder,
-                        isBaseApplication);
+                        globalScope, extension, taskManager, variantConfiguration, recorder);
 
         variant.calculateFilters(extension.getSplits());
 
@@ -244,7 +236,10 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
     @NonNull
     @Override
     public Collection<VariantType> getVariantConfigurationTypes() {
-        return ImmutableList.of(VariantType.APK);
+        if (extension.getBaseFeature()) {
+            return ImmutableList.of(VariantTypeImpl.BASE_APK);
+        }
+        return ImmutableList.of(VariantTypeImpl.OPTIONAL_APK);
     }
 
     @Override

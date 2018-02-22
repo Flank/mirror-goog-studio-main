@@ -38,7 +38,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
@@ -318,7 +318,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                 .setResourceDir(resDir)
                 .setLibrarySymbolTableFiles(ImmutableSet.of())
                 .setOptions(DslAdaptersKt.convert(new AaptOptions()))
-                .setVariantType(VariantType.LIBRARY)
+                .setVariantType(VariantTypeImpl.LIBRARY)
                 .setAndroidTarget(getBuilder().getTarget())
                 .build();
     }

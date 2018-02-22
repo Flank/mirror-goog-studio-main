@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
-import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.sdklib.IAndroidTarget
@@ -98,7 +98,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
                 // TODO: Remove generating R.java once b/69956357 is fixed.
                 sourceOutputDir = rClassSource,
                 resourceOutputApk = staticLibApk,
-                variantType = VariantType.LIBRARY,
+                variantType = VariantTypeImpl.LIBRARY,
                 customPackageForR = getPackageForR(),
                 symbolOutputDir = rDotTxt.parentFile,
                 intermediateDir = aaptIntermediateDir)
@@ -138,7 +138,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
 
-            if (scope.variantData.type == VariantType.FEATURE && !scope.isBaseFeature) {
+            if (scope.variantData.type.isApk && !scope.variantData.type.isBaseModule) {
                 task.featureDependencies =
                         scope.getArtifactFileCollection(
                                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,

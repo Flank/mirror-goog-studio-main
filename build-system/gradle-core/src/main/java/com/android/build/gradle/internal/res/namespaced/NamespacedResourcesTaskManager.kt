@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.featuresplit.getVariant
 import com.android.builder.core.VariantType
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
@@ -65,16 +66,8 @@ class NamespacedResourcesTaskManager(
         createLinkResourcesTask()
         createNamespacedLibraryRFiles()
 
-        if (variantScope.variantData.type == VariantType.APK || variantScope.variantData.type == VariantType.FEATURE) {
-            createNamespacedAppProcessTask(
-                resPackageOutputFolder = resPackageOutputFolder,
-                packageOutputType = packageOutputType,
-                baseName = baseName,
-                useAaptToGenerateLegacyMultidexMainDexProguardRules = useAaptToGenerateLegacyMultidexMainDexProguardRules
-            )
-            createCompileRuntimeRClassTask()
-        } else if (variantScope.variantData.type == VariantType.ANDROID_TEST) {
-            if (variantScope.testedVariantData!!.type == VariantType.LIBRARY) {
+        if (variantScope.type.isTestComponent) {
+            if (variantScope.testedVariantData!!.type.isAar) {
                 createNamespacedLibraryTestProcessResourcesTask(
                     resPackageOutputFolder = resPackageOutputFolder,
                     packageOutputType = packageOutputType
@@ -87,6 +80,14 @@ class NamespacedResourcesTaskManager(
                     useAaptToGenerateLegacyMultidexMainDexProguardRules = false
                 )
             }
+            createCompileRuntimeRClassTask()
+        } else if (variantScope.type.isApk) {
+            createNamespacedAppProcessTask(
+                resPackageOutputFolder = resPackageOutputFolder,
+                packageOutputType = packageOutputType,
+                baseName = baseName,
+                useAaptToGenerateLegacyMultidexMainDexProguardRules = useAaptToGenerateLegacyMultidexMainDexProguardRules
+            )
             createCompileRuntimeRClassTask()
         }
     }

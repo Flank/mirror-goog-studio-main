@@ -224,7 +224,7 @@ public class BytecodeGenerationHooksTest {
                 result, "SourceFoldersApi(:baseFeature:debug): ", "baseFeature/src/custom/java");
     }
 
-    private static void checkDependencies(
+    private void checkDependencies(
             GradleBuildResult result, String prefix, boolean exactly, String... dependencies) {
         List<String> lines = result.getStdoutAsLines();
 
@@ -251,7 +251,7 @@ public class BytecodeGenerationHooksTest {
         }
     }
 
-    private static void checkSourceFolders(
+    private void checkSourceFolders(
             GradleBuildResult result, String prefix, String... dependencies) {
         List<String> lines = result.getStdoutAsLines();
 

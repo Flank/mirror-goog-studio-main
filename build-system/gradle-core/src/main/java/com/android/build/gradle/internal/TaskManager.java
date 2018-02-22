@@ -58,9 +58,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.PUBLI
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_NATIVE_LIBS;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
-import static com.android.builder.core.VariantType.ANDROID_TEST;
-import static com.android.builder.core.VariantType.FEATURE;
-import static com.android.builder.core.VariantType.LIBRARY;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -284,9 +281,9 @@ public abstract class TaskManager {
     public static final String MAIN_PREBUILD = "preBuild";
     public static final String UNINSTALL_ALL = "uninstallAll";
     public static final String DEVICE_CHECK = "deviceCheck";
-    public static final String DEVICE_ANDROID_TEST = DEVICE + ANDROID_TEST.getSuffix();
+    public static final String DEVICE_ANDROID_TEST = DEVICE + VariantType.ANDROID_TEST_SUFFIX;
     public static final String CONNECTED_CHECK = "connectedCheck";
-    public static final String CONNECTED_ANDROID_TEST = CONNECTED + ANDROID_TEST.getSuffix();
+    public static final String CONNECTED_ANDROID_TEST = CONNECTED + VariantType.ANDROID_TEST_SUFFIX;
     public static final String ASSEMBLE_ANDROID_TEST = "assembleAndroidTest";
     public static final String LINT = "lint";
     public static final String EXTRACT_PROGUARD_FILES = "extractProguardFiles";
@@ -862,7 +859,7 @@ public abstract class TaskManager {
 
         GradleVariantConfiguration config = scope.getVariantConfiguration();
 
-        if (config.getType().isForTesting()) {
+        if (config.getType().isTestComponent()) {
             scope.getRenderscriptCompileTask()
                     .dependsOn(
                             scope.getVariantData()
@@ -1118,7 +1115,7 @@ public abstract class TaskManager {
                 taskFactory.create(new GenerateBuildConfig.ConfigAction(scope));
         scope.setGenerateBuildConfigTask(generateBuildConfigTask);
         scope.getSourceGenTask().dependsOn(generateBuildConfigTask.getName());
-        if (scope.getVariantConfiguration().getType().isForTesting()) {
+        if (scope.getVariantConfiguration().getType().isTestComponent()) {
             // in case of a test project, the manifest is generated so we need to depend
             // on its creation.
 
@@ -1142,7 +1139,7 @@ public abstract class TaskManager {
 
         VariantType variantType = scope.getVariantData().getVariantConfiguration().getType();
         InternalArtifactType packageOutputType =
-                variantType == FEATURE ? FEATURE_RESOURCE_PKG : null;
+                (variantType.isApk() && !variantType.isForTesting()) ? FEATURE_RESOURCE_PKG : null;
 
         createProcessResTask(
                 scope,
@@ -1791,7 +1788,7 @@ public abstract class TaskManager {
                         globalScope.getProject(),
                         globalScope.getNdkHandler(),
                         globalScope.getExtension().getPackagingOptions().getDoNotStrip(),
-                        scope.getVariantConfiguration().getType() == VariantType.LIBRARY));
+                        scope.getVariantConfiguration().getType().isAar()));
     }
 
     /** Creates the tasks to build unit tests. */
@@ -1951,7 +1948,7 @@ public abstract class TaskManager {
     private static boolean isLintVariant(@NonNull VariantScope variantScope) {
         // Only create lint targets for variants like debug and release, not debugTest
         final VariantType variantType = variantScope.getVariantConfiguration().getType();
-        return !variantType.isForTesting() && variantType != FEATURE;
+        return !variantType.isTestComponent() && !variantType.isHybrid();
     }
 
     /**
@@ -2117,8 +2114,7 @@ public abstract class TaskManager {
         final BaseVariantData baseVariantData = checkNotNull(variantScope.getTestedVariantData());
         final TestVariantData testVariantData = (TestVariantData) variantScope.getVariantData();
 
-        boolean isLibrary =
-                baseVariantData.getVariantConfiguration().getType() == VariantType.LIBRARY;
+        boolean isLibrary = baseVariantData.getVariantConfiguration().getType().isAar();
 
         TestDataImpl testData =
                 new TestDataImpl(
@@ -2273,12 +2269,15 @@ public abstract class TaskManager {
         }
 
         // ----- Android studio profiling transforms
-        for (String jar : getAdvancedProfilingTransforms(projectOptions)) {
-            if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()
-                    && variantData.getType().equals(VariantType.APK)
-                    && jar != null) {
-                transformManager.addTransform(
-                        taskFactory, variantScope, new CustomClassTransform(jar));
+        final VariantType type = variantData.getType();
+        if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()
+                && type.isApk()
+                && !type.isForTesting()) {
+            for (String jar : getAdvancedProfilingTransforms(projectOptions)) {
+                if (jar != null) {
+                    transformManager.addTransform(
+                            taskFactory, variantScope, new CustomClassTransform(jar));
+                }
             }
         }
 
@@ -2448,10 +2447,10 @@ public abstract class TaskManager {
                 return;
             }
 
-            if (variantScope.getVariantConfiguration().getType().isForTesting()) {
+            if (variantScope.getVariantConfiguration().getType().isTestComponent()) {
                 BaseVariantData testedVariant =
                         Objects.requireNonNull(variantScope.getTestedVariantData());
-                if (testedVariant.getType() != VariantType.LIBRARY) {
+                if (!testedVariant.getType().isAar()) {
                     // test variants, except for library, should not package try-with-resources jar
                     // as the tested variant already contains it
                     return;
@@ -2487,7 +2486,7 @@ public abstract class TaskManager {
         TransformManager transformManager = variantScope.getTransformManager();
 
         DefaultDexOptions dexOptions;
-        if (variantScope.getVariantData().getType().isForTesting()) {
+        if (variantScope.getVariantData().getType().isTestComponent()) {
             // Don't use custom dx flags when compiling the test FULL_APK. They can break the test FULL_APK,
             // like --minimal-main-dex.
             dexOptions = DefaultDexOptions.copyOf(extension.getDexOptions());
@@ -2617,7 +2616,7 @@ public abstract class TaskManager {
         AndroidBuilder androidBuilder = variantScope.getGlobalScope().getAndroidBuilder();
 
         DefaultDexOptions dexOptions;
-        if (variantScope.getVariantData().getType().isForTesting()) {
+        if (variantScope.getVariantData().getType().isTestComponent()) {
             // Don't use custom dx flags when compiling the test FULL_APK. They can break the test FULL_APK,
             // like --minimal-main-dex.
             dexOptions = DefaultDexOptions.copyOf(extension.getDexOptions());
@@ -2749,10 +2748,9 @@ public abstract class TaskManager {
         boolean isTestCoverageEnabled =
                 config.getBuildType().isTestCoverageEnabled()
                         && !variantScope.getInstantRunBuildContext().isInInstantRunMode()
-                        && (!config.getType().isForTesting()
+                        && (!config.getType().isTestComponent()
                                 || (config.getTestedConfig() != null
-                                        && config.getTestedConfig().getType()
-                                                == VariantType.LIBRARY));
+                                        && config.getTestedConfig().getType().isAar()));
         if (isTestCoverageEnabled) {
             if (variantScope.getDexer() == DexerTool.DX) {
                 androidBuilder
@@ -2812,10 +2810,9 @@ public abstract class TaskManager {
         }
         final BaseVariantData variantData = variantScope.getVariantData();
         VariantType type = variantData.getType();
-        boolean isTest = type == VariantType.ANDROID_TEST || type == VariantType.UNIT_TEST;
-        if (isTest && !extension.getDataBinding().isEnabledForTests()) {
+        if (type.isForTesting() && !extension.getDataBinding().isEnabledForTests()) {
             BaseVariantData testedVariantData = checkNotNull(variantScope.getTestedVariantData());
-            if (testedVariantData.getType() != LIBRARY) {
+            if (!testedVariantData.getType().isAar()) {
                 return;
             }
         }
@@ -2845,10 +2842,9 @@ public abstract class TaskManager {
     private void createDataBindingMergeBaseClassesTask(@NonNull VariantScope variantScope) {
         final BaseVariantData variantData = variantScope.getVariantData();
         VariantType type = variantData.getType();
-        boolean isTest = type == VariantType.ANDROID_TEST || type == VariantType.UNIT_TEST;
-        if (isTest && !extension.getDataBinding().isEnabledForTests()) {
+        if (type.isForTesting() && !extension.getDataBinding().isEnabledForTests()) {
             BaseVariantData testedVariantData = checkNotNull(variantScope.getTestedVariantData());
-            if (testedVariantData.getType() != LIBRARY) {
+            if (!testedVariantData.getType().isAar()) {
                 return;
             }
         }
@@ -2881,11 +2877,10 @@ public abstract class TaskManager {
         createDataBindingMergeArtifactsTask(scope);
 
 
-        VariantType type = scope.getVariantData().getType();
-        boolean isTest = type == VariantType.ANDROID_TEST || type == VariantType.UNIT_TEST;
-        if (isTest && !extension.getDataBinding().isEnabledForTests()) {
+        VariantType type = scope.getType();
+        if (type.isForTesting() && !extension.getDataBinding().isEnabledForTests()) {
             BaseVariantData testedVariantData = checkNotNull(scope.getTestedVariantData());
-            if (testedVariantData.getType() != LIBRARY) {
+            if (!testedVariantData.getType().isAar()) {
                 return;
             }
         }
@@ -2949,7 +2944,7 @@ public abstract class TaskManager {
 
             final BaseVariantData artifactVariantData;
             final boolean isTest;
-            if (variantData.getType() == VariantType.ANDROID_TEST) {
+            if (variantData.getType().isTestComponent()) {
                 artifactVariantData = checkNotNull(scope.getTestedVariantData());
                 isTest = true;
             } else {
@@ -2958,21 +2953,18 @@ public abstract class TaskManager {
             }
 
             final DataBindingCompilerArgs.Type type;
-            switch (artifactVariantData.getType()) {
-                case LIBRARY:
-                    type = DataBindingCompilerArgs.Type.LIBRARY;
-                    break;
-                case FEATURE:
-                    if (scope.isBaseFeature()) {
-                        type = DataBindingCompilerArgs.Type.APPLICATION;
-                    } else {
-                        type = DataBindingCompilerArgs.Type.FEATURE;
-                    }
-                    break;
-                    // FIXME: dynamic apps will use APK but will have isBaseFeature
-                default:
+            final VariantType variantType = artifactVariantData.getType();
+
+            if (variantType.isAar()) {
+                type = DataBindingCompilerArgs.Type.LIBRARY;
+            } else {
+                if (variantType.isBaseModule()) {
                     type = DataBindingCompilerArgs.Type.APPLICATION;
+                } else {
+                    type = DataBindingCompilerArgs.Type.FEATURE;
+                }
             }
+
             int minApi = variantConfiguration.getMinSdkVersion().getApiLevel();
             File classLogDir =
                     scope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
@@ -3281,7 +3273,7 @@ public abstract class TaskManager {
                 transformTask = createBuiltInShrinkerTransform(variantScope);
                 break;
             case R8:
-                if (variantScope.getVariantConfiguration().getType() == VariantType.LIBRARY) {
+                if (variantScope.getVariantConfiguration().getType().isAar()) {
                     // R8 class backend is not fully supported yet
                     transformTask = createProguardTransform(variantScope, mappingFileCollection);
                     createdShrinker = CodeShrinker.PROGUARD;
@@ -3437,7 +3429,7 @@ public abstract class TaskManager {
                         TaskInputHelper.bypassFileCallable(proguardConfigFiles),
                         scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
 
-        if (scope.getVariantData().getType() == LIBRARY) {
+        if (scope.getVariantData().getType().isAar()) {
             transform.keep("class **.R");
             transform.keep("class **.R$*");
         }
@@ -3827,8 +3819,10 @@ public abstract class TaskManager {
                     scope.getBundleArtifactFolderForDataBinding(),
                     kaptTask.getName());
         }
-        if (scope.getVariantData().getType() == VariantType.FEATURE) {
-            if (scope.isBaseFeature()) {
+
+        final VariantType variantType = scope.getType();
+        if (variantType.isApk() && !variantType.isForTesting()) {
+            if (variantType.isBaseModule()) {
                 kaptTask.getInputs()
                         .file(
                                 scope.getOutput(

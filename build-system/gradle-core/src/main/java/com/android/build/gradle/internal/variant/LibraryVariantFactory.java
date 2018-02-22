@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
@@ -75,7 +76,7 @@ public class LibraryVariantFactory extends BaseVariantFactory {
     @NonNull
     @Override
     public Collection<VariantType> getVariantConfigurationTypes() {
-        return ImmutableList.of(VariantType.LIBRARY);
+        return ImmutableList.of(VariantTypeImpl.LIBRARY);
     }
 
     @Override

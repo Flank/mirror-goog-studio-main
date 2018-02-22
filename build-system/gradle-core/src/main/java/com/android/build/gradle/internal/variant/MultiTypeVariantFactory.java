@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,9 +49,16 @@ public class MultiTypeVariantFactory extends BaseVariantFactory {
         super(globalScope, androidBuilder, extension);
         delegates =
                 ImmutableMap.of(
-                        VariantType.FEATURE,
-                        new FeatureVariantFactory(globalScope, androidBuilder, extension),
-                        VariantType.LIBRARY,
+                        VariantTypeImpl.BASE_FEATURE,
+                        new FeatureVariantFactory(
+                                globalScope,
+                                androidBuilder,
+                                extension,
+                                VariantTypeImpl.BASE_FEATURE),
+                        VariantTypeImpl.FEATURE,
+                        new FeatureVariantFactory(
+                                globalScope, androidBuilder, extension, VariantTypeImpl.FEATURE),
+                        VariantTypeImpl.LIBRARY,
                         new LibraryVariantFactory(globalScope, androidBuilder, extension));
     }
 
@@ -75,7 +83,10 @@ public class MultiTypeVariantFactory extends BaseVariantFactory {
     @NonNull
     @Override
     public Collection<VariantType> getVariantConfigurationTypes() {
-        return ImmutableList.of(VariantType.FEATURE, VariantType.LIBRARY);
+        if (extension.getBaseFeature()) {
+            return ImmutableList.of(VariantTypeImpl.BASE_FEATURE, VariantTypeImpl.LIBRARY);
+        }
+        return ImmutableList.of(VariantTypeImpl.FEATURE, VariantTypeImpl.LIBRARY);
     }
 
     @Override

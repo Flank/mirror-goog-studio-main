@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.BlockingResourceLinker;
@@ -378,7 +378,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                         .setManifestFile(androidManifest)
                         .setOptions(aaptOptions)
                         .setDebuggable(true)
-                        .setVariantType(VariantType.APK)
+                        .setVariantType(VariantTypeImpl.BASE_APK)
                         .setImports(ImmutableList.copyOf(importedAPKs))
                         .setResourceOutputApk(resFilePackageFile);
 

@@ -59,7 +59,7 @@ final class ProductFlavorContainerImpl implements ProductFlavorContainer, Serial
         List<SourceProviderContainer> clonedContainers =
                 SourceProviderContainerImpl.cloneCollection(sourceProviderContainers);
 
-        for (VariantType variantType : VariantType.getTestingTypes()) {
+        for (VariantType variantType : VariantType.Companion.getTestComponents()) {
             DefaultAndroidSourceSet sourceSet
                     = productFlavorData.getTestSourceSet(variantType);
             if (sourceSet != null) {

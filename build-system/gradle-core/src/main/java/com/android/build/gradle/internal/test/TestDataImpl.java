@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
-import com.android.builder.core.VariantType;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConfigProvider;
@@ -93,7 +92,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
     public boolean isLibrary() {
         TestedVariantData testedVariantData = testVariantData.getTestedVariantData();
         BaseVariantData testedVariantData2 = (BaseVariantData) testedVariantData;
-        return testedVariantData2.getVariantConfiguration().getType() == VariantType.LIBRARY;
+        return testedVariantData2.getVariantConfiguration().getType().isAar();
     }
 
     @NonNull

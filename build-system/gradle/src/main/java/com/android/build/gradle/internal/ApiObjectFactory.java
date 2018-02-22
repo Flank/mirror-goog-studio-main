@@ -16,9 +16,8 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.builder.core.VariantType.ANDROID_TEST;
-import static com.android.builder.core.VariantType.LIBRARY;
-import static com.android.builder.core.VariantType.UNIT_TEST;
+import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
+import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
@@ -63,7 +62,7 @@ public class ApiObjectFactory {
     }
 
     public BaseVariantImpl create(BaseVariantData variantData) {
-        if (variantData.getType().isForTesting()) {
+        if (variantData.getType().isTestComponent()) {
             // Testing variants are handled together with their "owners".
             createVariantOutput(variantData, null);
             return null;
@@ -137,7 +136,7 @@ public class ApiObjectFactory {
     private void createVariantOutput(BaseVariantData variantData, BaseVariantImpl variantApi) {
         variantData.variantOutputFactory =
                 new VariantOutputFactory(
-                        (variantData.getType() == LIBRARY)
+                        (variantData.getType().isAar())
                                 ? LibraryVariantOutputImpl.class
                                 : ApkVariantOutputImpl.class,
                         objectFactory,

@@ -45,8 +45,8 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ApplicationId;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -59,6 +59,7 @@ import com.android.manifmerger.ManifestProvider;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
 import com.android.utils.FileUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -467,6 +468,10 @@ public class MergeManifests extends ManifestProcessorTask {
             GlobalScope globalScope = variantScope.getGlobalScope();
             AndroidBuilder androidBuilder = globalScope.getAndroidBuilder();
 
+            VariantType variantType = variantScope.getType();
+            Preconditions.checkState(!variantType.isTestComponent());
+
+
             processManifestTask.setAndroidBuilder(androidBuilder);
             processManifestTask.setVariantName(config.getFullName());
             processManifestTask.outputScope = variantData.getOutputScope();
@@ -521,8 +526,8 @@ public class MergeManifests extends ManifestProcessorTask {
             processManifestTask.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
 
             // set optional inputs per module type
-            if (variantData.getType() == VariantType.FEATURE) {
-                if (variantScope.isBaseFeature()) {
+            if (variantType.isApk()) {
+                if (variantType.isBaseModule()) {
                     processManifestTask.packageManifest =
                             variantScope.getArtifactFileCollection(
                                     METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
@@ -533,7 +538,8 @@ public class MergeManifests extends ManifestProcessorTask {
                                     METADATA_VALUES, MODULE, METADATA_FEATURE_MANIFEST);
                 } else {
                     processManifestTask.featureName =
-                            ((FeatureVariantData) variantScope.getVariantData()).getFeatureName();
+                            ((ApplicationVariantData) variantScope.getVariantData())
+                                    .getFeatureName();
                     processManifestTask.packageManifest =
                             variantScope.getArtifactFileCollection(
                                     COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
@@ -546,8 +552,7 @@ public class MergeManifests extends ManifestProcessorTask {
             }
 
             // when dealing with a non-base feature, output is under a different type.
-            // TODO: add optional APK support.
-            if (variantData.getType() == VariantType.FEATURE && !variantScope.isBaseFeature()) {
+            if (!variantType.isBaseModule()) {
                 variantScope.addTaskOutput(
                         InternalArtifactType.METADADA_FEATURE_MANIFEST,
                         manifestOutputDirectory,
@@ -608,9 +613,10 @@ public class MergeManifests extends ManifestProcessorTask {
     private static EnumSet<Feature> getOptionalFeatures(
             VariantScope variantScope, boolean isAdvancedProfilingOn) {
         List<Feature> features = new ArrayList<>();
-        if (variantScope.getVariantData().getType() == VariantType.FEATURE) {
+        VariantType variantType = variantScope.getType();
+        if (variantType.isHybrid()) {
             features.add(Feature.TARGET_SANDBOX_VERSION);
-            if (!variantScope.isBaseFeature()) {
+            if (!variantType.isBaseModule()) {
                 features.add(Feature.ADD_FEATURE_SPLIT_INFO);
             }
         }

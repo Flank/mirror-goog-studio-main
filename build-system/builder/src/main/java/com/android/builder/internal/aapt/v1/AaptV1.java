@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
@@ -233,8 +232,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         }
 
         // options controlled by build variants
-        if (config.getVariantType() != VariantType.ANDROID_TEST
-                && config.getCustomPackageForR() != null) {
+        if (!config.getVariantType().isTestComponent() && config.getCustomPackageForR() != null) {
             builder.addArgs("--custom-package", config.getCustomPackageForR());
         }
 
@@ -244,7 +242,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
 
         // bundle specific options
         boolean generateFinalIds = true;
-        if (config.getVariantType() == VariantType.LIBRARY) {
+        if (config.getVariantType().isAar()) {
             generateFinalIds = false;
         }
         if (!generateFinalIds) {
@@ -320,7 +318,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         }
 
         if (config.getSymbolOutputDir() != null
-                && (config.getVariantType() == VariantType.LIBRARY
+                && (config.getVariantType().isAar()
                         || !config.getLibrarySymbolTableFiles().isEmpty())) {
             builder.addArgs(
                     "--output-text-symbols",

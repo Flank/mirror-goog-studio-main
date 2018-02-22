@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -61,45 +62,45 @@ public class MultiTypeTaskManager extends TaskManager {
                 sdkHandler,
                 toolingRegistry,
                 recorder);
+        FeatureTaskManager featureTaskManager =
+                new FeatureTaskManager(
+                        globalScope,
+                        project,
+                        projectOptions,
+                        androidBuilder,
+                        dataBindingBuilder,
+                        extension,
+                        sdkHandler,
+                        toolingRegistry,
+                        recorder);
         delegates =
                 ImmutableMap.of(
-                        VariantType.FEATURE,
-                        new FeatureTaskManager(
-                                globalScope,
-                                project,
-                                projectOptions,
-                                androidBuilder,
-                                dataBindingBuilder,
-                                extension,
-                                sdkHandler,
-                                toolingRegistry,
-                                recorder),
-                        VariantType.LIBRARY,
-                        new LibraryTaskManager(
-                                globalScope,
-                                project,
-                                projectOptions,
-                                androidBuilder,
-                                dataBindingBuilder,
-                                extension,
-                                sdkHandler,
-                                toolingRegistry,
-                                recorder));
+                        VariantTypeImpl.FEATURE, featureTaskManager,
+                        VariantTypeImpl.BASE_FEATURE, featureTaskManager,
+                        VariantTypeImpl.LIBRARY,
+                                new LibraryTaskManager(
+                                        globalScope,
+                                        project,
+                                        projectOptions,
+                                        androidBuilder,
+                                        dataBindingBuilder,
+                                        extension,
+                                        sdkHandler,
+                                        toolingRegistry,
+                                        recorder));
     }
 
     @Override
     public void createTasksForVariantScope(@NonNull VariantScope variantScope) {
-        delegates
-                .get(variantScope.getVariantData().getType())
-                .createTasksForVariantScope(variantScope);
+        delegates.get(variantScope.getType()).createTasksForVariantScope(variantScope);
     }
 
     @NonNull
     @Override
     protected Set<? super QualifiedContent.Scope> getResMergingScopes(
             @NonNull VariantScope variantScope) {
-        VariantType variantType = variantScope.getVariantData().getType();
-        if (variantType.isForTesting()) {
+        VariantType variantType = variantScope.getType();
+        if (variantType.isTestComponent()) {
             variantType = variantScope.getTestedVariantData().getType();
         }
         return delegates.get(variantType).getResMergingScopes(variantScope);

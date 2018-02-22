@@ -31,7 +31,7 @@ import com.android.build.gradle.internal.variant.FeatureVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AndroidBuilder
-import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
@@ -125,8 +125,8 @@ class GenerateSplitAbiResTest {
     fun testBaseFeatureConfiguration() {
 
         with(initTask {
-            `when`(mockedVariantConfiguration.type).thenReturn(VariantType.FEATURE)
-            `when`(mockedVariantScope.isBaseFeature).thenReturn(true)
+            `when`(mockedVariantConfiguration.type).thenReturn(VariantTypeImpl.BASE_FEATURE)
+            `when`(mockedVariantScope.type).thenReturn(VariantTypeImpl.BASE_FEATURE)
         }) {
             assertThat(applicationId).isEqualTo("com.example.app")
             assertThat(featureName).isNull()
@@ -137,8 +137,8 @@ class GenerateSplitAbiResTest {
     fun testNonBaseFeatureConfiguration() {
 
         with (initTask {
-            `when`(mockedVariantConfiguration.type).thenReturn(VariantType.FEATURE)
-            `when`(mockedVariantScope.isBaseFeature).thenReturn(false)
+            `when`(mockedVariantConfiguration.type).thenReturn(VariantTypeImpl.FEATURE)
+            `when`(mockedVariantScope.type).thenReturn(VariantTypeImpl.FEATURE)
         }) {
             assertThat(applicationId).isEqualTo("com.example.app")
             assertThat(featureName).isEqualTo("featureA")
@@ -149,8 +149,8 @@ class GenerateSplitAbiResTest {
     fun testNonFeatureConfiguration() {
 
         with(initTask {
-            `when`(mockedVariantConfiguration.type).thenReturn(VariantType.LIBRARY)
-            `when`(mockedVariantScope.isBaseFeature).thenReturn(false)
+            `when`(mockedVariantConfiguration.type).thenReturn(VariantTypeImpl.LIBRARY)
+            `when`(mockedVariantScope.type).thenReturn(VariantTypeImpl.LIBRARY)
         }) {
             assertThat(applicationId).isEqualTo("com.example.app")
             assertThat(featureName).isNull()
@@ -192,8 +192,8 @@ class GenerateSplitAbiResTest {
     fun testBaseFeatureExecution() {
 
         val generatedSplitManifest = initTask {
-            `when`(mockedVariantConfiguration.type).thenReturn(VariantType.FEATURE)
-            `when`(mockedVariantScope.isBaseFeature).thenReturn(true)
+            `when`(mockedVariantConfiguration.type).thenReturn(VariantTypeImpl.BASE_FEATURE)
+            `when`(mockedVariantScope.type).thenReturn(VariantTypeImpl.BASE_FEATURE)
         }.generateSplitManifest("x86", apkData)
 
         assertThat(generatedSplitManifest).exists()
@@ -204,8 +204,8 @@ class GenerateSplitAbiResTest {
     fun testNonBaseFeatureExecution() {
 
         val generatedSplitManifest = initTask {
-            `when`(mockedVariantConfiguration.type).thenReturn(VariantType.FEATURE)
-            `when`(mockedVariantScope.isBaseFeature).thenReturn(false)
+            `when`(mockedVariantConfiguration.type).thenReturn(VariantTypeImpl.FEATURE)
+            `when`(mockedVariantScope.type).thenReturn(VariantTypeImpl.FEATURE)
         }.generateSplitManifest("x86", apkData)
 
         assertThat(generatedSplitManifest).exists()
@@ -224,9 +224,9 @@ class GenerateSplitAbiResTest {
     }
 
     private fun initCommonFields() {
-        `when`(mockedVariantScope.isBaseFeature).thenReturn(false)
+        `when`(mockedVariantScope.type).thenReturn(VariantTypeImpl.LIBRARY)
         with(mockedVariantConfiguration) {
-            `when`(type).thenReturn(VariantType.LIBRARY)
+            `when`(type).thenReturn(VariantTypeImpl.LIBRARY)
             `when`(fullName).thenReturn("debug")
             `when`(versionCode).thenReturn(1)
             `when`<String>(versionName).thenReturn("versionName")

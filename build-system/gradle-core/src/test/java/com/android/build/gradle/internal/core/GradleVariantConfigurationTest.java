@@ -29,7 +29,7 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultVectorDrawablesOptions;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.model.SourceProvider;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
@@ -91,7 +91,7 @@ public class GradleVariantConfigurationTest {
                 null,
                 buildType,
                 null,
-                VariantType.APK,
+                VariantTypeImpl.BASE_APK,
                 null,
                 new FakeEvalIssueReporter(),
                 () -> true);

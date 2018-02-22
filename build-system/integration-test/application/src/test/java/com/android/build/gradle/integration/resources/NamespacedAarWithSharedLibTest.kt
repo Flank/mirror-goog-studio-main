@@ -23,7 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2Daemon
@@ -188,7 +188,7 @@ class NamespacedAarWithSharedLibTest {
                     manifestFile = manifest,
                     options = AaptOptions(),
                     androidJarPath = androidTarget.getPath(IAndroidTarget.ANDROID_JAR),
-                    variantType = VariantType.APK
+                    variantType = VariantTypeImpl.BASE_APK
             )
             val daemon: Aapt2Daemon = Aapt2DaemonImpl(
                 "buildStaticLibAsApk",

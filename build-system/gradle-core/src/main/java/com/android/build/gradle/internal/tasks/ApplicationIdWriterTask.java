@@ -24,7 +24,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.core.VariantType;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -95,19 +94,24 @@ public class ApplicationIdWriterTask extends AndroidVariantTask {
         @Override
         public void execute(@NonNull ApplicationIdWriterTask task) {
             task.setVariantName(variantScope.getFullVariantName());
-            task.applicationId = variantScope.getVariantConfiguration().getApplicationId();
+
             task.outputDirectory =
                     FileUtils.join(
                             variantScope.getGlobalScope().getIntermediatesDir(),
                             "applicationId",
                             variantScope.getVariantConfiguration().getDirName());
 
+            // default value of the app ID to publish. This may get overwritten by something
+            // coming from an application module.
+            task.applicationId = variantScope.getVariantConfiguration().getApplicationId();
+
+            // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
             variantScope.addTaskOutput(
                     InternalArtifactType.FEATURE_APPLICATION_ID_DECLARATION,
                     ApplicationId.getOutputFile(task.outputDirectory),
                     getName());
 
-            if (variantScope.getVariantConfiguration().getType() == VariantType.FEATURE) {
+            if (variantScope.getType().isHybrid()) {
                 //if this is a feature, get the Application ID from the metadata config
                 task.packageManifest =
                         variantScope.getArtifactFileCollection(

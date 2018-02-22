@@ -134,13 +134,13 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                             @NonNull
                             @Override
                             public String getName() {
-                                return super.getName() + VariantType.ANDROID_TEST.getSuffix();
+                                return super.getName() + VariantType.ANDROID_TEST_SUFFIX;
                             }
                         });
 
         Task connectedAndroidTest =
                 taskFactory.findByName(
-                        BuilderConstants.CONNECTED + VariantType.ANDROID_TEST.getSuffix());
+                        BuilderConstants.CONNECTED + VariantType.ANDROID_TEST_SUFFIX);
         if (connectedAndroidTest != null) {
             connectedAndroidTest.dependsOn(instrumentTestTask.getName());
         }

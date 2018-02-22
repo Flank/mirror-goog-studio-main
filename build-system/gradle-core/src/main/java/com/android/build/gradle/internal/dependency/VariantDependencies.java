@@ -105,7 +105,6 @@ public class VariantDependencies {
         @NonNull private final Project project;
         @NonNull private final SyncIssueHandler errorReporter;
         @NonNull private final GradleVariantConfiguration variantConfiguration;
-        private boolean baseSplit = false;
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection;
 
         private AndroidTypeAttr consumeType;
@@ -160,11 +159,6 @@ public class VariantDependencies {
         public Builder setTestedVariantDependencies(
                 @NonNull VariantDependencies testedVariantDependencies) {
             this.testedVariantDependencies = testedVariantDependencies;
-            return this;
-        }
-
-        public Builder setBaseSplit(boolean baseSplit) {
-            this.baseSplit = baseSplit;
             return this;
         }
 
@@ -264,7 +258,7 @@ public class VariantDependencies {
             runtimeAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
 
             Configuration globalTestedApks = configurations.findByName(CONFIG_NAME_TESTED_APKS);
-            if (variantType == VariantType.APK && globalTestedApks != null) {
+            if (variantType.isApk() && globalTestedApks != null) {
                 // this configuration is created only for test-only project
                 Configuration testedApks =
                         configurations.maybeCreate(
@@ -335,7 +329,7 @@ public class VariantDependencies {
                 // if the variant is not a library, then the publishing configuration should
                 // not extend from anything. It's mostly there to access the artifacts from
                 // another project but it shouldn't bring any dependencies with it.
-                if (variantType == VariantType.LIBRARY) {
+                if (variantType.isAar()) {
                     runtimeElements.extendsFrom(runtimeClasspath);
                 }
 
@@ -350,13 +344,11 @@ public class VariantDependencies {
                 // apiElements only extends the api classpaths.
                 apiElements.setExtendsFrom(apiClasspaths);
 
-                if (variantType == VariantType.APK
-                        || (variantType == VariantType.FEATURE && !baseSplit)) {
-                    // Variant-specific metadata publishing configuration. Only published to by app
-                    // modules and non-base feature modules.
-
+                if (variantType.getPublishToMetadata()) {
+                    // Variant-specific metadata publishing configuration. Only published to by base
+                    // app, optional apks, and non base feature modules.
                     metadataElements = configurations.maybeCreate(variantName + "MetadataElements");
-                    metadataElements.setDescription("Metadata elements for " + variantName);
+
                     metadataElements.setCanBeResolved(false);
                     final AttributeContainer metadataElementsAttributes =
                             metadataElements.getAttributes();
@@ -368,14 +360,14 @@ public class VariantDependencies {
                     metadataElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
                 }
 
-                if (baseSplit) {
+                if (variantType.isBaseModule()) {
                     // The variant-specific configuration that will contain the non-base feature
                     // metadata and the application metadata. It's per-variant to contain the
                     // right attribute. It'll be used to get the applicationId and to consume
                     // the manifest.
                     metadataValues = configurations.maybeCreate(variantName + "MetadataValues");
                     metadataValues.extendsFrom(configurations.getByName(CONFIG_NAME_FEATURE));
-                    if (variantType == VariantType.FEATURE) {
+                    if (variantType.isHybrid()) {
                         metadataValues.extendsFrom(
                                 configurations.getByName(CONFIG_NAME_APPLICATION));
                     }

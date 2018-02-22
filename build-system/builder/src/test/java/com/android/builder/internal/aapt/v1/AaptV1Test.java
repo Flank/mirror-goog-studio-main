@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
@@ -328,7 +328,7 @@ public class AaptV1Test {
                             .setManifestFile(manifestFile)
                             .setOptions(new AaptOptions(null, false, null))
                             .setSourceOutputDir(sourceOutput)
-                            .setVariantType(VariantType.APK)
+                            .setVariantType(VariantTypeImpl.BASE_APK)
                             .setResourceDir(outputDir)
                             .build();
             aapt.link(config, mLogger);
@@ -384,7 +384,7 @@ public class AaptV1Test {
                             .setManifestFile(manifestFile)
                             .setOptions(new AaptOptions(null, false, null))
                             .setSourceOutputDir(sourceOutput)
-                            .setVariantType(VariantType.LIBRARY)
+                            .setVariantType(VariantTypeImpl.LIBRARY)
                             .setResourceDir(outputDir)
                             .build();
             aapt.link(config, mLogger);
@@ -432,7 +432,7 @@ public class AaptV1Test {
                             .setManifestFile(manifestFile)
                             .setOptions(new AaptOptions(null, false, null))
                             .setSourceOutputDir(sourceOutput)
-                            .setVariantType(VariantType.APK)
+                            .setVariantType(VariantTypeImpl.BASE_APK)
                             .build();
             aapt.link(config, mLogger);
         }

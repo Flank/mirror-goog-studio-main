@@ -33,7 +33,8 @@ public class AppExtension extends TestedExtension {
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull SourceSetManager sourceSetManager,
-            @NonNull ExtraModelInfo extraModelInfo) {
+            @NonNull ExtraModelInfo extraModelInfo,
+            boolean isBaseModule) {
         super(
                 project,
                 projectOptions,
@@ -44,7 +45,8 @@ public class AppExtension extends TestedExtension {
                 signingConfigs,
                 buildOutputs,
                 sourceSetManager,
-                extraModelInfo);
+                extraModelInfo,
+                isBaseModule);
     }
 
     /**

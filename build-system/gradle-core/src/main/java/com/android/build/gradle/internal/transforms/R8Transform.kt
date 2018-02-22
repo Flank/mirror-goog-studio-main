@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_JARS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.TransformInputUtil.getAllFiles
 import com.android.builder.core.VariantType
-import com.android.builder.core.VariantType.LIBRARY
 import com.android.builder.dexing.MainDexListConfig
 import com.android.builder.dexing.ProguardConfig
 import com.android.builder.dexing.R8OutputType
@@ -84,7 +83,7 @@ class R8Transform(
                     mainDexRulesFiles,
                     inputProguardMapping,
                     outputProguardMapping,
-                    if (scope.variantData.type == LIBRARY) CONTENT_JARS else CONTENT_DEX,
+                    if (scope.variantData.type.isAar) CONTENT_JARS else CONTENT_DEX,
                     scope.globalScope.project.files(),
                     scope.variantData.type
             )

@@ -163,7 +163,7 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
         }
 
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
-            if (!variantScope.getVariantData().getType().isForTesting()) {
+            if (!variantScope.getVariantData().getType().isTestComponent()) {
                 variants.add(createVariant(variantScope.getVariantData()));
             }
         }

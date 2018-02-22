@@ -350,11 +350,14 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
         @Override
         public void execute(@NonNull GenerateSplitAbiRes generateSplitAbiRes) {
             final VariantConfiguration config = scope.getVariantConfiguration();
+            VariantType variantType = config.getType();
 
             generateSplitAbiRes.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             generateSplitAbiRes.setVariantName(config.getFullName());
+
+            // FIXME we need a feature name in the base variant data?
             generateSplitAbiRes.featureName =
-                    config.getType() == VariantType.FEATURE && !scope.isBaseFeature()
+                    variantType.isApk() && !variantType.isBaseModule()
                             ? ((FeatureVariantData) scope.getVariantData()).getFeatureName()
                             : null;
 
@@ -365,7 +368,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                     AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());
 
             generateSplitAbiRes.variantScope = scope;
-            generateSplitAbiRes.variantType = config.getType();
+            generateSplitAbiRes.variantType = variantType;
             generateSplitAbiRes.outputDirectory = outputDirectory;
             generateSplitAbiRes.splits =
                     AbiSplitOptions.getAbiFilters(
@@ -378,11 +381,14 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             generateSplitAbiRes.outputFactory = scope.getVariantData().getOutputFactory();
             generateSplitAbiRes.aapt2FromMaven =
                     Aapt2MavenUtils.getAapt2FromMavenIfEnabled(scope.getGlobalScope());
-            if (scope.getVariantData().getType() == VariantType.FEATURE) {
-                if (scope.isBaseFeature()) {
-                    generateSplitAbiRes.applicationIdOverride =
-                            scope.getArtifactFileCollection(
-                                    METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
+            if (variantType.isApk() && !variantType.isForTesting()) {
+                if (variantType.isBaseModule()) {
+                    if (variantType.isHybrid()) {
+                        // only override in the case of BASE_FEATURE
+                        generateSplitAbiRes.applicationIdOverride =
+                                scope.getArtifactFileCollection(
+                                        METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
+                    }
                 } else {
                     generateSplitAbiRes.applicationIdOverride =
                             scope.getArtifactFileCollection(

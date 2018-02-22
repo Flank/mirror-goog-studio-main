@@ -48,7 +48,6 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputFactory;
-import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -82,7 +81,7 @@ import com.android.ide.common.symbols.SymbolIo;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -147,7 +146,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     private InstantRunBuildContext buildContext;
 
-    private FileCollection featureResourcePackages;
+    @Nullable private FileCollection featureResourcePackages;
 
     private String originalApplicationId;
 
@@ -177,6 +176,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     }
 
     private VariantScope variantScope;
+
+    @Input
+    public boolean canHaveSplits() {
+        return variantScope.getType().getCanHaveSplits();
+    }
 
     @NonNull
     @Internal
@@ -222,7 +226,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         ? packageIdsFiles.getArtifactFiles().getAsFileTree().getFiles()
                         : null;
 
-        final Set<File> featureResourcePackages = this.featureResourcePackages.getFiles();
+        final Set<File> featureResourcePackages =
+                this.featureResourcePackages != null
+                        ? this.featureResourcePackages.getFiles()
+                        : ImmutableSet.of();
 
         SplitList splitList =
                 splitListInput == null ? SplitList.EMPTY : SplitList.load(splitListInput);
@@ -277,22 +284,24 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 }
             }
             // now all remaining splits will be generated asynchronously.
-            for (BuildOutput manifestBuildOutput : unprocessedManifest) {
-                ApkInfo apkInfo = manifestBuildOutput.getApkInfo();
-                if (apkInfo.requiresAapt()) {
-                    executor.execute(
-                            () ->
-                                    invokeAaptForSplit(
-                                            manifestBuildOutput,
-                                            dependencies,
-                                            imports,
-                                            packageIdFileSet,
-                                            splitList,
-                                            featureResourcePackages,
-                                            apkInfo,
-                                            false,
-                                            aapt,
-                                            aapt2ServiceKey));
+            if (variantScope.getType().getCanHaveSplits()) {
+                for (BuildOutput manifestBuildOutput : unprocessedManifest) {
+                    ApkInfo apkInfo = manifestBuildOutput.getApkInfo();
+                    if (apkInfo.requiresAapt()) {
+                        executor.execute(
+                                () ->
+                                        invokeAaptForSplit(
+                                                manifestBuildOutput,
+                                                dependencies,
+                                                imports,
+                                                packageIdFileSet,
+                                                splitList,
+                                                featureResourcePackages,
+                                                apkInfo,
+                                                false,
+                                                aapt,
+                                                aapt2ServiceKey));
+                    }
                 }
             }
 
@@ -703,7 +712,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             processResources.aapt2FromMaven =
                     Aapt2MavenUtils.getAapt2FromMavenIfEnabled(variantScope.getGlobalScope());
 
-            if (variantData.getType() == VariantType.LIBRARY) {
+            if (variantData.getType().isAar()) {
                 throw new IllegalArgumentException("Use GenerateLibraryRFileTask");
             } else {
                 Preconditions.checkState(
@@ -787,16 +796,21 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             processResources.buildContext = variantScope.getInstantRunBuildContext();
 
-            processResources.featureResourcePackages =
-                    variantScope.getArtifactFileCollection(
-                            COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG);
+            if (!variantScope.getType().isForTesting()) {
+                // Tests should not have feature dependencies, however because they include the
+                // tested production component in their dependency graph, we see the tested feature
+                // package in their graph. Therefore we have to manually not set this up for tests.
+                processResources.featureResourcePackages =
+                        variantScope.getArtifactFileCollection(
+                                COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG);
+            }
 
             processResources.projectBaseName = baseName;
             processResources.isLibrary = isLibrary;
             processResources.supportDirectory =
                     new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");
 
-            if (!variantScope.isBaseFeature()) {
+            if (!variantScope.getType().isBaseModule()) {
                 // sets the packageIds list.
                 processResources.packageIdsFiles =
                         variantScope.getArtifactCollection(
@@ -920,14 +934,23 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             task.buildContext = variantScope.getInstantRunBuildContext();
 
-            task.featureResourcePackages =
-                    variantScope.getArtifactFileCollection(
-                            COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG);
-            if (variantScope.getVariantData().getType() == VariantType.FEATURE
-                    && !variantScope.isBaseFeature()) {
-                task.packageIdsFiles =
-                        variantScope.getArtifactCollection(
-                                COMPILE_CLASSPATH, MODULE, FEATURE_IDS_DECLARATION);
+            VariantType variantType = variantScope.getType();
+
+            if (variantType.isForTesting()) {
+                // Tests should not have feature dependencies, however because they include the
+                // tested production component in their dependency graph, we see the tested feature
+                // package in their graph. Therefore we have to manually not set this up for tests.
+                task.featureResourcePackages = null;
+            } else {
+                task.featureResourcePackages =
+                        variantScope.getArtifactFileCollection(
+                                COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG);
+
+                if (variantType.isApk() && !variantType.isBaseModule()) {
+                    task.packageIdsFiles =
+                            variantScope.getArtifactCollection(
+                                    COMPILE_CLASSPATH, MODULE, FEATURE_IDS_DECLARATION);
+                }
             }
 
             task.projectBaseName = baseName;
@@ -1039,7 +1062,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     @Input
     public String getTypeAsString() {
-        return type.name();
+        return type.getName();
     }
 
     @Internal
@@ -1102,7 +1125,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     }
 
     @InputFiles
-    @NonNull
+    @Nullable
+    @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getFeatureResourcePackages() {
         return featureResourcePackages;

@@ -84,7 +84,8 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
                         signingConfigContainer,
                         buildOutputs,
                         sourceSetManager,
-                        extraModelInfo);
+                        extraModelInfo,
+                        isBaseApplication);
     }
 
     @NonNull
@@ -129,8 +130,7 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
             @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig androidConfig) {
-        return new ApplicationVariantFactory(
-                globalScope, androidBuilder, androidConfig, isBaseApplication);
+        return new ApplicationVariantFactory(globalScope, androidBuilder, androidConfig);
     }
 
     @Override

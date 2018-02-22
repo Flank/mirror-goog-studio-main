@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.fixtures.FakeVariantFactory2
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.google.common.truth.Truth
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.artifacts.Configuration
@@ -48,20 +49,20 @@ class DslModelDataImplTest {
     @Test
     fun `source sets for default config`() {
         val modelData = createModelData(
-                createFactories(BaseExtension2::class.java, VariantType.APK))
+                createFactories(BaseExtension2::class.java, VariantTypeImpl.BASE_APK))
 
         val defaultConfigData = modelData.defaultConfigData
         Truth.assertThat(defaultConfigData).isNotNull()
 
-        var sourceSet = defaultConfigData.getSourceSet(VariantType.APK)
+        var sourceSet = defaultConfigData.getSourceSet(VariantTypeImpl.BASE_APK)
         Truth.assertThat(sourceSet).isNotNull()
         Truth.assertThat(sourceSet?.name).isEqualTo(BuilderConstants.MAIN)
 
-        sourceSet = defaultConfigData.getSourceSet(VariantType.ANDROID_TEST)
+        sourceSet = defaultConfigData.getSourceSet(VariantTypeImpl.ANDROID_TEST)
         Truth.assertThat(sourceSet).isNotNull()
         Truth.assertThat(sourceSet?.name).isEqualTo("androidTest")
 
-        sourceSet = defaultConfigData.getSourceSet(VariantType.UNIT_TEST)
+        sourceSet = defaultConfigData.getSourceSet(VariantTypeImpl.UNIT_TEST)
         Truth.assertThat(sourceSet).isNotNull()
         Truth.assertThat(sourceSet?.name).isEqualTo("test")
 
@@ -72,7 +73,7 @@ class DslModelDataImplTest {
     @Test
     fun `configurations for default config`() {
         val modelData = createModelData(
-                createFactories(BaseExtension2::class.java, VariantType.APK))
+                createFactories(BaseExtension2::class.java, VariantTypeImpl.BASE_APK))
 
         val defaultConfigData = modelData.defaultConfigData
         Truth.assertThat(defaultConfigData).isNotNull()
@@ -116,7 +117,7 @@ class DslModelDataImplTest {
     @Test
     fun `configurations for default config with library`() {
         val modelData = createModelData(
-                createFactories(BaseExtension2::class.java, VariantType.LIBRARY))
+                createFactories(BaseExtension2::class.java, VariantTypeImpl.LIBRARY))
 
         val defaultConfigData = modelData.defaultConfigData
         Truth.assertThat(defaultConfigData).isNotNull()
@@ -135,21 +136,21 @@ class DslModelDataImplTest {
         val modelData = createModelData(
                 createFactories(
                         BaseExtension2::class.java,
-                        VariantType.APK,
+                        VariantTypeImpl.BASE_APK,
                         hasAndroidTests = false,
                         hasUnitTests = false))
 
         val defaultConfigData = modelData.defaultConfigData
         Truth.assertThat(defaultConfigData).isNotNull()
 
-        var sourceSet = defaultConfigData.getSourceSet(VariantType.APK)
+        var sourceSet = defaultConfigData.getSourceSet(VariantTypeImpl.BASE_APK)
         Truth.assertThat(sourceSet).isNotNull()
         Truth.assertThat(sourceSet?.name).isEqualTo(BuilderConstants.MAIN)
 
-        sourceSet = defaultConfigData.getSourceSet(VariantType.ANDROID_TEST)
+        sourceSet = defaultConfigData.getSourceSet(VariantTypeImpl.ANDROID_TEST)
         Truth.assertThat(sourceSet).isNull()
 
-        sourceSet = defaultConfigData.getSourceSet(VariantType.UNIT_TEST)
+        sourceSet = defaultConfigData.getSourceSet(VariantTypeImpl.UNIT_TEST)
         Truth.assertThat(sourceSet).isNull()
 
         // tests to make sure we don't have test source sets or configs.
@@ -163,7 +164,7 @@ class DslModelDataImplTest {
     @Test
     fun `source sets for added flavors`() {
         val modelData = createModelData(
-                createFactories(BaseExtension2::class.java, VariantType.APK))
+                createFactories(BaseExtension2::class.java, VariantTypeImpl.BASE_APK))
 
         val flavorName = "free"
         modelData.productFlavors.create(flavorName)
@@ -173,15 +174,15 @@ class DslModelDataImplTest {
         val data = modelData.flavorData[flavorName]
         Truth.assertThat(data).isNotNull()
 
-        var sourceSet = data?.getSourceSet(VariantType.APK)
+        var sourceSet = data?.getSourceSet(VariantTypeImpl.BASE_APK)
         Truth.assertThat(sourceSet).isNotNull()
         Truth.assertThat(sourceSet?.name).isEqualTo(flavorName)
 
-        sourceSet = data?.getSourceSet(VariantType.ANDROID_TEST)
+        sourceSet = data?.getSourceSet(VariantTypeImpl.ANDROID_TEST)
         Truth.assertThat(sourceSet).isNotNull()
         Truth.assertThat(sourceSet?.name).isEqualTo("androidTestFree")
 
-        sourceSet = data?.getSourceSet(VariantType.UNIT_TEST)
+        sourceSet = data?.getSourceSet(VariantTypeImpl.UNIT_TEST)
         Truth.assertThat(sourceSet).isNotNull()
         Truth.assertThat(sourceSet?.name).isEqualTo("testFree")
 
@@ -192,7 +193,7 @@ class DslModelDataImplTest {
     @Test
     fun `configurations for added flavors`() {
         val modelData = createModelData(
-                createFactories(BaseExtension2::class.java, VariantType.APK))
+                createFactories(BaseExtension2::class.java, VariantTypeImpl.BASE_APK))
 
         val flavorName = "free"
         modelData.productFlavors.create(flavorName)
@@ -238,7 +239,7 @@ class DslModelDataImplTest {
     @Test
     fun `source sets for added build type`() {
         val modelData = createModelData(
-                createFactories(BaseExtension2::class.java, VariantType.APK))
+                createFactories(BaseExtension2::class.java, VariantTypeImpl.BASE_APK))
 
         val flavorName = "staging"
         modelData.buildTypes.create(flavorName)
@@ -248,15 +249,15 @@ class DslModelDataImplTest {
         val data = modelData.buildTypeData[flavorName]
         Truth.assertThat(data).isNotNull()
 
-        var sourceSet = data?.getSourceSet(VariantType.APK)
+        var sourceSet = data?.getSourceSet(VariantTypeImpl.BASE_APK)
         Truth.assertThat(sourceSet).isNotNull()
         Truth.assertThat(sourceSet?.name).isEqualTo(flavorName)
 
-        sourceSet = data?.getSourceSet(VariantType.ANDROID_TEST)
+        sourceSet = data?.getSourceSet(VariantTypeImpl.ANDROID_TEST)
         Truth.assertThat(sourceSet).isNotNull()
         Truth.assertThat(sourceSet?.name).isEqualTo("androidTestStaging")
 
-        sourceSet = data?.getSourceSet(VariantType.UNIT_TEST)
+        sourceSet = data?.getSourceSet(VariantTypeImpl.UNIT_TEST)
         Truth.assertThat(sourceSet).isNotNull()
         Truth.assertThat(sourceSet?.name).isEqualTo("testStaging")
 
@@ -267,7 +268,7 @@ class DslModelDataImplTest {
     @Test
     fun `configurations for added build type`() {
         val modelData = createModelData(
-                createFactories(BaseExtension2::class.java, VariantType.APK))
+                createFactories(BaseExtension2::class.java, VariantTypeImpl.BASE_APK))
 
         val flavorName = "staging"
         modelData.buildTypes.create(flavorName)
@@ -313,7 +314,7 @@ class DslModelDataImplTest {
     @Test
     fun `name collisions between flavor, build type and default values`() {
         val modelData = createModelData(
-                createFactories(BaseExtension2::class.java, VariantType.APK))
+                createFactories(BaseExtension2::class.java, VariantTypeImpl.BASE_APK))
 
         // first validate collision against forbidden names
         val flavors = modelData.productFlavors
@@ -323,19 +324,19 @@ class DslModelDataImplTest {
                 flavors, "lint","ProductFlavor names cannot be 'lint'")
         validateCollision(
                 flavors,
-                VariantType.ANDROID_TEST.prefix,
+                VariantType.ANDROID_TEST_PREFIX,
                 "ProductFlavor names cannot start with 'androidTest'")
         validateCollision(
                 flavors,
-                VariantType.ANDROID_TEST.prefix + "Foo",
+                VariantType.ANDROID_TEST_PREFIX + "Foo",
                 "ProductFlavor names cannot start with 'androidTest'")
         validateCollision(
                 flavors,
-                VariantType.UNIT_TEST.prefix,
+                VariantType.UNIT_TEST_PREFIX,
                 "ProductFlavor names cannot start with 'test'")
         validateCollision(
                 flavors,
-                VariantType.UNIT_TEST.prefix + "Foo",
+                VariantType.UNIT_TEST_PREFIX + "Foo",
                 "ProductFlavor names cannot start with 'test'")
 
         // same with build types
@@ -346,19 +347,19 @@ class DslModelDataImplTest {
                 buildTypes, "lint","BuildType names cannot be 'lint'")
         validateCollision(
                 buildTypes,
-                VariantType.ANDROID_TEST.prefix,
+                VariantType.ANDROID_TEST_PREFIX,
                 "BuildType names cannot start with 'androidTest'")
         validateCollision(
                 buildTypes,
-                VariantType.ANDROID_TEST.prefix + "Foo",
+                VariantType.ANDROID_TEST_PREFIX + "Foo",
                 "BuildType names cannot start with 'androidTest'")
         validateCollision(
                 buildTypes,
-                VariantType.UNIT_TEST.prefix,
+                VariantType.UNIT_TEST_PREFIX,
                 "BuildType names cannot start with 'test'")
         validateCollision(
                 buildTypes,
-                VariantType.UNIT_TEST.prefix + "Foo",
+                VariantType.UNIT_TEST_PREFIX + "Foo",
                 "BuildType names cannot start with 'test'")
 
         // create a flavor and then a build type of the same name
@@ -431,10 +432,10 @@ class DslModelDataImplTest {
 
         val testList = mutableListOf<VariantType>()
         if (hasAndroidTests) {
-            testList.add(VariantType.ANDROID_TEST)
+            testList.add(VariantTypeImpl.ANDROID_TEST)
         }
         if (hasUnitTests) {
-            testList.add(VariantType.UNIT_TEST)
+            testList.add(VariantTypeImpl.UNIT_TEST)
         }
 
         list.add(FakeVariantFactory2<BaseExtension2>(mainVariantType, testList, null))
@@ -442,13 +443,13 @@ class DslModelDataImplTest {
         if (hasAndroidTests) {
             list.add(
                     FakeVariantFactory2<BaseExtension2>(
-                            VariantType.ANDROID_TEST, listOf(), mainVariantType))
+                            VariantTypeImpl.ANDROID_TEST, listOf(), mainVariantType))
         }
 
         if (hasUnitTests) {
             list.add(
                     FakeVariantFactory2<BaseExtension2>(
-                            VariantType.UNIT_TEST, listOf(), mainVariantType))
+                            VariantTypeImpl.UNIT_TEST, listOf(), mainVariantType))
         }
 
         return list

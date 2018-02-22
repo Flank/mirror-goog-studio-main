@@ -50,17 +50,17 @@ class SourceSetManager(
     }
 
     @JvmOverloads
-    fun setUpSourceSet(name: String, isForTesting: Boolean = false): AndroidSourceSet {
+    fun setUpSourceSet(name: String, isTestComponent: Boolean = false): AndroidSourceSet {
         val sourceSet = sourceSetsContainer.maybeCreate(name)
         if (!configuredSourceSets.contains(name)) {
-            createConfigurationsForSourceSet(sourceSet, isForTesting)
+            createConfigurationsForSourceSet(sourceSet, isTestComponent)
             configuredSourceSets.add(name)
         }
         return sourceSet
     }
 
     private fun createConfigurationsForSourceSet(
-            sourceSet: AndroidSourceSet, isForTesting: Boolean) {
+            sourceSet: AndroidSourceSet, isTestComponent: Boolean) {
         val implementationName = sourceSet.implementationConfigurationName
         val runtimeOnlyName = sourceSet.runtimeOnlyConfigurationName
         val compileOnlyName = sourceSet.compileOnlyConfigurationName
@@ -119,7 +119,7 @@ class SourceSetManager(
         val apiName = sourceSet.apiConfigurationName
         val api = createConfiguration(apiName, getConfigDesc("API", sourceSet.name))
         api.extendsFrom(compile)
-        if (isForTesting) {
+        if (isTestComponent) {
             api.allDependencies
                     .whenObjectAdded(
                             DeprecatedConfigurationAction(

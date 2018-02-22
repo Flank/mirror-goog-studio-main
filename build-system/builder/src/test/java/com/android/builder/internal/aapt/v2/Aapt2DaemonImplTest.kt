@@ -16,7 +16,7 @@
 
 package com.android.builder.internal.aapt.v2
 
-import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.AaptTestUtils
@@ -150,7 +150,7 @@ class Aapt2DaemonImplTest {
                 resourceDirs = ImmutableList.of(compiledDir),
                 resourceOutputApk = outputFile,
                 options = AaptOptions(),
-                variantType = VariantType.APK
+                variantType = VariantTypeImpl.BASE_APK
         )
 
         daemon.link(request, logger)
@@ -181,7 +181,7 @@ class Aapt2DaemonImplTest {
                 resourceOutputApk = outputFile,
                 resourceDirs = ImmutableList.of(compiledDir),
                 options = AaptOptions(),
-                variantType = VariantType.APK
+                variantType = VariantTypeImpl.BASE_APK
         )
         val exception = assertFailsWith(Aapt2Exception::class) {
             daemon.link(request.copy(intermediateDir = temporaryFolder.newFolder()), logger)

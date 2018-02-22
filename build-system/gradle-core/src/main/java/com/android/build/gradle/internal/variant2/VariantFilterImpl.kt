@@ -20,6 +20,7 @@ import com.android.build.api.dsl.variant.VariantFilter
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.EvalIssueReporter
 
 class VariantFilterImpl(
@@ -58,8 +59,8 @@ class VariantFilterImpl(
     }
 
     fun ignores(type: VariantType) = when(type) {
-        VariantType.UNIT_TEST -> _ignoresUnitTest
-        VariantType.ANDROID_TEST -> _ignoresAndroidTest
+        VariantTypeImpl.UNIT_TEST -> _ignoresUnitTest
+        VariantTypeImpl.ANDROID_TEST -> _ignoresAndroidTest
         else -> _ignoresProd
     }
 

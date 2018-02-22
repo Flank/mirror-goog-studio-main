@@ -16,7 +16,7 @@
 
 package com.android.builder.internal.aapt.v2
 
-import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.CompileResourceRequest
@@ -96,7 +96,7 @@ class Aapt2DaemonManagerTest {
                             manifestFile = File(""),
                             androidJarPath = "",
                             options = AaptOptions(),
-                            variantType = VariantType.APK
+                            variantType = VariantTypeImpl.BASE_APK
                     ),
                     NoErrorsOrWarningsLogger()
             )

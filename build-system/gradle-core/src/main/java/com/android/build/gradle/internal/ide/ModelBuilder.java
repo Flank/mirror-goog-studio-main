@@ -58,6 +58,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.AaptOptions;
@@ -242,17 +243,17 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
         // gather the testingVariants per testedVariant
         Multimap<VariantScope, VariantScope> sortedVariants = ArrayListMultimap.create();
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
-            boolean isForTesting = variantScope.getVariantData().getType().isForTesting();
+            boolean isTestComponent = variantScope.getVariantData().getType().isTestComponent();
 
-            if (isForTesting && variantScope.getTestedVariantData() != null) {
+            if (isTestComponent && variantScope.getTestedVariantData() != null) {
                 sortedVariants.put(variantScope.getTestedVariantData().getScope(), variantScope);
             }
         }
 
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
-            boolean isForTesting = variantScope.getVariantData().getType().isForTesting();
+            boolean isTestComponent = variantScope.getType().isTestComponent();
 
-            if (!isForTesting) {
+            if (!isTestComponent) {
                 Collection<VariantScope> testingVariants = sortedVariants.get(variantScope);
                 Collection<TestVariantBuildOutput> testVariantBuildOutputs;
                 if (testingVariants == null) {
@@ -270,10 +271,8 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                                                                                     .getVariantData())
                                                                     .get(),
                                                             variantScope.getFullVariantName(),
-                                                            testVariantScope
-                                                                                    .getVariantData()
-                                                                                    .getType()
-                                                                            == VariantType
+                                                            testVariantScope.getType()
+                                                                            == VariantTypeImpl
                                                                                     .ANDROID_TEST
                                                                     ? TestVariantBuildOutput
                                                                             .TestType.ANDROID_TEST
@@ -327,7 +326,7 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
         List<ArtifactMetaData> artifactMetaDataList = Lists.newArrayList(
                 extraModelInfo.getExtraArtifacts());
 
-        for (VariantType variantType : VariantType.getTestingTypes()) {
+        for (VariantType variantType : VariantType.Companion.getTestComponents()) {
             artifactMetaDataList.add(new ArtifactMetaDataImpl(
                     variantType.getArtifactName(),
                     true /*isTest*/,
@@ -369,7 +368,7 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
         }
 
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
-            if (!variantScope.getVariantData().getType().isForTesting()) {
+            if (!variantScope.getVariantData().getType().isTestComponent()) {
                 variantNames.add(variantScope.getFullVariantName());
                 if (shouldBuildVariant) {
                     variants.add(createVariant(variantScope.getVariantData()));
@@ -444,7 +443,7 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
             throw new IllegalArgumentException("Variant name cannot be null.");
         }
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
-            if (!variantScope.getVariantData().getType().isForTesting()
+            if (!variantScope.getVariantData().getType().isTestComponent()
                     && variantScope.getFullVariantName().equals(variantName)) {
                 return createVariant(variantScope.getVariantData());
             }
@@ -475,26 +474,22 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                         .collect(Collectors.toList());
 
         if (variantData instanceof TestedVariantData) {
-            for (VariantType variantType : VariantType.getTestingTypes()) {
+            for (VariantType variantType : VariantType.Companion.getTestComponents()) {
                 TestVariantData testVariantData = ((TestedVariantData) variantData).getTestVariantData(variantType);
                 if (testVariantData != null) {
-                    VariantType type = testVariantData.getType();
-                    if (type != null) {
-                        switch (type) {
-                            case ANDROID_TEST:
-                                extraAndroidArtifacts.add(createAndroidArtifact(
-                                        variantType.getArtifactName(),
-                                        testVariantData));
-                                break;
-                            case UNIT_TEST:
-                                clonedExtraJavaArtifacts.add(createUnitTestsJavaArtifact(
-                                        variantType,
-                                        testVariantData));
-                                break;
-                            default:
-                                throw new IllegalArgumentException(
-                                        "Unsupported test variant type ${variantType}.");
-                        }
+                    switch ((VariantTypeImpl) variantType) {
+                        case ANDROID_TEST:
+                            extraAndroidArtifacts.add(
+                                    createAndroidArtifact(
+                                            variantType.getArtifactName(), testVariantData));
+                            break;
+                        case UNIT_TEST:
+                            clonedExtraJavaArtifacts.add(
+                                    createUnitTestsJavaArtifact(variantType, testVariantData));
+                            break;
+                        default:
+                            throw new IllegalArgumentException(
+                                    "Unsupported test variant type ${variantType}.");
                     }
                 }
             }
@@ -738,7 +733,7 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
         List<File> additionalRuntimeApks = new ArrayList<>();
         TestOptionsImpl testOptions = null;
 
-        if (variantData.getType().isForTesting()) {
+        if (variantData.getType().isTestComponent()) {
             Configuration testHelpers =
                     scope.getGlobalScope()
                             .getProject()
@@ -811,9 +806,14 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
             BaseVariantData variantData) {
         final VariantScope variantScope = variantData.getScope();
 
-        switch (variantData.getType()) {
-            case APK:
+        VariantTypeImpl variantType = (VariantTypeImpl) variantData.getType();
+
+        switch (variantType) {
+            case BASE_APK:
+            case OPTIONAL_APK:
+            case BASE_FEATURE:
             case FEATURE:
+            case TEST_APK:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(
                                 InternalArtifactType.APK,
@@ -883,10 +883,15 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
     private static BuildOutputSupplier<Collection<EarlySyncBuildOutput>> getManifestsSupplier(
             BaseVariantData variantData) {
 
-        switch (variantData.getType()) {
-            case APK:
-            case ANDROID_TEST:
+        VariantTypeImpl variantType = (VariantTypeImpl) variantData.getType();
+
+        switch (variantType) {
+            case BASE_APK:
+            case OPTIONAL_APK:
+            case BASE_FEATURE:
             case FEATURE:
+            case ANDROID_TEST:
+            case TEST_APK:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(InternalArtifactType.MERGED_MANIFESTS),
                         ImmutableList.of(variantData.getScope().getManifestOutputDirectory()));

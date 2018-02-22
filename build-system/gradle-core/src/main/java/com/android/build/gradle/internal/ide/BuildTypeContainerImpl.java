@@ -57,7 +57,7 @@ final class BuildTypeContainerImpl implements BuildTypeContainer, Serializable {
         List<SourceProviderContainer> clonedContainers =
                 SourceProviderContainerImpl.cloneCollection(sourceProviderContainers);
 
-        for (VariantType variantType : VariantType.getTestingTypes()) {
+        for (VariantType variantType : VariantType.Companion.getTestComponents()) {
             DefaultAndroidSourceSet testSourceSet = buildTypeData.getTestSourceSet(variantType);
             if (testSourceSet != null) {
                 clonedContainers.add(SourceProviderContainerImpl.create(

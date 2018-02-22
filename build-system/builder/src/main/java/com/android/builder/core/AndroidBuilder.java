@@ -837,7 +837,7 @@ public class AndroidBuilder {
                             aaptConfig.getLibrarySymbolTableFiles());
 
             boolean finalIds = true;
-            if (aaptConfig.getVariantType() == VariantType.LIBRARY) {
+            if (aaptConfig.getVariantType().isAar()) {
                 finalIds = false;
             }
 

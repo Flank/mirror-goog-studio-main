@@ -60,15 +60,11 @@ public class TestVariantData extends ApkVariantData {
     @NonNull
     public String getDescription() {
         String prefix;
-        switch (getType()) {
-            case ANDROID_TEST:
-                prefix = "android (on device) tests";
-                break;
-            case UNIT_TEST:
-                prefix = "unit tests";
-                break;
-            default:
-                throw new IllegalStateException("Unknown test variant type.");
+        VariantType variantType = getType();
+        if (variantType.isApk()) {
+            prefix = "android (on device) tests";
+        } else {
+            prefix = "unit tests";
         }
 
         final GradleVariantConfiguration config = getVariantConfiguration();
@@ -94,7 +90,7 @@ public class TestVariantData extends ApkVariantData {
     @NonNull
     @Override
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        if (testedVariantData.getVariantConfiguration().getType() == VariantType.FEATURE) {
+        if (testedVariantData.getVariantConfiguration().getType().isHybrid()) {
             return StringHelper.appendCapitalized(
                     prefix,
                     getVariantConfiguration().getFullName(),

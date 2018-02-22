@@ -195,8 +195,9 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                     InternalArtifactType.DATA_BINDING_ARTIFACT,
                     javacTask.dataBindingArtifactOutputDirectory,
                     javacTask.getName());
-            if (variantData.getType() == VariantType.FEATURE) {
-                if (scope.isBaseFeature()) {
+            VariantType variantType = scope.getType();
+            if (variantType.isApk() && !variantType.isForTesting()) {
+                if (variantType.isBaseModule()) {
                     javacTask
                             .getInputs()
                             .file(

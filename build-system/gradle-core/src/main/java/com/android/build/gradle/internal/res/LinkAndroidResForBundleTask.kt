@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.Aapt
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.blame.MergingLog
@@ -128,7 +129,7 @@ open class LinkAndroidResForBundleTask
                 manifestFile = manifestFile,
                 options = aaptOptions.convert(),
                 resourceOutputApk = bundledResFile,
-                variantType = VariantType.APK,
+                variantType = VariantTypeImpl.BASE_APK,
                 debuggable = debuggable,
                 pseudoLocalize = getPseudoLocalesEnabled(),
                 resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).singleFile))

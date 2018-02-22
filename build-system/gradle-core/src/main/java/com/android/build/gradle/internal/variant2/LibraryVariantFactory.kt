@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
-import com.android.build.api.dsl.variant.Variant
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.extensions.LibraryExtensionImpl
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
@@ -26,15 +25,14 @@ import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImp
 import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
-import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.core.VariantType
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.core.VariantTypeImpl
 
 class LibraryVariantFactory : VariantFactory2<LibraryExtensionImpl> {
 
-    override val generatedType: VariantType = VariantType.LIBRARY
-    override val testedBy: List<VariantType> = listOf(VariantType.ANDROID_TEST,
-            VariantType.UNIT_TEST)
+    override val generatedType: VariantType = VariantTypeImpl.LIBRARY
+    override val testedBy: List<VariantType> = listOf(VariantTypeImpl.ANDROID_TEST,
+            VariantTypeImpl.UNIT_TEST)
     override val testTarget: VariantType? = null
 
     override fun createVariant(
@@ -49,7 +47,7 @@ class LibraryVariantFactory : VariantFactory2<LibraryExtensionImpl> {
             : SealableVariant {
 
         return LibraryVariantImpl(
-                VariantType.LIBRARY,
+                VariantTypeImpl.LIBRARY,
                 variantProperties,
                 productFlavorOrVariant,
                 buildTypOrVariant,

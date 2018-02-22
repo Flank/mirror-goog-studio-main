@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.TaskContainer;
-import com.android.builder.core.VariantType;
 import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestProvider;
 import com.android.utils.FileUtils;
@@ -343,7 +342,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
             VariantConfiguration testedConfig = config.getTestedConfig();
             processTestManifestTask.onlyTestApk =
-                    testedConfig != null && testedConfig.getType() == VariantType.LIBRARY;
+                    testedConfig != null && testedConfig.getType().isAar();
 
             processTestManifestTask.instrumentationRunner =
                     TaskInputHelper.memoize(config::getInstrumentationRunner);
