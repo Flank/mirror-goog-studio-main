@@ -125,6 +125,8 @@ public class ResourceValuesXmlParserTest {
         String xml =
                 ""
                         + "<resources>"
+                        + "<eat-comment/>"
+                        + "<!-- my super resources -->"
                         + "<declare-styleable name=\"empty\"/>"
                         + "<declare-styleable name=\"oneattr\">"
                         + "  <!-- unrelated comment -->\n"
