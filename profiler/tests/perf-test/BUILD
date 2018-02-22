@@ -132,6 +132,7 @@ perf_test(
 perf_test(
     name = "EnergyTest",
     srcs = [
+        "testSrcs/com/android/tools/profiler/energy/AlarmTest.java",
         "testSrcs/com/android/tools/profiler/energy/WakeLockTest.java",
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",

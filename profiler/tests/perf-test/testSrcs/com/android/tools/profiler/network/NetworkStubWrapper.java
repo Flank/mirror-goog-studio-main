@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.network;
 
+import com.android.tools.profiler.TestUtils;
 import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
@@ -24,7 +25,6 @@ import java.util.function.Supplier;
 
 /** Wrapper of stub calls that is shared among tests. */
 final class NetworkStubWrapper {
-    private static final int SLEEP_TIME_MS = 200;
     private final NetworkServiceBlockingStub myNetworkStub;
 
     NetworkStubWrapper(NetworkServiceBlockingStub networkStub) {
@@ -49,20 +49,6 @@ final class NetworkStubWrapper {
     }
 
     /**
-     * Run the loop and wait until condition is true. This method does NOT timeout so you should
-     * only wait for conditions that are guaranteed to eventually be true.
-     */
-    void waitFor(Supplier<Boolean> condition) {
-        while (!condition.get()) {
-            try {
-                Thread.sleep(SLEEP_TIME_MS);
-            } catch (InterruptedException e) {
-                e.printStackTrace(System.out);
-            }
-        }
-    }
-
-    /**
      * Returns payload id after repeatedly fetch it until it is non-empty or time out, otherwise,
      * returns empty string. Because there is some time gap between connection tracking and payload
      * track complete, it need some time to set the payload id.
@@ -75,7 +61,7 @@ final class NetworkStubWrapper {
                             ? result.getResponseBody().getPayloadId()
                             : result.getRequestBody().getPayloadId();
                 };
-        waitFor(() -> !getPayloadId.get().isEmpty());
+        TestUtils.waitFor(() -> !getPayloadId.get().isEmpty());
         return getPayloadId.get();
     }
 }

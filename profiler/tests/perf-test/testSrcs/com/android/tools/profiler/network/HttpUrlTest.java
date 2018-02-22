@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
+import com.android.tools.profiler.TestUtils;
 import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
@@ -79,7 +80,7 @@ public class HttpUrlTest {
         final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
         HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains("?activity=HttpUrlGet")).isTrue();
-        stubWrapper.waitFor(
+        TestUtils.waitFor(
                 () -> {
                     HttpDetailsResponse details =
                             stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
@@ -131,7 +132,7 @@ public class HttpUrlTest {
 
         final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
         HttpDetailsResponse requestDetails;
-        stubWrapper.waitFor(
+        TestUtils.waitFor(
                 () -> {
                     HttpDetailsResponse details =
                             stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);

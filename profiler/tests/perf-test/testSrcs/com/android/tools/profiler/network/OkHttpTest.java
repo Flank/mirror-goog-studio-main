@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.tools.profiler.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
+import com.android.tools.profiler.TestUtils;
 import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpConnectionData;
@@ -241,7 +242,7 @@ public class OkHttpTest {
     private void assertNetworkErrorBehavior(final NetworkStubWrapper stubWrapper) {
         // Wait until get two responses: 1 aborted and 1 completed.
         // Both failed and successful requests should have valid time ranges.
-        stubWrapper.waitFor(
+        TestUtils.waitFor(
                 () -> {
                     List<HttpConnectionData> list =
                             stubWrapper.getAllHttpRange(mySession).getDataList();
@@ -274,7 +275,7 @@ public class OkHttpTest {
 
     private static void waitForResponseFields200(
             final NetworkStubWrapper stubWrapper, final long connId) {
-        stubWrapper.waitFor(
+        TestUtils.waitFor(
                 () -> {
                     HttpDetailsResponse details = stubWrapper.getHttpDetails(connId, Type.RESPONSE);
                     return details.getResponse().getFields().contains("response-status-code = 200");

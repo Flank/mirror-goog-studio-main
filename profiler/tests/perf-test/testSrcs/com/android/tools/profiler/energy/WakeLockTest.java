@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.tools.profiler.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
+import com.android.tools.profiler.TestUtils;
 import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent.MetadataCase;
@@ -30,8 +31,6 @@ import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.Level;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockReleased.ReleaseFlag;
 import com.android.tools.profiler.proto.Profiler.BytesRequest;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.junit.After;
 import org.junit.Before;
@@ -39,8 +38,6 @@ import org.junit.Test;
 
 public class WakeLockTest {
     private static final String ACTIVITY_CLASS = "com.activity.energy.WakeLockActivity";
-    private static final int RETRY_INTERVAL_MILLIS = 200;
-    private static final int RETRY_LIMIT = 10;
 
     private PerfDriver myPerfDriver;
     private GrpcUtils myGrpc;
@@ -72,9 +69,10 @@ public class WakeLockTest {
         assertThat(myAndroidDriver.waitForInput("WAKE LOCK ACQUIRED")).isTrue();
 
         EnergyEventsResponse response =
-                waitForAndReturn(
+                TestUtils.waitForAndReturn(
                         () -> myStubWrapper.getAllEnergyEvents(mySession),
                         resp -> resp.getEventsCount() == 1);
+        assertThat(response.getEventsCount()).isEqualTo(1);
 
         final EnergyEvent energyEvent = response.getEvents(0);
         assertThat(energyEvent.getTimestamp()).isGreaterThan(0L);
@@ -101,7 +99,7 @@ public class WakeLockTest {
         assertThat(myAndroidDriver.waitForInput("WAKE LOCK RELEASED")).isTrue();
 
         EnergyEventsResponse response =
-                waitForAndReturn(
+                TestUtils.waitForAndReturn(
                         () -> myStubWrapper.getAllEnergyEvents(mySession),
                         resp -> resp.getEventsCount() == 2);
         assertThat(response.getEventsCount()).isEqualTo(2);
@@ -136,31 +134,5 @@ public class WakeLockTest {
         BytesRequest stackRequest = BytesRequest.newBuilder().setId(traceId).build();
         String stack = myGrpc.getProfilerStub().getBytes(stackRequest).getContents().toStringUtf8();
         assertThat(stack).contains(ACTIVITY_CLASS);
-    }
-
-    /**
-     * Run the loop and wait until condition is true or the retry limit is reached. Returns the
-     * result afterwards.
-     *
-     * @param supplier a function that returns the desired result.
-     * @param condition tests whether the result is desired.
-     * @param <T> type of the desired result.
-     * @return the result from the last run (condition met or timeout).
-     */
-    private static <T> T waitForAndReturn(Supplier<T> supplier, Predicate<T> condition) {
-        T result = supplier.get();
-        int count = 0;
-        while (!condition.test(result) && count < RETRY_LIMIT) {
-            System.out.println("Retrying condition");
-            ++count;
-            try {
-                Thread.sleep(RETRY_INTERVAL_MILLIS);
-            } catch (InterruptedException e) {
-                e.printStackTrace(System.out);
-                break;
-            }
-            result = supplier.get();
-        }
-        return result;
     }
 }

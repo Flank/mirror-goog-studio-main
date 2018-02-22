@@ -179,7 +179,8 @@ message AlarmSet {
   // Interval in milliseconds between subsequent repeats of the alarm. Used by
   // AlarmManager.setRepeating() and AlarmManager.setInexactRepeating().
   int64 interval_ms = 4;
-  oneof action {
+  // The alarm action can either be a PendingIntent or an AlarmListener.
+  oneof set_action {
     // Metadata of the action to perform when the alarm goes off.
     PendingIntent operation = 5;
     // Metadata of the alarm listener whose onAlarm() method will be called when
@@ -189,7 +190,8 @@ message AlarmSet {
 }
 
 message AlarmCancelled {
-  oneof action {
+  // The alarm action can either be a PendingIntent or an AlarmListener.
+  oneof cancel_action {
     // A previously set operation.
     PendingIntent operation = 1;
     // A previously set listener.
@@ -208,5 +210,5 @@ message PendingIntent {
 message AlarmListener {
   // String describing the alarm listener, used for logging and battery-use
   // attribution.
-  string listener_tag = 1;
+  string tag = 1;
 }

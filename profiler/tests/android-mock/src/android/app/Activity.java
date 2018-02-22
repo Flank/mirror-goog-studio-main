@@ -44,4 +44,8 @@ public class Activity {
     public PowerManager getPowerManager() {
         return new PowerManager();
     }
+
+    public AlarmManager getAlarmManager() {
+        return new AlarmManager();
+    }
 }
