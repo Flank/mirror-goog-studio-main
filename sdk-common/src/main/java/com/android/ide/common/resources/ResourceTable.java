@@ -29,7 +29,6 @@ import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
 import java.util.HashMap;
 import java.util.List;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
  * Mutable, three-dimensional table for storing {@link ResourceItem}, indexed by components of a
@@ -93,54 +92,6 @@ public final class ResourceTable
             put(namespace, resourceType, multimap);
         }
         return multimap;
-    }
-
-    /**
-     * Updates this {@link ResourceTable} by listening to events emitted by the {@link
-     * ResourceMerger}.
-     *
-     * <p>Only makes sense for a newly created {@link ResourceTable} or if the table was initialized
-     * by the same {@link ResourceMerger} before.
-     */
-    public void update(ResourceMerger merger) {
-        MergeConsumer<ResourceItem> mergeConsumer =
-                new MergeConsumer<ResourceItem>() {
-                    @Override
-                    public void start(@NonNull DocumentBuilderFactory factory) {}
-
-                    @Override
-                    public void end() {}
-
-                    @Override
-                    public void addItem(@NonNull ResourceItem item) {
-                        if (item.isTouched()) {
-                            ListMultimap<String, ResourceItem> multimap =
-                                    ResourceTable.this.getOrPutEmpty(
-                                            item.getNamespace(), item.getType());
-
-                            if (!multimap.containsEntry(item.getName(), item)) {
-                                multimap.put(item.getName(), item);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void removeItem(
-                            @NonNull ResourceItem removedItem, @Nullable ResourceItem replacedBy) {
-                        ResourceTable.this.remove(removedItem);
-                    }
-
-                    @Override
-                    public boolean ignoreItemInMerge(ResourceItem item) {
-                        // we never ignore any item.
-                        return false;
-                    }
-                };
-        try {
-            merger.mergeData(mergeConsumer, true);
-        } catch (MergingException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Nullable

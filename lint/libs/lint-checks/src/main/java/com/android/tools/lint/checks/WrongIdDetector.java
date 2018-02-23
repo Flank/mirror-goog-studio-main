@@ -39,7 +39,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.resources.AbstractResourceRepository;
-import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -494,10 +493,9 @@ public class WrongIdDetector extends LayoutDetector {
                 return false;
             }
             for (ResourceItem item : items) {
-                ResourceFile source = item.getSource();
+                File source = item.getFile();
                 if (source != null) {
-                    File file = source.getFile();
-                    if (file.getParentFile().getName().startsWith(FD_RES_VALUES)) {
+                    if (source.getParentFile().getName().startsWith(FD_RES_VALUES)) {
                         if (mDeclaredIds == null) {
                             mDeclaredIds = Sets.newHashSet();
                         }
@@ -508,7 +506,7 @@ public class WrongIdDetector extends LayoutDetector {
                     // Ignore definitions in the given file. This is used to ignore
                     // matches in the same file as the reference, since the reference
                     // is often expressed as a definition
-                    if (!isSameResourceFile(file, notIn)) {
+                    if (!isSameResourceFile(source, notIn)) {
                         return true;
                     }
                 }

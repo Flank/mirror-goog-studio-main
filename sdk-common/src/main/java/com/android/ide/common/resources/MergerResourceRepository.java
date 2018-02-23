@@ -24,7 +24,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import java.util.Set;
 
-public final class ResourceRepository extends AbstractResourceRepository {
+/** Simple repository implementation that just stores what the {@link ResourceMerger} emits. */
+public final class MergerResourceRepository extends AbstractResourceRepository {
     private final ResourceTable resourceTable = new ResourceTable();
 
     @NonNull
@@ -49,5 +50,9 @@ public final class ResourceRepository extends AbstractResourceRepository {
     @Override
     public Set<ResourceNamespace> getNamespaces() {
         return resourceTable.rowKeySet();
+    }
+
+    public void update(@NonNull ResourceMerger merger) {
+        ResourceRepositories.updateTableFromMerger(merger, resourceTable);
     }
 }

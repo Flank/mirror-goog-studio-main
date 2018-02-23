@@ -63,11 +63,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
- * A {@link MergeWriter} for assets, using {@link ResourceItem}. Also takes care of compiling
+ * A {@link MergeWriter} for assets, using {@link ResourceMergerItem}. Also takes care of compiling
  * resources and stripping data binding from layout files.
  */
 public class MergedResourceWriter
-        extends MergeWriter<ResourceItem, MergedResourceWriter.FileGenerationParameters> {
+        extends MergeWriter<ResourceMergerItem, MergedResourceWriter.FileGenerationParameters> {
 
     @NonNull
     private final ResourcePreprocessor mPreprocessor;
@@ -85,10 +85,8 @@ public class MergedResourceWriter
     /** Compiler for resources */
     @NonNull private final ResourceCompilationService mResourceCompiler;
 
-    /**
-     * map of XML values files to write after parsing all the files. the key is the qualifier.
-     */
-    private ListMultimap<String, ResourceItem> mValuesResMap;
+    /** Map of XML values files to write after parsing all the files. the key is the qualifier. */
+    private ListMultimap<String, ResourceMergerItem> mValuesResMap;
 
     /**
      * Set of qualifier that had a previously written resource now gone. This is to keep a list of
@@ -134,8 +132,8 @@ public class MergedResourceWriter
             new ConcurrentLinkedQueue<>();
 
     /**
-     * A {@link MergeWriter} for resources, using {@link ResourceItem}. Also takes care of compiling
-     * resources and stripping data binding from layout files.
+     * A {@link MergeWriter} for resources, using {@link ResourceMergerItem}. Also takes care of
+     * compiling resources and stripping data binding from layout files.
      *
      * @param rootFolder merged resources directory to write to (e.g. {@code
      *     intermediates/res/merged/debug})
@@ -337,12 +335,12 @@ public class MergedResourceWriter
     }
 
     @Override
-    public boolean ignoreItemInMerge(ResourceItem item) {
+    public boolean ignoreItemInMerge(ResourceMergerItem item) {
         return item.getIgnoredFromDiskMerge();
     }
     
     @Override
-    public void addItem(@NonNull final ResourceItem item) throws ConsumerException {
+    public void addItem(@NonNull final ResourceMergerItem item) throws ConsumerException {
         final ResourceFile.FileType type = item.getSourceType();
 
         if (type == ResourceFile.FileType.XML_VALUES) {
@@ -380,11 +378,11 @@ public class MergedResourceWriter
     }
 
     public static class FileGenerationParameters implements Serializable {
-        public final ResourceItem resourceItem;
+        public final ResourceMergerItem resourceItem;
         public final ResourcePreprocessor resourcePreprocessor;
 
         private FileGenerationParameters(
-                ResourceItem resourceItem, ResourcePreprocessor resourcePreprocessor) {
+                ResourceMergerItem resourceItem, ResourcePreprocessor resourcePreprocessor) {
             this.resourceItem = resourceItem;
             this.resourcePreprocessor = resourcePreprocessor;
         }
@@ -416,7 +414,8 @@ public class MergedResourceWriter
     }
 
     @Override
-    public void removeItem(@NonNull ResourceItem removedItem, @Nullable ResourceItem replacedBy)
+    public void removeItem(
+            @NonNull ResourceMergerItem removedItem, @Nullable ResourceMergerItem replacedBy)
             throws ConsumerException {
         ResourceFile.FileType removedType = removedItem.getSourceType();
         ResourceFile.FileType replacedType = replacedBy != null
@@ -474,11 +473,11 @@ public class MergedResourceWriter
             boolean mustWriteFile = mQualifierWithDeletedValues.remove(key);
 
             // get the list of items to write
-            List<ResourceItem> items = mValuesResMap.get(key);
+            List<ResourceMergerItem> items = mValuesResMap.get(key);
 
             // now check if we really have to write it
             if (!mustWriteFile) {
-                for (ResourceItem item : items) {
+                for (ResourceMergerItem item : items) {
                     if (item.isTouched()) {
                         mustWriteFile = true;
                         break;
@@ -518,7 +517,7 @@ public class MergedResourceWriter
 
                     Collections.sort(items);
 
-                    for (ResourceItem item : items) {
+                    for (ResourceMergerItem item : items) {
                         Node nodeValue = item.getValue();
                         if (nodeValue != null && publicTag.equals(nodeValue.getNodeName())) {
                             if (publicNodes == null) {
@@ -644,7 +643,7 @@ public class MergedResourceWriter
      * @return the file
      */
     @NonNull
-    private File getResourceOutputFile(@NonNull ResourceItem resourceItem) {
+    private File getResourceOutputFile(@NonNull ResourceMergerItem resourceItem) {
         File file = resourceItem.getFile();
         String compiledFilePath = mCompiledFileMap.getProperty(file.getAbsolutePath());
         if (compiledFilePath != null) {
@@ -662,7 +661,8 @@ public class MergedResourceWriter
      *
      * @param resourceItem the source item that could have created the file to remove
      */
-    private void removeLayoutFileFromDataBindingOutputFolder(@NonNull ResourceItem resourceItem) {
+    private void removeLayoutFileFromDataBindingOutputFolder(
+            @NonNull ResourceMergerItem resourceItem) {
         File originalFile = resourceItem.getFile();
         // Only files that come from layout folders and are XML files could have been stripped.
         if (!originalFile.getParentFile().getName().startsWith("layout")
@@ -672,7 +672,7 @@ public class MergedResourceWriter
         dataBindingExpressionRemover.processRemovedFile(originalFile);
     }
 
-    private void removeFileFromNotCompiledOutputDir(@NonNull ResourceItem resourceItem) {
+    private void removeFileFromNotCompiledOutputDir(@NonNull ResourceMergerItem resourceItem) {
         File originalFile = resourceItem.getFile();
         File resTypeDir =
                 new File(notCompiledOutputDirectory, originalFile.getParentFile().getName());
@@ -687,7 +687,7 @@ public class MergedResourceWriter
      *     file associated with it
      * @return true if success.
      */
-    private boolean removeOutFile(ResourceItem resourceItem) {
+    private boolean removeOutFile(ResourceMergerItem resourceItem) {
         File fileToRemove = getResourceOutputFile(resourceItem);
         if (dataBindingExpressionRemover != null) {
             // The file could have possibly been a layout file with data binding.
@@ -721,7 +721,7 @@ public class MergedResourceWriter
      * @return a relative folder name
      */
     @NonNull
-    private static String getFolderName(ResourceItem resourceItem) {
+    private static String getFolderName(ResourceMergerItem resourceItem) {
         ResourceType itemType = resourceItem.getType();
         String folderName = itemType.getName();
         String qualifiers = resourceItem.getQualifiers();

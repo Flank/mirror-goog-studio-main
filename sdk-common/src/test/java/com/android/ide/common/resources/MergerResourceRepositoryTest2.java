@@ -37,16 +37,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
 import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
-public class ResourceRepositoryTest2 extends TestCase {
+public class MergerResourceRepositoryTest2 extends TestCase {
     private final ResourceRepositoryFixture resourceFixture = new ResourceRepositoryFixture();
     private File mTempDir;
     private File mRes;
     private ResourceMerger mResourceMerger;
-    private ResourceRepository mRepository;
+    private MergerResourceRepository mRepository;
     private ILogger mLogger;
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -132,8 +131,8 @@ public class ResourceRepositoryTest2 extends TestCase {
         resourceSet.loadFromFiles(mLogger = new RecordingLogger());
         mResourceMerger.addDataSet(resourceSet);
 
-        mRepository = new ResourceRepository();
-        mRepository.getItems().update(mResourceMerger);
+        mRepository = new MergerResourceRepository();
+        mRepository.update(mResourceMerger);
     }
 
     @Override
@@ -173,7 +172,9 @@ public class ResourceRepositoryTest2 extends TestCase {
         assertEquals(1, itemList.size());
         for (ResourceItem item : itemList) {
             assertEquals("menu_settings", item.getName());
-            assertEquals("@string/menu_settings", item.getXmlString(ResourceType.STRING, false));
+            assertEquals(
+                    "@string/menu_settings",
+                    ((ResourceMergerItem) item).getXmlString(ResourceType.STRING, false));
         }
         //assertTrue(item.hasDefault());
 
@@ -182,7 +183,9 @@ public class ResourceRepositoryTest2 extends TestCase {
         assertTrue(itemList.size() > 1);
         for (ResourceItem item : itemList) {
             assertEquals("show_all_apps", item.getName());
-            assertEquals("@string/show_all_apps", item.getXmlString(ResourceType.STRING, false));
+            assertEquals(
+                    "@string/show_all_apps",
+                    ((ResourceMergerItem) item).getXmlString(ResourceType.STRING, false));
         }
         //assertTrue(item.hasDefault());
         FolderConfiguration folderConfig = new FolderConfiguration();
@@ -207,7 +210,7 @@ public class ResourceRepositoryTest2 extends TestCase {
         assertNotNull(itemList);
         //assertFalse(item.hasDefault());
         assertEquals(1, itemList.size());
-        ResourceFile resourceFile = itemList.get(0).getSource();
+        ResourceFile resourceFile = ((ResourceMergerItem) itemList.get(0)).getSource();
         assertEquals("only_land.xml", resourceFile.getFile().getName());
         assertEquals(ScreenOrientation.LANDSCAPE.getResourceValue(), resourceFile.getQualifiers());
 
@@ -215,21 +218,6 @@ public class ResourceRepositoryTest2 extends TestCase {
         assertNotNull(itemList);
         //assertTrue(item.hasDefault());
         assertEquals(2, itemList.size());
-
-        SortedSet<String> languages = mRepository.getLanguages();
-        assertEquals(2, languages.size());
-        assertTrue(languages.contains("es"));
-        assertTrue(languages.contains("kok"));
-        assertEquals(Collections.singleton("US"), mRepository.getRegions("es"));
-        assertEquals(Collections.singleton("IN"), mRepository.getRegions("kok"));
-
-//        List<ResourceFile> layouts = mRepository.getSourceFiles(ResourceType.LAYOUT, "layout1",
-//                folderConfig);
-//        assertNotNull(layouts);
-//        assertEquals(1, layouts.size());
-//        com.android.ide.common.resources.ResourceFile file1 = layouts.get(0);
-//        assertEquals("layout1.xml", file1.getFile().getName());
-//        assertSame(mRepository, file1.getRepository());
     }
 
     public void testGetConfiguredResources() throws Exception {
@@ -251,45 +239,6 @@ public class ResourceRepositoryTest2 extends TestCase {
         assertEquals("Todo", strings.get("show_all_apps").getValue());
         assertEquals(3, layouts.size());
         assertNotNull(layouts.get("layout1"));
-
-        ResourceFile file = mRepository.getMatchingFile("dialog_min_width_major",
-                ResourceType.DIMEN, folderConfig);
-        assertNotNull(file);
-//        file = mRepository.getMatchingFile("dialog_min_width_major", ResourceFolderType.VALUES,
-//                folderConfig);
-//        assertNotNull(file);
-//        file = mRepository.getMatchingFile("layout1", ResourceFolderType.LAYOUT, folderConfig);
-//        assertNotNull(file);
-        file = mRepository.getMatchingFile("layout1", ResourceType.LAYOUT, folderConfig);
-        assertNotNull(file);
-    }
-
-    public void testGetMatchingFileAliases() throws Exception {
-        FolderConfiguration folderConfig = new FolderConfiguration();
-        folderConfig.setLocaleQualifier(LocaleQualifier.getQualifier("es"));
-        folderConfig.setScreenOrientationQualifier(
-                new ScreenOrientationQualifier(ScreenOrientation.LANDSCAPE));
-
-        Map<ResourceType, ResourceValueMap> configuredResources =
-                mRepository.getConfiguredResources(folderConfig).row(ResourceNamespace.RES_AUTO);
-        ResourceValueMap layouts = configuredResources.get(ResourceType.LAYOUT);
-        assertEquals(6, layouts.size());
-        assertNotNull(layouts.get("layout1"));
-
-        folderConfig.setLocaleQualifier(LocaleQualifier.getQualifier("es-rES"));
-        ResourceFile file = mRepository.getMatchingFile("dialog_min_width_major",
-                ResourceType.DIMEN, folderConfig);
-        assertNotNull(file);
-        file = mRepository.getMatchingFile("layout2", ResourceType.LAYOUT, folderConfig);
-        assertNotNull(file);
-        assertEquals("layout2.xml", file.getFile().getName());
-        assertEquals("", file.getQualifiers());
-
-        folderConfig.setLocaleQualifier(LocaleQualifier.getQualifier("es-rUS"));
-        file = mRepository.getMatchingFile("layout2", ResourceType.LAYOUT, folderConfig);
-        assertNotNull(file);
-        assertEquals("layout1.xml", file.getFile().getName());
-        assertEquals("land", file.getQualifiers());
     }
 
     public void testUpdates() throws Exception {
@@ -307,7 +256,7 @@ public class ResourceRepositoryTest2 extends TestCase {
         File graphicFile = new File(drawableFolder, "graphic.9.png");
 
         resourceSet.updateWith(mRes, graphicFile, FileStatus.REMOVED, mLogger);
-        mRepository.getItems().update(mResourceMerger);
+        mRepository.update(mResourceMerger);
 
         assertFalse(mRepository.hasResourceItem("@drawable/graphic"));
         assertFalse(mRepository.hasResourcesOfType(ResourceType.DRAWABLE));
@@ -323,7 +272,7 @@ public class ResourceRepositoryTest2 extends TestCase {
         File layoutFile = new File(layoutFolder, "layout1.xml");
 
         resourceSet.updateWith(mRes, layoutFile, FileStatus.REMOVED, mLogger);
-        mRepository.getItems().update(mResourceMerger);
+        mRepository.update(mResourceMerger);
 
         // We still have a layout1: only default now
         assertTrue(mRepository.hasResourceItem("@layout/layout1"));
@@ -337,7 +286,7 @@ public class ResourceRepositoryTest2 extends TestCase {
         itemList = mRepository.getResourceItem(ResourceType.STRING, "dummy");
         assertNotNull(itemList);
         assertNotNull(itemList.get(0));
-        ResourceFile stringResFile = itemList.get(0).getSource();
+        ResourceFile stringResFile = ((ResourceMergerItem) itemList.get(0)).getSource();
         File stringFile = stringResFile.getFile();
         assertTrue(stringFile.exists());
         String strings = Files.toString(stringFile, Charsets.UTF_8);
@@ -346,7 +295,7 @@ public class ResourceRepositoryTest2 extends TestCase {
         Files.write(strings, stringFile, Charsets.UTF_8);
 
         resourceSet.updateWith(mRes, stringFile, FileStatus.CHANGED, mLogger);
-        mRepository.getItems().update(mResourceMerger);
+        mRepository.update(mResourceMerger);
 
         assertTrue(mRepository.hasResourceItem("@string/myDummy"));
         assertFalse(mRepository.hasResourceItem("@string/dummy"));
@@ -358,7 +307,7 @@ public class ResourceRepositoryTest2 extends TestCase {
         boolean created = newFile.createNewFile();
         assertTrue(created);
         resourceSet.updateWith(mRes, newFile, FileStatus.NEW, mLogger);
-        mRepository.getItems().update(mResourceMerger);
+        mRepository.update(mResourceMerger);
         assertTrue(mRepository.hasResourceItem("@layout/layout5"));
     }
 
@@ -380,7 +329,7 @@ public class ResourceRepositoryTest2 extends TestCase {
                         + "         the placeholders. -->\n"
                         + "    <string name=\"fileSizeSuffix\"><xliff:g id=\"number\" example=\"123\">%1$s</xliff:g><xliff:g id=\"unit\" example=\"KB\">%2$s</xliff:g></string>"
                         + "</resources>\n";
-        ResourceRepository resources =
+        MergerResourceRepository resources =
                 resourceFixture.createTestResources(
                         ResourceNamespace.TODO, new Object[] {"values/strings.xml", content});
 

@@ -13,43 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.ide.common.resources;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.resources.ResourceType;
+import java.io.File;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
- * Override of the normal ResourceItem to handle merged item cases.
- * This is mostly to deal with items that do not have a matching source file.
- * This class overrides the method returning the qualifier or the source type, to directly
- * return a value instead of relying on a source file (since merged items don't have any).
+ * A {@link ResourceMergerItem} that is generated, it knows its generated file path, which is not
+ * the same as as the owner ResourceFile.
  */
-public class MergedResourceItem extends SourcelessResourceItem {
-    @NonNull private final String mQualifiers;
+public class GeneratedResourceMergerItem extends SourcelessResourceMergerItem {
 
-    /**
-     * Constructs the object with a name, type and optional value.
-     *
-     * <p>Note that the object is not fully usable as-is. It must be added to a ResourceFile
-     * first.
-     *
-     * @param name the name of the resource
-     * @param type the type of the resource
-     * @param qualifiers the qualifiers of the resource
-     * @param value an optional Node that represents the resource value.
-     * @param libraryName name of library where resource came from if any
-     */
-    public MergedResourceItem(
+    private final File mGeneratedFile;
+
+    private final String mQualifiers;
+
+    public GeneratedResourceMergerItem(
             @NonNull String name,
             @NonNull ResourceNamespace namespace,
+            @NonNull File generatedFile,
             @NonNull ResourceType type,
             @NonNull String qualifiers,
-            @Nullable Node value,
             @Nullable String libraryName) {
-        super(name, namespace, type, value, libraryName);
+        super(name, namespace, type, null, libraryName);
+        mGeneratedFile = generatedFile;
         mQualifiers = qualifiers;
     }
 
@@ -60,8 +55,16 @@ public class MergedResourceItem extends SourcelessResourceItem {
     }
 
     @Override
-    @NonNull
-    public DataFile.FileType getSourceType() {
-        return DataFile.FileType.XML_VALUES;
+    public File getFile() {
+        return mGeneratedFile;
+    }
+
+    @Override
+    Node getDetailsXml(Document document) {
+        Element element = document.createElement("generated-file");
+        element.setAttribute(SdkConstants.ATTR_PATH, mGeneratedFile.getAbsolutePath());
+        element.setAttribute(SdkConstants.ATTR_TYPE, getType().getName());
+        element.setAttribute(ResourceFile.ATTR_QUALIFIER, mQualifiers);
+        return element;
     }
 }

@@ -29,7 +29,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.resources.AbstractResourceRepository;
-import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -238,17 +237,16 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
 
         // Check if at least one drawable with this name is a vector.
         for (ResourceItem item : items) {
-            ResourceFile source = item.getSource();
+            File source = item.getFile();
             if (source == null) {
                 return false;
             }
 
-            File file = source.getFile();
-            if (!file.getPath().endsWith(SdkConstants.DOT_XML)) {
+            if (!source.getPath().endsWith(SdkConstants.DOT_XML)) {
                 continue;
             }
 
-            return SdkConstants.TAG_VECTOR.equals(XmlUtils.getRootTagName(file));
+            return SdkConstants.TAG_VECTOR.equals(XmlUtils.getRootTagName(source));
         }
 
         return false;

@@ -41,11 +41,13 @@ import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.AbstractResourceRepository;
+import com.android.ide.common.resources.MergerResourceRepository;
 import com.android.ide.common.resources.MergingException;
 import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.ide.common.resources.ResourceMerger;
-import com.android.ide.common.resources.ResourceRepository;
+import com.android.ide.common.resources.ResourceMergerItem;
+import com.android.ide.common.resources.ResourceRepositories;
 import com.android.ide.common.resources.ResourceSet;
 import com.android.resources.ResourceType;
 import com.android.sdklib.AndroidTargetHash;
@@ -890,7 +892,7 @@ public class TestLintClient extends LintCliClient {
             return null;
         }
 
-        ResourceRepository repository = new ResourceRepository();
+        MergerResourceRepository repository = new MergerResourceRepository();
         ILogger logger = new StdLogger(StdLogger.Level.INFO);
         ResourceMerger merger = new ResourceMerger(0);
 
@@ -914,7 +916,7 @@ public class TestLintClient extends LintCliClient {
         try {
             resourceSet.loadFromFiles(logger);
             merger.addDataSet(resourceSet);
-            repository.getItems().update(merger);
+            repository.update(merger);
 
             // Make tests stable: sort the item lists!
             for (ListMultimap<String, ResourceItem> multimap : repository.getItems().values()) {
@@ -929,13 +931,12 @@ public class TestLintClient extends LintCliClient {
             ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
             if (layouts != null) {
                 for (ResourceItem item : layouts.values()) {
-                    ResourceFile source = item.getSource();
+                    File source = item.getFile();
                     if (source == null) {
                         continue;
                     }
-                    File file = source.getFile();
                     try {
-                        String xml = Files.toString(file, Charsets.UTF_8);
+                        String xml = Files.toString(source, Charsets.UTF_8);
                         Document document = XmlUtils.parseDocumentSilently(xml, true);
                         assertNotNull(document);
                         Set<String> ids = Sets.newHashSet();
@@ -945,14 +946,14 @@ public class TestLintClient extends LintCliClient {
                                     items.computeIfAbsent(
                                             ResourceType.ID, k -> ArrayListMultimap.create());
                             for (String id : ids) {
-                                ResourceItem idItem =
-                                        new ResourceItem(
+                                ResourceMergerItem idItem =
+                                        new ResourceMergerItem(
                                                 id,
                                                 ResourceNamespace.TODO,
                                                 ResourceType.ID,
                                                 null,
                                                 null);
-                                String qualifiers = file.getParentFile().getName();
+                                String qualifiers = source.getParentFile().getName();
                                 if (qualifiers.startsWith("layout-")) {
                                     qualifiers = qualifiers.substring("layout-".length());
                                 } else if (qualifiers.equals("layout")) {
@@ -962,7 +963,7 @@ public class TestLintClient extends LintCliClient {
                                 // Creating the resource file will set the source of
                                 // idItem.
                                 //noinspection ResultOfObjectAllocationIgnored
-                                ResourceFile.createSingle(file, idItem, qualifiers);
+                                ResourceFile.createSingle(source, idItem, qualifiers);
                                 idMap.put(id, idItem);
                             }
                         }

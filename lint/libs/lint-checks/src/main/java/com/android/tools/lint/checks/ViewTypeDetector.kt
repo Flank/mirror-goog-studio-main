@@ -383,10 +383,9 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
 
     protected open fun getViewTags(context: Context, item: ResourceItem): Collection<String>? {
         // Check view tag in this file.
-        val source = item.source
+        val source = item.file
         if (source != null) {
-            val file = source.file
-            val map = getIdToTagsIn(context, file) // This is cached
+            val map = getIdToTagsIn(context, source) // This is cached
             if (map != null) {
                 return map.get(item.name)
             }
@@ -520,13 +519,12 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             for (item in items) {
                 val t = getViewTags(context, item)
                 if (t != null && t.contains(displayTag)) {
-                    val source = item.source
+                    val source = item.file
                     if (source != null) {
-                        val file = source.file
-                        sampleLayout = if (source.folderConfiguration.isDefault) {
-                            file.name
+                        sampleLayout = if (item.configuration.isDefault) {
+                            source.name
                         } else {
-                            file.parentFile.name + "/" + file.name
+                            source.parentFile.name + "/" + source.name
                         }
                         break
                     }

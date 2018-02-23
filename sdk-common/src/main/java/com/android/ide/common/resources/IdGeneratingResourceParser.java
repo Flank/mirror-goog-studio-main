@@ -52,8 +52,8 @@ import org.xml.sax.SAXException;
 @Deprecated
 class IdGeneratingResourceParser {
 
-    private final ResourceItem mFileResourceItem;
-    private final List<ResourceItem> mIdResourceItems;
+    private final ResourceMergerItem mFileResourceMergerItem;
+    private final List<ResourceMergerItem> mIdResourceMergerItems;
     private final ResourceNamespace mNamespace;
 
     /**
@@ -64,7 +64,7 @@ class IdGeneratingResourceParser {
      * @param file the file to parse
      * @param sourceName the name of the file-based resource (derived from xml filename)
      * @param sourceType the type of the file-based resource (e.g., menu).
-     * @param namespace the namespace of generated {@link ResourceItem} objects.
+     * @param namespace the namespace of generated {@link ResourceMergerItem} objects.
      * @throws MergingException if given a data-binding file, or fails to parse.
      */
     IdGeneratingResourceParser(
@@ -78,17 +78,18 @@ class IdGeneratingResourceParser {
             throw MergingException.withMessage("Does not handle data-binding files").build();
         }
         mNamespace = namespace;
-        mFileResourceItem = new IdResourceItem(sourceName, mNamespace, sourceType);
-        mIdResourceItems = Lists.newArrayList();
+        mFileResourceMergerItem = new IdResourceMergerItem(sourceName, mNamespace, sourceType);
+        mIdResourceMergerItems = Lists.newArrayList();
         final Set<String> pendingResourceIds = Sets.newHashSet();
         NodeList nodes = mDocument.getChildNodes();
         for (int i = 0; i < nodes.getLength(); ++i) {
             Node child = nodes.item(i);
-            parseIds(mIdResourceItems, child, pendingResourceIds);
+            parseIds(mIdResourceMergerItems, child, pendingResourceIds);
         }
         for (String id : pendingResourceIds) {
-            ResourceItem resourceItem = new IdResourceItem(id, mNamespace, ResourceType.ID);
-            mIdResourceItems.add(resourceItem);
+            ResourceMergerItem resourceItem =
+                    new IdResourceMergerItem(id, mNamespace, ResourceType.ID);
+            mIdResourceMergerItems.add(resourceItem);
         }
     }
 
@@ -111,17 +112,17 @@ class IdGeneratingResourceParser {
     }
 
     @NonNull
-    public ResourceItem getFileResourceItem() {
-        return mFileResourceItem;
+    public ResourceMergerItem getFileResourceMergerItem() {
+        return mFileResourceMergerItem;
     }
 
     @NonNull
-    public List<ResourceItem> getIdResourceItems() {
-        return mIdResourceItems;
+    public List<ResourceMergerItem> getIdResourceMergerItems() {
+        return mIdResourceMergerItems;
     }
 
     private void parseIds(
-            @NonNull List<ResourceItem> items,
+            @NonNull List<ResourceMergerItem> items,
             @NonNull Node node,
             @NonNull Set<String> pendingResourceIds) {
         NamedNodeMap attributes = node.getAttributes();
@@ -163,7 +164,8 @@ class IdGeneratingResourceParser {
                         }
                         pendingResourceIds.remove(id);
                         if (!id.isEmpty()) {
-                            ResourceItem item = new IdResourceItem(id, mNamespace, ResourceType.ID);
+                            ResourceMergerItem item =
+                                    new IdResourceMergerItem(id, mNamespace, ResourceType.ID);
                             items.add(item);
                         }
                     }
@@ -178,10 +180,11 @@ class IdGeneratingResourceParser {
     }
 
     /**
-     * A ResourceItem representing an ID item or the source XML file item (ResourceType.LAYOUT, etc),
-     * from an ID-generating XML file that supports blob writing without having to link to the source XML.
+     * A ResourceMergerItem representing an ID item or the source XML file item
+     * (ResourceType.LAYOUT, etc), from an ID-generating XML file that supports blob writing without
+     * having to link to the source XML.
      */
-    private static class IdResourceItem extends ResourceItem {
+    private static class IdResourceMergerItem extends ResourceMergerItem {
         /**
          * Constructs the resource with a given name and type. Note that the object is not fully
          * usable as-is. It must be added to a ResourceFile first.
@@ -189,7 +192,7 @@ class IdGeneratingResourceParser {
          * @param name the name of the resource
          * @param type the type of the resource (ID, layout, menu).
          */
-        public IdResourceItem(
+        public IdResourceMergerItem(
                 @NonNull String name,
                 @NonNull ResourceNamespace namespace,
                 @NonNull ResourceType type) {

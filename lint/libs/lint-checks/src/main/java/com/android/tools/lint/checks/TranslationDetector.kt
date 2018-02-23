@@ -313,7 +313,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
 
         val items: List<ResourceItem> =
             resources.getResourceItems(context.project.resourceNamespace, type, name)
-        val hasDefault = items.filter { isDefaultFolder(null, null, it.qualifiers) }.any()
+        val hasDefault = items.filter { isDefaultFolder(it.configuration, null) }.any()
         if (!hasDefault) {
             reportExtraResource(type, name, context, element)
         } else if (type == STRING &&
@@ -343,7 +343,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
 
             for (item in items) {
                 val qualifiers = run {
-                    val s = item.qualifiers
+                    val s = item.configuration.qualifierString
                     val index = s.indexOf('-')
                     if (index != -1) {
                         s.substring(0, index)
@@ -372,7 +372,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         defaultLocale: String?
     ) {
         // Batch mode
-        val isDefault = isDefaultFolder(context.getFolderConfiguration(), folderName, null)
+        val isDefault = isDefaultFolder(context.getFolderConfiguration(), folderName)
         if (isDefault) {
             // Base folder
             if (context.phase == 1) {
@@ -452,11 +452,10 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
      */
     private fun isDefaultFolder(
         configuration: FolderConfiguration?,
-        folderName: String?,
-        qualifiers: String?
+        folderName: String?
     ): Boolean {
-        val config: FolderConfiguration
-        when {
+        val config: FolderConfiguration = when {
+            configuration != null -> configuration
             folderName != null -> {
                 if (!folderName.contains('-')) {
                     return true
@@ -468,25 +467,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                     return false
                 }
 
-                config = configuration
-                        ?: FolderConfiguration.getConfigForFolder(folderName)
-                        ?: return false
-            }
-            qualifiers != null -> {
-                if (qualifiers.isBlank()) {
-                    return true
-                }
-
-                // Cheap underestimate:
-                if (!qualifiers.contains("dpi") &&
-                    !(qualifiers.startsWith("v") || qualifiers.contains("-v"))
-                ) {
-                    return false
-                }
-
-                config = configuration
-                        ?: FolderConfiguration.getConfigForQualifierString(qualifiers)
-                        ?: return false
+                FolderConfiguration.getConfigForFolder(folderName) ?: return false
             }
             else -> {
                 assert(false)
@@ -494,19 +475,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             }
         }
 
-        if (config.any { it !is DensityQualifier && it !is VersionQualifier }) {
-            return false
-        }
-//        })
-//        for (qualifier in config.qualifiers) {
-//            if (qualifier.isValid) {
-//                if (qualifier !is DensityQualifier && qualifier !is VersionQualifier) {
-//                    return false
-//                }
-//            }
-//        }
-
-        return true
+        return !config.any { it !is DensityQualifier && it !is VersionQualifier }
     }
 
     private fun recordTranslation(name: String, language: String) {

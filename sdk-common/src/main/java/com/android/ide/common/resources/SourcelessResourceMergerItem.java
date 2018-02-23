@@ -23,11 +23,12 @@ import com.android.resources.ResourceType;
 import org.w3c.dom.Node;
 
 /**
- * Resource items that have no source file (qualifiers and folder configuration supplied by other means).
+ * Resource items that have no source file (qualifiers and folder configuration supplied by other
+ * means).
  */
-public abstract class SourcelessResourceItem extends ResourceItem {
+public abstract class SourcelessResourceMergerItem extends ResourceMergerItem {
 
-    public SourcelessResourceItem(
+    public SourcelessResourceMergerItem(
             @NonNull String name,
             @NonNull ResourceNamespace namespace,
             @NonNull ResourceType type,
@@ -37,12 +38,16 @@ public abstract class SourcelessResourceItem extends ResourceItem {
     }
 
     /**
-     * Determine the FolderConfiguration from the item's qualifiers instead of from {@link #getSource()}.
+     * Determine the FolderConfiguration from the item's qualifiers instead of from {@link
+     * #getSource()}.
+     *
      * @return the folder configuration
      */
+    @NonNull
     @Override
     public FolderConfiguration getConfiguration() {
         String qualifier = getQualifiers();
-        return FolderConfiguration.getConfigForQualifierString(qualifier);
+        FolderConfiguration fromString = FolderConfiguration.getConfigForQualifierString(qualifier);
+        return fromString != null ? fromString : new FolderConfiguration();
     }
 }

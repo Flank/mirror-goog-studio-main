@@ -49,15 +49,16 @@ public class GeneratedResourceSet extends ResourceSet {
     }
 
     @Override
-    protected DataSet<ResourceItem, ResourceFile> createSet(String name) {
+    protected DataSet<ResourceMergerItem, ResourceFile> createSet(String name) {
         return new GeneratedResourceSet(name, ResourceNamespace.TODO, getLibraryName());
     }
 
     @Override
-    void appendToXml(@NonNull Node setNode,
-                     @NonNull Document document,
-                     @NonNull MergeConsumer<ResourceItem> consumer,
-                     boolean includeTimestamps) {
+    void appendToXml(
+            @NonNull Node setNode,
+            @NonNull Document document,
+            @NonNull MergeConsumer<ResourceMergerItem> consumer,
+            boolean includeTimestamps) {
         NodeUtils.addAttribute(document, setNode, null, ATTR_GENERATED, SdkConstants.VALUE_TRUE);
         super.appendToXml(setNode, document, consumer, includeTimestamps);
     }

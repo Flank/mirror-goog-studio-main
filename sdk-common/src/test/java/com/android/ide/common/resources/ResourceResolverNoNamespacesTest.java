@@ -93,110 +93,116 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testBasicFunctionality() throws Exception {
-        ResourceRepository frameworkRepository =
-                resourceFixture.createTestResources(ResourceNamespace.ANDROID, new Object[] {
-                        "values/strings.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <string name=\"ok\">Ok</string>\n"
-                        + "</resources>\n",
+        MergerResourceRepository frameworkRepository =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.ANDROID,
+                        new Object[] {
+                            "values/strings.xml",
+                                    ""
+                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                            + "<resources>\n"
+                                            + "    <string name=\"ok\">Ok</string>\n"
+                                            + "</resources>\n",
+                            "values/themes.xml",
+                                    ""
+                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                            + "<resources>\n"
+                                            + "    <style name=\"Theme\">\n"
+                                            + "        <item name=\"colorForeground\">@android:color/bright_foreground_dark</item>\n"
+                                            + "        <item name=\"colorBackground\">@android:color/background_dark</item>\n"
+                                            + "    </style>\n"
+                                            + "    <style name=\"Theme.Light\">\n"
+                                            + "        <item name=\"colorBackground\">@android:color/background_light</item>\n"
+                                            + "        <item name=\"colorForeground\">@color/bright_foreground_light</item>\n"
+                                            + "    </style>\n"
+                                            + "</resources>\n",
+                            "values/colors.xml",
+                                    ""
+                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                            + "<resources>\n"
+                                            + "    <color name=\"background_dark\">#ff000000</color>\n"
+                                            + "    <color name=\"background_light\">#ffffffff</color>\n"
+                                            + "    <color name=\"bright_foreground_dark\">@android:color/background_light</color>\n"
+                                            + "    <color name=\"bright_foreground_light\">@android:color/background_dark</color>\n"
+                                            + "</resources>\n",
+                            "values/ids.xml",
+                                    ""
+                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                            + "<resources>\n"
+                                            + "    <item name=\"some_framework_id\" type=\"id\" />\n"
+                                            + "</resources>\n",
+                        });
 
-                        "values/themes.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <style name=\"Theme\">\n"
-                        + "        <item name=\"colorForeground\">@android:color/bright_foreground_dark</item>\n"
-                        + "        <item name=\"colorBackground\">@android:color/background_dark</item>\n"
-                        + "    </style>\n"
-                        + "    <style name=\"Theme.Light\">\n"
-                        + "        <item name=\"colorBackground\">@android:color/background_light</item>\n"
-                        + "        <item name=\"colorForeground\">@color/bright_foreground_light</item>\n"
-                        + "    </style>\n"
-                        + "</resources>\n",
-
-                        "values/colors.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <color name=\"background_dark\">#ff000000</color>\n"
-                        + "    <color name=\"background_light\">#ffffffff</color>\n"
-                        + "    <color name=\"bright_foreground_dark\">@android:color/background_light</color>\n"
-                        + "    <color name=\"bright_foreground_light\">@android:color/background_dark</color>\n"
-                        + "</resources>\n",
-
-                        "values/ids.xml",  ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <item name=\"some_framework_id\" type=\"id\" />\n"
-                        + "</resources>\n",
-                });
-
-        ResourceRepository projectRepository =
-                resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
-                        "layout/layout1.xml", "<!--contents doesn't matter-->",
-
-                        "layout/layout2.xml", "<!--contents doesn't matter-->",
-
-                        "layout-land/layout1.xml", "<!--contents doesn't matter-->",
-
-                        "layout-land/onlyland.xml", "<!--contents doesn't matter-->",
-
-                        "drawable/graphic.9.png", new byte[0],
-
-                        "mipmap-xhdpi/ic_launcher.png", new byte[0],
-
-                        "values/styles.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <style name=\"MyTheme\" parent=\"android:Theme.Light\">\n"
-                        + "        <item name=\"android:textColor\">#999999</item>\n"
-                        + "        <item name=\"foo\">?android:colorForeground</item>\n"
-                        + "    </style>\n"
-                        + "    <style name=\"MyTheme.Dotted1\" parent=\"\">\n"
-                        + "    </style>"
-                        + "    <style name=\"MyTheme.Dotted2\">\n"
-                        + "    </style>"
-                        + "    <style name=\"RandomStyle\">\n"
-                        + "        <item name=\"android:text\">&#169; Copyright</item>\n"
-                        + "    </style>"
-                        + "    <style name=\"RandomStyle2\" parent=\"RandomStyle\">\n"
-                        + "    </style>"
-                        + "    <style name=\"Theme.FakeTheme\" parent=\"\">\n"
-                        + "    </style>"
-                        + "    <style name=\"Theme\" parent=\"RandomStyle\">\n"
-                        + "    </style>"
-                        + "</resources>\n",
-
-                        "values/strings.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <item type=\"id\" name=\"action_bar_refresh\" />\n"
-                        + "    <item type=\"dimen\" name=\"dialog_min_width_major\">45%</item>\n"
-                        + "    <string name=\"home_title\">Home Sample</string>\n"
-                        + "    <string name=\"show_all_apps\">All</string>\n"
-                        + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
-                        + "    <string name=\"menu_search\">Search</string>\n"
-                        + "    <string name=\"menu_settings\">Settings</string>\n"
-                        + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
-                        + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
-                        + "</resources>\n",
-
-                        "values-es/strings.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <string name=\"show_all_apps\">Todo</string>\n"
-                        + "</resources>\n",
-
-                        "values/arrays.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <string name=\"first\">Item1</string>\n"
-                        + "    <string-array name=\"my_array\">\n"
-                        + "        <item>@string/first</item>\n"
-                        + "        <item>Item2</item>\n"
-                        + "        <item>Item3</item>\n"
-                        + "    </string-array>\n"
-                        + "</resources>\n",
-                });
+        MergerResourceRepository projectRepository =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.TODO,
+                        new Object[] {
+                            "layout/layout1.xml",
+                            "<!--contents doesn't matter-->",
+                            "layout/layout2.xml",
+                            "<!--contents doesn't matter-->",
+                            "layout-land/layout1.xml",
+                            "<!--contents doesn't matter-->",
+                            "layout-land/onlyland.xml",
+                            "<!--contents doesn't matter-->",
+                            "drawable/graphic.9.png",
+                            new byte[0],
+                            "mipmap-xhdpi/ic_launcher.png",
+                            new byte[0],
+                            "values/styles.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <style name=\"MyTheme\" parent=\"android:Theme.Light\">\n"
+                                    + "        <item name=\"android:textColor\">#999999</item>\n"
+                                    + "        <item name=\"foo\">?android:colorForeground</item>\n"
+                                    + "    </style>\n"
+                                    + "    <style name=\"MyTheme.Dotted1\" parent=\"\">\n"
+                                    + "    </style>"
+                                    + "    <style name=\"MyTheme.Dotted2\">\n"
+                                    + "    </style>"
+                                    + "    <style name=\"RandomStyle\">\n"
+                                    + "        <item name=\"android:text\">&#169; Copyright</item>\n"
+                                    + "    </style>"
+                                    + "    <style name=\"RandomStyle2\" parent=\"RandomStyle\">\n"
+                                    + "    </style>"
+                                    + "    <style name=\"Theme.FakeTheme\" parent=\"\">\n"
+                                    + "    </style>"
+                                    + "    <style name=\"Theme\" parent=\"RandomStyle\">\n"
+                                    + "    </style>"
+                                    + "</resources>\n",
+                            "values/strings.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <item type=\"id\" name=\"action_bar_refresh\" />\n"
+                                    + "    <item type=\"dimen\" name=\"dialog_min_width_major\">45%</item>\n"
+                                    + "    <string name=\"home_title\">Home Sample</string>\n"
+                                    + "    <string name=\"show_all_apps\">All</string>\n"
+                                    + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
+                                    + "    <string name=\"menu_search\">Search</string>\n"
+                                    + "    <string name=\"menu_settings\">Settings</string>\n"
+                                    + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
+                                    + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
+                                    + "</resources>\n",
+                            "values-es/strings.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <string name=\"show_all_apps\">Todo</string>\n"
+                                    + "</resources>\n",
+                            "values/arrays.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <string name=\"first\">Item1</string>\n"
+                                    + "    <string-array name=\"my_array\">\n"
+                                    + "        <item>@string/first</item>\n"
+                                    + "        <item>Item2</item>\n"
+                                    + "        <item>Item3</item>\n"
+                                    + "    </string-array>\n"
+                                    + "</resources>\n",
+                        });
 
         assertEquals(
                 Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
@@ -436,17 +442,19 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testMissingMessage() throws Exception {
-        ResourceRepository projectRepository =
-                resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
-                        "values/colors.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <color name=\"loop1\">@color/loop1</color>\n"
-                        + "    <color name=\"loop2a\">@color/loop2b</color>\n"
-                        + "    <color name=\"loop2b\">@color/loop2a</color>\n"
-                        + "</resources>\n",
-
-                });
+        MergerResourceRepository projectRepository =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.TODO,
+                        new Object[] {
+                            "values/colors.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <color name=\"loop1\">@color/loop1</color>\n"
+                                    + "    <color name=\"loop2a\">@color/loop2b</color>\n"
+                                    + "    <color name=\"loop2b\">@color/loop2a</color>\n"
+                                    + "</resources>\n",
+                        });
 
         assertEquals(
                 Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
@@ -477,17 +485,19 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testLoop() throws Exception {
-        ResourceRepository projectRepository =
-                resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
-                        "values/colors.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "    <color name=\"loop1\">@color/loop1</color>\n"
-                        + "    <color name=\"loop2a\">@color/loop2b</color>\n"
-                        + "    <color name=\"loop2b\">@color/loop2a</color>\n"
-                        + "</resources>\n",
-
-                });
+        MergerResourceRepository projectRepository =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.TODO,
+                        new Object[] {
+                            "values/colors.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <color name=\"loop1\">@color/loop1</color>\n"
+                                    + "    <color name=\"loop2a\">@color/loop2b</color>\n"
+                                    + "    <color name=\"loop2b\">@color/loop2a</color>\n"
+                                    + "</resources>\n",
+                        });
 
         assertEquals(
                 Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
@@ -538,31 +548,34 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testParentCycle() throws Exception {
-        ResourceRepository projectRepository =
-                resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
-                            "values/styles.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<resources>\n"
-                            + "    <style name=\"ButtonStyle.Base\">\n"
-                            + "        <item name=\"android:textColor\">#ff0000</item>\n"
-                            + "    </style>\n"
-                            + "    <style name=\"ButtonStyle\" parent=\"ButtonStyle.Base\">\n"
-                            + "        <item name=\"android:layout_height\">40dp</item>\n"
-                            + "    </style>\n"
-                            + "</resources>\n",
-
-                            "layouts/layout.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    android:layout_width=\"match_parent\"\n"
-                            + "    android:layout_height=\"match_parent\">\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        style=\"@style/ButtonStyle\"\n"
-                            + "        android:layout_width=\"wrap_content\"\n"
-                            + "        android:layout_height=\"wrap_content\" />\n"
-                            + "\n"
-                            + "</RelativeLayout>\n",
+        MergerResourceRepository projectRepository =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.TODO,
+                        new Object[] {
+                            "values/styles.xml",
+                                    ""
+                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                            + "<resources>\n"
+                                            + "    <style name=\"ButtonStyle.Base\">\n"
+                                            + "        <item name=\"android:textColor\">#ff0000</item>\n"
+                                            + "    </style>\n"
+                                            + "    <style name=\"ButtonStyle\" parent=\"ButtonStyle.Base\">\n"
+                                            + "        <item name=\"android:layout_height\">40dp</item>\n"
+                                            + "    </style>\n"
+                                            + "</resources>\n",
+                            "layouts/layout.xml",
+                                    ""
+                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                            + "    android:layout_width=\"match_parent\"\n"
+                                            + "    android:layout_height=\"match_parent\">\n"
+                                            + "\n"
+                                            + "    <TextView\n"
+                                            + "        style=\"@style/ButtonStyle\"\n"
+                                            + "        android:layout_width=\"wrap_content\"\n"
+                                            + "        android:layout_height=\"wrap_content\" />\n"
+                                            + "\n"
+                                            + "</RelativeLayout>\n",
                         });
         assertEquals(
                 Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
@@ -607,55 +620,61 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testSetDeviceDefaults() throws Exception {
-        ResourceRepository frameworkRepository =
-            resourceFixture.createTestResources(ResourceNamespace.ANDROID, new Object[] {
-                "values/themes.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <style name=\"Theme.Light\" parent=\"\">\n"
-                + "         <item name=\"android:textColor\">#ff0000</item>\n"
-                + "    </style>\n"
-                + "    <style name=\"Theme.Holo.Light\" parent=\"Theme.Light\">\n"
-                + "         <item name=\"android:textColor\">#00ff00</item>\n"
-                + "    </style>\n"
-                + "    <style name=\"Theme.DeviceDefault.Light\" parent=\"Theme.Holo.Light\"/>\n"
-                + "    <style name=\"Theme\" parent=\"\">\n"
-                + "         <item name=\"android:textColor\">#000000</item>\n"
-                + "    </style>\n"
-                + "    <style name=\"Theme.Holo\" parent=\"Theme\">\n"
-                + "         <item name=\"android:textColor\">#0000ff</item>\n"
-                + "    </style>\n"
-                + "    <style name=\"Theme.DeviceDefault\" parent=\"Theme.Holo\"/>\n"
-                + "</resources>\n",
+        MergerResourceRepository frameworkRepository =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.ANDROID,
+                        new Object[] {
+                            "values/themes.xml",
+                                    ""
+                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                            + "<resources>\n"
+                                            + "    <style name=\"Theme.Light\" parent=\"\">\n"
+                                            + "         <item name=\"android:textColor\">#ff0000</item>\n"
+                                            + "    </style>\n"
+                                            + "    <style name=\"Theme.Holo.Light\" parent=\"Theme.Light\">\n"
+                                            + "         <item name=\"android:textColor\">#00ff00</item>\n"
+                                            + "    </style>\n"
+                                            + "    <style name=\"Theme.DeviceDefault.Light\" parent=\"Theme.Holo.Light\"/>\n"
+                                            + "    <style name=\"Theme\" parent=\"\">\n"
+                                            + "         <item name=\"android:textColor\">#000000</item>\n"
+                                            + "    </style>\n"
+                                            + "    <style name=\"Theme.Holo\" parent=\"Theme\">\n"
+                                            + "         <item name=\"android:textColor\">#0000ff</item>\n"
+                                            + "    </style>\n"
+                                            + "    <style name=\"Theme.DeviceDefault\" parent=\"Theme.Holo\"/>\n"
+                                            + "</resources>\n",
+                            "values/styles.xml",
+                                    ""
+                                            + "<resources>\n"
+                                            + "    <style name=\"Widget.Button.Small\">\n"
+                                            + "         <item name=\"android:textColor\">#000000</item>\n"
+                                            + "    </style>\n"
+                                            + "    <style name=\"Widget.Holo.Button.Small\">\n"
+                                            + "         <item name=\"android:textColor\">#ffffff</item>\n"
+                                            + "    </style>\n"
+                                            + "    <style name=\"Widget.DeviceDefault.Button.Small\" parent=\"Widget.Holo.Button.Small\" />\n"
+                                            + "    <style name=\"ButtonBar\">\n"
+                                            + "         <item name=\"android:textColor\">#000000</item>\n"
+                                            + "    </style>\n"
+                                            + "    <style name=\"Holo.ButtonBar\">\n"
+                                            + "         <item name=\"android:textColor\">#ffffff</item>\n"
+                                            + "    </style>\n"
+                                            + "    <style name=\"DeviceDefault.ButtonBar\" parent=\"Holo.ButtonBar\" />\n"
+                                            + "</resources>\n",
+                        });
 
-                "values/styles.xml", ""
-                + "<resources>\n"
-                + "    <style name=\"Widget.Button.Small\">\n"
-                + "         <item name=\"android:textColor\">#000000</item>\n"
-                + "    </style>\n"
-                + "    <style name=\"Widget.Holo.Button.Small\">\n"
-                + "         <item name=\"android:textColor\">#ffffff</item>\n"
-                + "    </style>\n"
-                + "    <style name=\"Widget.DeviceDefault.Button.Small\" parent=\"Widget.Holo.Button.Small\" />\n"
-                + "    <style name=\"ButtonBar\">\n"
-                + "         <item name=\"android:textColor\">#000000</item>\n"
-                + "    </style>\n"
-                + "    <style name=\"Holo.ButtonBar\">\n"
-                + "         <item name=\"android:textColor\">#ffffff</item>\n"
-                + "    </style>\n"
-                + "    <style name=\"DeviceDefault.ButtonBar\" parent=\"Holo.ButtonBar\" />\n"
-                + "</resources>\n",
-        });
-
-        ResourceRepository projectRepository =
-            resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
-                "values/themes.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <style name=\"AppTheme\" parent=\"android:Theme.DeviceDefault.Light\"/>\n"
-                + "    <style name=\"AppTheme.Dark\" parent=\"android:Theme.DeviceDefault\"/>\n"
-                + "</resources>\n"
-        });
+        MergerResourceRepository projectRepository =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.TODO,
+                        new Object[] {
+                            "values/themes.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <style name=\"AppTheme\" parent=\"android:Theme.DeviceDefault.Light\"/>\n"
+                                    + "    <style name=\"AppTheme.Dark\" parent=\"android:Theme.DeviceDefault\"/>\n"
+                                    + "</resources>\n"
+                        });
 
         assertEquals(
                 Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
@@ -712,26 +731,32 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testCycle() throws Exception {
-        ResourceRepository frameworkRepository =
-            resourceFixture.createTestResources(ResourceNamespace.ANDROID, new Object[] {
-                "values/themes.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <style name=\"Theme.DeviceDefault.Light\"/>\n"
-                + "</resources>\n",
-            });
+        MergerResourceRepository frameworkRepository =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.ANDROID,
+                        new Object[] {
+                            "values/themes.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <style name=\"Theme.DeviceDefault.Light\"/>\n"
+                                    + "</resources>\n",
+                        });
 
-        ResourceRepository projectRepository =
-            resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
-                "values/themes.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <style name=\"AppTheme\" parent=\"android:Theme.DeviceDefault.Light\"/>\n"
-                + "    <style name=\"AppTheme.Dark\" parent=\"android:Theme.DeviceDefault\"/>\n"
-                + "    <style name=\"foo\" parent=\"bar\"/>\n"
-                + "    <style name=\"bar\" parent=\"foo\"/>\n"
-                + "</resources>\n"
-            });
+        MergerResourceRepository projectRepository =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.TODO,
+                        new Object[] {
+                            "values/themes.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <style name=\"AppTheme\" parent=\"android:Theme.DeviceDefault.Light\"/>\n"
+                                    + "    <style name=\"AppTheme.Dark\" parent=\"android:Theme.DeviceDefault\"/>\n"
+                                    + "    <style name=\"foo\" parent=\"bar\"/>\n"
+                                    + "    <style name=\"bar\" parent=\"foo\"/>\n"
+                                    + "</resources>\n"
+                        });
 
         assertEquals(
                 Collections.singleton(ResourceNamespace.TODO), projectRepository.getNamespaces());
@@ -769,31 +794,37 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testCopy() throws Exception {
-        ResourceRepository frameworkRepository =
-            resourceFixture.createTestResources(ResourceNamespace.ANDROID, new Object[] {
-                "values/themes.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <style name=\"Theme.Material\"/>\n"
-                + "</resources>\n",
-            });
-        ResourceRepository projectRepository =
-            resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
-                "values/colors.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <color name=\"loop1\">@color/loop1</color>\n"
-                + "    <color name=\"loop2a\">@color/loop2b</color>\n"
-                + "    <color name=\"loop2b\">@color/loop2a</color>\n"
-                + "    <style name=\"MyStyle\"/>\n"
-                + "</resources>\n",
-
-                "values/styles.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <style name=\"MyStyle\"/>\n"
-                + "</resources>\n",
-            });
+        MergerResourceRepository frameworkRepository =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.ANDROID,
+                        new Object[] {
+                            "values/themes.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <style name=\"Theme.Material\"/>\n"
+                                    + "</resources>\n",
+                        });
+        MergerResourceRepository projectRepository =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.TODO,
+                        new Object[] {
+                            "values/colors.xml",
+                                    ""
+                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                            + "<resources>\n"
+                                            + "    <color name=\"loop1\">@color/loop1</color>\n"
+                                            + "    <color name=\"loop2a\">@color/loop2b</color>\n"
+                                            + "    <color name=\"loop2b\">@color/loop2a</color>\n"
+                                            + "    <style name=\"MyStyle\"/>\n"
+                                            + "</resources>\n",
+                            "values/styles.xml",
+                                    ""
+                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                            + "<resources>\n"
+                                            + "    <style name=\"MyStyle\"/>\n"
+                                            + "</resources>\n",
+                        });
 
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values");
         assertNotNull(config);
@@ -838,8 +869,10 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
     }
 
     public void testResolverIds() throws Exception {
-        ResourceRepository projectRepository =
-                resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
+        MergerResourceRepository projectRepository =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.TODO,
+                        new Object[] {
                             "layout/layout1.xml",
                             "<!--contents doesn't matter-->",
                             "layout/layout2.xml",

@@ -49,97 +49,103 @@ public class ResourceItemResolverTest extends TestCase {
     }
 
     public void testBasicFunctionality() throws Exception {
-        ResourceRepository frameworkResources =
-            resourceFixture.createTestResources(ResourceNamespace.ANDROID, new Object[] {
-                "values/strings.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <string name=\"ok\">Ok</string>\n"
-                + "    <array name=\"my_fw_array\">\"\n"
-                + "        <item>  fw_value1</item>\n"   // also test trimming.
-                + "        <item>fw_value2\n</item>\n"
-                + "        <item>fw_value3</item>\n"
-                + "    </array>\n"
-                + "</resources>\n",
+        MergerResourceRepository frameworkResources =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.ANDROID,
+                        new Object[] {
+                            "values/strings.xml",
+                                    ""
+                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                            + "<resources>\n"
+                                            + "    <string name=\"ok\">Ok</string>\n"
+                                            + "    <array name=\"my_fw_array\">\"\n"
+                                            + "        <item>  fw_value1</item>\n" // also test trimming.
+                                            + "        <item>fw_value2\n</item>\n"
+                                            + "        <item>fw_value3</item>\n"
+                                            + "    </array>\n"
+                                            + "</resources>\n",
+                            "values/themes.xml",
+                                    ""
+                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                            + "<resources>\n"
+                                            + "    <style name=\"Theme\">\n"
+                                            + "        <item name=\"colorForeground\">@android:color/bright_foreground_dark</item>\n"
+                                            + "        <item name=\"colorBackground\">@android:color/background_dark</item>\n"
+                                            + "    </style>\n"
+                                            + "    <style name=\"Theme.Light\">\n"
+                                            + "        <item name=\"colorBackground\">@android:color/background_light</item>\n"
+                                            + "        <item name=\"colorForeground\">@color/bright_foreground_light</item>\n"
+                                            + "    </style>\n"
+                                            + "</resources>\n",
+                            "values/colors.xml",
+                                    ""
+                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                            + "<resources>\n"
+                                            + "    <color name=\"background_dark\">#ff000000</color>\n"
+                                            + "    <color name=\"background_light\">#ffffffff</color>\n"
+                                            + "    <color name=\"bright_foreground_dark\">@android:color/background_light</color>\n"
+                                            + "    <color name=\"bright_foreground_light\">@android:color/background_dark</color>\n"
+                                            + "</resources>\n",
+                        });
 
-                "values/themes.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <style name=\"Theme\">\n"
-                + "        <item name=\"colorForeground\">@android:color/bright_foreground_dark</item>\n"
-                + "        <item name=\"colorBackground\">@android:color/background_dark</item>\n"
-                + "    </style>\n"
-                + "    <style name=\"Theme.Light\">\n"
-                + "        <item name=\"colorBackground\">@android:color/background_light</item>\n"
-                + "        <item name=\"colorForeground\">@color/bright_foreground_light</item>\n"
-                + "    </style>\n"
-                + "</resources>\n",
-
-                "values/colors.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <color name=\"background_dark\">#ff000000</color>\n"
-                + "    <color name=\"background_light\">#ffffffff</color>\n"
-                + "    <color name=\"bright_foreground_dark\">@android:color/background_light</color>\n"
-                + "    <color name=\"bright_foreground_light\">@android:color/background_dark</color>\n"
-                + "</resources>\n",
-            });
-
-        ResourceRepository appResources =
-            resourceFixture.createTestResources(ResourceNamespace.TODO, new Object[] {
-                "layout/layout1.xml", "<!--contents doesn't matter-->",
-
-                "layout/layout2.xml", "<!--contents doesn't matter-->",
-
-                "layout-land/layout1.xml", "<!--contents doesn't matter-->",
-
-                "layout-land/only_land.xml", "<!--contents doesn't matter-->",
-
-                "drawable/graphic.9.png", new byte[0],
-
-                "values/styles.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <style name=\"MyTheme\" parent=\"android:Theme.Light\">\n"
-                + "        <item name=\"android:textColor\">#999999</item>\n"
-                + "        <item name=\"foo\">?android:colorForeground</item>\n"
-                + "    </style>\n"
-                + "    <style name=\"MyTheme.Dotted1\" parent=\"\">\n"
-                + "    </style>"
-                + "    <style name=\"MyTheme.Dotted2\">\n"
-                + "    </style>"
-                + "    <style name=\"RandomStyle\">\n"
-                + "    </style>"
-                + "    <style name=\"RandomStyle2\" parent=\"RandomStyle\">\n"
-                + "    </style>"
-                + "</resources>\n",
-
-                "values/strings.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
-                + "    <item type=\"id\" name=\"action_bar_refresh\" />\n"
-                + "    <item type=\"dimen\" name=\"dialog_min_width_major\">45%</item>\n"
-                + "    <string name=\"home_title\">Home Sample</string>\n"
-                + "    <string name=\"show_all_apps\">All</string>\n"
-                + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
-                + "    <string name=\"menu_search\">Search</string>\n"
-                + "    <string name=\"menu_settings\">Settings</string>\n"
-                + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
-                + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
-                + "    <string name=\"xliff_string\">First: <xliff:g id=\"firstName\">%1$s</xliff:g> Last: <xliff:g id=\"lastName\">%2$s</xliff:g></string>\n"
-                + "    <array name=\"my_array\">\"\n"
-                + "        <item>@string/home_title</item>\n"
-                + "        <item>value2\n</item>\n"
-                + "        <item>value3</item>\n"
-                + "    </array>\n"
-                + "</resources>\n",
-
-                "values-es/strings.xml", ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<resources>\n"
-                + "    <string name=\"show_all_apps\">Todo</string>\n"
-                + "</resources>\n",
-            });
+        MergerResourceRepository appResources =
+                resourceFixture.createTestResources(
+                        ResourceNamespace.TODO,
+                        new Object[] {
+                            "layout/layout1.xml",
+                            "<!--contents doesn't matter-->",
+                            "layout/layout2.xml",
+                            "<!--contents doesn't matter-->",
+                            "layout-land/layout1.xml",
+                            "<!--contents doesn't matter-->",
+                            "layout-land/only_land.xml",
+                            "<!--contents doesn't matter-->",
+                            "drawable/graphic.9.png",
+                            new byte[0],
+                            "values/styles.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <style name=\"MyTheme\" parent=\"android:Theme.Light\">\n"
+                                    + "        <item name=\"android:textColor\">#999999</item>\n"
+                                    + "        <item name=\"foo\">?android:colorForeground</item>\n"
+                                    + "    </style>\n"
+                                    + "    <style name=\"MyTheme.Dotted1\" parent=\"\">\n"
+                                    + "    </style>"
+                                    + "    <style name=\"MyTheme.Dotted2\">\n"
+                                    + "    </style>"
+                                    + "    <style name=\"RandomStyle\">\n"
+                                    + "    </style>"
+                                    + "    <style name=\"RandomStyle2\" parent=\"RandomStyle\">\n"
+                                    + "    </style>"
+                                    + "</resources>\n",
+                            "values/strings.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
+                                    + "    <item type=\"id\" name=\"action_bar_refresh\" />\n"
+                                    + "    <item type=\"dimen\" name=\"dialog_min_width_major\">45%</item>\n"
+                                    + "    <string name=\"home_title\">Home Sample</string>\n"
+                                    + "    <string name=\"show_all_apps\">All</string>\n"
+                                    + "    <string name=\"menu_wallpaper\">Wallpaper</string>\n"
+                                    + "    <string name=\"menu_search\">Search</string>\n"
+                                    + "    <string name=\"menu_settings\">Settings</string>\n"
+                                    + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
+                                    + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
+                                    + "    <string name=\"xliff_string\">First: <xliff:g id=\"firstName\">%1$s</xliff:g> Last: <xliff:g id=\"lastName\">%2$s</xliff:g></string>\n"
+                                    + "    <array name=\"my_array\">\"\n"
+                                    + "        <item>@string/home_title</item>\n"
+                                    + "        <item>value2\n</item>\n"
+                                    + "        <item>value3</item>\n"
+                                    + "    </array>\n"
+                                    + "</resources>\n",
+                            "values-es/strings.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<resources>\n"
+                                    + "    <string name=\"show_all_apps\">Todo</string>\n"
+                                    + "</resources>\n",
+                        });
 
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
         assertNotNull(config);
@@ -219,13 +225,13 @@ public class ResourceItemResolverTest extends TestCase {
 
                     @Nullable
                     @Override
-                    public ResourceRepository getFrameworkResources() {
+                    public MergerResourceRepository getFrameworkResources() {
                         return frameworkResources;
                     }
 
                     @Nullable
                     @Override
-                    public ResourceRepository getAppResources() {
+                    public MergerResourceRepository getAppResources() {
                         return appResources;
                     }
                 };

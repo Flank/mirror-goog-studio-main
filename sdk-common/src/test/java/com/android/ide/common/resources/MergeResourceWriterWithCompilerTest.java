@@ -40,7 +40,7 @@ public class MergeResourceWriterWithCompilerTest {
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
-    private Map<String, ResourceItem> mResourceItems;
+    private Map<String, ResourceMergerItem> mResourceItems;
 
     private ResourcePreprocessor mEmptyPreprocessor;
 
@@ -99,14 +99,16 @@ public class MergeResourceWriterWithCompilerTest {
         File f1 = new File(rawRes, "f1.txt");
         Files.write("foo", f1, Charsets.US_ASCII);
 
-        ResourceItem f1Item = new ResourceItem("f1.txt", null, ResourceType.RAW, null, null);
+        ResourceMergerItem f1Item =
+                new ResourceMergerItem("f1.txt", null, ResourceType.RAW, null, null);
         ResourceFile f1File = new ResourceFile(f1, f1Item, "", new FolderConfiguration());
         f1Item.setSource(f1File);
 
         File f2 = new File(rawRes, "f2.xml");
         Files.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n", f2, Charsets.US_ASCII);
 
-        ResourceItem f2Item = new ResourceItem("f2.xml", null, ResourceType.RAW, null, null);
+        ResourceMergerItem f2Item =
+                new ResourceMergerItem("f2.xml", null, ResourceType.RAW, null, null);
         ResourceFile f2File = new ResourceFile(f2, f2Item, "", new FolderConfiguration());
         f2Item.setSource(f2File);
 

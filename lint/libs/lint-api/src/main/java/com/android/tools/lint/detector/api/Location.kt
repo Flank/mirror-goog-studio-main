@@ -305,8 +305,8 @@ protected constructor(
         override fun resolve(): Location {
             // TODO: Look up the exact item location more
             // closely
-            val source = item.source ?: error(item)
-            return create(source.file)
+            val source = item.file ?: error(item)
+            return create(source)
         }
 
         override var clientData: Any?

@@ -25,7 +25,6 @@ import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.AbstractResourceRepository;
-import com.android.ide.common.resources.ResourceFile;
 import com.android.ide.common.resources.ResourceItem;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -292,9 +291,8 @@ public class ArraySizeDetector extends ResourceXmlDetector {
         List<ResourceItem> items = resources.getResourceItem(ResourceType.ARRAY, name);
         if (items != null) {
             for (ResourceItem item : items) {
-                ResourceFile source = item.getSource();
-                if (source != null
-                        && LintUtils.isSameResourceFile(context.file, source.getFile())) {
+                File source = item.getFile();
+                if (source != null && LintUtils.isSameResourceFile(context.file, source)) {
                     continue;
                 }
                 ResourceValue rv = item.getResourceValue();
@@ -303,8 +301,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                     if (childCount != arv.getElementCount()) {
                         String thisName = LintUtils.getFileNameWithParent(client, context.file);
                         assert source != null;
-                        File otherFile = source.getFile();
-                        String otherName = LintUtils.getFileNameWithParent(client, otherFile);
+                        String otherName = LintUtils.getFileNameWithParent(client, source);
                         String message =
                                 String.format(
                                         "Array `%1$s` has an inconsistent number of items (%2$d in `%3$s`, %4$d in `%5$s`)",

@@ -47,12 +47,12 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Implementation of {@link DataSet} for {@link ResourceItem} and {@link ResourceFile}.
+ * Implementation of {@link DataSet} for {@link ResourceMergerItem} and {@link ResourceFile}.
  *
- * This is able to detect duplicates from the same source folders (same resource coming from
- * the values folder in same or different files).
+ * <p>This is able to detect duplicates from the same source folders (same resource coming from the
+ * values folder in same or different files).
  */
-public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
+public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
     public static final String ATTR_GENERATED_SET = "generated-set";
     public static final String ATTR_FROM_DEPENDENCY = "from-dependency";
     public static final String ATTR_AAPT_NAMESPACE = "aapt-namespace";
@@ -115,7 +115,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     }
 
     @Override
-    protected DataSet<ResourceItem, ResourceFile> createSet(String name) {
+    protected DataSet<ResourceMergerItem, ResourceFile> createSet(String name) {
         return new ResourceSet(name, mNamespace, mLibraryName, true);
     }
 
@@ -148,8 +148,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
             NodeList childNodes = fileNode.getChildNodes();
             int childCount = childNodes.getLength();
 
-            List<ResourceItem> resourceItems =
-                    Lists.newArrayListWithCapacity(childCount);
+            List<ResourceMergerItem> resourceItems = Lists.newArrayListWithCapacity(childCount);
 
             for (int i = 0; i < childCount; i++) {
                 Node childNode = childNodes.item(i);
@@ -170,7 +169,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                 }
 
                 resourceItems.add(
-                        new GeneratedResourceItem(
+                        new GeneratedResourceMergerItem(
                                 getNameForFile(generatedFile),
                                 mNamespace,
                                 generatedFile,
@@ -185,7 +184,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
         }
         else if (typeAttr == null) {
             // FileType.XML_VALUES
-            List<ResourceItem> resourceList = Lists.newArrayList();
+            List<ResourceMergerItem> resourceList = Lists.newArrayList();
 
             // loop on each node that represent a resource
             NodeList resNodes = fileNode.getChildNodes();
@@ -196,7 +195,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                     continue;
                 }
 
-                ResourceItem r =
+                ResourceMergerItem r =
                         ValueResourceParser2.getResource(resNode, file, mNamespace, mLibraryName);
                 if (r != null) {
                     resourceList.add(r);
@@ -230,7 +229,8 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                 FileResourceNameValidator.validate(
                         file, ResourceFolderType.getFolderType(file.getParentFile().getName()));
             }
-            ResourceItem item = new ResourceItem(nameAttr, mNamespace, type, null, mLibraryName);
+            ResourceMergerItem item =
+                    new ResourceMergerItem(nameAttr, mNamespace, type, null, mLibraryName);
             return new ResourceFile(file, item, qualifier, folderConfiguration);
         }
     }
@@ -307,7 +307,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
 
         ResourceFile generatedSetResourceFile = mGeneratedSet.getDataFile(changedFile);
         boolean needsPreprocessing =
-                !getResourceItemsForGeneratedFilesIfNotFromDependency(changedFile).isEmpty();
+                !getResourceMergerItemsForGeneratedFilesIfNotFromDependency(changedFile).isEmpty();
 
         if (resourceFile != null && generatedSetResourceFile == null && needsPreprocessing) {
             // It didn't use to need preprocessing, but it does now.
@@ -348,8 +348,8 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                 resourceFile.getItem().setTouched();
                 break;
             case GENERATED_FILES:
-                handleChangedItems(resourceFile,
-                        getResourceItemsForGeneratedFiles(changedFile));
+                handleChangedItems(
+                        resourceFile, getResourceMergerItemsForGeneratedFiles(changedFile));
                 break;
             case XML_VALUES:
                 // multi res. Need to parse the file and compare the items one by one.
@@ -358,7 +358,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                 parser.setTrackSourcePositions(mTrackSourcePositions);
                 parser.setCheckDuplicates(mCheckDuplicates);
 
-                List<ResourceItem> parsedItems = parser.parseFile();
+                List<ResourceMergerItem> parsedItems = parser.parseFile();
                 handleChangedItems(resourceFile, parsedItems);
                 break;
             default:
@@ -367,19 +367,19 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     }
 
     private void handleChangedItems(
-            ResourceFile resourceFile,
-            List<ResourceItem> currentItems) throws MergingException {
-        Map<String, ResourceItem> oldItems = Maps.newHashMap(resourceFile.getItemMap());
-        Map<String, ResourceItem> addedItems = Maps.newHashMap();
+            ResourceFile resourceFile, List<ResourceMergerItem> currentItems)
+            throws MergingException {
+        Map<String, ResourceMergerItem> oldItems = Maps.newHashMap(resourceFile.getItemMap());
+        Map<String, ResourceMergerItem> addedItems = Maps.newHashMap();
 
         // Set the source of newly determined items, so we can call getKey() on them.
-        for (ResourceItem currentItem : currentItems) {
+        for (ResourceMergerItem currentItem : currentItems) {
             currentItem.setSource(resourceFile);
         }
 
-        for (ResourceItem newItem : currentItems) {
+        for (ResourceMergerItem newItem : currentItems) {
             String newKey = newItem.getKey();
-            ResourceItem oldItem = oldItems.get(newKey);
+            ResourceMergerItem oldItem = oldItems.get(newKey);
 
             if (oldItem == null) {
                 // this is a new item
@@ -405,12 +405,12 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
 
         // at this point oldItems is left with the deleted items.
         // just update their status to removed.
-        for (ResourceItem deletedItem : oldItems.values()) {
+        for (ResourceMergerItem deletedItem : oldItems.values()) {
             deletedItem.setRemoved();
         }
 
         // Now we need to add the new items to the resource file and the main map
-        for (Map.Entry<String, ResourceItem> entry : addedItems.entrySet()) {
+        for (Map.Entry<String, ResourceMergerItem> entry : addedItems.entrySet()) {
             // Clear the item from the old file so it can be added to the new one.
             entry.getValue().setSource(null);
             addItem(entry.getValue(), entry.getKey());
@@ -465,8 +465,8 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
         }
 
         if (folderData.type != null) {
-            List<ResourceItem> generatedFiles =
-                    getResourceItemsForGeneratedFilesIfNotFromDependency(file);
+            List<ResourceMergerItem> generatedFiles =
+                    getResourceMergerItemsForGeneratedFilesIfNotFromDependency(file);
             if (!generatedFiles.isEmpty()) {
                 return ResourceFile.generatedFiles(
                         file,
@@ -476,7 +476,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
             } else if (mShouldParseResourceIds && folderData.isIdGenerating &&
                        SdkUtils.endsWithIgnoreCase(file.getPath(), SdkConstants.DOT_XML)) {
                 String resourceName = getNameForFile(file);
-                List<ResourceItem> items;
+                List<ResourceMergerItem> items;
 
                 if (resourceName.isEmpty()) {
                     // This is only possible if validation is disabled, like when running from the IDE.
@@ -485,15 +485,15 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                     IdGeneratingResourceParser parser =
                             new IdGeneratingResourceParser(
                                     file, resourceName, folderData.type, mNamespace);
-                    items = parser.getIdResourceItems();
-                    ResourceItem fileItem = parser.getFileResourceItem();
+                    items = parser.getIdResourceMergerItems();
+                    ResourceMergerItem fileItem = parser.getFileResourceMergerItem();
                     items.add(fileItem);
                 }
                 return new ResourceFile(file, items, folderData.qualifiers, folderData.folderConfiguration);
             } else {
                 return new ResourceFile(
                         file,
-                        new ResourceItem(
+                        new ResourceMergerItem(
                                 getNameForFile(file),
                                 mNamespace,
                                 folderData.type,
@@ -508,7 +508,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                         new ValueResourceParser2(file, mNamespace, mLibraryName);
                 parser.setTrackSourcePositions(mTrackSourcePositions);
                 parser.setCheckDuplicates(mCheckDuplicates);
-                List<ResourceItem> items = parser.parseFile();
+                List<ResourceMergerItem> items = parser.parseFile();
 
                 return new ResourceFile(file, items, folderData.qualifiers, folderData.folderConfiguration);
             } catch (MergingException e) {
@@ -519,16 +519,16 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     }
 
     @NonNull
-    private List<ResourceItem> getResourceItemsForGeneratedFilesIfNotFromDependency(
+    private List<ResourceMergerItem> getResourceMergerItemsForGeneratedFilesIfNotFromDependency(
             @NonNull File file) throws MergingException {
         if (mIsFromDependency) {
             return Collections.emptyList();
         }
-        return getResourceItemsForGeneratedFiles(file);
+        return getResourceMergerItemsForGeneratedFiles(file);
     }
 
     @NonNull
-    private List<ResourceItem> getResourceItemsForGeneratedFiles(@NonNull File file)
+    private List<ResourceMergerItem> getResourceMergerItemsForGeneratedFiles(@NonNull File file)
             throws MergingException {
         Collection<File> filesToBeGenerated;
         try {
@@ -537,7 +537,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
             throw new MergingException(e);
         }
 
-        List<ResourceItem> resourceItems = new ArrayList<>(filesToBeGenerated.size());
+        List<ResourceMergerItem> resourceItems = new ArrayList<>(filesToBeGenerated.size());
         for (File generatedFile : filesToBeGenerated) {
             FolderData generatedFileFolderData =
                     getFolderData(generatedFile.getParentFile());
@@ -548,7 +548,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                     generatedFile.getPath());
 
             resourceItems.add(
-                    new GeneratedResourceItem(
+                    new GeneratedResourceMergerItem(
                             getNameForFile(generatedFile),
                             mNamespace,
                             generatedFile,
@@ -633,10 +633,11 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     }
 
     @Override
-    void appendToXml(@NonNull Node setNode,
-                     @NonNull Document document,
-                     @NonNull MergeConsumer<ResourceItem> consumer,
-                     boolean includeTimestamps) {
+    void appendToXml(
+            @NonNull Node setNode,
+            @NonNull Document document,
+            @NonNull MergeConsumer<ResourceMergerItem> consumer,
+            boolean includeTimestamps) {
         if (mGeneratedSet != null) {
             NodeUtils.addAttribute(
                     document,
