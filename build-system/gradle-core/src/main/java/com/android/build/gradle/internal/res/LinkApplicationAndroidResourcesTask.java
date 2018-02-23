@@ -191,7 +191,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     FileCollection splitListInput;
 
-    private OutputScope outputScope;
 
     private OutputFactory outputFactory;
 
@@ -938,28 +937,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                     new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");
             task.isNamespaced = true;
         }
-    }
-
-    FileCollection manifestFiles;
-
-    public File getManifestFile() {
-        File manifestDirectory = Iterables.getFirst(manifestFiles.getFiles(), null);
-        Preconditions.checkNotNull(manifestDirectory);
-        Preconditions.checkNotNull(outputScope.getMainSplit());
-        return FileUtils.join(
-                manifestDirectory,
-                outputScope.getMainSplit().getDirName(),
-                SdkConstants.ANDROID_MANIFEST_XML);
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getManifestFiles() {
-        return manifestFiles;
-    }
-
-    public void setManifestFiles(FileCollection manifestFiles) {
-        this.manifestFiles = manifestFiles;
     }
 
     @Optional

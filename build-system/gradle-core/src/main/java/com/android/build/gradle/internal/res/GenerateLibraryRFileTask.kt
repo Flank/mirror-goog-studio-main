@@ -85,10 +85,6 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
         private set
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFiles: FileCollection
-        private set
-
-    @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var inputResourcesDir: FileCollection
 
@@ -184,6 +180,8 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
             task.manifestFiles = variantScope.getOutput(InternalArtifactType.MERGED_MANIFESTS)
 
             task.inputResourcesDir = variantScope.getOutput(InternalArtifactType.PACKAGED_RES)
+
+            task.outputScope = variantScope.outputScope
         }
     }
 }
