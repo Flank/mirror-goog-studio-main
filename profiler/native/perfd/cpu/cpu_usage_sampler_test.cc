@@ -81,6 +81,18 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
   EXPECT_EQ(kAppCpuTime, sample.app_cpu_time_in_millisec());
   EXPECT_EQ(kSystemCpuTime, sample.system_cpu_time_in_millisec());
   EXPECT_EQ(kElapsedTime, sample.elapsed_time_in_millisec());
+
+  EXPECT_EQ(48, sample.cores_size());
+  int i = 0;
+  for (; i < sample.cores_size(); i++) {
+    auto usage = sample.cores(i);
+    if (usage.core() == 25) {
+      EXPECT_EQ(24543500, usage.elapsed_time_in_millisec());
+      EXPECT_EQ(130200, usage.system_cpu_time_in_millisec());
+      break;
+    }
+  }
+  ASSERT_LT(i, 48);
 }
 
 TEST(CpuUsageSamplerTest, SampleTwoApps) {

@@ -269,6 +269,14 @@ message CpuUsageData {
   int64 system_cpu_time_in_millisec = 3;
   // Amount of time since the system start, measured in milliseconds.
   int64 elapsed_time_in_millisec = 4;
+  // System usage per core.
+  repeated CpuCoreUsageData cores = 5;
+}
+
+message CpuCoreUsageData {
+  int32 core = 1;
+  int64 system_cpu_time_in_millisec = 2;
+  int64 elapsed_time_in_millisec = 3;
 }
 
 // Requests the state of all the threads in the given time range.
