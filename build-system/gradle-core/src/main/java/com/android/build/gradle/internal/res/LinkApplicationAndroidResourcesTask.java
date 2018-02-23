@@ -63,6 +63,7 @@ import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.v2.Aapt2DaemonManager;
@@ -430,7 +431,14 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         File proguardOutputFile = null;
         File mainDexListProguardOutputFile = null;
         if (generateCode) {
-            packageForR = originalApplicationId.get();
+            // workaround for b/74068247. Until that's fixed, if it's a namespaced feature,
+            // an extra empty dummy R.java file will be generated as well
+            if (isNamespaced
+                    && variantScope.getVariantData().getType() == VariantTypeImpl.FEATURE) {
+                packageForR = "dummy";
+            } else {
+                packageForR = originalApplicationId.get();
+            }
 
             // we have to clean the source folder output in case the package name changed.
             srcOut = getSourceOutputDir();

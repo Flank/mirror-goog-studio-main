@@ -276,6 +276,9 @@ class PublishingSpecs {
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
                 api(FEATURE_CLASSES, ArtifactType.CLASSES)
+                api(RES_STATIC_LIBRARY, ArtifactType.RES_STATIC_LIBRARY)
+                api(COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
+                    ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
 
                 runtime(FEATURE_TRANSITIVE_DEPS, ArtifactType.FEATURE_TRANSITIVE_DEPS)
                 runtime(APK, ArtifactType.APK)

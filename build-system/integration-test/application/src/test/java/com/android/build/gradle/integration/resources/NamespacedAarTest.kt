@@ -30,11 +30,7 @@ import org.junit.Test
  * </pre>
  */
 class NamespacedAarTest {
-    /**
-     * This test depends on AAPT2 features that are not released yet.
-     * There is a version of the build tools checked in from the build server,
-     * with the version in package.xml set to the build number it was taken from.
-     */
+
     private val buildScriptContent = """
         android.aaptOptions.namespaced = true
     """

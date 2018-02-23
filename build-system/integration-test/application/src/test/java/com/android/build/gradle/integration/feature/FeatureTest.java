@@ -140,6 +140,7 @@ public class FeatureTest {
                 assertThatApk(featureProject.getFeatureApk(GradleTestProject.ApkType.DEBUG))) {
             featureApk.exists();
             featureApk.containsClass("Lcom/example/android/multiproject/feature/R;");
+            featureApk.containsClass("Lcom/example/android/multiproject/feature/R$string;");
             featureApk.containsClass("Lcom/example/android/multiproject/feature/MainActivity;");
             featureApk.doesNotContainClass("Lcom/example/android/multiproject/R;");
             featureApk.doesNotContainClass("Lcom/example/android/multiproject/library/R;");
