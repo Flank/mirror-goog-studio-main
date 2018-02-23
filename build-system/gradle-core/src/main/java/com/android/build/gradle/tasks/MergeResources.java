@@ -706,6 +706,7 @@ public class MergeResources extends IncrementalTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public Collection<BuildableArtifact> getResources() {
         return resources.values();
     }
