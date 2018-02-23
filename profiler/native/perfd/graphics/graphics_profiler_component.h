@@ -27,7 +27,7 @@ namespace profiler {
 class GraphicsProfilerComponent final : public ProfilerComponent {
  public:
   explicit GraphicsProfilerComponent(Daemon::Utilities *utilities)
-      : public_service_(utilities, &collectors_) {}
+      : public_service_(utilities) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service *GetPublicService() override { return &public_service_; }
@@ -37,8 +37,6 @@ class GraphicsProfilerComponent final : public ProfilerComponent {
 
  private:
   GraphicsServiceImpl public_service_;
-  // Mapping "app/activity"->GraphicsCollector.
-  std::map<std::string, GraphicsCollector> collectors_;
 };
 
 }  // namespace profiler

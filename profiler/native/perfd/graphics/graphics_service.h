@@ -29,18 +29,17 @@ namespace profiler {
 class GraphicsServiceImpl final
     : public profiler::proto::GraphicsService::Service {
  public:
-  GraphicsServiceImpl(Daemon::Utilities *utilities,
-                      std::map<std::string, GraphicsCollector> *collectors)
-      : clock_(utilities->clock()), collectors_(*collectors) {}
+  GraphicsServiceImpl(Daemon::Utilities *utilities)
+      : clock_(utilities->clock()), collector_(clock_) {}
 
   virtual ~GraphicsServiceImpl() = default;
 
-  grpc::Status StartMonitoringApp(
+  grpc::Status StartMonitoringGraphics(
       grpc::ServerContext *context,
       const profiler::proto::GraphicsStartRequest *request,
       profiler::proto::GraphicsStartResponse *response) override;
 
-  grpc::Status StopMonitoringApp(
+  grpc::Status StopMonitoringGraphics(
       grpc::ServerContext *context,
       const profiler::proto::GraphicsStopRequest *request,
       profiler::proto::GraphicsStopResponse *response) override;
@@ -51,14 +50,9 @@ class GraphicsServiceImpl final
       profiler::proto::GraphicsDataResponse *response) override;
 
  private:
-  // Return the GraphicsCollector associated with the |app_and_activity_name|.
-  // |app_and_activity_name| should be formatted as app name + "/" + activity
-  // name.
-  GraphicsCollector *GetCollector(const std::string &app_and_activity_name);
+  Clock *clock_;
 
-  Clock* clock_;
-  // Mapping "app/activity"->GraphicsCollector.
-  std::map<std::string, GraphicsCollector> &collectors_;
+  GraphicsCollector collector_;  // profiler::GraphicsCollector(clock_);
 };
 }  // namespace profiler
 

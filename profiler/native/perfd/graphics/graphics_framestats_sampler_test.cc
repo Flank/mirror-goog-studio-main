@@ -17,43 +17,18 @@
 
 #include <gtest/gtest.h>
 
-#include "proto/graphics.pb.h"
 #include "test/utils.h"
-#include "utils/bash_command.h"
 #include "utils/file_reader.h"
 
 using profiler::TestUtils;
 using profiler::proto::GraphicsData;
 
-TEST(GetDumpsysCommand, DumpsysCommandValid26) {
-  profiler::GraphicsFrameStatsSampler sampler;
-  std::string command = sampler.GetDumpsysCommand("app/name", 26);
-
-  EXPECT_EQ("dumpsys SurfaceFlinger --latency \"SurfaceView - app/name#0\"",
-            command);
-}
-
-TEST(GetDumpsysCommand, DumpsysCommandValid24) {
-  profiler::GraphicsFrameStatsSampler sampler;
-  std::string command = sampler.GetDumpsysCommand("app/name", 24);
-
-  EXPECT_EQ("dumpsys SurfaceFlinger --latency \"SurfaceView - app/name\"",
-            command);
-}
-
-TEST(GetDumpsysCommand, DumpsysCommandValid21) {
-  profiler::GraphicsFrameStatsSampler sampler;
-  std::string command = sampler.GetDumpsysCommand("app/name", 21);
-
-  EXPECT_EQ("dumpsys SurfaceFlinger --latency \"SurfaceView\"", command);
-}
-
 class MockBashCommandRunner final : public profiler::BashCommandRunner {
  public:
-  MockBashCommandRunner(const std::string &test_data_file_name)
+  MockBashCommandRunner(const std::string& test_data_file_name)
       : BashCommandRunner(""), test_data_file_name_(test_data_file_name) {}
-  virtual bool Run(const std::string &parameters,
-                   std::string *output) const override {
+  virtual bool Run(const std::string& parameters,
+                   std::string* output) const override {
     if (!test_data_file_name_.empty()) {
       profiler::FileReader::Read(
           TestUtils::getGraphicsTestData(test_data_file_name_), output);

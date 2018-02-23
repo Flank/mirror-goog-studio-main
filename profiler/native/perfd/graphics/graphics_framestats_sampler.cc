@@ -15,8 +15,6 @@
  */
 #include "graphics_framestats_sampler.h"
 
-#include <cstdlib>
-#include <iostream>
 #include <sstream>
 
 #include "utils/trace.h"
@@ -70,18 +68,31 @@ int64_t GraphicsFrameStatsSampler::GetFrameStatsVector(
   return ParseFrameStatsOutput(output, start_timestamp_exclusive, data_vector);
 }
 
-std::string GraphicsFrameStatsSampler::GetDumpsysCommand(
-    const std::string app_and_activity_name, const int64_t sdk) {
-  std::string cmd("dumpsys SurfaceFlinger --latency \"SurfaceView");
-  if (sdk >= 24) {
-    // In api 24+ the specific app activity combination needs to be specified
-    // and will only be monitored if it is present on the screen.
-    cmd.append(" - ").append(app_and_activity_name);
+std::string GraphicsFrameStatsSampler::GetDumpsysCommand() {
+  std::string forefront_activity = GetForefrontActivity();
+  if (forefront_activity.empty()) {
+    // This happens if there is no SurfaceView on the screen.
+    return "";
   }
-  if (sdk >= 26) {
-    cmd.append("#0");
+  std::string cmd("dumpsys SurfaceFlinger --latency \"");
+  cmd.append(forefront_activity).append("\"");
+  return cmd;
+}
+
+std::string GraphicsFrameStatsSampler::GetForefrontActivity() {
+  std::string output;
+  BashCommandRunner cmd_get_forefront{
+      "dumpsys SurfaceFlinger --list | grep SurfaceView | grep -v "
+      "'Background "
+      "for'"};
+  cmd_get_forefront.Run("", &output);
+  if (output.empty()) {
+    return "";
   }
-  return cmd.append("\"");
+  if (isspace(output.back())) {
+    output.pop_back();
+  }
+  return output;
 }
 
 int64_t GraphicsFrameStatsSampler::ParseFrameStatsOutput(

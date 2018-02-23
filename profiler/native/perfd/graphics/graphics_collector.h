@@ -42,9 +42,7 @@ class GraphicsCollector {
   // every |kSleepNs| nanoseconds.
   // |app_and_activity_name| should be formatted as app name + "/" + activity
   // name.
-  GraphicsCollector(const std::string &app_and_activity_name, Clock* clock)
-      : graphics_cache_(clock, kSamplesCount),
-        app_and_activity_name_(app_and_activity_name) {}
+  GraphicsCollector(Clock* clock) : graphics_cache_(clock, kSamplesCount) {}
 
   ~GraphicsCollector();
 
@@ -58,10 +56,7 @@ class GraphicsCollector {
   // Assumes |Start()| and |Stop()| are called by the same thread.
   void Stop();
 
-  // Return the app and activity string this graphics collector will monitor.
-  std::string app_and_activity_name();
-
-  GraphicsCache &graphics_cache() { return graphics_cache_; }
+  GraphicsCache& graphics_cache() { return graphics_cache_; }
 
  private:
   // Collects and saves Graphics sampling data continually.
@@ -75,8 +70,6 @@ class GraphicsCollector {
   GraphicsFrameStatsSampler graphics_frame_stats_sampler_;
   // True if sampling operations is running.
   std::atomic_bool is_running_{false};
-  // "app/activity" name combination
-  std::string app_and_activity_name_;
 };  // GraphicsCollector
 
 }  // namespace profiler
