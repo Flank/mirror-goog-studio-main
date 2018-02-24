@@ -46,7 +46,7 @@ public class OkHttpTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.network.OkHttpActivity";
 
-    private boolean myIsOPlusDevice = true;
+    private boolean myIsOPlusDevice;
     private PerfDriver myPerfDriver;
     private FakeAndroidDriver myAndroidDriver;
     private GrpcUtils myGrpc;

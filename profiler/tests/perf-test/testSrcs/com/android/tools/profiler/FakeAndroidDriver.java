@@ -8,21 +8,22 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.regex.Pattern;
 import org.junit.Assert;
 
 public class FakeAndroidDriver extends ProcessRunner {
 
+    private static final String APP_LISTENING = "Test Framework Server Listening: ";
     private static final String ART_PATH = ProcessRunner.getProcessPath("art.location");
     private int myCommunicationPort;
     private String myAddress;
 
-    public FakeAndroidDriver(String address, int port, int communicationPort) {
+    public FakeAndroidDriver(String address, int port) {
         super(
                 ART_PATH,
                 "--64",
                 "--verbose",
                 String.format("-Dservice.address=%s:%d", address, port),
-                String.format("-Dapp.communication.port=%d", communicationPort),
                 "-Djava.library.path="
                         + ProcessRunner.getProcessPath("agent.location")
                         + ":"
@@ -62,8 +63,20 @@ public class FakeAndroidDriver extends ProcessRunner {
                         + ProcessRunner.getProcessPath("art.boot.location")
                         + "core-core-libart-hostdex.art",
                 "com.android.tools.profiler.FakeAndroid");
-        myCommunicationPort = communicationPort;
         myAddress = address;
+    }
+
+    @Override
+    public void start() throws IOException {
+        super.start();
+        Pattern pattern = Pattern.compile("(.*)(" + APP_LISTENING + ")(?<result>.*)");
+        String port = waitForInput(pattern, ProcessRunner.NO_TIMEOUT);
+        assertTrue(port != null && !port.isEmpty());
+        myCommunicationPort = Integer.parseInt(port);
+    }
+
+    public int getCommunicationPort() {
+        return myCommunicationPort;
     }
 
     public void loadDex(String dexPath) {

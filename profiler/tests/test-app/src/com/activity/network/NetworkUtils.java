@@ -22,13 +22,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.ServerSocket;
 
 // API methods are public to express intention, even if package private technically works
 @SuppressWarnings("WeakerAccess")
 public final class NetworkUtils {
     @SuppressWarnings("FieldCanBeLocal") // Constant, for readability
     private static final String LOCAL_HOST = "http://127.0.0.1";
+    private static final long SLEEP_MS = 200;
 
     public interface ServerTest {
         void runWith(SimpleWebServer server) throws Exception;
@@ -38,13 +38,16 @@ public final class NetworkUtils {
      * Start a new server to run a single test against. The test can then send requests to it.
      *
      * <p>The server will automatically be started before the test begins and stopped on its
-     * completion.
+     * completion. As server starting is in its own thread, test waits until server started.
      */
     public static void runWithServer(RequestHandler handler, ServerTest serverTest)
             throws Exception {
-        SimpleWebServer server = new SimpleWebServer(NetworkUtils.getAvailablePort(), handler);
+        SimpleWebServer server = new SimpleWebServer(handler);
         server.start();
         try {
+            while (server.getPort() == 0) {
+                Thread.sleep(SLEEP_MS);
+            }
             serverTest.runWith(server);
         } finally {
             server.stop();
@@ -76,17 +79,5 @@ public final class NetworkUtils {
             System.out.println();
             in.close();
         }
-    }
-
-    private static int getAvailablePort() {
-        int port = -1;
-        try {
-            ServerSocket socket = new ServerSocket(0);
-            port = socket.getLocalPort();
-            socket.close();
-        } catch (IOException ex) {
-            System.out.println("Unable to find available port: " + ex);
-        }
-        return port;
     }
 }

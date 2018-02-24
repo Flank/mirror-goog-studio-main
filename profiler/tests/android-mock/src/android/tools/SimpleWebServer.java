@@ -62,9 +62,6 @@ public class SimpleWebServer implements Runnable {
         }
     }
 
-    /** The port number we listen to */
-    private final int port;
-
     /** True if the server is running. */
     private boolean isRunning;
 
@@ -79,14 +76,14 @@ public class SimpleWebServer implements Runnable {
         String onRequest(List<QueryParam> queryParams);
     }
 
-    /** WebServer constructor. */
-    public SimpleWebServer(int port, RequestHandler handler) {
-        this.port = port;
+    /** WebServer constructor, port will be assigned when server started. */
+    public SimpleWebServer(RequestHandler handler) {
         this.handler = handler;
     }
 
+    /** Returns the server port if server is started, otherwise returns 0. */
     public int getPort() {
-        return port;
+        return serverSocket != null ? serverSocket.getLocalPort() : 0;
     }
 
     /** This method starts the web server listening to the specified port. */
@@ -120,8 +117,8 @@ public class SimpleWebServer implements Runnable {
     @Override
     public void run() {
         try {
-            serverSocket = new ServerSocket(port);
-            System.out.println("Test Framework Server Listening");
+            serverSocket = new ServerSocket(0);
+            System.out.println("Test Framework Server Listening: " + serverSocket.getLocalPort());
             while (isRunning) {
                 Socket socket = serverSocket.accept();
                 handle(socket);

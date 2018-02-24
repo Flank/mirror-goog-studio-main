@@ -105,6 +105,10 @@ public class ProcessRunner {
         return containsStatement(myInput, statement, DEFAULT_INPUT_TIMEOUT);
     }
 
+    public String waitForInput(Pattern statement, int timeout) {
+        return containsStatement(myInput, statement, timeout);
+    }
+
     private boolean containsStatement(List<String> storage, String statement, int timeout) {
         return containsStatement(
                         storage, Pattern.compile("(.*)(?<result>" + statement + ")(.*)"), timeout)

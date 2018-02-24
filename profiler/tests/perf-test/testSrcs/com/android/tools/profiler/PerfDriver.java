@@ -38,8 +38,8 @@ public class PerfDriver {
 
     public static final String LOCAL_HOST = "127.0.0.1";
     private File myConfigFile;
+    // Port that is used by studio side sending requests to perfd.
     private int myPort;
-    private int myCommunicationPort;
     private int myPid = -1;
     private FakeAndroidDriver myMockApp;
     private PerfdDriver myPerfdDriver;
@@ -56,8 +56,7 @@ public class PerfDriver {
         }
         myPropertiesFile.writeFile();
         myIsOPlusDevice = isOPlusDevice;
-        myCommunicationPort = getAvailablePort();
-        myMockApp = new FakeAndroidDriver(LOCAL_HOST, myPort, myCommunicationPort);
+        myMockApp = new FakeAndroidDriver(LOCAL_HOST, myPort);
         myPerfdDriver = new PerfdDriver(myConfigFile.getAbsolutePath());
         myGrpc = new GrpcUtils(LOCAL_HOST, myPort, myMockApp);
     }
@@ -68,8 +67,12 @@ public class PerfDriver {
         myPerfdDriver.stop();
     }
 
+    /**
+     * Returns the port the app communicates over. Note: this will not be valid until after {@link
+     * #start(String)} has finished.
+     */
     public int getCommunicationPort() {
-        return myCommunicationPort;
+        return myMockApp.getCommunicationPort();
     }
 
     public FakeAndroidDriver getFakeAndroidDriver() {
@@ -106,9 +109,7 @@ public class PerfDriver {
         myPerfdDriver.start();
         //Block until we are in a state for the test to continue.
         assertTrue(myPerfdDriver.waitForInput("Server listening on", ProcessRunner.NO_TIMEOUT));
-        assertTrue(
-                myMockApp.waitForInput(
-                        "Test Framework Server Listening", ProcessRunner.NO_TIMEOUT));
+
         myMockApp.setProperty(
                 "profiler.service.address", String.format("%s:%d", PerfDriver.LOCAL_HOST, myPort));
         if (!myIsOPlusDevice) {
