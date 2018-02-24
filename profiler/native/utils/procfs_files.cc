@@ -30,6 +30,13 @@ namespace profiler {
 
 string ProcfsFiles::GetSystemStatFilePath() const { return kProcStatFilename; }
 
+string ProcfsFiles::GetSystemCpuFrequencyPath(int32_t cpu) const {
+  // TODO: Use std::to_string() after we use libc++. NDK doesn't support itoa().
+  std::ostringstream os;
+  os << "/sys/devices/system/cpu/cpu" << cpu << "/cpufreq/scaling_cur_freq";
+  return os.str();
+}
+
 string ProcfsFiles::GetProcessStatFilePath(int32_t pid) const {
   // TODO: Use std::to_string() after we use libc++. NDK doesn't support itoa().
   std::ostringstream os;

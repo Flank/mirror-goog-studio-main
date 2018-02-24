@@ -25,9 +25,9 @@
 #include "test/utils.h"
 #include "utils/procfs_files.h"
 
-using std::vector;
 using std::string;
 using std::unique_ptr;
+using std::vector;
 
 namespace profiler {
 
@@ -40,9 +40,16 @@ class MockProcfsFiles final : public ProcfsFiles {
   std::string GetSystemStatFilePath() const override {
     return TestUtils::getCpuTestData("proc_stat_1.txt");
   }
+
   std::string GetProcessStatFilePath(int32_t pid) const override {
     std::ostringstream os;
     os << "pid_stat_" << pid << ".txt";
+    return TestUtils::getCpuTestData(os.str());
+  }
+
+  std::string GetSystemCpuFrequencyPath(int32_t cpu) const override {
+    std::ostringstream os;
+    os << "cpu" << cpu << "_scaling_cur_freq.txt";
     return TestUtils::getCpuTestData(os.str());
   }
 };
@@ -82,17 +89,16 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
   EXPECT_EQ(kSystemCpuTime, sample.system_cpu_time_in_millisec());
   EXPECT_EQ(kElapsedTime, sample.elapsed_time_in_millisec());
 
-  EXPECT_EQ(48, sample.cores_size());
-  int i = 0;
-  for (; i < sample.cores_size(); i++) {
-    auto usage = sample.cores(i);
-    if (usage.core() == 25) {
-      EXPECT_EQ(24543500, usage.elapsed_time_in_millisec());
-      EXPECT_EQ(130200, usage.system_cpu_time_in_millisec());
-      break;
-    }
-  }
-  ASSERT_LT(i, 48);
+  ASSERT_EQ(2, sample.cores_size());
+  auto core = sample.cores(0);
+  EXPECT_EQ(0, core.core());
+  EXPECT_EQ(360, core.elapsed_time_in_millisec());
+  EXPECT_EQ(270, core.system_cpu_time_in_millisec());
+  EXPECT_EQ(0, core.frequency_in_khz());
+
+  core = sample.cores(1);
+  EXPECT_EQ(1, core.core());
+  EXPECT_EQ(1234, core.frequency_in_khz());
 }
 
 TEST(CpuUsageSamplerTest, SampleTwoApps) {

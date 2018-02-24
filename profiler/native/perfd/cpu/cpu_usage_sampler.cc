@@ -32,13 +32,12 @@
 #include "utils/file_reader.h"
 #include "utils/tokenizer.h"
 
-using profiler::proto::CpuUsageData;
+using profiler::FileReader;
+using profiler::Tokenizer;
+using profiler::proto::CpuCoreUsageData;
 using profiler::proto::CpuStartResponse;
 using profiler::proto::CpuStopResponse;
 using profiler::proto::CpuUsageData;
-using profiler::proto::CpuCoreUsageData;
-using profiler::FileReader;
-using profiler::Tokenizer;
 using std::string;
 using std::vector;
 
@@ -79,13 +78,16 @@ int64_t TimeUnitInMilliseconds() {
 // |elapsed_time_in_millisec| except 'idle' and 'iowait' (which we also consider
 // as idle time).
 //
-bool ParseProcStatCpuLine(const string& line, int* cpu, int64_t* load, int64_t* elapsed) {
+bool ParseProcStatCpuLine(const string& line, int* cpu, int64_t* load,
+                          int64_t* elapsed) {
   int64_t user, nice, system, idle, iowait, irq, softirq, steal;
   char cpu_n[11];
   // TODO: figure out why sscanf_s cannot compile.
-  if (sscanf(line.c_str(), "%10s  %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64
-                           " %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64,
-          cpu_n, &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal) == 9) {
+  if (sscanf(line.c_str(),
+             "%10s  %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64
+             " %" PRId64 " %" PRId64 " %" PRId64,
+             cpu_n, &user, &nice, &system, &idle, &iowait, &irq, &softirq,
+             &steal) == 9) {
     *load = user + nice + system + irq + softirq + steal;
     *elapsed = *load + idle + iowait;
     if (strcmp(cpu_n, "cpu") == 0) {
@@ -105,7 +107,7 @@ bool ParseProcStatForUsageData(const string& content, CpuUsageData* data) {
   std::string line;
 
   bool found = false;
-  while (std::getline(stream, line, '\n')){
+  while (std::getline(stream, line, '\n')) {
     int64_t load, elapsed;
     int cpu;
     if (ParseProcStatCpuLine(line, &cpu, &load, &elapsed)) {
@@ -199,6 +201,14 @@ bool CollectProcessUsageData(int32_t pid, const string& usage_file,
   return false;
 }
 
+bool CollectCpuFrequency(const string& freq_file, CpuCoreUsageData* data) {
+  string buffer;
+  if (FileReader::Read(freq_file, &buffer)) {
+    data->set_frequency_in_khz(atoi(buffer.c_str()));
+  }
+  return false;
+}
+
 }  // namespace
 
 namespace profiler {
@@ -241,6 +251,13 @@ bool CpuUsageSampler::SampleAProcess(int32_t pid) {
   if (CollectSystemUsageData(usage_files_->GetSystemStatFilePath(), &data) &&
       CollectProcessUsageData(pid, usage_files_->GetProcessStatFilePath(pid),
                               &data)) {
+    for (int i = 0; i < data.cores_size(); i++) {
+      // We do not fail if there is no file, just not set it.
+      CpuCoreUsageData* data_core = data.mutable_cores(i);
+      CollectCpuFrequency(
+          usage_files_->GetSystemCpuFrequencyPath(data_core->core()),
+          data_core);
+    }
     data.set_end_timestamp(clock_.GetCurrentTime());
     cache_.Add(pid, data);
     return true;

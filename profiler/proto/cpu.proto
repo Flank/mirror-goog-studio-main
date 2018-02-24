@@ -294,6 +294,7 @@ message CpuCoreUsageData {
   int32 core = 1;
   int64 system_cpu_time_in_millisec = 2;
   int64 elapsed_time_in_millisec = 3;
+  int32 frequency_in_khz = 4;
 }
 
 // Requests the state of all the threads in the given time range.
