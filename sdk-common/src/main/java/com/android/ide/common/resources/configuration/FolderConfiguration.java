@@ -904,15 +904,6 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         return result.toString();
     }
 
-    // TODO: Remove.
-    /** @deprecated Use {@link #getQualifierString()} instead. */
-    @Deprecated
-    @NonNull
-    public String getUniqueKey() {
-        String qualifierString = getQualifierString();
-        return qualifierString.isEmpty() ? "" : SdkConstants.RES_QUALIFIER_SEP + qualifierString;
-    }
-
     /**
      * Returns the folder configuration as a qualifier string, e.g.
      * for the folder values-en-rUS this returns "en-rUS". For the
