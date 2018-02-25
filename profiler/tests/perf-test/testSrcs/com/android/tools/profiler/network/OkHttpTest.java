@@ -31,7 +31,6 @@ import com.android.tools.profiler.proto.Profiler.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -80,7 +79,7 @@ public class OkHttpTest {
 
         final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                stubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -108,7 +107,7 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                stubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -132,7 +131,7 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                stubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -160,7 +159,7 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                stubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -182,10 +181,11 @@ public class OkHttpTest {
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2AndOkHttp3Get");
         assertThat(myAndroidDriver.waitForInput(okhttp2AndOkHttp3Get)).isTrue();
 
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
-        assertThat(httpRangeResponse.getDataList().size()).isEqualTo(2);
+                TestUtils.waitForAndReturn(
+                        () -> stubWrapper.getNonEmptyHttpRange(mySession),
+                        resp -> resp.getDataList().size() == 2);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
         HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
@@ -206,8 +206,9 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
-        assertThat(httpRangeResponse.getDataList().size()).isEqualTo(2);
+                TestUtils.waitForAndReturn(
+                        () -> stubWrapper.getNonEmptyHttpRange(mySession),
+                        resp -> resp.getDataList().size() == 2);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
         HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
@@ -242,15 +243,14 @@ public class OkHttpTest {
     private void assertNetworkErrorBehavior(final NetworkStubWrapper stubWrapper) {
         // Wait until get two responses: 1 aborted and 1 completed.
         // Both failed and successful requests should have valid time ranges.
-        TestUtils.waitFor(
-                () -> {
-                    List<HttpConnectionData> list =
-                            stubWrapper.getAllHttpRange(mySession).getDataList();
-                    return list.size() == 2
-                            && list.stream().allMatch(item -> (item.getEndTimestamp() > 0));
-                });
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                TestUtils.waitForAndReturn(
+                        () -> stubWrapper.getNonEmptyHttpRange(mySession),
+                        resp ->
+                                resp.getDataList().size() == 2
+                                        && resp.getDataList()
+                                                .stream()
+                                                .allMatch(item -> (item.getEndTimestamp() > 0)));
 
         // The first request should have no response fields after being aborted
         HttpConnectionData connectionAborted = httpRangeResponse.getDataList().get(0);

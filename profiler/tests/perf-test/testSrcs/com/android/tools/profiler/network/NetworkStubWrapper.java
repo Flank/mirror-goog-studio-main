@@ -31,13 +31,20 @@ final class NetworkStubWrapper {
         myNetworkStub = networkStub;
     }
 
-    NetworkProfiler.HttpRangeResponse getAllHttpRange(Session session) {
-        return myNetworkStub.getHttpRange(
-                NetworkProfiler.HttpRangeRequest.newBuilder()
-                        .setSession(session)
-                        .setStartTimestamp(0L)
-                        .setEndTimestamp(Long.MAX_VALUE)
-                        .build());
+    /**
+     * Fetch an http range that have at least one element in it. This method will block until a
+     * non-empty range is returned.
+     */
+    NetworkProfiler.HttpRangeResponse getNonEmptyHttpRange(Session session) {
+        Supplier<NetworkProfiler.HttpRangeResponse> getRange =
+                () ->
+                        myNetworkStub.getHttpRange(
+                                NetworkProfiler.HttpRangeRequest.newBuilder()
+                                        .setSession(session)
+                                        .setStartTimestamp(0L)
+                                        .setEndTimestamp(Long.MAX_VALUE)
+                                        .build());
+        return TestUtils.waitForAndReturn(getRange, res -> res.getDataList().size() > 0);
     }
 
     NetworkProfiler.HttpDetailsResponse getHttpDetails(long connId, Type type) {

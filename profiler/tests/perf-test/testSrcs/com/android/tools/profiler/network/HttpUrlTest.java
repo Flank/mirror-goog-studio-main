@@ -74,7 +74,7 @@ public class HttpUrlTest {
 
         final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                stubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -102,7 +102,7 @@ public class HttpUrlTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                stubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -127,11 +127,10 @@ public class HttpUrlTest {
 
         final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                stubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
-        HttpDetailsResponse requestDetails;
         TestUtils.waitFor(
                 () -> {
                     HttpDetailsResponse details =
