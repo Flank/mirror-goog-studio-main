@@ -86,12 +86,14 @@ message EnergyEventsResponse {
 
 // Energy event data or state change for WakeLock, Alarm, etc.
 message EnergyEvent {
-  // Timestamp of the event in nanoseconds.
+  // Timestamp of the event in nanoseconds. For related events (e.g. those with
+  // the same ID), each event is expected to have a unique timestamp, as it will
+  // be used to order them.
   int64 timestamp = 1;
   // Application Id this event is associated with.
   int32 pid = 2;
-  // Optional ID. If set, use to correlate two related events together. Will be
-  // unique only to an app.
+  // ID used to correlate two (or more) related events together. Note: Event
+  // group IDs may be re-used across |pid|s, but will be unique within an app.
   int32 event_id = 3;
   // ID to fetch a code stack trace for where this event was generated
   // Use with |ProfilerService.GetBytes|
