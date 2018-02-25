@@ -1261,6 +1261,7 @@ public final class SdkConstants {
     public static final String ATTR_STYLE = "style"; //$NON-NLS-1$
     public static final String ATTR_CONTEXT = "context"; //$NON-NLS-1$
     public static final String ATTR_ID = "id"; //$NON-NLS-1$
+    public static final String ATTR_AUTOFILL_HINTS = "autofillHints"; //$NON-NLS-1$
     public static final String ATTR_TEXT = "text"; //$NON-NLS-1$
     public static final String ATTR_TEXT_SIZE = "textSize"; //$NON-NLS-1$
     public static final String ATTR_LABEL = "label"; //$NON-NLS-1$
@@ -1298,6 +1299,9 @@ public final class SdkConstants {
     public static final String ATTR_PRIVATE_IME_OPTIONS = "privateImeOptions"; //$NON-NLS-1$
     public static final String VALUE_NONE = "none"; //$NON-NLS-1$
     public static final String VALUE_NO = "no"; //$NON-NLS-1$
+    public static final String VALUE_NO_EXCLUDE_DESCENDANTS = "noExcludeDescendants"; //$NON-NLS-1$
+    public static final String VALUE_YES = "yes"; //$NON-NLS-1$
+    public static final String VALUE_YES_EXCLUDE_DESCENDANTS = "yesExcludeDescendants"; //$NON-NLS-1$
     public static final String ATTR_NUMERIC = "numeric"; //$NON-NLS-1$
     public static final String ATTR_IME_ACTION_ID = "imeActionId"; //$NON-NLS-1$
     public static final String ATTR_IME_OPTIONS = "imeOptions"; //$NON-NLS-1$
@@ -1317,6 +1321,8 @@ public final class SdkConstants {
     public static final String ATTR_SCALE_TYPE = "scaleType"; //$NON-NLS-1$
     public static final String ATTR_VISIBILITY = "visibility"; //$NON-NLS-1$
     public static final String ATTR_TEXT_IS_SELECTABLE = "textIsSelectable"; //$NON-NLS-1$
+    public static final String ATTR_IMPORTANT_FOR_AUTOFILL =
+            "importantForAutofill"; //$NON-NLS-1$
     public static final String ATTR_IMPORTANT_FOR_ACCESSIBILITY =
             "importantForAccessibility"; //$NON-NLS-1$
     public static final String ATTR_ACCESSIBILITY_TRAVERSAL_BEFORE =
