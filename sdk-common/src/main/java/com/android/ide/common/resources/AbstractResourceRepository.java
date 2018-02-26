@@ -650,8 +650,9 @@ public abstract class AbstractResourceRepository {
             FolderConfiguration configuration = FolderConfiguration.getConfigForQualifierString(s);
             if (configuration != null) {
                 LocaleQualifier locale = configuration.getLocaleQualifier();
-                if (locale != null && locale.getRegion() != null
-                        && locale.getLanguage().equals(currentLanguage)) {
+                if (locale != null
+                        && locale.getRegion() != null
+                        && currentLanguage.equals(locale.getLanguage())) {
                     set.add(locale.getRegion());
                 }
             }

@@ -759,7 +759,7 @@ public abstract class ResourceRepository {
             for (ResourceFolder folder : folderSubList) {
                 FolderConfiguration config = folder.getConfiguration();
                 LocaleQualifier locale = config.getLocaleQualifier();
-                if (locale != null) {
+                if (locale != null && locale.hasLanguage()) {
                     set.add(locale.getLanguage());
                 }
             }
