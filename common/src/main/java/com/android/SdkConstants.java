@@ -2235,7 +2235,8 @@ public final class SdkConstants {
     public static final String FQCN_IMAGE_VIEW = "android.widget.ImageView"; //$NON-NLS-1$
 
     /** The fully qualified class name of NavHostFragment Fragment subclass */
-    public static final String FQCN_NAV_HOST_FRAGMENT = "android.arch.navigation.NavHostFragment";
+    public static final String FQCN_NAV_HOST_FRAGMENT =
+            "androidx.navigation.fragment.NavHostFragment";
 
     public static final String ATTR_SRC = "src"; //$NON-NLS-1$
     public static final String ATTR_SRC_COMPAT = "srcCompat"; //$NON-NLS-1$
