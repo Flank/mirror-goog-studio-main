@@ -46,6 +46,7 @@ import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
 import com.android.sdklib.repository.installer.SdkInstallerUtil;
@@ -69,7 +70,6 @@ import java.util.stream.Collectors;
  * Singleton-based implementation of SdkLoader for a standard SDK
  */
 public class DefaultSdkLoader implements SdkLoader {
-
     private enum InstallResultType {
         SUCCESS,
         LICENSE_FAIL,
@@ -90,9 +90,16 @@ public class DefaultSdkLoader implements SdkLoader {
         if (sLoader == null) {
             sLoader = new DefaultSdkLoader(sdkLocation);
         } else if (!FileUtils.isSameFile(sdkLocation, sLoader.mSdkLocation)) {
-            throw new IllegalStateException(String.format(
-                    "%s already created using %s; cannot also use %s",
-                    DefaultSdkLoader.class.getSimpleName(), sLoader.mSdkLocation, sdkLocation));
+            throw new IllegalStateException(
+                    String.format(
+                            "%1$s already created using %2$s; cannot also use %3$s. If this is a Gradle "
+                                    + "composite build, it could be that you have set \"%4$s\" to multiple values "
+                                    + "across builds. Make sure that \"%4$s\" is the same in all .properties files of "
+                                    + "the composite build",
+                            DefaultSdkLoader.class.getSimpleName(),
+                            sLoader.mSdkLocation,
+                            sdkLocation,
+                            ProjectProperties.PROPERTY_SDK));
         }
 
         return sLoader;
