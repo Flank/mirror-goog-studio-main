@@ -20,7 +20,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_DATA_BINDING_V2;
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
-import static com.android.builder.model.AndroidProject.PROJECT_TYPE_FEATURE;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -129,9 +128,9 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
             new DependenciesImpl(ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
 
     @NonNull static final DependencyGraphs EMPTY_DEPENDENCY_GRAPH = new EmptyDependencyGraphs();
-    @NonNull private final GlobalScope globalScope;
+    @NonNull protected final GlobalScope globalScope;
     @NonNull private final AndroidBuilder androidBuilder;
-    @NonNull private final AndroidConfig config;
+    @NonNull protected final AndroidConfig config;
     @NonNull private final ExtraModelInfo extraModelInfo;
     @NonNull private final VariantManager variantManager;
     @NonNull private final TaskManager taskManager;
@@ -171,7 +170,6 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
         this.nativeLibFactory = nativeLibraryFactory;
         this.projectType = projectType;
         this.generation = generation;
-
     }
 
     public static void clearCaches() {
@@ -405,7 +403,17 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                 projectType,
                 Version.BUILDER_MODEL_API_VERSION,
                 generation,
-                projectType == PROJECT_TYPE_FEATURE && config.getBaseFeature());
+                isBaseSplit(),
+                getDynamicFeatures());
+    }
+
+    protected boolean isBaseSplit() {
+        return false;
+    }
+
+    @NonNull
+    protected Collection<String> getDynamicFeatures() {
+        return ImmutableList.of();
     }
 
     /**

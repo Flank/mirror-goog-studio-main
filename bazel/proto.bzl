@@ -108,7 +108,8 @@ _gen_proto_rule = rule(
 )
 
 def java_proto_library(
-    name, srcs=None, proto_deps=[], java_deps=[], pom=None, visibility=None, grpc_support=False, protoc_version="3.4.0"):
+    name, srcs=None, proto_deps=[], java_deps=[], pom=None, visibility=None, grpc_support=False, protoc_version="3.4.0",
+    **kwargs):
   srcs_name = name + "_srcs"
   outs = [srcs_name + ".srcjar"]
   _gen_proto_rule(
@@ -136,6 +137,7 @@ def java_proto_library(
       srcs = outs,
       deps = java_deps,
       visibility = visibility,
+      **kwargs
   )
 
 def cc_grpc_proto_library(name, srcs=[], deps=[], includes=[], visibility=None, grpc_support=False, tags=None):

@@ -26,7 +26,7 @@ import com.android.builder.tasks.Task;
 import com.android.ide.common.internal.ResourceCompilationException;
 import com.android.ide.common.internal.ResourceProcessor;
 import com.android.ide.common.process.ProcessOutputHandler;
-import com.android.ide.common.res2.CompileResourceRequest;
+import com.android.ide.common.resources.CompileResourceRequest;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.MoreObjects;

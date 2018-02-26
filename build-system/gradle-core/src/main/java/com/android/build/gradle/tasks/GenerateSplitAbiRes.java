@@ -33,6 +33,9 @@ import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable;
+import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
+import com.android.build.gradle.internal.res.namespaced.Aapt2MavenUtils;
+import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -65,6 +68,8 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.workers.IsolationMode;
 import org.gradle.workers.WorkerExecutor;
@@ -99,6 +104,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     private VariantScope variantScope;
     @Nullable private String featureName;
     @Nullable private FileCollection applicationIdOverride;
+    @Nullable private FileCollection aapt2FromMaven;
 
     @Input
     public String getApplicationId() {
@@ -160,6 +166,14 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
         return applicationIdOverride;
     }
 
+    @InputFiles
+    @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @Nullable
+    public FileCollection getAapt2FromMaven() {
+        return aapt2FromMaven;
+    }
+
     @TaskAction
     protected void doFullTaskAction() throws IOException, InterruptedException, ProcessException {
 
@@ -191,9 +205,11 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                             .setAndroidTarget(builder.getTarget())
                             .build();
             if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
+                Aapt2ServiceKey aapt2ServiceKey =
+                        Aapt2DaemonManagerService.registerAaptService(
+                                aapt2FromMaven, builder.getBuildToolInfo(), builder.getLogger());
                 Aapt2ProcessResourcesRunnable.Params params =
-                        new Aapt2ProcessResourcesRunnable.Params(
-                                getBuildTools().getRevision(), aaptConfig);
+                        new Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, aaptConfig);
                 workerExecutor.submit(
                         Aapt2ProcessResourcesRunnable.class,
                         it -> {
@@ -361,7 +377,8 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             generateSplitAbiRes.aaptOptions =
                     scope.getGlobalScope().getExtension().getAaptOptions();
             generateSplitAbiRes.outputFactory = scope.getVariantData().getOutputFactory();
-
+            generateSplitAbiRes.aapt2FromMaven =
+                    Aapt2MavenUtils.getAapt2FromMavenIfEnabled(scope.getGlobalScope());
             if (scope.getVariantData().getType() == VariantType.FEATURE) {
                 if (scope.isBaseFeature()) {
                     generateSplitAbiRes.applicationIdOverride =

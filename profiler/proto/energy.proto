@@ -32,14 +32,14 @@ service EnergyService {
   rpc StopMonitoringApp(EnergyStopRequest) returns (EnergyStopResponse) {
   }
 
-  // Requests energy data from app with given |process_id|, in the time range
+  // Requests energy samples from app with given |process_id|, in the time range
   // from |start_timestamp| (exclusive) to |end_timestamp| (inclusive), or
   // mathematically written as in interval (start_timestamp, end_timestamp].
-  rpc GetData(EnergyRequest) returns (EnergyDataResponse) {
+  rpc GetSamples(EnergyRequest) returns (EnergySamplesResponse) {
   }
 
   // Requests energy event data such as WakeLock, Alarm with given time range.
-  // Request data range is same as #GetData (start_timestamp, end_timestamp].
+  // Request data range is same as |GetSamples(start_timestamp, end_timestamp]|.
   // Response data includes repeated data in time order.
   rpc GetEvents(EnergyRequest) returns (EnergyEventsResponse) {
   }
@@ -74,14 +74,14 @@ message EnergySample {
   int32 network_usage = 3;
 }
 
-message EnergyDataResponse {
+message EnergySamplesResponse {
   // List of Energy usage sample data.
-  repeated EnergySample sample_data = 1;
+  repeated EnergySample samples = 1;
 }
 
 message EnergyEventsResponse {
   // Energy event details information in time order.
-  repeated EnergyEvent event = 1;
+  repeated EnergyEvent events = 1;
 }
 
 // Energy event data or state change for WakeLock, Alarm, etc.
@@ -104,25 +104,106 @@ message EnergyEvent {
     WakeLockAcquired wake_lock_acquired = 101;
     // A wake lock was released, indicating it's not needed anymore.
     WakeLockReleased wake_lock_released = 102;
+    // An alarm was set.
+    AlarmSet alarm_set = 103;
+    // An alarm was cancelled.
+    AlarmCancelled alarm_cancelled = 104;
   }
 }
 
 message WakeLockAcquired {
-  // Level and optional flags for the wake lock instance initialization.
+  enum Level {
+    UNDEFINED_WAKE_LOCK_LEVEL = 0;
+    PARTIAL_WAKE_LOCK = 1;
+    SCREEN_DIM_WAKE_LOCK = 2;
+    SCREEN_BRIGHT_WAKE_LOCK = 3;
+    FULL_WAKE_LOCK = 4;
+    PROXIMITY_SCREEN_OFF_WAKE_LOCK = 5;
+  }
+
+  enum CreationFlag {
+    UNDEFINED_WAKE_LOCK_CREATION_FLAG = 0;
+    ACQUIRE_CAUSES_WAKEUP = 1;
+    ON_AFTER_RELEASE = 2;
+  }
+
+  // Level for the wake lock instance initialization.
   // https://developer.android.com/reference/android/os/PowerManager.html#newWakeLock(int, java.lang.String)
-  int32 level_and_flags = 1;
+  Level level = 1;
+  // Optional flags for the wake lock instance initialization, empty if no flag
+  // is set.
+  repeated CreationFlag flags = 2;
   // Tag of the wake lock (which users may have set for debugging purposes).
-  string tag = 2;
+  string tag = 3;
   // An optional timeout in milliseconds given to the acquire call. The lock
   // will be released after the given timeout expires.
-  int64 timeout = 3;
+  int64 timeout = 4;
 }
 
 message WakeLockReleased {
-  // Optional flags that modify the release behavior.
+  enum ReleaseFlag {
+    UNDEFINED_WAKE_LOCK_RELEASE_FLAG = 0;
+    RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY = 1;
+  }
+
+  // Optional flags that modify the release behavior, empty if no flag is set.
   // https://developer.android.com/reference/android/os/PowerManager.WakeLock.html#release(int)
-  int32 flags = 1;
+  repeated ReleaseFlag flags = 1;
   // True if the wake lock is still held after the release. This may happen if
   // the wake lock is reference counted and has been acquired multiple times.
   bool is_held = 2;
+}
+
+message AlarmSet {
+  enum Type {
+    UNDEFINED_ALARM_TYPE = 0;
+    RTC = 1;
+    RTC_WAKEUP = 2;
+    ELAPSED_REALTIME = 3;
+    ELAPSED_REALTIME_WAKEUP = 4;
+  }
+
+  // Type of alarm.
+  Type type = 1;
+  // Time in milliseconds that the alarm should go off, using the appropriate
+  // clock (depending on the alarm type). Used by all AlarmManager.set*()
+  // methods.
+  int64 trigger_ms = 2;
+  // The length of the requested delivery window, in milliseconds. The alarm
+  // will be delivered no later than this many milliseconds after trigger_ms.
+  // Used by AlarmManager.setWindow().
+  int64 window_ms = 3;
+  // Interval in milliseconds between subsequent repeats of the alarm. Used by
+  // AlarmManager.setRepeating() and AlarmManager.setInexactRepeating().
+  int64 interval_ms = 4;
+  oneof action {
+    // Metadata of the action to perform when the alarm goes off.
+    PendingIntent operation = 5;
+    // Metadata of the alarm listener whose onAlarm() method will be called when
+    // the alarm goes off.
+    AlarmListener listener = 6;
+  }
+}
+
+message AlarmCancelled {
+  oneof action {
+    // A previously set operation.
+    PendingIntent operation = 1;
+    // A previously set listener.
+    AlarmListener listener = 2;
+  }
+}
+
+message PendingIntent {
+  // The package name of the PendingIntent, or empty if there is none
+  // associated with it.
+  string creator_package = 1;
+  // The uid of the PendingIntent, or -1 if there is none associated with it.
+  int32 creator_uid = 2;
+}
+
+message AlarmListener {
+  // String describing the alarm listener, used for logging and battery-use
+  // attribution.
+  string listener_tag = 1;
 }

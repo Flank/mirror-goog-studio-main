@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.*;
 import com.android.ide.common.gradle.model.UnusedModelMethodException;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -290,6 +291,12 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @Override
     public boolean isBaseSplit() {
         return myBaseSplit;
+    }
+
+    @NonNull
+    @Override
+    public Collection<String> getDynamicFeatures() {
+        return ImmutableList.of();
     }
 
     @Override

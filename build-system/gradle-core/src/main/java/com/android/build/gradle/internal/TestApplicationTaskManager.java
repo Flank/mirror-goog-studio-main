@@ -23,6 +23,7 @@ import static com.android.build.gradle.internal.variant.TestVariantFactory.getTe
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.CodeShrinker;
@@ -43,6 +44,7 @@ import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.google.common.base.Preconditions;
 import java.util.Collection;
+import java.util.Objects;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -166,15 +168,18 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
     @Override
     protected boolean isTestedAppObfuscated(@NonNull VariantScope variantScope) {
-        return variantScope.getCodeShrinker() == CodeShrinker.PROGUARD;
+        return variantScope.getCodeShrinker() == CodeShrinker.PROGUARD
+                || variantScope.getCodeShrinker() == CodeShrinker.R8;
     }
 
+    @Nullable
     @Override
-    protected void maybeCreateJavaCodeShrinkerTransform(@NonNull VariantScope variantScope) {
+    protected CodeShrinker maybeCreateJavaCodeShrinkerTransform(
+            @NonNull VariantScope variantScope) {
         if (isTestedAppObfuscated(variantScope)) {
-            doCreateJavaCodeShrinkerTransform(
+            return doCreateJavaCodeShrinkerTransform(
                     variantScope,
-                    CodeShrinker.PROGUARD,
+                    Objects.requireNonNull(variantScope.getCodeShrinker()),
                     variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
@@ -184,6 +189,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                     taskFactory.create(new CheckTestedAppObfuscation.ConfigAction(variantScope));
             Preconditions.checkNotNull(variantScope.getJavacTask());
             variantScope.getJavacTask().dependsOn(checkObfuscation);
+            return null;
         }
     }
 

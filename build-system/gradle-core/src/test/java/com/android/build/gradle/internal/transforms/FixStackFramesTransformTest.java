@@ -81,11 +81,13 @@ public class FixStackFramesTransformTest {
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
     private TestTransformOutputProvider outputProvider;
     private Path output;
+    private String emptyBootclasspath;
 
     @Before
     public void setUp() throws IOException {
         output = tmp.newFolder("out").toPath();
         outputProvider = new TestTransformOutputProvider(output);
+        emptyBootclasspath = tmp.newFolder().toString();
     }
 
     @Test
@@ -107,15 +109,14 @@ public class FixStackFramesTransformTest {
                         .build();
 
         FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, "", null);
+                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, null);
         transform.transform(invocation);
 
         assertAllClassesAreValid(output.resolve("input.jar"));
     }
 
     @Test
-    public void testJarCaching()
-            throws IOException, TransformException, InterruptedException, ClassNotFoundException {
+    public void testJarCaching() throws IOException, TransformException, InterruptedException {
         Path jar = getJarWithBrokenClasses("input", ImmutableList.of("test/A"));
 
         JarInput jarInput =
@@ -133,7 +134,7 @@ public class FixStackFramesTransformTest {
 
         FileCache cache = FileCache.getInstanceWithSingleProcessLocking(tmp.newFolder());
         FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, "", cache);
+                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, cache);
         transform.transform(invocation);
         assertThat(cache.getCacheDirectory().list()).hasLength(1);
 
@@ -161,7 +162,7 @@ public class FixStackFramesTransformTest {
                         .build();
 
         FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, "", null);
+                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, null);
         transform.transform(invocation);
         assertThat(output.toFile().list()).named("output artifacts").hasLength(0);
 
@@ -222,7 +223,7 @@ public class FixStackFramesTransformTest {
                         .build();
 
         FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, "", null);
+                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, null);
         transform.transform(invocation);
 
         assertThat(output.toFile().list()).named("output artifacts").hasLength(1);
@@ -245,7 +246,7 @@ public class FixStackFramesTransformTest {
                         .build();
 
         FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, "", null);
+                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, null);
         transform.transform(invocation);
 
         assertThat(readZipEntry(jar, "test/A.class"))
@@ -285,7 +286,7 @@ public class FixStackFramesTransformTest {
                         .build();
 
         FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, "", null);
+                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, null);
         transform.transform(invocation);
 
         assertThatZip(output.resolve("input.jar").toFile()).doesNotContain("LICENSE");
@@ -302,7 +303,7 @@ public class FixStackFramesTransformTest {
                         .setIncremental(false)
                         .build();
         FixStackFramesTransform transform =
-                new FixStackFramesTransform(ImmutableList::of, "", null);
+                new FixStackFramesTransform(ImmutableList::of, emptyBootclasspath, null);
         transform.transform(invocation);
         assertThat(output.toFile().list()).named("output artifacts").hasLength(0);
     }

@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Immutable
 public class Zip implements AutoCloseable {
@@ -85,19 +86,20 @@ public class Zip implements AutoCloseable {
 
     @NonNull
     public final List<Path> getEntries() throws IOException {
-        return Collections.unmodifiableList(
-                Files.walk(zip.getPath("/"))
-                        .filter(path -> Files.isRegularFile(path))
-                        .collect(Collectors.toList()));
+        try (Stream<Path> paths = Files.walk(zip.getPath("/"))) {
+            return Collections.unmodifiableList(
+                    paths.filter(path -> Files.isRegularFile(path)).collect(Collectors.toList()));
+        }
     }
 
     @NonNull
     public final List<Path> getEntries(@NonNull Pattern pattern) throws IOException {
-        return Collections.unmodifiableList(
-                Files.walk(zip.getPath("/"))
-                        .filter(path -> Files.isRegularFile(path))
-                        .filter(path -> pattern.matcher(path.toString()).matches())
-                        .collect(Collectors.toList()));
+        try (Stream<Path> paths = Files.walk(zip.getPath("/"))) {
+            return Collections.unmodifiableList(
+                    paths.filter(path -> Files.isRegularFile(path))
+                            .filter(path -> pattern.matcher(path.toString()).matches())
+                            .collect(Collectors.toList()));
+        }
     }
 
     @NonNull

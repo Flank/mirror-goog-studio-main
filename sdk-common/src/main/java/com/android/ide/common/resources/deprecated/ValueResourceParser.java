@@ -32,7 +32,7 @@ import com.android.ide.common.rendering.api.ItemResourceValue;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
-import com.android.ide.common.res2.ValueXmlHelper;
+import com.android.ide.common.resources.ValueXmlHelper;
 import com.android.resources.ResourceType;
 import com.google.common.base.Strings;
 import org.xml.sax.Attributes;

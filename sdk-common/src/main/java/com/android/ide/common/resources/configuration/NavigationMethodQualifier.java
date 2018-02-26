@@ -41,7 +41,7 @@ public final class NavigationMethodQualifier extends EnumBasedResourceQualifier 
     }
 
     @Override
-    ResourceEnum getEnumValue() {
+    public ResourceEnum getEnumValue() {
         return mValue;
     }
 

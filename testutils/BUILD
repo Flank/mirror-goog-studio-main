@@ -28,6 +28,7 @@ kotlin_library(
     name = "tools.testutils",
     srcs = ["src/main/java"],
     pom = ":pom",
+    resource_strip_prefix = "tools/base/testutils",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

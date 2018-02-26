@@ -17,7 +17,7 @@
 package com.android.builder.files;
 
 import com.android.annotations.NonNull;
-import com.android.ide.common.res2.FileStatus;
+import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.utils.IOExceptionRunnable;
 import com.android.tools.build.apkzlib.zip.StoredEntry;
 import com.android.tools.build.apkzlib.zip.StoredEntryType;

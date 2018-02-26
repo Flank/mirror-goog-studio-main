@@ -53,7 +53,7 @@ AtraceManager::AtraceManager(const Clock &clock, int dump_data_interval_ms)
 
 AtraceManager::~AtraceManager() {}
 
-bool AtraceManager::StartProfiling(const std::string &app_name,
+bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
                                    int sampling_interval_us,
                                    std::string *trace_path,
                                    std::string *error) {
@@ -64,25 +64,25 @@ bool AtraceManager::StartProfiling(const std::string &app_name,
 
   dumps_created_ = 0;
   Trace trace("CPU: StartProfiling atrace");
-  Log::D("Profiler:Received query to profile %s", app_name.c_str());
+  Log::D("Profiler:Received query to profile %s", app_pkg_name.c_str());
 
   // Build entry to keep track of what is being profiled.
-  profiled_app_.trace_path = GetTracePath(app_name);
-  profiled_app_.app_name = app_name;
+  profiled_app_.trace_path = GetTracePath(app_pkg_name);
+  profiled_app_.app_pkg_name = app_pkg_name;
   // Point trace path to entry's trace path so the trace can be pulled later.
   *trace_path = profiled_app_.trace_path;
 
-  RunAtrace(app_name, profiled_app_.trace_path, "--async_start");
+  RunAtrace(app_pkg_name, profiled_app_.trace_path, "--async_start");
   is_profiling_ = true;
   atrace_thread_ = std::thread(&AtraceManager::DumpData, this);
   return true;
 }
 
-void AtraceManager::RunAtrace(const string &app_name, const string &path,
+void AtraceManager::RunAtrace(const string &app_pkg_name, const string &path,
                               const string &command) {
   std::ostringstream args;
   args << "-z -b 4096"
-       << " -a " << app_name << " -o " << path << " " << command << " "
+       << " -a " << app_pkg_name << " -o " << path << " " << command << " "
        << categories_;
   profiler::BashCommandRunner atrace(kAtraceExecutable);
   atrace.Run(args.str(), nullptr);
@@ -120,7 +120,7 @@ std::set<std::string> AtraceManager::ParseListCategoriesOutput(
 
 void AtraceManager::DumpData() {
   while (is_profiling_) {
-    RunAtrace(profiled_app_.app_name, GetNextDumpPath(), "--async_dump");
+    RunAtrace(profiled_app_.app_pkg_name, GetNextDumpPath(), "--async_dump");
     std::this_thread::sleep_for(
         std::chrono::milliseconds(dump_data_interval_ms_));
   }
@@ -147,14 +147,14 @@ string AtraceManager::GetNextDumpPath() {
   return path.str();
 }
 
-bool AtraceManager::StopProfiling(const std::string &app_name, bool need_result,
+bool AtraceManager::StopProfiling(const std::string &app_pkg_name, bool need_result,
                                   std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:StopProfiling atrace");
-  Log::D("Profiler:Stopping profiling for %s", app_name.c_str());
+  Log::D("Profiler:Stopping profiling for %s", app_pkg_name.c_str());
   is_profiling_ = false;
   atrace_thread_.join();
-  RunAtrace(profiled_app_.app_name, GetNextDumpPath(), "--async_stop");
+  RunAtrace(profiled_app_.app_pkg_name, GetNextDumpPath(), "--async_stop");
   if (need_result) {
     return CombineFiles(profiled_app_.trace_path.c_str(), dumps_created_,
                         profiled_app_.trace_path.c_str());

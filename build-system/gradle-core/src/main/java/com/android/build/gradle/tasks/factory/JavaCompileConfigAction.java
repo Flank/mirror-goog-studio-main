@@ -17,7 +17,9 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.core.VariantType;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -53,6 +55,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
 
     @Override
     public void execute(@NonNull final AndroidJavaCompile javacTask) {
+        BaseVariantData variantData = scope.getVariantData();
         scope.getVariantData().javacTask = javacTask;
         scope.getVariantData().javaCompilerTask = javacTask;
         final GlobalScope globalScope = scope.getGlobalScope();
@@ -193,6 +196,23 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                     InternalArtifactType.DATA_BINDING_ARTIFACT,
                     javacTask.dataBindingArtifactOutputDirectory,
                     javacTask.getName());
+            if (variantData.getType() == VariantType.FEATURE) {
+                if (scope.isBaseFeature()) {
+                    javacTask
+                            .getInputs()
+                            .file(
+                                    scope.getOutput(
+                                            InternalArtifactType
+                                                    .FEATURE_DATA_BINDING_BASE_FEATURE_INFO));
+                } else {
+                    javacTask
+                            .getInputs()
+                            .file(
+                                    scope.getOutput(
+                                            InternalArtifactType
+                                                    .FEATURE_DATA_BINDING_FEATURE_INFO));
+                }
+            }
         }
 
         javacTask.processorListFile = scope.getOutput(ANNOTATION_PROCESSOR_LIST);

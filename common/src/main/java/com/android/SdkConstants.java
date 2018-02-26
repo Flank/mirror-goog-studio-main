@@ -1084,7 +1084,7 @@ public final class SdkConstants {
 
     // Tags: Navigation
     public static final String TAG_INCLUDE = "include";
-    public static final String TAG_DEEPLINK = "deeplink";
+    public static final String TAG_DEEP_LINK = "deepLink";
 
     public static final String VIEW = "View"; //$NON-NLS-1$
     public static final String VIEW_GROUP = "ViewGroup"; //$NON-NLS-1$
@@ -2249,7 +2249,7 @@ public final class SdkConstants {
     public static final String GRADLE_MINIMUM_VERSION = "4.5";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
-    public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.0.0";
+    public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.1.0";
     // Temporary - can be removed once the recommended version supports AIA (with splits).
     public static final String GRADLE_PLUGIN_LATEST_VERSION = GRADLE_PLUGIN_RECOMMENDED_VERSION;
 

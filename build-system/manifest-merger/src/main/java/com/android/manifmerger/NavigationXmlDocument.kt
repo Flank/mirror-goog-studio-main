@@ -50,7 +50,7 @@ class NavigationXmlDocument(private val sourceFile: SourceFile, private val root
 
     /**
      * The list of [DeepLink]s found in this document, including duplicates.
-     * [DeepLink]s are found in <deeplink> elements.
+     * [DeepLink]s are found in <deepLink> elements.
      */
     val deepLinks: List<DeepLink> by lazy {
         val deepLinks = ArrayList<DeepLink>()
@@ -92,7 +92,7 @@ class NavigationXmlDocument(private val sourceFile: SourceFile, private val root
     }
 
     /**
-     * Recursive search for [DeepLink]s, which are found in <deeplink> elements
+     * Recursive search for [DeepLink]s, which are found in <deepLink> elements
      *
      * @param deepLinks The list of [DeepLink]s found in the previous recursive calls.
      * Subsequent [DeepLink]s will be added to this list.
@@ -101,7 +101,7 @@ class NavigationXmlDocument(private val sourceFile: SourceFile, private val root
      */
     @Throws(NavigationXmlDocumentException::class, DeepLinkException::class)
     private fun getDeepLinks(deepLinks: MutableList<DeepLink>, element: Element) {
-        if (element.tagName == SdkConstants.TAG_DEEPLINK) {
+        if (element.tagName == SdkConstants.TAG_DEEP_LINK) {
             val namedNodeMap : NamedNodeMap? = element.attributes
             val deepLinkUri =
                     namedNodeMap
@@ -121,7 +121,7 @@ class NavigationXmlDocument(private val sourceFile: SourceFile, private val root
                         XmlUtils.lookupNamespacePrefix(element, SdkConstants.AUTO_URI, false)
                 val uriName = nsUriPrefix + XmlUtils.NS_SEPARATOR + SdkConstants.ATTR_URI
                 throw NavigationXmlDocumentException(
-                        "Navigation XML document <deeplink> element must contain a $uriName " +
+                        "Navigation XML document <deepLink> element must contain a $uriName " +
                                 "attribute.")
             }
         }

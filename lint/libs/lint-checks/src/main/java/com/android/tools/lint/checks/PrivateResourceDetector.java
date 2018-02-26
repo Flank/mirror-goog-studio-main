@@ -42,7 +42,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
-import com.android.ide.common.res2.AbstractResourceRepository;
+import com.android.ide.common.resources.AbstractResourceRepository;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;

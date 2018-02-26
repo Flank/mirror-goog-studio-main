@@ -40,7 +40,7 @@ public final class ScreenOrientationQualifier extends EnumBasedResourceQualifier
     }
 
     @Override
-    ResourceEnum getEnumValue() {
+    public ResourceEnum getEnumValue() {
         return mValue;
     }
 

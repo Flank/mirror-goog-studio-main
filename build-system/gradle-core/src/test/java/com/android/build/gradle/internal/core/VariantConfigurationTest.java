@@ -184,7 +184,8 @@ public class VariantConfigurationTest {
                         new MockSourceProvider("debug"),
                         VariantType.APK,
                         signingOverride,
-                        mIssueReporter);
+                        mIssueReporter,
+                        () -> true);
 
         variant.addProductFlavor(mFlavorConfig, new MockSourceProvider("custom"), "");
 
@@ -202,7 +203,8 @@ public class VariantConfigurationTest {
                         new MockSourceProvider("debug"),
                         VariantType.APK,
                         null /*signingConfigOverride*/,
-                        mIssueReporter) {
+                        mIssueReporter,
+                        () -> true) {
 
                     @NonNull
                     @Override
@@ -226,7 +228,8 @@ public class VariantConfigurationTest {
                         new MockSourceProvider("debug"),
                         VariantType.APK,
                         null /*signingConfigOverride*/,
-                        mIssueReporter) {
+                        mIssueReporter,
+                        () -> true) {
 
                     @Override
                     public String getVersionNameFromManifest() {
@@ -250,7 +253,8 @@ public class VariantConfigurationTest {
                         new MockSourceProvider(srcDir.getPath() + File.separatorChar + "debug"),
                         VariantType.APK,
                         null,
-                        mIssueReporter);
+                        mIssueReporter,
+                        () -> true);
 
         variant.addProductFlavor(
                 mFlavorConfig,

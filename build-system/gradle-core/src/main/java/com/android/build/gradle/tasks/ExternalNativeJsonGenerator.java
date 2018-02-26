@@ -75,6 +75,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.Input;
@@ -378,18 +379,20 @@ public abstract class ExternalNativeJsonGenerator {
             expectedSoFiles.add(library.output.toPath());
         }
 
-        Files.walk(expectedOutputFolder.toPath())
-                .filter(Files::isRegularFile)
-                .filter(path -> path.toString().endsWith(".so"))
-                .filter(path -> !expectedSoFiles.contains(path))
-                .forEach(
-                        path -> {
-                            if (path.toFile().delete()) {
-                                diagnostic(
-                                        "deleted unexpected build output %s in incremental regenerate",
-                                        path);
-                            }
-                        });
+        try (Stream<Path> paths = Files.walk(expectedOutputFolder.toPath())) {
+            paths.filter(Files::isRegularFile)
+                    .filter(path -> path.toString().endsWith(".so"))
+                    .filter(path -> !expectedSoFiles.contains(path))
+                    .forEach(
+                            path -> {
+                                if (path.toFile().delete()) {
+                                    diagnostic(
+                                            "deleted unexpected build output %s in incremental "
+                                                    + "regenerate",
+                                            path);
+                                }
+                            });
+        }
     }
 
     /**

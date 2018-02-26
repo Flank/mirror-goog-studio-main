@@ -40,6 +40,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_M
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
@@ -155,6 +156,7 @@ import com.android.build.gradle.internal.transforms.MultiDexTransform;
 import com.android.build.gradle.internal.transforms.PreDexTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
+import com.android.build.gradle.internal.transforms.R8Transform;
 import com.android.build.gradle.internal.transforms.ShrinkResourcesTransform;
 import com.android.build.gradle.internal.transforms.StripDebugSymbolTransform;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
@@ -1137,17 +1139,17 @@ public abstract class TaskManager {
 
             @NonNull VariantScope scope) {
 
-        createProcessResTask(
+        VariantType variantType = scope.getVariantData().getVariantConfiguration().getType();
+        InternalArtifactType packageOutputType =
+                variantType == FEATURE ? FEATURE_RESOURCE_PKG : null;
 
+        createProcessResTask(
                 scope,
-                        new File(
-                                globalScope.getIntermediatesDir(),
-                                "symbols/"
-                                        + scope.getVariantData()
-                                                .getVariantConfiguration()
-                                                .getDirName()),
+                new File(
+                        globalScope.getIntermediatesDir(),
+                        "symbols/" + scope.getVariantData().getVariantConfiguration().getDirName()),
                 scope.getProcessResourcePackageOutputDirectory(),
-                null,
+                packageOutputType,
                 MergeType.MERGE,
                 scope.getGlobalScope().getProjectBaseName());
     }
@@ -2279,9 +2281,12 @@ public abstract class TaskManager {
         }
 
         // ----- Minify next -----
-        maybeCreateJavaCodeShrinkerTransform(variantScope);
-
+        CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTransform(variantScope);
         maybeCreateResourcesShrinkerTransform(variantScope);
+        if (shrinker == CodeShrinker.R8) {
+            publishTransformOutputs(variantScope, transformManager);
+            return;
+        }
 
         // ----- 10x support
 
@@ -2369,8 +2374,12 @@ public abstract class TaskManager {
             }
         }
 
-        // ---- Create tasks to publish the pipeline output as needed.
+        publishTransformOutputs(variantScope, transformManager);
+    }
 
+    /** Creates tasks to publish the pipeline output as needed. */
+    private void publishTransformOutputs(
+            @NonNull VariantScope variantScope, @NonNull TransformManager transformManager) {
         final File intermediatesDir = variantScope.getGlobalScope().getIntermediatesDir();
         createPipelineToPublishTask(
                 variantScope,
@@ -2936,8 +2945,6 @@ public abstract class TaskManager {
             }
             String packageName = variantConfiguration.getOriginalApplicationId();
 
-            final DataBindingCompilerArgs.Type type;
-
             final BaseVariantData artifactVariantData;
             final boolean isTest;
             if (variantData.getType() == VariantType.ANDROID_TEST) {
@@ -2947,15 +2954,40 @@ public abstract class TaskManager {
                 artifactVariantData = variantData;
                 isTest = false;
             }
-            if (artifactVariantData.getType() == VariantType.LIBRARY) {
-                type = DataBindingCompilerArgs.Type.LIBRARY;
-            } else {
-                type = DataBindingCompilerArgs.Type.APPLICATION;
+
+            final DataBindingCompilerArgs.Type type;
+            switch (artifactVariantData.getType()) {
+                case LIBRARY:
+                    type = DataBindingCompilerArgs.Type.LIBRARY;
+                    break;
+                case FEATURE:
+                    if (scope.isBaseFeature()) {
+                        type = DataBindingCompilerArgs.Type.APPLICATION;
+                    } else {
+                        type = DataBindingCompilerArgs.Type.FEATURE;
+                    }
+                    break;
+                    // FIXME: dynamic apps will use APK but will have isBaseFeature
+                default:
+                    type = DataBindingCompilerArgs.Type.APPLICATION;
             }
             int minApi = variantConfiguration.getMinSdkVersion().getApiLevel();
             File classLogDir =
                     scope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
                             .getSingleFile();
+            File baseFeatureInfoFolder = null;
+            if (scope.hasOutput(InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO)) {
+                baseFeatureInfoFolder =
+                        scope.getIntermediateDir(
+                                InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO);
+            }
+            File featureInfoFile = null;
+            if (scope.hasOutput(InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO)) {
+                featureInfoFile =
+                        scope.getIntermediateDir(
+                                InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO);
+            }
+            // FIXME: Use the new Gradle 4.5 annotation processor inputs API when we integrate.
             DataBindingCompilerArgs args =
                     DataBindingCompilerArgs.builder()
                             .bundleFolder(scope.getBundleArtifactFolderForDataBinding())
@@ -2964,6 +2996,8 @@ public abstract class TaskManager {
                             .buildFolder(scope.getBuildFolderForDataBindingCompiler())
                             .sdkDir(scope.getGlobalScope().getSdkHandler().getSdkFolder())
                             .xmlOutDir(scope.getLayoutInfoOutputForDataBinding())
+                            .baseFeatureInfoFolder(baseFeatureInfoFolder)
+                            .featureInfoFolder(featureInfoFile)
                             .classLogDir(classLogDir)
                             .exportClassListTo(
                                     variantData.getType().isExportDataBindingClassList()
@@ -3196,33 +3230,62 @@ public abstract class TaskManager {
                 });
     }
 
-    protected void maybeCreateJavaCodeShrinkerTransform(@NonNull final VariantScope variantScope) {
+    /** Returns created shrinker type, or null if none was created. */
+    @Nullable
+    protected CodeShrinker maybeCreateJavaCodeShrinkerTransform(
+            @NonNull final VariantScope variantScope) {
         CodeShrinker codeShrinker = variantScope.getCodeShrinker();
 
         if (codeShrinker != null) {
-            doCreateJavaCodeShrinkerTransform(
+            return doCreateJavaCodeShrinkerTransform(
                     variantScope,
                     // No mapping in non-test modules.
                     codeShrinker,
                     null);
+        } else {
+            return null;
         }
     }
 
     /**
      * Actually creates the minify transform, using the given mapping configuration. The mapping is
-     * only used by test-only modules.
+     * only used by test-only modules. Returns a type of the {@link CodeShrinker} shrinker that was
+     * created, or {@code null} if none was created.
      */
-    protected final void doCreateJavaCodeShrinkerTransform(
+    @Nullable
+    protected final CodeShrinker doCreateJavaCodeShrinkerTransform(
             @NonNull final VariantScope variantScope,
             @NonNull CodeShrinker codeShrinker,
             @Nullable FileCollection mappingFileCollection) {
         Optional<TransformTask> transformTask;
+        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()
+                && codeShrinker != CodeShrinker.ANDROID_GRADLE) {
+            logger.warn(
+                    "{} is disabled for variant {} because it is not compatible with Instant Run. "
+                            + "See http://d.android.com/r/studio-ui/shrink-code-with-ir.html "
+                            + "for details on how to enable a code shrinker that's compatible with "
+                            + "Instant Run.",
+                    codeShrinker.name(),
+                    variantScope.getVariantConfiguration().getFullName());
+            return null;
+        }
+
+        CodeShrinker createdShrinker = codeShrinker;
         switch (codeShrinker) {
             case PROGUARD:
                 transformTask = createProguardTransform(variantScope, mappingFileCollection);
                 break;
             case ANDROID_GRADLE:
                 transformTask = createBuiltInShrinkerTransform(variantScope);
+                break;
+            case R8:
+                if (variantScope.getVariantConfiguration().getType() == VariantType.LIBRARY) {
+                    // R8 class backend is not fully supported yet
+                    transformTask = createProguardTransform(variantScope, mappingFileCollection);
+                    createdShrinker = CodeShrinker.PROGUARD;
+                } else {
+                    transformTask = createR8Transform(variantScope, mappingFileCollection);
+                }
                 break;
             default:
                 throw new AssertionError("Unknown value " + codeShrinker);
@@ -3234,12 +3297,13 @@ public abstract class TaskManager {
 
             transformTask.get().dependsOn(checkFilesTask);
         }
+        return createdShrinker;
     }
 
     @NonNull
     private Optional<TransformTask> createBuiltInShrinkerTransform(@NonNull VariantScope scope) {
         BuiltInShrinkerTransform transform = new BuiltInShrinkerTransform(scope);
-        applyProguardConfig(transform, scope);
+        applyProguardConfigForNonTest(transform, scope);
 
         if (scope.getInstantRunBuildContext().isInInstantRunMode()) {
             //TODO: This is currently overly broad, as finding the actual application class
@@ -3255,19 +3319,33 @@ public abstract class TaskManager {
     @NonNull
     private Optional<TransformTask> createProguardTransform(
             @NonNull VariantScope variantScope, @Nullable FileCollection mappingFileCollection) {
-        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
-            logger.warn(
-                    "ProGuard is disabled for variant {} because it is not compatible with Instant Run. See "
-                            + "http://d.android.com/r/studio-ui/shrink-code-with-ir.html "
-                            + "for details on how to enable a code shrinker that's compatible with Instant Run.",
-                    variantScope.getVariantConfiguration().getFullName());
-            return Optional.empty();
-        }
-
         final BaseVariantData testedVariantData = variantScope.getTestedVariantData();
 
         ProGuardTransform transform = new ProGuardTransform(variantScope);
 
+        FileCollection inputProguardMapping;
+        if (testedVariantData != null && testedVariantData.getScope().hasOutput(APK_MAPPING)) {
+            inputProguardMapping = testedVariantData.getScope().getOutput(APK_MAPPING);
+        } else {
+            inputProguardMapping = mappingFileCollection;
+        }
+        transform.applyTestedMapping(inputProguardMapping);
+
+        return applyProguardRules(
+                variantScope,
+                inputProguardMapping,
+                transform.getMappingFile(),
+                testedVariantData,
+                transform);
+    }
+
+    @NonNull
+    private Optional<TransformTask> applyProguardRules(
+            @NonNull VariantScope variantScope,
+            @Nullable FileCollection inputProguardMapping,
+            @Nullable File outputProguardMapping,
+            BaseVariantData testedVariantData,
+            ProguardConfigurable transform) {
         if (testedVariantData != null) {
             // This is an androidTest variant inside an app/library.
             applyProguardDefaultsForTest(transform);
@@ -3279,12 +3357,6 @@ public abstract class TaskManager {
                                     testedVariantData.getScope()::getTestProguardFiles),
                             variantScope.getArtifactFileCollection(
                                     RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
-
-            // Register the mapping file which may or may not exists (only exist if obfuscation)
-            // is enabled.
-            final VariantScope testedScope = testedVariantData.getScope();
-            transform.applyTestedMapping(
-                    testedScope.hasOutput(APK_MAPPING) ? testedScope.getOutput(APK_MAPPING) : null);
         } else if (isTestedAppObfuscated(variantScope)) {
             // This is a test-only module and the app being tested was obfuscated with ProGuard.
             applyProguardDefaultsForTest(transform);
@@ -3296,14 +3368,9 @@ public abstract class TaskManager {
                             variantScope.getArtifactFileCollection(
                                     RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
 
-            transform.applyTestedMapping(mappingFileCollection);
         } else {
             // This is a "normal" variant in an app/library.
-            applyProguardConfig(transform, variantScope);
-
-            if (mappingFileCollection != null) {
-                transform.applyTestedMapping(mappingFileCollection);
-            }
+            applyProguardConfigForNonTest(transform, variantScope);
         }
 
         Optional<TransformTask> task =
@@ -3316,11 +3383,11 @@ public abstract class TaskManager {
                 t -> {
                     variantScope.addTaskOutput(
                             InternalArtifactType.APK_MAPPING,
-                            checkNotNull(transform.getMappingFile()),
+                            checkNotNull(outputProguardMapping),
                             t.getName());
 
-                    if (mappingFileCollection != null) {
-                        t.dependsOn(mappingFileCollection);
+                    if (inputProguardMapping != null) {
+                        t.dependsOn(inputProguardMapping);
                     }
 
                     if (testedVariantData != null) {
@@ -3328,19 +3395,103 @@ public abstract class TaskManager {
                         t.dependsOn(testedVariantData.getScope().getAssembleTask());
                     }
                 });
-
         return task;
     }
 
-    private static void applyProguardDefaultsForTest(ProGuardTransform transform) {
+    private static void applyProguardDefaultsForTest(ProguardConfigurable transform) {
         // Don't remove any code in tested app.
-        transform.setActions(new PostprocessingFeatures(false, true, false));
+        // We can't call dontobfuscate for Proguard, since that makes it ignore the mapping file.
+        // R8 does not have that issue, so we disable obfuscation when running R8.
+        boolean obfuscate = transform instanceof ProGuardTransform;
+        transform.setActions(new PostprocessingFeatures(false, obfuscate, false));
 
-        // We can't call dontobfuscate, since that would make ProGuard ignore the mapping file.
         transform.keep("class * {*;}");
         transform.keep("interface * {*;}");
         transform.keep("enum * {*;}");
         transform.keepattributes();
+    }
+
+    private void applyProguardConfigForNonTest(ProguardConfigurable transform, VariantScope scope) {
+        GradleVariantConfiguration variantConfig = scope.getVariantConfiguration();
+
+        PostprocessingFeatures postprocessingFeatures = scope.getPostprocessingFeatures();
+        if (postprocessingFeatures != null) {
+            transform.setActions(postprocessingFeatures);
+        }
+
+        Supplier<Collection<File>> proguardConfigFiles =
+                () -> {
+                    List<File> proguardFiles = new ArrayList<>(scope.getProguardFiles());
+
+                    // Use the first output when looking for the proguard rule output of
+                    // the aapt task. The different outputs are not different in a way that
+                    // makes this rule file different per output.
+                    proguardFiles.add(scope.getProcessAndroidResourcesProguardOutputFile());
+                    return proguardFiles;
+                };
+
+        transform.setConfigurationFiles(
+                project.files(
+                        TaskInputHelper.bypassFileCallable(proguardConfigFiles),
+                        scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
+
+        if (scope.getVariantData().getType() == LIBRARY) {
+            transform.keep("class **.R");
+            transform.keep("class **.R$*");
+        }
+
+        if (variantConfig.isTestCoverageEnabled()) {
+            // when collecting coverage, don't remove the JaCoCo runtime
+            transform.keep("class com.vladium.** {*;}");
+            transform.keep("class org.jacoco.** {*;}");
+            transform.keep("interface org.jacoco.** {*;}");
+            transform.dontwarn("org.jacoco.**");
+        }
+    }
+
+    @NonNull
+    private Optional<TransformTask> createR8Transform(
+            @NonNull VariantScope variantScope, @Nullable FileCollection mappingFileCollection) {
+        final BaseVariantData testedVariantData = variantScope.getTestedVariantData();
+
+        File multiDexKeepProguard =
+                variantScope.getVariantConfiguration().getMultiDexKeepProguard();
+        FileCollection userMainDexListProguardRules;
+        if (multiDexKeepProguard != null) {
+            userMainDexListProguardRules = project.files(multiDexKeepProguard);
+        } else {
+            userMainDexListProguardRules = project.files();
+        }
+
+        File multiDexKeepFile = variantScope.getVariantConfiguration().getMultiDexKeepFile();
+        FileCollection userMainDexListFiles;
+        if (multiDexKeepFile != null) {
+            userMainDexListFiles = project.files(multiDexKeepFile);
+        } else {
+            userMainDexListFiles = project.files();
+        }
+
+        FileCollection inputProguardMapping;
+        if (testedVariantData != null && testedVariantData.getScope().hasOutput(APK_MAPPING)) {
+            inputProguardMapping = testedVariantData.getScope().getOutput(APK_MAPPING);
+        } else {
+            inputProguardMapping = MoreObjects.firstNonNull(mappingFileCollection, project.files());
+        }
+
+        R8Transform transform =
+                new R8Transform(
+                        variantScope,
+                        userMainDexListFiles,
+                        userMainDexListProguardRules,
+                        inputProguardMapping,
+                        variantScope.getOutputProguardMappingFile());
+
+        return applyProguardRules(
+                variantScope,
+                inputProguardMapping,
+                variantScope.getOutputProguardMappingFile(),
+                testedVariantData,
+                transform);
     }
 
     /**
@@ -3382,46 +3533,6 @@ public abstract class TaskManager {
                     .reportError(
                             Type.GENERIC,
                             "Internal error, could not add the ShrinkResourcesTransform");
-        }
-    }
-
-    private void applyProguardConfig(
-            ProguardConfigurable transform,
-            VariantScope scope) {
-        GradleVariantConfiguration variantConfig = scope.getVariantConfiguration();
-
-        PostprocessingFeatures postprocessingFeatures = scope.getPostprocessingFeatures();
-        if (postprocessingFeatures != null) {
-            transform.setActions(postprocessingFeatures);
-        }
-
-        Supplier<Collection<File>> proguardConfigFiles =
-                () -> {
-                    List<File> proguardFiles = new ArrayList<>(scope.getProguardFiles());
-
-                    // Use the first output when looking for the proguard rule output of
-                    // the aapt task. The different outputs are not different in a way that
-                    // makes this rule file different per output.
-                    proguardFiles.add(scope.getProcessAndroidResourcesProguardOutputFile());
-                    return proguardFiles;
-                };
-
-        transform.setConfigurationFiles(
-                project.files(
-                        TaskInputHelper.bypassFileCallable(proguardConfigFiles),
-                        scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
-
-        if (scope.getVariantData().getType() == LIBRARY) {
-            transform.keep("class **.R");
-            transform.keep("class **.R$*");
-        }
-
-        if (variantConfig.isTestCoverageEnabled()) {
-            // when collecting coverage, don't remove the JaCoCo runtime
-            transform.keep("class com.vladium.** {*;}");
-            transform.keep("class org.jacoco.** {*;}");
-            transform.keep("interface org.jacoco.** {*;}");
-            transform.dontwarn("org.jacoco.**");
         }
     }
 
@@ -3570,17 +3681,22 @@ public abstract class TaskManager {
                         SdkConstants.DATA_BINDING_BASELIB_ARTIFACT
                                 + ":"
                                 + dataBindingBuilder.getBaseLibraryVersion(version));
-
-        // TODO load config name from source sets
         project.getDependencies()
                 .add(
                         "annotationProcessor",
                         SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" + version);
-        if (options.isEnabledForTests() || this instanceof LibraryTaskManager) {
-            project.getDependencies().add("androidTestAnnotationProcessor",
-                    SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" +
-                            version);
+        // TODO load config name from source sets
+        if (options.isEnabledForTests()
+                || this instanceof LibraryTaskManager
+                || this instanceof MultiTypeTaskManager) {
+            project.getDependencies()
+                    .add(
+                            "androidTestAnnotationProcessor",
+                            SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT
+                                    + ":"
+                                    + version);
         }
+
         if (options.getAddDefaultAdapters()) {
             project.getDependencies()
                     .add(
@@ -3668,6 +3784,7 @@ public abstract class TaskManager {
                                 });
     }
 
+    // TODO we should merge this w/ JavaCompileConfigAction
     private static void configureKaptTaskInScope(VariantScope scope, Task kaptTask) {
         if (scope.hasOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
             // if data binding is enabled and this variant has merged dependency artifacts, then
@@ -3689,13 +3806,27 @@ public abstract class TaskManager {
         // the data binding artifact is created by the annotation processor, so we register this
         // task output (which also publishes it) with javac as the generating task.
         kaptTask.getOutputs()
-                .files(scope.getBundleArtifactFolderForDataBinding())
+                .file(scope.getBundleArtifactFolderForDataBinding())
                 .withPropertyName("dataBindingArtifactOutputDir");
         if (!scope.hasOutput(InternalArtifactType.DATA_BINDING_ARTIFACT)) {
             scope.addTaskOutput(
                     InternalArtifactType.DATA_BINDING_ARTIFACT,
                     scope.getBundleArtifactFolderForDataBinding(),
                     kaptTask.getName());
+        }
+        if (scope.getVariantData().getType() == VariantType.FEATURE) {
+            if (scope.isBaseFeature()) {
+                kaptTask.getInputs()
+                        .file(
+                                scope.getOutput(
+                                        InternalArtifactType
+                                                .FEATURE_DATA_BINDING_BASE_FEATURE_INFO));
+            } else {
+                kaptTask.getInputs()
+                        .file(
+                                scope.getOutput(
+                                        InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO));
+            }
         }
     }
 

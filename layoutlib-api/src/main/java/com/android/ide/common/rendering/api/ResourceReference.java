@@ -92,14 +92,48 @@ public class ResourceReference implements Serializable {
         return ResourceUrl.create(mNamespace.getPackageName(), mResourceType, mName);
     }
 
+    /**
+     * Returns a {@link ResourceUrl} that can be used to refer to this resource from the given
+     * namespace. This means the namespace part of the {@link ResourceUrl} will be null if the
+     * context namespace is the same as the namespace of this resource.
+     *
+     * <p>This method assumes no namespace prefixes (aliases) are defined, so the returned {@link
+     * ResourceUrl} will use the full package name of the target namespace, if necessary. Most use
+     * cases should attempt to call the overloaded method instead and provide a {@link
+     * ResourceNamespace.Resolver} from the XML element where the {@link ResourceUrl} will be used.
+     *
+     * @see #getRelativeResourceUrl(ResourceNamespace, ResourceNamespace.Resolver)
+     */
     @NonNull
     public ResourceUrl getRelativeResourceUrl(@NonNull ResourceNamespace context) {
-        // TODO(namespaces): extend ResourceNamespace.Resolver to map from URIs back to prefixes
-        // as well.
-        return ResourceUrl.create(
-                mNamespace.equals(context) ? null : mNamespace.getPackageName(),
-                mResourceType,
-                mName);
+        return getRelativeResourceUrl(context, ResourceNamespace.Resolver.EMPTY_RESOLVER);
+    }
+
+    /**
+     * Returns a {@link ResourceUrl} that can be used to refer to this resource from the given
+     * namespace. This means the namespace part of the {@link ResourceUrl} will be null if the
+     * context namespace is the same as the namespace of this resource.
+     *
+     * <p>This method uses the provided {@link ResourceNamespace.Resolver} to find the short prefix
+     * that can be used to refer to the target namespace. If it is not found, the full package name
+     * is used.
+     */
+    @NonNull
+    public ResourceUrl getRelativeResourceUrl(
+            @NonNull ResourceNamespace context, @NonNull ResourceNamespace.Resolver resolver) {
+        String namespaceString;
+        if (mNamespace.equals(context)) {
+            namespaceString = null;
+        } else {
+            String prefix = resolver.uriToPrefix(mNamespace.getXmlNamespaceUri());
+            if (prefix != null) {
+                namespaceString = prefix;
+            } else {
+                namespaceString = mNamespace.getPackageName();
+            }
+        }
+
+        return ResourceUrl.create(namespaceString, mResourceType, mName);
     }
 
     @Override

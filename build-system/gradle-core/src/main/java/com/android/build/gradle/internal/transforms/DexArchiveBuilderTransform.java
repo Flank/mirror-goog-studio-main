@@ -794,9 +794,10 @@ public class DexArchiveBuilderTransform extends Transform {
 
         logger.verbose("Dexing '" + inputPath + "' to '" + dexConversionParameters.output + "'");
 
-        try (ClassFileInput input = ClassFileInputs.fromPath(inputPath)) {
+        try (ClassFileInput input = ClassFileInputs.fromPath(inputPath);
+                Stream<ClassFileEntry> entries = input.entries(bucketFilter)) {
             dexArchiveBuilder.convert(
-                    input.entries(bucketFilter),
+                    entries,
                     Paths.get(new URI(dexConversionParameters.output)),
                     dexConversionParameters.isDirectoryBased());
         } catch (DexArchiveBuilderException ex) {

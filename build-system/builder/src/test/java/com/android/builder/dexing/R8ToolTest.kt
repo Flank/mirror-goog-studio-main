@@ -81,7 +81,7 @@ class R8ToolTest {
     fun testMainDexList() {
         val proguardConfig = ProguardConfig(listOf(), null, null, listOf())
         val toolConfig = ToolConfig(
-                minSdkVersion = 21,
+                minSdkVersion = 19,
                 isDebuggable = true,
                 disableTreeShaking = true,
                 disableDesugaring = true,
@@ -94,7 +94,10 @@ class R8ToolTest {
 
         val mainDexList = tmp.newFile().toPath()
         Files.write(mainDexList, listOf("test/A.class"))
-        val mainDexConfig = MainDexListConfig(listOf(), listOf(mainDexList))
+        val mainDexConfig = MainDexListConfig(
+                mainDexRulesFiles = listOf(),
+                mainDexListFiles = listOf(mainDexList),
+                mainDexRules = listOf())
 
         val output = tmp.newFolder().toPath()
         runR8(listOf(classes), output, bootClasspath, toolConfig, proguardConfig, mainDexConfig)
@@ -105,7 +108,7 @@ class R8ToolTest {
     fun testMainDexListRules() {
         val proguardConfig = ProguardConfig(listOf(), null, null, listOf())
         val toolConfig = ToolConfig(
-                minSdkVersion = 21,
+                minSdkVersion = 19,
                 isDebuggable = true,
                 disableTreeShaking = true,
                 disableDesugaring = true,

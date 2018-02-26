@@ -57,7 +57,7 @@ import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkInfo;
-import com.android.ide.common.res2.FileStatus;
+import com.android.ide.common.resources.FileStatus;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.build.apkzlib.utils.IOExceptionWrapper;
 import com.android.tools.build.apkzlib.zip.compress.Zip64NotSupportedException;
@@ -290,7 +290,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                                             .equals(SdkConstants.ANDROID_MANIFEST_XML)) {
                                 listBuilder.add(
                                         PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
-                                                        manifest)
+                                                        manifest,
+                                                        () -> getProject().getState().getExecuted())
                                                 .toString());
                             }
                         });
@@ -651,10 +652,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         // these manifest files.
                         .withNativeLibraryPackagingMode(
                                 PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
-                                        manifestForSplit.getOutputFile()))
+                                        manifestForSplit.getOutputFile(),
+                                        () -> getProject().getState().getExecuted()))
                         .withNoCompressPredicate(
                                 PackagingUtils.getNoCompressPredicate(
-                                        aaptOptionsNoCompress, manifestForSplit.getOutputFile()))
+                                        aaptOptionsNoCompress,
+                                        manifestForSplit.getOutputFile(),
+                                        () -> getProject().getState().getExecuted()))
                         .withIntermediateDir(incrementalDirForSplit)
                         .withProject(getProject())
                         .withDebuggableBuild(getDebugBuild())

@@ -62,7 +62,6 @@ import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
-import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -116,7 +115,6 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ForkJoinPool;
 import org.gradle.BuildListener;
@@ -149,7 +147,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
     private VariantManager variantManager;
 
-    private TaskManager taskManager;
+    protected TaskManager taskManager;
 
     protected Project project;
 
@@ -157,9 +155,9 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
     private SdkHandler sdkHandler;
 
-    private NdkHandler ndkHandler;
+    protected NdkHandler ndkHandler;
 
-    private AndroidBuilder androidBuilder;
+    protected AndroidBuilder androidBuilder;
 
     private DataBindingBuilder dataBindingBuilder;
 
@@ -184,8 +182,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
         this.registry = registry;
         creator = "Android Gradle " + Version.ANDROID_GRADLE_PLUGIN_VERSION;
         NonFinalPluginExpiry.verifyRetirementAge();
-
-        ModelBuilder.clearCaches();
     }
 
     @NonNull
@@ -434,12 +430,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 .addTaskExecutionGraphListener(
                         taskGraph -> {
                             TaskInputHelper.disableBypass();
-                            Aapt2DaemonManagerService.registerAaptService(
-                                    Objects.requireNonNull(androidBuilder.getTargetInfo())
-                                            .getBuildTools(),
-                                    loggerWrapper,
-                                    WorkerActionServiceRegistry.INSTANCE);
-
                             for (Task task : taskGraph.getAllTasks()) {
                                 if (task instanceof TransformTask) {
                                     Transform transform = ((TransformTask) task).getTransform();
@@ -611,24 +601,36 @@ public abstract class BasePlugin<E extends BaseExtension2>
             @NonNull VariantManager variantManager,
             @NonNull AndroidConfig config,
             @NonNull ExtraModelInfo extraModelInfo) {
+        // The call to ModelBuilder to clear caches should take place after the Gradle version check
+        // (https://issuetracker.google.com/73383831) but before the builder is used.
+        ModelBuilder.clearCaches();
+
         // Register a builder for the custom tooling model
-        ModelBuilder modelBuilder =
-                new ModelBuilder(
-                        globalScope,
-                        androidBuilder,
-                        variantManager,
-                        taskManager,
-                        config,
-                        extraModelInfo,
-                        ndkHandler,
-                        new NativeLibraryFactoryImpl(ndkHandler),
-                        getProjectType(),
-                        AndroidProject.GENERATION_ORIGINAL);
-        registry.register(modelBuilder);
+        registry.register(
+                instantiateModelBuilder(globalScope, variantManager, config, extraModelInfo));
 
         // Register a builder for the native tooling model
         NativeModelBuilder nativeModelBuilder = new NativeModelBuilder(variantManager);
         registry.register(nativeModelBuilder);
+    }
+
+    @NonNull
+    protected ModelBuilder instantiateModelBuilder(
+            @NonNull GlobalScope globalScope,
+            @NonNull VariantManager variantManager,
+            @NonNull AndroidConfig config,
+            @NonNull ExtraModelInfo extraModelInfo) {
+        return new ModelBuilder(
+                globalScope,
+                androidBuilder,
+                variantManager,
+                taskManager,
+                config,
+                extraModelInfo,
+                ndkHandler,
+                new NativeLibraryFactoryImpl(ndkHandler),
+                getProjectType(),
+                AndroidProject.GENERATION_ORIGINAL);
     }
 
     private static class UnsupportedAction implements Action<Object> {

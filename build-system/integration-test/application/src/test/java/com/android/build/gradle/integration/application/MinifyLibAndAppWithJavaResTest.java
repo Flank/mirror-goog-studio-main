@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
 import org.junit.Before;
 import org.junit.Rule;
@@ -40,6 +41,7 @@ public class MinifyLibAndAppWithJavaResTest {
 
     @Parameterized.Parameters(name = "codeShrinker = {0}")
     public static CodeShrinker[] data() {
+        // enable for R8 once http://b/36847655 is fixed
         return new CodeShrinker[] {CodeShrinker.ANDROID_GRADLE, CodeShrinker.PROGUARD};
     }
 
@@ -58,7 +60,9 @@ public class MinifyLibAndAppWithJavaResTest {
 
     @Test
     public void testDebugPackaging() throws Exception {
-        project.executor().run(":app:assembleDebug");
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run(":app:assembleDebug");
         Apk debugApk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
         assertNotNull(debugApk);
         // check that resources with relative path lookup code have a matching obfuscated package
@@ -73,7 +77,9 @@ public class MinifyLibAndAppWithJavaResTest {
 
     @Test
     public void testReleasePackaging() throws Exception {
-        project.executor().run(":app:assembleRelease");
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run(":app:assembleRelease");
         Apk releaseApk =
                 project.getSubproject("app").getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
         assertNotNull(releaseApk);

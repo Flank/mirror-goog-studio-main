@@ -29,13 +29,15 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging
 import java.io.File
 import java.util.function.Supplier
 
-object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
-    private val SCENARIOS = listOf(
+class AntennaPodBenchmarks(private val benchmarkEnvironment: BenchmarkEnvironment) : Supplier<List<Benchmark>> {
+    companion object {
+        private val SCENARIOS = listOf(
             ProjectScenario.NORMAL_J8,
             ProjectScenario.DEX_ARCHIVE_MONODEX_J8,
             ProjectScenario.D8_MONODEX_J8)
 
-    private const val ACTIVITY_PATH = "app/src/main/java/de/danoeh/antennapod/activity/MainActivity.java"
+        private const val ACTIVITY_PATH = "app/src/main/java/de/danoeh/antennapod/activity/MainActivity.java"
+    }
 
     override fun get(): List<Benchmark> {
         var benchmarks: List<Benchmark> = mutableListOf()
@@ -149,17 +151,18 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
         return benchmarks
     }
 
-    fun benchmark(
+    private fun benchmark(
             scenario: ProjectScenario,
             benchmarkMode: Logging.BenchmarkMode,
             action: ((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, ModelBuilder) -> Unit): Benchmark {
         return Benchmark(
+                benchmarkEnvironment = benchmarkEnvironment,
                 scenario = scenario,
                 benchmark = Logging.Benchmark.ANTENNA_POD,
                 benchmarkMode = benchmarkMode,
                 projectFactory = { projectBuilder ->
                     projectBuilder
-                        .fromDir(File(BenchmarkTest.getProjectDir().toFile(), "AntennaPod"))
+                        .fromDir(File(benchmarkEnvironment.projectDir.toFile(), "AntennaPod"))
                         .withHeap("1536M")
                         .create()
                 },

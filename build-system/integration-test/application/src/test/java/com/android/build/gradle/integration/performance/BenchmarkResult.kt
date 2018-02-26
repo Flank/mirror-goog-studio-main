@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.performance
 
+import com.google.common.base.Throwables
+import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import java.nio.file.Path
 import java.time.Duration
 
@@ -23,7 +25,7 @@ data class BenchmarkResult(
         val benchmark: Benchmark,
         val totalDuration: Duration,
         val recordedDuration: Duration,
-        val profileLocation: Path?,
+        val profile: GradleBuildProfile?,
         val exception: Exception?
 ) {
     override fun toString(): String {
@@ -34,8 +36,8 @@ data class BenchmarkResult(
             recordedDuration: $recordedDuration
             totalDuration: $totalDuration
             testDir: ${benchmark.projectDir()}
-            profileLocation: ${profileLocation ?: "none"}
-            exception: ${exception ?: "none"}
+            hasProfile: ${if (profile != null) "yes" else "no" }
+            exception: ${if (exception != null) Throwables.getRootCause(exception) else "none"}
         """.trimIndent()
     }
 }

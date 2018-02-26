@@ -159,6 +159,8 @@ public class AnalyticsUtil {
                 return GradleBuildVariant.Java8LangSupport.RETROLAMBDA;
             case DESUGAR:
                 return GradleBuildVariant.Java8LangSupport.INTERNAL;
+            case R8:
+                return GradleBuildVariant.Java8LangSupport.R8_DESUGARING;
             case D8:
                 return GradleBuildVariant.Java8LangSupport.D8;
             case INVALID:
@@ -198,6 +200,8 @@ public class AnalyticsUtil {
                 return GradleBuildVariant.CodeShrinkerTool.PROGUARD;
             case ANDROID_GRADLE:
                 return GradleBuildVariant.CodeShrinkerTool.ANDROID_GRADLE_SHRINKER;
+            case R8:
+                return GradleBuildVariant.CodeShrinkerTool.R8;
         }
         throw new AssertionError("Unrecognized type " + codeShrinker);
     }

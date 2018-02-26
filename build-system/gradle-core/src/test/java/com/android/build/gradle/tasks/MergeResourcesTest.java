@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
 import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.builder.core.BuilderConstants;
 import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.ide.common.res2.ResourceSet;
+import com.android.ide.common.resources.ResourceSet;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.File;

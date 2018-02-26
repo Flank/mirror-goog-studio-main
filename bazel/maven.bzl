@@ -8,7 +8,7 @@ def _maven_pom_impl(ctx):
   clsjars["sources"] = depset()
 
   if ctx.attr.library:
-    if ctx.attr.file:
+    if ctx.attr.file or ctx.attr.classified_files:
       fail("Cannot set both file and library for a maven_pom.")
     jars = jars | depset([jar.class_jar for jar in ctx.attr.library.java.outputs.jars])
     clsjars["sources"] = clsjars["sources"] | ctx.attr.library.java.source_jars
@@ -21,6 +21,12 @@ def _maven_pom_impl(ctx):
     if ctx.attr.library or ctx.attr.classified_libraries:
       fail("Cannot set both file and library for a maven_pom.")
     jars = jars | ctx.attr.file.files
+
+  if ctx.attr.classified_files:
+    for classifier, file in zip(ctx.attr.classifiers, ctx.attr.classified_files):
+      if classifier not in clsjars:
+        clsjars[classifier] = depset()
+      clsjars[classifier] += file.files
 
   parent_poms = depset([], order="postorder")
   parent_jars = {}
@@ -141,6 +147,10 @@ maven_pom = rule(
     "file": attr.label(
         allow_files = True
     ),
+    "classified_files": attr.label_list(
+        allow_files = True,
+        default = [],
+    ),
     "group" : attr.string(),
     "version" : attr.string(),
     "artifact" : attr.string(),
@@ -184,6 +194,7 @@ def maven_java_library(name,
                        exclusions=None,
                        export_artifact=None,
                        srcs=None,
+                       resources=[],
                        exports=None,
                        pom=None,
                        visibility=None,
@@ -200,6 +211,7 @@ def maven_java_library(name,
     name = name,
     deps = deps,
     srcs = srcs,
+    resources = native.glob(["NOTICE", "LICENSE"]) + resources,
     exports = java_exports,
     visibility = visibility,
     **kwargs

@@ -35,6 +35,8 @@ public class InstrumentationResultParserTest extends TestCase {
     private static final String CLASS_NAME = "com.test.FooTest";
     private static final String TEST_NAME = "testFoo";
     private static final String STACK_TRACE = "java.lang.AssertionFailedException";
+    private static final String ON_ERROR =
+            "onError: commandError=false message=" + "INSTRUMENTATION_ABORTED: System has crashed.";
     private static final TestIdentifier TEST_ID = new TestIdentifier(CLASS_NAME, TEST_NAME);
 
     /**
@@ -264,6 +266,37 @@ public class InstrumentationResultParserTest extends TestCase {
         mMockListener.testFailed(TEST_ID, STACK_TRACE);
         mMockListener.testEnded(TEST_ID, Collections.EMPTY_MAP);
         mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
+
+        injectAndVerifyTestString(output.toString());
+    }
+
+    /**
+     * Ensure that when onError message is available, we do not consider it as part of the class
+     * name but as a stand alone entity.
+     */
+    public void testParse_onError() {
+        StringBuilder output = new StringBuilder();
+        addLine(output, "INSTRUMENTATION_STATUS: class=" + CLASS_NAME);
+        addLine(output, ON_ERROR);
+        addLine(output, "INSTRUMENTATION_STATUS: current=1");
+        addLine(output, "INSTRUMENTATION_ABORTED: System has crashed.");
+        addLine(output, "INSTRUMENTATION_STATUS: id=AndroidJUnitRunner");
+        addLine(output, "INSTRUMENTATION_STATUS: numtests=1");
+        addLine(output, "INSTRUMENTATION_STATUS: stream=");
+        addLine(output, "INSTRUMENTATION_STATUS: test=" + TEST_NAME);
+        addLine(output, "INSTRUMENTATION_STATUS_CODE: 1");
+
+        mMockListener.testRunStarted(RUN_NAME, 1);
+        mMockListener.testStarted(TEST_ID);
+        mMockListener.testFailed(
+                TEST_ID,
+                "Test failed to run to completion. Reason: "
+                        + "'Test run failed to complete. Expected 1 tests, received 0'. "
+                        + "Check device logcat for details");
+        mMockListener.testEnded(TEST_ID, Collections.emptyMap());
+        mMockListener.testRunFailed(
+                "Test run failed to complete. Expected 1 tests, received 0. " + ON_ERROR);
+        mMockListener.testRunEnded(0L, Collections.emptyMap());
 
         injectAndVerifyTestString(output.toString());
     }
@@ -522,7 +555,7 @@ public class InstrumentationResultParserTest extends TestCase {
         mMockListener.testRunEnded(EasyMock.eq(676L), EasyMock.anyObject());
 
         injectAndVerifyTestString(output.toString());
-}
+    }
 
     /**
      * Builds a common test result using TEST_NAME and TEST_CLASS.

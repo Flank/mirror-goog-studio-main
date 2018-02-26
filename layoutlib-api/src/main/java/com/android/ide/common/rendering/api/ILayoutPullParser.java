@@ -32,15 +32,5 @@ public interface ILayoutPullParser extends XmlPullParser {
      * @see ViewInfo#getCookie()
      */
     Object getViewCookie();
-
-    /**
-     * Returns a custom parser for the layout of the given name.
-     * @param layoutName the name of the layout.
-     * @return returns a custom parser or null if no custom parsers are needed.
-     *
-     * @deprecated use {@link LayoutlibCallback#getParser(String)} instead
-     */
-    @Deprecated
-    ILayoutPullParser getParser(String layoutName);
 }
 

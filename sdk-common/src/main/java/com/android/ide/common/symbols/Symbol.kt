@@ -17,8 +17,8 @@
 package com.android.ide.common.symbols
 
 import com.android.annotations.concurrency.Immutable
-import com.android.ide.common.res2.MergingException
-import com.android.ide.common.res2.ValueResourceNameValidator
+import com.android.ide.common.resources.MergingException
+import com.android.ide.common.resources.ValueResourceNameValidator
 import com.android.resources.ResourceAccessibility
 import com.android.resources.ResourceType
 import com.google.common.base.Preconditions

@@ -34,11 +34,11 @@ class NavigationXmlDocumentTest {
                     |    xmlns:app="http://schemas.android.com/apk/res-auto">
                     |    <include app:graph="@navigation/foo" />
                     |    <include app:graph="@navigation/bar" />
-                    |    <deeplink app:uri="www.example1.com"
+                    |    <deepLink app:uri="www.example1.com"
                     |            android:autoVerify="true" />
                     |    <navigation>
                     |        <include app:graph="@navigation/bar" />
-                    |        <deeplink app:uri="www.example2.com" />
+                    |        <deepLink app:uri="www.example2.com" />
                     |    </navigation>
                     |</navigation>""".trimMargin()
 
@@ -55,11 +55,11 @@ class NavigationXmlDocumentTest {
                     |    xmlns:app="http://schemas.android.com/apk/res-auto">
                     |    <include app:graph="@navigation/foo" />
                     |    <include app:graph="@navigation/bar" />
-                    |    <deeplink app:uri="www.example1.com"
+                    |    <deepLink app:uri="www.example1.com"
                     |            android:autoVerify="true" />
                     |    <navigation>
                     |        <include app:graph="@navigation/bar" />
-                    |        <deeplink app:uri="www.example2.com" />
+                    |        <deepLink app:uri="www.example2.com" />
                     |    </navigation>
                     |</navigation>""".trimMargin()
 
@@ -96,7 +96,7 @@ class NavigationXmlDocumentTest {
                     |    xmlns:custom1="http://schemas.android.com/apk/res/android"
                     |    xmlns:custom2="http://schemas.android.com/apk/res-auto">
                     |    <include custom2:graph="@navigation/foo" />
-                    |    <deeplink custom2:uri="www.example1.com"
+                    |    <deepLink custom2:uri="www.example1.com"
                     |            custom1:autoVerify="true" />
                     |</navigation>""".trimMargin()
 
@@ -119,7 +119,7 @@ class NavigationXmlDocumentTest {
                     |    xmlns:android="http://schemas.android.com/apk/res/android"
                     |    xmlns:app="http://schemas.android.com/apk/res-auto">
                     |    <include />
-                    |    <deeplink />
+                    |    <deepLink />
                     |</navigation>""".trimMargin()
 
         val navigationXmlDocument = NavigationXmlLoader.load(UNKNOWN, input)
@@ -135,7 +135,7 @@ class NavigationXmlDocumentTest {
             navigationXmlDocument.deepLinks
             fail("Expecting NavigationXmlDocumentException")
         } catch (e: NavigationXmlDocument.NavigationXmlDocumentException) {
-            // should throw NavigationXmlDocumentException because of empty <deeplink> element
+            // should throw NavigationXmlDocumentException because of empty <deepLink> element
         }
     }
 }

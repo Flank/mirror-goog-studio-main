@@ -106,6 +106,9 @@ import java.util.Set;
  */
 @Beta
 public abstract class Reporter {
+    public static final String STDOUT = "stdout";
+    public static final String STDERR = "stderr";
+
     protected final LintCliClient client;
     protected final File output;
     protected String title = "Lint Report";
@@ -198,6 +201,12 @@ public abstract class Reporter {
     /** @return the title of the report */
     public String getTitle() {
         return title;
+    }
+
+    /** The report file, if any (reporters may write to stdout/stderr too) */
+    @Nullable
+    public File getOutput() {
+        return output;
     }
 
     String getUrl(File file) {

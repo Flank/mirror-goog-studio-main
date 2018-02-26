@@ -285,6 +285,8 @@ public class LintGradleExecution {
                     report);
         }
 
+        client.syncConfigOptions();
+
         boolean displayEmpty = !(fatalOnly || flags.isQuiet());
         for (Reporter reporter : flags.getReporters()) {
             reporter.setDisplayEmpty(displayEmpty);

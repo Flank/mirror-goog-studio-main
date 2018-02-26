@@ -62,6 +62,11 @@ public final class MinimalSubProject extends AbstractAndroidTestApp implements A
     }
 
     @NonNull
+    public static MinimalSubProject dynamicFeature(@NonNull String packageName) {
+        return new MinimalSubProject("com.android.dynamic-feature", packageName);
+    }
+
+    @NonNull
     public static MinimalSubProject instantApp() {
         return new MinimalSubProject("com.android.instantapp", null);
     }

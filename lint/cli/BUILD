@@ -6,6 +6,7 @@ kotlin_library(
     # TODO: move resources out of java?
     srcs = ["src/main/java"],
     pom = ":pom",
+    resource_strip_prefix = "tools/base/lint/cli",
     resources = glob(
         include = ["src/main/java/**"],
         exclude = [

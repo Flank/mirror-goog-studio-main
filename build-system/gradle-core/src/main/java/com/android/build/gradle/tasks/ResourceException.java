@@ -15,7 +15,7 @@
  */
 package com.android.build.gradle.tasks;
 
-import com.android.ide.common.res2.MergingException;
+import com.android.ide.common.resources.MergingException;
 
 /**
  * Exception used for resource merging errors, thrown when

@@ -17,9 +17,10 @@
 package com.android.build.gradle.internal.res
 
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.res.namespaced.useAaptDaemon
 import com.android.builder.internal.aapt.v2.Aapt2Exception
-import com.android.ide.common.res2.CompileResourceRequest
+import com.android.ide.common.resources.CompileResourceRequest
 import com.android.repository.Revision
 import org.gradle.api.logging.Logging
 import java.io.Serializable
@@ -31,7 +32,7 @@ class Aapt2CompileWithBlameRunnable @Inject constructor(
 
     override fun run() {
         val logger = LoggerWrapper(Logging.getLogger(this::class.java))
-        useAaptDaemon(params.revision) { daemon ->
+        useAaptDaemon(params.aapt2ServiceKey) { daemon ->
             try {
                 daemon.compile(params.request, logger)
             } catch (e: Aapt2Exception) {
@@ -43,7 +44,7 @@ class Aapt2CompileWithBlameRunnable @Inject constructor(
 
 
     class Params(
-        val revision: Revision,
+        val aapt2ServiceKey: Aapt2ServiceKey,
         val request: CompileResourceRequest
     ) : Serializable
 

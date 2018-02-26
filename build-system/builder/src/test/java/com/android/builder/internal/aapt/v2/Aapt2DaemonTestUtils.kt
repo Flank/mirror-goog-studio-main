@@ -17,7 +17,7 @@
 package com.android.builder.internal.aapt.v2
 
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.ide.common.res2.CompileResourceRequest
+import com.android.ide.common.resources.CompileResourceRequest
 import com.android.testutils.NoErrorsOrWarningsLogger
 import com.android.utils.ILogger
 import java.util.concurrent.TimeoutException

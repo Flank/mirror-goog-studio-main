@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.build.gradle.options.BooleanOption;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -32,7 +33,7 @@ public class SeparateTestModuleWithMinifiedAppConnectedTest {
 
     @Parameterized.Parameters(name = "codeShrinker = {0}")
     public static CodeShrinker[] getShrinkers() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
     }
 
     @Parameterized.Parameter public CodeShrinker codeShrinker;
@@ -49,6 +50,8 @@ public class SeparateTestModuleWithMinifiedAppConnectedTest {
     @Category(DeviceTests.class)
     public void checkRunOnDevice() throws Exception {
         adb.exclusiveAccess();
-        project.executor().run(":test:connectedAndroidTest");
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run(":test:connectedAndroidTest");
     }
 }

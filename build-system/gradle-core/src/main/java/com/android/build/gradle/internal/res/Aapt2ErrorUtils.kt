@@ -24,7 +24,7 @@ import com.android.ide.common.blame.Message
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
-import com.android.ide.common.res2.CompileResourceRequest
+import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.StdLogger
 import com.google.common.collect.ImmutableList
 

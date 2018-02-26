@@ -128,14 +128,15 @@ def kotlin_library(
     )
 
   java_name = name + ".java"
-  if javas:
+  resources_with_notice = native.glob(["NOTICE", "LICENSE"]) + resources if pom else resources
+  if javas or resources_with_notice:
     targets += [java_name]
     native.java_library(
         name = java_name,
         srcs = javas,
-        javacopts = javacopts,
-        resources = resources,
-        deps = kdeps + deps + bundled_deps,
+        javacopts = javacopts if javas else None,
+        resources = resources_with_notice,
+        deps = (kdeps + deps + bundled_deps) if javas else None,
         resource_jars = bundled_deps,
         visibility = visibility,
         **kwargs

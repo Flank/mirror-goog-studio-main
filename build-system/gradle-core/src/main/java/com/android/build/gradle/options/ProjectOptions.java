@@ -50,7 +50,6 @@ public final class ProjectOptions {
     private final ImmutableMap<LongOption, Long> longOptions;
     private final ImmutableMap<StringOption, String> stringOptions;
     private final ImmutableMap<String, String> testRunnerArgs;
-    private final EnumOptions enumOptions;
     private final ImmutableTable<String, String, DeprecationTarget> deprecatedOptions;
 
     public ProjectOptions(@NonNull ImmutableMap<String, Object> properties) {
@@ -64,12 +63,6 @@ public final class ProjectOptions {
         integerOptions = readOptions(IntegerOption.values(), properties, deprecatedOptionsBuilder);
         longOptions = readOptions(LongOption.values(), properties, deprecatedOptionsBuilder);
         stringOptions = readOptions(StringOption.values(), properties, deprecatedOptionsBuilder);
-        enumOptions =
-                EnumOptions.load(
-                        readOptions(
-                                EnumOptions.EnumOption.values(),
-                                properties,
-                                deprecatedOptionsBuilder));
         deprecatedOptions = deprecatedOptionsBuilder.build();
         testRunnerArgs = readTestRunnerArgs(properties);
     }
@@ -201,11 +194,6 @@ public final class ProjectOptions {
         }
         return EnumSet.noneOf(OptionalCompilationStep.class);
     }
-
-    public EnumOptions getEnumOptions() {
-        return enumOptions;
-    }
-
 
     public boolean hasRemovedOptions() {
         return !removedOptions.isEmpty();

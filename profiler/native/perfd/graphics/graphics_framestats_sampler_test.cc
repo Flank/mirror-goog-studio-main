@@ -25,6 +25,14 @@
 using profiler::TestUtils;
 using profiler::proto::GraphicsData;
 
+TEST(GetDumpsysCommand, DumpsysCommandValid26) {
+  profiler::GraphicsFrameStatsSampler sampler;
+  std::string command = sampler.GetDumpsysCommand("app/name", 26);
+
+  EXPECT_EQ("dumpsys SurfaceFlinger --latency \"SurfaceView - app/name#0\"",
+            command);
+}
+
 TEST(GetDumpsysCommand, DumpsysCommandValid24) {
   profiler::GraphicsFrameStatsSampler sampler;
   std::string command = sampler.GetDumpsysCommand("app/name", 24);

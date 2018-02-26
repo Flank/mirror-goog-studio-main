@@ -33,7 +33,7 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptTestUtils;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
-import com.android.ide.common.res2.CompileResourceRequest;
+import com.android.ide.common.resources.CompileResourceRequest;
 import com.android.repository.Revision;
 import com.android.repository.io.impl.FileOpImpl;
 import com.android.repository.testframework.FakeProgressIndicator;

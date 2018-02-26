@@ -60,6 +60,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     private final boolean myLibrary;
     private final int myProjectType;
     private final boolean myBaseSplit;
+    @NonNull private final Collection<String> myDynamicFeatures;
     private final int myHashCode;
 
     public IdeAndroidProjectImpl(
@@ -147,7 +148,12 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         myLibrary = project.isLibrary();
         myProjectType = getProjectType(project, myParsedModelVersion);
         myPluginGeneration = copyNewProperty(project::getPluginGeneration, null);
+        //noinspection ConstantConditions
         myBaseSplit = copyNewProperty(project::isBaseSplit, false);
+        //noinspection ConstantConditions
+        myDynamicFeatures =
+                ImmutableList.copyOf(
+                        copyNewProperty(project::getDynamicFeatures, ImmutableList.of()));
 
         myHashCode = calculateHashCode();
     }
@@ -333,6 +339,12 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         return myBaseSplit;
     }
 
+    @NonNull
+    @Override
+    public Collection<String> getDynamicFeatures() {
+        return myDynamicFeatures;
+    }
+
     @Override
     public void forEachVariant(@NonNull Consumer<IdeVariant> action) {
         for (Variant variant : myVariants) {
@@ -374,7 +386,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 && Objects.equals(myJavaCompileOptions, project.myJavaCompileOptions)
                 && Objects.equals(myAaptOptions, project.myAaptOptions)
                 && Objects.equals(myBuildFolder, project.myBuildFolder)
-                && Objects.equals(myResourcePrefix, project.myResourcePrefix);
+                && Objects.equals(myResourcePrefix, project.myResourcePrefix)
+                && Objects.equals(myDynamicFeatures, project.myDynamicFeatures);
     }
 
     @Override
@@ -409,7 +422,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 myProjectType,
                 myPluginGeneration,
                 myAaptOptions,
-                myBaseSplit);
+                myBaseSplit,
+                myDynamicFeatures);
     }
 
     @Override
@@ -470,6 +484,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 + myAaptOptions
                 + ", myBaseSplit="
                 + myBaseSplit
+                + ", myDynamicFeatures="
+                + myDynamicFeatures
                 + "}";
     }
 }

@@ -94,7 +94,20 @@ message Session {
   // The PID of the app. Note that this is actually an int16, but gRPC only
   // provides int32.
   int32 pid = 3;
+  // Start timestamp in device wall clock time.(ns)
   int64 start_timestamp = 4;
+  // End timestamp in device wall clock time. (ns)
   // If LLONG_MAX, the session is ongoing and hasn't ended yet.
   int64 end_timestamp = 5;
+}
+
+message SessionMetaData {
+  // References Session's |session_id| field
+  int64 session_id = 1;
+  // Session start time (unix epoch) as provided by the BeginSessionRequest.
+  // For Studio-side display only.
+  int64 start_timestamp_epoch_ms = 2;
+  // Session name as provided by the BeginSessionRequest.
+  // For Studio-side display only.
+  string session_name = 3;
 }

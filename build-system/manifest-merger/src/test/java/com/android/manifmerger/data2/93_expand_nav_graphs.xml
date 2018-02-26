@@ -37,10 +37,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/test1">
     <include app:graph="@navigation/navigation_93_expand_nav_graphs_2" />
-    <deeplink app:uri="www.example.com"
+    <deepLink app:uri="www.example.com"
             android:autoVerify="true" />
     <navigation android:id="@+id/subnav">
-        <deeplink app:uri="http://www.example.com:120/foo/{placeholder}" />
+        <deepLink app:uri="http://www.example.com:120/foo/{placeholder}" />
     </navigation>
 </navigation>
 
@@ -51,7 +51,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/test2">
-    <deeplink app:uri="https://.*.example.com/.*/bar" />
+    <deepLink app:uri="https://.*.example.com/.*/bar" />
 </navigation>
 
 

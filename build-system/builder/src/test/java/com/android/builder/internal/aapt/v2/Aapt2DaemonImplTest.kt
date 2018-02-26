@@ -20,7 +20,7 @@ import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.AaptTestUtils
-import com.android.ide.common.res2.CompileResourceRequest
+import com.android.ide.common.resources.CompileResourceRequest
 import com.android.repository.testframework.FakeProgressIndicator
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget

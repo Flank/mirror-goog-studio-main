@@ -18,12 +18,17 @@ package com.android.build.gradle.internal.res.namespaced
 
 import java.io.File
 import java.io.Serializable
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 class StaticLibraryManifestRunnable @Inject constructor(
         val params: StaticLibraryManifestRequest) : Runnable {
     override fun run() {
-        createStaticLibraryManifest(params.manifestFile, params.packageName)
+        params.manifestFile.outputStream().writer(StandardCharsets.UTF_8).buffered().use {
+            it.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
+                    .append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
+                    .append("    package=\"${params.packageName}\"/>\n")
+        }
     }
 }
 

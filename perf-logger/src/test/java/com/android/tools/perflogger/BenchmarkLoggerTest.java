@@ -25,9 +25,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.List;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -46,8 +43,12 @@ public class BenchmarkLoggerTest {
     }
 
     @Test
-    @Ignore
-    // TODO in bazel test runners, all tests here are writing to the same folder, so some assert/assumption below are failing.
+    public void testMetricNameRenamed() throws Exception {
+        BenchmarkLogger logger = new BenchmarkLogger("DEAD[BEEF]");
+        assertThat(logger.getMetricName()).isEqualTo("DEAD-BEEF-");
+    }
+
+    @Test
     public void testSingleBenchmark() throws Exception {
         BenchmarkLogger logger = new BenchmarkLogger(myTestName.getMethodName());
         Benchmark benchmark = new Benchmark("AS BenchmarkLogger Test");
@@ -58,11 +59,11 @@ public class BenchmarkLoggerTest {
                 new MetricSample(3, 30));
         logger.commit();
 
-        File outputDir = logger.getOutputDirectory();
-        assertThat(outputDir.exists()).isTrue();
-        List<File> outputs = Arrays.asList(outputDir.listFiles());
-        assertThat(outputs.size()).isEqualTo(1);
-
+        File outputFile =
+                new File(
+                        logger.getOutputDirectory(),
+                        String.format("%s.json", logger.getMetricName()));
+        assertThat(outputFile.exists()).isTrue();
         String expected =
                 "{\n"
                         + "  \"metric\": \""
@@ -79,7 +80,7 @@ public class BenchmarkLoggerTest {
                         + "    }\n"
                         + "  ]\n"
                         + "}";
-        InputStream outputStream = new FileInputStream(outputs.get(0));
+        InputStream outputStream = new FileInputStream(outputFile);
         String output = CharStreams.toString(new InputStreamReader(outputStream, Charsets.UTF_8));
         assertThat(output).isEqualTo(expected);
     }
@@ -101,11 +102,10 @@ public class BenchmarkLoggerTest {
                 new MetricSample(6, 60));
         logger.commit();
 
-        File outputDir = logger.getOutputDirectory();
-        assertThat(outputDir.exists()).isTrue();
-        List<File> outputs = Arrays.asList(outputDir.listFiles());
-        assertThat(outputs.size()).isEqualTo(1);
-
+        File outputFile =
+                new File(
+                        logger.getOutputDirectory(),
+                        String.format("%s.json", logger.getMetricName()));
         String expected =
                 "{\n"
                         + "  \"metric\": \""
@@ -130,7 +130,7 @@ public class BenchmarkLoggerTest {
                         + "    }\n"
                         + "  ]\n"
                         + "}";
-        InputStream outputStream = new FileInputStream(outputs.get(0));
+        InputStream outputStream = new FileInputStream(outputFile);
         String output = CharStreams.toString(new InputStreamReader(outputStream, Charsets.UTF_8));
         assertThat(output).isEqualTo(expected);
     }

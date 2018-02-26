@@ -96,13 +96,19 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
 
     public void hasFieldWithType(@NonNull String name, @NonNull String type) {
         if (assertSubjectIsNonNull() && !checkHasField(name, type)) {
-            fail("contains field", name + ":" + type);
+            fail("contains field ", name + ":" + type);
         }
     }
 
     public void doesNotHaveField(@NonNull String name) {
         if (assertSubjectIsNonNull() && checkHasField(name)) {
             fail("does not contain field", name);
+        }
+    }
+
+    public void doesNotHaveFieldWithType(@NonNull String name, @NonNull String type) {
+        if (assertSubjectIsNonNull() && checkHasField(name, type)) {
+            fail("does not contain field ", name + ":" + type);
         }
     }
 

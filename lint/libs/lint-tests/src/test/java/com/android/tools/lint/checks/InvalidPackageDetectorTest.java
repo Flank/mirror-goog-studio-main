@@ -428,6 +428,16 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
             ));
     }
 
+    public void testJunit() {
+        // Regression test for 73555280
+        lint().files(
+                // Only the path matters as far as this test is concerned; we don't
+                // need the actual junit-4.12 code that  is referencing java.lang.management
+                base64gzip("libs/junit-4.12.jar", UNSUPPORTED_BYTECODE))
+                .run()
+                .expectClean();
+    }
+
     public void testSkipProvidedLibraries() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=187191
         //noinspection all // Sample code
@@ -541,8 +551,7 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
             + "\n"
             + "</resources>\n");
 
-    @SuppressWarnings("all") // Sample code
-    private TestFile mUnsupported = base64gzip("libs/unsupported.jar", ""
+    private static final String UNSUPPORTED_BYTECODE = ""
             + "H4sIAAAAAAAAAAvwZmYRYeAAwmMzkxwZkAAnAwuDr2uIo66nn5v+v1MMDMwM"
             + "Ad7sHCApJqiSAJyaRYAYrtnX0c/TzTU4RM/X7bPvmdM+3rp6F3m9dbXOnTm/"
             + "OcjgivGDp0V6Xr46nr4XS1excM54KXlEerZ2hoWYyJMlWhXPVF9nfir6WMQI"
@@ -562,5 +571,8 @@ public class InvalidPackageDetectorTest extends AbstractCheckTest {
             + "MO/Pjur0Jvuny6Y7sYYm6SdIvr4iuvidzlX5SZOknpqfDGh6FHZk019xUFL9"
             + "+WuOhgQwpyQzg5IqI5MIA2pWYYKnRBYGVICS69C1IucAERRttjjyHMgELgbc"
             + "OQUBdiPyDW4tnCha7qHmI4RbQTkJOQikUbSxMuLNVwHerGwQ57EyGACVpjGD"
-            + "eADV4J9drAQAAA==");
+            + "eADV4J9drAQAAA==";
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mUnsupported = base64gzip("libs/unsupported.jar", UNSUPPORTED_BYTECODE);
 }

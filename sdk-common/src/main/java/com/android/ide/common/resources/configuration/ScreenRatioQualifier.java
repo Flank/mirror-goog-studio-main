@@ -37,7 +37,7 @@ public class ScreenRatioQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
-    ResourceEnum getEnumValue() {
+    public ResourceEnum getEnumValue() {
         return mValue;
     }
 

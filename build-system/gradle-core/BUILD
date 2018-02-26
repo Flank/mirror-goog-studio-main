@@ -73,6 +73,7 @@ kotlin_library(
         "//tools/base/third_party:org.ow2.asm_asm-analysis",
         "//tools/base/third_party:org.ow2.asm_asm-commons",
         "//tools/base/third_party:org.ow2.asm_asm-util",
+        "//tools/base/third_party:org.smali_dexlib2",
         "//tools/data-binding:tools.compilerCommon",
     ],
 )
@@ -106,7 +107,10 @@ kotlin_test(
     friends = [":gradle-core"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
-    tags = ["no_test_mac"],  # b/72972266
+    tags = [
+        "no_test_mac",
+        "no_test_windows",  # b/72972266 for mac, b/73306170 for win
+    ],
     # TODO: Remove the blacklist, once NDK is checked in.
     test_class = "com.android.build.gradle.internal.GradleCoreBazelSuite",
     deps = [

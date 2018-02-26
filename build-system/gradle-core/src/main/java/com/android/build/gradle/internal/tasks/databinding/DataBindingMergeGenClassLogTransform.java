@@ -173,7 +173,9 @@ public class DataBindingMergeGenClassLogTransform extends Transform {
     @Override
     public Set<QualifiedContent.Scope> getReferencedScopes() {
         return Sets.immutableEnumSet(
-                QualifiedContent.Scope.SUB_PROJECTS, QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+                QualifiedContent.Scope.SUB_PROJECTS,
+                QualifiedContent.Scope.EXTERNAL_LIBRARIES,
+                QualifiedContent.Scope.PROVIDED_ONLY);
     }
 
     @NonNull

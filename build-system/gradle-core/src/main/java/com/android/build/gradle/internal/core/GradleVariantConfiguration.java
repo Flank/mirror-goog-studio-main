@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -84,7 +85,8 @@ public class GradleVariantConfiguration
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type,
             @Nullable CoreSigningConfig signingConfigOverride,
-            @NonNull EvalIssueReporter issueReporter) {
+            @NonNull EvalIssueReporter issueReporter,
+            @NonNull BooleanSupplier isInExecutionPhase) {
         super(
                 defaultConfig,
                 defaultSourceProvider,
@@ -94,7 +96,8 @@ public class GradleVariantConfiguration
                 type,
                 testedConfig,
                 signingConfigOverride,
-                issueReporter);
+                issueReporter,
+                isInExecutionPhase);
         mergeOptions();
         this.projectOptions = projectOptions;
     }
@@ -106,7 +109,8 @@ public class GradleVariantConfiguration
             @NonNull SourceProvider defaultSourceProvider,
             @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
             @Nullable SourceProvider buildTypeSourceProvider,
-            @NonNull VariantType type) {
+            @NonNull VariantType type,
+            @NonNull BooleanSupplier isInExecutionPhase) {
         return new GradleVariantConfiguration(
                 this.projectOptions,
                 this,
@@ -117,7 +121,8 @@ public class GradleVariantConfiguration
                 buildTypeSourceProvider,
                 type,
                 getSigningConfig(),
-                getIssueReporter());
+                getIssueReporter(),
+                isInExecutionPhase);
     }
 
     /**
@@ -156,7 +161,8 @@ public class GradleVariantConfiguration
                 @Nullable SourceProvider buildTypeSourceProvider,
                 @NonNull VariantType type,
                 @Nullable CoreSigningConfig signingConfigOverride,
-                @NonNull EvalIssueReporter issueReporter);
+                @NonNull EvalIssueReporter issueReporter,
+                @NonNull BooleanSupplier isInExecutionPhase);
     }
 
     /** Builder for non-testing variant configurations */
@@ -172,7 +178,8 @@ public class GradleVariantConfiguration
                 @Nullable SourceProvider buildTypeSourceProvider,
                 @NonNull VariantType type,
                 @Nullable CoreSigningConfig signingConfigOverride,
-                @NonNull EvalIssueReporter issueReporter) {
+                @NonNull EvalIssueReporter issueReporter,
+                @NonNull BooleanSupplier isInExecutionPhase) {
             return new GradleVariantConfiguration(
                     projectOptions,
                     null /*testedConfig*/,
@@ -183,7 +190,8 @@ public class GradleVariantConfiguration
                     buildTypeSourceProvider,
                     type,
                     signingConfigOverride,
-                    issueReporter);
+                    issueReporter,
+                    isInExecutionPhase);
         }
     }
 
@@ -208,7 +216,8 @@ public class GradleVariantConfiguration
                 @Nullable SourceProvider buildTypeSourceProvider,
                 @NonNull VariantType type,
                 @Nullable CoreSigningConfig signingConfigOverride,
-                @NonNull EvalIssueReporter issueReporter) {
+                @NonNull EvalIssueReporter issueReporter,
+                @NonNull BooleanSupplier isInExecutionPhase) {
             return new GradleVariantConfiguration(
                     projectOptions,
                     null /*testedConfig*/,
@@ -219,7 +228,8 @@ public class GradleVariantConfiguration
                     buildTypeSourceProvider,
                     type,
                     signingConfigOverride,
-                    issueReporter) {
+                    issueReporter,
+                    isInExecutionPhase) {
                 @NonNull
                 @Override
                 public String getApplicationId() {
@@ -249,7 +259,8 @@ public class GradleVariantConfiguration
                         @NonNull SourceProvider defaultSourceProvider,
                         @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
                         @Nullable SourceProvider buildTypeSourceProvider,
-                        @NonNull VariantType type) {
+                        @NonNull VariantType type,
+                        @NonNull BooleanSupplier isInExecutionPhase) {
                     throw new UnsupportedOperationException("Test modules have no test variants.");
                 }
 

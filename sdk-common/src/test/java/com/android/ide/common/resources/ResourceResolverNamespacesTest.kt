@@ -15,18 +15,12 @@
  */
 package com.android.ide.common.resources
 
-import com.android.ide.common.rendering.api.AttrResourceValue
-import com.android.ide.common.rendering.api.ItemResourceValue
-import com.android.ide.common.rendering.api.ResourceNamespace
+import com.android.ide.common.rendering.api.*
 import com.android.ide.common.rendering.api.ResourceNamespace.ANDROID
-import com.android.ide.common.rendering.api.ResourceReference
-import com.android.ide.common.rendering.api.ResourceValue
-import com.android.ide.common.rendering.api.StyleResourceValue
+import com.android.ide.common.rendering.api.ResourceNamespace.Resolver
 import com.android.resources.ResourceType
-import com.android.resources.ResourceType.ATTR
-import com.android.resources.ResourceType.COLOR
-import com.android.resources.ResourceType.STRING
-import com.android.resources.ResourceType.STYLE
+import com.android.resources.ResourceType.*
+import com.google.common.collect.ImmutableBiMap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
@@ -41,11 +35,11 @@ class ResourceResolverNamespacesTest {
     private lateinit var resolver: ResourceResolver
 
     private fun StyleResourceValue.withItems(
-        namespaces: Map<String, String>,
+        resolver: Resolver,
         vararg items: ItemResourceValue
     ): StyleResourceValue {
         for (item in items) {
-            item.setNamespaceLookup(namespaces::get)
+            item.setNamespaceResolver(resolver)
             this.addItem(item)
         }
         return this
@@ -83,18 +77,22 @@ class ResourceResolverNamespacesTest {
                 "android:Theme",
                 null
             ).withItems(
-                emptyMap(),
+                Resolver.EMPTY_RESOLVER,
                 ItemResourceValue(app, "com.android.support:actionBarColor", "#00ff00", null)
             )
         )
 
-        val appPrefixes =
-            mapOf("common" to localLib.xmlNamespaceUri, "support" to supportLib.xmlNamespaceUri)
+        val appPrefixes = Resolver.fromBiMap(
+            ImmutableBiMap.of(
+                "common", localLib.xmlNamespaceUri,
+                "support", supportLib.xmlNamespaceUri
+            )
+        )
+
         val appRes = listOf(
             ResourceValue(app, COLOR, "image_color", "@common:color/logo_color"),
             ResourceValue(app, COLOR, "title_bar_color", "@support:color/material_blue"),
             ResourceValue(app, COLOR, "broken_chain_color", "@common:color/missing_ns"),
-
 
             ResourceValue(app, COLOR, "from_theme_1", "?android:colorPrimary"),
             ResourceValue(app, COLOR, "from_theme_2", "?support:fabColor"),
@@ -118,7 +116,7 @@ class ResourceResolverNamespacesTest {
                 ItemResourceValue(app, "support:fabColor", "@color/image_color", null)
             )
         )
-        appRes.forEach { it.setNamespaceLookup(appPrefixes::get) }
+        appRes.forEach { it.setNamespaceResolver(appPrefixes) }
 
         val allRes = sequenceOf(androidRes, appRes, supportRes, libRes)
             .flatMap { it.asSequence() }
@@ -168,7 +166,7 @@ class ResourceResolverNamespacesTest {
         check(app, STRING, "title_text_explicit", resolvesTo = "Example")
 
         // The "support" prefix is defined in the context of `app` resources (using
-        // setNamespaceLookup to simulate the xmlns syntax), but not in the context of `localLib`
+        // setNamespaceResolver to simulate the xmlns syntax), but not in the context of `localLib`
         // (which is assumed to use fully qualified package names in XML). Below we make sure that
         // the resolution process doesn't "leak" the defined prefixes as it walks the graph.
         check(app, COLOR, "broken_chain_color", resolvesTo = "@support:color/material_blue")

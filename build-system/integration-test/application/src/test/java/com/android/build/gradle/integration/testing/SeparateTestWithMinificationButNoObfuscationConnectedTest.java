@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.build.gradle.options.BooleanOption;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,7 +34,7 @@ public class SeparateTestWithMinificationButNoObfuscationConnectedTest {
 
     @Parameterized.Parameters(name = "codeShrinker = {0}")
     public static CodeShrinker[] getShrinkers() {
-        return new CodeShrinker[] {CodeShrinker.PROGUARD};
+        return new CodeShrinker[] {CodeShrinker.PROGUARD, CodeShrinker.R8};
     }
 
     @Parameterized.Parameter public CodeShrinker codeShrinker;
@@ -50,6 +51,8 @@ public class SeparateTestWithMinificationButNoObfuscationConnectedTest {
     @Category(DeviceTests.class)
     public void connectedCheck() throws IOException, InterruptedException {
         adb.exclusiveAccess();
-        project.executor().run(":test:connectedCheck");
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run(":test:connectedCheck");
     }
 }

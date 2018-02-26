@@ -197,6 +197,10 @@ public class Main {
             @Override
             public Configuration getConfiguration(@NonNull final Project project,
                     @Nullable LintDriver driver) {
+                if (overrideConfiguration != null) {
+                    return overrideConfiguration;
+                }
+
                 if (project.isGradleProject()) {
                     // Don't report any issues when analyzing a Gradle project from the
                     // non-Gradle runner; they are likely to be false, and will hide the real
@@ -811,6 +815,8 @@ public class Main {
                   ARG_SOURCES, ARG_CLASSES, ARG_LIBRARIES, ARG_RESOURCES));
             exit(ERRNO_INVALID_ARGS);
         }
+
+        client.syncConfigOptions();
 
         List<Reporter> reporters = flags.getReporters();
         if (reporters.isEmpty()) {

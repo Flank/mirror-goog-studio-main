@@ -19,7 +19,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.android.util.Pair;
-
 import org.intellij.lang.annotations.MagicConstant;
 import org.xmlpull.v1.XmlPullParser;
 
@@ -109,6 +108,24 @@ public abstract class LayoutlibCallback implements IProjectCallback {
     @Nullable
     public XmlPullParser getXmlFileParser(String fileName) {
         return null;
+    }
+
+    /**
+     * Returns an optional {@link ResourceNamespace.Resolver} that knows namespace prefixes assumed
+     * to be declared in every resource file.
+     *
+     * <p>For backwards compatibility, in non-namespaced projects this contains the "tools" prefix
+     * mapped to {@link ResourceNamespace#TOOLS}. Before the IDE understood resource namespaces,
+     * this prefix was used for referring to sample data, even if the user didn't define the "tools"
+     * prefix using {@code xmlns:tools="..."}.
+     *
+     * <p>In namespaced projects this method returns an empty resolver, which means sample data
+     * won't work without an explicit definition of a namespace prefix for the {@link
+     * ResourceNamespace#TOOLS} URI.
+     */
+    @NonNull
+    public ResourceNamespace.Resolver getImplicitNamespaces() {
+        return ResourceNamespace.Resolver.EMPTY_RESOLVER;
     }
 
     // ------ implementation of the old interface using the new interface.

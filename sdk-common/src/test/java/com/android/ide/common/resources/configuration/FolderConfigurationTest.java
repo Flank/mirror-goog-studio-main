@@ -17,8 +17,8 @@ package com.android.ide.common.resources.configuration;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.ide.common.res2.ResourceFile;
-import com.android.ide.common.res2.ResourceItem;
+import com.android.ide.common.resources.ResourceFile;
+import com.android.ide.common.resources.ResourceItem;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;

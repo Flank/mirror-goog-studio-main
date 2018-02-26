@@ -19,9 +19,9 @@ namespace profiler {
 
 using grpc::ServerContext;
 using grpc::Status;
-using proto::EnergyDataResponse;
 using proto::EnergyEventsResponse;
 using proto::EnergyRequest;
+using proto::EnergySamplesResponse;
 using proto::EnergyService;
 using proto::EnergyStartRequest;
 using proto::EnergyStartResponse;
@@ -42,9 +42,9 @@ Status EnergyServiceImpl::StopMonitoringApp(ServerContext* context,
   return Status::OK;
 }
 
-Status EnergyServiceImpl::GetData(ServerContext* context,
-                                  const EnergyRequest* request,
-                                  EnergyDataResponse* response) {
+Status EnergyServiceImpl::GetSamples(ServerContext* context,
+                                     const EnergyRequest* request,
+                                     EnergySamplesResponse* response) {
   return Status::OK;
 }
 
@@ -55,7 +55,7 @@ Status EnergyServiceImpl::GetEvents(ServerContext* context,
                                                      request->start_timestamp(),
                                                      request->end_timestamp());
   for (const auto& energy_event : energy_events) {
-    response->add_event()->CopyFrom(energy_event);
+    response->add_events()->CopyFrom(energy_event);
   }
   return Status::OK;
 }

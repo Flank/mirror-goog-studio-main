@@ -5,6 +5,7 @@ kotlin_library(
     name = "lint-tests",
     srcs = ["src/main/java"],
     pom = ":pom",
+    resource_strip_prefix = "tools/base/lint/libs/lint-tests",
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/lint-psi/intellij-core",
@@ -45,6 +46,7 @@ kotlin_test(
         # TODO: Inject the cache directory into tests.
         "-Duser.home=/tmp",
     ],
+    tags = ["no_test_windows"],  # b/73306170
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":lint-tests",

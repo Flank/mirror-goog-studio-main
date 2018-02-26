@@ -68,12 +68,14 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
   return (strcmp(sig_mutf8, "Ljava/net/URL;") == 0) ||
          (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
          (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0) ||
-         (strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 &&
-          energy_profiler_enabled) ||
-         (strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0 &&
-          energy_profiler_enabled) ||
-         (strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 &&
-          energy_profiler_enabled);
+         (energy_profiler_enabled &&
+          (strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 ||
+           strcmp(sig_mutf8, "Landroid/app/JobSchedulerImpl;") == 0 ||
+           strcmp(sig_mutf8, "Landroid/app/job/JobService;") == 0 ||
+           strcmp(sig_mutf8, "Landroid/app/job/JobServiceEngine$JobHandler;") ==
+               0 ||
+           strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 ||
+           strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0));
 }
 
 // ClassPrepare event callback to invoke transformation of selected
@@ -224,6 +226,53 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
             ir::MethodId(desc.c_str(), "cancel",
                          "(Landroid/app/AlarmManager$OnAlarmListener;)V"))) {
       Log::E("Error instrumenting AlarmManager.cancel(OnAlarmListener)");
+    }
+  } else if (strcmp(name, "android/app/JobSchedulerImpl") == 0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::EntryHook>(
+        ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
+                     "onScheduleJobEntry"),
+        true);
+    mi.AddTransformation<slicer::ExitHook>(
+        ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
+                     "onScheduleJobExit"));
+    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "schedule",
+                                          "(Landroid/app/job/JobInfo;)I"))) {
+      Log::E("Error instrumenting JobScheduler.schedule");
+    }
+  } else if (strcmp(name, "android/app/job/JobService") == 0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::EntryHook>(
+        ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
+                     "wrapJobFinished"));
+    if (!mi.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "jobFinished",
+                         "(Landroid/app/job/JobParameters;Z)V"))) {
+      Log::E("Error instrumenting JobService.jobFinished");
+    }
+  } else if (strcmp(name, "android/app/job/JobServiceEngine$JobHandler") == 0) {
+    // ackStartMessage is non-abstract and calls onStartJob.
+    slicer::MethodInstrumenter mi_start(dex_ir);
+    mi_start.AddTransformation<slicer::EntryHook>(
+        ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
+                     "wrapOnStartJob"),
+        true);
+    if (!mi_start.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "ackStartMessage",
+                         "(Landroid/app/job/JobParameters;Z)V"))) {
+      Log::E("Error instrumenting JobHandler.ackStartMessage");
+    }
+
+    // ackStopMessage is non-abstract and calls onStopJob.
+    slicer::MethodInstrumenter mi_stop(dex_ir);
+    mi_start.AddTransformation<slicer::EntryHook>(
+        ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
+                     "wrapOnStopJob"),
+        true);
+    if (!mi_start.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "ackStopMessage",
+                         "(Landroid/app/job/JobParameters;Z)V"))) {
+      Log::E("Error instrumenting JobHandler.ackStopMessage");
     }
   } else {
     Log::V("No transformation applied for class: %s", name);

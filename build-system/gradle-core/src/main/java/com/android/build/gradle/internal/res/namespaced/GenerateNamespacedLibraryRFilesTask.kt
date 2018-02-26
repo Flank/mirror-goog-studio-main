@@ -47,7 +47,7 @@ open class GenerateNamespacedLibraryRFilesTask : AndroidBuilderTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var rDotTxtCollection: FileCollection private set
 
     @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
-    @get:Input private val packageForR get() = packageForRSupplier.get()
+    @get:Input val packageForR get() = packageForRSupplier.get()
 
     @get:OutputFile lateinit var rJarFile: File private set
     @get:OutputFile lateinit var resIdsFile: File private set

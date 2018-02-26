@@ -128,7 +128,9 @@ public enum InternalArtifactType implements ArtifactType {
     INSTANT_RUN_MERGED_MANIFESTS,
     MANIFEST_METADATA,
     MANIFEST_MERGE_REPORT,
-    STATIC_LIBRARY_MANIFESTS,
+    // Simplified android manifest with original package name.
+    // It's used to create namespaced res.apk static library.
+    STATIC_LIBRARY_MANIFEST,
 
     // List of annotation processors for metrics.
     ANNOTATION_PROCESSOR_LIST,
@@ -174,6 +176,15 @@ public enum InternalArtifactType implements ArtifactType {
     FEATURE_APPLICATION_ID_DECLARATION,
     FEATURE_RESOURCE_PKG,
     FEATURE_TRANSITIVE_DEPS,
+    // The information about the features in the app that is necessary for the data binding
+    // annotation processor (for base feature compilation). Created by the
+    // DataBindingExportFeatureApplicationIdsTask and passed down to the annotation processor via
+    // processor args.
+    FEATURE_DATA_BINDING_BASE_FEATURE_INFO,
+    // The information about the feature that is necessary for the data binding annotation
+    // processor (for feature compilation). Created by DataBindingExportFeatureInfoTask and passed
+    // into the annotation processor via processor args.
+    FEATURE_DATA_BINDING_FEATURE_INFO,
 
     // Project metadata
     METADATA_FEATURE_DECLARATION,

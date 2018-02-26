@@ -23,6 +23,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
@@ -73,10 +74,16 @@ public class InstantRunResourceShrinkerTest {
     @Test
     public void checkPackaging() throws Exception {
         project.executor()
+                // resource shrinking and R8, http://b/72370175
+                .with(BooleanOption.ENABLE_R8, false)
                 .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
 
-        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
+        AndroidProject model =
+                project.model()
+                        .with(BooleanOption.ENABLE_R8, false)
+                        .fetchAndroidProjects()
+                        .getOnlyModel();
         InstantRunApk apk =
                 InstantRunTestUtils.getMainApk(InstantRunTestUtils.getInstantRunModel(model));
 

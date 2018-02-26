@@ -15,11 +15,10 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.SdkConstants
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.ExistingBuildElements
-import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.builder.core.VariantType
@@ -53,7 +52,7 @@ import javax.inject.Inject
 open class LinkLibraryAndroidResourcesTask @Inject constructor(private val workerExecutor: WorkerExecutor) :
         AndroidBuilderTask() {
 
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFiles: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFile: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDirectories: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
@@ -61,7 +60,11 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional var tested: FileCollection? = null; private set
 
     @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
-    @get:Input private val packageForR get() = packageForRSupplier.get()
+    @Input fun getPackageForR() = packageForRSupplier.get()
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    lateinit var aapt2FromMaven: FileCollection private set
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:Optional var rClassSource: File? = null; private set
@@ -87,7 +90,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
         val request = AaptPackageConfig(
                 androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
-                manifestFile = manifestFiles.singleFile,
+                manifestFile = manifestFile.singleFile,
                 options = AaptOptions(null, false, null),
                 resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.asIterable()),
                 staticLibrary = true,
@@ -96,13 +99,17 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
                 sourceOutputDir = rClassSource,
                 resourceOutputApk = staticLibApk,
                 variantType = VariantType.LIBRARY,
-                customPackageForR = packageForR,
+                customPackageForR = getPackageForR(),
                 symbolOutputDir = rDotTxt.parentFile,
                 intermediateDir = aaptIntermediateDir)
 
+        val aapt2ServiceKey = registerAaptService(
+            aapt2FromMaven = aapt2FromMaven,
+            logger = iLogger
+        )
         workerExecutor.submit(Aapt2LinkRunnable::class.java) {
             it.isolationMode = IsolationMode.NONE
-            it.setParams(Aapt2LinkRunnable.Params(buildTools.revision, request))
+            it.setParams(Aapt2LinkRunnable.Params(aapt2ServiceKey, request))
         }
     }
 
@@ -118,7 +125,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
         override fun execute(task: LinkLibraryAndroidResourcesTask) {
             task.variantName = scope.fullVariantName
-            task.manifestFiles = scope.getOutput(InternalArtifactType.STATIC_LIBRARY_MANIFESTS)
+            task.manifestFile = scope.getOutput(InternalArtifactType.STATIC_LIBRARY_MANIFEST)
             task.inputResourcesDirectories = scope.getOutput(InternalArtifactType.RES_COMPILED_FLAT_FILES)
             task.libraryDependencies =
                     scope.getArtifactFileCollection(
@@ -152,6 +159,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
             task.setAndroidBuilder(scope.globalScope.androidBuilder)
             task.packageForRSupplier = Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
             task.rDotTxt = rDotTxt
+            task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
         }
     }
 

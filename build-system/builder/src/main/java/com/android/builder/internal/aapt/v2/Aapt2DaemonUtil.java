@@ -19,7 +19,7 @@ package com.android.builder.internal.aapt.v2;
 import com.android.annotations.NonNull;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
-import com.android.ide.common.res2.CompileResourceRequest;
+import com.android.ide.common.resources.CompileResourceRequest;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.Writer;

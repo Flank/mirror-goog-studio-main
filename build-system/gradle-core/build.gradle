@@ -43,6 +43,7 @@ dependencies {
     compile libs.asm_util
     compile libs.jopt
     compile libs.proguard
+    compile libs.smali_dexlib
 
     compileOnly libs.jacoco_core
     compileOnly libs.jacoco_report

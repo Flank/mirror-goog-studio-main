@@ -68,8 +68,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
     @Suppress("unused")
     // Needed to trigger rebuild if proguard file is requested (https://issuetracker.google.com/67418335)
-    @get:Input private val hasProguardOutputFile: Boolean
-        get() = proguardOutputFile != null
+    @Input fun hasProguardOutputFile() = proguardOutputFile != null
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE) lateinit var dependencies: FileCollection

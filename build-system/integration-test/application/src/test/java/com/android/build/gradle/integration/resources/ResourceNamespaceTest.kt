@@ -49,7 +49,6 @@ class ResourceNamespaceTest {
      */
     private val buildScriptContent = """
         android.aaptOptions.namespaced = true
-        android.buildToolsVersion = '4509860'
     """
 
     private val lib = MinimalSubProject.lib("com.example.lib")

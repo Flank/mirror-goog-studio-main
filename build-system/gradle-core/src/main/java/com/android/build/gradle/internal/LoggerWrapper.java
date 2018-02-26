@@ -17,7 +17,7 @@ package com.android.build.gradle.internal;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.res2.MergingException;
+import com.android.ide.common.resources.MergingException;
 import com.android.utils.ILogger;
 import java.io.Serializable;
 import java.util.function.Supplier;

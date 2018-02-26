@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.desugar;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.desugar.DesugaringProjectConfigurator.configureR8Desugaring;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -43,9 +44,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -67,14 +70,17 @@ public class DesugarAppTest {
     @Parameterized.Parameters(name = "enableGradleWorkers={0}, tool={1}")
     public static Collection<Object[]> getParameters() {
         // noinspection unchecked
-        return Sets.cartesianProduct(
-                        Sets.newHashSet(Boolean.TRUE, Boolean.FALSE),
-                        Sets.newHashSet(
-                                VariantScope.Java8LangSupport.D8,
-                                VariantScope.Java8LangSupport.DESUGAR))
-                .stream()
-                .map(List::toArray)
-                .collect(Collectors.toSet());
+        Set<Object[]> setups =
+                Sets.cartesianProduct(
+                                Sets.newHashSet(Boolean.TRUE, Boolean.FALSE),
+                                Sets.newHashSet(
+                                        VariantScope.Java8LangSupport.D8,
+                                        VariantScope.Java8LangSupport.DESUGAR))
+                        .stream()
+                        .map(List::toArray)
+                        .collect(Collectors.toSet());
+        setups.add(new Object[] {Boolean.FALSE, VariantScope.Java8LangSupport.R8});
+        return setups;
     }
 
     public DesugarAppTest(
@@ -84,26 +90,30 @@ public class DesugarAppTest {
         this.java8LangSupport = java8LangSupport;
     }
 
+    @Before
+    public void setUp() {
+        if (java8LangSupport == VariantScope.Java8LangSupport.R8) {
+            configureR8Desugaring(project);
+        }
+    }
+
     @Test
-    public void syncIssueIfJava8AndDesugaringDisabled() throws IOException, InterruptedException {
+    public void syncIssueIfJava8AndDesugaringDisabled() throws IOException {
         enableJava8();
         AndroidProject result =
                 project.model()
                         .with(BooleanOption.ENABLE_D8_DESUGARING, false)
+                        .with(BooleanOption.ENABLE_R8_DESUGARING, false)
                         .with(BooleanOption.ENABLE_DESUGAR, false)
                         .ignoreSyncIssues()
                         .fetchAndroidProjects()
                         .getOnlyModel();
-        String expectedMsg =
-                "Please add 'android.enableD8.desugaring=true' "
-                        + "to your gradle.properties file "
-                        + "to enable Java 8 language "
-                        + "support.";
+        String expectedMsg = "to your gradle.properties file to enable Java 8 language support.";
         boolean found =
                 result.getSyncIssues()
                         .stream()
                         .filter(i -> i.getSeverity() == SyncIssue.SEVERITY_ERROR)
-                        .anyMatch(i -> i.getMessage().equals(expectedMsg));
+                        .anyMatch(i -> i.getMessage().contains(expectedMsg));
         assertThat(found).named("Sync issue to enable desugaring found").isTrue();
     }
 
@@ -150,10 +160,11 @@ public class DesugarAppTest {
     }
 
     @Test
-    public void testNonDesugaredLibraryDependency()
-            throws IOException, InterruptedException, ProcessException {
+    public void testNonDesugaredLibraryDependency() throws IOException, InterruptedException {
         // see b/65543679 for details
         Assume.assumeFalse(enableGradleWorkers);
+        // see b/72994228
+        Assume.assumeTrue(java8LangSupport != VariantScope.Java8LangSupport.R8);
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "dependencies {\n"
@@ -298,6 +309,12 @@ public class DesugarAppTest {
                 .with(
                         BooleanOption.ENABLE_D8_DESUGARING,
                         java8LangSupport == VariantScope.Java8LangSupport.D8)
-                .with(BooleanOption.ENABLE_GRADLE_WORKERS, enableGradleWorkers);
+                .with(BooleanOption.ENABLE_GRADLE_WORKERS, enableGradleWorkers)
+                .with(
+                        BooleanOption.ENABLE_R8_DESUGARING,
+                        java8LangSupport == VariantScope.Java8LangSupport.R8)
+                .with(
+                        BooleanOption.ENABLE_R8,
+                        java8LangSupport == VariantScope.Java8LangSupport.R8);
     }
 }

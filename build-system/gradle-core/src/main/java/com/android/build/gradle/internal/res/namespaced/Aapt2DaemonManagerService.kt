@@ -18,6 +18,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.SdkConstants
 import com.android.annotations.concurrency.GuardedBy
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.builder.internal.aapt.v2.Aapt2DaemonImpl
@@ -27,7 +28,10 @@ import com.android.ide.common.process.ProcessException
 import com.android.repository.Revision
 import com.android.sdklib.BuildToolInfo
 import com.android.utils.ILogger
+import org.gradle.api.file.FileCollection
+import java.io.File
 import java.io.IOException
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -42,10 +46,13 @@ private val daemonTimeouts = Aapt2DaemonTimeouts()
 private val daemonExpiryTimeSeconds = TimeUnit.MINUTES.toSeconds(3)
 private val maintenanceIntervalSeconds = TimeUnit.MINUTES.toSeconds(1)
 
-private data class AaptServiceKey(val aapt2Version: Revision) :
-        WorkerActionServiceRegistry.ServiceKey<Aapt2DaemonManager> {
-    override val type: Class<Aapt2DaemonManager> get() = Aapt2DaemonManager::class.java
+sealed class Aapt2ServiceKey : WorkerActionServiceRegistry.ServiceKey<Aapt2DaemonManager> {
+    final override val type: Class<Aapt2DaemonManager> get() = Aapt2DaemonManager::class.java
 }
+
+private data class Aapt2SdkServiceKey(val aapt2Version: Revision) : Aapt2ServiceKey()
+
+private data class Aapt2FileServiceKey(val file: File) : Aapt2ServiceKey()
 
 private class RegisteredAaptService(override val service: Aapt2DaemonManager)
     : WorkerActionServiceRegistry.RegisteredService<Aapt2DaemonManager> {
@@ -57,33 +64,47 @@ private class RegisteredAaptService(override val service: Aapt2DaemonManager)
 /** Intended for use from worker actions. */
 @Throws(ProcessException::class, IOException::class)
 fun <T: Any>useAaptDaemon(
-        aapt2Version: Revision,
-        serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE,
-        block: (Aapt2DaemonManager.LeasedAaptDaemon) -> T) : T {
-    return getAaptDaemon(aapt2Version, serviceRegistry).use(block)
+    aapt2ServiceKey: Aapt2ServiceKey,
+    serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE,
+    block: (Aapt2DaemonManager.LeasedAaptDaemon) -> T) : T {
+    return getAaptDaemon(aapt2ServiceKey, serviceRegistry).use(block)
 }
 
 /** Intended for use from java worker actions. */
 @JvmOverloads
 fun getAaptDaemon(
-        aapt2Version: Revision,
-        serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE) : Aapt2DaemonManager.LeasedAaptDaemon =
-        serviceRegistry.getService(AaptServiceKey(aapt2Version)).service.leaseDaemon()
+    aapt2ServiceKey: Aapt2ServiceKey,
+    serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE) : Aapt2DaemonManager.LeasedAaptDaemon =
+    serviceRegistry.getService(aapt2ServiceKey).service.leaseDaemon()
 
-
-
-/** Registers an AAPT2 daemon manager for the given build tools, keyed from version. Idempotent. */
+@JvmOverloads
 fun registerAaptService(
-        buildToolInfo: BuildToolInfo,
-        logger: ILogger,
-        serviceRegistry: WorkerActionServiceRegistry) {
-    serviceRegistry.registerService(AaptServiceKey(buildToolInfo.revision), {
-        val aaptExecutablePath = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT2)
+    aapt2FromMaven: FileCollection?,
+    buildToolInfo: BuildToolInfo? = null,
+    logger: ILogger,
+    serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE
+): Aapt2ServiceKey {
+    val key: Aapt2ServiceKey
+    val aaptExecutablePath: Path
+    when {
+        aapt2FromMaven != null -> {
+            val dir = aapt2FromMaven.singleFile
+            key = Aapt2FileServiceKey(dir)
+            aaptExecutablePath =  dir.toPath().resolve(SdkConstants.FN_AAPT2)
+        }
+        buildToolInfo != null -> {
+            key = Aapt2SdkServiceKey(buildToolInfo.revision)
+            aaptExecutablePath = Paths.get(buildToolInfo.getPath(BuildToolInfo.PathId.AAPT2))
+        }
+        else -> throw IllegalArgumentException("Must supply one of aapt2 from maven or build tool info.")
+    }
+
+    serviceRegistry.registerService(key, {
         val manager = Aapt2DaemonManager(logger = logger,
                 daemonFactory = { displayId ->
                     Aapt2DaemonImpl(
                             displayId = "#$displayId",
-                            aaptExecutable = Paths.get(aaptExecutablePath),
+                            aaptExecutable = aaptExecutablePath,
                             daemonTimeouts = daemonTimeouts,
                             logger = logger)
                 },
@@ -92,6 +113,7 @@ fun registerAaptService(
                 listener = Aapt2DaemonManagerMaintainer())
         RegisteredAaptService(manager)
     })
+    return key
 }
 
 /**

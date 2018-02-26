@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.FeatureVariantData
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantType
@@ -66,8 +67,7 @@ class GenerateSplitAbiResTest {
     @Mock lateinit internal var mockedAaptOptions: AaptOptions
     @Mock lateinit internal var mockedOutputFactory: OutputFactory
 
-    internal var localProjectOptions = ProjectOptions(ImmutableMap.of<String, Any>())
-    internal val apkData = OutputFactory.ConfigurationSplitApkData(
+    private val apkData = OutputFactory.ConfigurationSplitApkData(
             "x86",
             "app",
             "app",
@@ -85,9 +85,14 @@ class GenerateSplitAbiResTest {
 
         with(mockedGlobalScope) {
             `when`(androidBuilder).thenReturn(mockedAndroidBuilder)
-            `when`(projectOptions).thenReturn(localProjectOptions)
+            `when`(projectOptions).thenReturn(
+                ProjectOptions(ImmutableMap.of<String, Any>(
+                    BooleanOption.USE_AAPT2_FROM_MAVEN.propertyName, false
+                ))
+            )
             `when`(extension).thenReturn(mockedAndroidConfig)
             `when`(projectBaseName).thenReturn("featureA")
+            `when`(project).thenReturn(this@GenerateSplitAbiResTest.project)
         }
 
         with(mockedVariantScope) {

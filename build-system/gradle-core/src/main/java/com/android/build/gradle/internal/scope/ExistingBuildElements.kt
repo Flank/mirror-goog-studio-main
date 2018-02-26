@@ -232,7 +232,7 @@ class ExistingBuildElements {
                     filterName,
                     outputFile,
                     fullName,
-                    baseName,
+                    baseName ?: "",
                     enabled)
         }
 

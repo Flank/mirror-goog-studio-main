@@ -23,7 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.builder.internal.aapt.v1.AaptV1;
 import com.android.ide.common.internal.ResourceCompilationException;
 import com.android.ide.common.internal.ResourceProcessor;
-import com.android.ide.common.res2.CompileResourceRequest;
+import com.android.ide.common.resources.CompileResourceRequest;
 import com.android.repository.Revision;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.BuildToolInfo;

@@ -32,7 +32,7 @@ import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.SigningConfig;
 import com.android.ide.common.build.ApkInfo;
-import com.android.ide.common.res2.FileStatus;
+import com.android.ide.common.resources.FileStatus;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;

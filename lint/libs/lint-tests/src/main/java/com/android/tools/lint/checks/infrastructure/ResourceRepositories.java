@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks.infrastructure;
 
-import com.android.ide.common.res2.ResourceItem;
+import com.android.ide.common.resources.ResourceItem;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Ordering;

@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.BuilderConstants;
-import com.android.ide.common.res2.AssetSet;
+import com.android.ide.common.resources.AssetSet;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.File;

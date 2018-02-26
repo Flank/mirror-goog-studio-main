@@ -18,6 +18,8 @@ package com.android.tools.lint.client.api;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
+import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.utils.SdkUtils.globToRegexp;
 
 import com.android.annotations.NonNull;
@@ -92,6 +94,31 @@ public class DefaultConfiguration extends Configuration {
     private final File configFile;
     private boolean bulkEditing;
     private File baselineFile;
+
+    /**
+     * Returns whether lint should check all warnings, including those off by default,
+     * or null if not configured in this configuration
+     */
+    private Boolean checkAllWarnings;
+
+    /**
+     * Returns whether lint will only check for errors (ignoring warnings),
+     * or null if not configured in this configuration
+     */
+    private Boolean ignoreWarnings;
+
+    /**
+     * Returns whether lint should treat all warnings as errors,
+     * or null if not configured in this configuration
+     */
+    private Boolean warningsAsErrors;
+    private Boolean fatalOnly;
+    private Boolean checkTestSources;
+    private Boolean checkGeneratedSources;
+    private Boolean checkDependencies;
+    private Boolean explainIssues;
+    private Boolean removeFixedBaselineIssues;
+    private Boolean abortOnError;
 
     /** Map from id to list of project-relative paths for suppressed warnings */
     private Map<String, List<String>> suppressed;
@@ -313,10 +340,14 @@ public class DefaultConfiguration extends Configuration {
         try {
             // TODO: Switch to a pull parser!
             Document document = XmlUtils.parseUtfXmlFile(configFile, false);
-            String baseline = document.getDocumentElement().getAttribute(ATTR_BASELINE);
+
+            Element root = document.getDocumentElement();
+            readFlags(root);
+
+            String baseline = root.getAttribute(ATTR_BASELINE);
             if (!baseline.isEmpty()) {
                 baselineFile = new File(baseline.replace('/', File.separatorChar));
-                if (!baselineFile.isAbsolute()) {
+                if (project != null && !baselineFile.isAbsolute()) {
                     baselineFile = new File(project.getDir(), baselineFile.getPath());
                 }
             }
@@ -401,6 +432,104 @@ public class DefaultConfiguration extends Configuration {
         } catch (Exception e) {
             client.log(e, null);
         }
+    }
+
+    private void readFlags(@NonNull Element root) {
+        if (root.getAttributes().getLength() > 0) {
+            checkAllWarnings = readBooleanFlag(root, "checkAllWarnings");
+            ignoreWarnings = readBooleanFlag(root, "ignoreWarnings");
+            warningsAsErrors = readBooleanFlag(root, "warningsAsErrors");
+            fatalOnly = readBooleanFlag(root, "fatalOnly");
+            checkTestSources = readBooleanFlag(root, "checkTestSources");
+            checkGeneratedSources = readBooleanFlag(root, "checkGeneratedSources");
+            checkDependencies = readBooleanFlag(root, "checkDependencies");
+            explainIssues = readBooleanFlag(root, "explainIssues");
+            removeFixedBaselineIssues = readBooleanFlag(root, "removeFixedBaselineIssues");
+            abortOnError = readBooleanFlag(root, "abortOnError");
+        }
+    }
+
+    @Nullable
+    private static Boolean readBooleanFlag(@NonNull Element root, @NonNull String attribute) {
+        if (root.hasAttribute(attribute)) {
+            String value = root.getAttribute(attribute);
+            if (value.equals(VALUE_TRUE)) {
+                return true;
+            } else if (value.equals(VALUE_FALSE)) {
+                return false;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static File readFileFlag(@NonNull Element root, @NonNull String attribute) {
+        if (root.hasAttribute(attribute)) {
+            return new File(root.getAttribute(attribute));
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public Boolean getCheckAllWarnings() {
+        ensureInitialized();
+        return checkAllWarnings;
+    }
+
+    @Nullable
+    public Boolean getIgnoreWarnings() {
+        ensureInitialized();
+        return ignoreWarnings;
+    }
+
+    @Nullable
+    public Boolean getWarningsAsErrors() {
+        ensureInitialized();
+        return warningsAsErrors;
+    }
+
+    @Nullable
+    public Boolean getFatalOnly() {
+        ensureInitialized();
+        return fatalOnly;
+    }
+
+    @Nullable
+    public Boolean getCheckTestSources() {
+        ensureInitialized();
+        return checkTestSources;
+    }
+
+    @Nullable
+    public Boolean getCheckGeneratedSources() {
+        ensureInitialized();
+        return checkGeneratedSources;
+    }
+
+    @Nullable
+    public Boolean getCheckDependencies() {
+        ensureInitialized();
+        return checkDependencies;
+    }
+
+    @Nullable
+    public Boolean getExplainIssues() {
+        ensureInitialized();
+        return explainIssues;
+    }
+
+    @Nullable
+    public Boolean getRemoveFixedBaselineIssues() {
+        ensureInitialized();
+        return removeFixedBaselineIssues;
+    }
+
+    @Nullable
+    public Boolean getAbortOnError() {
+        ensureInitialized();
+        return abortOnError;
     }
 
     private void addRegexp(@NonNull String idList, @NonNull Iterable<String> ids, int n,

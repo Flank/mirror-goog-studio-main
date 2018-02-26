@@ -37,14 +37,22 @@ public class FeatureSplitDeclaration {
     @VisibleForTesting static final String PERSISTED_FILE_NAME = "feature-split.json";
 
     @NonNull private final String uniqueIdentifier;
+    @NonNull private final String applicationId;
 
-    public FeatureSplitDeclaration(@NonNull String uniqueIdentifier) {
+    public FeatureSplitDeclaration(
+            @NonNull String uniqueIdentifier, @NonNull String applicationId) {
         this.uniqueIdentifier = uniqueIdentifier;
+        this.applicationId = applicationId;
     }
 
     @NonNull
     public String getUniqueIdentifier() {
         return uniqueIdentifier;
+    }
+
+    @NonNull
+    public String getApplicationId() {
+        return applicationId;
     }
 
     public void save(@NonNull File outputDirectory) throws IOException {

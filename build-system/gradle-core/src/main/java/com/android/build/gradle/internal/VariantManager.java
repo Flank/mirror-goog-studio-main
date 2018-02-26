@@ -95,6 +95,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
@@ -138,6 +139,7 @@ public class VariantManager implements VariantModel {
     @NonNull private final Map<File, ManifestAttributeSupplier> manifestParserMap;
     @NonNull protected final GlobalScope globalScope;
     @Nullable private final CoreSigningConfig signingOverride;
+    @NonNull private final BooleanSupplier isInExecutionPhase;
 
     public VariantManager(
             @NonNull GlobalScope globalScope,
@@ -165,6 +167,7 @@ public class VariantManager implements VariantModel {
         this.productFlavors = Maps.newHashMap();
         this.signingConfigs = Maps.newHashMap();
         this.manifestParserMap = Maps.newHashMap();
+        this.isInExecutionPhase = () -> globalScope.isInExectionPhase();
 
         DefaultAndroidSourceSet mainSourceSet =
                 (DefaultAndroidSourceSet) extension.getSourceSets().getByName(extension.getDefaultConfig().getName());
@@ -498,7 +501,8 @@ public class VariantManager implements VariantModel {
                                     variantConfig)
                             .setConsumeType(
                                     getConsumeType(
-                                            testedVariantData.getVariantConfiguration().getType()))
+                                            testedVariantData.getVariantConfiguration().getType(),
+                                            variantScope.getVariantData()))
                             .addSourceSets(testVariantSourceSets)
                             .setFlavorSelection(getFlavorSelection(variantConfig))
                             .setTestedVariantDependencies(testedVariantData.getVariantDependency());
@@ -589,10 +593,11 @@ public class VariantManager implements VariantModel {
     }
 
     @NonNull
-    private AndroidTypeAttr getConsumeType(@NonNull VariantType type) {
+    private AndroidTypeAttr getConsumeType(
+            @NonNull VariantType type, @NonNull BaseVariantData variantData) {
         switch (type) {
             case APK:
-                if (variantFactory instanceof TestVariantFactory) {
+                if (!isBaseSplit(variantData) || variantFactory instanceof TestVariantFactory) {
                     return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.APK);
                 }
                 return project.getObjects().named(AndroidTypeAttr.class, AndroidTypeAttr.AAR);
@@ -909,7 +914,8 @@ public class VariantManager implements VariantModel {
                                 buildTypeData.getSourceSet(),
                                 variantType,
                                 signingOverride,
-                                globalScope.getErrorHandler());
+                                globalScope.getErrorHandler(),
+                                isInExecutionPhase);
 
         // sourceSetContainer in case we are creating variant specific sourceSets.
         NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer = extension
@@ -973,7 +979,9 @@ public class VariantManager implements VariantModel {
                                 variantData.getScope().getGlobalScope().getErrorHandler(),
                                 variantConfig)
                         .setConsumeType(
-                                getConsumeType(variantData.getVariantConfiguration().getType()))
+                                getConsumeType(
+                                        variantData.getVariantConfiguration().getType(),
+                                        variantData))
                         .setPublishType(
                                 getPublishingType(variantData.getVariantConfiguration().getType()))
                         .setFlavorSelection(getFlavorSelection(variantConfig))
@@ -1082,7 +1090,8 @@ public class VariantManager implements VariantModel {
                         testSourceSet,
                         testSourceSet != null ? getParser(testSourceSet.getManifestFile()) : null,
                         buildTypeData.getTestSourceSet(type),
-                        type);
+                        type,
+                        isInExecutionPhase);
 
 
         for (CoreProductFlavor productFlavor : productFlavorList) {
@@ -1317,6 +1326,7 @@ public class VariantManager implements VariantModel {
 
     @NonNull
     private ManifestAttributeSupplier getParser(@NonNull File file) {
-        return manifestParserMap.computeIfAbsent(file, DefaultManifestParser::new);
+        return manifestParserMap.computeIfAbsent(
+                file, f -> new DefaultManifestParser(f, isInExecutionPhase));
     }
 }

@@ -63,6 +63,7 @@ TEST_DATA = [
     "//prebuilts/tools/common/cmake:cmake-3.8.2",
     "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//tools/base/build-system:gradle-distrib",
+    "//tools/base/build-system/aapt2:aapt2_for_tests",
 ]
 
 gradle_integration_test(
@@ -87,6 +88,7 @@ gradle_integration_test(
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
+    tags = ["no_test_windows"],  # b/73306170
     deps = TEST_DEPS,
 )
 
@@ -100,6 +102,10 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
+    tags = [
+        "no_test_mac",  # b/69151132
+        "no_test_windows",  # b/73306170
+    ],
     deps = TEST_DEPS,
 )
 

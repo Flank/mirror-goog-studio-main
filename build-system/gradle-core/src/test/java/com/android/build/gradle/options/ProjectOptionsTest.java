@@ -162,7 +162,7 @@ public class ProjectOptionsTest {
                                 OptionalBooleanOption.values(),
                                 IntegerOption.values(),
                                 StringOption.values(),
-                                EnumOptions.EnumOption.values())
+                                RemovedOptions.values())
                         .flatMap(Arrays::stream)
                         .map(option -> option.getPropertyName())
                         .collect(Collectors.toList());

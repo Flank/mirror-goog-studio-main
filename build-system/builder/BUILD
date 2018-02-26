@@ -29,6 +29,8 @@ kotlin_library(
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",
     resources = [":resources"],
+    # TODO b/73306170
+    tags = ["no_test_windows"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library/protos/src/main/proto",

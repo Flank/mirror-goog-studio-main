@@ -25,6 +25,9 @@ import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent.MetadataCase;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
+import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.CreationFlag;
+import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.Level;
+import com.android.tools.profiler.proto.EnergyProfiler.WakeLockReleased.ReleaseFlag;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -68,14 +71,17 @@ public class WakeLockTest {
         assertThat(myAndroidDriver.waitForInput("WAKE LOCK ACQUIRED")).isTrue();
 
         EnergyEventsResponse response = myStubWrapper.getAllEnergyEvents(mySession);
-        assertThat(response.getEventCount()).isEqualTo(1);
+        assertThat(response.getEventsCount()).isEqualTo(1);
 
-        EnergyEvent energyEvent = response.getEvent(0);
+        EnergyEvent energyEvent = response.getEvents(0);
         assertThat(energyEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(energyEvent.getEventId()).isGreaterThan(0);
         assertThat(energyEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
-        assertThat(energyEvent.getWakeLockAcquired().getLevelAndFlags()).isEqualTo(0x1);
+        assertThat(energyEvent.getWakeLockAcquired().getLevel())
+                .isEqualTo(Level.SCREEN_DIM_WAKE_LOCK);
+        assertThat(energyEvent.getWakeLockAcquired().getFlagsList())
+                .containsExactly(CreationFlag.ACQUIRE_CAUSES_WAKEUP, CreationFlag.ON_AFTER_RELEASE);
         assertThat(energyEvent.getWakeLockAcquired().getTag()).isEqualTo("Foo");
         assertThat(energyEvent.getWakeLockAcquired().getTimeout()).isEqualTo(0);
     }
@@ -88,10 +94,10 @@ public class WakeLockTest {
         EnergyEventsResponse response =
                 waitForAndReturn(
                         () -> myStubWrapper.getAllEnergyEvents(mySession),
-                        resp -> resp.getEventCount() == 2);
-        assertThat(response.getEventCount()).isEqualTo(2);
+                        resp -> resp.getEventsCount() == 2);
+        assertThat(response.getEventsCount()).isEqualTo(2);
         List<EnergyEvent> sortedEnergyEvents =
-                response.getEventList()
+                response.getEventsList()
                         .stream()
                         .sorted((o1, o2) -> o1.getMetadataCase().compareTo(o2.getMetadataCase()))
                         .collect(Collectors.toList());
@@ -101,7 +107,9 @@ public class WakeLockTest {
         assertThat(acquiredEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(acquiredEvent.getEventId()).isGreaterThan(0);
         assertThat(acquiredEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
-        assertThat(acquiredEvent.getWakeLockAcquired().getLevelAndFlags()).isEqualTo(0x0);
+        assertThat(acquiredEvent.getWakeLockAcquired().getLevel())
+                .isEqualTo(Level.PARTIAL_WAKE_LOCK);
+        assertThat(acquiredEvent.getWakeLockAcquired().getFlagsCount()).isEqualTo(0);
         assertThat(acquiredEvent.getWakeLockAcquired().getTag()).isEqualTo("Bar");
         assertThat(acquiredEvent.getWakeLockAcquired().getTimeout()).isEqualTo(1000);
 
@@ -110,7 +118,8 @@ public class WakeLockTest {
         assertThat(releasedEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(releasedEvent.getEventId()).isEqualTo(acquiredEvent.getEventId());
         assertThat(releasedEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_RELEASED);
-        assertThat(releasedEvent.getWakeLockReleased().getFlags()).isEqualTo(0x10);
+        assertThat(releasedEvent.getWakeLockReleased().getFlagsList())
+                .containsExactly(ReleaseFlag.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
         assertThat(releasedEvent.getWakeLockReleased().getIsHeld()).isTrue();
     }
 

@@ -280,6 +280,7 @@ public class DesugarAppWithDesugarToolTest {
     private GradleTaskExecutor getProjectExecutor() {
         return project.executor()
                 .with(BooleanOption.ENABLE_D8_DESUGARING, false)
+                .with(BooleanOption.ENABLE_R8_DESUGARING, false)
                 .with(BooleanOption.ENABLE_GRADLE_WORKERS, enableGradleWorkers);
     }
 }

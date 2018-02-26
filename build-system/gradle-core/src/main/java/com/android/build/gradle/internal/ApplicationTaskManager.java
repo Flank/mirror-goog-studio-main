@@ -33,24 +33,31 @@ import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.res.namespaced.Aapt2MavenUtils;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
-import com.android.build.gradle.internal.tasks.ApplicationId;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIdsWriterTask;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask;
 import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBuilder;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
-import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
@@ -97,7 +104,6 @@ public class ApplicationTaskManager extends TaskManager {
     @Override
     public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
         BaseVariantData variantData = variantScope.getVariantData();
-        assert variantData instanceof ApplicationVariantData;
 
         createAnchorTasks(variantScope);
         createCheckManifestTask(variantScope);
@@ -200,7 +206,6 @@ public class ApplicationTaskManager extends TaskManager {
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
 
         // Add external native build tasks
-
         recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_EXTERNAL_NATIVE_BUILD_TASK,
                 project.getPath(),
@@ -217,6 +222,21 @@ public class ApplicationTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> createMergeJniLibFoldersTasks(variantScope));
 
+        // Add feature related tasks if necessary
+        if (variantScope.isBaseFeature()) {
+            // Base feature specific tasks.
+            createFeatureIdsWriterTask(variantScope);
+            if (extension.getDataBinding().isEnabled()) {
+                createDataBindingExportFeaturePackagesTask(variantScope);
+            }
+        } else {
+            // Non-base feature specific task.
+            createFeatureDeclarationTasks(variantScope);
+            if (extension.getDataBinding().isEnabled()) {
+                createDataBindingExportFeatureInfoTask(variantScope);
+            }
+        }
+
         // Add data binding tasks if enabled
         createDataBindingTasksIfNecessary(variantScope, MergeType.MERGE);
 
@@ -227,7 +247,12 @@ public class ApplicationTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> createCompileTask(variantScope));
 
-        createStripNativeLibraryTask(taskFactory, variantScope);
+        recorder.record(
+                ExecutionType.APP_TASK_MANAGER_CREATE_STRIP_NATIVE_LIBRARY_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
+                () -> createStripNativeLibraryTask(taskFactory, variantScope));
+
 
         if (variantScope.getVariantData().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
             if (extension.getBuildToolsRevision().getMajor() < 21) {
@@ -252,12 +277,14 @@ public class ApplicationTaskManager extends TaskManager {
                     createPackagingTask(variantScope, buildInfoWriterTask);
                 });
 
-        // create the lint tasks.
+        // Create the lint tasks, if enabled
         recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_LINT_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> createLintTasks(variantScope));
+
+        createTransitiveDepsTask(variantScope);
     }
 
     /** Create tasks related to creating pure split APKs containing sharded dex files. */
@@ -287,6 +314,7 @@ public class ApplicationTaskManager extends TaskManager {
                         project,
                         variantScope.getInstantRunBuildContext(),
                         variantScope.getGlobalScope().getAndroidBuilder(),
+                        Aapt2MavenUtils.getAapt2FromMavenIfEnabled(globalScope),
                         variantScope.getVariantConfiguration().getApplicationId(),
                         variantScope.getVariantConfiguration().getSigningConfig(),
                         AaptGeneration.fromProjectOptions(projectOptions),
@@ -319,6 +347,7 @@ public class ApplicationTaskManager extends TaskManager {
                         project,
                         variantScope.getInstantRunBuildContext(),
                         variantScope.getGlobalScope().getAndroidBuilder(),
+                        Aapt2MavenUtils.getAapt2FromMavenIfEnabled(globalScope),
                         variantScope.getVariantConfiguration().getApplicationId(),
                         variantScope.getVariantConfiguration().getSigningConfig(),
                         AaptGeneration.fromProjectOptions(projectOptions),
@@ -421,7 +450,7 @@ public class ApplicationTaskManager extends TaskManager {
 
     @NonNull
     @Override
-    protected Set<Scope> getResMergingScopes(@NonNull VariantScope variantScope) {
+    protected Set<? super Scope> getResMergingScopes(@NonNull VariantScope variantScope) {
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 
@@ -429,48 +458,140 @@ public class ApplicationTaskManager extends TaskManager {
     private void handleMicroApp(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
-        Boolean unbundledWearApp = variantConfiguration.getMergedFlavor().getWearAppUnbundled();
 
-        if (!Boolean.TRUE.equals(unbundledWearApp)
-                && variantConfiguration.getBuildType().isEmbedMicroApp()) {
-            Configuration wearApp = variantData.getVariantDependency().getWearAppConfiguration();
-            assert wearApp != null : "Wear app with no wearApp configuration";
-            if (!wearApp.getAllDependencies().isEmpty()) {
-                Action<AttributeContainer> setApkArtifact =
-                        container -> container.attribute(ARTIFACT_TYPE, APK.getType());
-                FileCollection files =
-                        wearApp.getIncoming()
-                                .artifactView(config -> config.attributes(setApkArtifact))
-                                .getFiles();
-                createGenerateMicroApkDataTask(scope, files);
-            }
-        } else {
-            if (Boolean.TRUE.equals(unbundledWearApp)) {
-                createGenerateMicroApkDataTask(scope, null);
+        if (variantConfiguration.getType() != VariantType.FEATURE) {
+            Boolean unbundledWearApp = variantConfiguration.getMergedFlavor().getWearAppUnbundled();
+
+            if (!Boolean.TRUE.equals(unbundledWearApp)
+                    && variantConfiguration.getBuildType().isEmbedMicroApp()) {
+                Configuration wearApp =
+                        variantData.getVariantDependency().getWearAppConfiguration();
+                assert wearApp != null : "Wear app with no wearApp configuration";
+                if (!wearApp.getAllDependencies().isEmpty()) {
+                    Action<AttributeContainer> setApkArtifact =
+                            container -> container.attribute(ARTIFACT_TYPE, APK.getType());
+                    FileCollection files =
+                            wearApp.getIncoming()
+                                    .artifactView(config -> config.attributes(setApkArtifact))
+                                    .getFiles();
+                    createGenerateMicroApkDataTask(scope, files);
+                }
+            } else {
+                if (Boolean.TRUE.equals(unbundledWearApp)) {
+                    createGenerateMicroApkDataTask(scope, null);
+                }
             }
         }
     }
 
     private void createApplicationIdWriterTask(@NonNull VariantScope variantScope) {
-
-        File applicationIdOutputDirectory =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "applicationId",
-                        variantScope.getVariantConfiguration().getDirName());
-
-        ApplicationIdWriterTask writeTask =
-                taskFactory.create(
-                        new ApplicationIdWriterTask.ConfigAction(
-                                variantScope, applicationIdOutputDirectory));
-
-        variantScope.addTaskOutput(
-                InternalArtifactType.METADATA_APP_ID_DECLARATION,
-                ApplicationId.getOutputFile(applicationIdOutputDirectory),
-                writeTask.getName());
+        if (variantScope.isBaseFeature()) {
+            taskFactory.create(new ApplicationIdWriterTask.ConfigAction(variantScope));
+        }
     }
 
     private static File getIncrementalFolder(VariantScope variantScope, String taskName) {
         return new File(variantScope.getIncrementalDir(taskName), variantScope.getDirName());
+    }
+
+    /**
+     * Creates feature declaration task. Task will produce artifacts consumed by the base feature.
+     */
+    private void createFeatureDeclarationTasks(@NonNull VariantScope variantScope) {
+
+        File featureSplitDeclarationOutputDirectory =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "feature-split",
+                        "declaration",
+                        variantScope.getVariantConfiguration().getDirName());
+
+        FeatureSplitDeclarationWriterTask featureSplitWriterTaskAndroidTask =
+                taskFactory.create(
+                        new FeatureSplitDeclarationWriterTask.ConfigAction(
+                                variantScope, featureSplitDeclarationOutputDirectory));
+
+        variantScope.addTaskOutput(
+                InternalArtifactType.METADATA_FEATURE_DECLARATION,
+                FeatureSplitDeclaration.getOutputFile(featureSplitDeclarationOutputDirectory),
+                featureSplitWriterTaskAndroidTask.getName());
+    }
+
+    /**
+     * Create a task that will package necessary information about the feature into a file. This
+     * file's path is passed into the Data Binding annotation processor.
+     *
+     * <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
+     */
+    private void createDataBindingExportFeatureInfoTask(@NonNull VariantScope variantScope) {
+        File outFolder =
+                variantScope.getIntermediateDir(
+                        InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO);
+
+        DataBindingExportFeatureInfoTask exportPackagesTask =
+                taskFactory.create(
+                        new DataBindingExportFeatureInfoTask.ConfigAction(variantScope, outFolder));
+        variantScope.addTaskOutput(
+                InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO,
+                outFolder,
+                exportPackagesTask.getName());
+    }
+
+    private void createFeatureIdsWriterTask(@NonNull VariantScope variantScope) {
+        File featureIdsOutputDirectory =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "feature-split",
+                        "ids",
+                        variantScope.getVariantConfiguration().getDirName());
+
+        FeatureSplitPackageIdsWriterTask writeTask =
+                taskFactory.create(
+                        new FeatureSplitPackageIdsWriterTask.ConfigAction(
+                                variantScope, featureIdsOutputDirectory));
+
+        variantScope.addTaskOutput(
+                InternalArtifactType.FEATURE_IDS_DECLARATION,
+                FeatureSplitPackageIds.getOutputFile(featureIdsOutputDirectory),
+                writeTask.getName());
+    }
+
+    /**
+     * Create a task that will package the manifest ids(the R file packages) of all features into a
+     * file. This file's path is passed into the Data Binding annotation processor which uses it to
+     * known about all available features.
+     *
+     * <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
+     */
+    private void createDataBindingExportFeaturePackagesTask(@NonNull VariantScope variantScope) {
+        File featurePackagesOutputDirectory =
+                variantScope.getIntermediateDir(
+                        InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO);
+
+        DataBindingExportFeatureApplicationIdsTask exportPackagesTask =
+                taskFactory.create(
+                        new DataBindingExportFeatureApplicationIdsTask.ConfigAction(
+                                variantScope, featurePackagesOutputDirectory));
+        variantScope.addTaskOutput(
+                InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO,
+                featurePackagesOutputDirectory,
+                exportPackagesTask.getName());
+    }
+
+    private void createTransitiveDepsTask(@NonNull VariantScope scope) {
+        File textFile =
+                new File(
+                        FileUtils.join(
+                                globalScope.getIntermediatesDir(),
+                                "feature-split",
+                                "transitive-deps",
+                                scope.getVariantConfiguration().getDirName()),
+                        "deps.txt");
+
+        FeatureSplitTransitiveDepsWriterTask task =
+                taskFactory.create(
+                        new FeatureSplitTransitiveDepsWriterTask.ConfigAction(scope, textFile));
+
+        scope.addTaskOutput(InternalArtifactType.FEATURE_TRANSITIVE_DEPS, textFile, task.getName());
     }
 }

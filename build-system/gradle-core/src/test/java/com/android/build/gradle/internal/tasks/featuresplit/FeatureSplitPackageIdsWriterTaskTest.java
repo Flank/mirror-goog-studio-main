@@ -70,7 +70,7 @@ public class FeatureSplitPackageIdsWriterTaskTest {
     public void testTask() throws IOException {
         ImmutableSet.Builder<File> inputDirs = ImmutableSet.builder();
         for (int i = 0; i < 5; i++) {
-            inputDirs.add(generateInputDir("id_" + i));
+            inputDirs.add(generateInputDir("id_" + i, "foo.bar.baz" + i));
         }
         when(fileTree.getFiles()).thenReturn(inputDirs.build());
 
@@ -86,9 +86,9 @@ public class FeatureSplitPackageIdsWriterTaskTest {
         }
     }
 
-    private File generateInputDir(String id) throws IOException {
+    private File generateInputDir(String id, String appId) throws IOException {
         File inputDir = temporaryFolder.newFolder();
-        FeatureSplitDeclaration featureSplitDeclaration = new FeatureSplitDeclaration(id);
+        FeatureSplitDeclaration featureSplitDeclaration = new FeatureSplitDeclaration(id, appId);
         featureSplitDeclaration.save(inputDir);
         return FeatureSplitDeclaration.getOutputFile(inputDir);
     }

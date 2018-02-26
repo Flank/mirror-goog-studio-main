@@ -93,7 +93,8 @@ public class GradleVariantConfigurationTest {
                 null,
                 VariantType.APK,
                 null,
-                new FakeEvalIssueReporter());
+                new FakeEvalIssueReporter(),
+                () -> true);
     }
 
     private CoreProductFlavor mockCoreProductFlavor() {

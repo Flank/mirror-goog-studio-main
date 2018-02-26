@@ -33,9 +33,13 @@ import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
 /** Uploads profiling data to Google Storage from the gradle performance tests. */
 public class GoogleStorageProfileUploader implements ProfileUploader {
+    private static final Logger logger =
+            Logger.getLogger(GoogleStorageProfileUploader.class.getName());
+
     private static final Duration UPLOAD_TIMEOUT = Duration.ofMinutes(5);
 
     private static GoogleStorageProfileUploader INSTANCE;
@@ -45,7 +49,7 @@ public class GoogleStorageProfileUploader implements ProfileUploader {
 
     private static final String STORAGE_BUCKET = "android-gradle-logging-benchmark-results";
 
-    public static GoogleStorageProfileUploader getInstance() {
+    public static GoogleStorageProfileUploader getInstance() throws IOException {
         if (INSTANCE == null) {
             synchronized (GoogleStorageProfileUploader.class) {
                 if (INSTANCE == null) {
@@ -57,14 +61,9 @@ public class GoogleStorageProfileUploader implements ProfileUploader {
         return INSTANCE;
     }
 
-    private GoogleStorageProfileUploader() {}
+    private final Storage storage;
 
-    @Override
-    public void uploadData(@NonNull List<Logging.GradleBenchmarkResult> benchmarkResults)
-            throws IOException {
-        Preconditions.checkNotNull(benchmarkResults);
-        Preconditions.checkArgument(!benchmarkResults.isEmpty(), "got an empty list of results");
-
+    private GoogleStorageProfileUploader() throws IOException {
         GoogleCredential credential;
         try {
             credential =
@@ -87,7 +86,7 @@ public class GoogleStorageProfileUploader implements ProfileUploader {
         }
         JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 
-        Storage storage =
+        this.storage =
                 new Storage.Builder(httpTransport, jsonFactory, credential)
                         .setApplicationName(
                                 "Android-Gradle-Plugin-Performance-Test-Upload/"
@@ -103,16 +102,21 @@ public class GoogleStorageProfileUploader implements ProfileUploader {
                                     credential.initialize(httpRequest);
                                 })
                         .build();
+    }
 
+    @Override
+    public void uploadData(@NonNull List<Logging.GradleBenchmarkResult> benchmarkResults)
+            throws IOException {
+        Preconditions.checkNotNull(benchmarkResults);
         for (Logging.GradleBenchmarkResult result : benchmarkResults) {
             InputStreamContent content =
                     new InputStreamContent(
                             "application/octet-stream",
                             new ByteArrayInputStream(result.toByteArray()));
-            storage.objects()
-                    .insert(STORAGE_BUCKET, null, content)
-                    .setName(ProfileUtils.filename(result))
-                    .execute();
+
+            String name = ProfileUtils.filename(result);
+            storage.objects().insert(STORAGE_BUCKET, null, content).setName(name).execute();
+            logger.fine(() -> "uploaded gcs://" + STORAGE_BUCKET + "/" + name);
         }
     }
 }

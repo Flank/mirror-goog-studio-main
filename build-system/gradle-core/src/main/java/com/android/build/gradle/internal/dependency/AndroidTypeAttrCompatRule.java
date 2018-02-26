@@ -22,7 +22,13 @@ import javax.inject.Inject;
 import org.gradle.api.attributes.AttributeCompatibilityRule;
 import org.gradle.api.attributes.CompatibilityCheckDetails;
 
-/** Custom Compat rule to handle the different values of AndroidTypeAttr. */
+/**
+ * Custom Compat rule to handle the different values of AndroidTypeAttr.
+ *
+ * <p>Requests for APK: accepts APK or AAR
+ *
+ * <p>Requests for FEATURE: accepts FEATURE or AAR
+ */
 public final class AndroidTypeAttrCompatRule
         implements AttributeCompatibilityRule<AndroidTypeAttr> {
 

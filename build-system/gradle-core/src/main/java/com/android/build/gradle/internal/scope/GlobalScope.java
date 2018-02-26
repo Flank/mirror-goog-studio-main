@@ -272,6 +272,10 @@ public class GlobalScope extends TaskOutputHolderImpl
         return androidBuilder.getMessageReceiver();
     }
 
+    public boolean isInExectionPhase() {
+        return project.getState().getExecuted();
+    }
+
     @NonNull
     public FileCollection getLocalCustomLintChecks() {
         Action<AttributeContainer> attributes =

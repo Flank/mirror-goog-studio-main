@@ -16,7 +16,7 @@
 
 package com.android.builder.internal.aapt;
 
-import com.android.ide.common.res2.QueueableResourceCompiler;
+import com.android.ide.common.resources.QueueableResourceCompiler;
 
 
 /**

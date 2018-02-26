@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.Density;
 import com.android.resources.ResourceEnum;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -66,7 +65,7 @@ public final class DensityQualifier extends EnumBasedResourceQualifier {
     }
 
     @Override
-    ResourceEnum getEnumValue() {
+    public ResourceEnum getEnumValue() {
         return mValue;
     }
 

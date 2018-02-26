@@ -114,6 +114,7 @@ public class InstrumentationResultParser extends MultiLineReceiver {
         private static final String STATUS = "INSTRUMENTATION_STATUS: ";
         private static final String STATUS_CODE = "INSTRUMENTATION_STATUS_CODE: ";
         private static final String STATUS_FAILED = "INSTRUMENTATION_FAILED: ";
+        private static final String ON_ERROR = "onError:";
         private static final String CODE = "INSTRUMENTATION_CODE: ";
         private static final String RESULT = "INSTRUMENTATION_RESULT: ";
         private static final String TIME_REPORT = "Time: ";
@@ -201,6 +202,9 @@ public class InstrumentationResultParser extends MultiLineReceiver {
 
     /** Contains the full error available in 'stream=' in case of test runner fatal exception. */
     private String mStreamError = null;
+
+    /** Contains the error message associated with the onError callback output. */
+    private String mOnError = null;
 
     /**
      * Stores key-value pairs under INSTRUMENTATION_RESULT header, these are printed at the end of a
@@ -314,6 +318,8 @@ public class InstrumentationResultParser extends MultiLineReceiver {
             // just ignore the remaining data on this line
         } else if (line.startsWith(Prefixes.TIME_REPORT)) {
             parseTime(line);
+        } else if (line.startsWith(Prefixes.ON_ERROR)) {
+            mOnError = line;
         } else {
             if (mCurrentValue != null) {
                 // this is a value that has wrapped to next line.
@@ -459,10 +465,10 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     }
 
     /**
-     * Reports a test result to the test run listener. Must be called when a individual test
-     * result has been fully parsed.
+     * Reports a test result to the test run listener. Must be called when a individual test result
+     * has been fully parsed.
      *
-     * @param statusMap key-value status pairs of test result
+     * @param testInfo The {@link TestResult} holding the current test infos.
      */
     private void reportResult(TestResult testInfo) {
         if (!testInfo.isComplete()) {
@@ -610,13 +616,20 @@ public class InstrumentationResultParser extends MultiLineReceiver {
                 // test run wasn't started - must have crashed before it started
                 listener.testRunStarted(mTestRunName, 0);
             }
-            listener.testRunFailed(errorMsg);
+            String runErrorMsg = errorMsg;
+            if (mOnError != null) {
+                runErrorMsg = String.format("%s. %s", errorMsg, mOnError);
+            }
+            listener.testRunFailed(runErrorMsg);
+
+
             if (mTestTime == null) {
                 // We don't report an extra failure due to missing time stamp.
                 mTestTime = 0l;
             }
             listener.testRunEnded(mTestTime, mInstrumentationResultBundle);
         }
+        mOnError = null;
         mTestStartReported = true;
         mTestRunFailReported = true;
     }

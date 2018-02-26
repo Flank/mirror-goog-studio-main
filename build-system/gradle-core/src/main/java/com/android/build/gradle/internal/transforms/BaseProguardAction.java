@@ -51,7 +51,7 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
 
 
     public BaseProguardAction(@NonNull VariantScope scope) {
-        super(scope);
+        super(scope.getGlobalScope().getProject().files(), scope.getVariantData().getType());
         configuration.useMixedCaseClassNames = false;
         configuration.programJars = new ClassPath();
         configuration.libraryJars = new ClassPath();
@@ -80,14 +80,9 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
         }
 
         //noinspection unchecked
-        configuration.keep.add(new KeepClassSpecification(
-                true  /*markClasses*/,
-                false /*markConditionally*/,
-                false /*includedescriptorclasses */,
-                false /*allowshrinking*/,
-                false /*allowoptimization*/,
-                false /*allowobfuscation*/,
-                classSpecification));
+        configuration.keep.add(
+                new KeepClassSpecification(
+                        true, false, false, false, false, false, false, null, classSpecification));
     }
 
     public void dontpreverify() {

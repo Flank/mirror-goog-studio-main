@@ -108,6 +108,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
                         project,
                         buildContext,
                         androidBuilder,
+                        null,
                         "com.foo.test",
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_DAEMON_MODE,

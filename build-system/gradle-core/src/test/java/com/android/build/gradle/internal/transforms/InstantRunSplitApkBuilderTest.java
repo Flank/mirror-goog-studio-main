@@ -111,6 +111,7 @@ public class InstantRunSplitApkBuilderTest {
                         project,
                         buildContext,
                         androidBuilder,
+                        null,
                         "com.foo.test",
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_DAEMON_MODE,
@@ -124,7 +125,7 @@ public class InstantRunSplitApkBuilderTest {
                         apkList,
                         apkInfo) {
                     @Override
-                    protected Aapt makeAapt() {
+                    protected Aapt getLinker() {
                         return aapt;
                     }
                 };
@@ -240,6 +241,7 @@ public class InstantRunSplitApkBuilderTest {
                         project,
                         buildContext,
                         androidBuilder,
+                        null,
                         "com.foo.test",
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_DAEMON_MODE,
@@ -253,7 +255,7 @@ public class InstantRunSplitApkBuilderTest {
                         apkList,
                         apkInfo) {
                     @Override
-                    protected Aapt makeAapt() {
+                    protected Aapt getLinker() {
                         return aapt;
                     }
                 };

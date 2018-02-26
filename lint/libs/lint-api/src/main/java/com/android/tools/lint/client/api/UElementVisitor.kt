@@ -35,6 +35,7 @@ import com.google.common.collect.Multimap
 import com.google.common.collect.Sets
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiLambdaExpression
@@ -298,7 +299,9 @@ internal class UElementVisitor constructor(private val parser: UastParser,
             allContexts: List<JavaContext>) {
         if (!allContexts.isEmpty() && allDetectors.stream().
                 anyMatch { it.uastScanner.isCallGraphRequired() }) {
-            val callGraph = generateCallGraph(projectContext, parser, allContexts)
+            val callGraph = projectContext.client.runReadAction(Computable {
+                generateCallGraph(projectContext, parser, allContexts)
+            })
             if (callGraph != null && !callGraphDetectors.isEmpty()) {
                 for (scanner in callGraphDetectors) {
                     projectContext.client.runReadAction(Runnable {

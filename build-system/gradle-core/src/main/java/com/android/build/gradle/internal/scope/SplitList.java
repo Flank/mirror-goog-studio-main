@@ -64,19 +64,11 @@ public class SplitList {
         return new SplitList(gson.fromJson(persistedData, collectionType));
     }
 
-    @NonNull
-    public static SplitList maybeLoad(@Nullable FileCollection persistedList) throws IOException {
-        if (persistedList == null) {
-            return EMPTY;
-        }
-        return load(persistedList);
-    }
-
-    public Set<String> getFilters(OutputFile.FilterType splitType) throws IOException {
+    public Set<String> getFilters(OutputFile.FilterType splitType) {
         return getFilters(splitType.name());
     }
 
-    public synchronized Set<String> getFilters(String filterType) throws IOException {
+    public synchronized Set<String> getFilters(String filterType) {
         Optional<Record> record =
                 records.stream().filter(r -> r.splitType.equals(filterType)).findFirst();
         return record.isPresent() ? record.get().getValues() : ImmutableSet.of();
@@ -86,7 +78,7 @@ public class SplitList {
         void apply(OutputFile.FilterType filterType, Collection<Filter> filters);
     }
 
-    public void forEach(SplitAction action) throws IOException {
+    public void forEach(SplitAction action) {
         records.forEach(
                 record -> {
                     if (record.isConfigSplit() && !record.getValues().isEmpty()) {
@@ -96,7 +88,7 @@ public class SplitList {
                 });
     }
 
-    public Set<String> getResourcesSplit() throws IOException {
+    public Set<String> getResourcesSplit() {
         ImmutableSet.Builder<String> allFilters = ImmutableSet.builder();
         allFilters.addAll(getFilters(OutputFile.FilterType.DENSITY));
         allFilters.addAll(getFilters(OutputFile.FilterType.LANGUAGE));
@@ -105,8 +97,7 @@ public class SplitList {
 
     @NonNull
     public static Set<String> getSplits(
-            @NonNull SplitList splitList, @NonNull MultiOutputPolicy multiOutputPolicy)
-            throws IOException {
+            @NonNull SplitList splitList, @NonNull MultiOutputPolicy multiOutputPolicy) {
         return multiOutputPolicy == MultiOutputPolicy.SPLITS
                 ? splitList.getResourcesSplit()
                 : ImmutableSet.of();

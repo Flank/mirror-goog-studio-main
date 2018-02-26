@@ -40,8 +40,8 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.ide.common.rendering.api.ResourceNamespace;
-import com.android.ide.common.res2.AssetSet;
-import com.android.ide.common.res2.ResourceSet;
+import com.android.ide.common.resources.AssetSet;
+import com.android.ide.common.resources.ResourceSet;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 import com.google.common.base.Strings;
@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
 /**
@@ -173,7 +174,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type,
             @Nullable SigningConfig signingConfigOverride,
-            @NonNull EvalIssueReporter issueReporter) {
+            @NonNull EvalIssueReporter issueReporter,
+            @NonNull BooleanSupplier isInExecutionPhase) {
         this(
                 defaultConfig,
                 defaultSourceProvider,
@@ -183,7 +185,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
                 type,
                 null /*testedConfig*/,
                 signingConfigOverride,
-                issueReporter);
+                issueReporter,
+                isInExecutionPhase);
     }
 
     /**
@@ -207,7 +210,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             @NonNull VariantType type,
             @Nullable VariantConfiguration<T, D, F> testedConfig,
             @Nullable SigningConfig signingConfigOverride,
-            @NonNull EvalIssueReporter issueReporter) {
+            @NonNull EvalIssueReporter issueReporter,
+            @NonNull BooleanSupplier canParseManifest) {
         checkNotNull(defaultConfig);
         checkNotNull(defaultSourceProvider);
         checkNotNull(buildType);
@@ -224,7 +228,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         mManifestAttributeSupplier =
                 mainManifestAttributeSupplier != null
                         ? mainManifestAttributeSupplier
-                        : new DefaultManifestParser(mDefaultSourceProvider.getManifestFile());
+                        : new DefaultManifestParser(
+                                mDefaultSourceProvider.getManifestFile(), canParseManifest);
         mBuildType = checkNotNull(buildType);
         mBuildTypeSourceProvider = buildTypeSourceProvider;
         mType = checkNotNull(type);

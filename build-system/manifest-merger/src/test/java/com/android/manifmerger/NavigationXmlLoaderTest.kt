@@ -32,7 +32,7 @@ class NavigationXmlLoaderTest {
                    |    xmlns:android="http://schemas.android.com/apk/res/android"
                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
                    |    <include app:graph="@navigation/foo" />
-                   |    <deeplink app:uri="www.example.com" />
+                   |    <deepLink app:uri="www.example.com" />
                    |</navigation>""".trimMargin()
 
         val navigationXmlDocument = NavigationXmlLoader.load(UNKNOWN, input)

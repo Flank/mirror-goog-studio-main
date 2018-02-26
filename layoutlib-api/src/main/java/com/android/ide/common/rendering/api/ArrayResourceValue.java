@@ -87,12 +87,12 @@ public class ArrayResourceValue extends ResourceValue implements Iterable<String
         // layout libs, return the first array element's value instead.
 
         //noinspection VariableNotUsedInsideIf
-        if (mValue == null) {
+        if (super.getValue() == null) {
             if (!mItems.isEmpty()) {
                 return mItems.get(getDefaultIndex());
             }
         }
 
-        return mValue;
+        return super.getValue();
     }
 }

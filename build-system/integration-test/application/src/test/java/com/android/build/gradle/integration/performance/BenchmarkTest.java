@@ -21,21 +21,15 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.common.category.PerformanceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
-import com.android.build.gradle.integration.common.utils.SdkHelper;
-import com.android.testutils.TestUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 import com.google.common.io.MoreFiles;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,10 +37,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import javax.annotation.concurrent.NotThreadSafe;
 import org.junit.AssumptionViolatedException;
 import org.junit.Test;
@@ -101,6 +92,11 @@ import org.junit.runners.JUnit4;
  *      In order to get a good, clear signal of how long a benchmark really takes you need to run
  *      the benchmark more than once. This environment variable tells the code how many times you
  *      want to run each benchmark, and you should assume that the lowest value is the best signal.
+ *
+ *   PERF_SKIP_CLEANUP
+ *
+ *      Set this to any non-null value in order to leave environment files around when running this
+ *      from the standalone jar.
  * </pre>
  *
  * You can set all or none of these environment variables to run whatever subset of benchmarks you
@@ -108,140 +104,52 @@ import org.junit.runners.JUnit4;
  */
 @NotThreadSafe
 public class BenchmarkTest {
-    private static ProfileCapturer PROFILE_CAPTURER;
-    private static BenchmarkRecorder BENCHMARK_RECORDER;
-    @Nullable private static List<Path> MAVEN_REPOS;
-    @Nullable private static Path PROJECT_DIR;
-    @Nullable private static Path SDK_DIR;
-    @Nullable private static Path GRADLE_DIR;
-
-    /**
-     * Takes an InputStream in zip format and unzips it, returning the directory to which it was
-     * unzipped.
-     */
-    private static Path unzip(InputStream in) throws IOException {
-        File out = Files.createTempDir();
-        byte[] buffer = new byte[4096];
-
-        try (ZipInputStream zis = new ZipInputStream(in)) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-
-                File entryFile = new File(out.getAbsolutePath() + File.separator + entry.getName());
-                Files.createParentDirs(entryFile);
-
-                try (FileOutputStream fos = new FileOutputStream(entryFile)) {
-                    int len;
-                    while ((len = zis.read(buffer)) > 0) {
-                        fos.write(buffer, 0, len);
-                    }
-                }
-            }
-        }
-
-        return out.getAbsoluteFile().toPath();
-    }
+    @Nullable private static List<ProfileUploader> UPLOADERS;
+    @Nullable private static BenchmarkEnvironment BENCHMARK_ENVIRONMENT;
 
     public static void main(String... args) throws Exception {
+        Path tmp = Files.createTempDirectory("BenchmarkTest");
+
         try {
-            MAVEN_REPOS =
-                    ImmutableList.of(
-                            unzip(ClassLoader.getSystemResourceAsStream("offline_repo.zip")),
-                            unzip(ClassLoader.getSystemResourceAsStream("prebuilts_repo.zip")));
-
-            SDK_DIR = unzip(ClassLoader.getSystemResourceAsStream("android_sdk.zip"));
-            PROJECT_DIR = unzip(ClassLoader.getSystemResourceAsStream("projects.zip"));
-            GRADLE_DIR = unzip(ClassLoader.getSystemResourceAsStream("gradle.zip"));
-
-            new BenchmarkTest().run();
+            System.out.println("inflating benchmark environment from jar...");
+            BENCHMARK_ENVIRONMENT = BenchmarkEnvironment.fromJar(tmp);
+            BenchmarkTest benchmarkTest = new BenchmarkTest();
+            System.out.println("done, beginning benchmark tests...");
+            benchmarkTest.run();
         } finally {
-            if (MAVEN_REPOS != null) {
-                MAVEN_REPOS.forEach(BenchmarkTest::tryDeleteRecursively);
+            try {
+                if (System.getenv("PERF_SKIP_CLEANUP") == null) {
+                    MoreFiles.deleteRecursively(tmp);
+                }
+            } catch (IOException e) {
+                // we tried
             }
-            tryDeleteRecursively(SDK_DIR);
-            tryDeleteRecursively(PROJECT_DIR);
-            tryDeleteRecursively(GRADLE_DIR);
         }
     }
 
-    private static void tryDeleteRecursively(@Nullable Path p) {
-        try {
-            if (p != null) {
-                MoreFiles.deleteRecursively(p);
+    @NonNull
+    private static List<ProfileUploader> getUploaders() {
+        if (UPLOADERS == null) {
+            List<ProfileUploader> uploaders = new ArrayList<>();
+
+            try {
+                uploaders.add(GoogleStorageProfileUploader.getInstance());
+            } catch (Exception e) {
+                System.out.println(
+                        "couldn't add GoogleStorageProfileUploader to the list of default uploaders, reason: "
+                                + e
+                                + ", this means that benchmark results will not be uploaded to GCS");
             }
-        } catch (IOException e) {
-            // we tried
+
+            UPLOADERS = ImmutableList.copyOf(uploaders);
         }
-    }
 
-    @NonNull
-    public static List<Path> getMavenRepos() {
-        if (MAVEN_REPOS != null) {
-            return MAVEN_REPOS;
-        } else {
-            return GradleTestProject.getLocalRepositories();
-        }
-    }
-
-    @NonNull
-    public static Path getProjectDir() {
-        if (PROJECT_DIR != null) {
-            return PROJECT_DIR;
-        } else {
-            return TestUtils.getWorkspaceFile("external").toPath();
-        }
-    }
-
-    @NonNull
-    public static Path getSdkDir() {
-        if (SDK_DIR != null) {
-            return SDK_DIR;
-        } else {
-            return SdkHelper.findSdkDir().toPath();
-        }
-    }
-
-    @NonNull
-    public static Path getGradleDir() {
-        if (GRADLE_DIR != null) {
-            return GRADLE_DIR;
-        } else {
-            return TestUtils.getWorkspaceFile("tools/external/gradle").toPath();
-        }
-    }
-
-    @NonNull
-    public static Path getBenchmarkTestRootDirectory() {
-        return Paths.get(GradleTestProject.BUILD_DIR.getAbsolutePath(), "BenchmarkTest");
-    }
-
-    @NonNull
-    public static Path getProfileDirectory() {
-        return getBenchmarkTestRootDirectory().resolve("profiles");
-    }
-
-    @NonNull
-    public static ProfileCapturer getProfileCapturer() throws IOException {
-        if (PROFILE_CAPTURER == null) {
-            PROFILE_CAPTURER = new ProfileCapturer(getProfileDirectory());
-        }
-        return PROFILE_CAPTURER;
-    }
-
-    @NonNull
-    public static BenchmarkRecorder getBenchmarkRecorder() throws IOException {
-        if (BENCHMARK_RECORDER == null) {
-            BENCHMARK_RECORDER = new BenchmarkRecorder(getProfileCapturer());
-        }
-        return BENCHMARK_RECORDER;
+        return UPLOADERS;
     }
 
     @Test
     @Category(PerformanceTests.class)
-    public void run() throws Exception {
+    public void run() {
         /*
          * Sometimes the version of Gradle checked in to our repo is the same as their current
          * nightly version. In this scenario, we want to avoid running the same set of tests twice
@@ -256,6 +164,14 @@ public class BenchmarkTest {
             throw new AssumptionViolatedException(msg);
         }
 
+        if (BENCHMARK_ENVIRONMENT == null) {
+            BENCHMARK_ENVIRONMENT = BenchmarkEnvironment.fromRepo();
+        }
+
+        System.out.println("running benchmarks with BenchmarkEnvironment:");
+        System.out.println(BENCHMARK_ENVIRONMENT);
+        System.out.println();
+
         long start = System.nanoTime();
         List<Benchmark> benchmarks = new ArrayList<>();
 
@@ -263,9 +179,9 @@ public class BenchmarkTest {
          * Add all Benchmark objects to the list here. If you're wanting to create new Benchmarks,
          * this is the place to add them to make sure that they're correctly filtered and sharded.
          */
-        benchmarks.addAll(AntennaPodBenchmarks.INSTANCE.get());
-        benchmarks.addAll(LargeGradleProjectBenchmarks.INSTANCE.get());
-        benchmarks.addAll(MediumGradleProjectBenchmarks.INSTANCE.get());
+        benchmarks.addAll(new AntennaPodBenchmarks(BENCHMARK_ENVIRONMENT).get());
+        benchmarks.addAll(new LargeGradleProjectBenchmarks(BENCHMARK_ENVIRONMENT).get());
+        benchmarks.addAll(new MediumGradleProjectBenchmarks(BENCHMARK_ENVIRONMENT).get());
 
         /*
          * We sort the benchmarks to make sure they're in a predictable, stable order. This is
@@ -375,6 +291,7 @@ public class BenchmarkTest {
         Duration recordedDuration = Duration.ofNanos(0);
 
         List<BenchmarkResult> failed = new ArrayList<>();
+        List<BenchmarkResult> succeeded = new ArrayList<>();
         for (Benchmark b : shard) {
             i++;
 
@@ -399,17 +316,62 @@ public class BenchmarkTest {
 
                 if (result.getException() != null) {
                     failed.add(result);
+                } else {
+                    succeeded.add(result);
                 }
             }
         }
 
         /*
-         * The Benchmark.run method will call uploadAsync() on its BenchmarkRecorder when the test
-         * completely successfully and a profile is found. We need to wait for these uploads to
-         * complete before shutting down the process.
+         * Each BenchmarkResult that was successful will have a GradleBuildProfile proto attached to
+         * it, representing the profile data gathered during that benchmark. There's a lot of
+         * metadata we need to attach to the result to identify what machine the benchmark ran on,
+         * what commit it pertains to, what set of flags it used and so on. The ProfileWrapper does
+         * all of that and gives us a GradleBenchmarkResult proto in return.
          */
-        BenchmarkRecorder.awaitUploads(15, TimeUnit.MINUTES);
-        BenchmarkRecorder.shutdownExecutor();
+        ProfileWrapper wrapper = new ProfileWrapper();
+        List<Logging.GradleBenchmarkResult> protos =
+                succeeded
+                        .stream()
+                        .map(
+                                result ->
+                                        wrapper.wrap(
+                                                result.getProfile(),
+                                                result.getBenchmark().getBenchmark(),
+                                                result.getBenchmark().getBenchmarkMode(),
+                                                result.getBenchmark().getScenario()))
+                        .collect(Collectors.toList());
+
+        /*
+         * The last meaningful step in this benchmarking process is to upload the results somewhere.
+         * For this we grab the list of ProfileUploader objects and pass all of the results in to
+         * each for them to upload to wherever they want to.
+         */
+        List<ProfileUploader> uploaders = getUploaders();
+        if (!uploaders.isEmpty() && !protos.isEmpty()) {
+            System.out.println("captured " + protos.size() + " profiles to be uploaded");
+
+            for (ProfileUploader uploader : uploaders) {
+                String uploaderName = uploader.getClass().getSimpleName();
+                System.out.println(
+                        "uploading "
+                                + protos.size()
+                                + " profiles with uploader "
+                                + uploaderName
+                                + "...");
+
+                try {
+                    uploader.uploadData(protos);
+                    System.out.println("done");
+                } catch (IOException e) {
+                    System.out.println(
+                            "failed to upload with uploader "
+                                    + uploaderName
+                                    + ": "
+                                    + e.getMessage());
+                }
+            }
+        }
 
         Duration totalDuration = Duration.ofNanos(System.nanoTime() - start);
         System.out.println("Total recorded duration: " + recordedDuration);
@@ -426,8 +388,8 @@ public class BenchmarkTest {
                 System.out.println();
                 System.out.println("Command to re-run locally: " + result.getBenchmark().command());
                 System.out.println();
-                System.out.println("full stack trace:");
-                result.getException().printStackTrace();
+                System.out.println("exception root cause:");
+                Throwables.getRootCause(result.getException()).printStackTrace();
                 System.out.println();
             }
 

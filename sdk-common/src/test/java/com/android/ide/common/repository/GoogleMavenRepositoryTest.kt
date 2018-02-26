@@ -16,7 +16,7 @@
 
 package com.android.ide.common.repository
 
-import com.android.ide.common.res2.BaseTestCase
+import com.android.ide.common.resources.BaseTestCase
 import org.junit.Assert.*
 import org.junit.ClassRule
 import org.junit.Test

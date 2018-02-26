@@ -12,7 +12,9 @@ iml_module(
     srcs = ["manifest-merger/src/main/java"],
     iml_files = ["manifest-merger/manifest-merger.iml"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
-    tags = ["managed"],
+    tags = [
+        "managed",
+    ],
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/sdklib:studio.sdklib"],
@@ -53,6 +55,8 @@ kotlin_library(
     srcs = ["manifest-merger/src/main/java"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     pom = ":manifest-merger.pom",
+    resource_strip_prefix = "tools/base/build-system/manifest-merger",
+    resources = ["manifest-merger/NOTICE"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
@@ -125,6 +129,7 @@ maven_pom(
 # the data-binding runtime library with the Gradle plugin.
 
 GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
+    "//tools/base/build-system/aapt2",
     "//tools/base/build-system/gradle",
     "//tools/base/lint:tools.lint-gradle",
     "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.0.18:jar",

@@ -18,7 +18,12 @@ package com.android.repository.impl.installer;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.api.*;
+import com.android.repository.api.DelegatingProgressIndicator;
+import com.android.repository.api.Installer;
+import com.android.repository.api.PackageOperation;
+import com.android.repository.api.ProgressIndicator;
+import com.android.repository.api.RepoManager;
+import com.android.repository.api.Uninstaller;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
@@ -37,6 +42,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Frameworks for concrete {@link Installer}s and {@link Uninstaller}s that manages creation of temp
@@ -369,14 +375,14 @@ public abstract class AbstractPackageOperation implements PackageOperation {
     private void deleteOrphanedTempDirs(@NonNull ProgressIndicator progress) {
         Path root = mFop.toPath(mRepoManager.getLocalPath());
         Path suffixPath = mFop.toPath(new File(InstallerUtil.INSTALLER_DIR_FN, INSTALL_DATA_FN));
-        try {
-            Set<File> tempDirs = Files.walk(root)
-                    .filter(path -> path.endsWith(suffixPath))
-                    .map(this::getPathPropertiesOrNull)
-                    .filter(Objects::nonNull)
-                    .map(props -> props.getProperty(PATH_KEY))
-                    .map(File::new)
-                    .collect(Collectors.toSet());
+        try (Stream<Path> paths = Files.walk(root)) {
+            Set<File> tempDirs =
+                    paths.filter(path -> path.endsWith(suffixPath))
+                            .map(this::getPathPropertiesOrNull)
+                            .filter(Objects::nonNull)
+                            .map(props -> props.getProperty(PATH_KEY))
+                            .map(File::new)
+                            .collect(Collectors.toSet());
             FileOpUtils.retainTempDirs(tempDirs, TEMP_DIR_PREFIX, mFop);
         } catch (IOException e) {
             progress.logWarning("Error while searching for in-use temporary directories.", e);

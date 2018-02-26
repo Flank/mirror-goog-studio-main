@@ -22,7 +22,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.files.NativeLibraryAbiPredicate;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.packaging.PackagerException;
-import com.android.ide.common.res2.FileStatus;
+import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.zfile.ApkCreator;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.google.common.base.Preconditions;

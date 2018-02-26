@@ -19,12 +19,13 @@ package com.android.build.gradle.tasks.ir
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext
 import com.android.build.gradle.internal.scope.BuildOutput
-import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.utils.FileCache
 import com.android.ide.common.build.ApkInfo
@@ -69,10 +70,7 @@ open class InstantRunMainApkResourcesBuilderTest {
     @Mock private lateinit var variantScope: VariantScope
     @Mock private lateinit var globalScope: GlobalScope
     @Mock private lateinit var fileCache: FileCache
-    private val projectOptions = ProjectOptions(ImmutableMap.of())
     private val outputScope = OutputScope()
-
-
 
     internal lateinit var project: Project
     internal lateinit var task: InstantRunMainApkResourcesBuilder
@@ -87,7 +85,12 @@ open class InstantRunMainApkResourcesBuilderTest {
         `when`(variantScope.fullVariantName).thenReturn("variantName")
         `when`(variantConfiguration.baseName).thenReturn("variantName")
         `when`(globalScope.buildCache).thenReturn(fileCache)
-        `when`(globalScope.projectOptions).thenReturn(projectOptions)
+        `when`(globalScope.projectOptions).thenReturn(
+            ProjectOptions(ImmutableMap.of<String, Any>(
+                BooleanOption.USE_AAPT2_FROM_MAVEN.propertyName, false
+            ))
+        )
+        `when`(globalScope.project).thenReturn(project)
         `when`(variantScope.getTaskName(any(String::class.java))).thenReturn("taskFoo")
         `when`(variantScope.globalScope).thenReturn(globalScope)
         `when`(variantScope.outputScope).thenReturn(outputScope)

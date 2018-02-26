@@ -27,6 +27,7 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test/java-library-model-builder:prebuilts",
     ],
     resources = glob(["src/test/resources/**"]),
+    tags = ["no_test_windows"],  # b/73306170
     deps = [
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",  #TODO: remove.

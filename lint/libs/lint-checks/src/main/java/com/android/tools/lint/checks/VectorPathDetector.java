@@ -21,8 +21,8 @@ import static com.android.SdkConstants.TAG_VECTOR;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.res2.AbstractResourceRepository;
-import com.android.ide.common.res2.ResourceItem;
+import com.android.ide.common.resources.AbstractResourceRepository;
+import com.android.ide.common.resources.ResourceItem;
 import com.android.resources.ResourceUrl;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;

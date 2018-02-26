@@ -317,6 +317,20 @@ public class TestUtils {
                 .toPath();
     }
 
+    /** Returns the checked in AAPT2 binary that is shipped with the gradle plugin. */
+    @NonNull
+    public static Path getAapt2() {
+        OsType osType = OsType.getHostOs();
+        if (osType == OsType.UNKNOWN) {
+            throw new IllegalStateException(
+                    "AAPT2 not supported on unknown platform: " + OsType.getOsName());
+        }
+        String hostDir = osType.getFolderName();
+        return getWorkspaceFile(
+                        "prebuilts/tools/common/aapt/" + hostDir + "/" + SdkConstants.FN_AAPT2)
+                .toPath();
+    }
+
     @NonNull
     public static String getLatestAndroidPlatform() {
         return "android-27";

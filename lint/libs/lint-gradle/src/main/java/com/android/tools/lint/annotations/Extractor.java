@@ -838,6 +838,7 @@ public class Extractor {
                     String name = pkg.replace('.', '/') + "/annotations.xml";
 
                     JarEntry outEntry = new JarEntry(name);
+                    outEntry.setTime(0);
                     zos.putNextEntry(outEntry);
 
                     try (StringPrintWriter writer = StringPrintWriter.create()) {

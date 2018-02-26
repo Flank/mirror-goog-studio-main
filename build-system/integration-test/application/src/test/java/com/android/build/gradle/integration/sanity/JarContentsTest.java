@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.sanity;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.android.builder.model.Version;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
@@ -27,7 +25,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
+import com.google.common.truth.Expect;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FilterInputStream;
@@ -42,11 +40,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 
 /** Checks what we distribute in our jars. */
@@ -183,6 +180,29 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "META-INF/",
                 "NOTICE");
+        expected.putAll(
+                "com/android/tools/build/aapt2:windows",
+                "aapt2.exe",
+                "libwinpthread-1.dll",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
+                "META-INF/");
+        expected.putAll(
+                "com/android/tools/build/aapt2:osx",
+                "aapt2",
+                "lib64/",
+                "lib64/libc++.dylib",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
+                "META-INF/");
+        expected.putAll(
+                "com/android/tools/build/aapt2:linux",
+                "aapt2",
+                "lib64/",
+                "lib64/libc++.so",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
+                "META-INF/");
         expected.putAll(
                 "com/android/tools/build/builder",
                 "com/",
@@ -559,7 +579,6 @@ public class JarContentsTest {
                 "com/android/ide/common/process/",
                 "com/android/ide/common/rendering/",
                 "com/android/ide/common/repository/",
-                "com/android/ide/common/res2/",
                 "com/android/ide/common/resources/",
                 "com/android/ide/common/resources/configuration/",
                 "com/android/ide/common/resources/deprecated/",
@@ -1134,6 +1153,8 @@ public class JarContentsTest {
         }
     }
 
+    @Rule public Expect expect = Expect.createAndEnableStackTrace();
+
     @Test
     public void checkTools() throws Exception {
         checkGroup("com/android/tools", GMAVEN_ZIP);
@@ -1152,7 +1173,7 @@ public class JarContentsTest {
         checkGroup("com/android/java", JAVALIBMODELBUILDER_ZIP);
     }
 
-    private static void checkGroup(String groupPrefix, String zipLocation) throws Exception {
+    private void checkGroup(String groupPrefix, String zipLocation) throws Exception {
         List<String> jarNames = new ArrayList<>();
 
         Path repo = getRepo(zipLocation);
@@ -1170,7 +1191,7 @@ public class JarContentsTest {
                 checkSourcesJar(jar);
             } else {
                 checkJar(jar, repo);
-                jarNames.add(jarRelativePathWithoutVersion(jar, repo));
+                jarNames.add(jarRelativePathWithoutVersionWithClassifier(jar, repo));
             }
         }
 
@@ -1187,28 +1208,30 @@ public class JarContentsTest {
                         .collect(Collectors.toList());
         // Test only artifact need not be there.
         expectedJars.remove("com/android/tools/internal/build/test/devicepool");
-        assertThat(expectedJars).isNotEmpty();
-        assertThat(jarNames).named("Jars for " + groupPrefix).containsAllIn(expectedJars);
+        expect.that(expectedJars).isNotEmpty();
+        expect.that(jarNames).named("Jars for " + groupPrefix).containsAllIn(expectedJars);
     }
 
-    private static void checkSourcesJar(Path jarPath) throws IOException {
-        checkLicense(jarPath);
-    }
-
-    private static void checkLicense(Path jarPath) throws IOException {
-        // TODO: Handle NOTICE files in Bazel (b/64921827).
+    private void checkSourcesJar(Path jarPath) throws IOException {
         if (TestUtils.runningFromBazel()) {
             return;
         }
+        checkLicense(jarPath);
+    }
 
-        try (JarFile jarFile = new JarFile(jarPath.toFile())) {
-            for (String possibleName : LICENSE_NAMES) {
-                if (jarFile.getEntry(possibleName) != null) {
-                    return;
+    private void checkLicense(Path jarPath) throws IOException {
+        boolean found = false;
+        try (ZipInputStream zipInputStream =
+                new ZipInputStream(new BufferedInputStream(Files.newInputStream(jarPath)))) {
+            ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                if (LICENSE_NAMES.contains(entry.getName())) {
+                    found = true;
                 }
             }
-
-            Assert.fail("No license file in " + jarPath);
+        }
+        if (!found) {
+            expect.fail("No license file in " + jarPath + " from " + jarPath.getFileSystem());
         }
     }
 
@@ -1232,18 +1255,26 @@ public class JarContentsTest {
                 || path.toString().contains(Version.ANDROID_TOOLS_BASE_VERSION);
     }
 
-    private static String jarRelativePathWithoutVersion(Path jar, Path repo) {
+    private static String jarRelativePathWithoutVersionWithClassifier(Path jar, Path repo) {
         String pathWithoutVersion = repo.relativize(jar).getParent().getParent().toString();
-        return FileUtils.toSystemIndependentPath(pathWithoutVersion);
+
+        String name = jar.getParent().getParent().getFileName().toString();
+        String revision = jar.getParent().getFileName().toString();
+        String expectedNameNoClassifier = name + "-" + revision;
+        String filename = jar.getFileName().toString();
+        String path = FileUtils.toSystemIndependentPath(pathWithoutVersion);
+        if (!filename.equals(expectedNameNoClassifier + ".jar")) {
+            String classifier =
+                    filename.substring(
+                            expectedNameNoClassifier.length() + 1,
+                            filename.length() - ".jar".length());
+            return path + ":" + classifier;
+        }
+        return path;
     }
 
     private static boolean shouldCheckFile(String fileName) {
         if (fileName.endsWith(".class")) {
-            return false;
-        }
-
-        if (LICENSE_NAMES.contains(fileName) && TestUtils.runningFromBazel()) {
-            // TODO: Handle NOTICE files in Bazel (b/64921827).
             return false;
         }
 
@@ -1282,18 +1313,15 @@ public class JarContentsTest {
         return files;
     }
 
-    private static void checkJar(Path jar, Path repo) throws Exception {
+    private void checkJar(Path jar, Path repo) throws Exception {
         checkLicense(jar);
 
-        String key = FileUtils.toSystemIndependentPath(jarRelativePathWithoutVersion(jar, repo));
+        String key =
+                FileUtils.toSystemIndependentPath(
+                        jarRelativePathWithoutVersionWithClassifier(jar, repo));
         Set<String> expected = EXPECTED.get(key);
         if (expected == null) {
             expected = Collections.emptySet();
-        }
-
-        if (TestUtils.runningFromBazel()) {
-            // TODO: Handle NOTICE files in Bazel (b/64921827).
-            expected = Sets.difference(expected, LICENSE_NAMES);
         }
 
         Set<String> actual = new HashSet<>();
@@ -1307,7 +1335,8 @@ public class JarContentsTest {
                                 entry, new NonClosingInputStream(zipInputStream), ""));
             }
 
-            assertThat(actual).named(jar.toString() + " with key " + key)
+            expect.that(actual)
+                    .named(jar.toString() + " with key " + key)
                     .containsExactlyElementsIn(expected);
         }
     }
@@ -1342,7 +1371,7 @@ public class JarContentsTest {
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
             // Do nothing.
         }
     }

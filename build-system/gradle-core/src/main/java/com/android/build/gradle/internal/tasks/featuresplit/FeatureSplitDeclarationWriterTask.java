@@ -32,12 +32,14 @@ import org.gradle.api.tasks.TaskAction;
 public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
 
     @Input String uniqueIdentifier;
+    @Input String originalApplicationId;
 
     @OutputDirectory File outputDirectory;
 
     @TaskAction
     public void fullTaskAction() throws IOException {
-        FeatureSplitDeclaration declaration = new FeatureSplitDeclaration(uniqueIdentifier);
+        FeatureSplitDeclaration declaration =
+                new FeatureSplitDeclaration(uniqueIdentifier, originalApplicationId);
         declaration.save(outputDirectory);
     }
 
@@ -67,7 +69,13 @@ public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
         @Override
         public void execute(@NonNull FeatureSplitDeclarationWriterTask task) {
             task.setVariantName(variantScope.getFullVariantName());
+
             task.uniqueIdentifier = variantScope.getGlobalScope().getProject().getPath();
+            task.originalApplicationId =
+                    variantScope
+                            .getVariantData()
+                            .getVariantConfiguration()
+                            .getOriginalApplicationId();
             task.outputDirectory = outputDirectory;
         }
     }

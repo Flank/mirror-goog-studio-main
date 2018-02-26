@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CPU_SIMPLEPERF_H_
-#define CPU_SIMPLEPERF_H_
+#ifndef PERFD_CPU_SIMPLEPERF_H_
+#define PERFD_CPU_SIMPLEPERF_H_
 
 #include <string>
 
@@ -84,4 +84,4 @@ class Simpleperf {
 };
 }  // namespace profiler
 
-#endif  // CPU_SIMPLEPERF_H_
+#endif  // PERFD_CPU_SIMPLEPERF_H_

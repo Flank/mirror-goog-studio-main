@@ -20,13 +20,15 @@ import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
-import com.android.ide.common.res2.CompileResourceRequest
-import com.android.ide.common.res2.FileStatus
+import com.android.ide.common.resources.CompileResourceRequest
+import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
@@ -42,6 +44,9 @@ import javax.inject.Inject
  */
 open class CompileSourceSetResources
 @Inject constructor(private val workerExecutor: WorkerExecutor) : IncrementalTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    lateinit var aapt2FromMaven: FileCollection private set
 
     @get:InputFiles @get:SkipWhenEmpty lateinit var inputDirectories: FileCollection private set
     @get:Input var isPngCrunching: Boolean = false; private set
@@ -61,20 +66,25 @@ open class CompileSourceSetResources
             }
 
             /** Only look at files in first level subdirectories of the input directory */
-            Files.list(inputDirectory.toPath()).forEach { subDir ->
-                if (Files.isDirectory(subDir)) {
-                    Files.list(subDir).forEach { resFile ->
-                        if (Files.isRegularFile(resFile)) {
-                            val relativePath = inputDirectory.toPath().relativize(resFile)
-                            if (addedFiles.contains(relativePath)) {
-                                throw RuntimeException(
-                                        "Duplicated resource '$relativePath' found in a source " +
-                                                "set:\n" +
-                                                "    - ${addedFiles[relativePath]}\n" +
-                                                "    - $resFile")
+            Files.list(inputDirectory.toPath()).use { fstLevel ->
+                fstLevel.forEach { subDir ->
+                    if (Files.isDirectory(subDir)) {
+                        Files.list(subDir).use {
+                            it.forEach { resFile ->
+                                if (Files.isRegularFile(resFile)) {
+                                    val relativePath = inputDirectory.toPath().relativize(resFile)
+                                    if (addedFiles.contains(relativePath)) {
+                                        throw RuntimeException(
+                                                "Duplicated resource '$relativePath' found in a " +
+                                                        "source set:\n" +
+                                                        "    - ${addedFiles[relativePath]}\n" +
+                                                        "    - $resFile"
+                                        )
+                                    }
+                                    requests.add(compileRequest(resFile.toFile()))
+                                    addedFiles.put(relativePath, resFile)
+                                }
                             }
-                            requests.add(compileRequest(resFile.toFile()))
-                            addedFiles.put(relativePath, resFile)
                         }
                     }
                 }
@@ -123,12 +133,17 @@ open class CompileSourceSetResources
         if (requests.isEmpty()) {
             return
         }
+        val aapt2ServiceKey = registerAaptService(
+            aapt2FromMaven = aapt2FromMaven,
+            logger = iLogger
+        )
         for (request in requests) {
             workerExecutor.submit(Aapt2CompileRunnable::class.java) {
                 it.isolationMode = IsolationMode.NONE
                 it.setParams(Aapt2CompileRunnable.Params(
-                        revision = builder.buildToolInfo.revision,
-                        requests = listOf(request)))
+                    aapt2ServiceKey = aapt2ServiceKey,
+                    requests = listOf(request)
+                ))
             }
         }
     }
@@ -155,7 +170,7 @@ open class CompileSourceSetResources
             task.isPngCrunching = variantScope.isCrunchPngs
             task.isPseudoLocalize = variantScope.variantData.variantConfiguration.buildType.isPseudoLocalesEnabled
             task.aaptIntermediateDirectory = aaptIntermediateDirectory
-            task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
+            task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
         }
     }
 

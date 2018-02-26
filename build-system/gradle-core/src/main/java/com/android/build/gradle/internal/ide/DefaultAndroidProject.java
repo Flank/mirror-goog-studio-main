@@ -63,6 +63,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     private final int generation;
 
     private final boolean baseSplit;
+    private final Collection<String> dynamicFeatures;
 
     @NonNull
     private final JavaCompileOptions javaCompileOptions;
@@ -114,7 +115,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
             int projectType,
             int apiVersion,
             int generation,
-            boolean baseSplit) {
+            boolean baseSplit,
+            @NonNull Collection<String> dynamicFeatures) {
         this.name = name;
         this.defaultConfig = defaultConfig;
         this.flavorDimensions = flavorDimensions;
@@ -139,6 +141,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         this.nativeToolchains = nativeToolchains;
         this.buildToolsVersion = buildToolsVersion;
         this.baseSplit = baseSplit;
+        this.dynamicFeatures = ImmutableList.copyOf(dynamicFeatures);
     }
 
     @Override
@@ -298,6 +301,12 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         return baseSplit;
     }
 
+    @NonNull
+    @Override
+    public Collection<String> getDynamicFeatures() {
+        return dynamicFeatures;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -330,7 +339,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 && Objects.equals(variantNames, that.variantNames)
                 && Objects.equals(defaultConfig, that.defaultConfig)
                 && Objects.equals(flavorDimensions, that.flavorDimensions)
-                && Objects.equals(baseSplit, that.baseSplit);
+                && Objects.equals(baseSplit, that.baseSplit)
+                && Objects.equals(dynamicFeatures, that.dynamicFeatures);
     }
 
     @Override
@@ -359,6 +369,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 variantNames,
                 defaultConfig,
                 flavorDimensions,
-                baseSplit);
+                baseSplit,
+                dynamicFeatures);
     }
 }

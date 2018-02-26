@@ -19,14 +19,11 @@ package com.android.ide.common.resources.configuration;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceEnum;
 
-/**
- * Base class for {@link ResourceQualifier} whose value is an {@link ResourceEnum}.
- *
- */
-abstract class EnumBasedResourceQualifier extends ResourceQualifier {
+/** Base class for {@link ResourceQualifier} whose value is an {@link ResourceEnum}. */
+public abstract class EnumBasedResourceQualifier extends ResourceQualifier {
 
     @Nullable
-    abstract ResourceEnum getEnumValue();
+    public abstract ResourceEnum getEnumValue();
 
     @Override
     public boolean isValid() {

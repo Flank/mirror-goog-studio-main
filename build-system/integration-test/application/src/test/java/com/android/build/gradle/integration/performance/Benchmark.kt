@@ -20,10 +20,12 @@ import com.android.build.gradle.integration.common.fixture.ModelBuilder
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
+import com.android.build.gradle.integration.common.fixture.ProfileCapturer
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.options.BooleanOption
 import com.google.common.collect.Iterables
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
+import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.nio.file.Path
@@ -33,6 +35,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 typealias BenchmarkAction = (((() -> Unit) -> Unit, GradleTestProject, GradleTaskExecutor, ModelBuilder) -> Unit)
 
 data class Benchmark(
+        private val benchmarkEnvironment: BenchmarkEnvironment,
+
         // These first three parameters should uniquely identify your benchmark
         val scenario: ProjectScenario,
         val benchmark: Logging.Benchmark,
@@ -51,16 +55,9 @@ data class Benchmark(
          * a subproject until _after_ project.apply has been called, so if you do need to do that
          * you'll have to supply a postApplyProject function and do it in there.
          */
-        var project = projectFactory(
-                GradleTestProject.builder()
-                        .enableProfileOutputInDirectory(BenchmarkTest.getProfileDirectory())
-                        .withTestDir(projectDir().toFile())
-                        .withRepoDirectories(BenchmarkTest.getMavenRepos())
-                        .withAndroidHome(BenchmarkTest.getSdkDir().toFile())
-                        .withGradleDistributionDirectory(BenchmarkTest.getGradleDir().toFile())
-                        .withKotlinVersion(KotlinVersion.CURRENT.toString()))
+        var project = projectFactory(benchmarkEnvironment.projectBuilder)
 
-        var profileLocation: Path? = null
+        var profile: GradleBuildProfile? = null
 
         val statement =
                 object : Statement() {
@@ -83,7 +80,7 @@ data class Benchmark(
                                 .with(BooleanOption.ENABLE_D8, scenario.useD8())
                                 .withUseDexArchive(scenario.useDexArchive())
 
-                        val recorder = BenchmarkTest.getBenchmarkRecorder()
+                        val capturer = ProfileCapturer(project)
                         val recordCalled = AtomicBoolean(false)
                         val record = { r: () -> Unit ->
                             recordStart = System.nanoTime()
@@ -93,12 +90,12 @@ data class Benchmark(
                                 }
                                 recordCalled.set(true)
 
-                                val numProfiles = recorder.record(scenario, benchmark, benchmarkMode, r)
-                                if (numProfiles != 1) {
+                                val profiles = capturer.capture(r)
+                                if (profiles.size != 1) {
                                     throw IllegalStateException("record lambda generated more than one profile, this is not allowed")
                                 }
 
-                                profileLocation = Iterables.getOnlyElement(BenchmarkTest.getProfileCapturer().lastPoll)
+                                profile = Iterables.getOnlyElement(profiles)
                             } finally {
                                 recordEnd = System.nanoTime()
                             }
@@ -108,8 +105,6 @@ data class Benchmark(
                         if (!recordCalled.get()) {
                             throw IllegalStateException("no recorded section in your benchmark, did you forget to use the record function?")
                         }
-
-                        recorder.uploadAsync()
                     }
                 }
 
@@ -124,7 +119,7 @@ data class Benchmark(
                 benchmark = this,
                 recordedDuration = Duration.ofNanos(recordEnd - recordStart),
                 totalDuration = Duration.ofNanos(System.nanoTime() - totalStart),
-                profileLocation = profileLocation,
+                profile = profile,
                 exception = exception
         )
     }
@@ -154,7 +149,7 @@ data class Benchmark(
     }
 
     fun projectDir(): Path =
-            BenchmarkTest.getBenchmarkTestRootDirectory()
+            benchmarkEnvironment.scratchDir
                     .resolve(scenario.name)
                     .resolve(benchmark.name)
                     .resolve(benchmarkMode.name)
