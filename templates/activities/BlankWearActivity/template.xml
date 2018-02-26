@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <template
     format="5"
-    revision="4"
+    revision="5"
     name="Blank Wear Activity"
-    minApi="22"
-    minBuildApi="22"
+    minApi="23"
+    minBuildApi="23"
     description="Creates a blank activity for Android Wear">
 
     <category value="Activity" />
