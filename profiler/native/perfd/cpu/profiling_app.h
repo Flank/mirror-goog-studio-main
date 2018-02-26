@@ -31,7 +31,7 @@ struct ProfilingApp {
   // successfully.
   int64_t start_timestamp;
   // The last start profiling requests processed successfully.
-  profiler::proto::CpuProfilingAppStartRequest start_request;
+  profiler::proto::CpuProfilerConfiguration configuration;
 };
 
 }  // namespace profiler

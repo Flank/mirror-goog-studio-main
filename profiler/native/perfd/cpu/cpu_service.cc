@@ -30,6 +30,7 @@ using grpc::Status;
 using grpc::StatusCode;
 using profiler::proto::CpuDataRequest;
 using profiler::proto::CpuDataResponse;
+using profiler::proto::CpuProfilerConfiguration;
 using profiler::proto::CpuProfilerType;
 using profiler::proto::CpuProfilingAppStartRequest;
 using profiler::proto::CpuProfilingAppStartResponse;
@@ -161,24 +162,25 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
   bool success = false;
   string error;
   string trace_path;
-
-  if (request->profiler_type() == CpuProfilerType::SIMPLEPERF) {
+  const CpuProfilerConfiguration& configuration = request->configuration();
+  if (configuration.profiler_type() == CpuProfilerType::SIMPLEPERF) {
     success = simpleperf_manager_.StartProfiling(
-        app_pkg_name, request->abi_cpu_arch(), request->sampling_interval_us(),
-        &trace_path, &error);
-  } else if (request->profiler_type() == CpuProfilerType::ATRACE) {
+        app_pkg_name, request->abi_cpu_arch(),
+        configuration.sampling_interval_us(), &trace_path, &error);
+  } else if (configuration.profiler_type() == CpuProfilerType::ATRACE) {
     success = atrace_manager_.StartProfiling(
-        app_pkg_name, request->sampling_interval_us(), &trace_path, &error);
+        app_pkg_name, configuration.sampling_interval_us(), &trace_path,
+        &error);
   } else {
     // TODO: Move the activity manager to the daemon.
     // It should be shared with everything in perfd.
     ActivityManager* manager = ActivityManager::Instance();
     auto mode = ActivityManager::SAMPLING;
-    if (request->mode() == CpuProfilingAppStartRequest::INSTRUMENTED) {
+    if (configuration.mode() == CpuProfilerConfiguration::INSTRUMENTED) {
       mode = ActivityManager::INSTRUMENTED;
     }
     success = manager->StartProfiling(mode, app_pkg_name,
-                                      request->sampling_interval_us(),
+                                      configuration.sampling_interval_us(),
                                       &trace_path, &error);
   }
 
@@ -189,7 +191,7 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     profiling_app.app_pkg_name = app_pkg_name;
     profiling_app.trace_path = trace_path;
     profiling_app.start_timestamp = clock_.GetCurrentTime();
-    profiling_app.start_request = *request;
+    profiling_app.configuration = configuration;
     profiling_apps_[pid] = profiling_app;
   } else {
     response->set_status(CpuProfilingAppStartResponse::FAILURE);
@@ -212,7 +214,7 @@ void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
     return;
   }
   ProfilingApp app = app_iterator->second;
-  CpuProfilerType profiler_type = app.start_request.profiler_type();
+  CpuProfilerType profiler_type = app.configuration.profiler_type();
   string error;
   bool success = false;
   bool need_trace = response != nullptr;
@@ -267,7 +269,7 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
     // App is being profiled. Include the start profiling request and its
     // timestamp in the response.
     response->set_start_timestamp(app.start_timestamp);
-    *(response->mutable_start_request()) = app.start_request;
+    *(response->mutable_configuration()) = app.configuration;
   }
 
   return Status::OK;
