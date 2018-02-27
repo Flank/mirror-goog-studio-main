@@ -16,6 +16,7 @@
 
 package com.android.build.api;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
@@ -30,7 +31,6 @@ import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.Invokable;
 import com.google.common.reflect.Parameter;
 import com.google.common.reflect.TypeToken;
-import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -38,7 +38,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -64,11 +63,7 @@ public class StableApiTest {
 
     @Test
     public void stableApiElements() throws Exception {
-        List<String> apiElements =
-                getApiElements(
-                        incubatingClass -> !incubatingClass,
-                        (incubatingClass, incubatingMember) ->
-                                !incubatingClass && !incubatingMember);
+        List<String> apiElements = getStableApiElements();
 
         // Compare the two as strings, to get a nice diff UI in the IDE.
         Iterable<String> expectedApiElements =
@@ -76,22 +71,24 @@ public class StableApiTest {
                         .omitEmptyStrings()
                         .split(Resources.toString(STABLE_API_URL, Charsets.UTF_8));
 
-        //System.err.println("####################");
-        //Collections.sort(apiElements);
-        //for (String apiElement : apiElements) {
-        //    System.err.println(apiElement);
-        //}
-        //System.err.println("####################");
+        try {
+            assertThat(apiElements).containsExactlyElementsIn(expectedApiElements);
+        } catch (AssertionError e) {
+            throw new AssertionError(
+                    "Stable API has changed, either revert the API change or re-run StableApiUpdater from the IDE to update the API file.",
+                    e);
+        }
+    }
 
-        Truth.assertThat(apiElements).containsExactlyElementsIn(expectedApiElements);
+    static List<String> getStableApiElements() throws IOException {
+        return getApiElements(
+                incubatingClass -> !incubatingClass,
+                (incubatingClass, incubatingMember) -> !incubatingClass && !incubatingMember);
     }
 
     @Test
     public void incubatingApiElements() throws Exception {
-        List<String> apiElements =
-                getApiElements(
-                        incubatingClass -> incubatingClass,
-                        (incubatingClass, incubatingMember) -> incubatingClass || incubatingMember);
+        List<String> apiElements = getIncubatingApiElements();
 
         // Compare the two as strings, to get a nice diff UI in the IDE.
         Iterable<String> expectedApiElements =
@@ -99,14 +96,19 @@ public class StableApiTest {
                         .omitEmptyStrings()
                         .split(Resources.toString(INCUBATING_API_URL, Charsets.UTF_8));
 
-        System.err.println("####################");
-        Collections.sort(apiElements);
-        for (String apiElement : apiElements) {
-            System.err.println(apiElement);
+        try {
+            assertThat(apiElements).containsExactlyElementsIn(expectedApiElements);
+        } catch (AssertionError e) {
+            throw new AssertionError(
+                    "Incubating API has changed, either revert the API change or re-run StableApiUpdater from the IDE to update the API file.",
+                    e);
         }
-        System.err.println("####################");
+    }
 
-        Truth.assertThat(apiElements).containsExactlyElementsIn(expectedApiElements);
+    static List<String> getIncubatingApiElements() throws IOException {
+        return getApiElements(
+                incubatingClass -> incubatingClass,
+                (incubatingClass, incubatingMember) -> incubatingClass || incubatingMember);
     }
 
     @Test
@@ -114,8 +116,8 @@ public class StableApiTest {
         // ATTENTION REVIEWER: if this needs to be changed, please make sure changes to api-list.txt
         // are backwards compatible.
         assertEquals(
-                "1807c47ee07972bd8eeeab6873b776d770ce7a8b",
-                Hashing.sha1()
+                "fe42544e30ce3414a5f3824921d9ace21751a97682f1903dd8af41b7cbb5dc32",
+                Hashing.sha256()
                         .hashString(
                                 Resources.toString(STABLE_API_URL, Charsets.UTF_8)
                                         .replace(System.lineSeparator(), "\n"),
@@ -133,8 +135,12 @@ public class StableApiTest {
 
         return allClasses
                 .stream()
-                .filter(classInfo -> !classInfo.getSimpleName().endsWith("Test"))
+                .filter(
+                        classInfo ->
+                                !classInfo.getSimpleName().endsWith("Test")
+                                        && !classInfo.getSimpleName().equals("StableApiUpdater"))
                 .flatMap(classInfo -> getApiElements(classInfo.load(), classFilter, memberFilter))
+                .sorted()
                 .collect(Collectors.toList());
     }
 
