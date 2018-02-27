@@ -124,7 +124,15 @@
       </library>
     </orderEntry>
     <orderEntry type="module" module-name="common" />
-    <orderEntry type="library" name="gradle-api" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/4.5/gradle-tooling-api-4.5.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntry type="module" module-name="testutils" />
     <orderEntry type="module-library" scope="TEST">
       <library>

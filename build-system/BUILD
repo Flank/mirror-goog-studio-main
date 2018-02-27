@@ -1,5 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:gradle.bzl", "gradle_build")
 load(
     "//tools/base/bazel:maven.bzl",
     "maven_java_import",
@@ -29,25 +30,6 @@ iml_module(
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
-)
-
-filegroup(
-    name = "gradle-distrib",
-    srcs = ["//tools/external/gradle:gradle-distrib-4.5"],
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "gradle-api_neverlink",
-    jars = ["//tools/external/gradle:gradle-api-4.5-jar"],
-    neverlink = 1,
-    visibility = ["//visibility:public"],
-)
-
-java_import(
-    name = "gradle-api",
-    jars = ["//tools/external/gradle:gradle-api-4.5-jar"],
-    visibility = ["//visibility:public"],
 )
 
 kotlin_library(
@@ -119,6 +101,47 @@ maven_pom(
     artifact = "apksig",
     group = "com.android.tools.build",
     source = "//tools/buildSrc/base:build_version",
+)
+
+# The Gradle APIs to build against and run against.
+GRADLE_VERSION = "4.5"
+
+filegroup(
+    name = "gradle-distrib",
+    srcs = ["//tools/external/gradle:gradle-distrib-" + GRADLE_VERSION],
+    visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "gradle-tooling-api",
+    visibility = ["//tools/base/bazel:__subpackages__"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/" +
+               GRADLE_VERSION + ":jar"],
+    runtime_deps = ["//tools/base/third_party:org.slf4j_slf4j-api"],
+)
+
+gradle_build(
+    name = "gradle_api_jar",
+    build_file = "extract-gradle-api/build.gradle",
+    data = [":gradle-distrib"],
+    gradle_version = GRADLE_VERSION,
+    output_file = "gradle_api.jar",
+    output_file_source = "gradle-api-" + GRADLE_VERSION + ".jar",
+    tasks = [":copyApiJar"],
+)
+
+java_import(
+    name = "gradle-api_neverlink",
+    jars = [":gradle_api.jar"],
+    neverlink = 1,
+    visibility = ["//visibility:public"],
+)
+
+# Used for tests only.
+java_import(
+    name = "gradle-api",
+    jars = [":gradle_api.jar"],
+    visibility = ["//visibility:public"],
 )
 
 # repos for the gradle plugin and the offline repo packaged inside Studio

@@ -250,7 +250,7 @@ java_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api",
+        "//tools/base/build-system:gradle-tooling-api",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
     ],
