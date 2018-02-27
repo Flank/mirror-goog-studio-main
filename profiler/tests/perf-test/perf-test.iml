@@ -21,7 +21,7 @@
     <orderEntry type="module-library" scope="TEST">
       <library name="truth-0.28">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/m2/repository/com/google/truth/truth/0.28/truth-0.28.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/m2/repository/com/google/truth/truth/0.34/truth-0.34.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
