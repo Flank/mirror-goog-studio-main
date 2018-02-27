@@ -92,12 +92,6 @@ class Aapt2FromMavenTest {
     }
 
     private fun getAapt2FromMavenForTest(project: Project): FileCollection {
-        val enabledOptions = ProjectOptions(
-            ImmutableMap.of<String, Any>(
-                BooleanOption.USE_AAPT2_FROM_MAVEN.propertyName,
-                true
-            )
-        )
 
         val artifact = getAapt2FromMaven(
             project = project
@@ -111,7 +105,7 @@ class Aapt2FromMavenTest {
                 it.url = repoPath.toUri()
             })
         }
-        return artifact!!
+        return artifact
     }
 
     private fun testRunningAapt2FromMaven(artifact: FileCollection) {
@@ -121,7 +115,7 @@ class Aapt2FromMavenTest {
             registerAaptService(artifact, null, StdLogger(StdLogger.Level.INFO), registry)
 
         val outDir = temporaryFolder.newFolder()
-        val inFile = createFileToCompile();
+        val inFile = createFileToCompile()
         useAaptDaemon(serviceKey, registry) { daemon ->
             daemon.compile(
                 CompileResourceRequest(
