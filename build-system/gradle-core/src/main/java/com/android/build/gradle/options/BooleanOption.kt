@@ -92,7 +92,7 @@ enum class BooleanOption(
     BUILD_ONLY_TARGET_ABI("android.buildOnlyTargetAbi", true),
     ENABLE_DATA_BINDING_V2("android.databinding.enableV2", true),
     ENABLE_SEPARATE_APK_RESOURCES("android.enableSeparateApkRes", true),
-    ENABLE_SEPARATE_R_CLASS_COMPILATION(AndroidProject.PROPERTY_SEPARATE_R_CLASS_COMPILATION, status = Option.Status.STABLE),
+    ENABLE_SEPARATE_R_CLASS_COMPILATION(AndroidProject.PROPERTY_SEPARATE_R_CLASS_COMPILATION, true),
     ENABLE_PARALLEL_NATIVE_JSON_GEN("android.enableParallelJsonGen", true),
     ENABLE_SIDE_BY_SIDE_CMAKE("android.enableSideBySideCmake", true),
     ENABLE_PROGUARD_RULES_EXTRACTION("android.proguard.enableRulesExtraction", true),
