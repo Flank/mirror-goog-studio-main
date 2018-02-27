@@ -21,15 +21,20 @@ import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.blame.parser.DexParser;
+import com.android.tools.r8.ClassFileResourceProvider;
 import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8;
 import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.OutputMode;
+import com.android.tools.r8.ProgramResource;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -48,6 +53,32 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
     @NonNull private final ClassFileProviderFactory classFileProviderFactory;
     private final boolean desugaring;
     @NonNull private final MessageReceiver messageReceiver;
+
+    private static class OrderedClassFileResourceProvider implements ClassFileResourceProvider {
+        public final List<ClassFileResourceProvider> providers;
+        public final Set<String> descriptors = Sets.newHashSet();
+
+        OrderedClassFileResourceProvider(ImmutableList<ClassFileResourceProvider> providers) {
+            this.providers = providers;
+            this.providers.forEach(
+                    provider -> this.descriptors.addAll(provider.getClassDescriptors()));
+        }
+
+        @Override
+        public Set<String> getClassDescriptors() {
+            return descriptors;
+        }
+
+        @Override
+        public ProgramResource getProgramResource(String descriptor) {
+            for (ClassFileResourceProvider provider : providers) {
+                if (provider.getClassDescriptors().contains(descriptor)) {
+                    return provider.getProgramResource(descriptor);
+                }
+            }
+            return null;
+        }
+    }
 
     public D8DexArchiveBuilder(
             int minSdkVersion,
@@ -97,8 +128,14 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                 for (Path entry : bootClasspath) {
                     builder.addLibraryResourceProvider(factory.getProvider(entry));
                 }
-                for (Path entry : classpath) {
-                    builder.addClasspathResourceProvider(factory.getProvider(entry));
+                if (!classpath.isEmpty()) {
+                    ImmutableList.Builder<ClassFileResourceProvider> providers =
+                            ImmutableList.builder();
+                    for (Path entry : classpath) {
+                        providers.add(factory.getProvider(entry));
+                    }
+                    builder.addClasspathResourceProvider(
+                            new OrderedClassFileResourceProvider(providers.build()));
                 }
             } else {
                 builder.setDisableDesugaring(true);
