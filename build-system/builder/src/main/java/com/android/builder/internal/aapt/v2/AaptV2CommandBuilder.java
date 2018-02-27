@@ -75,6 +75,10 @@ public final class AaptV2CommandBuilder {
             }
         }
 
+        if (request.getPartialRFile() != null) {
+            parameters.add("--output-text-symbols", request.getPartialRFile().getAbsolutePath());
+        }
+
         parameters.add("--legacy");
         parameters.add("-o", request.getOutputDirectory().getAbsolutePath());
         parameters.add(request.getInputFile().getAbsolutePath());

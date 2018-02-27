@@ -465,6 +465,8 @@ public final class SdkConstants {
     public static final String FD_MERGED = "merged"; //$NON-NLS-1$
     /** Name of the compiled resources folder. */
     public static final String FD_COMPILED = "compiled"; //$NON-NLS-1$
+    /** Name of the folder containing partial R files. */
+    public static final String FD_PARTIAL_R = "partial-r"; //$NON-NLS-1$
     /** Name of the output dex folder. */
     public static final String FD_DEX = "dex"; //$NON-NLS-1$
     /** Name of the generated source folder. */
