@@ -470,6 +470,20 @@ public class SystemPermissionsDetectorTest extends AbstractCheckTest {
                         "1 errors, 0 warnings");
     }
 
+    public void testRequestInstallPackages() {
+        // Regression test for 73857733
+        lint().files(
+                manifest("" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"com.example.lintbugs\">\n" +
+                        "    <uses-permission android:name=\"android.permission.REQUEST_INSTALL_PACKAGES\"/><!-- OK -->\n" +
+                        "    <uses-permission android:name=\"android.permission.SYSTEM_ALERT_WINDOW\"/><!-- OK -->\n" +
+                        "</manifest>"))
+                .run()
+                .expectClean();
+    }
+
     public void testDbUpToDate() {
         PermissionDataGenerator generator = new PermissionDataGenerator();
         List<Permission> permissions = generator.getSignaturePermissions(false);

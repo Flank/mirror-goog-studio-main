@@ -571,6 +571,56 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             """)
     }
 
+    fun testVisibleForTestingInternalKotlin() {
+        lint().files(
+            kotlin("""
+                package test.pkg
+
+                import android.os.Bundle
+                import android.app.Acativity
+                import android.support.annotation.VisibleForTesting
+                import android.util.Log
+
+                class MainActivity : Activity() {
+
+                    override fun onCreate(savedInstanceState: Bundle?) {
+                        super.onCreate(savedInstanceState)
+
+                        Log.d("MainActivity", createApi().getPrompt())
+                        Log.d("MainActivity", createOtherApi().getPrompt())
+                    }
+
+                    interface SomeApi {
+                        /**
+                         * Get the prompt of the day. The server will choose a prompt that will be shown for 24 hours.
+                         */
+                        fun getPrompt(): String
+                    }
+                }
+
+                @VisibleForTesting
+                internal fun createApi(): MainActivity.SomeApi {
+                    return object : MainActivity.SomeApi {
+                        override fun getPrompt(): String {
+                            return "Foo"
+                        }
+                    }
+                }
+
+                private fun createOtherApi() : MainActivity.SomeApi {
+                    return object : MainActivity.SomeApi {
+                        override fun getPrompt(): String {
+                            return "Bar"
+                        }
+                    }
+                }
+                """),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR)
+            .run()
+            .expectClean()
+    }
+
     companion object {
         /*
                 Compiled version of these 5 files (and the RestrictTo annotation);

@@ -435,6 +435,13 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
                     return;
                 }
 
+                if (permissionName.equals("android.permission.REQUEST_INSTALL_PACKAGES")) {
+                    // Despite have protection level, it appears to be valid and required
+                    // in some scenarios; see bug 73857733 and
+                    // https://android-developers.googleblog.com/2017/08/making-it-safer-to-get-apps-on-android-o.html
+                    return;
+                }
+
                 // Special cases: some permissions were added as signature permissions later;
                 // look for these and allow it.
                 int max = getLastNonSignatureApiLevel(permissionName);
