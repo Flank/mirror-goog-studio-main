@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package android.os;
+package com.activity.energy;
 
-public class Bundle {
-    private final String mStr;
+import android.app.job.JobParameters;
+import android.app.job.JobService;
 
-    public Bundle() {
-        this("");
-    }
-
-    public Bundle(String str) {
-        mStr = str;
+public class MyJobService extends JobService {
+    @Override
+    public boolean onStartJob(JobParameters params) {
+        System.out.println("JOB STARTED");
+        return true;
     }
 
     @Override
-    public String toString() {
-        return mStr;
+    public boolean onStopJob(JobParameters params) {
+        System.out.println("JOB STOPPED");
+        return true;
     }
 }

@@ -20,7 +20,7 @@ import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.app.job.JobService;
-import com.android.tools.profiler.support.util.StudioLog;
+import android.net.Uri;
 
 /**
  * A set of helpers for Android job scheduler instrumentation, used by the Energy Profiler.
@@ -31,13 +31,21 @@ import com.android.tools.profiler.support.util.StudioLog;
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class JobWrapper {
     /**
+     * Use a thread-local variable for schedule job parameters, so a value can be temporarily stored
+     * when we enter {@link JobScheduler#schedule(JobInfo)} and retrieved when we exit it. Using a
+     * ThreadLocal protects against the situation when multiple threads schedule jobs at the same
+     * time.
+     */
+    private static final ThreadLocal<JobInfo> scheduleJobInfo = new ThreadLocal<JobInfo>();
+
+    /**
      * Entry hook for {@link JobScheduler#schedule(JobInfo)}.
      *
      * @param jobScheduler the wrapped JobSchedulerImpl instance, i.e. "this".
      * @param job the job parameter passed to the original method.
      */
     public static void onScheduleJobEntry(Object jobScheduler, JobInfo job) {
-        StudioLog.v("Scheduling job: " + String.valueOf(job));
+        scheduleJobInfo.set(job);
     }
 
     /**
@@ -47,9 +55,29 @@ public final class JobWrapper {
      * @return the same wrapped return value.
      */
     public static int onScheduleJobExit(int scheduleResult) {
-        StudioLog.v(
-                "Job scheduled. Result: "
-                        + (scheduleResult == JobScheduler.RESULT_SUCCESS ? "success" : "failure"));
+        JobInfo jobInfo = scheduleJobInfo.get();
+        sendJobScheduled(
+                jobInfo.getId(),
+                jobInfo.getService().getClassName(),
+                jobInfo.getBackoffPolicy(),
+                jobInfo.getInitialBackoffMillis(),
+                jobInfo.isPeriodic(),
+                jobInfo.getFlexMillis(),
+                jobInfo.getIntervalMillis(),
+                jobInfo.getMinLatencyMillis(),
+                jobInfo.getMaxExecutionDelayMillis(),
+                jobInfo.getNetworkType(),
+                triggerContentUrisToStrings(jobInfo.getTriggerContentUris()),
+                jobInfo.getTriggerContentMaxDelay(),
+                jobInfo.getTriggerContentUpdateDelay(),
+                jobInfo.isPersisted(),
+                jobInfo.isRequireBatteryNotLow(),
+                jobInfo.isRequireCharging(),
+                jobInfo.isRequireDeviceIdle(),
+                jobInfo.isRequireStorageNotLow(),
+                jobInfo.getExtras().toString(),
+                jobInfo.getTransientExtras().toString(),
+                scheduleResult);
         return scheduleResult;
     }
 
@@ -63,9 +91,14 @@ public final class JobWrapper {
      */
     public static void wrapOnStartJob(
             Object jobHandler, JobParameters params, boolean workOngoing) {
-        StudioLog.v(
-                String.format(
-                        "onStartJob (JobId=%d, workOngoing=%b)", params.getJobId(), workOngoing));
+        sendJobStarted(
+                params.getJobId(),
+                params.getTriggeredContentAuthorities(),
+                urisToStrings(params.getTriggeredContentUris()),
+                params.isOverrideDeadlineExpired(),
+                params.getExtras().toString(),
+                params.getTransientExtras().toString(),
+                workOngoing);
     }
 
     /**
@@ -77,9 +110,14 @@ public final class JobWrapper {
      * @param reschedule the reschedule parameter passed to the original method.
      */
     public static void wrapOnStopJob(Object jobHandler, JobParameters params, boolean reschedule) {
-        StudioLog.v(
-                String.format(
-                        "onStopJob (JobId=%d, reschedule=%b)", params.getJobId(), reschedule));
+        sendJobStopped(
+                params.getJobId(),
+                params.getTriggeredContentAuthorities(),
+                urisToStrings(params.getTriggeredContentUris()),
+                params.isOverrideDeadlineExpired(),
+                params.getExtras().toString(),
+                params.getTransientExtras().toString(),
+                reschedule);
     }
 
     /**
@@ -91,9 +129,86 @@ public final class JobWrapper {
      */
     public static void wrapJobFinished(
             JobService jobService, JobParameters params, boolean wantsReschedule) {
-        StudioLog.v(
-                String.format(
-                        "jobFinished (JobId=%d, wantsReschedule=%b)",
-                        params.getJobId(), wantsReschedule));
+        sendJobFinished(
+                params.getJobId(),
+                params.getTriggeredContentAuthorities(),
+                urisToStrings(params.getTriggeredContentUris()),
+                params.isOverrideDeadlineExpired(),
+                params.getExtras().toString(),
+                params.getTransientExtras().toString(),
+                wantsReschedule);
     }
+
+    private static String[] triggerContentUrisToStrings(JobInfo.TriggerContentUri[] uris) {
+        if (uris == null) {
+            return new String[0];
+        }
+        String[] result = new String[uris.length];
+        for (int i = 0; i < uris.length; ++i) {
+            result[i] = uris[i].getUri().toString();
+        }
+        return result;
+    }
+
+    private static String[] urisToStrings(Uri[] uris) {
+        if (uris == null) {
+            return new String[0];
+        }
+        String[] result = new String[uris.length];
+        for (int i = 0; i < uris.length; ++i) {
+            result[i] = uris[i].toString();
+        }
+        return result;
+    }
+
+    // Native functions to send job events to perfd.
+    private static native void sendJobScheduled(
+            int jobId,
+            String serviceName,
+            int backoffPolicy,
+            long initialBackoffMs,
+            boolean isPeriodic,
+            long flexMs,
+            long intervalMs,
+            long minLatencyMs,
+            long maxExecutionDelayMs,
+            int networkType,
+            String[] triggerContentUris,
+            long triggerContentMaxDelay,
+            long triggerContentUpdateDelay,
+            boolean isPersisted,
+            boolean isRequireBatteryNotLow,
+            boolean isRequireCharging,
+            boolean isRequireDeviceIdle,
+            boolean isRequireStorageNotLow,
+            String extras,
+            String transientExtras,
+            int scheduleResult);
+
+    private static native void sendJobStarted(
+            int jobId,
+            String[] triggerContentAuthorities,
+            String[] triggerContentUris,
+            boolean isOverrideDeadlineExpired,
+            String extras,
+            String transientExtras,
+            boolean workOngoing);
+
+    private static native void sendJobStopped(
+            int jobId,
+            String[] triggerContentAuthorities,
+            String[] triggerContentUris,
+            boolean isOverrideDeadlineExpired,
+            String extras,
+            String transientExtras,
+            boolean reschedule);
+
+    private static native void sendJobFinished(
+            int jobId,
+            String[] triggerContentAuthorities,
+            String[] triggerContentUris,
+            boolean isOverrideDeadlineExpired,
+            String extras,
+            String transientExtras,
+            boolean needsReschedule);
 }

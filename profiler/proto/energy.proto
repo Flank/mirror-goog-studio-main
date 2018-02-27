@@ -347,10 +347,10 @@ message JobParameters {
   int32 job_id = 1;
   // For jobs with JobInfo.trigger_content_uris set, this reports which content
   // authorities have triggered the job.
-  repeated string trigger_content_authorities = 2;
+  repeated string triggered_content_authorities = 2;
   // For jobs with JobInfo.trigger_content_uris set, this reports which URIs
   // have triggered the job.
-  repeated string trigger_content_uris = 3;
+  repeated string triggered_content_uris = 3;
   // For jobs with setOverrideDeadline(long) set, this provides an easy way to
   // tell whether the job is being executed due to the deadline expiring.
   bool is_override_deadline_expired = 4;

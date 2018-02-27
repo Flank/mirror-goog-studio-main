@@ -288,11 +288,11 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
 
     // ackStopMessage is non-abstract and calls onStopJob.
     slicer::MethodInstrumenter mi_stop(dex_ir);
-    mi_start.AddTransformation<slicer::EntryHook>(
+    mi_stop.AddTransformation<slicer::EntryHook>(
         ir::MethodId("Lcom/android/tools/profiler/support/energy/JobWrapper;",
                      "wrapOnStopJob"),
         true);
-    if (!mi_start.InstrumentMethod(
+    if (!mi_stop.InstrumentMethod(
             ir::MethodId(desc.c_str(), "ackStopMessage",
                          "(Landroid/app/job/JobParameters;Z)V"))) {
       Log::E("Error instrumenting JobHandler.ackStopMessage");
@@ -348,12 +348,10 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
     BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
                   "nextId", "()J");
   }
-
   if (agent_config->energy_profiler_enabled()) {
-    BindJNIMethod(jni,
-                  "com/android/tools/profiler/support/energy/WakeLockWrapper",
-                  "sendWakeLockAcquired",
-                  "(IILjava/lang/String;JLjava/lang/String;)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/WakeLockWrapper",
+        "sendWakeLockAcquired", "(IILjava/lang/String;JLjava/lang/String;)V");
     BindJNIMethod(jni,
                   "com/android/tools/profiler/support/energy/WakeLockWrapper",
                   "sendWakeLockReleased", "(IIZLjava/lang/String;)V");
@@ -369,6 +367,22 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
         "sendListenerAlarmCancelled", "(ILjava/lang/String;)V");
+    BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
+                  "sendJobScheduled",
+                  "(ILjava/lang/String;IJZJJJJI[Ljava/lang/String;JJZZZZZ"
+                  "Ljava/lang/String;Ljava/lang/String;I)V");
+    BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
+                  "sendJobStarted",
+                  "(I[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
+                  "Ljava/lang/String;Z)V");
+    BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
+                  "sendJobStopped",
+                  "(I[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
+                  "Ljava/lang/String;Z)V");
+    BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
+                  "sendJobFinished",
+                  "(I[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
+                  "Ljava/lang/String;Z)V");
   }
 
   if (agent_config->cpu_api_tracing_enabled()) {

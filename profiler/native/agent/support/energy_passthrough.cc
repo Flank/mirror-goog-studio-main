@@ -28,6 +28,9 @@ using profiler::proto::AlarmSet;
 using profiler::proto::EmptyEnergyReply;
 using profiler::proto::EnergyEvent;
 using profiler::proto::InternalEnergyService;
+using profiler::proto::JobInfo;
+using profiler::proto::JobParameters;
+using profiler::proto::JobScheduled;
 using profiler::proto::WakeLockAcquired;
 using profiler::proto::WakeLockReleased;
 
@@ -59,6 +62,24 @@ constexpr int RTC = 0x00000001;
 constexpr int RTC_WAKEUP = 0x00000000;
 constexpr int ELAPSED_REALTIME = 0x00000003;
 constexpr int ELAPSED_REALTIME_WAKEUP = 0x00000002;
+
+// In order to parse JobScheduler constants we fork constant values from
+// https://developer.android.com/reference/android/app/job/JobScheduler.html
+
+// Job schedule result
+constexpr int RESULT_FAILURE = 0x00000000;
+constexpr int RESULT_SUCCESS = 0x00000001;
+
+// Job backoff policy
+constexpr int BACKOFF_POLICY_LINEAR = 0x00000000;
+constexpr int BACKOFF_POLICY_EXPONENTIAL = 0x00000001;
+
+// Job network type
+constexpr int NETWORK_TYPE_NONE = 0x00000000;
+constexpr int NETWORK_TYPE_ANY = 0x00000001;
+constexpr int NETWORK_TYPE_UNMETERED = 0x00000002;
+constexpr int NETWORK_TYPE_NOT_ROAMING = 0x00000003;
+constexpr int NETWORK_TYPE_METERED = 0x00000004;
 
 const SteadyClock& GetClock() {
   static SteadyClock clock;
@@ -97,6 +118,35 @@ AlarmSet::Type ParseAlarmType(jint type) {
     default:
       return AlarmSet::UNDEFINED_ALARM_TYPE;
   }
+}
+
+void PopulateJobParams(JNIEnv* env, JobParameters* params, jint job_id,
+                       jobjectArray triggered_content_authorities,
+                       jobjectArray triggered_content_uris,
+                       jboolean is_override_deadline_expired, jstring extras,
+                       jstring transient_extras) {
+  JStringWrapper extras_str(env, extras);
+  JStringWrapper transient_extras_str(env, transient_extras);
+  params->set_job_id(job_id);
+  jsize len = env->GetArrayLength(triggered_content_authorities);
+  for (jsize i = 0; i < len; ++i) {
+    jstring authority =
+        (jstring)env->GetObjectArrayElement(triggered_content_authorities, i);
+    JStringWrapper authority_str(env, authority);
+    params->add_triggered_content_authorities(authority_str.get());
+    env->DeleteLocalRef(authority);
+  }
+  len = env->GetArrayLength(triggered_content_uris);
+  for (jsize i = 0; i < len; ++i) {
+    jstring uri =
+        (jstring)env->GetObjectArrayElement(triggered_content_uris, i);
+    JStringWrapper uri_str(env, uri);
+    params->add_triggered_content_uris(uri_str.get());
+    env->DeleteLocalRef(uri);
+  }
+  params->set_is_override_deadline_expired(is_override_deadline_expired);
+  params->set_extras(extras_str.get());
+  params->set_transient_extras(transient_extras_str.get());
 }
 }  // namespace
 
@@ -223,6 +273,155 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerA
   energy_event.set_event_id(event_id);
   energy_event.mutable_alarm_cancelled()->mutable_listener()->set_tag(
       listener_tag_str.get());
+  SubmitEnergyEvent(energy_event);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobScheduled(
+    JNIEnv* env, jclass clazz, jint job_id, jstring service_name,
+    jint backoff_policy, jlong initial_backoff_ms, jboolean is_periodic,
+    jlong flex_ms, jlong interval_ms, jlong min_latency_ms,
+    jlong max_execution_delay_ms, jint network_type,
+    jobjectArray trigger_content_uris, jlong trigger_content_max_delay,
+    jlong trigger_content_update_delay, jboolean is_persisted,
+    jboolean is_require_battery_not_low, jboolean is_require_charging,
+    jboolean is_require_device_idle, jboolean is_require_storage_not_low,
+    jstring extras, jstring transient_extras, jint schedule_result) {
+  JStringWrapper service_name_str(env, service_name);
+  JStringWrapper extras_str(env, extras);
+  JStringWrapper transient_extras_str(env, transient_extras);
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(job_id);
+
+  auto job = energy_event.mutable_job_scheduled()->mutable_job();
+  job->set_job_id(job_id);
+  job->set_service_name(service_name_str.get());
+  job->set_initial_backoff_ms(initial_backoff_ms);
+  job->set_is_periodic(is_periodic);
+  job->set_flex_ms(flex_ms);
+  job->set_interval_ms(interval_ms);
+  job->set_min_latency_ms(min_latency_ms);
+  job->set_max_execution_delay_ms(max_execution_delay_ms);
+  job->set_trigger_content_max_delay(trigger_content_max_delay);
+  job->set_trigger_content_update_delay(trigger_content_update_delay);
+  job->set_is_persisted(is_persisted);
+  job->set_is_require_battery_not_low(is_require_battery_not_low);
+  job->set_is_require_charging(is_require_charging);
+  job->set_is_require_device_idle(is_require_device_idle);
+  job->set_is_require_storage_not_low(is_require_storage_not_low);
+  job->set_extras(extras_str.get());
+  job->set_transient_extras(transient_extras_str.get());
+
+  JobInfo::BackoffPolicy backoff_policy_enum;
+  switch (backoff_policy) {
+    case BACKOFF_POLICY_LINEAR:
+      backoff_policy_enum = JobInfo::BACKOFF_POLICY_LINEAR;
+      break;
+    case BACKOFF_POLICY_EXPONENTIAL:
+      backoff_policy_enum = JobInfo::BACKOFF_POLICY_EXPONENTIAL;
+      break;
+    default:
+      backoff_policy_enum = JobInfo::UNDEFINED_BACKOFF_POLICY;
+      break;
+  }
+  job->set_backoff_policy(backoff_policy_enum);
+
+  JobInfo::NetworkType network_type_enum;
+  switch (network_type) {
+    case NETWORK_TYPE_NONE:
+      network_type_enum = JobInfo::NETWORK_TYPE_NONE;
+      break;
+    case NETWORK_TYPE_ANY:
+      network_type_enum = JobInfo::NETWORK_TYPE_ANY;
+      break;
+    case NETWORK_TYPE_UNMETERED:
+      network_type_enum = JobInfo::NETWORK_TYPE_UNMETERED;
+      break;
+    case NETWORK_TYPE_NOT_ROAMING:
+      network_type_enum = JobInfo::NETWORK_TYPE_NOT_ROAMING;
+      break;
+    case NETWORK_TYPE_METERED:
+      network_type_enum = JobInfo::NETWORK_TYPE_METERED;
+      break;
+    default:
+      network_type_enum = JobInfo::UNDEFINED_NETWORK_TYPE;
+      break;
+  }
+  job->set_network_type(network_type_enum);
+
+  jsize len = env->GetArrayLength(trigger_content_uris);
+  for (jsize i = 0; i < len; ++i) {
+    jstring uri = (jstring)env->GetObjectArrayElement(trigger_content_uris, i);
+    JStringWrapper uri_str(env, uri);
+    job->add_trigger_content_uris(uri_str.get());
+    env->DeleteLocalRef(uri);
+  }
+
+  JobScheduled::Result result;
+  switch (schedule_result) {
+    case RESULT_FAILURE:
+      result = JobScheduled::RESULT_FAILURE;
+      break;
+    case RESULT_SUCCESS:
+      result = JobScheduled::RESULT_SUCCESS;
+      break;
+    default:
+      result = JobScheduled::UNDEFINED_JOB_SCHEDULE_RESULT;
+      break;
+  }
+  energy_event.mutable_job_scheduled()->set_result(result);
+  SubmitEnergyEvent(energy_event);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobStarted(
+    JNIEnv* env, jclass clazz, jint job_id,
+    jobjectArray triggered_content_authorities,
+    jobjectArray triggered_content_uris, jboolean is_override_deadline_expired,
+    jstring extras, jstring transient_extras, jboolean work_ongoing) {
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(job_id);
+  auto params = energy_event.mutable_job_started()->mutable_params();
+  PopulateJobParams(env, params, job_id, triggered_content_authorities,
+                    triggered_content_uris, is_override_deadline_expired,
+                    extras, transient_extras);
+  energy_event.mutable_job_started()->set_work_ongoing(work_ongoing);
+  SubmitEnergyEvent(energy_event);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobStopped(
+    JNIEnv* env, jclass clazz, jint job_id,
+    jobjectArray triggered_content_authorities,
+    jobjectArray triggered_content_uris, jboolean is_override_deadline_expired,
+    jstring extras, jstring transient_extras, jboolean reschedule) {
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(job_id);
+  auto params = energy_event.mutable_job_stopped()->mutable_params();
+  PopulateJobParams(env, params, job_id, triggered_content_authorities,
+                    triggered_content_uris, is_override_deadline_expired,
+                    extras, transient_extras);
+  energy_event.mutable_job_stopped()->set_reschedule(reschedule);
+  SubmitEnergyEvent(energy_event);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobFinished(
+    JNIEnv* env, jclass clazz, jint job_id,
+    jobjectArray triggered_content_authorities,
+    jobjectArray triggered_content_uris, jboolean is_override_deadline_expired,
+    jstring extras, jstring transient_extras, jboolean needs_reschedule) {
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(job_id);
+  auto params = energy_event.mutable_job_finished()->mutable_params();
+  PopulateJobParams(env, params, job_id, triggered_content_authorities,
+                    triggered_content_uris, is_override_deadline_expired,
+                    extras, transient_extras);
+  energy_event.mutable_job_finished()->set_needs_reschedule(needs_reschedule);
   SubmitEnergyEvent(energy_event);
 }
 };

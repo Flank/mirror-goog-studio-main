@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,14 @@
  * limitations under the License.
  */
 
-package android.os;
+package android.app;
 
-public class Bundle {
-    private final String mStr;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
 
-    public Bundle() {
-        this("");
-    }
-
-    public Bundle(String str) {
-        mStr = str;
-    }
-
+public class JobSchedulerImpl extends JobScheduler {
     @Override
-    public String toString() {
-        return mStr;
+    public int schedule(JobInfo job) {
+        return 1;
     }
 }

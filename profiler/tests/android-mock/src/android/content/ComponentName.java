@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-package android.os;
+package android.content;
 
-public class Bundle {
-    private final String mStr;
+public class ComponentName {
+    private final String mClassName;
 
-    public Bundle() {
-        this("");
+    public ComponentName(String className) {
+        mClassName = className;
     }
 
-    public Bundle(String str) {
-        mStr = str;
-    }
-
-    @Override
-    public String toString() {
-        return mStr;
+    public String getClassName() {
+        return mClassName;
     }
 }
