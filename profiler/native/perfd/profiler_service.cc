@@ -269,6 +269,10 @@ Status ProfilerServiceImpl::TryAttachAppAgent(
 Status ProfilerServiceImpl::ConfigureStartupAgent(
     ServerContext* context, const profiler::proto::ConfigureStartupAgentRequest* request,
     profiler::proto::ConfigureStartupAgentResponse* response) {
+  if (profiler::DeviceInfo::feature_level() < Device::O) {
+    return Status(StatusCode::UNIMPLEMENTED,
+                  "JVMTI agent cannot be attached on Nougat or older devices");
+  }
   string package_name = request->app_package_name();
   string agent_lib_file_name = request->agent_lib_file_name();
 
