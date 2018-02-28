@@ -29,8 +29,6 @@ import com.android.testutils.TestUtils
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.MoreTruth.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
-import com.android.utils.FileUtils
-import com.google.common.base.Throwables
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
@@ -39,12 +37,9 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.rules.TestName
 import java.io.File
-import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
 import kotlin.test.assertFailsWith
 
 /** Tests for [Aapt2DaemonImpl], including error conditions */
@@ -204,23 +199,6 @@ class Aapt2DaemonImplTest {
     }
 
     @Test
-    fun testInvalidAaptBinary() {
-        val compiledDir = temporaryFolder.newFolder()
-        val daemon = createDaemon(
-                executable = temporaryFolder.newFolder("invalidBuildTools").toPath().resolve("aapt2"),
-                daemonTimeouts = Aapt2DaemonTimeouts())
-        val exception = assertFailsWith(Aapt2InternalException::class) {
-            daemon.compile(
-                    CompileResourceRequest(
-                            inputFile = File("values/does_not_matter.xml"),
-                            outputDirectory = compiledDir),
-                    logger)
-        }
-        assertThat(exception.message).contains("Daemon startup failed")
-        assertThat(exception.cause).isInstanceOf(IOException::class.java)
-    }
-
-    @Test
     fun pngWithLongPathCrunchingTest() {
         val daemon = createDaemon()
 
@@ -287,50 +265,6 @@ class Aapt2DaemonImplTest {
                 logger)
         val withCrunchDisabled = Files.readAllBytes(outFile)
         assertThat(withCrunchDisabled).isEqualTo(withCrunchEnabled)
-    }
-
-    @Test
-    fun testNeverReady() {
-        val args = listOf<String>(
-                FileUtils.join(System.getProperty("java.home"), "bin", "java"),
-                "-cp",
-                System.getProperty("java.class.path"),
-                NeverReadyAapt2Daemon::class.java.name)
-
-        val daemon = Aapt2DaemonImpl(
-                displayId = "'Aapt2DaemonImplTest.${testName.methodName}'",
-                aaptPath = "fake_path",
-                aaptCommand = args,
-                versionString = "fake_version",
-                daemonTimeouts = Aapt2DaemonTimeouts(
-                        start = 2, startUnit = TimeUnit.MILLISECONDS,
-                        stop = 3000, stopUnit = TimeUnit.NANOSECONDS),
-                logger = logger)
-        this.daemon = daemon
-
-        val compiledDir = temporaryFolder.newFolder()
-        val exception = assertFailsWith(Aapt2InternalException::class) {
-            daemon.compile(
-                    CompileResourceRequest(
-                            inputFile = File("values/does_not_matter.xml"),
-                            outputDirectory = compiledDir),
-                    logger)
-        }
-
-        assertThat(exception.javaClass).isEqualTo(Aapt2InternalException::class.java)
-        assertThat(exception.cause).isNotNull()
-        // The inner startup failure
-        assertThat(exception.cause!!.javaClass).isEqualTo(Aapt2InternalException::class.java)
-        // The original cause was a timeout waiting for ready.
-        assertThat(Throwables.getRootCause(exception).javaClass).isEqualTo(TimeoutException::class.java)
-
-        // The shutdown failure should be a suppressed exception on the inner startup failure,
-        // which is also a timeout.
-        assertThat(exception.cause!!.suppressed).hasLength(1)
-        exception.cause!!.suppressed[0].let {
-            assertThat(it.javaClass).isEqualTo(TimeoutException::class.java)
-            assertThat(it.cause).isNull()
-        }
     }
 
     @After
