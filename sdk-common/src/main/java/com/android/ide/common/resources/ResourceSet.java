@@ -66,7 +66,6 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     private boolean mDontNormalizeQualifiers;
     private boolean mTrackSourcePositions = true;
     private boolean mCheckDuplicates = true;
-    private boolean mAllowUnspecifiedAttrFormat;
 
     public ResourceSet(
             String name,
@@ -112,14 +111,6 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
      */
     public void setCheckDuplicates(boolean value) {
         mCheckDuplicates = value;
-    }
-
-    /**
-     * Tells the resource set whether to allow "attr" items without a "format" attribute or
-     * children.
-     */
-    public void setAllowUnspecifiedAttrFormat(boolean value) {
-        mAllowUnspecifiedAttrFormat = value;
     }
 
     @Override
@@ -212,13 +203,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                         // Need to also create ATTR items for its children
                         try {
                             ValueResourceParser2.addStyleableItems(
-                                    resNode,
-                                    resourceList,
-                                    null,
-                                    file,
-                                    mNamespace,
-                                    mLibraryName,
-                                    false);
+                                    resNode, resourceList, null, file, mNamespace, mLibraryName);
                         } catch (MergingException ignored) {
                             // since we are not passing a dup map, this will never be thrown
                             assert false : file + ": " + ignored.getMessage();
@@ -371,7 +356,6 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                         new ValueResourceParser2(changedFile, mNamespace, mLibraryName);
                 parser.setTrackSourcePositions(mTrackSourcePositions);
                 parser.setCheckDuplicates(mCheckDuplicates);
-                parser.setAllowUnspecifiedAttrFormat(mAllowUnspecifiedAttrFormat);
 
                 List<ResourceItem> parsedItems = parser.parseFile();
                 handleChangedItems(resourceFile, parsedItems);
@@ -523,7 +507,6 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                         new ValueResourceParser2(file, mNamespace, mLibraryName);
                 parser.setTrackSourcePositions(mTrackSourcePositions);
                 parser.setCheckDuplicates(mCheckDuplicates);
-                parser.setAllowUnspecifiedAttrFormat(mAllowUnspecifiedAttrFormat);
                 List<ResourceItem> items = parser.parseFile();
 
                 return new ResourceFile(file, items, folderData.qualifiers, folderData.folderConfiguration);

@@ -16,21 +16,7 @@
 
 package com.android.ide.common.resources;
 
-import static com.android.SdkConstants.ANDROID_NEW_ID_PREFIX;
-import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
-import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN;
-import static com.android.SdkConstants.ANDROID_PREFIX;
-import static com.android.SdkConstants.ATTR_ID;
-import static com.android.SdkConstants.ATTR_INDEX;
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_PARENT;
-import static com.android.SdkConstants.ATTR_QUANTITY;
-import static com.android.SdkConstants.ATTR_TYPE;
-import static com.android.SdkConstants.ATTR_VALUE;
-import static com.android.SdkConstants.NEW_ID_PREFIX;
-import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
-import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.SdkConstants.TOOLS_URI;
+import static com.android.SdkConstants.*;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
