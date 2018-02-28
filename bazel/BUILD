@@ -103,6 +103,7 @@ java_binary(
     name = "iml_to_build",
     srcs = ["src/com/android/tools/binaries/ImlToBazel.java"],
     main_class = "com.android.tools.binaries.ImlToBazel",
+    tags = ["no_test_foundry"],
     visibility = ["//visibility:public"],
     deps = [
         ":bazel_generator",
