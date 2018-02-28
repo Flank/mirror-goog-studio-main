@@ -96,7 +96,7 @@ interface VariantType {
     val canHaveSplits: Boolean
 
     val consumeType: String
-    val publishType: String
+    val publishType: String?
 
     val name: String
 
@@ -142,7 +142,7 @@ enum class VariantTypeImpl(
     override val analyticsVariantType: GradleBuildVariant.VariantType,
     override val canHaveSplits: Boolean,
     private val consumeTypeOptional: String?,
-    private val publishTypeOptional: String?
+    override val publishType: String?
 
 ): VariantType {
     BASE_APK(
@@ -161,7 +161,7 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.APPLICATION,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_AAR,
-        publishTypeOptional = ATTR_APK
+        publishType = ATTR_APK
     ),
     OPTIONAL_APK(
         isAar = false,
@@ -179,7 +179,7 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.APPLICATION,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_APK,
-        publishTypeOptional = ATTR_APK),
+        publishType = ATTR_APK),
     BASE_FEATURE(
         isAar = false,
         isApk = true,
@@ -196,7 +196,7 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.FEATURE,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_AAR,
-        publishTypeOptional = ATTR_FEATURE
+        publishType = ATTR_FEATURE
     ),
     FEATURE(
         isAar = false,
@@ -214,7 +214,7 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.FEATURE,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_FEATURE,
-        publishTypeOptional = ATTR_FEATURE
+        publishType = ATTR_FEATURE
     ),
     LIBRARY(
         isAar = true,
@@ -232,7 +232,7 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.LIBRARY,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_AAR,
-        publishTypeOptional = ATTR_AAR),
+        publishType = ATTR_AAR),
     INSTANTAPP(
         isAar = false,
         isApk = false,
@@ -249,7 +249,7 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.INSTANTAPP,
         canHaveSplits = false,
         consumeTypeOptional = ATTR_FEATURE,
-        publishTypeOptional = ATTR_FEATURE
+        publishType = null
     ),
     TEST_APK(
         isAar = false,
@@ -267,7 +267,7 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.APPLICATION,
         canHaveSplits = false,
         consumeTypeOptional = ATTR_APK,
-        publishTypeOptional = ATTR_APK),
+        publishType = null),
     ANDROID_TEST(
         isAar = false,
         isApk = true,
@@ -284,7 +284,7 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.ANDROID_TEST,
         canHaveSplits = false,
         consumeTypeOptional = null,
-        publishTypeOptional = null),
+        publishType = null),
     UNIT_TEST(
         isAar = false,
         isApk = false,
@@ -301,13 +301,11 @@ enum class VariantTypeImpl(
         analyticsVariantType = GradleBuildVariant.VariantType.UNIT_TEST,
         canHaveSplits = false,
         consumeTypeOptional = null,
-        publishTypeOptional = null);
+        publishType = null);
 
     override val isTestComponent: Boolean
         get() = isForTesting && this != TEST_APK
 
     override val consumeType: String
         get() = consumeTypeOptional ?: throw RuntimeException("Unsupported consumeType for VariantType: ${this.name}")
-    override val publishType: String
-        get() = publishTypeOptional ?: throw RuntimeException("Unsupported publishType for VariantType: ${this.name}")
 }

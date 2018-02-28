@@ -491,6 +491,10 @@ public class VariantManager implements VariantModel {
             // now add the default config
             testVariantSourceSets.add(defaultConfigData.getTestSourceSet(variantType));
 
+            final AndroidTypeAttr consumeAndroidTypeAttr =
+                    instantiateAndroidTypeAttr(
+                            testedVariantData.getVariantConfiguration().getType().getConsumeType());
+
             // If the variant being tested is a library variant, VariantDependencies must be
             // computed after the tasks for the tested variant is created.  Therefore, the
             // VariantDependencies is computed here instead of when the VariantData was created.
@@ -499,9 +503,7 @@ public class VariantManager implements VariantModel {
                                     project,
                                     variantScope.getGlobalScope().getErrorHandler(),
                                     variantConfig)
-                            .setConsumeType(
-                                    getConsumeType(
-                                            testedVariantData.getVariantConfiguration().getType()))
+                            .setConsumeType(consumeAndroidTypeAttr)
                             .addSourceSets(testVariantSourceSets)
                             .setFlavorSelection(getFlavorSelection(variantConfig))
                             .setTestedVariantDependencies(testedVariantData.getVariantDependency());
@@ -592,13 +594,8 @@ public class VariantManager implements VariantModel {
     }
 
     @NonNull
-    private AndroidTypeAttr getConsumeType(@NonNull VariantType type) {
-        return project.getObjects().named(AndroidTypeAttr.class, type.getConsumeType());
-    }
-
-    @NonNull
-    private AndroidTypeAttr getPublishingType(@NonNull VariantType type) {
-        return project.getObjects().named(AndroidTypeAttr.class, type.getPublishType());
+    AndroidTypeAttr instantiateAndroidTypeAttr(@NonNull String androidTypeAttrString) {
+        return project.getObjects().named(AndroidTypeAttr.class, androidTypeAttrString);
     }
 
     public void configureDependencies() {
@@ -946,12 +943,14 @@ public class VariantManager implements VariantModel {
                                 project,
                                 variantData.getScope().getGlobalScope().getErrorHandler(),
                                 variantConfig)
-                        .setConsumeType(
-                                getConsumeType(variantData.getVariantConfiguration().getType()))
-                        .setPublishType(
-                                getPublishingType(variantData.getVariantConfiguration().getType()))
+                        .setConsumeType(instantiateAndroidTypeAttr(variantType.getConsumeType()))
                         .setFlavorSelection(getFlavorSelection(variantConfig))
                         .addSourceSets(variantSourceSets);
+
+        final String publishType = variantType.getPublishType();
+        if (publishType != null) {
+            builder.setPublishType(instantiateAndroidTypeAttr(publishType));
+        }
 
         final VariantDependencies variantDep = builder.build();
         variantData.setVariantDependency(variantDep);

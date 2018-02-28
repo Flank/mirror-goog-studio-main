@@ -288,7 +288,6 @@ class PublishingSpecs {
                     ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
             }
 
-
             // empty specs
             variantSpec(VariantTypeImpl.TEST_APK)
             variantSpec(VariantTypeImpl.ANDROID_TEST)
