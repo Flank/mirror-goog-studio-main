@@ -287,6 +287,7 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
     // App is being profiled. Include the start profiling request and its
     // timestamp in the response.
     response->set_start_timestamp(app->start_timestamp);
+    response->set_is_startup_profiling(app->is_startup_profiling);
     *(response->mutable_configuration()) = app->configuration;
   }
 

@@ -259,6 +259,8 @@ message ProfilingStateResponse {
   int64 start_timestamp = 3;
   // The timestamp when the profiling state was checked.
   int64 check_timestamp = 4;
+  // Whether the app in the request is being profiled by a startup profiling.
+  bool is_startup_profiling = 5;
 }
 
 // CPU usage data of an app process and the entire system at a given point.
