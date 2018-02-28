@@ -21,7 +21,10 @@
 #include <mutex>
 #include <vector>
 
+#include "utils/process_manager.h"
+
 using profiler::proto::CpuUsageData;
+using std::string;
 using std::vector;
 
 namespace profiler {
@@ -98,6 +101,41 @@ CpuCache::ThreadSampleResponse CpuCache::GetThreads(int32_t pid, int64_t from,
   }
 
   return response;
+}
+
+void CpuCache::AddProfilingStart(int32_t pid, const ProfilingApp& record) {
+  profiling_apps_[pid] = record;
+}
+
+void CpuCache::AddProfilingStop(int32_t pid) { profiling_apps_.erase(pid); }
+
+void CpuCache::AddStartupProfilingStart(const string& apk_pkg_name,
+                                        const ProfilingApp& record) {
+  startup_profiling_apps_[apk_pkg_name] = record;
+}
+
+void CpuCache::AddStartupProfilingStop(const string& apk_pkg_name) {
+  startup_profiling_apps_.erase(apk_pkg_name);
+}
+
+// Looks from |profiling_apps_|, if not found then from
+// |startup_profiling_apps_|, otherwise returns null.
+ProfilingApp* CpuCache::GetProfilingApp(int32_t pid) {
+  const auto& app_iterator = profiling_apps_.find(pid);
+  if (app_iterator != profiling_apps_.end()) {
+    return &app_iterator->second;
+  }
+  // Try to find in |startup_profiling_apps_|
+  string app_pkg_name = ProcessManager::GetCmdlineForPid(pid);
+  if (app_pkg_name.empty()) {
+    return nullptr;
+  }
+  const auto& startup_app_iterator = startup_profiling_apps_.find(app_pkg_name);
+  if (startup_app_iterator != startup_profiling_apps_.end()) {
+    return &startup_app_iterator->second;
+  }
+
+  return nullptr;
 }
 
 CpuCache::AppCpuCache* CpuCache::FindAppCache(int32_t pid) {
