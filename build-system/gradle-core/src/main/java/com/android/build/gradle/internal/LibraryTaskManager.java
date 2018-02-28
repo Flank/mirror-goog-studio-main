@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_JNI;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
-import static com.android.SdkConstants.FN_INTERMEDIATE_FULL_JAR;
 import static com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
@@ -60,6 +59,7 @@ import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
@@ -354,29 +354,27 @@ public class LibraryTaskManager extends TaskManager {
 
                         intermediateTransformTask.ifPresent(
                                 t -> {
-                                    // publish the intermediate classes.jar.
-                                    variantScope.addTaskOutput(
-                                            InternalArtifactType.LIBRARY_CLASSES,
-                                            mainClassJar,
-                                            t.getName());
+                                    // publish the intermediate classes.jar
+                                    variantScope
+                                            .getBuildArtifactsHolder()
+                                            .appendArtifact(
+                                                    InternalArtifactType.LIBRARY_CLASSES,
+                                                    ImmutableList.of(mainClassJar),
+                                                    t);
                                     // publish the res jar
-                                    variantScope.addTaskOutput(
-                                            InternalArtifactType.LIBRARY_JAVA_RES,
-                                            mainResJar,
-                                            t.getName());
+                                    variantScope
+                                            .getBuildArtifactsHolder()
+                                            .appendArtifact(
+                                                    InternalArtifactType.LIBRARY_JAVA_RES,
+                                                    ImmutableList.of(mainResJar),
+                                                    t);
                                 });
 
                         // Create a jar with both classes and java resources.  This artifact is not
                         // used by the Android application plugin and the task usually don't need to
                         // be executed.  The artifact is useful for other Gradle users who needs the
                         // 'jar' artifact as API dependency.
-                        File mainFullJar = new File(jarOutputFolder, FN_INTERMEDIATE_FULL_JAR);
-                        ZipMergingTask zipMerger =
-                                taskFactory.create(
-                                        new ZipMergingTask.ConfigAction(variantScope, mainFullJar));
-
-                        variantScope.addTaskOutput(
-                                InternalArtifactType.FULL_JAR, mainFullJar, zipMerger.getName());
+                        taskFactory.create(new ZipMergingTask.ConfigAction(variantScope));
 
                         // now add a transform that will take all the native libs and package
                         // them into an intermediary folder. This processes only the PROJECT

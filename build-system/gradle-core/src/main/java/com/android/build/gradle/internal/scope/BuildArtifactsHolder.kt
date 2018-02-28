@@ -80,14 +80,13 @@ class BuildArtifactsHolder(
 
         fun final() : BuildableArtifact {
             return object : BuildableArtifact {
-                override fun get(): FileCollection = last.get()
-
                 override val files: Set<File>
                     get() = last.files
 
                 override fun isEmpty(): Boolean = last.isEmpty()
                 override fun iterator(): Iterator<File> = last.iterator()
                 override fun getBuildDependencies(): TaskDependency = last.buildDependencies
+                override fun get(): FileCollection = last.get()
             }
         }
     }
@@ -124,6 +123,27 @@ class BuildArtifactsHolder(
      */
     fun getFinalArtifactFiles(artifactType: ArtifactType) : BuildableArtifact {
         return getArtifactRecord(artifactType).final()
+    }
+
+    /**
+     * Returns the final [BuildableArtifact] associated with the artifactType or an empty
+     * BuildableArtifact if no [BuildableArtifact] has been registered for this artifact type.
+     *
+     * Irrespective of the timing of this method call, it will always return the final version of
+     * the [BuildableArtifact] for the passed artifact type or an empty one.
+     *
+     * This should not be used to transform further the artifact type.
+     *
+     * @param artifactType the requested [BuildableArtifact] artifact type.
+     * @return the possibly empty final [BuildableArtifact] for this artifact type.
+     */
+
+    fun getOptionalFinalArtifactFiles(artifactType: ArtifactType): BuildableArtifact {
+        return if (hasArtifact(artifactType)) {
+            getFinalArtifactFiles(artifactType)
+        } else {
+            BuildableArtifactImpl(project.files(), dslScope)
+        }
     }
 
     /**

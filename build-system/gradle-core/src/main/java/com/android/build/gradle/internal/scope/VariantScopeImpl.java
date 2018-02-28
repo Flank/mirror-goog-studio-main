@@ -318,6 +318,19 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return fileCollection;
     }
 
+    /**
+     * Temporary override to handle artifacts still published in the old TaskOutputHolder and those
+     * published in the new BuildableArtifactHolder.
+     */
+    @Override
+    public boolean hasOutput(@NonNull com.android.build.api.artifact.ArtifactType outputType) {
+        return super.hasOutput(outputType) || buildArtifactsHolder.hasArtifact(outputType);
+    }
+
+    /**
+     * Temporary override to handle artifacts still published in the old TaskOutputHolder and those
+     * published in the new BuildableArtifactHolder.
+     */
     @NonNull
     @Override
     public FileCollection getOutput(@NonNull com.android.build.api.artifact.ArtifactType outputType)
@@ -325,6 +338,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         try {
             return super.getOutput(outputType);
         } catch (MissingTaskOutputException e) {
+            if (getBuildArtifactsHolder().hasArtifact(outputType)) {
+                return getBuildArtifactsHolder().getFinalArtifactFiles(outputType).get();
+            }
             throw new RuntimeException(
                     String.format(
                             "Variant '%1$s' in project '%2$s' has no output with type '%3$s'",
@@ -351,7 +367,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // Create Provider so that the BuildableArtifact is not resolved until needed.
         Provider<File> provider =
                 getProject().provider(() -> Iterables.getOnlyElement(artifact.getFiles()));
-        publishIntermediateArtifact((Object) provider, artifact, artifactType, configTypes);
+        publishIntermediateArtifact(provider, artifact, artifactType, configTypes);
     }
 
     /**
