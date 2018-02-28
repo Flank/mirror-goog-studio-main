@@ -76,6 +76,7 @@ public class AlarmTest {
         EnergyEvent energyEvent = response.getEvents(0);
         assertThat(energyEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
+        assertThat(energyEvent.getEventId()).isGreaterThan(0);
         assertThat(energyEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
         assertThat(energyEvent.getAlarmSet().getType()).isEqualTo(Type.RTC);
         assertThat(energyEvent.getAlarmSet().getTriggerMs()).isEqualTo(1000);
@@ -101,6 +102,7 @@ public class AlarmTest {
         EnergyEvent energyEvent = response.getEvents(0);
         assertThat(energyEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
+        assertThat(energyEvent.getEventId()).isGreaterThan(0);
         assertThat(energyEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
         assertThat(energyEvent.getAlarmSet().getType()).isEqualTo(Type.RTC_WAKEUP);
         assertThat(energyEvent.getAlarmSet().getTriggerMs()).isEqualTo(2000);
@@ -118,18 +120,29 @@ public class AlarmTest {
         EnergyEventsResponse response =
                 TestUtils.waitForAndReturn(
                         () -> myStubWrapper.getAllEnergyEvents(mySession),
-                        resp -> resp.getEventsCount() == 1);
-        assertThat(response.getEventsCount()).isEqualTo(1);
+                        resp -> resp.getEventsCount() == 2);
+        assertThat(response.getEventsCount()).isEqualTo(2);
+        List<EnergyEvent> sortedEnergyEvents =
+                response.getEventsList()
+                        .stream()
+                        .sorted((o1, o2) -> o1.getMetadataCase().compareTo(o2.getMetadataCase()))
+                        .collect(Collectors.toList());
 
-        EnergyEvent energyEvent = response.getEvents(0);
-        assertThat(energyEvent.getTimestamp()).isGreaterThan(0L);
-        assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
-        assertThat(energyEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_CANCELLED);
-        assertThat(energyEvent.getAlarmCancelled().getCancelActionCase())
+        EnergyEvent setEvent = sortedEnergyEvents.get(0);
+        assertThat(setEvent.getEventId()).isGreaterThan(0);
+        assertThat(setEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
+        assertThat(setEvent.getAlarmSet().getSetActionCase()).isEqualTo(SetActionCase.OPERATION);
+
+        EnergyEvent cancelEvent = response.getEvents(1);
+        assertThat(cancelEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(cancelEvent.getPid()).isEqualTo(mySession.getPid());
+        assertThat(cancelEvent.getEventId()).isEqualTo(setEvent.getEventId());
+        assertThat(cancelEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_CANCELLED);
+        assertThat(cancelEvent.getAlarmCancelled().getCancelActionCase())
                 .isEqualTo(CancelActionCase.OPERATION);
-        assertThat(energyEvent.getAlarmCancelled().getOperation().getCreatorPackage())
+        assertThat(cancelEvent.getAlarmCancelled().getOperation().getCreatorPackage())
                 .isEqualTo("foo.bar");
-        assertThat(energyEvent.getAlarmCancelled().getOperation().getCreatorUid()).isEqualTo(2);
+        assertThat(cancelEvent.getAlarmCancelled().getOperation().getCreatorUid()).isEqualTo(2);
     }
 
     @Test
@@ -149,11 +162,13 @@ public class AlarmTest {
                         .collect(Collectors.toList());
 
         EnergyEvent setEvent = sortedEnergyEvents.get(0);
+        assertThat(setEvent.getEventId()).isGreaterThan(0);
         assertThat(setEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
         assertThat(setEvent.getAlarmSet().getSetActionCase()).isEqualTo(SetActionCase.LISTENER);
         assertThat(setEvent.getAlarmSet().getListener().getTag()).isEqualTo("bar");
 
         EnergyEvent cancelEvent = sortedEnergyEvents.get(1);
+        assertThat(cancelEvent.getEventId()).isEqualTo(setEvent.getEventId());
         assertThat(cancelEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_CANCELLED);
         assertThat(cancelEvent.getAlarmCancelled().getCancelActionCase())
                 .isEqualTo(CancelActionCase.LISTENER);

@@ -36,6 +36,10 @@ import java.util.Map;
 public final class AlarmManagerWrapper {
     private static final Map<OnAlarmListener, String> listenerTagMap =
             new HashMap<OnAlarmListener, String>();
+    private static final Map<PendingIntent, Integer> operationIdMap =
+            new HashMap<PendingIntent, Integer>();
+    private static final Map<OnAlarmListener, Integer> listenerIdMap =
+            new HashMap<OnAlarmListener, Integer>();
 
     /**
      * Wraps the implementation method of various set alarm methods in {@link AlarmManager}.
@@ -67,7 +71,11 @@ public final class AlarmManagerWrapper {
             WorkSource workSource,
             AlarmClockInfo alarmClock) {
         if (operation != null) {
+            if (!operationIdMap.containsKey(operation)) {
+                operationIdMap.put(operation, EventIdGenerator.nextId());
+            }
             sendIntentAlarmScheduled(
+                    operationIdMap.get(operation),
                     type,
                     triggerAtMillis,
                     windowMillis,
@@ -75,8 +83,16 @@ public final class AlarmManagerWrapper {
                     operation.getCreatorPackage(),
                     operation.getCreatorUid());
         } else if (listener != null) {
+            if (!listenerIdMap.containsKey(listener)) {
+                listenerIdMap.put(listener, EventIdGenerator.nextId());
+            }
             sendListenerAlarmScheduled(
-                    type, triggerAtMillis, windowMillis, intervalMillis, listenerTag);
+                    listenerIdMap.get(listener),
+                    type,
+                    triggerAtMillis,
+                    windowMillis,
+                    intervalMillis,
+                    listenerTag);
             listenerTagMap.put(listener, listenerTag);
         } else {
             StudioLog.e("Invalid alarm: neither operation or listener is set.");
@@ -90,7 +106,10 @@ public final class AlarmManagerWrapper {
      * @param operation the operation parameter passed to the original method.
      */
     public static void wrapCancel(AlarmManager alarmManager, PendingIntent operation) {
-        sendIntentAlarmCancelled(operation.getCreatorPackage(), operation.getCreatorUid());
+        sendIntentAlarmCancelled(
+                operationIdMap.containsKey(operation) ? operationIdMap.get(operation) : 0,
+                operation.getCreatorPackage(),
+                operation.getCreatorUid());
     }
 
     /**
@@ -101,11 +120,13 @@ public final class AlarmManagerWrapper {
      */
     public static void wrapCancel(AlarmManager alarmManager, OnAlarmListener listener) {
         sendListenerAlarmCancelled(
+                listenerIdMap.containsKey(listener) ? listenerIdMap.get(listener) : 0,
                 listenerTagMap.containsKey(listener) ? listenerTagMap.get(listener) : "");
     }
 
     // Native functions to send alarm events to perfd.
     private static native void sendIntentAlarmScheduled(
+            int eventId,
             int type,
             long triggerMs,
             long windowMs,
@@ -114,9 +135,15 @@ public final class AlarmManagerWrapper {
             int creatorUid);
 
     private static native void sendListenerAlarmScheduled(
-            int type, long triggerMs, long windowMs, long intervalMs, String listenerTag);
+            int eventId,
+            int type,
+            long triggerMs,
+            long windowMs,
+            long intervalMs,
+            String listenerTag);
 
-    private static native void sendIntentAlarmCancelled(String creatorPackage, int creatorUid);
+    private static native void sendIntentAlarmCancelled(
+            int eventId, String creatorPackage, int creatorUid);
 
-    private static native void sendListenerAlarmCancelled(String listenerTag);
+    private static native void sendListenerAlarmCancelled(int eventId, String listenerTag);
 }

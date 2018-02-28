@@ -359,16 +359,16 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
                   "sendWakeLockReleased", "(IIZLjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendIntentAlarmScheduled", "(IJJJLjava/lang/String;I)V");
+        "sendIntentAlarmScheduled", "(IIJJJLjava/lang/String;I)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendListenerAlarmScheduled", "(IJJJLjava/lang/String;)V");
+        "sendListenerAlarmScheduled", "(IIJJJLjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendIntentAlarmCancelled", "(Ljava/lang/String;I)V");
+        "sendIntentAlarmCancelled", "(ILjava/lang/String;I)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendListenerAlarmCancelled", "(Ljava/lang/String;)V");
+        "sendListenerAlarmCancelled", "(ILjava/lang/String;)V");
   }
 
   if (agent_config->cpu_api_tracing_enabled()) {

@@ -38,7 +38,10 @@ public class AlarmActivity extends PerfdTestActivity {
     }
 
     public void cancelIntentAlarm() {
-        getAlarmManager().cancel(new PendingIntent("foo.bar", 2));
+        AlarmManager alarmManager = getAlarmManager();
+        PendingIntent pendingIntent = new PendingIntent("foo.bar", 2);
+        alarmManager.set(0x0, 1000, pendingIntent);
+        getAlarmManager().cancel(pendingIntent);
         System.out.println("INTENT ALARM CANCELLED");
     }
 

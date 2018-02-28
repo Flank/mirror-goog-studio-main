@@ -20,7 +20,6 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A set of helpers for Android Wake Lock instrumentation, used by the Energy profiler.
@@ -53,9 +52,6 @@ public final class WakeLockWrapper {
         }
     }
 
-    /** For generating wake lock IDs. */
-    private static final AtomicInteger atomicInteger = new AtomicInteger();
-
     /**
      * Use a thread-local variable for wake lock creation parameters, so a value can be temporarily
      * stored when we enter a wakelock's constructor and retrieved when we exit it. Using a
@@ -73,7 +69,7 @@ public final class WakeLockWrapper {
             new ThreadLocal<ReleaseParams>();
 
     /** Used by acquire and release hooks to look up the generated ID by wake lock instance. */
-    private static final Map<WakeLock, Integer> wakeLockIdMap = new HashMap<WakeLock, Integer>();
+    private static final Map<WakeLock, Integer> eventIdMap = new HashMap<WakeLock, Integer>();
 
     /** Used by acquire hooks to retrieve wake lock creation parameters. */
     private static final Map<WakeLock, CreationParams> wakeLockCreationParamsMap =
@@ -123,14 +119,13 @@ public final class WakeLockWrapper {
      * @param timeout the timeout parameter passed to the original method.
      */
     public static void wrapAcquire(WakeLock wakeLock, long timeout) {
-        if (!wakeLockIdMap.containsKey(wakeLock)) {
-            wakeLockIdMap.put(wakeLock, atomicInteger.incrementAndGet());
+        if (!eventIdMap.containsKey(wakeLock)) {
+            eventIdMap.put(wakeLock, EventIdGenerator.nextId());
         }
-        int wakeLockId = wakeLockIdMap.get(wakeLock);
         if (wakeLockCreationParamsMap.containsKey(wakeLock)) {
             CreationParams creationParams = wakeLockCreationParamsMap.get(wakeLock);
             sendWakeLockAcquired(
-                    wakeLockId,
+                    eventIdMap.get(wakeLock),
                     creationParams.myLevelAndFlags,
                     creationParams.myTag,
                     timeout,
@@ -156,9 +151,9 @@ public final class WakeLockWrapper {
      */
     public static void onReleaseExit() {
         ReleaseParams releaseParams = releaseWakeLockData.get();
-        if (wakeLockIdMap.containsKey(releaseParams.myWakeLock)) {
+        if (eventIdMap.containsKey(releaseParams.myWakeLock)) {
             sendWakeLockReleased(
-                    wakeLockIdMap.get(releaseParams.myWakeLock),
+                    eventIdMap.get(releaseParams.myWakeLock),
                     releaseParams.myFlags,
                     releaseParams.myWakeLock.isHeld(),
                     getStackTrace());
@@ -187,8 +182,8 @@ public final class WakeLockWrapper {
 
     // Native functions to send wake lock events to perfd.
     private static native void sendWakeLockAcquired(
-            int wakeLockId, int flags, String tag, long timeout, String stack);
+            int eventId, int flags, String tag, long timeout, String stack);
 
     private static native void sendWakeLockReleased(
-            int wakeLockId, int releaseFlags, boolean isHeld, String stack);
+            int eventId, int releaseFlags, boolean isHeld, String stack);
 }

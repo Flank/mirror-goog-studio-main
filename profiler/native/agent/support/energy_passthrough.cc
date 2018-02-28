@@ -103,13 +103,13 @@ AlarmSet::Type ParseAlarmType(jint type) {
 extern "C" {
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockAcquired(
-    JNIEnv* env, jclass clazz, jint wake_lock_id, jint flags, jstring tag,
+    JNIEnv* env, jclass clazz, jint event_id, jint flags, jstring tag,
     jlong timeout, jstring stack) {
   JStringWrapper tag_string(env, tag);
   JStringWrapper stack_string(env, stack);
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
-  energy_event.set_event_id(wake_lock_id);
+  energy_event.set_event_id(event_id);
   auto wake_lock_acquired = energy_event.mutable_wake_lock_acquired();
   WakeLockAcquired::Level level;
   switch (flags & WAKE_LOCK_LEVEL_MASK) {
@@ -148,11 +148,11 @@ Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockAcqui
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockReleased(
-    JNIEnv* env, jclass clazz, jint wake_lock_id, jint flags, jboolean is_held,
+    JNIEnv* env, jclass clazz, jint event_id, jint flags, jboolean is_held,
     jstring stack) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
-  energy_event.set_event_id(wake_lock_id);
+  energy_event.set_event_id(event_id);
   if ((flags & RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY) != 0) {
     energy_event.mutable_wake_lock_released()->mutable_flags()->Add(
         WakeLockReleased::RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
@@ -164,11 +164,13 @@ Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockRelea
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendIntentAlarmScheduled(
-    JNIEnv* env, jclass clazz, jint type, jlong trigger_ms, jlong window_ms,
-    jlong interval_ms, jstring creator_package, jint creator_uid) {
+    JNIEnv* env, jclass clazz, jint event_id, jint type, jlong trigger_ms,
+    jlong window_ms, jlong interval_ms, jstring creator_package,
+    jint creator_uid) {
   JStringWrapper creator_package_str(env, creator_package);
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
   auto alarm_set = energy_event.mutable_alarm_set();
   alarm_set->set_type(ParseAlarmType(type));
   alarm_set->set_trigger_ms(trigger_ms);
@@ -182,11 +184,12 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendIntentAla
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerAlarmScheduled(
-    JNIEnv* env, jclass clazz, jint type, jlong trigger_ms, jlong window_ms,
-    jlong interval_ms, jstring listener_tag) {
+    JNIEnv* env, jclass clazz, jint event_id, jint type, jlong trigger_ms,
+    jlong window_ms, jlong interval_ms, jstring listener_tag) {
   JStringWrapper listener_tag_str(env, listener_tag);
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
   auto alarm_set = energy_event.mutable_alarm_set();
   alarm_set->set_type(ParseAlarmType(type));
   alarm_set->set_trigger_ms(trigger_ms);
@@ -198,10 +201,12 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerA
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendIntentAlarmCancelled(
-    JNIEnv* env, jclass clazz, jstring creator_package, jint creator_uid) {
+    JNIEnv* env, jclass clazz, jint event_id, jstring creator_package,
+    jint creator_uid) {
   JStringWrapper creator_package_str(env, creator_package);
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
   auto alarm_cancelled = energy_event.mutable_alarm_cancelled();
   alarm_cancelled->mutable_operation()->set_creator_package(
       creator_package_str.get());
@@ -211,10 +216,11 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendIntentAla
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerAlarmCancelled(
-    JNIEnv* env, jclass clazz, jstring listener_tag) {
+    JNIEnv* env, jclass clazz, jint event_id, jstring listener_tag) {
   JStringWrapper listener_tag_str(env, listener_tag);
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
   energy_event.mutable_alarm_cancelled()->mutable_listener()->set_tag(
       listener_tag_str.get());
   SubmitEnergyEvent(energy_event);
