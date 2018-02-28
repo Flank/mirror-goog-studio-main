@@ -245,8 +245,6 @@ message CpuProfilingAppStopResponse {
 
 message ProfilingStateRequest {
   Session session = 1;
-  // The given moment that this request is querying about.
-  int64 timestamp = 2;
 }
 
 message ProfilingStateResponse {
