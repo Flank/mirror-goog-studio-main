@@ -47,6 +47,8 @@
             android:name=".taskcategory.EventTaskCategory$EmptyActivity"
             android:label="EmptyActivity">
         </activity>
+
+        <receiver android:name=".taskcategory.BackgroundTaskCategory$AlarmReceiver" />
     </application>
 
 </manifest>

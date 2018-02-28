@@ -17,4 +17,5 @@ public enum ActivityRequestCodes {
     CAMERA, // Request code for accessing the camera.
     MICROPHONE, // Request code for accessing the microphone to record sounds.
     BODY_SENSORS, // Request code for gyros and accelerometers.
+    ALARM, // Request code for test alarm.
 }
