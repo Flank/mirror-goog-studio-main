@@ -16,13 +16,19 @@
 
 package com.android.build.gradle;
 
+import com.android.builder.model.AndroidProject;
 import javax.inject.Inject;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on an optional APK module */
-public class OptionalPlugin extends AbstractAppPlugin {
+public class OptionalApkPlugin extends AbstractAppPlugin {
     @Inject
-    public OptionalPlugin(ToolingModelBuilderRegistry registry) {
+    public OptionalApkPlugin(ToolingModelBuilderRegistry registry) {
         super(registry, false /*isBaseApplication*/);
+    }
+
+    @Override
+    protected int getProjectType() {
+        return AndroidProject.PROJECT_TYPE_DYNAMIC_FEATURE;
     }
 }

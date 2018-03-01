@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.bundle
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.builder.model.AndroidProject
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
@@ -44,9 +45,18 @@ class BundleTest {
     @Test
     @Throws(IOException::class)
     fun testModel() {
-        val appModel = project.model().fetchAndroidProjects().rootBuildModelMap[":app"]
+        val rootBuildModelMap = project.model().fetchAndroidProjects().rootBuildModelMap
 
-        Truth.assertThat(appModel).isNotNull()
-        Truth.assertThat(appModel!!.dynamicFeatures).containsExactly(":feature1")
+        val appModel = rootBuildModelMap[":app"]
+        Truth.assertThat(appModel).named("app model").isNotNull()
+        Truth.assertThat(appModel!!.dynamicFeatures)
+            .named("feature list in app model")
+            .containsExactly(":feature1")
+
+        val featureModel = rootBuildModelMap[":feature1"]
+        Truth.assertThat(featureModel).named("feature model").isNotNull()
+        Truth.assertThat(featureModel!!.projectType)
+            .named("feature model type")
+            .isEqualTo(AndroidProject.PROJECT_TYPE_DYNAMIC_FEATURE)
     }
 }
