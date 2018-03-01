@@ -21,7 +21,7 @@ import com.android.annotations.VisibleForTesting
 import com.android.ide.common.symbols.SymbolJavaType.INT
 import com.android.ide.common.symbols.SymbolJavaType.INT_LIST
 import com.android.ide.common.symbols.SymbolTable
-import com.android.ide.common.symbols.SymbolUtils
+import com.android.ide.common.symbols.canonicalizeValueResourceName
 import com.android.resources.ResourceType
 import com.google.common.base.Splitter
 import org.objectweb.asm.ClassWriter
@@ -137,7 +137,7 @@ private fun generateResourceTypeClass(table: SymbolTable, resType: ResourceType)
             for ((i, child) in children.withIndex()) {
                 cw.visitField(
                         ACC_PUBLIC + ACC_STATIC,
-                        "${s.name}_${SymbolUtils.canonicalizeValueResourceName(child)}",
+                        "${s.name}_${canonicalizeValueResourceName(child)}",
                         "I",
                         null,
                         i)

@@ -44,7 +44,7 @@ class SymbolTableMergeTest {
                 .add(symbol("attr", "b", "int", 2))
                 .build()
 
-        val result = SymbolUtils.mergeAndRenumberSymbols("",
+        val result = mergeAndRenumberSymbols("",
                 table1, ImmutableSet.of(table2), androidSymbols)
 
         val expected = SymbolTable.builder()
@@ -72,7 +72,7 @@ class SymbolTableMergeTest {
                 .add(symbol("attr", "b", "int", 0))
                 .build()
 
-        val result = SymbolUtils.mergeAndRenumberSymbols("",
+        val result = mergeAndRenumberSymbols("",
                 table1, ImmutableSet.of(table2), androidSymbols)
 
         val expected = SymbolTable.builder()
@@ -101,7 +101,7 @@ class SymbolTableMergeTest {
                 .add(symbol("styleable", "style1", "int[]", "{ 12, 42 }", listOf("a1", "a2")))
                 .build()
 
-        val result = SymbolUtils.mergeAndRenumberSymbols("",
+        val result = mergeAndRenumberSymbols("",
                 table1, ImmutableSet.of(table2), androidSymbols)
 
         val expected = SymbolTable.builder()
@@ -133,7 +133,7 @@ class SymbolTableMergeTest {
                 .add(symbol("styleable", "style1", "int[]", "{ 12, 42 }", listOf("a1", "a2")))
                 .build()
 
-        val result = SymbolUtils.mergeAndRenumberSymbols("",
+        val result = mergeAndRenumberSymbols("",
                 table1, ImmutableSet.of(table2), androidSymbols)
 
         val expected = SymbolTable.builder()
@@ -162,7 +162,7 @@ class SymbolTableMergeTest {
                 .add(symbol("styleable", "style1", "int[]", "{ 12, 42 }", listOf("android:foo", "zz")))
                 .build()
 
-        val result = SymbolUtils.mergeAndRenumberSymbols("",
+        val result = mergeAndRenumberSymbols("",
                 table1, ImmutableSet.of(table2), androidSymbols)
 
         val expected = SymbolTable.builder()
@@ -193,7 +193,7 @@ class SymbolTableMergeTest {
                 .add(symbol("styleable", "style1", "int[]", "{ 12, 42 }", listOf("b1", "b2")))
                 .build()
 
-        val result = SymbolUtils.mergeAndRenumberSymbols("",
+        val result = mergeAndRenumberSymbols("",
                 table1, ImmutableSet.of(table2), androidSymbols)
 
         val expected = SymbolTable.builder()
@@ -229,7 +229,7 @@ class SymbolTableMergeTest {
                 .add(symbol("styleable", "style1", "int[]", "{ 12, 42 }", listOf("b1", "b2")))
                 .build()
 
-        val result = SymbolUtils.mergeAndRenumberSymbols("",
+        val result = mergeAndRenumberSymbols("",
                 table1, ImmutableSet.of(table2), androidSymbols)
 
         val expected = SymbolTable.builder()
@@ -268,7 +268,7 @@ class SymbolTableMergeTest {
                 .add(symbol("styleable", "style1", "int[]", "{2,3}", listOf("b1", "b2")))
                 .build()
 
-        val result = SymbolUtils.mergeAndRenumberSymbols("",
+        val result = mergeAndRenumberSymbols("",
                 table1, ImmutableSet.of(table2), androidSymbols)
 
         val expected = SymbolTable.builder()

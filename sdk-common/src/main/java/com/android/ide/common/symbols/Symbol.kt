@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableList
  * resource (without the extension) or the name of the resource if the resource is part of an XML
  * file. While names of resources declared in XML files can contain dots and colons, these should be
  * replaced by underscores before being passed to the constructor. To sanitize the resource name,
- * call [SymbolUtils.canonicalizeValueResourceName] before passing the name to the
+ * call [canonicalizeValueResourceName] before passing the name to the
  * constructor.
  *
  * For example, the resource `drawable/foo.png` has name `foo`.
@@ -83,7 +83,7 @@ abstract class Symbol protected constructor() {
 
         /**
          * Creates a new symbol. The `name` of the symbol needs to be a valid sanitized resource
-         * name. See [SymbolUtils.canonicalizeValueResourceName] method and apply it beforehand
+         * name. See [canonicalizeValueResourceName] method and apply it beforehand
          * when necessary.
          *
          * @param resourceType the resource type of the symbol
