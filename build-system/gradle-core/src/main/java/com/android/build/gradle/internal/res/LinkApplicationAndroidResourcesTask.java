@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -148,7 +149,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     @Nullable private FileCollection featureResourcePackages;
 
-    private String originalApplicationId;
+    private Supplier<String> originalApplicationId;
 
     private String buildTargetDensity;
 
@@ -190,7 +191,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     @Input
     public String getApplicationId() {
-        return applicationId;
+        return applicationId.get();
     }
 
     FileCollection splitListInput;
@@ -200,7 +201,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     private boolean enableAapt2;
 
-    private String applicationId;
+    private Supplier<String> applicationId;
 
     private File supportDirectory;
 
@@ -429,7 +430,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         File proguardOutputFile = null;
         File mainDexListProguardOutputFile = null;
         if (generateCode) {
-            packageForR = originalApplicationId;
+            packageForR = originalApplicationId.get();
 
             // we have to clean the source folder output in case the package name changed.
             srcOut = getSourceOutputDir();
@@ -471,7 +472,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         InstantRunSliceSplitApkBuilder.generateSplitApkManifest(
                                 supportDirectory,
                                 IR_APK_FILE_NAME,
-                                applicationId,
+                                applicationId.get(),
                                 apkData.getVersionName(),
                                 apkData.getVersionCode(),
                                 manifestOutput
@@ -723,7 +724,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             processResources.setEnableAapt2(projectOptions.get(BooleanOption.ENABLE_AAPT2));
 
-            processResources.applicationId = config.getApplicationId();
+            processResources.applicationId = TaskInputHelper.memoize(config::getApplicationId);
 
             // per exec
             processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
@@ -766,7 +767,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             processResources.outputScope = variantData.getOutputScope();
             processResources.outputFactory = variantData.getOutputFactory();
             processResources.originalApplicationId =
-                    variantScope.getVariantConfiguration().getOriginalApplicationId();
+                    TaskInputHelper.memoize(config::getOriginalApplicationId);
 
             boolean aaptFriendlyManifestsFilePresent =
                     variantScope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
@@ -870,7 +871,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(variantScope.getGlobalScope());
             task.setEnableAapt2(true);
 
-            task.applicationId = config.getApplicationId();
+            task.applicationId = TaskInputHelper.memoize(config::getApplicationId);
 
             // per exec
             task.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
@@ -895,8 +896,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             task.variantScope = variantScope;
             task.outputScope = variantData.getOutputScope();
             task.outputFactory = variantData.getOutputFactory();
-            task.originalApplicationId =
-                    variantScope.getVariantConfiguration().getOriginalApplicationId();
+            task.originalApplicationId = TaskInputHelper.memoize(config::getOriginalApplicationId);
 
             boolean aaptFriendlyManifestsFilePresent =
                     variantScope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
@@ -1139,7 +1139,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     @Input
     public String getOriginalApplicationId() {
-        return originalApplicationId;
+        return originalApplicationId.get();
     }
 
     @InputFiles

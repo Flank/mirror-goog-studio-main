@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.ProjectOptions;
@@ -82,6 +83,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -183,9 +185,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     private PackagingOptions packagingOptions;
 
-    private AndroidVersion minSdkVersion;
+    protected Supplier<AndroidVersion> minSdkVersion;
 
-    protected InstantRunBuildContext instantRunContext;
+    protected Supplier<InstantRunBuildContext> instantRunContext;
 
     protected FileCollection manifests;
 
@@ -263,16 +265,12 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     @Input
     public int getMinSdkVersion() {
-        return this.minSdkVersion.getApiLevel();
-    }
-
-    public void setMinSdkVersion(AndroidVersion version) {
-        this.minSdkVersion = version;
+        return this.minSdkVersion.get().getApiLevel();
     }
 
     @Input
     public Boolean isInInstantRunMode() {
-        return instantRunContext.isInInstantRunMode();
+        return instantRunContext.get().isInInstantRunMode();
     }
 
     /*
@@ -675,7 +673,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 // FIX-ME : below would not work in multi apk situations. There is code somewhere
                 // to ensure we only build ONE multi APK for the target device, make sure it is still
                 // active.
-                instantRunContext.addChangedFile(instantRunFileType, outputFile);
+                instantRunContext.get().addChangedFile(instantRunFileType, outputFile);
             }
         }
 
@@ -895,8 +893,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packageAndroidArtifact.taskInputType = inputResourceFilesType;
             packageAndroidArtifact.setAndroidBuilder(globalScope.getAndroidBuilder());
             packageAndroidArtifact.setVariantName(variantScope.getFullVariantName());
-            packageAndroidArtifact.setMinSdkVersion(variantScope.getMinSdkVersion());
-            packageAndroidArtifact.instantRunContext = variantScope.getInstantRunBuildContext();
+            packageAndroidArtifact.minSdkVersion =
+                    TaskInputHelper.memoize(variantScope::getMinSdkVersion);
+            packageAndroidArtifact.instantRunContext =
+                    TaskInputHelper.memoize(variantScope::getInstantRunBuildContext);
             packageAndroidArtifact.aaptIntermediateFolder =
                     new File(
                             variantScope.getIncrementalDir(packageAndroidArtifact.getName()),

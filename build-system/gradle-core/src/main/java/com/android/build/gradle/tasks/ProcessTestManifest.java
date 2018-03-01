@@ -81,8 +81,8 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     private boolean onlyTestApk;
 
     private File tmpDir;
-    private String testApplicationId;
-    private String testedApplicationId;
+    private Supplier<String> testApplicationId;
+    private Supplier<String> testedApplicationId;
     private Supplier<String> minSdkVersion;
     private Supplier<String> targetSdkVersion;
     private Supplier<String> instrumentationRunner;
@@ -192,39 +192,21 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
     @Input
     public String getTestApplicationId() {
-        return testApplicationId;
+        return testApplicationId.get();
     }
-
-    public void setTestApplicationId(String testApplicationId) {
-        this.testApplicationId = testApplicationId;
-    }
-
     @Input
     @Optional
     public String getTestedApplicationId() {
-        return testedApplicationId;
-    }
-
-    public void setTestedApplicationId(String testedApplicationId) {
-        this.testedApplicationId = testedApplicationId;
+        return testedApplicationId.get();
     }
 
     @Input
     public String getMinSdkVersion() {
         return minSdkVersion.get();
     }
-
-    public void setMinSdkVersion(String minSdkVersion) {
-        this.minSdkVersion = () -> minSdkVersion;
-    }
-
     @Input
     public String getTargetSdkVersion() {
         return targetSdkVersion.get();
-    }
-
-    public void setTargetSdkVersion(String targetSdkVersion) {
-        this.targetSdkVersion = () -> targetSdkVersion;
     }
 
     @Input
@@ -329,16 +311,18 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
 
             processTestManifestTask.minSdkVersion =
-                    TaskInputHelper.memoize(config.getMinSdkVersion()::getApiString);
+                    TaskInputHelper.memoize(() -> config.getMinSdkVersion().getApiString());
 
             processTestManifestTask.targetSdkVersion =
-                    TaskInputHelper.memoize(config.getTargetSdkVersion()::getApiString);
+                    TaskInputHelper.memoize(() -> config.getTargetSdkVersion().getApiString());
 
             processTestManifestTask.testTargetMetadata = testTargetMetadata;
-            processTestManifestTask.setTestApplicationId(config.getTestApplicationId());
+            processTestManifestTask.testApplicationId =
+                    TaskInputHelper.memoize(config::getTestApplicationId);
 
             // will only be used if testTargetMetadata is null.
-            processTestManifestTask.setTestedApplicationId(config.getTestedApplicationId());
+            processTestManifestTask.testedApplicationId =
+                    TaskInputHelper.memoize(config::getTestedApplicationId);
 
             VariantConfiguration testedConfig = config.getTestedConfig();
             processTestManifestTask.onlyTestApk =

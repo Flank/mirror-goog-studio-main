@@ -151,7 +151,7 @@ public class MergeResources extends IncrementalTask {
 
     private Collection<String> generatedDensities;
 
-    private int minSdk;
+    private Supplier<Integer> minSdk;
 
     private VariantScope variantScope;
 
@@ -276,7 +276,7 @@ public class MergeResources extends IncrementalTask {
         List<ResourceSet> resourceSets = getConfiguredResourceSets(preprocessor);
 
         // create a new merger and populate it with the sets.
-        ResourceMerger merger = new ResourceMerger(minSdk);
+        ResourceMerger merger = new ResourceMerger(minSdk.get());
         MergingLog mergingLog = null;
         if (blameLogFolder != null) {
             FileUtils.cleanOutputDir(blameLogFolder);
@@ -338,7 +338,7 @@ public class MergeResources extends IncrementalTask {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
         // create a merger and load the known state.
-        ResourceMerger merger = new ResourceMerger(minSdk);
+        ResourceMerger merger = new ResourceMerger(minSdk.get());
         try {
             if (!merger.loadFromBlob(getIncrementalFolder(), true /*incrementalState*/)) {
                 doFullTaskAction();
@@ -488,7 +488,7 @@ public class MergeResources extends IncrementalTask {
                 getGeneratedDensities().stream().map(Density::getEnum).collect(Collectors.toList());
 
         return new MergeResourcesVectorDrawableRenderer(
-                minSdk,
+                minSdk.get(),
                 vectorSupportLibraryIsUsed,
                 generatedPngsOutputDir,
                 densities,
@@ -666,7 +666,7 @@ public class MergeResources extends IncrementalTask {
 
     @Input
     public int getMinSdk() {
-        return minSdk;
+        return minSdk.get();
     }
 
     @Input
@@ -848,7 +848,12 @@ public class MergeResources extends IncrementalTask {
 
             mergeResourcesTask.filesProvider = scope.getGlobalScope().getFilesProvider();
             mergeResourcesTask.minSdk =
-                    variantData.getVariantConfiguration().getMinSdkVersion().getApiLevel();
+                    TaskInputHelper.memoize(
+                            () ->
+                                    variantData
+                                            .getVariantConfiguration()
+                                            .getMinSdkVersion()
+                                            .getApiLevel());
 
             mergeResourcesTask.aaptGeneration =
                     AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());

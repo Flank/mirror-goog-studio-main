@@ -104,7 +104,7 @@ public class MergeManifests extends ManifestProcessorTask {
     private BuildableArtifact compatibleScreensManifest;
     private FileCollection packageManifest;
     private FileCollection apkList;
-    private EnumSet<Feature> optionalFeatures;
+    private Supplier<EnumSet<Feature>> optionalFeatures;
     private OutputScope outputScope;
 
     private String featureName;
@@ -359,13 +359,13 @@ public class MergeManifests extends ManifestProcessorTask {
     /** Not an input, see {@link #getOptionalFeaturesString()}. */
     @Internal
     public EnumSet<Feature> getOptionalFeatures() {
-        return optionalFeatures;
+        return optionalFeatures.get();
     }
 
     /** Synthetic input for {@link #getOptionalFeatures()} */
     @Input
     public List<String> getOptionalFeaturesString() {
-        return optionalFeatures.stream().map(Enum::toString).collect(Collectors.toList());
+        return getOptionalFeatures().stream().map(Enum::toString).collect(Collectors.toList());
     }
 
     @Internal
@@ -521,7 +521,8 @@ public class MergeManifests extends ManifestProcessorTask {
 
             processManifestTask.setReportFile(reportFile);
             processManifestTask.optionalFeatures =
-                    getOptionalFeatures(variantScope, isAdvancedProfilingOn);
+                    TaskInputHelper.memoize(
+                            () -> getOptionalFeatures(variantScope, isAdvancedProfilingOn));
 
             processManifestTask.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
 

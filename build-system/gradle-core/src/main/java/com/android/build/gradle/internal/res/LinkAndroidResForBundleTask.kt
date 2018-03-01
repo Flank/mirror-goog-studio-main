@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIF
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantType
@@ -49,6 +50,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -60,6 +62,7 @@ import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.function.Function
+import java.util.function.Supplier
 import javax.inject.Inject
 
 /**
@@ -90,14 +93,11 @@ open class LinkAndroidResForBundleTask
     lateinit var bundledResFile: File
         private set
 
-    @get:Input
-    @get:Optional
-    var versionName: String? = null
-        private set
+    @get:Internal lateinit var versionNameSupplier: Supplier<String?> private set
+    @get:Input val versionName get() = versionNameSupplier.get()
 
-    @get:Input
-    var versionCode: Int = 0
-        private set
+    @get:Internal lateinit var versionCodeSupplier: Supplier<Int?> private set
+    @get:Input val versionCode get() = versionCodeSupplier.get()
 
     @get:OutputDirectory
     lateinit var incrementalFolder: File
@@ -234,8 +234,12 @@ open class LinkAndroidResForBundleTask
 
             processResources.incrementalFolder = variantScope.getIncrementalDir(name)
 
-            processResources.versionCode = config.versionCode
-            processResources.versionName = config.versionName
+            processResources.versionCodeSupplier = TaskInputHelper.memoize {
+                config.versionCode
+            }
+            processResources.versionNameSupplier = TaskInputHelper.memoize {
+                config.versionName
+            }
 
             processResources.mainSplit = variantData.outputScope.mainSplit
 
