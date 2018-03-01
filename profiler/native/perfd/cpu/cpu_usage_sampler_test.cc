@@ -23,6 +23,7 @@
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/daemon.h"
 #include "test/utils.h"
+#include "utils/clock.h"
 #include "utils/procfs_files.h"
 
 using profiler::CpuCache;
@@ -82,7 +83,8 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
   const int64_t kElapsedTime = 1175801430;
 
   Daemon::Utilities utilities("", "");
-  CpuCache cache{100};
+  SteadyClock clock;
+  CpuCache cache{100, &clock};
   cache.AllocateAppCache(kMockAppPid);
   CpuUsageSamplerToTest sampler{&utilities, &cache};
   sampler.AddProcess(kMockAppPid);
@@ -119,7 +121,8 @@ TEST(CpuUsageSamplerTest, SampleTwoApps) {
   const int64_t kAppCpuTime_2 = 140;
 
   Daemon::Utilities utilities("", "");
-  CpuCache cache{100};
+  SteadyClock clock;
+  CpuCache cache{100, &clock};
   cache.AllocateAppCache(kMockAppPid_1);
   cache.AllocateAppCache(kMockAppPid_2);
   CpuUsageSamplerToTest sampler{&utilities, &cache};

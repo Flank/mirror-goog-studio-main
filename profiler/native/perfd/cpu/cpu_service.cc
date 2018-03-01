@@ -47,8 +47,14 @@ using profiler::proto::CpuStopResponse;
 using profiler::proto::CpuUsageData;
 using profiler::proto::GetThreadsRequest;
 using profiler::proto::GetThreadsResponse;
+using profiler::proto::GetTraceInfoRequest;
+using profiler::proto::GetTraceInfoResponse;
+using profiler::proto::GetTraceRequest;
+using profiler::proto::GetTraceResponse;
 using profiler::proto::ProfilingStateRequest;
 using profiler::proto::ProfilingStateResponse;
+using profiler::proto::TraceInfo;
+using profiler::proto::TraceInitiationType;
 using std::map;
 using std::string;
 using std::vector;
@@ -117,6 +123,43 @@ grpc::Status CpuServiceImpl::GetThreads(ServerContext* context,
   return Status::OK;
 }
 
+grpc::Status CpuServiceImpl::GetTraceInfo(ServerContext* context,
+                                          const GetTraceInfoRequest* request,
+                                          GetTraceInfoResponse* response) {
+  Trace trace("CPU:GetTraceInfo");
+  response->set_response_timestamp(clock_->GetCurrentTime());
+  const vector<ProfilingApp>& data =
+      cache_.GetCaptures(request->session().pid(), request->from_timestamp(),
+                         request->to_timestamp());
+  for (const auto& datum : data) {
+    // Do not return in-progress captures.
+    if (datum.end_timestamp == -1) continue;
+    TraceInfo* info = response->add_trace_info();
+    info->set_profiler_type(datum.configuration.profiler_type());
+    info->set_initiation_type(datum.initiation_type);
+    info->set_from_timestamp(datum.start_timestamp);
+    info->set_to_timestamp(datum.end_timestamp);
+    info->set_trace_id(datum.trace_id);
+  }
+  return Status::OK;
+}
+
+grpc::Status CpuServiceImpl::GetTrace(ServerContext* context,
+                                      const GetTraceRequest* request,
+                                      GetTraceResponse* response) {
+  string content;
+  bool found = cache_.RetrieveTraceContent(request->session().pid(),
+                                           request->trace_id(), &content);
+  if (found) {
+    response->set_status(GetTraceResponse::SUCCESS);
+    response->set_data(content);
+    response->set_profiler_type(CpuProfilerType::ART);
+  } else {
+    response->set_status(GetTraceResponse::FAILURE);
+  }
+  return Status::OK;
+}
+
 grpc::Status CpuServiceImpl::StartMonitoringApp(ServerContext* context,
                                                 const CpuStartRequest* request,
                                                 CpuStartResponse* response) {
@@ -143,7 +186,6 @@ grpc::Status CpuServiceImpl::StopMonitoringApp(ServerContext* context,
     status = thread_monitor_.RemoveProcess(pid);
   }
   response->set_status(status);
-
   DoStopProfilingApp(pid, nullptr);
   return Status::OK;
 }
@@ -195,7 +237,10 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     profiling_app.app_pkg_name = app_pkg_name;
     profiling_app.trace_path = trace_path;
     profiling_app.start_timestamp = clock_->GetCurrentTime();
+    profiling_app.end_timestamp = -1;  // -1 means not end yet (ongoing)
     profiling_app.configuration = configuration;
+    profiling_app.initiation_type = TraceInitiationType::INITIATED_BY_UI;
+
     cache_.AddProfilingStart(pid, profiling_app);
   } else {
     response->set_status(CpuProfilingAppStartResponse::FAILURE);
@@ -213,8 +258,11 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
 
 void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
                                         CpuProfilingAppStopResponse* response) {
-  ProfilingApp* app = cache_.GetProfilingApp(pid);
+  ProfilingApp* app = cache_.GetOngoingCapture(pid);
   if (app == nullptr) {
+    if (response != nullptr) {
+      response->set_status(CpuProfilingAppStopResponse::FAILURE);
+    }
     return;
   }
   CpuProfilerType profiler_type = app->configuration.profiler_type();
@@ -239,10 +287,7 @@ void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
       string trace_content;
       FileReader::Read(app->trace_path, &trace_content);
       response->set_trace(trace_content);
-      // Set the trace id to a random integer
-      // TODO: Change to something more predictable/robust
-      int trace_id = rand() % INT_MAX;
-      response->set_trace_id(trace_id);
+      response->set_trace_id(app->trace_id);
     } else {
       response->set_status(CpuProfilingAppStopResponse::FAILURE);
       response->set_error_message(error);
@@ -262,7 +307,7 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
   ProcessManager process_manager;
   string app_pkg_name = process_manager.GetCmdlineForPid(pid);
 
-  ProfilingApp* app = cache_.GetProfilingApp(pid);
+  ProfilingApp* app = cache_.GetOngoingCapture(pid);
   // Whether the app is being profiled (there is a stored start profiling
   // request corresponding to the app)
   response->set_check_timestamp(clock_->GetCurrentTime());
@@ -274,6 +319,7 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
     // timestamp in the response.
     response->set_start_timestamp(app->start_timestamp);
     response->set_is_startup_profiling(app->is_startup_profiling);
+    response->set_initiation_type(app->initiation_type);
     *(response->mutable_configuration()) = app->configuration;
   }
 
@@ -287,7 +333,9 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
   ProfilingApp app;
   app.app_pkg_name = request->app_package();
   app.start_timestamp = clock_->GetCurrentTime();
+  app.end_timestamp = -1;
   app.configuration = request->configuration();
+  app.initiation_type = TraceInitiationType::INITIATED_BY_STARTUP;
   app.is_startup_profiling = true;
 
   CpuProfilerType profiler_type = app.configuration.profiler_type();

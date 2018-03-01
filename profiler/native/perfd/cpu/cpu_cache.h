@@ -25,6 +25,7 @@
 #include "perfd/cpu/threads_sample.h"
 #include "proto/cpu.grpc.pb.h"
 #include "proto/cpu.pb.h"
+#include "utils/clock.h"
 #include "utils/time_value_buffer.h"
 
 namespace profiler {
@@ -40,7 +41,8 @@ class CpuCache {
 
   // Construct the main CPU cache holder. |capacity| is of every app's every
   // kind of cache (same size for all).
-  explicit CpuCache(int32_t capacity) : capacity_(capacity) {}
+  explicit CpuCache(int32_t capacity, Clock* clock)
+      : capacity_(capacity), clock_(clock) {}
 
   // Returns true if successfully allocating a cache for a given pid, or if
   // the cache is already allocated.
@@ -64,20 +66,30 @@ class CpuCache {
   // (|from|, |to|].
   ThreadSampleResponse GetThreads(int32_t pid, int64_t from, int64_t to);
 
-  // Adds start event for non-startup profiling.
-  void AddProfilingStart(int32_t pid, const ProfilingApp& record);
+  // Adds start event for non-startup profiling. Returns a unique ID to identify
+  // the profiling. Returns -1 if not successful.
+  int32_t AddProfilingStart(int32_t pid, const ProfilingApp& record);
   // Adds stop event for non-startup profiling.
-  // TODO(b/74149988): keep the record in a cache for retrieving later.
-  void AddProfilingStop(int32_t pid);
-  // Adds start event for startup profiling.
-  void AddStartupProfilingStart(const std::string& apk_pkg_name,
-                                const ProfilingApp& record);
+  bool AddProfilingStop(int32_t pid);
+  // Adds start event for startup profiling. Returns a unique ID to identify the
+  // profiling.
+  int32_t AddStartupProfilingStart(const std::string& apk_pkg_name,
+                                   const ProfilingApp& record);
   // Adds stop event for startup profiling.
-  // TODO(b/74149988): keep the record in a cache for retrieving later.
   void AddStartupProfilingStop(const std::string& apk_pkg_name);
 
   // Returns the |ProfilingApp| of the app with the given |pid|.
-  ProfilingApp* GetProfilingApp(int32_t pid);
+  ProfilingApp* GetOngoingCapture(int32_t pid);
+  // Returns the captures from process of |pid| that overlap with the given
+  // interval [|from|, |to|], both inclusive.
+  std::vector<ProfilingApp> GetCaptures(int32_t pid, int64_t from, int64_t to);
+  // Returns true if successfully adding |trace_content| of the given |trace_id|
+  // generated from app of given process ID |pid|.
+  bool AddTraceContent(int32_t pid, int32_t trace_id,
+                       const std::string& trace_content);
+  // Returns true if successfully retrieve the content of given |trace_id| from
+  // process of |pid|.
+  bool RetrieveTraceContent(int32_t pid, int32_t trace_id, std::string* output);
 
  private:
   // Each app's cache held by CPU component in the on-device daemon.
@@ -85,22 +97,34 @@ class CpuCache {
     int32_t pid;
     TimeValueBuffer<profiler::proto::CpuUsageData> usage_cache;
     TimeValueBuffer<ThreadsSample> threads_cache;
+    CircularBuffer<ProfilingApp> capture_cache;
+    ProfilingApp* ongoing_capture;
+    // TODO(b/74448881): Use FileCache to preper cache trace contents.
+    std::map<int32_t, std::string> trace_contents;
 
     AppCpuCache(int32_t pid, int32_t capacity)
-        : pid(pid), usage_cache(capacity, pid), threads_cache(capacity, pid) {}
+        : pid(pid),
+          usage_cache(capacity, pid),
+          threads_cache(capacity, pid),
+          capture_cache(capacity),
+          ongoing_capture(nullptr) {}
   };
 
   // Returns the raw pointer to the cache for a given app. Returns null if
   // it doesn't exist. No ownership transfer.
   AppCpuCache* FindAppCache(int32_t pid);
 
+  // Returns a new positive integer that is unique throughout the lifetime of
+  // this cache. It satisfies the uniqueness requirement for a trace ID (unique
+  // within a session).
+  int32_t GenerateTraceId();
+
   // Each app has a set of dedicated caches.
   std::vector<std::unique_ptr<AppCpuCache>> app_caches_;
   // The capacity of every kind of cache.
   int32_t capacity_;
+  Clock* clock_;
 
-  // Map from pid to the corresponding data of ongoing profiling (capturing).
-  std::map<int32_t, ProfilingApp> profiling_apps_;
   // Map from app package name to the corresponding data of startup profiling.
   std::map<std::string, ProfilingApp> startup_profiling_apps_;
 };

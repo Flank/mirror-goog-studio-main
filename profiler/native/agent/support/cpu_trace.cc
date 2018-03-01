@@ -19,34 +19,106 @@
 #include "agent/agent.h"
 #include "agent/support/jni_wrappers.h"
 #include "proto/internal_cpu.grpc.pb.h"
+#include "utils/file_reader.h"
+#include "utils/log.h"
+#include "utils/process_manager.h"
 
 using grpc::ClientContext;
+using grpc::Status;
 using profiler::Agent;
 using profiler::JStringWrapper;
 using profiler::SteadyClock;
 using profiler::proto::CpuTraceOperationRequest;
-using profiler::proto::EmptyCpuResponse;
+using profiler::proto::CpuTraceOperationResponse;
 using profiler::proto::InternalCpuService;
+using std::string;
 
 namespace {
 
-const SteadyClock& GetClock() {
-  static SteadyClock clock;
-  return clock;
-}
+class TraceMonitor {
+ public:
+  // Grabs the singleton instance of the Agent. This will initialize the class
+  // if necessary.
+  static TraceMonitor& Instance() {
+    static TraceMonitor* instance = new TraceMonitor();
+    return *instance;
+  }
 
-// Enqueue and submit the target |request|. The request's pid and timestamp will
-// be set as a side-effect of calling this method, but all other fields and
-// appropriate metadata must be set by the caller.
-void SubmitCpuTraceOperation(CpuTraceOperationRequest& request) {
-  request.set_pid(getpid());
-  request.set_timestamp(GetClock().GetCurrentTime());
+  void SubmitStartEvent(const CpuTraceOperationRequest& input_request);
+  void SubmitStopEvent(int tid);
+
+ private:
+  // Use TraceMonitor::Instance() to initialize.
+  explicit TraceMonitor() {}
+  ~TraceMonitor() = delete;  // TODO: Support destroying the agent
+
+  SteadyClock clock_;
+  // Absolute path of the file being created and written by the app.
+  string trace_path_;
+  int trace_id_;
+  bool api_initiated_trace_in_progress_{false};
+};
+
+void TraceMonitor::SubmitStartEvent(
+    const CpuTraceOperationRequest& input_request) {
+  api_initiated_trace_in_progress_ = true;
+  int64_t timestamp = clock_.GetCurrentTime();
   Agent::Instance().SubmitCpuTasks(
-      {[request](InternalCpuService::Stub& stub, ClientContext& ctx) {
-        EmptyCpuResponse response;
-        return stub.SendTraceOperation(&ctx, request, &response);
+      {[this, input_request, timestamp](InternalCpuService::Stub& stub,
+                                        ClientContext& ctx) {
+        int pid = getpid();
+        CpuTraceOperationRequest request;
+        request.CopyFrom(input_request);
+        request.set_pid(pid);
+        request.set_timestamp(timestamp);
+        CpuTraceOperationResponse response;
+        Status status = stub.SendTraceEvent(&ctx, request, &response);
+        if (status.ok()) {
+          trace_id_ = response.trace_id();
+
+          // TODO(b/74405724): Get the absolute path properly.
+          string absolute_path{"/sdcard/Android/data/"};
+          string app_pkg_name = profiler::ProcessManager::GetCmdlineForPid(pid);
+          absolute_path.append(app_pkg_name)
+              .append("/files/")
+              .append(request.start().arg_trace_path());
+          trace_path_ = absolute_path;
+        } else {
+          // Not receiving a trace id. Ignore this catpure.
+          api_initiated_trace_in_progress_ = false;
+        }
+        return status;
       }});
 }
+
+void TraceMonitor::SubmitStopEvent(int tid) {
+  if (!api_initiated_trace_in_progress_) return;
+  api_initiated_trace_in_progress_ = false;
+  int64_t timestamp = clock_.GetCurrentTime();
+  Agent::Instance().SubmitCpuTasks(
+      {[this, tid, timestamp](InternalCpuService::Stub& stub,
+                              ClientContext& ctx) {
+        CpuTraceOperationRequest request;
+        int pid = getpid();
+        request.set_pid(pid);
+        request.set_thread_id(tid);
+        request.set_timestamp(timestamp);
+
+        // Wait 0.2 seconds for the trace to complete.
+        // TODO(b/74449118): Use FileSystemNotifier to properly monitor the
+        // file's close.
+        usleep(200 * 1000);
+        string trace_content;
+        profiler::FileReader::Read(trace_path_, &trace_content);
+
+        request.mutable_stop()->set_trace_id(trace_id_);
+        request.mutable_stop()->set_trace_content(trace_content);
+        CpuTraceOperationResponse response;
+        Status status = stub.SendTraceEvent(&ctx, request, &response);
+        return status;
+      }});
+}
+
 }  // namespace
 
 extern "C" {
@@ -55,20 +127,16 @@ Java_com_android_tools_profiler_support_cpu_TraceOperationTracker_sendStartOpera
     JNIEnv* env, jclass clazz, jint thread_id, jstring trace_path) {
   CpuTraceOperationRequest request;
   request.set_thread_id(thread_id);
-  request.set_api_name("StartMethodTracing");
-  request.set_api_signature("(Ljava/lang/String;)V");
+  request.mutable_start()->set_method_name("startMethodTracing");
+  request.mutable_start()->set_method_signature("(Ljava/lang/String;)V");
   JStringWrapper path_string(env, trace_path);
-  request.add_arguments(path_string.get());
-  SubmitCpuTraceOperation(request);
+  request.mutable_start()->set_arg_trace_path(path_string.get());
+  TraceMonitor::Instance().SubmitStartEvent(request);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_cpu_TraceOperationTracker_sendStopOperation(
     JNIEnv* env, jclass clazz, jint thread_id) {
-  CpuTraceOperationRequest request;
-  request.set_thread_id(thread_id);
-  request.set_api_name("StopMethodTracing");
-  request.set_api_signature("()V");
-  SubmitCpuTraceOperation(request);
+  TraceMonitor::Instance().SubmitStopEvent(thread_id);
 }
 };
