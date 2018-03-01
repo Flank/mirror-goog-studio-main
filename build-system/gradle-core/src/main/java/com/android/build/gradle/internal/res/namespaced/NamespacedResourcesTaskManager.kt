@@ -247,12 +247,9 @@ class NamespacedResourcesTaskManager(
                         "res-linked",
                         variantScope.variantConfiguration.dirName,
                         "res.apk")
-        // We only need this because of b/69956357. Remove generating R.java once bug is fixed.
-        val compileOnlyRClassSourceDir = File(globalScope.generatedDir,
-                "source/r/" + variantScope.variantConfiguration.dirName)
         val link = taskFactory.create(
                 LinkLibraryAndroidResourcesTask.ConfigAction(
-                        variantScope, compileOnlyRClassSourceDir, resourceStaticLibrary, rDotTxt))
+                        variantScope, resourceStaticLibrary, rDotTxt))
         variantScope.addTaskOutput(
                 InternalArtifactType.RES_STATIC_LIBRARY,
                 resourceStaticLibrary,
