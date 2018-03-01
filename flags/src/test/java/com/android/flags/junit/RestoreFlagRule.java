@@ -15,7 +15,6 @@
  */
 package com.android.flags.junit;
 
-import com.android.annotations.Nullable;
 import com.android.flags.Flag;
 import org.junit.Rule;
 import org.junit.rules.ExternalResource;
@@ -26,7 +25,7 @@ import org.junit.rules.ExternalResource;
  *
  * <p>If you have code behind a flag, then that means your code can exhibit different behavior
  * depending on the flag's value. The easiest way to test all paths is to have multiple tests, with
- * each test changing the flag's value at the beginning of it.
+ * each test changing the flag's value explicitly at the beginning of it.
  *
  * <pre>
  *   public class MyTest {
@@ -49,27 +48,13 @@ import org.junit.rules.ExternalResource;
  */
 public class RestoreFlagRule<T> extends ExternalResource {
     private final Flag<T> myFlag;
-    @Nullable private T myOriginalValue = null;
 
     public RestoreFlagRule(Flag<T> flag) {
         myFlag = flag;
     }
 
     @Override
-    protected void before() throws Throwable {
-        if (myFlag.isOverridden()) {
-            myOriginalValue = myFlag.get();
-        }
-    }
-
-    @Override
     protected void after() {
-        if (myOriginalValue != null) {
-            myFlag.override(myOriginalValue);
-        } else {
-            // If myOriginalValue was null, it meant the flag was not overridden in the first place.
-            // Therefore, clear it here, just in case any test happened to set it.
-            myFlag.clearOverride();
-        }
+        myFlag.clearOverride();
     }
 }
