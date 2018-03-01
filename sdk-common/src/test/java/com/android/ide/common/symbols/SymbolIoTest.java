@@ -197,6 +197,30 @@ public class SymbolIoTest {
         SymbolIo.read(R, null);
     }
 
+    @Test
+    public void readStyleablesWithClashingPrefixes() throws Exception {
+        File file = mTemporaryFolder.newFile();
+        Files.asCharSink(file, StandardCharsets.UTF_8)
+                .write(
+                        "int[] styleable a { 0x1 }\n"
+                                + "int styleable a_b 0\n"
+                                + "int[] styleable a_c { 0x2 }\n"
+                                + "int styleable a_c_d 0");
+        SymbolTable table = SymbolIo.read(file, null);
+        assertThat(table)
+                .isEqualTo(
+                        SymbolTable.builder()
+                                .add(
+                                        new Symbol.StyleableSymbol(
+                                                "a", ImmutableList.of(0x1), ImmutableList.of("b")))
+                                .add(
+                                        new Symbol.StyleableSymbol(
+                                                "a_c",
+                                                ImmutableList.of(0x2),
+                                                ImmutableList.of("d")))
+                                .build());
+    }
+
     private static void checkFileGeneration(
             @NonNull String expected, @NonNull Supplier<File> generator) throws Exception {
         File result = generator.get();
@@ -384,22 +408,13 @@ public class SymbolIoTest {
                                         "TiledView",
                                         "int[]",
                                         "{ 0x7f010000, 0x7f010001, 0x7f010002, "
-                                                + "0x7f010003, 0x7f010004 }"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable", "TiledView_tileName", "int", "2"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable", "TiledView_tilingEnum", "int", "4"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable", "TiledView_tilingMode", "int", "3"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable", "TiledView_tilingProperty", "int", "0"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable", "TiledView_tilingResource", "int", "1"))
+                                                + "0x7f010003, 0x7f010004 }",
+                                        ImmutableList.of(
+                                                "tilingProperty",
+                                                "tilingResource",
+                                                "tileName",
+                                                "tilingMode",
+                                                "tilingEnum")))
                         .build();
 
         checkRGeneration(
@@ -418,11 +433,11 @@ public class SymbolIoTest {
                         + "\n"
                         + "        public static final int[] TiledView = "
                         + "{ 0x7f010000, 0x7f010001, 0x7f010002, 0x7f010003, 0x7f010004 };\n"
-                        + "        public static final int TiledView_tileName = 2;\n"
-                        + "        public static final int TiledView_tilingEnum = 4;\n"
-                        + "        public static final int TiledView_tilingMode = 3;\n"
                         + "        public static final int TiledView_tilingProperty = 0;\n"
                         + "        public static final int TiledView_tilingResource = 1;\n"
+                        + "        public static final int TiledView_tileName = 2;\n"
+                        + "        public static final int TiledView_tilingMode = 3;\n"
+                        + "        public static final int TiledView_tilingEnum = 4;\n"
                         + "    }\n"
                         + "}",
                 Paths.get("R.java"),
@@ -440,19 +455,8 @@ public class SymbolIoTest {
                                         "styleable",
                                         "LimitedSizeLinearLayout",
                                         "int[]",
-                                        "{ 0x7f010000, 0x7f010001 }"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable",
-                                        "LimitedSizeLinearLayout_max_height",
-                                        "int",
-                                        "1"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable",
-                                        "LimitedSizeLinearLayout_max_width",
-                                        "int",
-                                        "0"))
+                                        "{ 0x7f010000, 0x7f010001 }",
+                                        ImmutableList.of("max_width", "max_height")))
                         .add(
                                 SymbolTestUtils.createSymbol(
                                         "xml", "authenticator", "int", "0x7f040000"))
@@ -475,8 +479,8 @@ public class SymbolIoTest {
                         + "\n"
                         + "        public static final int[] LimitedSizeLinearLayout = "
                         + "{ 0x7f010000, 0x7f010001 };\n"
-                        + "        public static final int LimitedSizeLinearLayout_max_height = 1;\n"
                         + "        public static final int LimitedSizeLinearLayout_max_width = 0;\n"
+                        + "        public static final int LimitedSizeLinearLayout_max_height = 1;\n"
                         + "    }\n"
                         + "    public static final class xml {\n"
                         + "        private xml() {}\n"
@@ -573,17 +577,10 @@ public class SymbolIoTest {
         SymbolTable table = SymbolIo.read(txt, "com.example.app");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        Symbol.createSymbol(
-                                ResourceType.DRAWABLE,
-                                "foobar",
-                                SymbolJavaType.INT,
-                                "0x7f02000 ",
-                                Symbol.NO_CHILDREN),
-                        Symbol.createSymbol(
-                                ResourceType.STYLEABLE,
+                        new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000),
+                        new Symbol.StyleableSymbol(
                                 "LimitedSizeLinearLayout",
-                                SymbolJavaType.INT_LIST,
-                                "{ 0x7f010000, 0x7f010001 } ",
+                                ImmutableList.of(0x7f010000, 0x7f010001),
                                 ImmutableList.of("max_width", "max_height")));
     }
 
@@ -633,11 +630,9 @@ public class SymbolIoTest {
         SymbolTable table = SymbolIo.read(txt, "com.example.app");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        Symbol.createSymbol(
-                                ResourceType.STYLEABLE,
+                        new Symbol.StyleableSymbol(
                                 "LimitedSizeLinearLayout",
-                                SymbolJavaType.INT_LIST,
-                                "{ 0x7f010000, 0x7f010001 } ",
+                                ImmutableList.of(0x7f010000, 0x7f010001),
                                 ImmutableList.of("android:max_width", "android:max_height")));
     }
 
@@ -657,17 +652,10 @@ public class SymbolIoTest {
         assertThat(table.getTablePackage()).isEqualTo("com.example.lib");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        Symbol.createSymbol(
-                                ResourceType.DRAWABLE,
-                                "foobar",
-                                SymbolJavaType.INT,
-                                "0x7f02000 ",
-                                Symbol.NO_CHILDREN),
-                        Symbol.createSymbol(
-                                ResourceType.STYLEABLE,
+                        new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000),
+                        new Symbol.StyleableSymbol(
                                 "LimitedSizeLinearLayout",
-                                SymbolJavaType.INT_LIST,
-                                "{ 0x7f010000, 0x7f010001 } ",
+                                ImmutableList.of(0x7f010000, 0x7f010001),
                                 ImmutableList.of("max_width", "max_height")));
     }
 
@@ -678,19 +666,11 @@ public class SymbolIoTest {
         SymbolTable table =
                 SymbolTable.builder()
                         .tablePackage("com.example.lib")
+                        .add(new Symbol.NormalSymbol(ResourceType.DRAWABLE, "foobar", 0x7f02000))
                         .add(
-                                Symbol.createSymbol(
-                                        ResourceType.DRAWABLE,
-                                        "foobar",
-                                        SymbolJavaType.INT,
-                                        "0x7f02000 ",
-                                        Symbol.NO_CHILDREN))
-                        .add(
-                                Symbol.createSymbol(
-                                        ResourceType.STYLEABLE,
+                                new Symbol.StyleableSymbol(
                                         "LimitedSizeLinearLayout",
-                                        SymbolJavaType.INT_LIST,
-                                        "{ 0x7f010000, 0x7f010001 } ",
+                                        ImmutableList.of(0x7f010000, 0x7f010001),
                                         ImmutableList.of("max_width", "max_height")))
                         .build();
         Path rTxt = fs.getPath("r.txt");
@@ -709,8 +689,8 @@ public class SymbolIoTest {
         assertThat(outputLines)
                 .containsExactly(
                         "com.example.lib",
-                        "int drawable foobar 0x7f02000 ",
-                        "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } ",
+                        "int drawable foobar 0x7f02000",
+                        "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 }",
                         "int styleable LimitedSizeLinearLayout_max_width 0",
                         "int styleable LimitedSizeLinearLayout_max_height 1")
                 .inOrder();
@@ -789,47 +769,20 @@ public class SymbolIoTest {
         assertThat(table.getTablePackage()).isEqualTo("foo.bar.com");
         assertThat(table.getSymbols().values())
                 .containsExactly(
-                        Symbol.createSymbol(
-                                ResourceAccessibility.PUBLIC,
-                                ResourceType.DRAWABLE,
-                                "img",
-                                SymbolJavaType.INT,
-                                "0",
-                                Symbol.NO_CHILDREN),
-                        Symbol.createSymbol(
-                                ResourceAccessibility.DEFAULT,
-                                ResourceType.ID,
-                                "bar",
-                                SymbolJavaType.INT,
-                                "0",
-                                Symbol.NO_CHILDREN),
-                        Symbol.createSymbol(
-                                ResourceAccessibility.PRIVATE,
-                                ResourceType.STRING,
-                                "beep",
-                                SymbolJavaType.INT,
-                                "0",
-                                Symbol.NO_CHILDREN),
-                        Symbol.createSymbol(
-                                ResourceAccessibility.DEFAULT,
-                                ResourceType.STRING,
-                                "foo",
-                                SymbolJavaType.INT,
-                                "0",
-                                Symbol.NO_CHILDREN),
-                        Symbol.createSymbol(
-                                ResourceAccessibility.DEFAULT,
-                                ResourceType.STYLEABLE,
+                        new Symbol.NormalSymbol(
+                                ResourceType.DRAWABLE, "img", 0, ResourceAccessibility.PUBLIC),
+                        new Symbol.NormalSymbol(
+                                ResourceType.ID, "bar", 0, ResourceAccessibility.DEFAULT),
+                        new Symbol.NormalSymbol(
+                                ResourceType.STRING, "beep", 0, ResourceAccessibility.PRIVATE),
+                        new Symbol.NormalSymbol(
+                                ResourceType.STRING, "foo", 0, ResourceAccessibility.DEFAULT),
+                        new Symbol.StyleableSymbol(
                                 "s1",
-                                SymbolJavaType.INT_LIST,
-                                "{ }",
-                                ImmutableList.of("a1", "a2")),
-                        Symbol.createSymbol(
-                                ResourceAccessibility.PUBLIC,
-                                ResourceType.TRANSITION,
-                                "t",
-                                SymbolJavaType.INT,
-                                "0",
-                                Symbol.NO_CHILDREN));
+                                ImmutableList.of(),
+                                ImmutableList.of("a1", "a2"),
+                                ResourceAccessibility.DEFAULT),
+                        new Symbol.NormalSymbol(
+                                ResourceType.TRANSITION, "t", 0, ResourceAccessibility.PUBLIC));
     }
 }

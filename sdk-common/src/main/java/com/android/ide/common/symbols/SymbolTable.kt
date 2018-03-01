@@ -49,7 +49,11 @@ abstract class SymbolTable protected constructor() {
 
     private data class SymbolTableImpl(
             override val tablePackage: String,
-            override val symbols: ImmutableTable<ResourceType, String, Symbol>) : SymbolTable()
+            override val symbols: ImmutableTable<ResourceType, String, Symbol>) : SymbolTable() {
+
+        override fun toString(): String = "SymbolTable ($tablePackage)" +
+                "\n  " + symbols.values().joinToString("\n  ")
+    }
 
     /**
      * Produces a subset of this symbol table that has the symbols with resource type / name defined

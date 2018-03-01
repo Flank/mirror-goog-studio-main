@@ -17,9 +17,7 @@
 package com.android.builder.symbols
 
 import com.android.SdkConstants
-import com.android.annotations.VisibleForTesting
-import com.android.ide.common.symbols.SymbolJavaType.INT
-import com.android.ide.common.symbols.SymbolJavaType.INT_LIST
+import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.canonicalizeValueResourceName
 import com.android.resources.ResourceType
@@ -128,11 +126,13 @@ private fun generateResourceTypeClass(table: SymbolTable, resType: ResourceType)
         cw.visitField(
                 ACC_PUBLIC + ACC_STATIC,
                 s.name,
-                if (s.javaType == INT) /* int */ "I" else /* int[] */ "[I", null,
-                if (s.javaType == INT) valueStringToInt(valueString = s.value) else null)
+                s.javaType.desc,
+                null,
+                (s as? Symbol.NormalSymbol)?.intValue
+        )
                 .visitEnd()
 
-        if (s.javaType == INT_LIST) {
+        if (s is Symbol.StyleableSymbol) {
             val children = s.children
             for ((i, child) in children.withIndex()) {
                 cw.visitField(
@@ -161,7 +161,8 @@ private fun generateResourceTypeClass(table: SymbolTable, resType: ResourceType)
         val clinit = cw.visitMethod(ACC_STATIC, "<clinit>", "()V", null, null)
         clinit.visitCode()
         for (s in symbols) {
-            val values = parseArrayLiteral(s.children.size, s.value)
+            s as Symbol.StyleableSymbol
+            val values = s.values
             clinit.visitIntInsn(BIPUSH, values.size)
             clinit.visitIntInsn(NEWARRAY, T_INT)
 
@@ -194,32 +195,3 @@ private fun internalName(table: SymbolTable, type: ResourceType?): String {
     }
 }
 
-@VisibleForTesting
-fun valueStringToInt(valueString: String) =
-        if (valueString.startsWith("0x")) {
-            Integer.parseInt(valueString.substring(2), 16)
-        } else {
-            throw IllegalArgumentException("""Value string '$valueString' does not start with 0x""")
-        }
-
-@VisibleForTesting
-fun parseArrayLiteral(size: Int, valuesString: String): IntArray {
-    if (size == 0) {
-        return IntArray(0)
-    }
-    val ints = IntArray(size)
-
-    val values = VALUE_ID_SPLITTER.split(valuesString.subSequence(1,
-            valuesString.length - 1)).iterator()
-    for (i in 0 until size) {
-        if (!values.hasNext()) {
-            throw IllegalArgumentException("""Values string $valuesString should have $size items.""")
-        }
-        ints[i] = valueStringToInt(values.next())
-    }
-    if (values.hasNext()) {
-        throw IllegalArgumentException("""Values string $valuesString should have $size items.""")
-    }
-
-    return ints
-}

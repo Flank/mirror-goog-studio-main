@@ -101,15 +101,15 @@ public class SymbolTableTest {
         SymbolTable m1 =
                 SymbolTable.builder()
                         .tablePackage("muu")
-                        .add(createSymbol("attr", "b", "int[]", "d1"))
+                        .add(createSymbol("attr", "b", "int", "d1"))
                         .add(createSymbol("string", "b2", "int", "d2"))
                         .build();
 
         SymbolTable m2 =
                 SymbolTable.builder()
                         .tablePackage("moo")
-                        .add(createSymbol("attr", "b", "int[]", "d3"))
-                        .add(createSymbol("string", "b2", "int[]", "d4"))
+                        .add(createSymbol("attr", "b", "int", "d3"))
+                        .add(createSymbol("string", "b2", "int", "d4"))
                         .add(createSymbol("color", "b5", "int", "d5"))
                         .build();
 
@@ -132,14 +132,14 @@ public class SymbolTableTest {
                 SymbolTable.builder()
                         .tablePackage("bar")
                         .add(createSymbol("attr", "b", "int", "d"))
-                        .add(createSymbol("string", "f", "int[]", "h"))
+                        .add(createSymbol("string", "f", "int", "h"))
                         .build();
 
         SymbolTable f =
                 SymbolTable.builder()
                         .tablePackage("bleh")
-                        .add(createSymbol("integer", "j", "int[]", "l"))
-                        .add(createSymbol("attr", "b", "int[]", "n"))
+                        .add(createSymbol("integer", "j", "int", "l"))
+                        .add(createSymbol("attr", "b", "int", "n"))
                         .build();
 
         SymbolTable r = t.filter(f);
@@ -204,53 +204,35 @@ public class SymbolTableTest {
         SymbolTable table =
                 SymbolTable.builder()
                         .add(
-                                Symbol.createSymbol(
-                                        ResourceAccessibility.PUBLIC,
+                                new Symbol.NormalSymbol(
                                         ResourceType.DRAWABLE,
                                         "img",
-                                        SymbolJavaType.INT,
-                                        "0",
-                                        Symbol.NO_CHILDREN))
+                                        0,
+                                        ResourceAccessibility.PUBLIC))
                         .add(
-                                Symbol.createSymbol(
-                                        ResourceAccessibility.DEFAULT,
-                                        ResourceType.ID,
-                                        "bar",
-                                        SymbolJavaType.INT,
-                                        "0",
-                                        Symbol.NO_CHILDREN))
+                                new Symbol.NormalSymbol(
+                                        ResourceType.ID, "bar", 0, ResourceAccessibility.DEFAULT))
                         .add(
-                                Symbol.createSymbol(
-                                        ResourceAccessibility.PRIVATE,
+                                new Symbol.NormalSymbol(
                                         ResourceType.STRING,
                                         "beep",
-                                        SymbolJavaType.INT,
-                                        "0",
-                                        Symbol.NO_CHILDREN))
+                                        0,
+                                        ResourceAccessibility.PRIVATE))
                         .add(
-                                Symbol.createSymbol(
-                                        ResourceAccessibility.DEFAULT,
+                                new Symbol.NormalSymbol(
                                         ResourceType.STRING,
                                         "foo",
-                                        SymbolJavaType.INT,
-                                        "0",
-                                        Symbol.NO_CHILDREN))
+                                        0,
+                                        ResourceAccessibility.DEFAULT))
                         .add(
-                                Symbol.createSymbol(
-                                        ResourceAccessibility.PUBLIC,
+                                new Symbol.NormalSymbol(
                                         ResourceType.TRANSITION,
                                         "t",
-                                        SymbolJavaType.INT,
-                                        "0",
-                                        Symbol.NO_CHILDREN))
+                                        0,
+                                        ResourceAccessibility.PUBLIC))
                         .add(
-                                Symbol.createSymbol(
-                                        ResourceAccessibility.PUBLIC,
-                                        ResourceType.XML,
-                                        "xml",
-                                        SymbolJavaType.INT,
-                                        "0",
-                                        Symbol.NO_CHILDREN))
+                                new Symbol.NormalSymbol(
+                                        ResourceType.XML, "xml", 0, ResourceAccessibility.PUBLIC))
                         .build();
 
         assertThat(table.getSymbolByAccessibility(ResourceAccessibility.DEFAULT)).hasSize(2);

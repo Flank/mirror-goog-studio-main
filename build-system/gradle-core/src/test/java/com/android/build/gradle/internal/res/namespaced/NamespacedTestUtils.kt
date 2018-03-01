@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.ide.common.symbols.Symbol
-import com.android.ide.common.symbols.SymbolJavaType
 import com.android.resources.ResourceType
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
@@ -67,13 +66,10 @@ fun compileSources(sources: ImmutableList<File>, javacOutput: File) {
  */
 fun symbol(type: String, name: String): Symbol {
     val resType = ResourceType.getEnum(type)!!
-    var javaType = SymbolJavaType.INT
-    var value = "0"
     if (resType == ResourceType.DECLARE_STYLEABLE) {
-        javaType = SymbolJavaType.INT_LIST
-        value = "{}"
+        return Symbol.StyleableSymbol(name, ImmutableList.of(), ImmutableList.of())
     }
-    return Symbol.createSymbol(resType, name, javaType, value)
+    return Symbol.NormalSymbol(resType, name, 0)
 }
 
 class MockResolvedDependencyResult(

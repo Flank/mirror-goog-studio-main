@@ -33,10 +33,11 @@ public class SymbolTest {
 
     @Test
     public void symbolData() {
-        Symbol s = SymbolTestUtils.createSymbol("attr", "a", "int", "c");
+        Symbol s = SymbolTestUtils.createSymbol("attr", "a", "int", "0xc");
+        assertThat(s).isInstanceOf(Symbol.NormalSymbol.class);
         assertThat(s.getName()).isEqualTo("a");
         assertThat(s.getJavaType()).isEqualTo(SymbolJavaType.INT);
-        assertThat(s.getValue()).isEqualTo("c");
+        assertThat(((Symbol.NormalSymbol) s).getIntValue()).isEqualTo(0xc);
         assertThat(s.getResourceType()).isEqualTo(ResourceType.ATTR);
     }
 
@@ -70,7 +71,7 @@ public class SymbolTest {
     public void nameCannotBeNull() {
         try {
             // noinspection ConstantConditions
-            SymbolTestUtils.createSymbol("attr", null, "int[]", "");
+            SymbolTestUtils.createSymbol("attr", null, "int", "");
             fail();
         } catch (IllegalArgumentException e) {
             assertThat(e.getMessage()).contains("name");
@@ -80,7 +81,7 @@ public class SymbolTest {
     @Test
     public void nameCannotContainDots() {
         try {
-            SymbolTestUtils.createSymbol("attr", "b.c", "int[]", "e");
+            SymbolTestUtils.createSymbol("attr", "b.c", "int", "e");
             fail();
         } catch (IllegalArgumentException e) {
             assertThat("Resource name cannot contain dots: b.c").isEqualTo(e.getMessage());
@@ -90,7 +91,7 @@ public class SymbolTest {
     @Test
     public void nameCannotContainColons() {
         try {
-            SymbolTestUtils.createSymbol("attr", "b:c", "int[]", "e");
+            SymbolTestUtils.createSymbol("attr", "b:c", "int", "e");
             fail();
         } catch (IllegalArgumentException e) {
             assertThat("Error: ':' is not a valid resource name character")

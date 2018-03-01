@@ -26,8 +26,9 @@ import com.android.resources.ResourceType
 import com.android.xml.AndroidManifest
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.CharMatcher
-import com.google.common.base.Joiner
+import com.google.common.base.Splitter
 import com.google.common.collect.HashMultimap
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Lists
 import org.w3c.dom.Element
@@ -77,10 +78,10 @@ fun mergeAndRenumberSymbols(
 
     tables.forEach { table ->
         table.symbols.values().forEach { symbol ->
-            if (symbol.resourceType != ResourceType.STYLEABLE) {
-                newSymbolMap.put(symbol.resourceType, symbol.name)
-            } else {
-                arrayToAttrs.putAll(symbol.name, symbol.children)
+            when (symbol) {
+                is Symbol.NormalSymbol -> newSymbolMap.put(symbol.resourceType, symbol.name)
+                is Symbol.StyleableSymbol -> arrayToAttrs.putAll(symbol.name, symbol.children)
+                else -> throw IllegalStateException("Unexpected symbol $symbol")
             }
         }
     }
@@ -90,7 +91,7 @@ fun mergeAndRenumberSymbols(
 
     // let's keep a map of the new ATTR names to symbol so that we can find them easily later
     // when we process the styleable
-    val attrToValue = HashMap<String, Symbol>()
+    val attrToValue = HashMap<String, Symbol.NormalSymbol>()
 
     // process the normal symbols
     for (resourceType in newSymbolMap.keySet()) {
@@ -100,12 +101,10 @@ fun mergeAndRenumberSymbols(
         for (symbolName in symbolNames) {
             val value = idProvider.next(resourceType)
             val newSymbol =
-                Symbol.createSymbol(
-                    resourceType,
-                    symbolName,
-                    SymbolJavaType.INT,
-                    value,
-                    Symbol.NO_CHILDREN
+                Symbol.NormalSymbol(
+                    resourceType = resourceType,
+                    name = symbolName,
+                    intValue = value
                 )
             tableBuilder.add(newSymbol)
 
@@ -123,15 +122,15 @@ fun mergeAndRenumberSymbols(
         attributes.sort()
 
         // now get the attributes values using the new symbol map
-        val attributeValues = ArrayList<String>(attributes.size)
+        val attributeValues = ImmutableList.builder<Int>()
         for (attribute in attributes) {
             if (attribute.startsWith(SdkConstants.ANDROID_NS_NAME_PREFIX)) {
                 val name = attribute.substring(SdkConstants.ANDROID_NS_NAME_PREFIX_LEN)
 
                 val platformSymbol =
-                    platformSymbols.symbols.get(ResourceType.ATTR, name)
+                    platformSymbols.symbols.get(ResourceType.ATTR, name) as Symbol.NormalSymbol?
                 if (platformSymbol != null) {
-                    attributeValues.add(platformSymbol.value)
+                    attributeValues.add(platformSymbol.intValue)
                 }
             } else {
                 val symbol = attrToValue[attribute]
@@ -139,18 +138,16 @@ fun mergeAndRenumberSymbols(
                     // symbol can be null if the symbol table is broken. This is possible
                     // some non-final AAR built with non final Gradle.
                     // e.g.  com.android.support:appcompat-v7:26.0.0-beta2
-                    attributeValues.add(symbol.value)
+                    attributeValues.add(symbol.intValue)
                 }
             }
         }
 
         tableBuilder.add(
-            Symbol.createSymbol(
-                ResourceType.STYLEABLE,
+            Symbol.StyleableSymbol(
                 arrayName,
-                SymbolJavaType.INT_LIST,
-                "{ " + Joiner.on(", ").join(attributeValues) + " }",
-                attributes
+                attributeValues.build(),
+                ImmutableList.copyOf(attributes)
             )
         )
     }
@@ -354,3 +351,48 @@ fun parseManifest(manifestFile: File): ManifestData {
 fun canonicalizeValueResourceName(name: String): String =
     NORMALIZED_VALUE_NAME_CHARS.replaceFrom(name, '_')
 
+private val VALUE_ID_SPLITTER = Splitter.on(',').trimResults()
+
+fun valueStringToInt(valueString: String) =
+    if (valueString.startsWith("0x")) {
+        Integer.parseUnsignedInt(valueString.substring(2), 16)
+    } else {
+        Integer.parseInt(valueString)
+    }
+
+fun parseArrayLiteral(size: Int, valuesString: String): ImmutableList<Int> {
+    if (size == 0) {
+        return ImmutableList.of()
+    }
+    val ints = ImmutableList.builder<Int>()
+
+    val values = VALUE_ID_SPLITTER.split(valuesString.subSequence(1,
+        valuesString.length - 1)).iterator()
+    for (i in 0 until size) {
+        if (!values.hasNext()) {
+            throw IllegalArgumentException("""Values string $valuesString should have $size items.""")
+        }
+        ints.add(valueStringToInt(values.next()))
+    }
+    if (values.hasNext()) {
+        throw IllegalArgumentException("""Values string $valuesString should have $size items.""")
+    }
+
+    return ints.build()
+}
+
+// Some AARs built with a preview version of the Android Gradle Plugin had badly sorted symbol
+// tables, so in that case the lenient method is used.
+fun parseArrayLiteralLenient(valuesString: String): ImmutableList<Int> =
+    ImmutableList.builder<Int>().apply {
+        VALUE_ID_SPLITTER.split(
+            valuesString.subSequence(
+                1,
+                valuesString.length - 1
+            )
+        ).forEach { value ->
+            if (!value.isEmpty()) {
+                add(valueStringToInt(value))
+            }
+        }
+    }.build()

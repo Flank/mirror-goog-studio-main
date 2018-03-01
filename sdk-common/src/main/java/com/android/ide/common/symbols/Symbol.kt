@@ -25,8 +25,7 @@ import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 
 /**
- * A symbol is a 4-tuple containing a resource type, a name, a java type and a value. Symbols are
- * used to refer to Android resources.
+ * Symbols are used to refer to Android resources.
  *
  * A resource type identifies the group or resource. Resources in Android can have various types:
  * drawables, strings, etc. The full list of supported resource types can be found in
@@ -55,31 +54,20 @@ import com.google.common.collect.ImmutableList
  * this class is independent of any use.
  */
 @Immutable
-abstract class Symbol protected constructor() {
+sealed class Symbol {
 
     abstract val resourceAccessibility : ResourceAccessibility
     abstract val resourceType: ResourceType
-    abstract val value:String
     abstract val name:String
+    /** The value as a string. */
+    abstract fun getValue():String
     abstract val javaType: SymbolJavaType
-    /**
-     * list of the symbol's children. If the resource has a java type equal to INT_LIST
-     * (is a declare styleable) the list will contain its' children in order corresponding to their
-     * IDs in the value list. Otherwise, the list is empty.
-     * For example:
-     * ```
-     * int[] styleable S1 {0x7f040001,0x7f040002}
-     * int styleable S1_attr1 0
-     * int styleable S1_attr2 1
-     * ```
-     *  corresponds to a Symbol with value `"{0x7f040001,0x7f040002}"` and children `{"attr1",
-     * "attr2"}`.
-     * */
     abstract val children: ImmutableList<String>
 
     companion object {
 
         @JvmField val NO_CHILDREN: ImmutableList<String> = ImmutableList.of()
+
 
         /**
          * Creates a new symbol. The `name` of the symbol needs to be a valid sanitized resource
@@ -88,73 +76,67 @@ abstract class Symbol protected constructor() {
          *
          * @param resourceType the resource type of the symbol
          * @param name the sanitized name of the symbol
-         * @param javaType the java type of the symbol
+         * @param idProvider the provider for the value of the symbol
+         */
+        @JvmStatic fun createAndValidateSymbol(
+            resourceType: ResourceType,
+            name: String,
+            idProvider: IdProvider): NormalSymbol {
+            validateSymbol(name, resourceType)
+            return NormalSymbol(
+                resourceType = resourceType,
+                name = name,
+                intValue = idProvider.next(resourceType)
+            )
+        }
+
+        /**
+         * Creates a new symbol. The `name` of the symbol needs to be a valid sanitized resource
+         * name. See [canonicalizeValueResourceName] method and apply it beforehand
+         * when necessary.
+         *
+         * @param resourceType the resource type of the symbol
+         * @param name the sanitized name of the symbol
          * @param value the value of the symbol
          */
         @JvmStatic fun createAndValidateSymbol(
                 resourceType: ResourceType,
                 name: String,
-                javaType: SymbolJavaType,
-                value: String,
-                children: List<String> = ImmutableList.of()): Symbol {
+                value: Int): NormalSymbol {
             validateSymbol(name, resourceType)
-            return createSymbol(
-                    resourceType,
-                    name,
-                    javaType,
-                    value,
-                    children)
+            return NormalSymbol(
+                resourceType = resourceType,
+                name = name,
+                intValue = value
+            )
         }
 
         /**
-         * Creates a new symbol without validation. The `name` of the symbol should to be a valid
-         * sanitized resource name.
-         * The created resource will have the DEFAULT resource accessibility qualifier.
+         * Creates a new symbol. The `name` of the symbol needs to be a valid sanitized resource
+         * name. See [canonicalizeValueResourceName] method and apply it beforehand
+         * when necessary.
          *
-         * @param resourceType the resource type of the symbol
-         * @param name the sanitized name of the symbol
-         * @param javaType the java type of the symbol
-         * @param value the value of the symbol
-         */
-        @JvmStatic fun createSymbol(
-                resourceType: ResourceType,
-                name: String,
-                javaType: SymbolJavaType,
-                value: String,
-                children: List<String> = ImmutableList.of()): Symbol {
-            return SymbolImpl(
-                    ResourceAccessibility.DEFAULT,
-                    resourceType,
-                    value,
-                    name,
-                    javaType,
-                    ImmutableList.copyOf(children))
-        }
-
-        /**
-         * Creates a new symbol without validation. The `name` of the symbol should to be a valid
-         * sanitized resource name.
+         * For example:
+         * ```
+         * int[] styleable S1 {0x7f040001,0x7f040002}
+         * int styleable S1_attr1 0
+         * int styleable S1_attr2 1
+         * ```
+         *  corresponds to a StylableSymbol with value
+         *  `[0x7f040001,0x7f040002]` and children `["attr1", "attr2"]`.
          *
-         * @param resourceAccessibility the resource accessibility qualifier (e.g. public)
-         * @param resourceType the resource type of the symbol
          * @param name the sanitized name of the symbol
-         * @param javaType the java type of the symbol
-         * @param value the value of the symbol
          */
-        @JvmStatic fun createSymbol(
-                resourceAccessibility: ResourceAccessibility,
-                resourceType: ResourceType,
-                name: String,
-                javaType: SymbolJavaType,
-                value: String,
-                children: List<String> = ImmutableList.of()): Symbol {
-            return SymbolImpl(
-                    resourceAccessibility,
-                    resourceType,
-                    value,
-                    name,
-                    javaType,
-                    ImmutableList.copyOf(children))
+        @JvmStatic fun createAndValidateStyleableSymbol(
+            name: String,
+            values: ImmutableList<Int>,
+            children: List<String> = ImmutableList.of()): StyleableSymbol {
+            validateSymbol(name, ResourceType.STYLEABLE)
+            return StyleableSymbol(
+                name = name,
+                values = values,
+                children = ImmutableList.copyOf(children)
+            )
         }
 
         /**
@@ -176,11 +158,56 @@ abstract class Symbol protected constructor() {
         }
     }
 
-    private data class SymbolImpl(
-            override val resourceAccessibility: ResourceAccessibility,
-            override val resourceType: ResourceType,
-            override val value: String,
-            override val name: String,
-            override val javaType: SymbolJavaType,
-            override val children: ImmutableList<String>) : Symbol()
+    data class NormalSymbol @JvmOverloads constructor(
+        override val resourceType: ResourceType,
+        override val name: String,
+        val intValue: Int,
+        override val resourceAccessibility: ResourceAccessibility = ResourceAccessibility.DEFAULT
+    ) : Symbol() {
+        init {
+            Preconditions.checkArgument(resourceType != ResourceType.STYLEABLE,
+                "Internal Error: Styleables must be represented by StyleableSymbol.")
+        }
+        override val javaType: SymbolJavaType
+            get() = SymbolJavaType.INT
+        override fun getValue(): String = "0x${Integer.toHexString(intValue)}"
+        override val children: ImmutableList<String>
+            get() = throw UnsupportedOperationException("Only styleables have children.")
+
+        override fun toString(): String = "$resourceAccessibility $resourceType $name = 0x${intValue.toString(16)}"
+    }
+
+    data class StyleableSymbol @JvmOverloads constructor(
+        override val name: String,
+        val values: ImmutableList<Int>,
+        /**
+         * list of the symbol's children in order corresponding to their IDs in the value list.
+         * For example:
+         * ```
+         * int[] styleable S1 {0x7f040001,0x7f040002}
+         * int styleable S1_attr1 0
+         * int styleable S1_attr2 1
+         * ```
+         *  corresponds to a Symbol with value `"{0x7f040001,0x7f040002}"` and children `{"attr1",
+         * "attr2"}`.
+         * */
+        override val children: ImmutableList<String>,
+        override val resourceAccessibility: ResourceAccessibility = ResourceAccessibility.DEFAULT        ) : Symbol() {
+        override val resourceType: ResourceType
+            get() = ResourceType.STYLEABLE
+
+        override fun getValue(): String =
+            StringBuilder(values.size * 12 + 2).apply {
+                    append("{ ")
+                    for (i in 0 until values.size) {
+                        if (i != 0) { append(", ") }
+                        append("0x")
+                        append(Integer.toHexString(values[i]))
+                    }
+                    append(" }")
+                }.toString()
+
+        override val javaType: SymbolJavaType
+            get() = SymbolJavaType.INT_LIST
+    }
 }

@@ -115,9 +115,7 @@ public class ResourceExtraXmlParser {
                     Symbol.createAndValidateSymbol(
                             ResourceType.ID,
                             SymbolUtils.canonicalizeValueResourceName(name),
-                            SymbolJavaType.INT,
-                            idProvider.next(ResourceType.ID),
-                            Symbol.NO_CHILDREN);
+                            idProvider);
             if (!builder.contains(newSymbol)) {
                 builder.add(newSymbol);
             }
