@@ -260,33 +260,37 @@ public class TranslationDetectorTest extends AbstractCheckTest {
              ));
     }
 
-    public void testNonTranslatable1() throws Exception {
+    public void testNonTranslatable1() {
         TranslationDetector.sCompleteRegions = true;
         //noinspection all // Sample code
-        assertEquals(""
-                + "res/values-nb/nontranslatable.xml:3: Error: The resource string \"dummy\" has been marked as translatable=\"false\" [ExtraTranslation]\n"
-                + "    <string name=\"dummy\">Ignore Me</string>\n"
-                + "            ~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-
-            lintProject(mNontranslatable,
-                    xml("res/values-nb/nontranslatable.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<resources>\n"
-                            + "    <string name=\"dummy\">Ignore Me</string>\n"
-                            + "</resources>\n"
-                            + "\n")));
+        String expected = "" +
+                "res/values-nb/nontranslatable.xml:3: Warning: The resource string \"dummy\" has been marked as translatable=\"false\" [Untranslatable]\n" +
+                "    <string name=\"dummy\">Ignore Me</string>\n" +
+                "            ~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings\n";
+        lint().files(
+                mNontranslatable,
+                xml("res/values-nb/nontranslatable.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "    <string name=\"dummy\">Ignore Me</string>\n"
+                        + "</resources>\n"
+                        + "\n"))
+                .run()
+                .expect(expected);
     }
 
-    public void testNonTranslatable2() throws Exception {
+    public void testNonTranslatable2() {
         TranslationDetector.sCompleteRegions = true;
-        assertEquals(""
-                + "res/values-nb/nontranslatable.xml:3: Error: Non-translatable resources should only be defined in the base values/ folder [ExtraTranslation]\n"
-                + "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n"
-                + "                         ~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-
-            lintProject(mNontranslatable2));
+        String expected = "" +
+                "res/values-nb/nontranslatable.xml:3: Warning: Non-translatable resources should only be defined in the base values/ folder [Untranslatable]\n" +
+                "    <string name=\"dummy\" translatable=\"false\">Ignore Me</string>\n" +
+                "                         ~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings";
+        lint().files(
+                mNontranslatable2)
+                .run()
+                .expect(expected);
     }
 
     public void testNonTranslatable3() throws Exception {
@@ -645,6 +649,50 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                                 + "    <string name=\"app_name\">Min Applikasjon</string>\n"
                                 + "</resources>\n")
                 ));
+    }
+
+    public void testTranslatableAttributeWarning() {
+        lint().files(
+                xml("res/values/strings.xml", "" +
+                        "<resources>\n" +
+                        "    <string name=\"name\">base</string>\n" +
+                        "</resources>\n"),
+                xml("res/values-en/strings.xml", "" +
+                        "<resources>\n" +
+                        "    <string name=\"name\" translatable=\"false\">base</string>\n" +
+                        "</resources>\n"),
+                xml("res/values-nb/strings.xml", "" +
+                        "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n" +
+                        "    <string name=\"name\" translatable=\"false\" tools:ignore=\"Untranslatable\">base</string>\n" +
+                        "</resources>\n"),
+                xml("res/values-sv/strings.xml", "" +
+                        "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n" +
+                        // Check legacy suppress via ExtraTranslation
+                        "    <string name=\"name\" translatable=\"false\" tools:ignore=\"ExtraTranslation\">base</string>\n" +
+                        "</resources>\n"),
+                xml("res/values/something.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n" +
+                        "    <!-- Version dependent font string, in v21 we added sans-serif-medium. [DO NOT TRANSLATE] -->\n" +
+                        "    <string name=\"games_font_roboto_medium\">sans-serif</string>\n" +
+                        "</resources>"),
+                xml("res/values-af/something.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                        "<resources>\n" +
+                        "    <string name=\"name\">base</string>\n" +
+                        "    <string name=\"games_font_roboto_medium\" msgid=\"2018081468373942067\">sans-serif-medium</string>\n" +
+                        "</resources>"),
+                xml("res/values-v21/something.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                        "<resources>\n" +
+                        "    <!-- Version specific font string for v21 and up. [DO NOT TRANSLATE] -->\n" +
+                        "    <string name=\"games_font_roboto_medium\" translatable=\"false\">sans-serif-medium</string>\n" +
+                        "</resources>"))
+                .run().expect("" +
+                "res/values-en/strings.xml:2: Warning: Non-translatable resources should only be defined in the base values/ folder [Untranslatable]\n" +
+                "    <string name=\"name\" translatable=\"false\">base</string>\n" +
+                "                        ~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings");
     }
 
     @SuppressWarnings("all") // Sample code

@@ -107,7 +107,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             "to the namespace declaration `http://schemas.android.com/tools`.)",
             Category.MESSAGES,
             8,
-            Severity.FATAL,
+            Severity.ERROR,
             IMPLEMENTATION);
 
     /** Are there extra translations that are "unused" (appear only in specific languages) ? */
@@ -124,6 +124,22 @@ public class TranslationDetector extends ResourceXmlDetector {
             Category.MESSAGES,
             6,
             Severity.FATAL,
+            IMPLEMENTATION);
+
+    /** Are there extra translations that are "unused" (appear only in specific languages) ? */
+    public static final Issue TRANSLATED_UNTRANSLATABLE = Issue.create(
+            "Untranslatable",
+            "Translated Untranslatable",
+            "Strings can be marked with `translatable=false` to indicate that they " +
+                    "are not intended to be translated, but are present in the resource file " +
+                    "for other purposes (for example for non-display strings that should vary " +
+                    "by some other configuration qualifier such as screen size or API level.).\n" +
+                    "\n" +
+                    "There are cases where translators accidentally translate these strings " +
+                    "anyway, and lint will flag these occurrences with this lint check.",
+            Category.MESSAGES,
+            6,
+            Severity.WARNING,
             IMPLEMENTATION);
 
     private Set<String> mNames;
@@ -564,6 +580,7 @@ public class TranslationDetector extends ResourceXmlDetector {
             }
             if (mExtraLocations != null && mExtraLocations.containsKey(name)) {
                 String language = getLanguageTag(context.file.getParentFile().getName());
+                //noinspection VariableNotUsedInsideIf
                 if (language != null) {
                     if (context.getDriver().isSuppressed(context, EXTRA, element)) {
                         mExtraLocations.remove(name);
@@ -591,9 +608,14 @@ public class TranslationDetector extends ResourceXmlDetector {
                 String l = LintUtils.getLocaleAndRegion(context.file.getParentFile().getName());
                 //noinspection VariableNotUsedInsideIf
                 if (l != null) {
-                    context.report(EXTRA, translatable, context.getLocation(translatable),
-                        "Non-translatable resources should only be defined in the base " +
-                        "`values/` folder");
+                    // Check to make sure it's not suppressed with the older flag, EXTRA,
+                    // which this issue used to be reported under.
+                    if (!context.getDriver().isSuppressed(context, EXTRA, translatable)) {
+                        context.report(TRANSLATED_UNTRANSLATABLE, translatable,
+                                context.getLocation(translatable),
+                                "Non-translatable resources should only be defined in the base " +
+                                        "`values/` folder");
+                    }
                 } else {
                     if (mNonTranslatable == null) {
                         mNonTranslatable = new HashSet<>();
@@ -644,9 +666,14 @@ public class TranslationDetector extends ResourceXmlDetector {
 
             if (mNonTranslatable != null && mNonTranslatable.contains(name)
                     && !context.file.getParentFile().getName().equals(FD_RES_VALUES)) {
-                String message = String.format("The resource string \"`%1$s`\" has been "
-                        + "marked as `translatable=\"false\"`", name);
-                context.report(EXTRA, attribute, context.getLocation(attribute), message);
+                // Check to make sure it's not suppressed with the older flag, EXTRA,
+                // which this issue used to be reported under.
+                if (!context.getDriver().isSuppressed(context, EXTRA, translatable)) {
+                    String message = String.format("The resource string \"`%1$s`\" has been "
+                            + "marked as `translatable=\"false\"`", name);
+                    context.report(TRANSLATED_UNTRANSLATABLE, attribute,
+                            context.getLocation(attribute), message);
+                }
             }
 
             // TBD: Also make sure that the strings are not empty or placeholders?
