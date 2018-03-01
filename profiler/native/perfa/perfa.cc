@@ -73,6 +73,8 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
           cpu_api_tracing_enabled) ||
          (energy_profiler_enabled &&
           (strcmp(sig_mutf8, "Landroid/app/AlarmManager;") == 0 ||
+           strcmp(sig_mutf8, "Landroid/app/AlarmManager$ListenerWrapper;") ==
+               0 ||
            strcmp(sig_mutf8, "Landroid/app/JobSchedulerImpl;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/job/JobService;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/job/JobServiceEngine$JobHandler;") ==
@@ -250,6 +252,17 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                          "(Landroid/app/AlarmManager$OnAlarmListener;)V"))) {
       Log::E("Error instrumenting AlarmManager.cancel(OnAlarmListener)");
     }
+  } else if (strcmp(name, "android/app/AlarmManager$ListenerWrapper") == 0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::DetourInterfaceInvoke>(
+        ir::MethodId("Landroid/app/AlarmManager$OnAlarmListener;", "onAlarm",
+                     "()V"),
+        ir::MethodId(
+            "Lcom/android/tools/profiler/support/energy/AlarmManagerWrapper;",
+            "wrapListenerOnAlarm"));
+    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "run", "()V"))) {
+      Log::E("Error instrumenting ListenerWrapper.run");
+    }
   } else if (strcmp(name, "android/app/JobSchedulerImpl") == 0) {
     slicer::MethodInstrumenter mi(dex_ir);
     mi.AddTransformation<slicer::EntryHook>(
@@ -367,6 +380,9 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
         "sendListenerAlarmCancelled", "(ILjava/lang/String;)V");
+    BindJNIMethod(
+        jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
+        "sendListenerAlarmFired", "(ILjava/lang/String;)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobScheduled",
                   "(IILjava/lang/String;IJZJJJJI[Ljava/lang/String;JJZZZZZ"

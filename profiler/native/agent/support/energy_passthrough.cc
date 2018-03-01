@@ -287,6 +287,20 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerA
 }
 
 JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerAlarmFired(
+    JNIEnv* env, jclass clazz, jint event_id, jstring listener_tag) {
+  JStringWrapper listener_tag_str(env, listener_tag);
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
+  energy_event.mutable_alarm_fired()->mutable_listener()->set_tag(
+      listener_tag_str.get());
+  // Listener alarm cannot repeat so it's always terminal.
+  energy_event.set_is_terminal(true);
+  SubmitEnergyEvent(energy_event);
+}
+
+JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobScheduled(
     JNIEnv* env, jclass clazz, jint event_id, jint job_id, jstring service_name,
     jint backoff_policy, jlong initial_backoff_ms, jboolean is_periodic,

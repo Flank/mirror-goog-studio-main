@@ -34,12 +34,22 @@ import java.util.Map;
  */
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class AlarmManagerWrapper {
-    private static final Map<OnAlarmListener, String> listenerTagMap =
-            new HashMap<OnAlarmListener, String>();
+
+    /** Data structure for {@link OnAlarmListener} parameters. */
+    private static final class ListenerParams {
+        final int id;
+        final String tag;
+
+        ListenerParams(int id, String tag) {
+            this.id = id;
+            this.tag = tag;
+        }
+    }
+
     private static final Map<PendingIntent, Integer> operationIdMap =
             new HashMap<PendingIntent, Integer>();
-    private static final Map<OnAlarmListener, Integer> listenerIdMap =
-            new HashMap<OnAlarmListener, Integer>();
+    private static final Map<OnAlarmListener, ListenerParams> listenerMap =
+            new HashMap<OnAlarmListener, ListenerParams>();
 
     /**
      * Wraps the implementation method of various set alarm methods in {@link AlarmManager}.
@@ -83,17 +93,17 @@ public final class AlarmManagerWrapper {
                     operation.getCreatorPackage(),
                     operation.getCreatorUid());
         } else if (listener != null) {
-            if (!listenerIdMap.containsKey(listener)) {
-                listenerIdMap.put(listener, EventIdGenerator.nextId());
+            if (!listenerMap.containsKey(listener)) {
+                listenerMap.put(
+                        listener, new ListenerParams(EventIdGenerator.nextId(), listenerTag));
             }
             sendListenerAlarmScheduled(
-                    listenerIdMap.get(listener),
+                    listenerMap.get(listener).id,
                     type,
                     triggerAtMillis,
                     windowMillis,
                     intervalMillis,
                     listenerTag);
-            listenerTagMap.put(listener, listenerTag);
         } else {
             StudioLog.e("Invalid alarm: neither operation or listener is set.");
         }
@@ -119,9 +129,24 @@ public final class AlarmManagerWrapper {
      * @param listener the listener parameter passed to the original method.
      */
     public static void wrapCancel(AlarmManager alarmManager, OnAlarmListener listener) {
-        sendListenerAlarmCancelled(
-                listenerIdMap.containsKey(listener) ? listenerIdMap.get(listener) : 0,
-                listenerTagMap.containsKey(listener) ? listenerTagMap.get(listener) : "");
+        ListenerParams params =
+                listenerMap.containsKey(listener)
+                        ? listenerMap.get(listener)
+                        : new ListenerParams(0, "");
+        sendListenerAlarmCancelled(params.id, params.tag);
+    }
+
+    /**
+     * Wraps {@link OnAlarmListener#onAlarm()}.
+     *
+     * @param listener the wrapped {@link OnAlarmListener} instance, i.e. "this".
+     */
+    public static void wrapListenerOnAlarm(OnAlarmListener listener) {
+        if (listenerMap.containsKey(listener)) {
+            ListenerParams params = listenerMap.get(listener);
+            sendListenerAlarmFired(params.id, params.tag);
+        }
+        listener.onAlarm();
     }
 
     // Native functions to send alarm events to perfd.
@@ -146,4 +171,6 @@ public final class AlarmManagerWrapper {
             int eventId, String creatorPackage, int creatorUid);
 
     private static native void sendListenerAlarmCancelled(int eventId, String listenerTag);
+
+    private static native void sendListenerAlarmFired(int eventId, String listenerTag);
 }

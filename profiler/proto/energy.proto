@@ -116,21 +116,23 @@ message EnergyEvent {
     AlarmSet alarm_set = 103;
     // An alarm was cancelled.
     AlarmCancelled alarm_cancelled = 104;
+    // An alarm goes off.
+    AlarmFired alarm_fired = 105;
     // A job is scheduled by JobScheduler.
-    JobScheduled job_scheduled = 105;
+    JobScheduled job_scheduled = 106;
     // JobService.onStartJob is called.
-    JobStarted job_started = 106;
+    JobStarted job_started = 107;
     // JobService.onStopJob is called. This is called if the system has
     // determined that the application must stop execution of this job even
     // before it has had a chance to call jobFinished(JobParameters, boolean).
     // For example, JobScheduler.cancel() will trigger this event. This will
     // also happen if the constraints specified at schedule time (e.g. requires
     // charging) are no longer met.
-    JobStopped job_stopped = 107;
+    JobStopped job_stopped = 108;
     // JobService.jobFinished is called. Application must call this to inform
     // the JobScheduler the application has finished executing. When the system
     // receives this message it will release the wakelock being held.
-    JobFinished job_finished = 108;
+    JobFinished job_finished = 109;
   }
 }
 
@@ -216,6 +218,19 @@ message AlarmCancelled {
     PendingIntent operation = 1;
     // A previously set listener.
     AlarmListener listener = 2;
+  }
+}
+
+message AlarmFired {
+  // True if the alarm repeats, i.e. interval is greater than zero.
+  // Android doesn't allow repeating listener alarms.
+  bool is_repeating = 1;
+  // The alarm action can either be a PendingIntent or an AlarmListener.
+  oneof fire_action {
+    // A previously set operation.
+    PendingIntent operation = 2;
+    // A previously set listener.
+    AlarmListener listener = 3;
   }
 }
 
