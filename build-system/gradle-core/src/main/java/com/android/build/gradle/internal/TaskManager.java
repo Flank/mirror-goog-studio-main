@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.SdkConstants.FD_ASSETS;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
@@ -45,7 +44,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINKED_RES_FOR_BUNDLE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MOCKABLE_JAR;
@@ -963,25 +961,12 @@ public abstract class TaskManager {
         return mergeResourcesTask;
     }
 
-    public MergeSourceSetFolders createMergeAssetsTask(@NonNull VariantScope scope) {
-        final GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
-        File outputDir =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        FD_ASSETS,
-                        variantConfiguration.getDirName());
-
+    public void createMergeAssetsTask(@NonNull VariantScope scope) {
         MergeSourceSetFolders mergeAssetsTask =
-                taskFactory.create(
-                        new MergeSourceSetFolders.MergeAppAssetConfigAction(scope, outputDir));
-
-        // register the output
-        scope.addTaskOutput(MERGED_ASSETS, outputDir, mergeAssetsTask.getName());
+                taskFactory.create(new MergeSourceSetFolders.MergeAppAssetConfigAction(scope));
 
         mergeAssetsTask.dependsOn(scope.getAssetGenTask());
         scope.setMergeAssetsTask(mergeAssetsTask);
-
-        return mergeAssetsTask;
     }
 
     @NonNull

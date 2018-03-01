@@ -51,7 +51,7 @@ public class AndroidUnitTest extends Test {
     private String sdkPlatformDirPath;
     private BuildableArtifact mergedManifest;
     private FileCollection resCollection;
-    private FileCollection assetsCollection;
+    private BuildableArtifact assetsCollection;
 
     @InputFiles
     @Optional
@@ -61,7 +61,7 @@ public class AndroidUnitTest extends Test {
 
     @InputFiles
     @Optional
-    public FileCollection getAssetsCollection() {
+    public BuildableArtifact getAssetsCollection() {
         return assetsCollection;
     }
 
@@ -131,7 +131,9 @@ public class AndroidUnitTest extends Test {
             VariantScope testedScope = testedVariantData.getScope();
             if (includeAndroidResources) {
                 runTestsTask.assetsCollection =
-                        testedScope.getOutput(InternalArtifactType.MERGED_ASSETS);
+                        testedScope
+                                .getBuildArtifactsHolder()
+                                .getFinalArtifactFiles(InternalArtifactType.MERGED_ASSETS);
                 runTestsTask.resCollection =
                         testedScope.getOutput(InternalArtifactType.MERGED_NOT_COMPILED_RES);
             }

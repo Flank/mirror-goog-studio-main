@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
@@ -54,7 +55,7 @@ import org.gradle.api.tasks.TaskAction;
 public class GenerateTestConfig extends DefaultTask {
 
     FileCollection resourcesDirectory;
-    FileCollection assetsDirectory;
+    BuildableArtifact assets;
     Path sdkHome;
     File generatedJavaResourcesDirectory;
     ApkInfo mainApkInfo;
@@ -74,14 +75,14 @@ public class GenerateTestConfig extends DefaultTask {
     @TaskAction
     public void generateTestConfig() throws IOException {
         checkNotNull(resourcesDirectory);
-        checkNotNull(assetsDirectory);
+        checkNotNull(assets);
         checkNotNull(sdkHome);
 
         BuildOutput output =
                 ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifests)
                         .element(mainApkInfo);
         generateTestConfigForOutput(
-                assetsDirectory.getSingleFile().toPath().toAbsolutePath(),
+                Iterables.getOnlyElement(assets).toPath().toAbsolutePath(),
                 resourcesDirectory.getSingleFile().toPath().toAbsolutePath(),
                 sdkHome,
                 packageForR,
@@ -125,8 +126,8 @@ public class GenerateTestConfig extends DefaultTask {
     }
 
     @Input // No need for @InputDirectory, we only care about the path.
-    public String getAssetsDirectory() {
-        return assetsDirectory.getSingleFile().getPath();
+    public String getAssets() {
+        return Iterables.getOnlyElement(assets).getPath();
     }
 
     @Input // No need for @InputDirectory, we only care about the path.
@@ -178,12 +179,13 @@ public class GenerateTestConfig extends DefaultTask {
 
             task.resourcesDirectory = testedScope.getOutput(MERGED_NOT_COMPILED_RES);
             task.dependsOn(task.resourcesDirectory);
-            task.assetsDirectory = testedScope.getOutput(MERGED_ASSETS);
-            task.dependsOn(task.assetsDirectory);
             task.manifests =
                     testedScope
                             .getBuildArtifactsHolder()
                             .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
+            task.assets =
+                    testedScope.getBuildArtifactsHolder().getFinalArtifactFiles(MERGED_ASSETS);
+            task.dependsOn(task.assets);
             task.mainApkInfo = testedScope.getOutputScope().getMainSplit();
             task.sdkHome =
                     Paths.get(scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation());

@@ -158,7 +158,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected FileCollection dexFolders;
 
-    protected FileCollection assets;
+    protected BuildableArtifact assets;
 
     @InputFiles
     @Optional
@@ -169,7 +169,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     @InputFiles
     @PathSensitive(PathSensitivity.ABSOLUTE)
-    public FileCollection getAssets() {
+    public BuildableArtifact getAssets() {
         return assets;
     }
 
@@ -921,7 +921,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packageAndroidArtifact.dexFolders = getDexFolders();
             packageAndroidArtifact.javaResourceFiles = getJavaResources();
 
-            packageAndroidArtifact.assets = variantScope.getOutput(MERGED_ASSETS);
+            packageAndroidArtifact.assets =
+                    variantScope.getBuildArtifactsHolder().getFinalArtifactFiles(MERGED_ASSETS);
             packageAndroidArtifact.setAbiFilters(variantConfiguration.getSupportedAbis());
             packageAndroidArtifact.setJniDebugBuild(
                     variantConfiguration.getBuildType().isJniDebuggable());

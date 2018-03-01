@@ -116,8 +116,9 @@ open class AndroidZip : Zip() {
                     variantScope.getOutput(InternalArtifactType.AAR_LIBS_DIRECTORY),
                     prependToCopyPath(SdkConstants.LIBS_FOLDER))
             bundle.from(
-                    variantScope.getOutput(InternalArtifactType.LIBRARY_ASSETS),
-                    prependToCopyPath(SdkConstants.FD_ASSETS))
+                variantScope.buildArtifactsHolder
+                    .getFinalArtifactFiles(InternalArtifactType.LIBRARY_ASSETS),
+                prependToCopyPath(SdkConstants.FD_ASSETS))
 
             variantScope.addTaskOutput(
                     InternalArtifactType.AAR,

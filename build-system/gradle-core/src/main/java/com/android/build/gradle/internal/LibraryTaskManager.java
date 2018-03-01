@@ -58,7 +58,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
-import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -609,26 +608,13 @@ public class LibraryTaskManager extends TaskManager {
                 });
     }
 
-    public MergeSourceSetFolders createLibraryAssetsTask(@NonNull VariantScope scope) {
-        final GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
-        File outputDir =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "packagedAssets",
-                        variantConfiguration.getDirName());
+    public void createLibraryAssetsTask(@NonNull VariantScope scope) {
 
         MergeSourceSetFolders mergeAssetsTask =
-                taskFactory.create(
-                        new MergeSourceSetFolders.LibraryAssetConfigAction(scope, outputDir));
-
-        // register the output
-        scope.addTaskOutput(
-                InternalArtifactType.LIBRARY_ASSETS, outputDir, mergeAssetsTask.getName());
+                taskFactory.create(new MergeSourceSetFolders.LibraryAssetConfigAction(scope));
 
         mergeAssetsTask.dependsOn(scope.getAssetGenTask());
         scope.setMergeAssetsTask(mergeAssetsTask);
-
-        return mergeAssetsTask;
     }
 
     @NonNull
