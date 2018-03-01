@@ -383,7 +383,7 @@ public final class SymbolIo {
 
         String name = line.substring(pos3 + 1);
 
-        String value = type == SymbolJavaType.INT ? "0" : "{ }";
+        String value = type == SymbolJavaType.INT ? "0x000000" : "{ }";
 
         return new SymbolData(accessibility, resourceType, name, type, value);
     }

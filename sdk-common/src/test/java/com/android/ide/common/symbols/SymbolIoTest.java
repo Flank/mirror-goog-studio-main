@@ -53,7 +53,7 @@ public class SymbolIoTest {
     public void testSingleInt() throws Exception {
         String r = "int xml authenticator 0x7f040000\n";
         File file = mTemporaryFolder.newFile();
-        Files.write(r, file, Charsets.UTF_8);
+        Files.asCharSink(file, Charsets.UTF_8).write(r);
 
         SymbolTable table = SymbolIo.read(file, null);
 
@@ -74,7 +74,7 @@ public class SymbolIoTest {
                         + "int styleable LimitedSizeLinearLayout_max_width 0\n"
                         + "int xml authenticator 0x7f040000\n";
         File file = mTemporaryFolder.newFile();
-        Files.write(r, file, Charsets.UTF_8);
+        Files.asCharSink(file, Charsets.UTF_8).write(r);
 
         SymbolTable table = SymbolIo.read(file, null);
 
@@ -102,7 +102,7 @@ public class SymbolIoTest {
                         + "int styleable LimitedSizeLinearLayout_android_foo 1\n"
                         + "int xml authenticator 0x7f040000\n";
         File file = mTemporaryFolder.newFile();
-        Files.write(r, file, Charsets.UTF_8);
+        Files.asCharSink(file, Charsets.UTF_8).write(r);
 
         SymbolTable table = SymbolIo.read(file, null);
 
@@ -129,7 +129,7 @@ public class SymbolIoTest {
                         + "int styleable LimitedSizeLinearLayout_a 1\n"
                         + "int styleable LimitedSizeLinearLayout_b 0\n";
         File file = mTemporaryFolder.newFile();
-        Files.write(r, file, Charsets.UTF_8);
+        Files.asCharSink(file, Charsets.UTF_8).write(r);
 
         SymbolTable table = SymbolIo.readFromAapt(file, null);
 
@@ -153,9 +153,9 @@ public class SymbolIoTest {
                         + "int styleable LimitedSizeLinearLayout_a NOT_AN_INT!\n"
                         + "int styleable LimitedSizeLinearLayout_b 0\n";
         File file = mTemporaryFolder.newFile();
-        Files.write(r, file, Charsets.UTF_8);
+        Files.asCharSink(file, Charsets.UTF_8).write(r);
         try {
-            SymbolTable table = SymbolIo.readFromAapt(file, null);
+            SymbolIo.readFromAapt(file, null);
             fail("Expected IOException");
         } catch (IOException e) {
             assertThat(e.getMessage()).contains("LimitedSizeLinearLayout");
@@ -166,9 +166,9 @@ public class SymbolIoTest {
     public void testInvalidType() throws Exception {
         String r = "INVALID_TYPE xml LimitedSizeLinearLayout 0x7f010000\n";
         File file = mTemporaryFolder.newFile();
-        Files.write(r, file, Charsets.UTF_8);
+        Files.asCharSink(file, Charsets.UTF_8).write(r);
         try {
-            SymbolTable table = SymbolIo.readFromAapt(file, null);
+            SymbolIo.readFromAapt(file, null);
             fail("Expected IOException");
         } catch (IOException e) {
             assertThat(e.getMessage()).contains("LimitedSizeLinearLayout");
@@ -573,7 +573,7 @@ public class SymbolIoTest {
                         + "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } \r\n"
                         + "int styleable LimitedSizeLinearLayout_max_width 0 \r\n"
                         + "int styleable LimitedSizeLinearLayout_max_height 1 \r\n";
-        java.nio.file.Files.write(txt.toPath(), content.getBytes(StandardCharsets.UTF_8));
+        Files.asCharSink(txt, Charsets.UTF_8).write(content);
         SymbolTable table = SymbolIo.read(txt, "com.example.app");
         assertThat(table.getSymbols().values())
                 .containsExactly(
@@ -626,7 +626,7 @@ public class SymbolIoTest {
                         + "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } \r\n"
                         + "int styleable LimitedSizeLinearLayout_android_max_width 0 \r\n"
                         + "int styleable LimitedSizeLinearLayout_android_max_height 1 \r\n";
-        java.nio.file.Files.write(txt.toPath(), content.getBytes(StandardCharsets.UTF_8));
+        Files.asCharSink(txt, Charsets.UTF_8).write(content);
         SymbolTable table = SymbolIo.read(txt, "com.example.app");
         assertThat(table.getSymbols().values())
                 .containsExactly(
@@ -645,7 +645,7 @@ public class SymbolIoTest {
                         + "int styleable LimitedSizeLinearLayout_max_width 0 \r\n"
                         + "int styleable LimitedSizeLinearLayout_max_height 1 \r\n";
         File file = mTemporaryFolder.newFile();
-        Files.write(content, file, Charsets.UTF_8);
+        Files.asCharSink(file, Charsets.UTF_8).write(content);
 
         SymbolTable table = SymbolIo.readTableWithPackage(file);
 

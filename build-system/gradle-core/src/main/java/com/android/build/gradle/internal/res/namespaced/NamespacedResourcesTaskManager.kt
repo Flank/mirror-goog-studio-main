@@ -17,14 +17,12 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.SdkConstants.FN_RESOURCE_TEXT
 import com.android.build.gradle.internal.TaskFactory
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import org.gradle.api.Task
@@ -92,17 +90,18 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createNamespacedLibraryRFiles() {
+        // TODO: also generate a private R.jar holding private resources.
         val rClassJarFile = File(
                 variantScope.globalScope.intermediatesDir,
                 "res-rJar/" + variantScope.variantConfiguration.dirName + "/R.jar")
         val resIdsFile = File(
                 variantScope.globalScope.intermediatesDir,
-                "res-ids/" + variantScope.variantConfiguration.dirName + "res-ids.txt")
+                "res-ids/" + variantScope.variantConfiguration.dirName + "/res-ids.txt")
 
         val task = taskFactory.create(
                 GenerateNamespacedLibraryRFilesTask.ConfigAction(
                         variantScope,
-                        variantScope.getOutput(InternalArtifactType.SYMBOL_LIST),
+                        variantScope.getOutput(InternalArtifactType.PARTIAL_R_FILES),
                         rClassJarFile,
                         resIdsFile))
 
@@ -240,23 +239,16 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createLinkResourcesTask() {
-        val rDotTxt = File(globalScope.intermediatesDir,
-                "symbols/" + variantScope.variantConfiguration.dirName + "/" + FN_RESOURCE_TEXT)
         val resourceStaticLibrary =
                 FileUtils.join(globalScope.intermediatesDir,
                         "res-linked",
                         variantScope.variantConfiguration.dirName,
                         "res.apk")
         val link = taskFactory.create(
-                LinkLibraryAndroidResourcesTask.ConfigAction(
-                        variantScope, resourceStaticLibrary, rDotTxt))
+                LinkLibraryAndroidResourcesTask.ConfigAction(variantScope, resourceStaticLibrary))
         variantScope.addTaskOutput(
                 InternalArtifactType.RES_STATIC_LIBRARY,
                 resourceStaticLibrary,
-                link.name)
-        variantScope.addTaskOutput(
-                InternalArtifactType.SYMBOL_LIST,
-                rDotTxt,
                 link.name)
     }
 

@@ -21,9 +21,12 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
+import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import java.net.URLClassLoader
+import kotlin.test.assertFailsWith
 
 class PartialRTest {
 
@@ -85,5 +88,35 @@ class PartialRTest {
         )
         assertThat(publicR).contains("public int string public_string")
         assertThat(symbolsR).contains("private int string private_string")
+
+        val resIds = FileUtils.join(
+                project.getSubproject("app").intermediatesDir, "res-ids", "debug", "res-ids.txt")
+        assertThat(resIds).exists()
+        assertThat(resIds).contains(
+                "" +
+                        "com.example.app\n" +
+                        "int string default_string 0x0\n" +
+                        "int string private_string 0x0\n" +
+                        "int string public_string 0x0")
+
+        val rJar = FileUtils.join(
+                project.getSubproject("app").intermediatesDir, "res-rJar", "debug", "R.jar")
+        assertThat(rJar).exists()
+
+        URLClassLoader(arrayOf(rJar.toURI().toURL()), null).use { classLoader ->
+            val testC = classLoader.loadClass("com.example.app.R\$string")
+            checkResource(testC, "public_string")
+            checkResource(testC, "private_string")
+            checkResource(testC, "default_string")
+
+            assertFailsWith<NoSuchFieldException> {
+                checkResource(testC, "invalid")
+            }
+        }
+    }
+
+    private fun checkResource(testC: Class<*>, name: String) {
+        val field = testC.getField(name)
+        Truth.assertThat(field.getInt(testC)).isEqualTo(0)
     }
 }
