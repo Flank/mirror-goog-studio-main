@@ -1303,12 +1303,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 + "/manifest_keep.txt");
     }
 
-    @NonNull
-    @Override
-    public File getConsumerProguardFile() {
-        return intermediate("publish-proguard", SdkConstants.FN_PROGUARD_TXT);
-    }
-
     @Override
     @NonNull
     public File getMainDexListFile() {

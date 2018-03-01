@@ -43,8 +43,8 @@ open class AndroidZip : Zip() {
     override fun getArchiveName() = archiveNameSupplier()
 
     class ConfigAction(
-            private val extension: AndroidConfig,
-            private val variantScope: VariantScope
+        private val extension: AndroidConfig,
+        private val variantScope: VariantScope
     ) : TaskConfigAction<AndroidZip> {
 
         override fun getName() = variantScope.getTaskName("bundle")
@@ -53,6 +53,8 @@ open class AndroidZip : Zip() {
 
         override fun execute(bundle: AndroidZip) {
             val libVariantData = variantScope.variantData as LibraryVariantData
+
+            val artifacts = variantScope.buildArtifactsHolder
 
             libVariantData.addTask(TaskContainer.TaskKind.PACKAGE_ANDROID_ARTIFACT, bundle)
 
@@ -72,32 +74,38 @@ open class AndroidZip : Zip() {
             bundle.archiveNameSupplier = { variantScope.outputScope.mainSplit.outputFileName }
             bundle.extension = BuilderConstants.EXT_LIB_ARCHIVE
             bundle.from(
-                    variantScope.buildArtifactsHolder.getArtifactFiles(
-                            InternalArtifactType.AIDL_PARCELABLE),
-                    prependToCopyPath(SdkConstants.FD_AIDL))
-            bundle.from(variantScope.getOutput(InternalArtifactType.CONSUMER_PROGUARD_FILE))
+                variantScope.buildArtifactsHolder.getArtifactFiles(
+                    InternalArtifactType.AIDL_PARCELABLE
+                ),
+                prependToCopyPath(SdkConstants.FD_AIDL)
+            )
+            bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.CONSUMER_PROGUARD_FILE))
             if (extension.dataBinding.isEnabled) {
                 bundle.from(
-                        variantScope.getOutput(InternalArtifactType.DATA_BINDING_ARTIFACT),
-                        prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR))
+                    variantScope.getOutput(InternalArtifactType.DATA_BINDING_ARTIFACT),
+                    prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR)
+                )
                 bundle.from(
-                        variantScope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
-                        prependToCopyPath(
-                                DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR))
+                    variantScope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
+                    prependToCopyPath(
+                        DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR
+                    )
+                )
             }
             bundle.from(variantScope.getOutput(InternalArtifactType.LIBRARY_MANIFEST))
             // TODO: this should be unconditional b/69358522
             if (java.lang.Boolean.TRUE != variantScope.globalScope.extension.aaptOptions.namespaced) {
                 bundle.from(variantScope.getOutput(InternalArtifactType.SYMBOL_LIST))
                 bundle.from(
-                        variantScope.getOutput(InternalArtifactType.PACKAGED_RES),
-                        prependToCopyPath(SdkConstants.FD_RES))
+                    variantScope.getOutput(InternalArtifactType.PACKAGED_RES),
+                    prependToCopyPath(SdkConstants.FD_RES)
+                )
             }
             bundle.from(
-                    variantScope.buildArtifactsHolder.getFinalArtifactFiles(
-                        InternalArtifactType.RENDERSCRIPT_HEADERS),
-                    prependToCopyPath(SdkConstants.FD_RENDERSCRIPT))
-            bundle.from(variantScope.getOutput(InternalArtifactType.PUBLIC_RES))
+                artifacts.getFinalArtifactFiles(InternalArtifactType.RENDERSCRIPT_HEADERS),
+                prependToCopyPath(SdkConstants.FD_RENDERSCRIPT)
+            )
+            bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.PUBLIC_RES))
             if (variantScope.hasOutput(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
                 bundle.from(variantScope.getOutput(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))
             }
@@ -105,43 +113,46 @@ open class AndroidZip : Zip() {
                 bundle.from(variantScope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY))
             }
             bundle.from(
-                    variantScope.getOutput(InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI),
-                    prependToCopyPath(SdkConstants.FD_JNI))
+                artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI),
+                prependToCopyPath(SdkConstants.FD_JNI)
+            )
             bundle.from(variantScope.globalScope.getOutput(InternalArtifactType.LINT_JAR))
             if (variantScope.hasOutput(InternalArtifactType.ANNOTATIONS_ZIP)) {
                 bundle.from(variantScope.getOutput(InternalArtifactType.ANNOTATIONS_ZIP))
             }
-            bundle.from(variantScope.getOutput(InternalArtifactType.AAR_MAIN_JAR))
+            bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.AAR_MAIN_JAR))
             bundle.from(
-                    variantScope.getOutput(InternalArtifactType.AAR_LIBS_DIRECTORY),
-                    prependToCopyPath(SdkConstants.LIBS_FOLDER))
+                artifacts.getFinalArtifactFiles(InternalArtifactType.AAR_LIBS_DIRECTORY),
+                prependToCopyPath(SdkConstants.LIBS_FOLDER)
+            )
             bundle.from(
                 variantScope.buildArtifactsHolder
                     .getFinalArtifactFiles(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
 
             variantScope.addTaskOutput(
-                    InternalArtifactType.AAR,
-                    Callable {
-                        File(
-                                variantScope.aarLocation,
-                                variantScope
-                                        .outputScope
-                                        .mainSplit
-                                        .outputFileName)
-                    },
-                    bundle.name)
+                InternalArtifactType.AAR,
+                Callable {
+                    File(
+                        variantScope.aarLocation,
+                        variantScope
+                            .outputScope
+                            .mainSplit
+                            .outputFileName
+                    )
+                },
+                bundle.name
+            )
 
             libVariantData.packageLibTask = bundle
         }
 
-        private fun prependToCopyPath(pathSegment: String) = Action {
-            copySpec: CopySpec ->
-                copySpec.eachFile(
-                        { fileCopyDetails: FileCopyDetails ->
-                            fileCopyDetails.relativePath =
-                                    fileCopyDetails.relativePath.prepend(pathSegment)
-                        })
+        private fun prependToCopyPath(pathSegment: String) = Action { copySpec: CopySpec ->
+            copySpec.eachFile(
+                { fileCopyDetails: FileCopyDetails ->
+                    fileCopyDetails.relativePath =
+                            fileCopyDetails.relativePath.prepend(pathSegment)
+                })
         }
     }
 }

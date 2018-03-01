@@ -192,9 +192,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getManifestKeepListProguardFile();
 
     @NonNull
-    File getConsumerProguardFile();
-
-    @NonNull
     File getMainDexListFile();
 
     @NonNull
