@@ -78,6 +78,7 @@ public class WakeLockTest {
         assertThat(energyEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(energyEvent.getEventId()).isGreaterThan(0);
+        assertThat(energyEvent.getIsTerminal()).isFalse();
         assertThat(energyEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
         assertThat(energyEvent.getWakeLockAcquired().getLevel())
                 .isEqualTo(Level.SCREEN_DIM_WAKE_LOCK);
@@ -113,6 +114,7 @@ public class WakeLockTest {
         assertThat(acquiredEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(acquiredEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(acquiredEvent.getEventId()).isGreaterThan(0);
+        assertThat(acquiredEvent.getIsTerminal()).isFalse();
         assertThat(acquiredEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
         assertThat(acquiredEvent.getWakeLockAcquired().getLevel())
                 .isEqualTo(Level.PARTIAL_WAKE_LOCK);
@@ -124,10 +126,10 @@ public class WakeLockTest {
         assertThat(releasedEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(releasedEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(releasedEvent.getEventId()).isEqualTo(acquiredEvent.getEventId());
+        assertThat(releasedEvent.getIsTerminal()).isTrue();
         assertThat(releasedEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_RELEASED);
         assertThat(releasedEvent.getWakeLockReleased().getFlagsList())
                 .containsExactly(ReleaseFlag.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
-        assertThat(releasedEvent.getWakeLockReleased().getIsHeld()).isTrue();
 
         String traceId = releasedEvent.getTraceId();
         assertThat(releasedEvent.getTraceId()).isNotEmpty();

@@ -208,6 +208,7 @@ Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockRelea
         WakeLockReleased::RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
   }
   energy_event.mutable_wake_lock_released()->set_is_held(is_held);
+  energy_event.set_is_terminal(!is_held);
   JStringWrapper stack_string(env, stack);
   SubmitEnergyEvent(energy_event, stack_string.get());
 }
@@ -261,6 +262,7 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendIntentAla
   alarm_cancelled->mutable_operation()->set_creator_package(
       creator_package_str.get());
   alarm_cancelled->mutable_operation()->set_creator_uid(creator_uid);
+  energy_event.set_is_terminal(true);
   SubmitEnergyEvent(energy_event);
 }
 
@@ -273,6 +275,7 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerA
   energy_event.set_event_id(event_id);
   energy_event.mutable_alarm_cancelled()->mutable_listener()->set_tag(
       listener_tag_str.get());
+  energy_event.set_is_terminal(true);
   SubmitEnergyEvent(energy_event);
 }
 
@@ -422,6 +425,7 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobFinished(
                     triggered_content_uris, is_override_deadline_expired,
                     extras, transient_extras);
   energy_event.mutable_job_finished()->set_needs_reschedule(needs_reschedule);
+  energy_event.set_is_terminal(true);
   SubmitEnergyEvent(energy_event);
 }
 };

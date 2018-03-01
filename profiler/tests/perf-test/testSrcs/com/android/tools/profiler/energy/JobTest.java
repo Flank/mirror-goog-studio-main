@@ -83,6 +83,7 @@ public class JobTest {
         assertThat(energyEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(energyEvent.getEventId()).isGreaterThan(0);
+        assertThat(energyEvent.getIsTerminal()).isFalse();
         assertThat(energyEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_SCHEDULED);
         JobScheduled jobScheduled = energyEvent.getJobScheduled();
         assertThat(jobScheduled.getResult()).isEqualTo(Result.RESULT_SUCCESS);
@@ -130,6 +131,7 @@ public class JobTest {
         assertThat(startEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(startEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(startEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
+        assertThat(startEvent.getIsTerminal()).isFalse();
         assertThat(startEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_STARTED);
         JobStarted jobStarted = startEvent.getJobStarted();
         assertThat(jobStarted.getWorkOngoing()).isTrue();
@@ -163,6 +165,7 @@ public class JobTest {
         assertThat(stopEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(stopEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(stopEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
+        assertThat(stopEvent.getIsTerminal()).isFalse();
         assertThat(stopEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_STOPPED);
         JobStopped jobStopped = stopEvent.getJobStopped();
         assertThat(jobStopped.getReschedule()).isTrue();
@@ -196,6 +199,7 @@ public class JobTest {
         assertThat(finishEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(finishEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(finishEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
+        assertThat(finishEvent.getIsTerminal()).isTrue();
         assertThat(finishEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_FINISHED);
         JobFinished jobFinished = finishEvent.getJobFinished();
         assertThat(jobFinished.getNeedsReschedule()).isTrue();
