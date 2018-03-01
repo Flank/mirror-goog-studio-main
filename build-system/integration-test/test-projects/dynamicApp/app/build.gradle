@@ -1,0 +1,16 @@
+apply plugin: 'com.android.application'
+
+apply from: "../../commonLocalRepo.gradle"
+
+android {
+    compileSdkVersion rootProject.latestCompileSdk
+
+	defaultConfig {
+		minSdkVersion 27
+	}
+}
+
+dependencies {
+	feature project(':feature1')
+	implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+}

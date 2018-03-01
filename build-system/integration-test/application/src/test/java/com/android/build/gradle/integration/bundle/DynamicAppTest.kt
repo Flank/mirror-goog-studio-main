@@ -17,30 +17,24 @@
 package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.builder.model.AndroidProject
+import com.android.testutils.apk.Zip
+import com.android.testutils.truth.FileSubject
 import com.google.common.truth.Truth
-import org.junit.Rule
+import org.junit.ClassRule
 import org.junit.Test
+import java.io.File
 import java.io.IOException
 
-class BundleTest {
-
-    private val app = MinimalSubProject.app("com.example.app")
-        .appendToBuild(
-            """dependencies { feature project(':feature1') }""")
-
-    private val feature1 = MinimalSubProject.dynamicFeature("com.example.opt")
-        .appendToBuild(
-            """dependencies { implementation project(':app') }""")
-
-    private val testApp = MultiModuleTestProject.builder()
-            .subproject(":app", app)
-            .subproject(":feature1", feature1)
-            .build()
-
-    @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
+class DynamicAppTest {
+    companion object {
+        @ClassRule
+        @JvmField
+        val project: GradleTestProject = GradleTestProject.builder()
+            .fromTestProject("dynamicApp")
+            .withoutNdk()
+            .create()
+    }
 
     @Test
     @Throws(IOException::class)
@@ -58,5 +52,25 @@ class BundleTest {
         Truth.assertThat(featureModel!!.projectType)
             .named("feature model type")
             .isEqualTo(AndroidProject.PROJECT_TYPE_DYNAMIC_FEATURE)
+    }
+
+    @Test
+    fun testBundle() {
+        project.execute("bundle:bundle")
+
+        val bundleFile = File(project.getSubproject("bundle").buildDir, "bundle.aab")
+        FileSubject.assertThat(bundleFile).exists()
+
+        val zipFile = Zip(bundleFile)
+        Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(
+            "/BundleManifest.pb",
+            "/base/dex/classes.dex",
+            "/base/manifest/AndroidManifest.xml",
+            "/base/res/layout/base_layout.xml",
+            "/base/resources.pb",
+            "/feature1/dex/classes.dex",
+            "/feature1/manifest/AndroidManifest.xml",
+            "/feature1/res/layout/feature_layout.xml",
+            "/feature1/resources.pb")
     }
 }

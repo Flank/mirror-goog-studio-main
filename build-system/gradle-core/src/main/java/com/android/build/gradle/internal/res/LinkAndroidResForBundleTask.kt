@@ -17,12 +17,14 @@
 package com.android.build.gradle.internal.res
 
 import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.aapt.AaptGradleFactory
 import com.android.build.gradle.internal.dsl.convert
-import com.android.build.gradle.internal.res.namespaced.Aapt2LinkRunnable
-import com.android.build.gradle.internal.res.namespaced.getAapt2FromMavenIfEnabled
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_IDS_DECLARATION
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+import com.android.build.gradle.internal.res.namespaced.getAapt2FromMaven
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -31,9 +33,8 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds
 import com.android.build.gradle.options.StringOption
-import com.android.builder.core.AndroidBuilder
-import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.Aapt
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -62,6 +63,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
+import java.io.IOException
 import java.util.function.Function
 import java.util.function.Supplier
 import javax.inject.Inject
@@ -94,11 +96,30 @@ open class LinkAndroidResForBundleTask
     lateinit var bundledResFile: File
         private set
 
-    @get:Internal lateinit var versionNameSupplier: Supplier<String?> private set
-    @get:Input val versionName get() = versionNameSupplier.get()
+    @get:InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    lateinit var featureResourcePackages: FileCollection
+        private set
 
-    @get:Internal lateinit var versionCodeSupplier: Supplier<Int?> private set
-    @get:Input val versionCode get() = versionCodeSupplier.get()
+    @get:InputFiles
+    @get:Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
+    var packageIdsFiles: FileCollection? = null
+        private set
+
+    @get:Internal lateinit var versionNameSupplier: Supplier<String?>
+        private set
+
+    @get:Input
+    @get:Optional
+    val versionName
+        get() = versionNameSupplier.get()
+
+    @get:Internal lateinit var versionCodeSupplier: Supplier<Int?>
+        private set
+
+    @get:Input val versionCode
+        get() = versionCodeSupplier.get()
 
     @get:OutputDirectory
     lateinit var incrementalFolder: File
@@ -124,6 +145,24 @@ open class LinkAndroidResForBundleTask
 
         FileUtils.mkdirs(bundledResFile.parentFile)
 
+        val packageIdFileSet = packageIdsFiles?.files
+        var packageId: Int? = null
+        if (packageIdFileSet != null && FeatureSplitPackageIds.getOutputFile(packageIdFileSet) != null) {
+            val featurePackageIds = FeatureSplitPackageIds.load(packageIdFileSet)
+            packageId = featurePackageIds.getIdFor(project.path)
+        }
+
+        val featurePackagesBuilder = ImmutableList.builder<File>()
+        for (featurePackage in featureResourcePackages) {
+            val buildElements =
+                ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, featurePackage)
+            if (buildElements.size() != 1) {
+                throw IOException("Found more than one PROCESSED_RES output at " + featurePackage)
+            }
+
+            featurePackagesBuilder.add(buildElements.iterator().next().outputFile)
+        }
+
         val config = AaptPackageConfig(
                 androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
                 generateProtos = true,
@@ -132,29 +171,24 @@ open class LinkAndroidResForBundleTask
                 resourceOutputApk = bundledResFile,
                 variantType = VariantTypeImpl.BASE_APK,
                 debuggable = debuggable,
+                packageId =  packageId,
+                dependentFeatures = featurePackagesBuilder.build(),
                 pseudoLocalize = getPseudoLocalesEnabled(),
                 resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).singleFile))
         if (logger.isInfoEnabled) {
             logger.info("Aapt output file {}", bundledResFile.absolutePath)
         }
-        if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
-            val aapt2ServiceKey = registerAaptService(
-                aapt2FromMaven = aapt2FromMaven,
-                buildToolInfo = builder.targetInfo!!.buildTools,
-                logger = builder.logger
-            )
-            //TODO: message rewriting.
-            workerExecutor.submit(Aapt2ProcessResourcesRunnable::class.java) {
-                it.isolationMode = IsolationMode.NONE
-                it.params(Aapt2LinkRunnable.Params(aapt2ServiceKey, config))
-            }
-        } else {
-            makeAapt().use { aapt ->
-                AndroidBuilder.processResources(aapt, config, LoggerWrapper(logger))
-            }
+
+        val aapt2ServiceKey = registerAaptService(
+            aapt2FromMaven = aapt2FromMaven,
+            buildToolInfo = null,
+            logger = builder.logger
+        )
+        //TODO: message rewriting.
+        workerExecutor.submit(Aapt2ProcessResourcesRunnable::class.java) {
+            it.isolationMode = IsolationMode.NONE
+            it.params(Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config))
         }
-
-
     }
 
     /**
@@ -249,6 +283,16 @@ open class LinkAndroidResForBundleTask
 
             processResources.inputResourcesDir = variantScope.getOutput(InternalArtifactType.MERGED_RES)
 
+            processResources.featureResourcePackages = variantScope.getArtifactFileCollection(
+                COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG)
+
+            if (!variantScope.type.isBaseModule) {
+                // sets the packageIds list.
+                processResources.packageIdsFiles = variantScope.getArtifactFileCollection(
+                    COMPILE_CLASSPATH, MODULE, FEATURE_IDS_DECLARATION)
+            }
+
+
             processResources.debuggable = config.buildType.isDebuggable
             processResources.aaptOptions = variantScope.globalScope.extension.aaptOptions
             processResources.pseudoLocalesEnabled = config.buildType.isPseudoLocalesEnabled
@@ -256,7 +300,7 @@ open class LinkAndroidResForBundleTask
             processResources.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
             processResources.mergeBlameLogFolder = variantScope.resourceBlameLogDir
-            processResources.aapt2FromMaven = getAapt2FromMavenIfEnabled(variantScope.globalScope)
+            processResources.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
         }
     }
 
