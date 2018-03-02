@@ -103,7 +103,6 @@ java_binary(
     name = "iml_to_build",
     srcs = ["src/com/android/tools/binaries/ImlToBazel.java"],
     main_class = "com.android.tools.binaries.ImlToBazel",
-    tags = ["no_test_foundry"],
     visibility = ["//visibility:public"],
     deps = [
         ":bazel_generator",
@@ -316,7 +315,10 @@ java_test(
     name = "iml_to_build_tests",
     srcs = ["testSrc/com/android/tools/binaries/ImlToBazelTest.java"],
     data = ["//tools/base/bazel/test:iml_to_bazel"],
-    tags = ["no_test_windows"],
+    tags = [
+        "no_test_foundry",
+        "no_test_windows",
+    ],
     test_class = "com.android.tools.binaries.ImlToBazelTest",
     deps = [
         ":bazel_generator",

@@ -84,7 +84,10 @@ gradle_integration_test(
     ],
     resources = glob(["src/test/resources/**"]),
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
-    tags = ["no_test_windows"],  # b/73306170
+    tags = [
+        "no_test_foundry",  # b/73948555
+        "no_test_windows",  # b/73306170
+    ],
     deps = TEST_DEPS,
 )
 
@@ -99,6 +102,7 @@ gradle_integration_test(
     ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     tags = [
+        "no_test_foundry",  # b/73948555
         "no_test_mac",  # b/69151132
         "no_test_windows",  # b/73306170
     ],
