@@ -53,7 +53,8 @@ public class SingleFeatureTest {
         GradleTestProject featureProject = sProject.getSubproject(":feature");
         checkManifestContents(
                 featureProject.getIntermediateFile(
-                        "artifact_transform",
+                        "merged_manifests",
+                        "debugFeature",
                         "processDebugFeatureManifest",
                         "merged",
                         "AndroidManifest.xml"));
@@ -63,7 +64,8 @@ public class SingleFeatureTest {
         GradleTestProject appProject = sProject.getSubproject(":app");
         checkManifestContents(
                 appProject.getIntermediateFile(
-                        "artifact_transform",
+                        "merged_manifests",
+                        "debug",
                         "processDebugManifest",
                         "merged",
                         "AndroidManifest.xml"));

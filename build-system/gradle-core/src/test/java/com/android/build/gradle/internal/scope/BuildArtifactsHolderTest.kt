@@ -66,7 +66,7 @@ class BuildArtifactsHolderTest {
 
     /** Return the expected location of a generated file given the task name and file name. */
     private fun file(taskName : String, filename : String) =
-            FileUtils.join(root, taskName, filename)
+            FileUtils.join(JAVAC_CLASSES.getOutputDir(root), "debug", taskName, filename)
 
     @Test
     fun replaceOutput() {

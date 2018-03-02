@@ -101,6 +101,6 @@ public class LibraryIntermediateArtifactPublishingTest {
 
     private File getJar(String fileName) {
         return project.getSubproject(":lib")
-                .file("build/intermediates/artifact_transform/createFullJarDebug/" + fileName);
+                .file("build/intermediates/full_jar/debug/createFullJarDebug/" + fileName);
     }
 }

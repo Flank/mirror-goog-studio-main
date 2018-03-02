@@ -71,7 +71,7 @@ public class ManifestMergingTest {
                 libsTest.file(
                         "libapp/build/"
                                 + FD_INTERMEDIATES
-                                + "/artifact_transform/processDebugManifest/merged/AndroidManifest.xml");
+                                + "/merged_manifests/debug/processDebugManifest/merged/AndroidManifest.xml");
 
         assertThat(fileOutput).isFile();
 
@@ -79,7 +79,7 @@ public class ManifestMergingTest {
                 libsTest.file(
                         "libapp/build/"
                                 + FD_INTERMEDIATES
-                                + "/artifact_transform/processReleaseManifest/merged/AndroidManifest.xml");
+                                + "/merged_manifests/release/processReleaseManifest/merged/AndroidManifest.xml");
 
         assertThat(fileOutput).isFile();
 
@@ -103,7 +103,7 @@ public class ManifestMergingTest {
 
         assertThat(
                         flavors.file(
-                                "build/intermediates/artifact_transform/processF1FaDebugManifest/merged/AndroidManifest.xml"))
+                                "build/intermediates/merged_manifests/f1FaDebug/processF1FaDebugManifest/merged/AndroidManifest.xml"))
                 .doesNotContain("android:testOnly=\"true\"");
 
         flavors.executor()
@@ -112,7 +112,7 @@ public class ManifestMergingTest {
 
         assertThat(
                         flavors.file(
-                                "build/intermediates/artifact_transform/processF1FaDebugManifest/merged/AndroidManifest.xml"))
+                                "build/intermediates/merged_manifests/f1FaDebug/processF1FaDebugManifest/merged/AndroidManifest.xml"))
                 .contains("android:testOnly=\"true\"");
     }
 
@@ -132,7 +132,7 @@ public class ManifestMergingTest {
         libsTest.execute("clean", ":app:build");
         assertThat(
                         appProject.file(
-                                "build/intermediates/artifact_transform/processDebugManifest/merged/AndroidManifest.xml"))
+                                "build/intermediates/merged_manifests/debug/processDebugManifest/merged/AndroidManifest.xml"))
                 .containsAllOf(
                         "android:minSdkVersion=\"15\"",
                         "android:targetSdkVersion=\"N\"",
@@ -155,7 +155,7 @@ public class ManifestMergingTest {
         libsTest.execute("clean", ":app:assembleDebug");
         assertThat(
                         appProject.file(
-                                "build/intermediates/artifact_transform/processDebugManifest/merged/AndroidManifest.xml"))
+                                "build/intermediates/merged_manifests/debug/processDebugManifest/merged/AndroidManifest.xml"))
                 .containsAllOf(
                         "android:minSdkVersion=\"N\"",
                         "android:targetSdkVersion=\"15\"",
@@ -179,7 +179,7 @@ public class ManifestMergingTest {
                 .run("clean", "assembleF1FaDebug");
         File manifestFile =
                 flavors.file(
-                        "build/intermediates/artifact_transform/processF1FaDebugManifest/merged/AndroidManifest.xml");
+                        "build/intermediates/merged_manifests/f1FaDebug/processF1FaDebugManifest/merged/AndroidManifest.xml");
         assertThat(manifestFile)
                 .containsAllOf("android:minSdkVersion=\"15\"", "android:targetSdkVersion=\"24\"");
     }
@@ -193,7 +193,7 @@ public class ManifestMergingTest {
         navigation.executor().run("clean", ":app:assembleF1Debug");
         File manifestFile =
                 navigation.file(
-                        "app/build/intermediates/artifact_transform/processF1DebugManifest/merged/AndroidManifest.xml");
+                        "app/build/intermediates/merged_manifests/f1Debug/processF1DebugManifest/merged/AndroidManifest.xml");
         assertThat(manifestFile).contains("/library/nav1");
         assertThat(manifestFile).contains("/main/nav1");
         assertThat(manifestFile).contains("/f1/nav2");

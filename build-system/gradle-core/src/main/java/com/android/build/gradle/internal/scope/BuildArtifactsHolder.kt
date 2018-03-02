@@ -240,7 +240,7 @@ class BuildArtifactsHolder(
         artifactType: ArtifactType,
         task : Task,
         fileName: String = "out") : File {
-        val output = createFile(task, fileName)
+        val output = createFile(task, artifactType, fileName)
         appendArtifact(artifactType, listOf(output), task)
         return output
     }
@@ -275,16 +275,32 @@ class BuildArtifactsHolder(
             }
 
     /**
-     * Creates a File for a task.
+     * Create a File for a task and artifact type.
+     * @param task the task the file should be created for.
+     * @param artifactType artifact type that will be associated with the file.
+     * @param filename desired file name.
+     */
+    internal fun createFile(task: Task, artifactType: ArtifactType, filename: String) =
+            FileUtils.join(artifactType.getOutputDir(rootOutputDir),
+                variantName,
+                task.name,
+                filename)
+
+
+    /**
+     * Creates a File for a task. Prefer [createFile] when artifact type is known and unique for
+     * the output file. This will stuff all the tasks directly under "multi-types" leading to
+     * potentially confusing directory structure.
      *
      * @param task the task creating the output file.
      * @param filename name of the file.
      */
     internal fun createFile(task: Task, filename : String) =
             FileUtils.join(
-                    rootOutputDir,
-                    task.name,
-                    filename)
+                InternalArtifactType.Kind.INTERMEDIATES.getOutputDir(rootOutputDir),
+                MULTI_TYPES,
+                task.name,
+                filename)
 
     internal fun getArtifactFilename(artifactType: ArtifactType) : String {
         val record = getArtifactRecord(artifactType)
@@ -313,6 +329,8 @@ class BuildArtifactsHolder(
                 artifact.buildDependencies.getDependencies(null).map(Task::getPath))
 
     companion object {
+        val MULTI_TYPES = "multi-types"
+
         fun parseReport(file : File) : Report {
             val result = mutableMapOf<ArtifactType, List<BuildableArtifactData>>()
             val parser = JsonParser()

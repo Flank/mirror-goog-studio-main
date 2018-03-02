@@ -95,7 +95,8 @@ public class FeatureTest {
         // Check the feature manifest contains only the feature data.
         File featureManifest =
                 featureProject.getIntermediateFile(
-                        "artifact_transform",
+                        "merged_manifests",
+                        "releaseFeature",
                         "processReleaseFeatureManifest",
                         "merged",
                         "AndroidManifest.xml");
@@ -161,7 +162,8 @@ public class FeatureTest {
         // Check that the base feature manifest contains the expected content.
         File baseFeatureManifest =
                 baseProject.getIntermediateFile(
-                        "artifact_transform",
+                        "merged_manifests",
+                        "releaseFeature",
                         "processReleaseFeatureManifest",
                         "merged",
                         "AndroidManifest.xml");

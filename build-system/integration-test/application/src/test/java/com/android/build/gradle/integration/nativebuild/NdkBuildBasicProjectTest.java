@@ -137,7 +137,7 @@ public class NdkBuildBasicProjectTest {
 
         assertThat(
                         project.file(
-                                "build/intermediates/artifact_transform/processDebugManifest/merged/AndroidManifest.xml"))
+                                "build/intermediates/merged_manifests/debug/processDebugManifest/merged/AndroidManifest.xml"))
                 .contains("android:testOnly=\"true\"");
     }
 

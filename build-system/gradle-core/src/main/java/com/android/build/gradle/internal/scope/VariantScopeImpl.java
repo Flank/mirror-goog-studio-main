@@ -243,7 +243,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 new BuildArtifactsHolder(
                         getProject(),
                         getFullVariantName(),
-                        new File(globalScope.getIntermediatesDir(), "artifact_transform"),
+                        globalScope.getBuildDir(),
                         getVariantConfiguration().getDirName(),
                         globalScope.getDslScope());
 
