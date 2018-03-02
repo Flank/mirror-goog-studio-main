@@ -21,6 +21,8 @@ import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.net.Uri;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A set of helpers for Android job scheduler instrumentation, used by the Energy Profiler.
@@ -37,6 +39,12 @@ public final class JobWrapper {
      * time.
      */
     private static final ThreadLocal<JobInfo> scheduleJobInfo = new ThreadLocal<JobInfo>();
+
+    /**
+     * Job ID is user-defined so we still need to send event ID to guarantee uniqueness across
+     * energy events.
+     */
+    private static final Map<Integer, Integer> jobIdToEventId = new HashMap<Integer, Integer>();
 
     /**
      * Entry hook for {@link JobScheduler#schedule(JobInfo)}.
@@ -56,7 +64,9 @@ public final class JobWrapper {
      */
     public static int onScheduleJobExit(int scheduleResult) {
         JobInfo jobInfo = scheduleJobInfo.get();
+        jobIdToEventId.put(jobInfo.getId(), EventIdGenerator.nextId());
         sendJobScheduled(
+                jobIdToEventId.get(jobInfo.getId()),
                 jobInfo.getId(),
                 jobInfo.getService().getClassName(),
                 jobInfo.getBackoffPolicy(),
@@ -92,6 +102,9 @@ public final class JobWrapper {
     public static void wrapOnStartJob(
             Object jobHandler, JobParameters params, boolean workOngoing) {
         sendJobStarted(
+                jobIdToEventId.containsKey(params.getJobId())
+                        ? jobIdToEventId.get(params.getJobId())
+                        : 0,
                 params.getJobId(),
                 params.getTriggeredContentAuthorities(),
                 urisToStrings(params.getTriggeredContentUris()),
@@ -111,6 +124,9 @@ public final class JobWrapper {
      */
     public static void wrapOnStopJob(Object jobHandler, JobParameters params, boolean reschedule) {
         sendJobStopped(
+                jobIdToEventId.containsKey(params.getJobId())
+                        ? jobIdToEventId.get(params.getJobId())
+                        : 0,
                 params.getJobId(),
                 params.getTriggeredContentAuthorities(),
                 urisToStrings(params.getTriggeredContentUris()),
@@ -130,6 +146,9 @@ public final class JobWrapper {
     public static void wrapJobFinished(
             JobService jobService, JobParameters params, boolean wantsReschedule) {
         sendJobFinished(
+                jobIdToEventId.containsKey(params.getJobId())
+                        ? jobIdToEventId.get(params.getJobId())
+                        : 0,
                 params.getJobId(),
                 params.getTriggeredContentAuthorities(),
                 urisToStrings(params.getTriggeredContentUris()),
@@ -163,6 +182,7 @@ public final class JobWrapper {
 
     // Native functions to send job events to perfd.
     private static native void sendJobScheduled(
+            int eventId,
             int jobId,
             String serviceName,
             int backoffPolicy,
@@ -186,6 +206,7 @@ public final class JobWrapper {
             int scheduleResult);
 
     private static native void sendJobStarted(
+            int eventId,
             int jobId,
             String[] triggerContentAuthorities,
             String[] triggerContentUris,
@@ -195,6 +216,7 @@ public final class JobWrapper {
             boolean workOngoing);
 
     private static native void sendJobStopped(
+            int eventId,
             int jobId,
             String[] triggerContentAuthorities,
             String[] triggerContentUris,
@@ -204,6 +226,7 @@ public final class JobWrapper {
             boolean reschedule);
 
     private static native void sendJobFinished(
+            int eventId,
             int jobId,
             String[] triggerContentAuthorities,
             String[] triggerContentUris,

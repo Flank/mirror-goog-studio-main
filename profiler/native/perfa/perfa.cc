@@ -369,19 +369,19 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
         "sendListenerAlarmCancelled", "(ILjava/lang/String;)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobScheduled",
-                  "(ILjava/lang/String;IJZJJJJI[Ljava/lang/String;JJZZZZZ"
+                  "(IILjava/lang/String;IJZJJJJI[Ljava/lang/String;JJZZZZZ"
                   "Ljava/lang/String;Ljava/lang/String;I)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobStarted",
-                  "(I[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
+                  "(II[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
                   "Ljava/lang/String;Z)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobStopped",
-                  "(I[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
+                  "(II[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
                   "Ljava/lang/String;Z)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobFinished",
-                  "(I[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
+                  "(II[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
                   "Ljava/lang/String;Z)V");
   }
 

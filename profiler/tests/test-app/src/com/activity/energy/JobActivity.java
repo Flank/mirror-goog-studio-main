@@ -54,14 +54,17 @@ public class JobActivity extends PerfdTestActivity {
     }
 
     public void startJob() {
+        getJobSchedler().schedule(new Builder(2, new ComponentName("com.example")).build());
         new JobServiceEngine(new MyJobService()).startJob(createJobParams(2));
     }
 
     public void stopJob() {
+        getJobSchedler().schedule(new Builder(3, new ComponentName("com.example")).build());
         new JobServiceEngine(new MyJobService()).stopJob(createJobParams(3));
     }
 
     public void finishJob() {
+        getJobSchedler().schedule(new Builder(4, new ComponentName("com.example")).build());
         new MyJobService().jobFinished(createJobParams(4), true);
         System.out.println("JOB FINISHED");
     }

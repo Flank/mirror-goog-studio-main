@@ -278,7 +278,7 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerA
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobScheduled(
-    JNIEnv* env, jclass clazz, jint job_id, jstring service_name,
+    JNIEnv* env, jclass clazz, jint event_id, jint job_id, jstring service_name,
     jint backoff_policy, jlong initial_backoff_ms, jboolean is_periodic,
     jlong flex_ms, jlong interval_ms, jlong min_latency_ms,
     jlong max_execution_delay_ms, jint network_type,
@@ -292,7 +292,7 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobScheduled(
   JStringWrapper transient_extras_str(env, transient_extras);
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
-  energy_event.set_event_id(job_id);
+  energy_event.set_event_id(event_id);
 
   auto job = energy_event.mutable_job_scheduled()->mutable_job();
   job->set_job_id(job_id);
@@ -376,13 +376,13 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobScheduled(
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobStarted(
-    JNIEnv* env, jclass clazz, jint job_id,
+    JNIEnv* env, jclass clazz, jint event_id, jint job_id,
     jobjectArray triggered_content_authorities,
     jobjectArray triggered_content_uris, jboolean is_override_deadline_expired,
     jstring extras, jstring transient_extras, jboolean work_ongoing) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
-  energy_event.set_event_id(job_id);
+  energy_event.set_event_id(event_id);
   auto params = energy_event.mutable_job_started()->mutable_params();
   PopulateJobParams(env, params, job_id, triggered_content_authorities,
                     triggered_content_uris, is_override_deadline_expired,
@@ -393,13 +393,13 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobStarted(
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobStopped(
-    JNIEnv* env, jclass clazz, jint job_id,
+    JNIEnv* env, jclass clazz, jint event_id, jint job_id,
     jobjectArray triggered_content_authorities,
     jobjectArray triggered_content_uris, jboolean is_override_deadline_expired,
     jstring extras, jstring transient_extras, jboolean reschedule) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
-  energy_event.set_event_id(job_id);
+  energy_event.set_event_id(event_id);
   auto params = energy_event.mutable_job_stopped()->mutable_params();
   PopulateJobParams(env, params, job_id, triggered_content_authorities,
                     triggered_content_uris, is_override_deadline_expired,
@@ -410,13 +410,13 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobStopped(
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobFinished(
-    JNIEnv* env, jclass clazz, jint job_id,
+    JNIEnv* env, jclass clazz, jint event_id, jint job_id,
     jobjectArray triggered_content_authorities,
     jobjectArray triggered_content_uris, jboolean is_override_deadline_expired,
     jstring extras, jstring transient_extras, jboolean needs_reschedule) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
-  energy_event.set_event_id(job_id);
+  energy_event.set_event_id(event_id);
   auto params = energy_event.mutable_job_finished()->mutable_params();
   PopulateJobParams(env, params, job_id, triggered_content_authorities,
                     triggered_content_uris, is_override_deadline_expired,
