@@ -30,8 +30,6 @@ import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.Creation
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.Level;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockReleased.ReleaseFlag;
 import com.android.tools.profiler.proto.Profiler.BytesRequest;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -104,13 +102,8 @@ public class WakeLockTest {
                         () -> myStubWrapper.getAllEnergyEvents(mySession),
                         resp -> resp.getEventsCount() == 2);
         assertThat(response.getEventsCount()).isEqualTo(2);
-        List<EnergyEvent> sortedEnergyEvents =
-                response.getEventsList()
-                        .stream()
-                        .sorted((o1, o2) -> o1.getMetadataCase().compareTo(o2.getMetadataCase()))
-                        .collect(Collectors.toList());
 
-        EnergyEvent acquiredEvent = sortedEnergyEvents.get(0);
+        EnergyEvent acquiredEvent = response.getEvents(0);
         assertThat(acquiredEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(acquiredEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(acquiredEvent.getEventId()).isGreaterThan(0);
@@ -122,7 +115,7 @@ public class WakeLockTest {
         assertThat(acquiredEvent.getWakeLockAcquired().getTag()).isEqualTo("Bar");
         assertThat(acquiredEvent.getWakeLockAcquired().getTimeout()).isEqualTo(1000);
 
-        EnergyEvent releasedEvent = sortedEnergyEvents.get(1);
+        EnergyEvent releasedEvent = response.getEvents(1);
         assertThat(releasedEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(releasedEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(releasedEvent.getEventId()).isEqualTo(acquiredEvent.getEventId());

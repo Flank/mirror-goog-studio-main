@@ -35,8 +35,6 @@ import com.android.tools.profiler.proto.EnergyProfiler.JobScheduled;
 import com.android.tools.profiler.proto.EnergyProfiler.JobScheduled.Result;
 import com.android.tools.profiler.proto.EnergyProfiler.JobStarted;
 import com.android.tools.profiler.proto.EnergyProfiler.JobStopped;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -120,14 +118,9 @@ public class JobTest {
                         () -> myStubWrapper.getAllEnergyEvents(mySession),
                         resp -> resp.getEventsCount() == 2);
         assertThat(response.getEventsCount()).isEqualTo(2);
-        List<EnergyEvent> sortedEnergyEvents =
-                response.getEventsList()
-                        .stream()
-                        .sorted((o1, o2) -> o1.getMetadataCase().compareTo(o2.getMetadataCase()))
-                        .collect(Collectors.toList());
 
-        final EnergyEvent scheduleEvent = sortedEnergyEvents.get(0);
-        final EnergyEvent startEvent = sortedEnergyEvents.get(1);
+        final EnergyEvent scheduleEvent = response.getEvents(0);
+        final EnergyEvent startEvent = response.getEvents(1);
         assertThat(startEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(startEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(startEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
@@ -154,14 +147,9 @@ public class JobTest {
                         () -> myStubWrapper.getAllEnergyEvents(mySession),
                         resp -> resp.getEventsCount() == 2);
         assertThat(response.getEventsCount()).isEqualTo(2);
-        List<EnergyEvent> sortedEnergyEvents =
-                response.getEventsList()
-                        .stream()
-                        .sorted((o1, o2) -> o1.getMetadataCase().compareTo(o2.getMetadataCase()))
-                        .collect(Collectors.toList());
 
-        final EnergyEvent scheduleEvent = sortedEnergyEvents.get(0);
-        final EnergyEvent stopEvent = sortedEnergyEvents.get(1);
+        final EnergyEvent scheduleEvent = response.getEvents(0);
+        final EnergyEvent stopEvent = response.getEvents(1);
         assertThat(stopEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(stopEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(stopEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
@@ -188,14 +176,9 @@ public class JobTest {
                         () -> myStubWrapper.getAllEnergyEvents(mySession),
                         resp -> resp.getEventsCount() == 2);
         assertThat(response.getEventsCount()).isEqualTo(2);
-        List<EnergyEvent> sortedEnergyEvents =
-                response.getEventsList()
-                        .stream()
-                        .sorted((o1, o2) -> o1.getMetadataCase().compareTo(o2.getMetadataCase()))
-                        .collect(Collectors.toList());
 
-        final EnergyEvent scheduleEvent = sortedEnergyEvents.get(0);
-        final EnergyEvent finishEvent = sortedEnergyEvents.get(1);
+        final EnergyEvent scheduleEvent = response.getEvents(0);
+        final EnergyEvent finishEvent = response.getEvents(1);
         assertThat(finishEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(finishEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(finishEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
