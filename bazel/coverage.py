@@ -32,31 +32,8 @@ def main():
   output_path = sys.argv[1]
   with open(output_path, 'w') as fh:
     for test in tests:
-      files = []
-      with open(workspace + "/bazel-bin/" + test + ".instrumented_files") as f:
-        files = f.read().splitlines()
       with open(workspace + "/bazel-testlogs/" + test + "/coverage.dat") as f:
-        content = f.read().splitlines()
-        for line in content:
-          # Coverage format specifies a SF (Source File) line for each source.
-          # SF:<absolute path to the source file>
-          if line.startswith("SF:"):
-            in_section = True
-            found = None
-            candidate = line[3:]
-            for file in files:
-              if file.endswith(candidate):
-                found = file
-                break
-            if found:
-              # We have a file for this section:
-              fh.write("SF:" + workspace + "/" + found + '\n')
-            else:
-              print >>sys.stderr, "WARNING: Couldn't find instrumented file for {}".format(file)
-          else:
-            if found:
-              fh.write(line + '\n')
-
+        fh.write(f.read())
 
 if __name__ == '__main__':
   main()
