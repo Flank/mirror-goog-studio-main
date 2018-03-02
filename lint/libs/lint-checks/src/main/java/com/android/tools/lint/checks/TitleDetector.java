@@ -101,6 +101,6 @@ public class TitleDetector extends ResourceXmlDetector {
 
         LintFix fix = fix().set(ANDROID_URI, ATTR_TITLE, "").build();
         String message = "Menu items should specify a `title`";
-        context.report(ISSUE, element, context.getLocation(element), message, fix);
+        context.report(ISSUE, element, context.getNameLocation(element), message, fix);
     }
 }

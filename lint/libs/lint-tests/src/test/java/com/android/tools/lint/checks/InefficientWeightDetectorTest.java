@@ -26,80 +26,80 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
     }
 
     public void testWeights() {
-        String expected = ""
-                + "res/layout/inefficient_weight.xml:3: Error: Wrong orientation? No orientation specified, and the default is horizontal, yet this layout has multiple children where at least one has layout_width=\"match_parent\" [Orientation]\n"
-                + "<LinearLayout\n"
-                + "^\n"
-                + "res/layout/inefficient_weight.xml:10: Warning: Use a layout_width of 0dp instead of match_parent for better performance [InefficientWeight]\n"
-                + "     android:layout_width=\"match_parent\"\n"
-                + "     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "res/layout/inefficient_weight.xml:24: Warning: Use a layout_height of 0dp instead of wrap_content for better performance [InefficientWeight]\n"
-                + "      android:layout_height=\"wrap_content\"\n"
-                + "      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 2 warnings\n";
+        String expected = "" +
+                "res/layout/inefficient_weight.xml:3: Error: Wrong orientation? No orientation specified, and the default is horizontal, yet this layout has multiple children where at least one has layout_width=\"match_parent\" [Orientation]\n" +
+                "<LinearLayout\n" +
+                " ~~~~~~~~~~~~\n" +
+                "res/layout/inefficient_weight.xml:10: Warning: Use a layout_width of 0dp instead of match_parent for better performance [InefficientWeight]\n" +
+                "     android:layout_width=\"match_parent\"\n" +
+                "     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "res/layout/inefficient_weight.xml:24: Warning: Use a layout_height of 0dp instead of wrap_content for better performance [InefficientWeight]\n" +
+                "      android:layout_height=\"wrap_content\"\n" +
+                "      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "1 errors, 2 warnings";
         //noinspection all // Sample code
         lint().files(
-                xml("res/layout/inefficient_weight.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "\n"
-                        + "<LinearLayout\n"
-                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "\n"
-                        + "    android:layout_width=\"match_parent\"\n"
-                        + "    android:layout_height=\"match_parent\">\n"
-                        + "\n"
-                        + "\t<Button\n"
-                        + "\t    android:layout_width=\"match_parent\"\n"
-                        + "\t    android:layout_height=\"wrap_content\"\n"
-                        + "        android:layout_weight=\"1.0\" />\n"
-                        + "\n"
-                        + "\t<LinearLayout\n"
-                        + "\t    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "\n"
-                        + "\t    android:layout_width=\"match_parent\"\n"
-                        + "\t    android:layout_height=\"match_parent\"\n"
-                        + "\n"
-                        + "\t\tandroid:orientation=\"vertical\">\n"
-                        + "\n"
-                        + "\t\t<Button\n"
-                        + "\t\t    android:layout_width=\"match_parent\"\n"
-                        + "\t\t    android:layout_height=\"wrap_content\"\n"
-                        + "\t\t    android:layout_weight=\"1.0\" />\n"
-                        + "\n"
-                        + "\t</LinearLayout>\n"
-                        + "\n"
-                        + "\t<LinearLayout\n"
-                        + "\t    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "\n"
-                        + "\t    android:layout_width=\"match_parent\"\n"
-                        + "\t    android:layout_height=\"match_parent\"\n"
-                        + "\n"
-                        + "\t\tandroid:orientation=\"vertical\">\n"
-                        + "\n"
-                        + "\t\t<Button\n"
-                        + "\t\t    android:layout_width=\"match_parent\"\n"
-                        + "\t\t    android:layout_height=\"0dip\"\n"
-                        + "            android:layout_weight=\"1.0\" />\n"
-                        + "\n"
-                        + "\t</LinearLayout>\n"
-                        + "\n"
-                        + "    <LinearLayout\n"
-                        + "            xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "            style=\"@style/MyStyle\"\n"
-                        + "            android:layout_width=\"match_parent\"\n"
-                        + "            android:layout_height=\"match_parent\">\n"
-                        + "        <Button\n"
-                        + "                android:layout_width=\"match_parent\"\n"
-                        + "                android:layout_height=\"wrap_content\" />\n"
-                        + "\n"
-                        + "        <Button\n"
-                        + "                android:layout_width=\"match_parent\"\n"
-                        + "                android:layout_height=\"wrap_content\" />\n"
-                        + "\n"
-                        + "    </LinearLayout>\n"
-                        + "\n"
-                        + "\n"
-                        + "</LinearLayout>\n"))
+                xml("res/layout/inefficient_weight.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "\n" +
+                        "<LinearLayout\n" +
+                        "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\">\n" +
+                        "\n" +
+                        "\t<Button\n" +
+                        "\t    android:layout_width=\"match_parent\"\n" +
+                        "\t    android:layout_height=\"wrap_content\"\n" +
+                        "        android:layout_weight=\"1.0\" />\n" +
+                        "\n" +
+                        "\t<LinearLayout\n" +
+                        "\t    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "\n" +
+                        "\t    android:layout_width=\"match_parent\"\n" +
+                        "\t    android:layout_height=\"match_parent\"\n" +
+                        "\n" +
+                        "\t\tandroid:orientation=\"vertical\">\n" +
+                        "\n" +
+                        "\t\t<Button\n" +
+                        "\t\t    android:layout_width=\"match_parent\"\n" +
+                        "\t\t    android:layout_height=\"wrap_content\"\n" +
+                        "\t\t    android:layout_weight=\"1.0\" />\n" +
+                        "\n" +
+                        "\t</LinearLayout>\n" +
+                        "\n" +
+                        "\t<LinearLayout\n" +
+                        "\t    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "\n" +
+                        "\t    android:layout_width=\"match_parent\"\n" +
+                        "\t    android:layout_height=\"match_parent\"\n" +
+                        "\n" +
+                        "\t\tandroid:orientation=\"vertical\">\n" +
+                        "\n" +
+                        "\t\t<Button\n" +
+                        "\t\t    android:layout_width=\"match_parent\"\n" +
+                        "\t\t    android:layout_height=\"0dip\"\n" +
+                        "            android:layout_weight=\"1.0\" />\n" +
+                        "\n" +
+                        "\t</LinearLayout>\n" +
+                        "\n" +
+                        "    <LinearLayout\n" +
+                        "            xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "            style=\"@style/MyStyle\"\n" +
+                        "            android:layout_width=\"match_parent\"\n" +
+                        "            android:layout_height=\"match_parent\">\n" +
+                        "        <Button\n" +
+                        "                android:layout_width=\"match_parent\"\n" +
+                        "                android:layout_height=\"wrap_content\" />\n" +
+                        "\n" +
+                        "        <Button\n" +
+                        "                android:layout_width=\"match_parent\"\n" +
+                        "                android:layout_height=\"wrap_content\" />\n" +
+                        "\n" +
+                        "    </LinearLayout>\n" +
+                        "\n" +
+                        "\n" +
+                        "</LinearLayout>\n"))
                 .run()
                 .expect(expected)
                 .verifyFixes().window(1).expectFixDiffs(""
@@ -173,55 +173,55 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
     }
 
     public void testWeights3() {
-        String expected = ""
-                + "res/layout/baseline_weights.xml:2: Warning: Set android:baselineAligned=\"false\" on this element for better performance [DisableBaselineAlignment]\n"
-                + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "^\n"
-                + "0 errors, 1 warnings\n";
+        String expected = "" +
+                "res/layout/baseline_weights.xml:2: Warning: Set android:baselineAligned=\"false\" on this element for better performance [DisableBaselineAlignment]\n" +
+                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                " ~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings";
         //noinspection all // Sample code
         lint().files(
-                xml("res/layout/baseline_weights.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    android:layout_width=\"match_parent\"\n"
-                        + "    android:layout_height=\"match_parent\"\n"
-                        + "    android:orientation=\"horizontal\" >\n"
-                        + "\n"
-                        + "    <LinearLayout\n"
-                        + "        android:id=\"@+id/linearLayout1\"\n"
-                        + "        android:layout_weight=\"0.3\"\n"
-                        + "        android:layout_width=\"wrap_content\"\n"
-                        + "        android:layout_height=\"match_parent\"\n"
-                        + "        android:orientation=\"vertical\" >\n"
-                        + "\n"
-                        + "\n"
-                        + "        <Button\n"
-                        + "            android:id=\"@+id/button1\"\n"
-                        + "            android:layout_width=\"wrap_content\"\n"
-                        + "            android:layout_height=\"wrap_content\"\n"
-                        + "            android:text=\"Button\" />\n"
-                        + "\n"
-                        + "        <Button\n"
-                        + "            android:id=\"@+id/button2\"\n"
-                        + "            android:layout_width=\"wrap_content\"\n"
-                        + "            android:layout_height=\"wrap_content\"\n"
-                        + "            android:text=\"Button\" />\n"
-                        + "\n"
-                        + "        <Button\n"
-                        + "            android:id=\"@+id/button3\"\n"
-                        + "            android:layout_width=\"wrap_content\"\n"
-                        + "            android:layout_height=\"wrap_content\"\n"
-                        + "            android:text=\"Button\" />\n"
-                        + "    </LinearLayout>\n"
-                        + "\n"
-                        + "    <FrameLayout\n"
-                        + "        android:id=\"@+id/frameLayout1\"\n"
-                        + "        android:layout_weight=\"0.7\"\n"
-                        + "        android:layout_width=\"match_parent\"\n"
-                        + "        android:layout_height=\"match_parent\" >\n"
-                        + "    </FrameLayout>\n"
-                        + "\n"
-                        + "</LinearLayout>\n"))
+                xml("res/layout/baseline_weights.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\"\n" +
+                        "    android:orientation=\"horizontal\" >\n" +
+                        "\n" +
+                        "    <LinearLayout\n" +
+                        "        android:id=\"@+id/linearLayout1\"\n" +
+                        "        android:layout_weight=\"0.3\"\n" +
+                        "        android:layout_width=\"wrap_content\"\n" +
+                        "        android:layout_height=\"match_parent\"\n" +
+                        "        android:orientation=\"vertical\" >\n" +
+                        "\n" +
+                        "\n" +
+                        "        <Button\n" +
+                        "            android:id=\"@+id/button1\"\n" +
+                        "            android:layout_width=\"wrap_content\"\n" +
+                        "            android:layout_height=\"wrap_content\"\n" +
+                        "            android:text=\"Button\" />\n" +
+                        "\n" +
+                        "        <Button\n" +
+                        "            android:id=\"@+id/button2\"\n" +
+                        "            android:layout_width=\"wrap_content\"\n" +
+                        "            android:layout_height=\"wrap_content\"\n" +
+                        "            android:text=\"Button\" />\n" +
+                        "\n" +
+                        "        <Button\n" +
+                        "            android:id=\"@+id/button3\"\n" +
+                        "            android:layout_width=\"wrap_content\"\n" +
+                        "            android:layout_height=\"wrap_content\"\n" +
+                        "            android:text=\"Button\" />\n" +
+                        "    </LinearLayout>\n" +
+                        "\n" +
+                        "    <FrameLayout\n" +
+                        "        android:id=\"@+id/frameLayout1\"\n" +
+                        "        android:layout_weight=\"0.7\"\n" +
+                        "        android:layout_width=\"match_parent\"\n" +
+                        "        android:layout_height=\"match_parent\" >\n" +
+                        "    </FrameLayout>\n" +
+                        "\n" +
+                        "</LinearLayout>\n"))
                 .run()
                 .expect(expected)
                 .verifyFixes().window(1).expectFixDiffs(""
@@ -233,51 +233,51 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
     }
 
     public void testWeights4() {
-        String expected = ""
-                + "res/layout/activity_item_two_pane.xml:1: Warning: Set android:baselineAligned=\"false\" on this element for better performance [DisableBaselineAlignment]\n"
-                + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "^\n"
-                + "0 errors, 1 warnings\n";
+        String expected = "" +
+                "res/layout/activity_item_two_pane.xml:1: Warning: Set android:baselineAligned=\"false\" on this element for better performance [DisableBaselineAlignment]\n" +
+                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                " ~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings";
         //noinspection all // Sample code
         lint().files(
-                xml("res/layout/activity_item_two_pane.xml", ""
-                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                        + "    android:layout_width=\"match_parent\"\n"
-                        + "    android:layout_height=\"match_parent\"\n"
-                        + "    android:layout_marginLeft=\"16dp\"\n"
-                        + "    android:layout_marginRight=\"16dp\"\n"
-                        + "    android:divider=\"?android:attr/dividerHorizontal\"\n"
-                        + "    android:orientation=\"horizontal\"\n"
-                        + "    android:showDividers=\"middle\"\n"
-                        + "    tools:context=\".ItemListActivity\" >\n"
-                        + "\n"
-                        + "    <!--\n"
-                        + "    This layout is a two-pane layout for the Items\n"
-                        + "    master/detail flow. See res/values-large/refs.xml and\n"
-                        + "    res/values-sw600dp/refs.xml for an example of layout aliases\n"
-                        + "    that replace the single-pane version of the layout with\n"
-                        + "    this two-pane version.\n"
-                        + "\n"
-                        + "    For more on layout aliases, see:\n"
-                        + "    http://developer.android.com/training/multiscreen/screensizes.html#TaskUseAliasFilters\n"
-                        + "    -->\n"
-                        + "\n"
-                        + "    <fragment\n"
-                        + "        android:id=\"@+id/item_list\"\n"
-                        + "        android:name=\"com.example.master.ItemListFragment\"\n"
-                        + "        android:layout_width=\"0dp\"\n"
-                        + "        android:layout_height=\"match_parent\"\n"
-                        + "        android:layout_weight=\"1\"\n"
-                        + "        tools:layout=\"@android:layout/list_content\" />\n"
-                        + "\n"
-                        + "    <FrameLayout\n"
-                        + "        android:id=\"@+id/item_detail_container\"\n"
-                        + "        android:layout_width=\"0dp\"\n"
-                        + "        android:layout_height=\"match_parent\"\n"
-                        + "        android:layout_weight=\"3\" />\n"
-                        + "\n"
-                        + "</LinearLayout>\n"))
+                xml("res/layout/activity_item_two_pane.xml", "" +
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\"\n" +
+                        "    android:layout_marginLeft=\"16dp\"\n" +
+                        "    android:layout_marginRight=\"16dp\"\n" +
+                        "    android:divider=\"?android:attr/dividerHorizontal\"\n" +
+                        "    android:orientation=\"horizontal\"\n" +
+                        "    android:showDividers=\"middle\"\n" +
+                        "    tools:context=\".ItemListActivity\" >\n" +
+                        "\n" +
+                        "    <!--\n" +
+                        "    This layout is a two-pane layout for the Items\n" +
+                        "    master/detail flow. See res/values-large/refs.xml and\n" +
+                        "    res/values-sw600dp/refs.xml for an example of layout aliases\n" +
+                        "    that replace the single-pane version of the layout with\n" +
+                        "    this two-pane version.\n" +
+                        "\n" +
+                        "    For more on layout aliases, see:\n" +
+                        "    http://developer.android.com/training/multiscreen/screensizes.html#TaskUseAliasFilters\n" +
+                        "    -->\n" +
+                        "\n" +
+                        "    <fragment\n" +
+                        "        android:id=\"@+id/item_list\"\n" +
+                        "        android:name=\"com.example.master.ItemListFragment\"\n" +
+                        "        android:layout_width=\"0dp\"\n" +
+                        "        android:layout_height=\"match_parent\"\n" +
+                        "        android:layout_weight=\"1\"\n" +
+                        "        tools:layout=\"@android:layout/list_content\" />\n" +
+                        "\n" +
+                        "    <FrameLayout\n" +
+                        "        android:id=\"@+id/item_detail_container\"\n" +
+                        "        android:layout_width=\"0dp\"\n" +
+                        "        android:layout_height=\"match_parent\"\n" +
+                        "        android:layout_weight=\"3\" />\n" +
+                        "\n" +
+                        "</LinearLayout>\n"))
                 .run()
                 .expect(expected);
     }
@@ -333,53 +333,53 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
 
     public void testNoVerticalWeights4() {
         // Orientation not specified =⇒ horizontal
-        String expected = ""
-                + "res/layout/baseline_weights3.xml:2: Warning: Set android:baselineAligned=\"false\" on this element for better performance [DisableBaselineAlignment]\n"
-                + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "^\n"
-                + "0 errors, 1 warnings\n";
+        String expected = "" +
+                "res/layout/baseline_weights3.xml:2: Warning: Set android:baselineAligned=\"false\" on this element for better performance [DisableBaselineAlignment]\n" +
+                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                " ~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings";
         //noinspection all // Sample code
         lint().files(
-                xml("res/layout/baseline_weights3.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    android:layout_width=\"match_parent\"\n"
-                        + "    android:layout_height=\"match_parent\" >\n"
-                        + "\n"
-                        + "    <LinearLayout\n"
-                        + "        android:id=\"@+id/linearLayout1\"\n"
-                        + "        android:layout_weight=\"0.3\"\n"
-                        + "        android:layout_width=\"wrap_content\"\n"
-                        + "        android:layout_height=\"match_parent\"\n"
-                        + "        android:orientation=\"vertical\" >\n"
-                        + "\n"
-                        + "        <Button\n"
-                        + "            android:id=\"@+id/button1\"\n"
-                        + "            android:layout_width=\"wrap_content\"\n"
-                        + "            android:layout_height=\"wrap_content\"\n"
-                        + "            android:text=\"Button\" />\n"
-                        + "\n"
-                        + "        <Button\n"
-                        + "            android:id=\"@+id/button2\"\n"
-                        + "            android:layout_width=\"wrap_content\"\n"
-                        + "            android:layout_height=\"wrap_content\"\n"
-                        + "            android:text=\"Button\" />\n"
-                        + "\n"
-                        + "        <Button\n"
-                        + "            android:id=\"@+id/button3\"\n"
-                        + "            android:layout_width=\"wrap_content\"\n"
-                        + "            android:layout_height=\"wrap_content\"\n"
-                        + "            android:text=\"Button\" />\n"
-                        + "    </LinearLayout>\n"
-                        + "\n"
-                        + "    <FrameLayout\n"
-                        + "        android:id=\"@+id/frameLayout1\"\n"
-                        + "        android:layout_weight=\"0.7\"\n"
-                        + "        android:layout_width=\"match_parent\"\n"
-                        + "        android:layout_height=\"match_parent\" >\n"
-                        + "    </FrameLayout>\n"
-                        + "\n"
-                        + "</LinearLayout>\n"))
+                xml("res/layout/baseline_weights3.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\" >\n" +
+                        "\n" +
+                        "    <LinearLayout\n" +
+                        "        android:id=\"@+id/linearLayout1\"\n" +
+                        "        android:layout_weight=\"0.3\"\n" +
+                        "        android:layout_width=\"wrap_content\"\n" +
+                        "        android:layout_height=\"match_parent\"\n" +
+                        "        android:orientation=\"vertical\" >\n" +
+                        "\n" +
+                        "        <Button\n" +
+                        "            android:id=\"@+id/button1\"\n" +
+                        "            android:layout_width=\"wrap_content\"\n" +
+                        "            android:layout_height=\"wrap_content\"\n" +
+                        "            android:text=\"Button\" />\n" +
+                        "\n" +
+                        "        <Button\n" +
+                        "            android:id=\"@+id/button2\"\n" +
+                        "            android:layout_width=\"wrap_content\"\n" +
+                        "            android:layout_height=\"wrap_content\"\n" +
+                        "            android:text=\"Button\" />\n" +
+                        "\n" +
+                        "        <Button\n" +
+                        "            android:id=\"@+id/button3\"\n" +
+                        "            android:layout_width=\"wrap_content\"\n" +
+                        "            android:layout_height=\"wrap_content\"\n" +
+                        "            android:text=\"Button\" />\n" +
+                        "    </LinearLayout>\n" +
+                        "\n" +
+                        "    <FrameLayout\n" +
+                        "        android:id=\"@+id/frameLayout1\"\n" +
+                        "        android:layout_weight=\"0.7\"\n" +
+                        "        android:layout_width=\"match_parent\"\n" +
+                        "        android:layout_height=\"match_parent\" >\n" +
+                        "    </FrameLayout>\n" +
+                        "\n" +
+                        "</LinearLayout>\n"))
                 .run()
                 .expect(expected);
     }
@@ -623,94 +623,94 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
     }
 
     public void testOrientation() {
-        String expected = ""
-                + "res/layout/orientation.xml:52: Error: No orientation specified, and the default is horizontal. This is a common source of bugs when children are added dynamically. [Orientation]\n"
-                + "    <LinearLayout\n"
-                + "    ^\n"
-                + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "res/layout/orientation.xml:52: Error: No orientation specified, and the default is horizontal. This is a common source of bugs when children are added dynamically. [Orientation]\n" +
+                "    <LinearLayout\n" +
+                "     ~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
-                xml("res/layout/orientation.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<!--\n"
-                        + "  ~ Copyright (C) 2013 The Android Open Source Project\n"
-                        + "  ~\n"
-                        + "  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n"
-                        + "  ~ you may not use this file except in compliance with the License.\n"
-                        + "  ~ You may obtain a copy of the License at\n"
-                        + "  ~\n"
-                        + "  ~      http://www.apache.org/licenses/LICENSE-2.0\n"
-                        + "  ~\n"
-                        + "  ~ Unless required by applicable law or agreed to in writing, software\n"
-                        + "  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n"
-                        + "  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
-                        + "  ~ See the License for the specific language governing permissions and\n"
-                        + "  ~ limitations under the License.\n"
-                        + "  -->\n"
-                        + "<FrameLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                        + "    android:layout_width=\"match_parent\"\n"
-                        + "    android:layout_height=\"match_parent\"\n"
-                        + "    tools:ignore=\"HardcodedText\" >\n"
-                        + "\n"
-                        + "    <!-- OK: specifies orientation -->\n"
-                        + "    <LinearLayout\n"
-                        + "        android:layout_width=\"match_parent\"\n"
-                        + "        android:layout_height=\"match_parent\"\n"
-                        + "        android:orientation=\"vertical\" >\n"
-                        + "\n"
-                        + "    </LinearLayout>\n"
-                        + "\n"
-                        + "    <!-- OK: no id -->\n"
-                        + "    <LinearLayout\n"
-                        + "        android:layout_width=\"match_parent\"\n"
-                        + "        android:layout_height=\"match_parent\" >\n"
-                        + "\n"
-                        + "    </LinearLayout>\n"
-                        + "\n"
-                        + "    <!-- OK: has children -->\n"
-                        + "    <LinearLayout\n"
-                        + "        android:layout_width=\"match_parent\"\n"
-                        + "        android:layout_height=\"match_parent\" >\n"
-                        + "\n"
-                        + "        <Button\n"
-                        + "            android:layout_width=\"0dp\"\n"
-                        + "            android:layout_height=\"wrap_content\"\n"
-                        + "            android:layout_weight=\"1.0\"\n"
-                        + "            android:text=\"Button\" />\n"
-                        + "\n"
-                        + "    </LinearLayout>\n"
-                        + "\n"
-                        + "    <!-- Error: Missing orientation -->\n"
-                        + "    <LinearLayout\n"
-                        + "        android:layout_width=\"match_parent\"\n"
-                        + "        android:layout_height=\"match_parent\"\n"
-                        + "        android:id=\"@+id/mylayout\" >\n"
-                        + "\n"
-                        + "    </LinearLayout>\n"
-                        + "\n"
-                        + "</FrameLayout>\n"))
+                xml("res/layout/orientation.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<!--\n" +
+                        "  ~ Copyright (C) 2013 The Android Open Source Project\n" +
+                        "  ~\n" +
+                        "  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n" +
+                        "  ~ you may not use this file except in compliance with the License.\n" +
+                        "  ~ You may obtain a copy of the License at\n" +
+                        "  ~\n" +
+                        "  ~      http://www.apache.org/licenses/LICENSE-2.0\n" +
+                        "  ~\n" +
+                        "  ~ Unless required by applicable law or agreed to in writing, software\n" +
+                        "  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n" +
+                        "  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n" +
+                        "  ~ See the License for the specific language governing permissions and\n" +
+                        "  ~ limitations under the License.\n" +
+                        "  -->\n" +
+                        "<FrameLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\"\n" +
+                        "    tools:ignore=\"HardcodedText\" >\n" +
+                        "\n" +
+                        "    <!-- OK: specifies orientation -->\n" +
+                        "    <LinearLayout\n" +
+                        "        android:layout_width=\"match_parent\"\n" +
+                        "        android:layout_height=\"match_parent\"\n" +
+                        "        android:orientation=\"vertical\" >\n" +
+                        "\n" +
+                        "    </LinearLayout>\n" +
+                        "\n" +
+                        "    <!-- OK: no id -->\n" +
+                        "    <LinearLayout\n" +
+                        "        android:layout_width=\"match_parent\"\n" +
+                        "        android:layout_height=\"match_parent\" >\n" +
+                        "\n" +
+                        "    </LinearLayout>\n" +
+                        "\n" +
+                        "    <!-- OK: has children -->\n" +
+                        "    <LinearLayout\n" +
+                        "        android:layout_width=\"match_parent\"\n" +
+                        "        android:layout_height=\"match_parent\" >\n" +
+                        "\n" +
+                        "        <Button\n" +
+                        "            android:layout_width=\"0dp\"\n" +
+                        "            android:layout_height=\"wrap_content\"\n" +
+                        "            android:layout_weight=\"1.0\"\n" +
+                        "            android:text=\"Button\" />\n" +
+                        "\n" +
+                        "    </LinearLayout>\n" +
+                        "\n" +
+                        "    <!-- Error: Missing orientation -->\n" +
+                        "    <LinearLayout\n" +
+                        "        android:layout_width=\"match_parent\"\n" +
+                        "        android:layout_height=\"match_parent\"\n" +
+                        "        android:id=\"@+id/mylayout\" >\n" +
+                        "\n" +
+                        "    </LinearLayout>\n" +
+                        "\n" +
+                        "</FrameLayout>\n"))
                 .run()
                 .expect(expected)
-                .expectFixDiffs(""
-                        + "Fix for res/layout/orientation.xml line 51: Set orientation=\"horizontal\" (default):\n"
-                        + "@@ -56 +56\n"
-                        + "-         android:layout_height=\"match_parent\" >\n"
-                        + "+         android:layout_height=\"match_parent\"\n"
-                        + "+         android:orientation=\"horizontal\" >\n"
-                        + "Fix for res/layout/orientation.xml line 51: Set orientation=\"vertical\" (changes layout):\n"
-                        + "@@ -56 +56\n"
-                        + "-         android:layout_height=\"match_parent\" >\n"
-                        + "+         android:layout_height=\"match_parent\"\n"
-                        + "+         android:orientation=\"vertical\" >\n");
+                .expectFixDiffs("" +
+                        "Fix for res/layout/orientation.xml line 51: Set orientation=\"horizontal\" (default):\n" +
+                        "@@ -56 +56\n" +
+                        "-         android:layout_height=\"match_parent\" >\n" +
+                        "+         android:layout_height=\"match_parent\"\n" +
+                        "+         android:orientation=\"horizontal\" >\n" +
+                        "Fix for res/layout/orientation.xml line 51: Set orientation=\"vertical\" (changes layout):\n" +
+                        "@@ -56 +56\n" +
+                        "-         android:layout_height=\"match_parent\" >\n" +
+                        "+         android:layout_height=\"match_parent\"\n" +
+                        "+         android:orientation=\"vertical\" >\n");
     }
 
     public void testIncremental1() {
-        String expected = ""
-                + "res/layout/orientation2.xml:5: Error: No orientation specified, and the default is horizontal. This is a common source of bugs when children are added dynamically. [Orientation]\n"
-                + "    <LinearLayout\n"
-                + "    ^\n"
-                + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "res/layout/orientation2.xml:5: Error: No orientation specified, and the default is horizontal. This is a common source of bugs when children are added dynamically. [Orientation]\n" +
+                "    <LinearLayout\n" +
+                "     ~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings";
         lint().files(
                 mOrientation2)
                 .incremental("res/layout/orientation2.xml")

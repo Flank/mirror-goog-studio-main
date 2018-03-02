@@ -721,7 +721,7 @@ public class ApiDetector extends ResourceXmlDetector
             int minSdk = getMinSdk(context);
             if (api > minSdk && api > context.getFolderVersion()
                     && api > getLocalMinSdk(element)) {
-                Location location = context.getLocation(element);
+                Location location = context.getNameLocation(element);
                 String message = String.format(
                         "View requires API level %1$d (current min is %2$d): `<%3$s>`",
                         api, minSdk, tag);
@@ -775,7 +775,7 @@ public class ApiDetector extends ResourceXmlDetector
                     && api > context.getFolderVersion()
                     && api > getLocalMinSdk(element)
                     && !featureProvidedByGradle(context, gradleVersion)) {
-                Location location = context.getLocation(element);
+                Location location = context.getNameLocation(element);
 
                 // For the <drawable> tag we report it against the class= attribute
                 if ("drawable".equals(tag)) {

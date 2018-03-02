@@ -215,7 +215,7 @@ public class UselessViewDetector extends LayoutDetector {
         }
 
         boolean hasId = element.hasAttributeNS(ANDROID_URI, ATTR_ID);
-        Location location = context.getLocation(element);
+        Location location = context.getNameLocation(element);
         String tag = element.getTagName();
         String format;
         if (hasId) {
@@ -282,7 +282,7 @@ public class UselessViewDetector extends LayoutDetector {
             return;
         }
 
-        Location location = context.getLocation(element);
+        Location location = context.getNameLocation(element);
         String tag = element.getTagName();
         String message = String.format(
                 "This `%1$s` view is useless (no children, no `background`, no `id`, no `style`)", tag);

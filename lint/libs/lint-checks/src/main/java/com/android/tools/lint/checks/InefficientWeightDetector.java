@@ -221,7 +221,7 @@ public class InefficientWeightDetector extends LayoutDetector {
                 String message = "Wrong orientation? No orientation specified, and the default "
                         + "is horizontal, yet this layout has multiple children where at "
                         + "least one has `layout_width=\"match_parent\"`";
-                context.report(ORIENTATION, element, context.getLocation(element), message,
+                context.report(ORIENTATION, element, context.getNameLocation(element), message,
                         createOrientationFixes());
             }
         } else if (children.isEmpty() && (orientation == null || orientation.isEmpty())
@@ -243,7 +243,7 @@ public class InefficientWeightDetector extends LayoutDetector {
             if (!ignore) {
                 String message = "No orientation specified, and the default is horizontal. "
                         + "This is a common source of bugs when children are added dynamically.";
-                context.report(ORIENTATION, element, context.getLocation(element), message,
+                context.report(ORIENTATION, element, context.getNameLocation(element), message,
                         createOrientationFixes());
             }
         }
@@ -271,7 +271,7 @@ public class InefficientWeightDetector extends LayoutDetector {
                         .set(ANDROID_URI, ATTR_BASELINE_ALIGNED, VALUE_FALSE).build();
                 context.report(BASELINE_WEIGHTS,
                         element,
-                        context.getLocation(element),
+                        context.getNameLocation(element),
                         "Set `android:baselineAligned=\"false\"` on this element for better performance",
                         fix);
             }

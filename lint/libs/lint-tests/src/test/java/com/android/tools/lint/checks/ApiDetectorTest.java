@@ -46,29 +46,29 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testXmlApi1() {
-        String expected = ""
-                + "res/color/colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n"
-                + "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n"
-                + "                                                ^\n"
-                + "res/layout/layout.xml:9: Error: View requires API level 5 (current min is 1): <QuickContactBadge> [NewApi]\n"
-                + "    <QuickContactBadge\n"
-                + "    ^\n"
-                + "res/layout/layout.xml:15: Error: View requires API level 11 (current min is 1): <CalendarView> [NewApi]\n"
-                + "    <CalendarView\n"
-                + "    ^\n"
-                + "res/layout/layout.xml:21: Error: View requires API level 14 (current min is 1): <GridLayout> [NewApi]\n"
-                + "    <GridLayout\n"
-                + "    ^\n"
-                + "res/layout/layout.xml:22: Error: @android:attr/actionBarSplitStyle requires API level 14 (current min is 1) [NewApi]\n"
-                + "        foo=\"@android:attr/actionBarSplitStyle\"\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "res/layout/layout.xml:23: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n"
-                + "        bar=\"@android:color/holo_red_light\"\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "res/values/themes.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n"
-                + "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n"
-                + "                                                ^\n"
-                + "7 errors, 0 warnings\n";
+        String expected = "" +
+                "res/color/colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +
+                "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n" +
+                "                                                ^\n" +
+                "res/layout/layout.xml:9: Error: View requires API level 5 (current min is 1): <QuickContactBadge> [NewApi]\n" +
+                "    <QuickContactBadge\n" +
+                "     ~~~~~~~~~~~~~~~~~\n" +
+                "res/layout/layout.xml:15: Error: View requires API level 11 (current min is 1): <CalendarView> [NewApi]\n" +
+                "    <CalendarView\n" +
+                "     ~~~~~~~~~~~~\n" +
+                "res/layout/layout.xml:21: Error: View requires API level 14 (current min is 1): <GridLayout> [NewApi]\n" +
+                "    <GridLayout\n" +
+                "     ~~~~~~~~~~\n" +
+                "res/layout/layout.xml:22: Error: @android:attr/actionBarSplitStyle requires API level 14 (current min is 1) [NewApi]\n" +
+                "        foo=\"@android:attr/actionBarSplitStyle\"\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "res/layout/layout.xml:23: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +
+                "        bar=\"@android:color/holo_red_light\"\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "res/values/themes.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +
+                "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n" +
+                "                                                ^\n" +
+                "7 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(1),
@@ -81,57 +81,57 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testXmlApi2() {
-        String expected = ""
-                + "res/layout/textureview.xml:8: Error: View requires API level 14 (current min is 1): <TextureView> [NewApi]\n"
-                + "    <TextureView\n"
-                + "    ^\n"
-                + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "res/layout/textureview.xml:8: Error: View requires API level 14 (current min is 1): <TextureView> [NewApi]\n" +
+                "    <TextureView\n" +
+                "     ~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(1),
-                xml("res/layout/textureview.xml", ""
-                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                        + "    android:id=\"@+id/LinearLayout1\"\n"
-                        + "    android:layout_width=\"match_parent\"\n"
-                        + "    android:layout_height=\"match_parent\"\n"
-                        + "    android:orientation=\"vertical\" >\n"
-                        + "\n"
-                        + "    <TextureView\n"
-                        + "        android:layout_width=\"wrap_content\"\n"
-                        + "        android:layout_height=\"wrap_content\" />\n"
-                        + "\n"
-                        + "</LinearLayout>\n"))
+                xml("res/layout/textureview.xml", "" +
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
+                        "    android:id=\"@+id/LinearLayout1\"\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\"\n" +
+                        "    android:orientation=\"vertical\" >\n" +
+                        "\n" +
+                        "    <TextureView\n" +
+                        "        android:layout_width=\"wrap_content\"\n" +
+                        "        android:layout_height=\"wrap_content\" />\n" +
+                        "\n" +
+                        "</LinearLayout>\n"))
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
     }
 
     public void testTagWarnings() {
-        String expected = ""
-                + "res/layout/tag.xml:12: Warning: <tag> is only used in API level 21 and higher (current min is 1) [UnusedAttribute]\n"
-                + "        <tag id=\"@+id/test\" />\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n";
+        String expected = "" +
+                "res/layout/tag.xml:12: Warning: <tag> is only used in API level 21 and higher (current min is 1) [UnusedAttribute]\n" +
+                "        <tag id=\"@+id/test\" />\n" +
+                "         ~~~\n" +
+                "0 errors, 1 warnings";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(1),
-                xml("res/layout/tag.xml", ""
-                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                        + "    android:id=\"@+id/LinearLayout1\"\n"
-                        + "    android:layout_width=\"match_parent\"\n"
-                        + "    android:layout_height=\"match_parent\"\n"
-                        + "    android:orientation=\"vertical\" >\n"
-                        + "\n"
-                        + "    <TextView\n"
-                        + "        android:layout_width=\"wrap_content\"\n"
-                        + "        android:layout_height=\"wrap_content\"\n"
-                        + "        android:textSize=\"14dp\">\n"
-                        + "        <tag id=\"@+id/test\" />\n"
-                        + "    </TextView>\n"
-                        + "\n"
-                        + "</LinearLayout>\n"))
+                xml("res/layout/tag.xml", "" +
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
+                        "    android:id=\"@+id/LinearLayout1\"\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\"\n" +
+                        "    android:orientation=\"vertical\" >\n" +
+                        "\n" +
+                        "    <TextView\n" +
+                        "        android:layout_width=\"wrap_content\"\n" +
+                        "        android:layout_height=\"wrap_content\"\n" +
+                        "        android:textSize=\"14dp\">\n" +
+                        "        <tag id=\"@+id/test\" />\n" +
+                        "    </TextView>\n" +
+                        "\n" +
+                        "</LinearLayout>\n"))
                 .checkMessage(this::checkReportedError)
                 .run()                .expect(expected);
     }
@@ -492,16 +492,16 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testCustomDrawable() {
-        String expected = ""
-                + "res/drawable/my_layer.xml:2: Error: Custom drawables requires API level 24 (current min is 15) [NewApi]\n"
-                + "<my.custom.drawable/>\n"
-                + "~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "res/drawable/my_layer.xml:2: Error: Custom drawables requires API level 24 (current min is 15) [NewApi]\n" +
+                "<my.custom.drawable/>\n" +
+                " ~~~~~~~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings";
         lint().files(
                 manifest().minSdk(15),
-                xml("res/drawable/my_layer.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<my.custom.drawable/>\n"))
+                xml("res/drawable/my_layer.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<my.custom.drawable/>\n"))
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
@@ -691,23 +691,23 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testXmlApiFolderVersion11() {
-        String expected = ""
-                + "res/color-v11/colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n"
-                + "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n"
-                + "                                                ^\n"
-                + "res/layout-v11/layout.xml:21: Error: View requires API level 14 (current min is 1): <GridLayout> [NewApi]\n"
-                + "    <GridLayout\n"
-                + "    ^\n"
-                + "res/layout-v11/layout.xml:22: Error: @android:attr/actionBarSplitStyle requires API level 14 (current min is 1) [NewApi]\n"
-                + "        foo=\"@android:attr/actionBarSplitStyle\"\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "res/layout-v11/layout.xml:23: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n"
-                + "        bar=\"@android:color/holo_red_light\"\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "res/values-v11/themes.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n"
-                + "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n"
-                + "                                                ^\n"
-                + "5 errors, 0 warnings\n";
+        String expected = "" +
+                "res/color-v11/colors.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +
+                "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n" +
+                "                                                ^\n" +
+                "res/layout-v11/layout.xml:21: Error: View requires API level 14 (current min is 1): <GridLayout> [NewApi]\n" +
+                "    <GridLayout\n" +
+                "     ~~~~~~~~~~\n" +
+                "res/layout-v11/layout.xml:22: Error: @android:attr/actionBarSplitStyle requires API level 14 (current min is 1) [NewApi]\n" +
+                "        foo=\"@android:attr/actionBarSplitStyle\"\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "res/layout-v11/layout.xml:23: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +
+                "        bar=\"@android:color/holo_red_light\"\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "res/values-v11/themes.xml:9: Error: @android:color/holo_red_light requires API level 14 (current min is 1) [NewApi]\n" +
+                "        <item name=\"android:windowBackground\">  @android:color/holo_red_light </item>\n" +
+                "                                                ^\n" +
+                "5 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(1),
@@ -982,51 +982,51 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testViewClassLayoutReference() {
-        String expected = ""
-                + "res/layout/view.xml:9: Error: View requires API level 5 (current min is 1): <QuickContactBadge> [NewApi]\n"
-                + "    <view\n"
-                + "    ^\n"
-                + "res/layout/view.xml:16: Error: View requires API level 11 (current min is 1): <CalendarView> [NewApi]\n"
-                + "    <view\n"
-                + "    ^\n"
-                + "res/layout/view.xml:24: Error: ?android:attr/dividerHorizontal requires API level 11 (current min is 1) [NewApi]\n"
-                + "        unknown=\"?android:attr/dividerHorizontal\"\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "res/layout/view.xml:25: Error: ?android:attr/textColorLinkInverse requires API level 11 (current min is 1) [NewApi]\n"
-                + "        android:textColor=\"?android:attr/textColorLinkInverse\" />\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "4 errors, 0 warnings\n";
+        String expected = "" +
+                "res/layout/view.xml:9: Error: View requires API level 5 (current min is 1): <QuickContactBadge> [NewApi]\n" +
+                "    <view\n" +
+                "     ~~~~\n" +
+                "res/layout/view.xml:16: Error: View requires API level 11 (current min is 1): <CalendarView> [NewApi]\n" +
+                "    <view\n" +
+                "     ~~~~\n" +
+                "res/layout/view.xml:24: Error: ?android:attr/dividerHorizontal requires API level 11 (current min is 1) [NewApi]\n" +
+                "        unknown=\"?android:attr/dividerHorizontal\"\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "res/layout/view.xml:25: Error: ?android:attr/textColorLinkInverse requires API level 11 (current min is 1) [NewApi]\n" +
+                "        android:textColor=\"?android:attr/textColorLinkInverse\" />\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "4 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(1),
-                xml("res/layout/view.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    android:layout_width=\"fill_parent\"\n"
-                        + "    android:layout_height=\"match_parent\"\n"
-                        + "    android:orientation=\"vertical\" >\n"
-                        + "\n"
-                        + "    <!-- Requires API 5 -->\n"
-                        + "\n"
-                        + "    <view\n"
-                        + "        android:layout_width=\"wrap_content\"\n"
-                        + "        android:layout_height=\"wrap_content\"\n"
-                        + "        class=\"QuickContactBadge\" />\n"
-                        + "\n"
-                        + "    <!-- Requires API 11 -->\n"
-                        + "\n"
-                        + "    <view\n"
-                        + "        android:layout_width=\"fill_parent\"\n"
-                        + "        android:layout_height=\"fill_parent\"\n"
-                        + "        class=\"CalendarView\" />\n"
-                        + "\n"
-                        + "    <Button\n"
-                        + "        android:layout_width=\"fill_parent\"\n"
-                        + "        android:layout_height=\"fill_parent\"\n"
-                        + "        unknown=\"?android:attr/dividerHorizontal\"\n"
-                        + "        android:textColor=\"?android:attr/textColorLinkInverse\" />\n"
-                        + "\n"
-                        + "</LinearLayout>\n"))
+                xml("res/layout/view.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    android:layout_width=\"fill_parent\"\n" +
+                        "    android:layout_height=\"match_parent\"\n" +
+                        "    android:orientation=\"vertical\" >\n" +
+                        "\n" +
+                        "    <!-- Requires API 5 -->\n" +
+                        "\n" +
+                        "    <view\n" +
+                        "        android:layout_width=\"wrap_content\"\n" +
+                        "        android:layout_height=\"wrap_content\"\n" +
+                        "        class=\"QuickContactBadge\" />\n" +
+                        "\n" +
+                        "    <!-- Requires API 11 -->\n" +
+                        "\n" +
+                        "    <view\n" +
+                        "        android:layout_width=\"fill_parent\"\n" +
+                        "        android:layout_height=\"fill_parent\"\n" +
+                        "        class=\"CalendarView\" />\n" +
+                        "\n" +
+                        "    <Button\n" +
+                        "        android:layout_width=\"fill_parent\"\n" +
+                        "        android:layout_height=\"fill_parent\"\n" +
+                        "        unknown=\"?android:attr/dividerHorizontal\"\n" +
+                        "        android:textColor=\"?android:attr/textColorLinkInverse\" />\n" +
+                        "\n" +
+                        "</LinearLayout>\n"))
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
@@ -2972,11 +2972,11 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testRipple() {
-        String expected = ""
-                + "res/drawable/ripple.xml:1: Error: <ripple> requires API level 21 (current min is 14) [NewApi]\n"
-                + "<ripple\n"
-                + "^\n"
-                + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "res/drawable/ripple.xml:1: Error: <ripple> requires API level 21 (current min is 14) [NewApi]\n" +
+                "<ripple\n" +
+                " ~~~~~~\n" +
+                "1 errors, 0 warnings";
         lint().files(
                 manifest().minSdk(14),
                 mRipple)
@@ -3007,11 +3007,11 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testVector() {
         //noinspection all // Sample code
-        String expected = ""
-                + "res/drawable/vector.xml:1: Error: <vector> requires API level 21 (current min is 4) or building with Android Gradle plugin 1.4 or higher [NewApi]\n"
-                + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n"
-                + "^\n"
-                + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "res/drawable/vector.xml:1: Error: <vector> requires API level 21 (current min is 4) or building with Android Gradle plugin 1.4 or higher [NewApi]\n" +
+                "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n" +
+                " ~~~~~~\n" +
+                "1 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(4),
@@ -3038,87 +3038,87 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testAnimatedSelector() {
-        String expected = ""
-                + "res/drawable/animated_selector.xml:1: Error: <animated-selector> requires API level 21 (current min is 14) [NewApi]\n"
-                + "<animated-selector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "^\n"
-                + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "res/drawable/animated_selector.xml:1: Error: <animated-selector> requires API level 21 (current min is 14) [NewApi]\n" +
+                "<animated-selector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                " ~~~~~~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(14),
-                xml("res/drawable/animated_selector.xml", ""
-                        + "<animated-selector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    android:constantSize=\"true\">\n"
-                        + "    <item android:state_enabled=\"false\" android:id=\"@+id/off\">\n"
-                        + "        <nine-patch\n"
-                        + "            android:src=\"@drawable/btn_switch_to_on_mtrl_00001\"\n"
-                        + "            android:gravity=\"center\"\n"
-                        + "            android:tintMode=\"multiply\"\n"
-                        + "            android:tint=\"?attr/colorSwitchThumbNormal\" />\n"
-                        + "    </item>\n"
-                        + "    <item\n"
-                        + "        android:state_checked=\"true\"\n"
-                        + "        android:id=\"@+id/on\">\n"
-                        + "        <nine-patch\n"
-                        + "            android:src=\"@drawable/btn_switch_to_on_mtrl_00012\"\n"
-                        + "            android:gravity=\"center\"\n"
-                        + "            android:tintMode=\"multiply\"\n"
-                        + "            android:tint=\"?attr/colorControlActivated\" />\n"
-                        + "    </item>\n"
-                        + "    <item android:id=\"@+id/off\">\n"
-                        + "        <nine-patch\n"
-                        + "            android:src=\"@drawable/btn_switch_to_on_mtrl_00001\"\n"
-                        + "            android:gravity=\"center\"\n"
-                        + "            android:tintMode=\"multiply\"\n"
-                        + "            android:tint=\"?attr/colorSwitchThumbNormal\" />\n"
-                        + "    </item>\n"
-                        + "    <transition\n"
-                        + "        android:fromId=\"@+id/off\"\n"
-                        + "        android:toId=\"@+id/on\">\n"
-                        + "        <animation-list>\n"
-                        + "            <item android:duration=\"15\">\n"
-                        + "                <nine-patch android:src=\"@drawable/btn_switch_to_on_mtrl_00001\" android:gravity=\"center\" android:tintMode=\"multiply\" android:tint=\"?attr/colorSwitchThumbNormal\" />\n"
-                        + "            </item>\n"
-                        + "            <item android:duration=\"15\">\n"
-                        + "                <nine-patch android:src=\"@drawable/btn_switch_to_on_mtrl_00002\" android:gravity=\"center\" android:tintMode=\"multiply\" android:tint=\"?attr/colorSwitchThumbNormal\" />\n"
-                        + "            </item>\n"
-                        + "        </animation-list>\n"
-                        + "    </transition>\n"
-                        + "    <transition android:fromId=\"@+id/on\" android:toId=\"@+id/off\">\n"
-                        + "        <animation-list>\n"
-                        + "            <item android:duration=\"15\">\n"
-                        + "                <nine-patch android:src=\"@drawable/btn_switch_to_off_mtrl_00001\" android:gravity=\"center\" android:tintMode=\"multiply\" android:tint=\"?attr/colorControlActivated\" />\n"
-                        + "            </item>\n"
-                        + "            <item android:duration=\"15\">\n"
-                        + "                <nine-patch android:src=\"@drawable/btn_switch_to_off_mtrl_00002\" android:gravity=\"center\" android:tintMode=\"multiply\" android:tint=\"?attr/colorControlActivated\" />\n"
-                        + "            </item>\n"
-                        + "        </animation-list>\n"
-                        + "    </transition>\n"
-                        + "</animated-selector>\n"))
+                xml("res/drawable/animated_selector.xml", "" +
+                        "<animated-selector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    android:constantSize=\"true\">\n" +
+                        "    <item android:state_enabled=\"false\" android:id=\"@+id/off\">\n" +
+                        "        <nine-patch\n" +
+                        "            android:src=\"@drawable/btn_switch_to_on_mtrl_00001\"\n" +
+                        "            android:gravity=\"center\"\n" +
+                        "            android:tintMode=\"multiply\"\n" +
+                        "            android:tint=\"?attr/colorSwitchThumbNormal\" />\n" +
+                        "    </item>\n" +
+                        "    <item\n" +
+                        "        android:state_checked=\"true\"\n" +
+                        "        android:id=\"@+id/on\">\n" +
+                        "        <nine-patch\n" +
+                        "            android:src=\"@drawable/btn_switch_to_on_mtrl_00012\"\n" +
+                        "            android:gravity=\"center\"\n" +
+                        "            android:tintMode=\"multiply\"\n" +
+                        "            android:tint=\"?attr/colorControlActivated\" />\n" +
+                        "    </item>\n" +
+                        "    <item android:id=\"@+id/off\">\n" +
+                        "        <nine-patch\n" +
+                        "            android:src=\"@drawable/btn_switch_to_on_mtrl_00001\"\n" +
+                        "            android:gravity=\"center\"\n" +
+                        "            android:tintMode=\"multiply\"\n" +
+                        "            android:tint=\"?attr/colorSwitchThumbNormal\" />\n" +
+                        "    </item>\n" +
+                        "    <transition\n" +
+                        "        android:fromId=\"@+id/off\"\n" +
+                        "        android:toId=\"@+id/on\">\n" +
+                        "        <animation-list>\n" +
+                        "            <item android:duration=\"15\">\n" +
+                        "                <nine-patch android:src=\"@drawable/btn_switch_to_on_mtrl_00001\" android:gravity=\"center\" android:tintMode=\"multiply\" android:tint=\"?attr/colorSwitchThumbNormal\" />\n" +
+                        "            </item>\n" +
+                        "            <item android:duration=\"15\">\n" +
+                        "                <nine-patch android:src=\"@drawable/btn_switch_to_on_mtrl_00002\" android:gravity=\"center\" android:tintMode=\"multiply\" android:tint=\"?attr/colorSwitchThumbNormal\" />\n" +
+                        "            </item>\n" +
+                        "        </animation-list>\n" +
+                        "    </transition>\n" +
+                        "    <transition android:fromId=\"@+id/on\" android:toId=\"@+id/off\">\n" +
+                        "        <animation-list>\n" +
+                        "            <item android:duration=\"15\">\n" +
+                        "                <nine-patch android:src=\"@drawable/btn_switch_to_off_mtrl_00001\" android:gravity=\"center\" android:tintMode=\"multiply\" android:tint=\"?attr/colorControlActivated\" />\n" +
+                        "            </item>\n" +
+                        "            <item android:duration=\"15\">\n" +
+                        "                <nine-patch android:src=\"@drawable/btn_switch_to_off_mtrl_00002\" android:gravity=\"center\" android:tintMode=\"multiply\" android:tint=\"?attr/colorControlActivated\" />\n" +
+                        "            </item>\n" +
+                        "        </animation-list>\n" +
+                        "    </transition>\n" +
+                        "</animated-selector>\n"))
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
     }
 
     public void testAnimatedVector() {
-        String expected = ""
-                + "res/drawable/animated_vector.xml:1: Error: <animated-vector> requires API level 21 (current min is 14) [NewApi]\n"
-                + "<animated-vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "^\n"
-                + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "res/drawable/animated_vector.xml:1: Error: <animated-vector> requires API level 21 (current min is 14) [NewApi]\n" +
+                "<animated-vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                " ~~~~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(14),
-                xml("res/drawable/animated_vector.xml", ""
-                        + "<animated-vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    android:drawable=\"@drawable/vector_drawable_progress_bar_large\" >\n"
-                        + "    <target\n"
-                        + "        android:name=\"progressBar\"\n"
-                        + "        android:animation=\"@anim/progress_indeterminate_material\" />\n"
-                        + "    <target\n"
-                        + "        android:name=\"root\"\n"
-                        + "        android:animation=\"@anim/progress_indeterminate_rotation_material\" />\n"
-                        + "</animated-vector>\n"))
+                xml("res/drawable/animated_vector.xml", "" +
+                        "<animated-vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    android:drawable=\"@drawable/vector_drawable_progress_bar_large\" >\n" +
+                        "    <target\n" +
+                        "        android:name=\"progressBar\"\n" +
+                        "        android:animation=\"@anim/progress_indeterminate_material\" />\n" +
+                        "    <target\n" +
+                        "        android:name=\"root\"\n" +
+                        "        android:animation=\"@anim/progress_indeterminate_rotation_material\" />\n" +
+                        "</animated-vector>\n"))
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);

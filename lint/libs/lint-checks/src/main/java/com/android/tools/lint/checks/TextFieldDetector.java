@@ -126,7 +126,7 @@ public class TextFieldDetector extends LayoutDetector {
             }
 
             LintFix fix = fix().set(ANDROID_URI, ATTR_INPUT_TYPE, "").caretBegin().build();
-            context.report(ISSUE, element, context.getLocation(element),
+            context.report(ISSUE, element, context.getNameLocation(element),
                     "This text field does not specify an `inputType`", fix);
             return;
         }

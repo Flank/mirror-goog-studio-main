@@ -25,11 +25,11 @@ public class MissingIdDetectorTest extends AbstractCheckTest {
         return new MissingIdDetector();
     }
 
-    public void test() {
+    public void testBasic() {
         String expected = ""
                 + "res/layout/fragment.xml:7: Warning: This <fragment> tag should specify an id or a tag to preserve state across activity restarts [MissingId]\n"
                 + "    <fragment\n"
-                + "    ^\n"
+                + "     ~~~~~~~~\n"
                 + "0 errors, 1 warnings\n";
         //noinspection all // Sample code
         lint().files(

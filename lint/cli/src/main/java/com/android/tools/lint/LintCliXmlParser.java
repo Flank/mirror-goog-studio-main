@@ -173,7 +173,7 @@ public class LintCliXmlParser extends XmlParser {
         int startColumn = start.getColumn() + delta;
         return Location.create(location.getFile(),
                 new DefaultPosition(start.getLine(), startColumn, startOffset),
-                new DefaultPosition(end.getLine(), startColumn + length, startOffset + length))
+                new DefaultPosition(start.getLine(), startColumn + length, startOffset + length))
                 .withSource(node);
     }
 

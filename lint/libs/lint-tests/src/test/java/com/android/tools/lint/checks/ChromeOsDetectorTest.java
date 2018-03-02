@@ -97,11 +97,11 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
     }
 
     public void testInvalidPermissionImpliesNotMissingUnsupportedHardware() {
-        String expected =
-                "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n"
-                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
-                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n" +
+                "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n" +
+                "     ~~~~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings";
         lint().files(
                 manifest(""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -115,11 +115,11 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
     }
 
     public void testInvalidPermissionImpliesMissingUnsupportedHardware() {
-        String expected =
-                "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n"
-                        + "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n"
-                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.telephony\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n" +
+                "    <uses-permission android:name=\"android.permission.CALL_PHONE\"/>\n" +
+                "     ~~~~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings";
         lint().files(
                 manifest(""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -133,11 +133,11 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
     }
 
     public void testCameraPermissionImpliesMissingUnsupportedCamera() {
-        String expected =
-                "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n"
-                        + "    <uses-permission android:name=\"android.permission.CAMERA\"/>\n"
-                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n" +
+                "    <uses-permission android:name=\"android.permission.CAMERA\"/>\n" +
+                "     ~~~~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings";
         lint().files(
                 manifest(""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -152,11 +152,11 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
     }
 
     public void testCameraPermissionImpliesMissingUnsupportedCameraAutofocus() {
-        String expected =
-                "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera.autofocus\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n"
-                        + "    <uses-permission android:name=\"android.permission.CAMERA\"/>\n"
-                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera.autofocus\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n" +
+                "    <uses-permission android:name=\"android.permission.CAMERA\"/>\n" +
+                "     ~~~~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings";
         lint().files(
                 manifest(""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -171,14 +171,14 @@ public class ChromeOsDetectorTest extends AbstractCheckTest {
     }
 
     public void testCameraPermissionImpliesTwoMissingUnsupportedCameraHardware() {
-        String expected =
-                "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n"
-                        + "    <uses-permission android:name=\"android.permission.CAMERA\"/>\n"
-                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera.autofocus\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n"
-                        + "    <uses-permission android:name=\"android.permission.CAMERA\"/>\n"
-                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "2 errors, 0 warnings\n";
+        String expected = "" +
+                "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n" +
+                "    <uses-permission android:name=\"android.permission.CAMERA\"/>\n" +
+                "     ~~~~~~~~~~~~~~~\n" +
+                "AndroidManifest.xml:4: Error: Permission exists without corresponding hardware <uses-feature android:name=\"android.hardware.camera.autofocus\" required=\"false\"> tag. [PermissionImpliesUnsupportedChromeOsHardware]\n" +
+                "    <uses-permission android:name=\"android.permission.CAMERA\"/>\n" +
+                "     ~~~~~~~~~~~~~~~\n" +
+                "2 errors, 0 warnings";
         lint().files(
                 manifest(""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

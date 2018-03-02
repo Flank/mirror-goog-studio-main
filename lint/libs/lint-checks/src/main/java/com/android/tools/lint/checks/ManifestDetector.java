@@ -535,7 +535,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
             } else if (fullBackupNode == null && !VALUE_FALSE.equals(allowBackup)
                     && mainProject.getTargetSdk() >= 23) {
                 if (hasGcmReceiver(application)) {
-                    Location location = context.getLocation(sourceApplicationElement);
+                    Location location = context.getNameLocation(sourceApplicationElement);
                     context.report(ALLOW_BACKUP, application, location, ""
                             + "On SDK version 23 and up, your app data will be automatically "
                             + "backed up, and restored on app install. Your GCM regid will not "
@@ -545,7 +545,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                             + "configures which files to backup. More info: "
                             + BACKUP_DOCUMENTATION_URL);
                 } else {
-                    Location location = context.getLocation(sourceApplicationElement);
+                    Location location = context.getNameLocation(sourceApplicationElement);
                     context.report(ALLOW_BACKUP, application, location, ""
                             + "On SDK version 23 and up, your app data will be automatically "
                             + "backed up and restored on app install. Consider adding the "
@@ -557,7 +557,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
 
             if ((allowBackup == null || allowBackup.isEmpty()
                     && mainProject.getMinSdk() >= 4)) {
-                context.report(ALLOW_BACKUP, context.getLocation(sourceApplicationElement),
+                context.report(ALLOW_BACKUP, context.getNameLocation(sourceApplicationElement),
                         "Should explicitly set `android:allowBackup` to `true` or "
                                 + "`false` (it's `true` by default, and that can have some security "
                                 + "implications for the application's data)");
@@ -567,7 +567,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
         if (!application.hasAttributeNS(ANDROID_URI, ATTR_ICON)
                 && context.isEnabled(APPLICATION_ICON)) {
             LintFix fix = fix().set(ANDROID_URI, ATTR_ICON, "@mipmap/").caretEnd().build();
-            context.report(APPLICATION_ICON, context.getLocation(sourceApplicationElement),
+            context.report(APPLICATION_ICON, context.getNameLocation(sourceApplicationElement),
                     "Should explicitly set `android:icon`, there is no default", fix);
         }
     }
@@ -584,7 +584,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 // and inserted at build time
                 && !context.getMainProject().isGradleProject()) {
             LintFix fix = fix().set(ANDROID_URI, ATTR_VERSION_CODE, "").build();
-            context.report(SET_VERSION, element, context.getLocation(element),
+            context.report(SET_VERSION, element, context.getNameLocation(element),
                     "Should set `android:versionCode` to specify the application version",
                     fix);
         }
@@ -594,7 +594,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 // and inserted at build time
                 && !context.getMainProject().isGradleProject()) {
             LintFix fix = fix().set(ANDROID_URI, ATTR_VERSION_NAME, "").build();
-            context.report(SET_VERSION, element, context.getLocation(element),
+            context.report(SET_VERSION, element, context.getNameLocation(element),
                     "Should set `android:versionName` to specify the application version",
                     fix);
         }
@@ -698,7 +698,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 || tag.equals(TAG_PROVIDER) || isReceiver) {
             if (!TAG_APPLICATION.equals(parentNode.getNodeName())
                     && context.isEnabled(WRONG_PARENT)) {
-                context.report(WRONG_PARENT, element, context.getLocation(element),
+                context.report(WRONG_PARENT, element, context.getNameLocation(element),
                         String.format(
                         "The `<%1$s>` element must be a direct child of the <application> element",
                         tag));
@@ -806,7 +806,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
 
         if (parentNode != element.getOwnerDocument().getDocumentElement()
                 && context.isEnabled(WRONG_PARENT)) {
-            context.report(WRONG_PARENT, element, context.getLocation(element),
+            context.report(WRONG_PARENT, element, context.getNameLocation(element),
                     String.format(
                     "The `<%1$s>` element must be a direct child of the " +
                     "`<manifest>` root element", tag));
@@ -816,7 +816,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
             mSeenUsesSdk++;
 
             if (mSeenUsesSdk == 2) { // Only warn when we encounter the first one
-                Location location = context.getLocation(element);
+                Location location = context.getNameLocation(element);
 
                 // Link up *all* encountered locations in the document
                 NodeList elements = element.getOwnerDocument().getElementsByTagName(TAG_USES_SDK);
@@ -824,7 +824,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 for (int i = elements.getLength() - 1; i >= 0; i--) {
                     Element e = (Element) elements.item(i);
                     if (e != element) {
-                        Location l = context.getLocation(e);
+                        Location l = context.getNameLocation(e);
                         l.setSecondary(secondary);
                         l.setMessage("Also appears here");
                         secondary = l;
@@ -842,7 +842,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
 
             if (!element.hasAttributeNS(ANDROID_URI, ATTR_MIN_SDK_VERSION)) {
                 if (context.isEnabled(USES_SDK) && !context.getMainProject().isGradleProject()) {
-                    context.report(USES_SDK, element, context.getLocation(element),
+                    context.report(USES_SDK, element, context.getNameLocation(element),
                         "`<uses-sdk>` tag should specify a minimum API level with " +
                         "`android:minSdkVersion=\"?\"`");
                 }
@@ -863,7 +863,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 // old so there's some compatibility stuff kicking in (such as the menu
                 // button etc)
                 if (context.isEnabled(USES_SDK) && !context.getMainProject().isGradleProject()) {
-                    context.report(USES_SDK, element, context.getLocation(element),
+                    context.report(USES_SDK, element, context.getNameLocation(element),
                         "`<uses-sdk>` tag should specify a target API level (the " +
                         "highest verified version; when running on later versions, " +
                         "compatibility behaviors may be enabled) with " +
@@ -937,7 +937,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
             }
         } else if (mSeenApplication) {
             if (context.isEnabled(ORDER)) {
-                context.report(ORDER, element, context.getLocation(element),
+                context.report(ORDER, element, context.getNameLocation(element),
                     String.format("`<%1$s>` tag appears after `<application>` tag", tag));
             }
 
