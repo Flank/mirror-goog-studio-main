@@ -1164,6 +1164,22 @@ public class VariantManager implements VariantModel {
 
                 GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
                 VariantScope variantScope = variantData.getScope();
+
+                int minSdkVersion = variantConfig.getMinSdkVersion().getApiLevel();
+                int targetSdkVersion = variantConfig.getTargetSdkVersion().getApiLevel();
+                if (minSdkVersion > 0 && targetSdkVersion > 0 && minSdkVersion > targetSdkVersion) {
+                    globalScope
+                            .getDslScope()
+                            .getIssueReporter()
+                            .reportWarning(
+                                    EvalIssueReporter.Type.GENERIC,
+                                    String.format(
+                                            "minSdkVersion (%d) is greater than targetSdkVersion (%d) for variant \"%s\". Please change the values such that minSdkVersion is less than or equal to targetSdkVersion.",
+                                            minSdkVersion,
+                                            targetSdkVersion,
+                                            variantData.getName()));
+                }
+
                 GradleBuildVariant.Builder profileBuilder =
                         ProcessProfileWriter.getOrCreateVariant(
                                         project.getPath(), variantData.getName())
