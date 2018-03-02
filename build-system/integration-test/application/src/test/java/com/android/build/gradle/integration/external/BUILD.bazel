@@ -101,7 +101,11 @@ gradle_integration_test(
         "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/external:wordpress_prebuilts",
     ],
-    tags = ["no_test_windows"],  # b/73306170
+    tags = [
+        "no_test_linux",  # b/73994346
+        "no_test_mac",  # b/73994346
+        "no_test_windows",  # b/73306170
+    ],
     deps = TEST_DEPS,
 )
 
