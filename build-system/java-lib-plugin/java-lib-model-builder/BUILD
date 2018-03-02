@@ -8,6 +8,7 @@ iml_module(
     resources = ["src/main/resources"],
     tags = ["managed"],
     test_srcs = ["src/test/java"],
+    test_tags = ["manual"],  # Test is below, due to needing runtime version of gradle API
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
@@ -17,6 +18,17 @@ iml_module(
         "//tools/idea/.idea/libraries:equalsverifier[test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+    ],
+)
+
+java_test(
+    name = "studio.builder_tests",
+    jvm_flags = ["-Dtest.suite.jar=builder_test.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    runtime_deps = [
+        ":studio.java-lib-model-builder_testlib",
+        "//tools/base/build-system:gradle-api",
+        "//tools/base/testutils:studio.testutils",
     ],
 )
 

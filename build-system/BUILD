@@ -13,9 +13,7 @@ iml_module(
     srcs = ["manifest-merger/src/main/java"],
     iml_files = ["manifest-merger/manifest-merger.iml"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
-    tags = [
-        "managed",
-    ],
+    tags = ["managed"],
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/sdklib:studio.sdklib"],
@@ -115,8 +113,7 @@ filegroup(
 java_library(
     name = "gradle-tooling-api",
     visibility = ["//tools/base/bazel:__subpackages__"],
-    exports = ["//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/" +
-               GRADLE_VERSION + ":jar"],
+    exports = ["//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/" + GRADLE_VERSION + ":jar"],
     runtime_deps = ["//tools/base/third_party:org.slf4j_slf4j-api"],
 )
 
@@ -125,14 +122,14 @@ gradle_build(
     build_file = "extract-gradle-api/build.gradle",
     data = [":gradle-distrib"],
     gradle_version = GRADLE_VERSION,
-    output_file = "gradle_api.jar",
+    output_file = "gradle-api_neverlink.jar",
     output_file_source = "gradle-api-" + GRADLE_VERSION + ".jar",
     tasks = [":copyApiJar"],
 )
 
 java_import(
     name = "gradle-api_neverlink",
-    jars = [":gradle_api.jar"],
+    jars = [":gradle-api_neverlink.jar"],
     neverlink = 1,
     visibility = ["//visibility:public"],
 )
@@ -140,7 +137,7 @@ java_import(
 # Used for tests only.
 java_import(
     name = "gradle-api",
-    jars = [":gradle_api.jar"],
+    jars = [":gradle-api_neverlink.jar"],
     visibility = ["//visibility:public"],
 )
 

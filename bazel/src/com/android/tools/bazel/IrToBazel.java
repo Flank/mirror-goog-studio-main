@@ -222,7 +222,7 @@ public class IrToBazel {
     }
 
     private boolean isGenFile(String relJar) {
-        return relJar.startsWith("bazel-genfiles");
+        return relJar.startsWith("bazel-genfiles") || relJar.startsWith("bazel-bin");
     }
 
 
