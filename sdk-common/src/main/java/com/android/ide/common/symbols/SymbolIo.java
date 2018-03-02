@@ -40,7 +40,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
@@ -99,10 +101,12 @@ public final class SymbolIo {
             @Nullable String tablePackage,
             @NonNull ReadConfiguration readConfiguration)
             throws IOException {
-        List<String> lines = Files.readAllLines(file.toPath(), Charsets.UTF_8);
-
-        SymbolTable.Builder table = readLines(lines, 1, file.toPath(), readConfiguration);
-
+        SymbolTable.Builder table;
+        try (Stream<String> lines = Files.lines(file.toPath(), Charsets.UTF_8)) {
+            table =
+                    new SymbolLineReader(readConfiguration, lines.iterator(), file.toPath(), 1)
+                            .readLines();
+        }
         if (tablePackage != null) {
             table.tablePackage(tablePackage);
         }
@@ -126,164 +130,184 @@ public final class SymbolIo {
 
     @NonNull
     public static SymbolTable readTableWithPackage(@NonNull Path file) throws IOException {
-
-        List<String> lines = Files.readAllLines(file, Charsets.UTF_8);
-
-        if (lines.isEmpty()) {
-            throw new IOException(
-                    "Internal error: Symbol file with package cannot be empty. File located at: "
-                            + file);
+        String tablePackage;
+        SymbolTable.Builder table;
+        try (Stream<String> lines = Files.lines(file, Charsets.UTF_8)) {
+            Iterator<String> linesIterator = lines.iterator();
+            if (!linesIterator.hasNext()) {
+                throw new IOException(
+                        "Internal error: Symbol file with package cannot be empty. File located at: "
+                                + file);
+            }
+            tablePackage = linesIterator.next().trim();
+            table = new SymbolLineReader(ReadConfiguration.AAR, linesIterator, file, 2).readLines();
         }
 
-        SymbolTable.Builder table = readLines(lines, 2, file, ReadConfiguration.AAR);
-        table.tablePackage(lines.get(0).trim());
-
+        table.tablePackage(tablePackage);
         return table.build();
     }
 
-    @NonNull
-    private static SymbolTable.Builder readLines(
-            @NonNull List<String> lines,
-            int startLine,
-            @NonNull Path file,
-            @NonNull ReadConfiguration readConfiguration)
-            throws IOException {
-        SymbolTable.Builder table = SymbolTable.builder();
+    private static class SymbolLineReader {
+        @NonNull private final SymbolTable.Builder table = SymbolTable.builder();
 
-        int lineIndex = startLine;
-        String line = null;
-        try {
-            // Reuse lists to avoid allocations.
-            final List<String> stylableChildren = new ArrayList<>(10);
-            final List<SymbolData> aaptStylableChildren = new ArrayList<>(10);
+        @NonNull private final Iterator<String> lines;
+        @NonNull private final Path file;
+        @NonNull private final ReadConfiguration readConfiguration;
 
-            final int count = lines.size();
-            for (; lineIndex <= count; lineIndex++) {
-                line = lines.get(lineIndex - 1);
+        // Current line number and content
+        private int currentLineNumber;
+        @Nullable private String currentLineContent;
 
-                SymbolData data = readConfiguration.readLine(line, null);
-                if (data.resourceType == ResourceType.STYLEABLE) {
-                    switch (data.javaType) {
-                        case INT:
-                            // because there are some misordered file out there we want to make sure
-                            // both the resType is Styleable and the javaType is array.
-                            // We skip the non arrays that are out of sort
-                            if (!readConfiguration.bestEffortMisorderedFile) {
-                                throw new IOException("Unexpected stylable child " + line);
-                            } else {
-                                continue;
-                            }
-                        case INT_LIST:
-                            lineIndex =
-                                    handleStyleable(
-                                            table,
-                                            lines,
-                                            data,
-                                            readConfiguration,
-                                            lineIndex,
-                                            count,
-                                            stylableChildren,
-                                            aaptStylableChildren);
-                            break;
-                    }
-                } else {
-                    int value = 0;
-                    if (readConfiguration.readValues) {
-                        value = SymbolUtils.valueStringToInt(data.value);
-                    }
-                    table.add(
-                            new Symbol.NormalSymbol(
-                                    data.resourceType, data.name, value, data.accessibility));
-                }
-            }
-        } catch (IndexOutOfBoundsException | IOException e) {
-            throw new IOException(
-                    String.format(
-                            "File format error reading %s line %d: '%s'",
-                            file.toString(), lineIndex, line),
-                    e);
+        // Reuse lists to avoid allocations.
+        private final List<String> styleableChildrenCache = new ArrayList<>(10);
+        private final List<SymbolData> aaptStyleableChildrenCache = new ArrayList<>(10);
+
+        SymbolLineReader(
+                @NonNull ReadConfiguration readConfiguration,
+                @NonNull Iterator<String> lines,
+                @NonNull Path file,
+                int startLine) {
+            this.readConfiguration = readConfiguration;
+            this.lines = lines;
+            this.file = file;
+            currentLineNumber = startLine - 1;
         }
 
-        return table;
-    }
+        private void readNextLine() {
+            if (!lines.hasNext()) {
+                currentLineContent = null;
+            } else {
+                currentLineContent = lines.next();
+                currentLineNumber++;
+            }
+        }
 
-    private static int handleStyleable(
-            @NonNull SymbolTable.Builder table,
-            @NonNull List<String> lines,
-            @NonNull SymbolData data,
-            @NonNull ReadConfiguration readConfiguration,
-            int lineIndex,
-            int count,
-            @NonNull List<String> stylableChildren,
-            @NonNull List<SymbolData> aaptStylableChildren)
-            throws IOException {
+        @NonNull
+        SymbolTable.Builder readLines() throws IOException {
+            if (!lines.hasNext()) {
+                return table;
+            }
+            readNextLine();
+            try {
+                while (currentLineContent != null) {
+                    SymbolData data = readConfiguration.parseLine(currentLineContent, null);
+                    if (data.resourceType == ResourceType.STYLEABLE) {
+                        switch (data.javaType) {
+                            case INT:
+                                // because there are some misordered file out there we want to make sure
+                                // both the resType is Styleable and the javaType is array.
+                                // We skip the non arrays that are out of sort
+                                if (!readConfiguration.bestEffortMisorderedFile) {
+                                    throw new IOException(
+                                            "Unexpected stylable child " + currentLineContent);
+                                }
+                                readNextLine();
+                                break;
+                            case INT_LIST:
+                                readNextLine();
+                                handleStyleable(table, data);
+                                // Already at the next line, as handleStyleable has to read forward
+                                // to find its children.
+                                break;
+                        }
+                    } else {
+                        int value = 0;
+                        if (readConfiguration.readValues) {
+                            value = SymbolUtils.valueStringToInt(data.value);
+                        }
+                        table.add(
+                                new Symbol.NormalSymbol(
+                                        data.resourceType, data.name, value, data.accessibility));
+                        readNextLine();
+                    }
+                }
+            } catch (IndexOutOfBoundsException | IOException e) {
+                throw new IOException(
+                        String.format(
+                                "File format error reading %1$s line %2$d: '%3$s'",
+                                file.toString(), currentLineNumber, currentLineContent),
+                        e);
+            }
 
-        final String data_name = data.name + "_";
-        stylableChildren.clear();
-        aaptStylableChildren.clear();
-        SymbolData subData;
-        // read the next line
-        while (lineIndex < count
-                && (subData =
-                                readConfiguration.readLine(
-                                        lines.get(lineIndex), ONLY_STYLABLE_CHILDREN))
-                        != null) {
-            // line is value, inc the index
-            lineIndex++;
+            return table;
+        }
+
+        private void handleStyleable(@NonNull SymbolTable.Builder table, @NonNull SymbolData data)
+                throws IOException {
+            // Keep the current location to report if there is an error
+            String styleableLineContent = currentLineContent;
+            int styleableLineIndex = currentLineNumber;
+            final String data_name = data.name + "_";
+            styleableChildrenCache.clear();
+            aaptStyleableChildrenCache.clear();
+            SymbolData subData;
+            while (currentLineContent != null
+                    && (subData =
+                                    readConfiguration.parseLine(
+                                            currentLineContent, ONLY_STYLEABLE_CHILDREN))
+                            != null) {
+                if (readConfiguration.numericallySortedStyleableChildren) {
+                    if (subData.name.startsWith(data_name)) {
+                        styleableChildrenCache.add(computeItemName(data_name, subData.name));
+                    } else if (!readConfiguration.bestEffortMisorderedFile) {
+                        throw new IOException("Unexpected styleable child " + subData.name);
+                    }
+                } else {
+                    aaptStyleableChildrenCache.add(subData);
+                }
+                readNextLine();
+            }
+
+            ImmutableList<String> childNames;
             if (readConfiguration.numericallySortedStyleableChildren) {
-                if (subData.name.startsWith(data_name)) {
-                    stylableChildren.add(computeItemName(data_name, subData.name));
-                } else if (!readConfiguration.bestEffortMisorderedFile) {
-                    throw new IOException("Unexpected stylable child " + lines.get(lineIndex));
+                childNames = ImmutableList.copyOf(styleableChildrenCache);
+            } else {
+                try {
+                    aaptStyleableChildrenCache.sort(SYMBOL_DATA_VALUE_COMPARATOR);
+                } catch (NumberFormatException e) {
+                    // Report error from styleable parent.
+                    currentLineContent = styleableLineContent;
+                    currentLineNumber = styleableLineIndex;
+                    throw new IOException(e);
+                }
+                ImmutableList.Builder<String> builder = ImmutableList.builder();
+                for (SymbolData aaptStyleableChild : aaptStyleableChildrenCache) {
+                    builder.add(computeItemName(data_name, aaptStyleableChild.name));
+                }
+                childNames = builder.build();
+            }
+
+            ImmutableList<Integer> values;
+            if (readConfiguration.readValues) {
+                try {
+                    if (readConfiguration.bestEffortMisorderedFile) {
+                        values = SymbolUtils.parseArrayLiteralLenient(data.value);
+                    } else {
+                        values = SymbolUtils.parseArrayLiteral(childNames.size(), data.value);
+                    }
+                } catch (NumberFormatException e) {
+                    // Report error from styleable parent.
+                    currentLineContent = styleableLineContent;
+                    currentLineNumber = styleableLineIndex;
+                    throw new IOException(
+                            "Unable to parse array literal " + data.name + " = " + data.value, e);
                 }
             } else {
-                aaptStylableChildren.add(subData);
+                values = ImmutableList.of();
             }
+
+            table.add(
+                    new Symbol.StyleableSymbol(data.name, values, childNames, data.accessibility));
         }
 
-        ImmutableList<String> childNames;
-        if (readConfiguration.numericallySortedStyleableChildren) {
-            childNames = ImmutableList.copyOf(stylableChildren);
-        } else {
-            try {
-                aaptStylableChildren.sort(SYMBOL_DATA_VALUE_COMPARATOR);
-            } catch (NumberFormatException e) {
-                throw new IOException(e);
-            }
-            ImmutableList.Builder<String> builder = ImmutableList.builder();
-            for (SymbolData aaptStyleableChild : aaptStylableChildren) {
-                builder.add(computeItemName(data_name, aaptStyleableChild.name));
-            }
-            childNames = builder.build();
-        }
+        private static final SymbolFilter ONLY_STYLEABLE_CHILDREN =
+                (resType, javaType) ->
+                        resType.equals(ResourceType.STYLEABLE.getName())
+                                && javaType.equals(SymbolJavaType.INT.getTypeName());
 
-        ImmutableList<Integer> values;
-        if (readConfiguration.readValues) {
-            try {
-                if (readConfiguration.bestEffortMisorderedFile) {
-                    values = SymbolUtils.parseArrayLiteralLenient(data.value);
-                } else {
-                    values = SymbolUtils.parseArrayLiteral(childNames.size(), data.value);
-                }
-            } catch (NumberFormatException e) {
-                throw new IOException(
-                        "Unable to parse array literal " + data.name + " = " + data.value, e);
-            }
-        } else {
-            values = ImmutableList.of();
-        }
-
-        table.add(new Symbol.StyleableSymbol(data.name, values, childNames, data.accessibility));
-        return lineIndex;
+        private static final Comparator<SymbolData> SYMBOL_DATA_VALUE_COMPARATOR =
+                Comparator.comparingInt(o -> Integer.parseInt(o.value));
     }
-
-    private static final SymbolFilter ONLY_STYLABLE_CHILDREN =
-            (resType, javaType) ->
-                    resType.equals(ResourceType.STYLEABLE.getName())
-                            && javaType.equals(SymbolJavaType.INT.getTypeName());
-
-    private static final Comparator<SymbolData> SYMBOL_DATA_VALUE_COMPARATOR =
-            Comparator.comparingInt(o -> Integer.parseInt(o.value));
 
     private static class SymbolData {
         @NonNull final ResourceAccessibility accessibility;
@@ -405,28 +429,28 @@ public final class SymbolIo {
     private enum ReadConfiguration {
         AAR(true, true, true) {
             @Override
-            public SymbolData readLine(@NonNull String line, @Nullable SymbolFilter filter)
+            public SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
                     throws IOException {
                 return SymbolIo.readLine(line, filter);
             }
         },
         AAPT(true, false, false) {
             @Override
-            public SymbolData readLine(@NonNull String line, @Nullable SymbolFilter filter)
+            public SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
                     throws IOException {
                 return SymbolIo.readLine(line, filter);
             }
         },
         LOCAL(true, false, false) {
             @Override
-            public SymbolData readLine(@NonNull String line, @Nullable SymbolFilter filter)
+            public SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
                     throws IOException {
                 return SymbolIo.readLine(line, filter);
             }
         },
         PARTIAL_FILE(false, true, false) {
             @Override
-            public SymbolData readLine(@NonNull String line, @Nullable SymbolFilter filter)
+            public SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
                     throws IOException {
                 return readPartialRLine(line, filter);
             }
@@ -446,7 +470,7 @@ public final class SymbolIo {
         final boolean numericallySortedStyleableChildren;
         final boolean bestEffortMisorderedFile;
 
-        abstract SymbolData readLine(@NonNull String line, @Nullable SymbolFilter filter)
+        abstract SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
                 throws IOException;
     }
     /**
