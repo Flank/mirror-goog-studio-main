@@ -55,6 +55,7 @@ import org.w3c.dom.NodeList;
 public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     public static final String ATTR_GENERATED_SET = "generated-set";
     public static final String ATTR_FROM_DEPENDENCY = "from-dependency";
+    public static final String ATTR_AAPT_NAMESPACE = "aapt-namespace";
 
     private final String mLibraryName;
 
@@ -653,6 +654,9 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                     ATTR_FROM_DEPENDENCY,
                     SdkConstants.VALUE_TRUE);
         }
+
+        NodeUtils.addAttribute(
+                document, setNode, null, ATTR_AAPT_NAMESPACE, mNamespace.getXmlNamespaceUri());
 
         super.appendToXml(setNode, document, consumer, includeTimestamps);
     }

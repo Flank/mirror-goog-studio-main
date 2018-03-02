@@ -202,7 +202,12 @@ public class ResourceMergerTest extends BaseTestCase {
 
     @NonNull
     private static ResourceSet createResourceSet(String name) {
-        return new ResourceSet(name, ResourceNamespace.RES_AUTO, null, true);
+        return createResourceSet(name, ResourceNamespace.RES_AUTO);
+    }
+
+    @NonNull
+    private static ResourceSet createResourceSet(String name, ResourceNamespace namespace) {
+        return new ResourceSet(name, namespace, null, true);
     }
 
     @Test
@@ -474,6 +479,27 @@ public class ResourceMergerTest extends BaseTestCase {
         assertEquals("Loaded String in merger",
                      "This is should be followed by whitespace:\n        %1$s",
                      fromLoadedString.getValueText());
+    }
+
+    @Test
+    public void testNamespaceRestored() throws Exception {
+        File root =
+                TestResources.getDirectory(
+                        ResourceMergerTest.class, "/testData/resources/baseMerge");
+        ResourceNamespace libNs = ResourceNamespace.fromPackageName("com.example.lib");
+        ResourceSet libSources = createResourceSet("lib", libNs);
+        libSources.addSource(new File(root, "base"));
+        libSources.loadFromFiles(new RecordingLogger());
+
+        ResourceMerger resourceMerger = new ResourceMerger(0);
+        resourceMerger.addDataSet(libSources);
+
+        File folder = TestUtils.createTempDirDeletedOnExit();
+        resourceMerger.writeBlobTo(folder, getConsumer(), false);
+
+        ResourceMerger loadedMerger = new ResourceMerger(0);
+        assertTrue(loadedMerger.loadFromBlob(folder, true /*incrementalState*/));
+        assertEquals(Iterables.getOnlyElement(loadedMerger.getDataSets()).getNamespace(), libNs);
     }
 
     @Test
@@ -1748,8 +1774,9 @@ public class ResourceMergerTest extends BaseTestCase {
 
     private static ResourceMerger getResourceMerger()
             throws MergingException, IOException {
-        File root = TestResources
-                .getDirectory(ResourceMergerTest.class, "/testData/resources/baseMerge");
+        File root =
+                TestResources.getDirectory(
+                        ResourceMergerTest.class, "/testData/resources/baseMerge");
 
         ResourceSet res = ResourceSetTest.getBaseResourceSet();
 
