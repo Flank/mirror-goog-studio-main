@@ -1698,7 +1698,11 @@ class LintDriver
                     }
                 } else if (binaryChecks != null &&
                         (isBitmapFile(file) || type == ResourceFolderType.RAW)) {
-                    val context = ResourceContext(this, project, main, file, type, "")
+                    val context = object : ResourceContext(this, project, main, file, type, "") {
+                        override val resourceFolder: File?
+                            // Like super, but for the parent folder instead of the context file
+                            get() = if (resourceFolderType != null) file.parentFile else null
+                    }
                     fireEvent(EventType.SCANNING_FILE, context)
                     visitor.visitBinaryResource(context)
                 }

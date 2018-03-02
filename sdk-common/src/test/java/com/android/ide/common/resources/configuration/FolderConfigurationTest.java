@@ -421,7 +421,7 @@ public class FolderConfigurationTest extends TestCase {
         assertEquals("car", config.getLocaleQualifier().getLanguage());
     }
 
-    public void testVr() {
+    public void testVrHeadset() {
         FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-vrheadset");
         assertNotNull(config);
         assertNotNull(config.getUiModeQualifier());
@@ -515,7 +515,7 @@ public class FolderConfigurationTest extends TestCase {
                         Arrays.asList(itemBlank, itemBcpEn, itemEn, itemDe)));
     }
 
-    public void testFromQualifierString() throws Exception {
+    public void testFromQualifierString() {
         FolderConfiguration blankFolder = FolderConfiguration.getConfigForQualifierString("");
         FolderConfiguration enFolder = FolderConfiguration.getConfigForQualifierString("en");
         FolderConfiguration deFolder = FolderConfiguration.getConfigForQualifierString("de");
@@ -539,7 +539,7 @@ public class FolderConfigurationTest extends TestCase {
         assertEquals(Density.HIGH, twoQualifiersFolder.getDensityQualifier().getValue());
     }
 
-    public void testCopyOf() throws Exception {
+    public void testCopyOf() {
         FolderConfiguration deBcp47Folder = FolderConfiguration.getConfigForFolder("values-b+de");
         FolderConfiguration copy = FolderConfiguration.copyOf(deBcp47Folder);
         assertTrue(copy.isMatchFor(deBcp47Folder));
@@ -570,5 +570,21 @@ public class FolderConfigurationTest extends TestCase {
         runConfigMatchTest("large-v21", 1, "", "v21", "small", "xlarge");
         runConfigMatchTest("small-v21", 2, "", "v21", "small", "xlarge");
         runConfigMatchTest("small-v21", 1, "", "v21", "normal", "xlarge");
+    }
+
+    public void testForEach() {
+        FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-en-vrheadset");
+        assertNotNull(config);
+        List<Object> list = new ArrayList<>();
+        config.forEach(list::add);
+        assertEquals("[en, vrheadset]", list.toString());
+    }
+
+    public void testAnyPredicate() {
+        FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-vrheadset");
+        assertNotNull(config);
+        assertNotNull(config.getUiModeQualifier());
+        assertTrue(config.any(qualifier -> qualifier instanceof UiModeQualifier));
+        assertFalse(config.any(qualifier -> qualifier instanceof DensityQualifier));
     }
 }
