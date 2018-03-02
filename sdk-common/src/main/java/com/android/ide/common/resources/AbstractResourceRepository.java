@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 
 /**
  * Wrapper around a {@link ResourceTable} that:
@@ -159,6 +160,38 @@ public abstract class AbstractResourceRepository {
         }
 
         return Collections.emptyList();
+    }
+
+    /**
+     * Returns the resources with the given namespace, type and with a name satisfying the given
+     * predicate.
+     *
+     * @param namespace the namespace of the resources to return
+     * @param resourceType the namespace of the resources to return
+     * @param nameFilter the predicate for checking resource names
+     * @return the resources matching the namespace, type, and satisfying the name filter
+     */
+    @NonNull
+    public List<ResourceItem> getResourceItems(
+            @NonNull ResourceNamespace namespace,
+            @NonNull ResourceType resourceType,
+            @NonNull Predicate<String> nameFilter) {
+        List<ResourceItem> result = null;
+        synchronized (ITEM_MAP_LOCK) {
+            ListMultimap<String, ResourceItem> map = getMap(namespace, resourceType, false);
+            if (map != null) {
+                for (ResourceItem item : map.values()) {
+                    if (nameFilter.test(item.getName())) {
+                        if (result == null) {
+                            result = new ArrayList<>();
+                        }
+                        result.add(item);
+                    }
+                }
+            }
+        }
+
+        return result == null ? Collections.emptyList() : result;
     }
 
     @NonNull
@@ -334,7 +367,8 @@ public abstract class AbstractResourceRepository {
      * Returns whether the repository has resources of a given {@link ResourceType}.
      *
      * <p>Do not call this method if you you are going to call
-     * {@link #getItemsOfType(ResourceNamespace, ResourceType)} immediately after.
+     * {@link #getItemsOfType(ResourceNamespace, ResourceType)} or
+     * {@link #getResourceItemsOfType(ResourceNamespace, ResourceType)} immediately after.
      *
      * @param resourceType the type of resource to check.
      * @return true if the repository contains resources of the given type, false otherwise.
