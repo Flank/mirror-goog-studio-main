@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.attributes.VariantAttr
 import com.android.build.api.dsl.extension.BundleExtension
+import com.android.build.gradle.internal.dependency.AndroidTypeAttr
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.tasks.ZipModuleTask
 import com.google.common.collect.ImmutableMap
@@ -57,8 +58,9 @@ open class BundleExtensionImpl(private val project: Project): BundleExtension {
         val attributes = config.attributes
 
         attributes.attribute(
-                Usage.USAGE_ATTRIBUTE, factory.named(Usage::class.java,
-                VariantDependencies.USAGE_BUNDLE))
+            AndroidTypeAttr.ATTRIBUTE,
+            factory.named(AndroidTypeAttr::class.java, AndroidTypeAttr.METADATA)
+        )
         attributes.attribute(
                 VariantAttr.ATTRIBUTE, factory.named(VariantAttr::class.java, variantName))
 

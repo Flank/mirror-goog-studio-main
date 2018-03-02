@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.AndroidProject
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.junit.Assume
 import org.junit.ClassRule
@@ -75,5 +76,32 @@ class DynamicAppTest {
             "/feature1/manifest/AndroidManifest.xml",
             "/feature1/res/layout/feature_layout.xml",
             "/feature1/resources.pb")
+    }
+
+
+    @Test
+    fun testBundleFromApp() {
+        project.execute("app:bundleDebug")
+
+        //TODO: update model with this stuff?
+        val bundleFile = FileUtils.join(project.getSubproject("app").buildDir,
+            "outputs",
+            "bundle",
+            "debug",
+            "bundle.aab")
+        FileSubject.assertThat(bundleFile).exists()
+
+        val zipFile = Zip(bundleFile)
+        Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(
+            "/BundleManifest.pb",
+            "/base/dex/classes.dex",
+            "/base/manifest/AndroidManifest.xml",
+            "/base/res/layout/base_layout.xml",
+            "/base/resources.pb",
+            "/feature1/dex/classes.dex",
+            "/feature1/manifest/AndroidManifest.xml",
+            "/feature1/res/layout/feature_layout.xml",
+            "/feature1/resources.pb")
+
     }
 }

@@ -1588,9 +1588,7 @@ public abstract class TaskManager {
     protected void createCompileTask(@NonNull VariantScope variantScope) {
         JavaCompile javacTask = createJavacTask(variantScope);
         VariantScope.Java8LangSupport java8LangSupport = variantScope.getJava8LangSupportType();
-        if (java8LangSupport == VariantScope.Java8LangSupport.INVALID) {
-            return;
-        }
+
         // Only warn for users of retrolambda
         String pluginName = null;
         if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {

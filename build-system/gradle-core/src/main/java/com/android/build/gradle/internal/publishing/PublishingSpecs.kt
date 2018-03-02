@@ -141,11 +141,11 @@ class PublishingSpecs {
 
                 // this should only be needed by the non base module
                 // FIXME when the bundle task is inside the base module
-                bundle(MERGED_ASSETS, ArtifactType.ASSETS)
-                bundle(PUBLISHED_DEX, ArtifactType.DEX)
-                bundle(PUBLISHED_JAVA_RES, ArtifactType.JAVA_RES)
-                bundle(PUBLISHED_NATIVE_LIBS, ArtifactType.JNI)
-                bundle(LINKED_RES_FOR_BUNDLE, ArtifactType.RES_BUNDLE)
+                metadata(MERGED_ASSETS, ArtifactType.ASSETS)
+                metadata(PUBLISHED_DEX, ArtifactType.DEX)
+                metadata(PUBLISHED_JAVA_RES, ArtifactType.JAVA_RES)
+                metadata(PUBLISHED_NATIVE_LIBS, ArtifactType.JNI)
+                metadata(LINKED_RES_FOR_BUNDLE, ArtifactType.RES_BUNDLE)
 
                 // this is only for base modules.
                 api(FEATURE_IDS_DECLARATION, ArtifactType.FEATURE_IDS_DECLARATION)
@@ -187,11 +187,11 @@ class PublishingSpecs {
                 runtime(APK, ArtifactType.APK)
                 runtime(FEATURE_TRANSITIVE_DEPS, ArtifactType.FEATURE_TRANSITIVE_DEPS)
 
-                bundle(MERGED_ASSETS, ArtifactType.ASSETS)
-                bundle(PUBLISHED_DEX, ArtifactType.DEX)
-                bundle(PUBLISHED_JAVA_RES, ArtifactType.JAVA_RES)
-                bundle(PUBLISHED_NATIVE_LIBS, ArtifactType.JNI)
-                bundle(LINKED_RES_FOR_BUNDLE, ArtifactType.RES_BUNDLE)
+                metadata(MERGED_ASSETS, ArtifactType.ASSETS)
+                metadata(PUBLISHED_DEX, ArtifactType.DEX)
+                metadata(PUBLISHED_JAVA_RES, ArtifactType.JAVA_RES)
+                metadata(PUBLISHED_NATIVE_LIBS, ArtifactType.JNI)
+                metadata(LINKED_RES_FOR_BUNDLE, ArtifactType.RES_BUNDLE)
 
                 // this is only for non-base modules.
                 metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)

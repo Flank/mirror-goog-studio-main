@@ -54,6 +54,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.tasks.BundleDynamicModules;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -284,6 +285,8 @@ public class ApplicationTaskManager extends TaskManager {
                 () -> createLintTasks(variantScope));
 
         createTransitiveDepsTask(variantScope);
+
+        createDynamicBundleTask(variantScope);
     }
 
     /** Create tasks related to creating pure split APKs containing sharded dex files. */
@@ -590,5 +593,19 @@ public class ApplicationTaskManager extends TaskManager {
                         new FeatureSplitTransitiveDepsWriterTask.ConfigAction(scope, textFile));
 
         scope.addTaskOutput(InternalArtifactType.FEATURE_TRANSITIVE_DEPS, textFile, task.getName());
+    }
+
+    private void createDynamicBundleTask(@NonNull VariantScope scope) {
+
+        // If namespaced resources are enabled, LINKED_RES_FOR_BUNDLE is not generated,
+        // and the bundle can't be created. For now, just don't add the bundle task.
+        if (Boolean.TRUE.equals(
+                scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
+            return;
+        }
+
+        if (scope.getType().isBaseModule() && !scope.getType().isHybrid()) {
+            taskFactory.create(new BundleDynamicModules.ConfigAction(scope));
+        }
     }
 }
