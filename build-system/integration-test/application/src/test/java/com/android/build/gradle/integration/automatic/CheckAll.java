@@ -38,7 +38,8 @@ import org.junit.runners.Parameterized;
  *
  * <p>You can run only one test like this:
  *
- * <p>{@code ./gradlew :base:integration-test:automaticTest --tests=*[abiPureSplits]}
+ * <p>{@code ./gradlew :base:build-system:integration-test:application:automaticTest
+ * --tests=*[abiPureSplits]}
  */
 @RunWith(CheckAllRunner.class)
 public class CheckAll {
