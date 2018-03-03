@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.scope;
 
+import com.android.annotations.NonNull;
 import com.android.build.api.artifact.ArtifactType;
 import java.io.File;
 
@@ -157,7 +158,8 @@ public enum InternalArtifactType implements ArtifactType {
 
     // the zip file output of the extract annotation class.
     ANNOTATIONS_ZIP,
-    // the associated TypeDef file
+    // Optional recipe file (only used for libraries) which describes typedefs defined in the
+    // library, and how to process them (typically which typedefs to omit during packaging).
     ANNOTATIONS_TYPEDEF_FILE,
     // the associated proguard file
     ANNOTATIONS_PROGUARD,
@@ -211,6 +213,7 @@ public enum InternalArtifactType implements ArtifactType {
          * @param parentDir the parent build directory
          * @return a file location which is task and variant independent.
          */
+        @NonNull
         File getOutputDir(File parentDir) {
             return new File(parentDir, name().toLowerCase());
         }

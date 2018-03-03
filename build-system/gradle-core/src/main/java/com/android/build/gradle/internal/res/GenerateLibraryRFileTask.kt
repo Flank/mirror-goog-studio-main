@@ -160,19 +160,13 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
             if (variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
-                val rJar = File(variantScope.getIntermediateDir(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR), "R.jar")
-                task.rClassOutputJar = rJar
-                variantScope.addTaskOutput(
-                        InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
-                        rJar,
-                        task.name)
+                task.rClassOutputJar = variantScope.buildArtifactsHolder
+                    .appendArtifact(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
+                        task,
+                        "R.jar")
             } else {
-                val sourceOutputDirectory = variantScope.rClassSourceOutputDir
-                task.sourceOutputDirectory = sourceOutputDirectory
-                variantScope.addTaskOutput(
-                        InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                        sourceOutputDirectory,
-                        task.name)
+                task.sourceOutputDirectory = variantScope.buildArtifactsHolder
+                    .appendArtifact(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES, task)
             }
             task.textSymbolOutputFile = symbolFile
             task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile

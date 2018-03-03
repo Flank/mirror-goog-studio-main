@@ -933,22 +933,26 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                                         .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             }
         } else {
-            if (hasOutput(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
-                FileCollection rJar =
-                        getOutput(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
-                mainCollection = mainCollection.plus(rJar);
+            if (buildArtifactsHolder.hasArtifact(
+                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+                BuildableArtifact rJar =
+                        buildArtifactsHolder.getFinalArtifactFiles(
+                                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                mainCollection = mainCollection.plus(rJar.get());
             }
             BaseVariantData tested = getTestedVariantData();
             if (tested != null
                     && tested.getScope()
-                            .hasOutput(
+                            .getBuildArtifactsHolder()
+                            .hasArtifact(
                                     InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
-                FileCollection rJar =
+                BuildableArtifact rJar =
                         tested.getScope()
-                                .getOutput(
+                                .getBuildArtifactsHolder()
+                                .getFinalArtifactFiles(
                                         InternalArtifactType
                                                 .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
-                mainCollection = mainCollection.plus(rJar);
+                mainCollection = mainCollection.plus(rJar.get());
             }
         }
 
@@ -1438,13 +1442,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getRClassSourceOutputDir() {
-        return new File(globalScope.getGeneratedDir(),
-                "source/r/" + getVariantConfiguration().getDirName());
-    }
-
-    @Override
-    @NonNull
     public File getAidlSourceOutputDir() {
         return new File(globalScope.getGeneratedDir(),
                 "source/aidl/" + getVariantConfiguration().getDirName());
@@ -1469,26 +1466,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public File getAarLibsDirectory() {
         return intermediate("packaged-classes", SdkConstants.LIBS_FOLDER);
-    }
-
-    @NonNull
-    @Override
-    public File getAnnotationZipFile() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "annotations",
-                getVariantConfiguration().getDirName(),
-                SdkConstants.FN_ANNOTATIONS_ZIP);
-    }
-
-    @NonNull
-    @Override
-    public File getTypedefFile() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "extractedTypedefs",
-                getVariantConfiguration().getDirName(),
-                "typedefs.txt");
     }
 
     @NonNull

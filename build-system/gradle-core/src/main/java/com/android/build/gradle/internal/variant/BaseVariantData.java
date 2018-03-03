@@ -58,6 +58,7 @@ import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -686,11 +687,15 @@ public abstract class BaseVariantData implements TaskContainer {
             }
 
             // then all the generated src folders.
-            if (scope.hasOutput(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES)) {
-                FileCollection rClassSource =
-                        scope.getOutput(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
+            if (scope.getBuildArtifactsHolder()
+                    .hasArtifact(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES)) {
+                BuildableArtifact rClassSource =
+                        scope.getBuildArtifactsHolder()
+                                .getFinalArtifactFiles(
+                                        InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
                 sourceSets.add(
-                        project.fileTree(rClassSource.getSingleFile()).builtBy(rClassSource));
+                        project.fileTree(Iterables.getOnlyElement(rClassSource.get()))
+                                .builtBy(rClassSource));
             }
 
             // for the other, there's no duplicate so no issue.

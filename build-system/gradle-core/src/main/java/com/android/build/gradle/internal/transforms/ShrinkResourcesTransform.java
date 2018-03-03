@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -49,6 +50,7 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -92,7 +94,7 @@ public class ShrinkResourcesTransform extends Transform {
 
     @NonNull private final Logger logger;
 
-    @NonNull private final File sourceDir;
+    @NonNull private final BuildableArtifact sourceDir;
     @NonNull private final FileCollection resourceDir;
     @Nullable private final FileCollection mappingFileSrc;
     @NonNull private final BuildableArtifact mergedManifests;
@@ -119,16 +121,17 @@ public class ShrinkResourcesTransform extends Transform {
         this.variantData = variantData;
         this.logger = logger;
 
-        this.sourceDir = variantScope.getRClassSourceOutputDir();
+        BuildArtifactsHolder artifacts = variantScope.getBuildArtifactsHolder();
+        this.sourceDir =
+                artifacts.getFinalArtifactFiles(
+                        InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
         this.resourceDir = variantScope.getOutput(InternalArtifactType.MERGED_NOT_COMPILED_RES);
         this.mappingFileSrc =
                 variantScope.hasOutput(InternalArtifactType.APK_MAPPING)
                         ? variantScope.getOutput(InternalArtifactType.APK_MAPPING)
                         : null;
         this.mergedManifests =
-                variantScope
-                        .getBuildArtifactsHolder()
-                        .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
+                artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
         this.uncompressedResources = uncompressedResources;
 
         this.aaptGeneration = aaptGeneration;
@@ -301,7 +304,7 @@ public class ShrinkResourcesTransform extends Transform {
         // Analyze resources and usages and strip out unused
         ResourceUsageAnalyzer analyzer =
                 new ResourceUsageAnalyzer(
-                        sourceDir,
+                        Iterables.getOnlyElement(sourceDir.getFiles()),
                         classes,
                         mergedManifest.getOutputFile(),
                         mappingFile,

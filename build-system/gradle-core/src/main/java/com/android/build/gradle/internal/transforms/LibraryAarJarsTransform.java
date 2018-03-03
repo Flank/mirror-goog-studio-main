@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.TransformException;
@@ -35,7 +36,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
-import org.gradle.api.file.FileCollection;
 
 /**
  * A Transforms that takes the project/project local streams for CLASSES and RESOURCES,
@@ -53,7 +53,7 @@ public class LibraryAarJarsTransform extends LibraryBaseTransform {
     public LibraryAarJarsTransform(
             @NonNull File mainClassLocation,
             @NonNull File localJarsLocation,
-            @Nullable FileCollection typedefRecipe,
+            @Nullable BuildableArtifact typedefRecipe,
             @NonNull String packageName,
             boolean packageBuildConfig) {
         super(mainClassLocation, localJarsLocation, typedefRecipe, packageName, packageBuildConfig);
@@ -91,7 +91,7 @@ public class LibraryAarJarsTransform extends LibraryBaseTransform {
         if (localJarsLocation != null) {
             FileUtils.deleteDirectoryContents(localJarsLocation);
         }
-        if (typedefRecipe != null && !typedefRecipe.getSingleFile().exists()) {
+        if (typedefRecipe != null && !Iterables.getOnlyElement(typedefRecipe).exists()) {
             throw new IllegalStateException("Type def recipe not found: " + typedefRecipe);
         }
 
@@ -126,7 +126,8 @@ public class LibraryAarJarsTransform extends LibraryBaseTransform {
                 false,
                 archivePath -> checkEntry(patterns, archivePath),
                 typedefRecipe != null
-                        ? new TypedefRemover().setTypedefFile(typedefRecipe.getSingleFile())
+                        ? new TypedefRemover()
+                                .setTypedefFile(Iterables.getOnlyElement(typedefRecipe))
                         : null);
 
         // process local scope

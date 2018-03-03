@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.feature;
 
-import static com.android.SdkConstants.FD_RES_CLASS;
-import static com.android.SdkConstants.FD_SOURCE_GEN;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
@@ -29,6 +27,8 @@ import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtilKt;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
 import com.android.builder.model.AndroidProject;
@@ -119,20 +119,19 @@ public class FeatureTest {
 
         // Check the R.java file builds with the right IDs.
         File featureResFile =
-                featureProject.file(
-                        FileUtils.join(
-                                "build",
-                                AndroidProject.FD_GENERATED,
-                                FD_SOURCE_GEN,
-                                FD_RES_CLASS,
-                                "feature",
-                                "debug",
-                                "com",
-                                "example",
-                                "android",
-                                "multiproject",
-                                "feature",
-                                "R.java"));
+                FileUtils.join(
+                        ArtifactTypeUtilKt.getOutputDir(
+                                InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                                featureProject.file("build")),
+                        "debugFeature",
+                        "processDebugFeatureResources",
+                        SdkConstants.FD_RES_CLASS,
+                        "com",
+                        "example",
+                        "android",
+                        "multiproject",
+                        "feature",
+                        "R.java");
         assertThat(featureResFile).isFile();
         assertThat(featureResFile).containsAllOf("public static final int feature_value=0x80");
 

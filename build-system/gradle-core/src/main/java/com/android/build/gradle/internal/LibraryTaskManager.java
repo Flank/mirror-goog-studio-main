@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -349,22 +350,19 @@ public class LibraryTaskManager extends TaskManager {
                                 transformManager.addTransform(
                                         taskFactory, variantScope, intermediateTransform);
 
+                        BuildArtifactsHolder artifacts = variantScope.getBuildArtifactsHolder();
                         intermediateTransformTask.ifPresent(
                                 t -> {
                                     // publish the intermediate classes.jar
-                                    variantScope
-                                            .getBuildArtifactsHolder()
-                                            .appendArtifact(
-                                                    InternalArtifactType.LIBRARY_CLASSES,
-                                                    ImmutableList.of(mainClassJar),
-                                                    t);
+                                    artifacts.appendArtifact(
+                                            InternalArtifactType.LIBRARY_CLASSES,
+                                            ImmutableList.of(mainClassJar),
+                                            t);
                                     // publish the res jar
-                                    variantScope
-                                            .getBuildArtifactsHolder()
-                                            .appendArtifact(
-                                                    InternalArtifactType.LIBRARY_JAVA_RES,
-                                                    ImmutableList.of(mainResJar),
-                                                    t);
+                                    artifacts.appendArtifact(
+                                            InternalArtifactType.LIBRARY_JAVA_RES,
+                                            ImmutableList.of(mainResJar),
+                                            t);
                                 });
 
                         // Create a jar with both classes and java resources.  This artifact is not
@@ -422,10 +420,10 @@ public class LibraryTaskManager extends TaskManager {
                                 new LibraryAarJarsTransform(
                                         classesJar,
                                         libsDirectory,
-                                        variantScope.hasOutput(
+                                        artifacts.hasArtifact(
                                                         InternalArtifactType
                                                                 .ANNOTATIONS_TYPEDEF_FILE)
-                                                ? variantScope.getOutput(
+                                                ? artifacts.getFinalArtifactFiles(
                                                         InternalArtifactType
                                                                 .ANNOTATIONS_TYPEDEF_FILE)
                                                 : null,

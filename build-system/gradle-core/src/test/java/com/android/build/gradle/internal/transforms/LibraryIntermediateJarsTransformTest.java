@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.gradle.api.file.FileCollection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +41,6 @@ public class LibraryIntermediateJarsTransformTest {
 
     private File mainClassLocation;
     private File resJarLocation;
-    private FileCollection typedefRecipe;
     private String packageName;
 
     private LibraryIntermediateJarsTransform transform;
@@ -50,17 +48,13 @@ public class LibraryIntermediateJarsTransformTest {
     @Before
     public void setUp() throws Exception {
         packageName = "com.example.android.multiproject.person";
-        typedefRecipe = null;
 
         mainClassLocation = Files.createTempFile(null, null).toFile();
         resJarLocation = Files.createTempFile(null, null).toFile();
 
-        transform = new LibraryIntermediateJarsTransform(
-                mainClassLocation,
-                resJarLocation,
-                typedefRecipe,
-                packageName,
-                true);
+        transform =
+                new LibraryIntermediateJarsTransform(
+                        mainClassLocation, resJarLocation, null, packageName, true);
     }
 
     @After

@@ -192,11 +192,15 @@ public class AndroidUnitTest extends Test {
             // The separately compile R class, if applicable.
             VariantScope testedScope =
                     Objects.requireNonNull(scope.getTestedVariantData()).getScope();
-            if (testedScope.hasOutput(
-                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+            if (testedScope
+                    .getBuildArtifactsHolder()
+                    .hasArtifact(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
                 collection.from(
-                        testedScope.getOutput(
-                                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
+                        testedScope
+                                .getBuildArtifactsHolder()
+                                .getFinalArtifactFiles(
+                                        InternalArtifactType
+                                                .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
             }
 
             // Any additional or requested optional libraries

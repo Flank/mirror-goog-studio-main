@@ -25,6 +25,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
@@ -317,18 +318,23 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
                             + " variant into the archive file");
             task.setGroup(BasePlugin.BUILD_GROUP);
 
-            File annotationsZip = variantScope.getAnnotationZipFile();
-
-            task.setDestinationDir(annotationsZip.getParentFile());
-            task.setOutput(annotationsZip);
             // publish intermediate annotation data
-            variantScope.addTaskOutput(
-                    InternalArtifactType.ANNOTATIONS_ZIP, annotationsZip, getName());
+            task.setOutput(
+                    variantScope
+                            .getBuildArtifactsHolder()
+                            .appendArtifact(
+                                    InternalArtifactType.ANNOTATIONS_ZIP,
+                                    task,
+                                    SdkConstants.FN_ANNOTATIONS_ZIP));
+            task.setDestinationDir(task.getOutput().getParentFile());
 
-            File typeDefFile = variantScope.getTypedefFile();
-            task.typedefFile = typeDefFile;
-            variantScope.addTaskOutput(
-                    InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE, typeDefFile, getName());
+            task.typedefFile =
+                    variantScope
+                            .getBuildArtifactsHolder()
+                            .appendArtifact(
+                                    InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
+                                    task,
+                                    "typedefs.txt");
 
             task.setClassDir(variantScope.getOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES));
 
