@@ -107,6 +107,30 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testNoImports() {
+        // We shouldn't be flagging warnings on import statements. It's fine to import
+        // whatever you want. It's *usages* that count. And those usages may be
+        // guarded by SDK_INT version checks.
+        // Regression test for
+        //  74128292: Kotlin import flagged for InlinedApi despite constant used correctly
+        lint().files(
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.os.Build\n" +
+                        "import android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR\n" +
+                        "import android.view.Window\n" +
+                        "\n" +
+                        "fun test(window: Window) {\n" +
+                        "    if (Build.VERSION.SDK_INT == 26) {\n" +
+                        "        // This attribute can only be set in code on API 26. It's in our theme XML on 27+.\n" +
+                        "        window.decorView.systemUiVisibility = SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR\n" +
+                        "    }\n" +
+                        "\n" +
+                        "}")
+        ).run().expectClean();
+    }
+
     public void testTagWarnings() {
         String expected = "" +
                 "res/layout/tag.xml:12: Warning: <tag> is only used in API level 21 and higher (current min is 1) [UnusedAttribute]\n" +
@@ -1921,9 +1945,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testJavaConstants() {
         String expected = ""
-                + "src/test/pkg/ApiSourceCheck.java:5: Warning: Field requires API level 11 (current min is 1): android.view.View#MEASURED_STATE_MASK [InlinedApi]\n"
-                + "import static android.view.View.MEASURED_STATE_MASK;\n"
-                + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "src/test/pkg/ApiSourceCheck.java:30: Warning: Field requires API level 11 (current min is 1): android.view.View#MEASURED_STATE_MASK [InlinedApi]\n"
                 + "        int x = MEASURED_STATE_MASK;\n"
                 + "                ~~~~~~~~~~~~~~~~~~~\n"
@@ -1978,7 +1999,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/ApiSourceCheck.java:51: Error: Field requires API level 14 (current min is 1): android.view.View#ROTATION_X [NewApi]\n"
                 + "        Object rotationX = ZoomButton.ROTATION_X; // Requires API 14\n"
                 + "                           ~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 18 warnings\n";
+                + "1 errors, 17 warnings\n";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(1),

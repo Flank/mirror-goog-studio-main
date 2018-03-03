@@ -144,7 +144,6 @@ import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.UForEachExpression;
 import org.jetbrains.uast.UIfExpression;
-import org.jetbrains.uast.UImportStatement;
 import org.jetbrains.uast.UInstanceExpression;
 import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.ULocalVariable;
@@ -934,8 +933,7 @@ public class ApiDetector extends ResourceXmlDetector
 
     @Override
     public List<Class<? extends UElement>> getApplicableUastTypes() {
-        List<Class<? extends UElement>> types = new ArrayList<>(14);
-        types.add(UImportStatement.class);
+        List<Class<? extends UElement>> types = new ArrayList<>(12);
         types.add(USimpleNameReferenceExpression.class);
         types.add(ULocalVariable.class);
         types.add(UTryExpression.class);
@@ -1027,16 +1025,6 @@ public class ApiDetector extends ResourceXmlDetector
 
         private ApiVisitor(JavaContext context) {
             mContext = context;
-        }
-
-        @Override
-        public void visitImportStatement(@NonNull UImportStatement statement) {
-            if (!statement.isOnDemand()) {
-                PsiElement resolved = statement.resolve();
-                if (resolved instanceof PsiField) {
-                    checkField(statement, (PsiField)resolved);
-                }
-            }
         }
 
         @Override
@@ -2154,15 +2142,6 @@ public class ApiDetector extends ResourceXmlDetector
                     }
 
                     String fqcn = getFqcn(owner) + '#' + name;
-
-                    // For import statements, place the underlines only under the
-                    // reference, not the import and static keywords
-                    if (node instanceof UImportStatement) {
-                        UElement reference = ((UImportStatement) node).getImportReference();
-                        if (reference != null) {
-                            node = reference;
-                        }
-                    }
 
                     if (isSuppressed(mContext, api, node, minSdk)) {
                         return;
