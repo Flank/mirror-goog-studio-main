@@ -606,31 +606,33 @@ public abstract class BasePlugin<E extends BaseExtension2>
         ModelBuilder.clearCaches();
 
         // Register a builder for the custom tooling model
-        registry.register(
-                instantiateModelBuilder(globalScope, variantManager, config, extraModelInfo));
+        registerModelBuilder(registry, globalScope, variantManager, config, extraModelInfo);
 
         // Register a builder for the native tooling model
         NativeModelBuilder nativeModelBuilder = new NativeModelBuilder(variantManager);
         registry.register(nativeModelBuilder);
     }
 
+    /** Registers a builder for the custom tooling model. */
     @NonNull
-    protected ModelBuilder instantiateModelBuilder(
+    protected void registerModelBuilder(
+            @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
             @NonNull VariantManager variantManager,
             @NonNull AndroidConfig config,
             @NonNull ExtraModelInfo extraModelInfo) {
-        return new ModelBuilder(
-                globalScope,
-                androidBuilder,
-                variantManager,
-                taskManager,
-                config,
-                extraModelInfo,
-                ndkHandler,
-                new NativeLibraryFactoryImpl(ndkHandler),
-                getProjectType(),
-                AndroidProject.GENERATION_ORIGINAL);
+        registry.register(
+                new ModelBuilder(
+                        globalScope,
+                        androidBuilder,
+                        variantManager,
+                        taskManager,
+                        config,
+                        extraModelInfo,
+                        ndkHandler,
+                        new NativeLibraryFactoryImpl(ndkHandler),
+                        getProjectType(),
+                        AndroidProject.GENERATION_ORIGINAL));
     }
 
     private static class UnsupportedAction implements Action<Object> {

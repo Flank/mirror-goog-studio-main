@@ -17,17 +17,12 @@
 package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.AppModelBuilder;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.ide.BaseModuleModelBuilder;
-import com.android.build.gradle.internal.ide.ModelBuilder;
-import com.android.build.gradle.internal.model.NativeLibraryFactory;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import javax.inject.Inject;
 import org.gradle.api.Project;
@@ -54,53 +49,23 @@ public class AppPlugin extends AbstractAppPlugin {
 
     @NonNull
     @Override
-    protected ModelBuilder instantiateModelBuilder(
+    protected void registerModelBuilder(
+            @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
             @NonNull VariantManager variantManager,
             @NonNull AndroidConfig config,
             @NonNull ExtraModelInfo extraModelInfo) {
-        return new AppModelBuilder(
-                globalScope,
-                androidBuilder,
-                variantManager,
-                taskManager,
-                config,
-                extraModelInfo,
-                ndkHandler,
-                new NativeLibraryFactoryImpl(ndkHandler),
-                getProjectType(),
-                AndroidProject.GENERATION_ORIGINAL);
-    }
-
-    private static final class AppModelBuilder extends BaseModuleModelBuilder {
-
-        public AppModelBuilder(
-                @NonNull GlobalScope globalScope,
-                @NonNull AndroidBuilder androidBuilder,
-                @NonNull VariantManager variantManager,
-                @NonNull TaskManager taskManager,
-                @NonNull AndroidConfig config,
-                @NonNull ExtraModelInfo extraModelInfo,
-                @NonNull NdkHandler ndkHandler,
-                @NonNull NativeLibraryFactory nativeLibraryFactory,
-                int projectType,
-                int generation) {
-            super(
-                    globalScope,
-                    androidBuilder,
-                    variantManager,
-                    taskManager,
-                    config,
-                    extraModelInfo,
-                    ndkHandler,
-                    nativeLibraryFactory,
-                    projectType,
-                    generation);
-        }
-
-        @Override
-        protected boolean isBaseSplit() {
-            return true;
-        }
+        registry.register(
+                new AppModelBuilder(
+                        globalScope,
+                        androidBuilder,
+                        variantManager,
+                        taskManager,
+                        config,
+                        extraModelInfo,
+                        ndkHandler,
+                        new NativeLibraryFactoryImpl(ndkHandler),
+                        getProjectType(),
+                        AndroidProject.GENERATION_ORIGINAL));
     }
 }
