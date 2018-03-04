@@ -128,22 +128,29 @@ void PopulateJobParams(JNIEnv* env, JobParameters* params, jint job_id,
   JStringWrapper extras_str(env, extras);
   JStringWrapper transient_extras_str(env, transient_extras);
   params->set_job_id(job_id);
-  jsize len = env->GetArrayLength(triggered_content_authorities);
-  for (jsize i = 0; i < len; ++i) {
-    jstring authority =
-        (jstring)env->GetObjectArrayElement(triggered_content_authorities, i);
-    JStringWrapper authority_str(env, authority);
-    params->add_triggered_content_authorities(authority_str.get());
-    env->DeleteLocalRef(authority);
+
+  if (triggered_content_authorities != nullptr) {
+    jsize len = env->GetArrayLength(triggered_content_authorities);
+    for (jsize i = 0; i < len; ++i) {
+      jstring authority =
+          (jstring)env->GetObjectArrayElement(triggered_content_authorities, i);
+      JStringWrapper authority_str(env, authority);
+      params->add_triggered_content_authorities(authority_str.get());
+      env->DeleteLocalRef(authority);
+    }
   }
-  len = env->GetArrayLength(triggered_content_uris);
-  for (jsize i = 0; i < len; ++i) {
-    jstring uri =
-        (jstring)env->GetObjectArrayElement(triggered_content_uris, i);
-    JStringWrapper uri_str(env, uri);
-    params->add_triggered_content_uris(uri_str.get());
-    env->DeleteLocalRef(uri);
+
+  if (triggered_content_uris != nullptr) {
+    jsize len = env->GetArrayLength(triggered_content_uris);
+    for (jsize i = 0; i < len; ++i) {
+      jstring uri =
+          (jstring)env->GetObjectArrayElement(triggered_content_uris, i);
+      JStringWrapper uri_str(env, uri);
+      params->add_triggered_content_uris(uri_str.get());
+      env->DeleteLocalRef(uri);
+    }
   }
+
   params->set_is_override_deadline_expired(is_override_deadline_expired);
   params->set_extras(extras_str.get());
   params->set_transient_extras(transient_extras_str.get());
