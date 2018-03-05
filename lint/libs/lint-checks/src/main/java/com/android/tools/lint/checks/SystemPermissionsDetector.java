@@ -435,6 +435,10 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
                     return;
                 }
 
+                if (permissionName.equals("android.permission.REQUEST_INSTALL_PACKAGES")) {
+                    return;
+                }
+
                 // Special cases: some permissions were added as signature permissions later;
                 // look for these and allow it.
                 int max = getLastNonSignatureApiLevel(permissionName);

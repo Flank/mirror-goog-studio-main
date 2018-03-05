@@ -25,6 +25,7 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
@@ -166,6 +167,11 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             val index = parent.expressions.indexOf(expression)
             if (index == -1) {
                 if (parent.uastParent is ULambdaExpression) {
+                    return false
+                }
+                if (LintUtils.isKotlin(expression.psi?.language)) {
+                    // Temporary hotfix for 3.1; proper fix is in 3.2.
+                    // Err on the side of caution.
                     return false
                 }
                 return true
