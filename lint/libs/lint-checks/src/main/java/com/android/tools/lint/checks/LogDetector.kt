@@ -103,8 +103,8 @@ Log tags are only allowed to be at most 23 tag characters long.""",
                 IMPLEMENTATION)
 
         private const val IS_LOGGABLE = "isLoggable"
-        private const val LOG_CLS = "android.util.Log"
         private const val PRINTLN = "println"
+        const val LOG_CLS = "android.util.Log"
     }
 
     override fun getApplicableMethodNames(): List<String>? =
