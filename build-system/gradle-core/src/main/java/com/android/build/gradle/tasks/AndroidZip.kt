@@ -94,7 +94,8 @@ open class AndroidZip : Zip() {
                         prependToCopyPath(SdkConstants.FD_RES))
             }
             bundle.from(
-                    variantScope.getOutput(InternalArtifactType.RENDERSCRIPT_HEADERS),
+                    variantScope.buildArtifactsHolder.getFinalArtifactFiles(
+                        InternalArtifactType.RENDERSCRIPT_HEADERS),
                     prependToCopyPath(SdkConstants.FD_RENDERSCRIPT))
             bundle.from(variantScope.getOutput(InternalArtifactType.PUBLIC_RES))
             if (variantScope.hasOutput(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {

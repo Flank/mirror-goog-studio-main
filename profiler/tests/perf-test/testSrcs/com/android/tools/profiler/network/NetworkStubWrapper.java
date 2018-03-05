@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.network;
 
+import com.android.tools.profiler.TestUtils;
 import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
@@ -24,20 +25,26 @@ import java.util.function.Supplier;
 
 /** Wrapper of stub calls that is shared among tests. */
 final class NetworkStubWrapper {
-    private static final int SLEEP_TIME_MS = 200;
     private final NetworkServiceBlockingStub myNetworkStub;
 
     NetworkStubWrapper(NetworkServiceBlockingStub networkStub) {
         myNetworkStub = networkStub;
     }
 
-    NetworkProfiler.HttpRangeResponse getAllHttpRange(Session session) {
-        return myNetworkStub.getHttpRange(
-                NetworkProfiler.HttpRangeRequest.newBuilder()
-                        .setSession(session)
-                        .setStartTimestamp(0L)
-                        .setEndTimestamp(Long.MAX_VALUE)
-                        .build());
+    /**
+     * Fetch an http range that have at least one element in it. This method will block until a
+     * non-empty range is returned.
+     */
+    NetworkProfiler.HttpRangeResponse getNonEmptyHttpRange(Session session) {
+        Supplier<NetworkProfiler.HttpRangeResponse> getRange =
+                () ->
+                        myNetworkStub.getHttpRange(
+                                NetworkProfiler.HttpRangeRequest.newBuilder()
+                                        .setSession(session)
+                                        .setStartTimestamp(0L)
+                                        .setEndTimestamp(Long.MAX_VALUE)
+                                        .build());
+        return TestUtils.waitForAndReturn(getRange, res -> res.getDataList().size() > 0);
     }
 
     NetworkProfiler.HttpDetailsResponse getHttpDetails(long connId, Type type) {
@@ -46,20 +53,6 @@ final class NetworkStubWrapper {
                         .setConnId(connId)
                         .setType(type)
                         .build());
-    }
-
-    /**
-     * Run the loop and wait until condition is true. This method does NOT timeout so you should
-     * only wait for conditions that are guaranteed to eventually be true.
-     */
-    void waitFor(Supplier<Boolean> condition) {
-        while (!condition.get()) {
-            try {
-                Thread.sleep(SLEEP_TIME_MS);
-            } catch (InterruptedException e) {
-                e.printStackTrace(System.out);
-            }
-        }
     }
 
     /**
@@ -75,7 +68,7 @@ final class NetworkStubWrapper {
                             ? result.getResponseBody().getPayloadId()
                             : result.getRequestBody().getPayloadId();
                 };
-        waitFor(() -> !getPayloadId.get().isEmpty());
+        TestUtils.waitFor(() -> !getPayloadId.get().isEmpty());
         return getPayloadId.get();
     }
 }

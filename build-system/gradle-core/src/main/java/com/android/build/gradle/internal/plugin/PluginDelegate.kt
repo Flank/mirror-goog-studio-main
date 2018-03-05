@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.variant2.VariantFactory2
 import com.android.build.gradle.internal.variant2.VariantModelData
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.SyncOptions
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
@@ -102,7 +103,7 @@ class PluginDelegate<out E: BaseExtension2>(
 
         if (projectOptions.hasRemovedOptions()) {
             issueReporter.reportError(
-                    EvalIssueReporter.Type.GENERIC, projectOptions.removedOptionsErrorMessage)
+                    EvalIssueReporter.Type.GENERIC, EvalIssueException(projectOptions.removedOptionsErrorMessage))
         }
 
         if (projectOptions.hasDeprecatedOptions()) {

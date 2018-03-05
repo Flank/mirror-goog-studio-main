@@ -32,12 +32,12 @@
 #include "utils/file_reader.h"
 #include "utils/tokenizer.h"
 
-using profiler::proto::CpuUsageData;
+using profiler::FileReader;
+using profiler::Tokenizer;
+using profiler::proto::CpuCoreUsageData;
 using profiler::proto::CpuStartResponse;
 using profiler::proto::CpuStopResponse;
 using profiler::proto::CpuUsageData;
-using profiler::FileReader;
-using profiler::Tokenizer;
 using std::string;
 using std::vector;
 
@@ -68,7 +68,6 @@ int64_t TimeUnitInMilliseconds() {
 // |system_cpu_time_in_millisec| and |elapsed_time_in_millisec|. Returns true
 // on success.
 //
-// Only the first line of /proc/stat is used.
 // See more details at http://man7.org/linux/man-pages/man5/proc.5.html.
 //
 // |elapsed_time_in_millisec| is the combination of every state, except
@@ -79,20 +78,54 @@ int64_t TimeUnitInMilliseconds() {
 // |elapsed_time_in_millisec| except 'idle' and 'iowait' (which we also consider
 // as idle time).
 //
-bool ParseProcStatForUsageData(const string& content, CpuUsageData* data) {
+bool ParseProcStatCpuLine(const string& line, int* cpu, int64_t* load,
+                          int64_t* elapsed) {
   int64_t user, nice, system, idle, iowait, irq, softirq, steal;
+  char cpu_n[11];
   // TODO: figure out why sscanf_s cannot compile.
-  if (sscanf(
-          content.c_str(), "cpu  %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64
-                           " %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64,
-          &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal) == 8) {
-    int64_t load = user + nice + system + irq + softirq + steal;
-    data->set_system_cpu_time_in_millisec(load * TimeUnitInMilliseconds());
-    int64_t elapsed = load + idle + iowait;
-    data->set_elapsed_time_in_millisec(elapsed * TimeUnitInMilliseconds());
+  if (sscanf(line.c_str(),
+             "%10s  %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64
+             " %" PRId64 " %" PRId64 " %" PRId64,
+             cpu_n, &user, &nice, &system, &idle, &iowait, &irq, &softirq,
+             &steal) == 9) {
+    *load = user + nice + system + irq + softirq + steal;
+    *elapsed = *load + idle + iowait;
+    if (strcmp(cpu_n, "cpu") == 0) {
+      *cpu = -1;
+    } else if (strncmp(cpu_n, "cpu", 3) == 0) {
+      *cpu = atoi(cpu_n + 3);
+    } else {
+      return false;
+    }
     return true;
   }
   return false;
+}
+
+bool ParseProcStatForUsageData(const string& content, CpuUsageData* data) {
+  std::istringstream stream(content);
+  std::string line;
+
+  bool found = false;
+  while (std::getline(stream, line, '\n')) {
+    int64_t load, elapsed;
+    int cpu;
+    if (ParseProcStatCpuLine(line, &cpu, &load, &elapsed)) {
+      if (cpu == -1) {
+        data->set_system_cpu_time_in_millisec(load * TimeUnitInMilliseconds());
+        data->set_elapsed_time_in_millisec(elapsed * TimeUnitInMilliseconds());
+        found = true;
+      } else {
+        CpuCoreUsageData* core = data->add_cores();
+        core->set_core(cpu);
+        core->set_system_cpu_time_in_millisec(load * TimeUnitInMilliseconds());
+        core->set_elapsed_time_in_millisec(elapsed * TimeUnitInMilliseconds());
+      }
+    } else {
+      break;
+    }
+  }
+  return found;
 }
 
 // Collects system-wide data by reading /proc/stat. Returns true on success.
@@ -168,6 +201,14 @@ bool CollectProcessUsageData(int32_t pid, const string& usage_file,
   return false;
 }
 
+bool CollectCpuFrequency(const string& freq_file, CpuCoreUsageData* data) {
+  string buffer;
+  if (FileReader::Read(freq_file, &buffer)) {
+    data->set_frequency_in_khz(atoi(buffer.c_str()));
+  }
+  return false;
+}
+
 }  // namespace
 
 namespace profiler {
@@ -210,6 +251,13 @@ bool CpuUsageSampler::SampleAProcess(int32_t pid) {
   if (CollectSystemUsageData(usage_files_->GetSystemStatFilePath(), &data) &&
       CollectProcessUsageData(pid, usage_files_->GetProcessStatFilePath(pid),
                               &data)) {
+    for (int i = 0; i < data.cores_size(); i++) {
+      // We do not fail if there is no file, just not set it.
+      CpuCoreUsageData* data_core = data.mutable_cores(i);
+      CollectCpuFrequency(
+          usage_files_->GetSystemCpuFrequencyPath(data_core->core()),
+          data_core);
+    }
     data.set_end_timestamp(clock_.GetCurrentTime());
     cache_.Add(pid, data);
     return true;

@@ -36,7 +36,7 @@ interface BuildArtifactsOptions {
             artifactType: ArtifactType,
             taskName : String,
             taskType : Class<T>,
-            configurationAction : BuildArtifactTransformBuilder.SimpleConfigurationAction<T>)
+            configurationAction : BuildArtifactTransformBuilder.ConfigurationAction<T>)
 
     fun <T : Task>appendTo(
             artifactType: ArtifactType,
@@ -51,7 +51,7 @@ interface BuildArtifactsOptions {
             artifactType: ArtifactType,
             taskName : String,
             taskType : Class<T>,
-            configurationAction : BuildArtifactTransformBuilder.SimpleConfigurationAction<T>)
+            configurationAction : BuildArtifactTransformBuilder.ConfigurationAction<T>)
 
     fun <T : Task>replace(
             artifactType: ArtifactType,

@@ -39,6 +39,8 @@ import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreLocation
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
+import com.android.builder.errors.EvalIssueException
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.errors.EvalIssueReporter.Type
 import com.android.utils.StringHelper
 import org.gradle.api.Action
@@ -164,7 +166,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
 
         mainVariantType = variantTypes
                 .stream()
-                .filter { !it.isForTesting }
+                .filter { !it.isTestComponent }
                 .reduce(toSingleItem())
                 .orElseThrow { RuntimeException("No main variant type") }
 
@@ -172,7 +174,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 DefaultAndroidSourceSet::class.java,
                 AndroidSourceSetFactory(
                         filesProvider,
-                        mainVariantType == VariantType.LIBRARY,
+                        mainVariantType.isAar,
                         dslScope))
 
         sourceSets = createSealableContainer(
@@ -180,8 +182,8 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 DefaultAndroidSourceSet::class.java,
                 _sourceSets)
 
-        hasAndroidTests = variantTypes.contains(VariantType.ANDROID_TEST)
-        hasUnitTests = variantTypes.contains(VariantType.UNIT_TEST)
+        hasAndroidTests = variantTypes.contains(VariantTypeImpl.ANDROID_TEST)
+        hasUnitTests = variantTypes.contains(VariantTypeImpl.UNIT_TEST)
 
         // setup callback to generate source sets on the fly, as well as the associated
         // configurations
@@ -242,8 +244,8 @@ class DslModelDataImpl<in E: BaseExtension2>(
         return DimensionData(
                 data,
                 sourceSets.getByName(name), // this one must exist, so use getByName
-                sourceSets.findByName(computeSourceSetName(name, VariantType.ANDROID_TEST)), // this one might not, so use findByName
-                sourceSets.findByName(computeSourceSetName(name, VariantType.UNIT_TEST)), // this one might not, so use findByName
+                sourceSets.findByName(computeSourceSetName(name, VariantTypeImpl.ANDROID_TEST)), // this one might not, so use findByName
+                sourceSets.findByName(computeSourceSetName(name, VariantTypeImpl.UNIT_TEST)), // this one might not, so use findByName
                 configurationContainer)
     }
 
@@ -262,7 +264,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
 
         if (_buildTypes.any { it.name == name }) {
             dslScope.issueReporter.reportError(Type.GENERIC,
-                    "ProductFlavor names cannot collide with BuildType names: $name")
+                EvalIssueException("ProductFlavor names cannot collide with BuildType names: $name"))
 
             // don't want to keep going in case of sync
             return
@@ -287,7 +289,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
 
         if (_productFlavors.any { it.name == name }) {
             dslScope.issueReporter.reportError(Type.GENERIC,
-                    "BuildType names cannot collide with ProductFlavor names: $name")
+                EvalIssueException("BuildType names cannot collide with ProductFlavor names: $name"))
 
             // don't want to keep going in case of sync
             return
@@ -304,11 +306,11 @@ class DslModelDataImpl<in E: BaseExtension2>(
         _sourceSets.maybeCreate(name)
 
         if (hasAndroidTests) {
-            _sourceSets.maybeCreate(computeSourceSetName(name, VariantType.ANDROID_TEST))
+            _sourceSets.maybeCreate(computeSourceSetName(name, VariantTypeImpl.ANDROID_TEST))
         }
 
         if (hasUnitTests) {
-            _sourceSets.maybeCreate(computeSourceSetName(name, VariantType.UNIT_TEST))
+            _sourceSets.maybeCreate(computeSourceSetName(name, VariantTypeImpl.UNIT_TEST))
         }
     }
 
@@ -338,7 +340,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 .whenObjectAdded(
                         DeprecatedConfigurationAction(implementationName, compileName, dslScope.deprecationReporter))
 
-        val packageConfigDescription = if (mainVariantType == VariantType.LIBRARY) {
+        val packageConfigDescription = if (mainVariantType.isAar) {
             getConfigDescriptionOld("publish", sourceSet.name, runtimeOnlyName)
         } else {
             getConfigDescriptionOld("apk", sourceSet.name, runtimeOnlyName)
@@ -434,22 +436,22 @@ class DslModelDataImpl<in E: BaseExtension2>(
     }
 
     private fun checkName(name: String, displayName: String): Boolean {
-        if (!checkPrefix(name, displayName, VariantType.ANDROID_TEST.prefix)) {
+        if (!checkPrefix(name, displayName, VariantType.ANDROID_TEST_PREFIX)) {
             return false
         }
-        if (!checkPrefix(name, displayName, VariantType.UNIT_TEST.prefix)) {
+        if (!checkPrefix(name, displayName, VariantType.UNIT_TEST_PREFIX)) {
             return false
         }
 
         if (BuilderConstants.MAIN == name) {
             dslScope.issueReporter.reportError(Type.GENERIC,
-                    "$displayName names cannot be '${BuilderConstants.MAIN}'")
+                EvalIssueException("$displayName names cannot be '${BuilderConstants.MAIN}'"))
             return false
         }
 
         if (BuilderConstants.LINT == name) {
             dslScope.issueReporter.reportError(Type.GENERIC,
-                    "$displayName names cannot be '${BuilderConstants.LINT}'")
+                EvalIssueException("$displayName names cannot be '${BuilderConstants.LINT}'"))
             return false
         }
 
@@ -459,7 +461,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
     private fun checkPrefix(name: String, displayName: String, prefix: String): Boolean {
         if (name.startsWith(prefix)) {
             dslScope.issueReporter.reportError(Type.GENERIC,
-                    "$displayName names cannot start with '$prefix'")
+                EvalIssueException("$displayName names cannot start with '$prefix'"))
             return false
         }
 

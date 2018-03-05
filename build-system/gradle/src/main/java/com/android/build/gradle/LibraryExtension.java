@@ -57,7 +57,8 @@ public class LibraryExtension extends TestedExtension {
                 signingConfigs,
                 buildOutputs,
                 sourceSetManager,
-                extraModelInfo);
+                extraModelInfo,
+                false);
     }
 
     /**

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -24,6 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.SourceSetContainerUtils;
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
+import com.android.builder.core.VariantType;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProviderContainer;
@@ -67,7 +67,7 @@ public class MigratedTest {
         new SourceProviderHelper(
                         model.getName(),
                         projectDir,
-                        ANDROID_TEST.getPrefix(),
+                        VariantType.ANDROID_TEST_PREFIX,
                         testSourceProviderContainer.getSourceProvider())
                 .setJavaDir("tests/java")
                 .setResourcesDir("tests/resources")

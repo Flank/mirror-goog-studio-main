@@ -16,12 +16,45 @@
 
 package com.android.build.gradle.tasks;
 
+import com.android.SdkConstants;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
+import com.android.utils.FileUtils;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import java.io.File;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 /** Base class for process resources / create R class task, to satisfy existing variants API. */
 public abstract class ProcessAndroidResources extends IncrementalTask {
 
+
+    protected OutputScope outputScope;
+    protected FileCollection manifestFiles;
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public FileCollection getManifestFiles() {
+        return manifestFiles;
+    }
+
+    protected void setManifestFiles(FileCollection manifestFiles) {
+        this.manifestFiles = manifestFiles;
+    }
+
     // Used by the kotlin plugin.
     public abstract File getSourceOutputDir();
+
+    public File getManifestFile() {
+        File manifestDirectory = Iterables.getFirst(manifestFiles.getFiles(), null);
+        Preconditions.checkNotNull(manifestDirectory);
+        Preconditions.checkNotNull(outputScope.getMainSplit());
+        return FileUtils.join(
+                manifestDirectory,
+                outputScope.getMainSplit().getDirName(),
+                SdkConstants.ANDROID_MANIFEST_XML);
+    }
 }

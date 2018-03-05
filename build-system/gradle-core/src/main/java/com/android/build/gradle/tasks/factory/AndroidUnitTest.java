@@ -21,7 +21,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.ALL_CLASSES;
-import static com.android.builder.core.VariantType.UNIT_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -29,6 +28,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
+import com.android.builder.core.VariantType;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Objects;
@@ -88,7 +88,7 @@ public class AndroidUnitTest extends Test {
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName(UNIT_TEST.getPrefix());
+            return scope.getTaskName(VariantType.UNIT_TEST_PREFIX);
         }
 
         @NonNull

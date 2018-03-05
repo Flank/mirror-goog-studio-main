@@ -18,9 +18,11 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SyncIssue;
 import java.util.List;
+import org.jetbrains.annotations.NotNull;
 
 public class NoOpIssueReporter implements EvalIssueReporter {
 
@@ -75,18 +77,6 @@ public class NoOpIssueReporter implements EvalIssueReporter {
 
     @NonNull
     @Override
-    public SyncIssue reportError(@NonNull Type type, @NonNull String msg, @Nullable String data) {
-        return FAKE_ISSUE;
-    }
-
-    @NonNull
-    @Override
-    public SyncIssue reportError(@NonNull Type type, @NonNull String msg) {
-        return FAKE_ISSUE;
-    }
-
-    @NonNull
-    @Override
     public SyncIssue reportWarning(@NonNull Type type, @NonNull String msg, @Nullable String data) {
         return FAKE_ISSUE;
     }
@@ -94,6 +84,19 @@ public class NoOpIssueReporter implements EvalIssueReporter {
     @NonNull
     @Override
     public SyncIssue reportWarning(@NonNull Type type, @NonNull String msg) {
+        return FAKE_ISSUE;
+    }
+
+    @NotNull
+    @Override
+    public SyncIssue reportIssue(
+            @NotNull Type type, @NotNull Severity severity, @NotNull EvalIssueException exception) {
+        return FAKE_ISSUE;
+    }
+
+    @NotNull
+    @Override
+    public SyncIssue reportError(@NotNull Type type, @NotNull EvalIssueException exception) {
         return FAKE_ISSUE;
     }
 }

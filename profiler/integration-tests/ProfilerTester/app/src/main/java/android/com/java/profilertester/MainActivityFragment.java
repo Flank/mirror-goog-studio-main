@@ -2,10 +2,12 @@ package android.com.java.profilertester;
 
 import android.app.Activity;
 import android.com.java.profilertester.taskcategory.AudioTaskCategory;
+import android.com.java.profilertester.taskcategory.BackgroundTaskCategory;
 import android.com.java.profilertester.taskcategory.BluetoothTaskCategory;
 import android.com.java.profilertester.taskcategory.CameraTaskCategory;
 import android.com.java.profilertester.taskcategory.CpuTaskCategory;
 import android.com.java.profilertester.taskcategory.EventTaskCategory;
+import android.com.java.profilertester.taskcategory.FeedbackTaskCategory;
 import android.com.java.profilertester.taskcategory.LocationTaskCategory;
 import android.com.java.profilertester.taskcategory.MemoryTaskCategory;
 import android.com.java.profilertester.taskcategory.NetworkTaskCategory;
@@ -78,7 +80,9 @@ public class MainActivityFragment extends Fragment {
                     new LocationTaskCategory(host, mMainLooperThread.getLooper()),
                     new ScreenBrightnessTaskCategory(host),
                     new CameraTaskCategory(host),
-                    new AudioTaskCategory(host)
+                    new AudioTaskCategory(host),
+                    new FeedbackTaskCategory(host),
+                    new BackgroundTaskCategory(host)
                 };
         ArrayAdapter<TaskCategory> categoryAdapters =
                 new ArrayAdapter<>(

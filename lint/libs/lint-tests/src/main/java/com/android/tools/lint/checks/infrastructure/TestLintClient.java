@@ -54,6 +54,7 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
+import com.android.tools.lint.LintCliXmlParser;
 import com.android.tools.lint.LintExternalAnnotationsManager;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
@@ -67,6 +68,7 @@ import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.UastParser;
+import com.android.tools.lint.client.api.XmlParser;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -79,6 +81,7 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
+import com.android.utils.PositionXmlParser;
 import com.android.utils.StdLogger;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
@@ -587,6 +590,32 @@ public class TestLintClient extends LintCliClient {
 
     public String getErrors() {
         return writer.toString();
+    }
+
+    @NonNull
+    @Override
+    public XmlParser getXmlParser() {
+        //noinspection ConstantConditions
+        if (task != null && !task.allowCompilationErrors) {
+            return new LintCliXmlParser(this) {
+                @Override
+                public Document parseXml(@NonNull CharSequence xml, @Nullable File file) {
+                    try {
+                        return PositionXmlParser.parse(xml.toString());
+                    } catch (Exception e) {
+                        String message = e.getCause() != null
+                                ? e.getCause().getLocalizedMessage()
+                                : e.getLocalizedMessage();
+                        fail(message + " : Failure processing source " + file + ".\n" +
+                                "If you want your test to work with broken XML sources, add " +
+                                "`allowCompilationErrors()` on the TestLintTask.\n");
+                        return null;
+                    }
+                }
+            };
+        } else {
+            return super.getXmlParser();
+        }
     }
 
     @NonNull

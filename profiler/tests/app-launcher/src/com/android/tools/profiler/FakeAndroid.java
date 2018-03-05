@@ -36,14 +36,8 @@ public class FakeAndroid implements SimpleWebServer.RequestHandler {
     private List<ClassLoader> myClassLoaders = new ArrayList<>();
 
     public static void main(String[] args) {
-        Integer webPort = Integer.getInteger("app.communication.port");
-        if (webPort == null) {
-            System.err.println("Expected service port but none was specified");
-            return;
-        }
-
         FakeAndroid app = new FakeAndroid();
-        SimpleWebServer webServer = new SimpleWebServer(webPort, app);
+        SimpleWebServer webServer = new SimpleWebServer(app);
         webServer.start();
         app.block();
 

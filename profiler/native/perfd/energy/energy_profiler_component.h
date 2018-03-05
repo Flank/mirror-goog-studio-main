@@ -26,8 +26,9 @@ namespace profiler {
 
 class EnergyProfilerComponent final : public ProfilerComponent {
  public:
-  explicit EnergyProfilerComponent()
-      : public_service_(&energy_cache_), internal_service_(&energy_cache_) {}
+  explicit EnergyProfilerComponent(Daemon::Utilities* utilities)
+      : public_service_(&energy_cache_),
+        internal_service_(&energy_cache_, utilities->file_cache()) {}
 
   // Returns the service that talks to desktop clients (e.g. Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }

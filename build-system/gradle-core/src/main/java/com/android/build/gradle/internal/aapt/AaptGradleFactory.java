@@ -30,7 +30,6 @@ import com.android.utils.ILogger;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import java.io.File;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -49,7 +48,6 @@ public final class AaptGradleFactory {
      * @param builder the android builder project model
      * @param outputHandler the output handler to use
      * @param crunchPng should PNGs be crunched?
-     * @param intermediateDir intermediate directory for aapt to use
      * @param cruncherProcesses the number of cruncher processes to use, if cruncher processes are
      *     used
      * @return the newly-created instance
@@ -60,7 +58,6 @@ public final class AaptGradleFactory {
             @NonNull AndroidBuilder builder,
             @Nullable ProcessOutputHandler outputHandler,
             boolean crunchPng,
-            @NonNull File intermediateDir,
             int cruncherProcesses) {
         TargetInfo target = builder.getTargetInfo();
         Preconditions.checkNotNull(target, "target == null");

@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.build.gradle.internal.variant2.DeprecatedConfigurationAction
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -49,17 +50,17 @@ class SourceSetManager(
     }
 
     @JvmOverloads
-    fun setUpSourceSet(name: String, isForTesting: Boolean = false): AndroidSourceSet {
+    fun setUpSourceSet(name: String, isTestComponent: Boolean = false): AndroidSourceSet {
         val sourceSet = sourceSetsContainer.maybeCreate(name)
         if (!configuredSourceSets.contains(name)) {
-            createConfigurationsForSourceSet(sourceSet, isForTesting)
+            createConfigurationsForSourceSet(sourceSet, isTestComponent)
             configuredSourceSets.add(name)
         }
         return sourceSet
     }
 
     private fun createConfigurationsForSourceSet(
-            sourceSet: AndroidSourceSet, isForTesting: Boolean) {
+            sourceSet: AndroidSourceSet, isTestComponent: Boolean) {
         val implementationName = sourceSet.implementationConfigurationName
         val runtimeOnlyName = sourceSet.runtimeOnlyConfigurationName
         val compileOnlyName = sourceSet.compileOnlyConfigurationName
@@ -118,7 +119,7 @@ class SourceSetManager(
         val apiName = sourceSet.apiConfigurationName
         val api = createConfiguration(apiName, getConfigDesc("API", sourceSet.name))
         api.extendsFrom(compile)
-        if (isForTesting) {
+        if (isTestComponent) {
             api.allDependencies
                     .whenObjectAdded(
                             DeprecatedConfigurationAction(
@@ -191,7 +192,7 @@ class SourceSetManager(
             if (!configuredSourceSets.contains(sourceSet.name)) {
                 val message = ("The SourceSet '${sourceSet.name}' is not recognized " +
                         "by the Android Gradle Plugin. Perhaps you misspelled something?")
-                dslScope.issueReporter.reportError(EvalIssueReporter.Type.GENERIC, message)
+                dslScope.issueReporter.reportError(EvalIssueReporter.Type.GENERIC, EvalIssueException(message))
             }
         }
     }

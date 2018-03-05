@@ -209,7 +209,6 @@ public class MergeResources extends IncrementalTask {
                         builder,
                         createProcessOutputHandler(aaptGeneration, builder, blameLog),
                         crunchPng,
-                        intermediateDir,
                         scope.getGlobalScope()
                                 .getExtension()
                                 .getAaptOptions()
@@ -706,6 +705,7 @@ public class MergeResources extends IncrementalTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public Collection<BuildableArtifact> getResources() {
         return resources.values();
     }

@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.android.sdklib.AndroidTargetHash;
@@ -76,7 +77,9 @@ public class FeatureTaskManager extends ApplicationTaskManager {
             if (androidVersion != null) {
                 message += " compileSdkVersion is set to " + androidVersion.getApiString();
             }
-            androidBuilder.getIssueReporter().reportError(Type.GENERIC, message);
+            androidBuilder
+                    .getIssueReporter()
+                    .reportError(Type.GENERIC, new EvalIssueException(message));
         }
 
         // Ensure we're not using aapt1.
@@ -84,7 +87,10 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                 && !extension.getBaseFeature()) {
             androidBuilder
                     .getIssueReporter()
-                    .reportError(Type.GENERIC, "Non-base feature modules require AAPTv2 to build.");
+                    .reportError(
+                            Type.GENERIC,
+                            new EvalIssueException(
+                                    "Non-base feature modules require AAPTv2 to build."));
         }
 
         // FIXME: This is currently disabled due to b/62301277.
@@ -106,10 +112,11 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                             .getIssueReporter()
                             .reportError(
                                     Type.GENERIC,
-                                    "To use data binding in non-base features, you must"
-                                            + " enable data binding v2 by adding "
-                                            + bindingV2
-                                            + "=true to your gradle.properties file.");
+                                    new EvalIssueException(
+                                            "To use data binding in non-base features, you must"
+                                                    + " enable data binding v2 by adding "
+                                                    + bindingV2
+                                                    + "=true to your gradle.properties file."));
                 }
 
             } else {
@@ -117,15 +124,16 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                         .getIssueReporter()
                         .reportError(
                                 Type.GENERIC,
-                                "Currently, data binding does not work for non-base features. "
-                                        + "Move data binding code to the base feature module.\n"
-                                        + "See https://issuetracker.google.com/63814741.\n"
-                                        + "To enable data binding with non-base features, set the "
-                                        + experimentalBinding
-                                        + " and "
-                                        + bindingV2
-                                        + " properties "
-                                        + "to true.");
+                                new EvalIssueException(
+                                        "Currently, data binding does not work for non-base features. "
+                                                + "Move data binding code to the base feature module.\n"
+                                                + "See https://issuetracker.google.com/63814741.\n"
+                                                + "To enable data binding with non-base features, set the "
+                                                + experimentalBinding
+                                                + " and "
+                                                + bindingV2
+                                                + " properties "
+                                                + "to true."));
             }
         }
     }

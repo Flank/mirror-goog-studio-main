@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.TestVariantBuildOutput;
@@ -131,6 +132,7 @@ public class ModelBuilderTest {
         GradleVariantConfiguration variantConfiguration =
                 Mockito.mock(GradleVariantConfiguration.class);
         when(variantConfiguration.getDirName()).thenReturn("variant/name");
+        when(variantConfiguration.getType()).thenReturn(VariantTypeImpl.BASE_APK);
 
         VariantScope variantScope =
                 createVariantScope("variantName", "variant/name", variantConfiguration);
@@ -155,6 +157,7 @@ public class ModelBuilderTest {
         GradleVariantConfiguration variantConfiguration =
                 Mockito.mock(GradleVariantConfiguration.class);
         when(variantConfiguration.getDirName()).thenReturn("variant/name");
+        when(variantConfiguration.getType()).thenReturn(VariantTypeImpl.BASE_APK);
 
         VariantScope variantScope =
                 createVariantScope("variantName", "variant/name", variantConfiguration);
@@ -206,6 +209,7 @@ public class ModelBuilderTest {
         GradleVariantConfiguration variantConfiguration =
                 Mockito.mock(GradleVariantConfiguration.class);
         when(variantConfiguration.getDirName()).thenReturn("variant/name");
+        when(variantConfiguration.getType()).thenReturn(VariantTypeImpl.BASE_APK);
 
         VariantScope variantScope =
                 createVariantScope("variantName", "variant/name", variantConfiguration);
@@ -278,6 +282,7 @@ public class ModelBuilderTest {
             GradleVariantConfiguration variantConfiguration =
                     Mockito.mock(GradleVariantConfiguration.class);
             when(variantConfiguration.getDirName()).thenReturn("variant/name" + i);
+            when(variantConfiguration.getType()).thenReturn(VariantTypeImpl.BASE_APK);
 
             String variantName = "variantName" + i;
             VariantScope variantScope =
@@ -337,31 +342,39 @@ public class ModelBuilderTest {
         GradleVariantConfiguration variantConfiguration =
                 Mockito.mock(GradleVariantConfiguration.class);
         when(variantConfiguration.getDirName()).thenReturn("variant/name");
-        when(variantConfiguration.getType()).thenReturn(VariantType.LIBRARY);
+        when(variantConfiguration.getType()).thenReturn(VariantTypeImpl.LIBRARY);
 
         VariantScope variantScope =
                 createVariantScope("variantName", "variant/name", variantConfiguration);
         BaseVariantData variantData = createVariantData(variantScope, variantConfiguration);
-
-        GradleVariantConfiguration testVariantConfiguration =
-                Mockito.mock(GradleVariantConfiguration.class);
-        when(testVariantConfiguration.getDirName()).thenReturn("test/name");
-        when(testVariantConfiguration.getType()).thenReturn(VariantType.UNIT_TEST);
-
-        VariantScope testVariantScope =
-                createVariantScope("testVariant", "test/name", testVariantConfiguration);
-        BaseVariantData testVariantData =
-                createVariantData(testVariantScope, testVariantConfiguration);
-        when(testVariantData.getType()).thenReturn(VariantType.UNIT_TEST);
-        when(testVariantScope.getTestedVariantData()).thenReturn(variantData);
 
         FileCollection outputCollection = Mockito.mock(FileCollection.class);
         when(outputCollection.getSingleFile()).thenReturn(temporaryFolder.getRoot());
         Iterator outputIterator = Mockito.mock(Iterator.class);
         when(outputIterator.next()).thenReturn(temporaryFolder.getRoot());
         when(outputCollection.iterator()).thenReturn(outputIterator);
-        when(testVariantScope.getOutput(ArgumentMatchers.eq(ALL_CLASSES)))
+        when(variantScope.getOutput(ArgumentMatchers.eq(InternalArtifactType.AAR)))
                 .thenReturn(outputCollection);
+
+        GradleVariantConfiguration testVariantConfiguration =
+                Mockito.mock(GradleVariantConfiguration.class);
+        when(testVariantConfiguration.getDirName()).thenReturn("test/name");
+        when(testVariantConfiguration.getType()).thenReturn(VariantTypeImpl.UNIT_TEST);
+
+        VariantScope testVariantScope =
+                createVariantScope("testVariant", "test/name", testVariantConfiguration);
+        BaseVariantData testVariantData =
+                createVariantData(testVariantScope, testVariantConfiguration);
+        when(testVariantData.getType()).thenReturn(VariantTypeImpl.UNIT_TEST);
+        when(testVariantScope.getTestedVariantData()).thenReturn(variantData);
+
+        FileCollection testOutputCollection = Mockito.mock(FileCollection.class);
+        when(testOutputCollection.getSingleFile()).thenReturn(temporaryFolder.getRoot());
+        Iterator testOutputIterator = Mockito.mock(Iterator.class);
+        when(testOutputIterator.next()).thenReturn(temporaryFolder.getRoot());
+        when(testOutputCollection.iterator()).thenReturn(testOutputIterator);
+        when(testVariantScope.getOutput(ArgumentMatchers.eq(ALL_CLASSES)))
+                .thenReturn(testOutputCollection);
 
         when(variantManager.getVariantScopes())
                 .thenReturn(ImmutableList.of(variantScope, testVariantScope));
@@ -407,10 +420,13 @@ public class ModelBuilderTest {
     private static BaseVariantData createVariantData(
             VariantScope variantScope, GradleVariantConfiguration variantConfiguration) {
         BaseVariantData variantData = Mockito.mock(BaseVariantData.class);
-        when(variantData.getType()).thenReturn(VariantType.APK);
+        final VariantType type = variantConfiguration.getType();
+        when(variantData.getType()).thenReturn(type);
         when(variantData.getScope()).thenReturn(variantScope);
         when(variantData.getVariantConfiguration()).thenReturn(variantConfiguration);
+
         when(variantScope.getVariantData()).thenReturn(variantData);
+
         return variantData;
     }
 
@@ -423,6 +439,8 @@ public class ModelBuilderTest {
         when(variantScope.getVariantConfiguration()).thenReturn(variantConfiguration);
 
         final VariantType type = variantConfiguration.getType();
+        when(variantScope.getType()).thenReturn(type);
+
         //noinspection ConstantConditions
         if (type != null) {
             when(variantScope.getPublishingSpec()).thenReturn(PublishingSpecs.getVariantSpec(type));

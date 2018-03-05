@@ -106,6 +106,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.BaseConfig;
 import com.android.repository.api.ProgressIndicator;
@@ -244,7 +245,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         getFullVariantName(),
                         new File(globalScope.getIntermediatesDir(), "artifact_transform"),
                         getVariantConfiguration().getDirName(),
-                        ImmutableList.of(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST),
                         globalScope.getDslScope());
 
         validatePostprocessingOptions();
@@ -262,7 +262,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         .getErrorHandler()
                         .reportError(
                                 Type.GENERIC,
-                                "The 'android-gradle' code shrinker does not support obfuscating.");
+                                new EvalIssueException(
+                                        "The 'android-gradle' code shrinker does not support obfuscating."));
             }
 
             if (postprocessingOptions.isOptimizeCode()) {
@@ -270,7 +271,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         .getErrorHandler()
                         .reportError(
                                 Type.GENERIC,
-                                "The 'android-gradle' code shrinker does not support optimizing code.");
+                                new EvalIssueException(
+                                        "The 'android-gradle' code shrinker does not support optimizing code."));
             }
         }
     }
@@ -377,7 +379,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (configTypes.contains(API_ELEMENTS)) {
             Preconditions.checkNotNull(
                     variantDependency.getApiElements(),
-                    "Publishing to API Element with no ApiElements configuration object");
+                    "Publishing to API Element with no ApiElements configuration object. VariantType: "
+                            + getType());
             publishArtifactToConfiguration(
                     variantDependency.getApiElements(), file, builtBy, artifactType);
         }
@@ -385,7 +388,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (configTypes.contains(RUNTIME_ELEMENTS)) {
             Preconditions.checkNotNull(
                     variantDependency.getRuntimeElements(),
-                    "Publishing to Runtime Element with no RuntimeElements configuration object");
+                    "Publishing to Runtime Element with no RuntimeElements configuration object. VariantType: "
+                            + getType());
             publishArtifactToConfiguration(
                     variantDependency.getRuntimeElements(), file, builtBy, artifactType);
         }
@@ -393,7 +397,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (configTypes.contains(METADATA_ELEMENTS)) {
             Preconditions.checkNotNull(
                     variantDependency.getMetadataElements(),
-                    "Publishing to Metadata Element with no MetaDataElements configuration object");
+                    "Publishing to Metadata Element with no MetaDataElements configuration object. VariantType: "
+                            + getType());
             publishArtifactToConfiguration(
                     variantDependency.getMetadataElements(), file, builtBy, artifactType);
         }
@@ -401,7 +406,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (configTypes.contains(BUNDLE_ELEMENTS)) {
             Preconditions.checkNotNull(
                     variantDependency.getBundleElements(),
-                    "Publishing to Bundle Element with no BundleElements configuration object");
+                    "Publishing to Bundle Element with no BundleElements configuration object. VariantType: "
+                            + getType());
             publishArtifactToConfiguration(
                     variantDependency.getBundleElements(), file, builtBy, artifactType);
         }
@@ -491,12 +497,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return false;
         }
 
-        if (variantData.getType() == VariantType.LIBRARY) {
+        if (variantData.getType().isAar()) {
             if (!getProject().getPlugins().hasPlugin("com.android.feature")) {
                 globalScope
                         .getErrorHandler()
                         .reportError(
-                                Type.GENERIC, "Resource shrinker cannot be used for libraries.");
+                                Type.GENERIC,
+                                new EvalIssueException(
+                                        "Resource shrinker cannot be used for libraries."));
             }
             return false;
         }
@@ -506,9 +514,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     .getErrorHandler()
                     .reportError(
                             Type.GENERIC,
-                            "Removing unused resources requires unused code shrinking to be turned on. See "
-                                    + "http://d.android.com/r/tools/shrink-resources.html "
-                                    + "for more information.");
+                            new EvalIssueException(
+                                    "Removing unused resources requires unused code shrinking to be turned on. See "
+                                            + "http://d.android.com/r/tools/shrink-resources.html "
+                                            + "for more information."));
 
             return false;
         }
@@ -537,10 +546,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Nullable
     @Override
     public CodeShrinker getCodeShrinker() {
-        boolean isForTesting = getVariantConfiguration().getType().isForTesting();
+        boolean isTestComponent = getVariantConfiguration().getType().isTestComponent();
 
         //noinspection ConstantConditions - getType() will not return null for a testing variant.
-        if (isForTesting && getTestedVariantData().getType() == VariantType.LIBRARY) {
+        if (isTestComponent && getTestedVariantData().getType().isAar()) {
             // For now we seem to include the production library code as both program and library
             // input to the test ProGuard run, which confuses it.
             return null;
@@ -567,7 +576,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 shrinkerForBuildType = useProguard ? PROGUARD : ANDROID_GRADLE;
             }
 
-            if (!isForTesting) {
+            if (!isTestComponent) {
                 return shrinkerForBuildType;
             } else {
                 if (shrinkerForBuildType == PROGUARD || shrinkerForBuildType == R8) {
@@ -591,7 +600,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 case R8:
                     // fall through
                 case PROGUARD:
-                    if (!isForTesting) {
+                    if (!isTestComponent) {
                         boolean somethingToDo =
                                 postprocessingOptions.isRemoveUnusedCode()
                                         || postprocessingOptions.isObfuscate()
@@ -602,7 +611,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         return postprocessingOptions.isObfuscate() ? chosenShrinker : null;
                     }
                 case ANDROID_GRADLE:
-                    if (isForTesting) {
+                    if (isTestComponent) {
                         return null;
                     } else {
                         return postprocessingOptions.isRemoveUnusedCode() ? ANDROID_GRADLE : null;
@@ -736,18 +745,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 || getVariantConfiguration().getTargetSdkVersion().getCodename() != null;
     }
 
-    /**
-     * Determine if the module is a base feature module.
-     *
-     * @return true if this module is a base feature module. False otherwise.
-     */
+    @NonNull
     @Override
-    public boolean isBaseFeature() {
-        if (variantData instanceof ApplicationVariantData) {
-            return ((ApplicationVariantData) variantData).isBaseApplication();
-        }
-        return getVariantConfiguration().getType() == VariantType.FEATURE
-                && globalScope.getExtension().getBaseFeature();
+    public VariantType getType() {
+        return variantData.getVariantConfiguration().getType();
     }
 
     @NonNull
@@ -1032,8 +1033,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         FileCollection fileCollection;
 
+        final VariantType type = getVariantConfiguration().getType();
         if (configType == RUNTIME_CLASSPATH
-                && getVariantConfiguration().getType() == VariantType.FEATURE
+                && type.isApk()
+                && !type.isBaseModule()
                 && artifactType != ArtifactType.FEATURE_TRANSITIVE_DEPS) {
             fileCollection =
                     new FilteredArtifactCollection(
@@ -1076,8 +1079,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ArtifactType artifactType) {
         ArtifactCollection artifacts = computeArtifactCollection(configType, scope, artifactType);
 
+        final VariantType type = getVariantConfiguration().getType();
         if (configType == RUNTIME_CLASSPATH
-                && getVariantConfiguration().getType() == VariantType.FEATURE
+                && type.isApk()
+                && !type.isBaseModule()
                 && artifactType != ArtifactType.FEATURE_TRANSITIVE_DEPS) {
             artifacts =
                     new FilteredArtifactCollection(
@@ -1642,24 +1647,24 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getManifestOutputDirectory() {
-        switch (getVariantConfiguration().getType()) {
-            case APK:
-            case FEATURE:
-            case LIBRARY:
-                return FileUtils.join(
-                        getGlobalScope().getIntermediatesDir(),
-                        "manifests",
-                        "full",
-                        getVariantConfiguration().getDirName());
-            case ANDROID_TEST:
+        final VariantType variantType = getVariantConfiguration().getType();
+
+        if (variantType.isTestComponent()) {
+            if (variantType.isApk()) { // ANDROID_TEST
                 return FileUtils.join(
                         getGlobalScope().getIntermediatesDir(),
                         "manifest",
                         getVariantConfiguration().getDirName());
-            default:
-                throw new RuntimeException(
-                        "getManifestOutputDirectory called for an unexpected variant.");
+            }
+        } else {
+            return FileUtils.join(
+                    getGlobalScope().getIntermediatesDir(),
+                    "manifests",
+                    "full",
+                    getVariantConfiguration().getDirName());
         }
+
+        throw new RuntimeException("getManifestOutputDirectory called for an unexpected variant.");
     }
 
     /**
@@ -1677,7 +1682,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         : getDefaultApkLocation();
 
         File baseDirectory =
-                override != null && variantData.getType() != VariantType.FEATURE
+                override != null && !variantData.getType().isHybrid()
                         ? globalScope.getProject().file(override)
                         : defaultLocation;
 
@@ -2025,7 +2030,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull final BiFunction<T, ArtifactCollection, T> resourceMinusFunction) {
         // this only handles Android Test, not unit tests.
         VariantType variantType = getVariantConfiguration().getType();
-        if (!variantType.isForTesting()) {
+        if (!variantType.isTestComponent()) {
             return collection;
         }
 
@@ -2073,7 +2078,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             // We do have to however keep the Android resources.
             if (tested instanceof ApplicationVariantData
                     && configType == RUNTIME_CLASSPATH
-                    && variantType == VariantType.ANDROID_TEST) {
+                    && variantType.isTestComponent()
+                    && variantType.isApk()) {
                 if (artifactType == ArtifactType.ANDROID_RES) {
                     result =
                             resourceMinusFunction.apply(
@@ -2173,12 +2179,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 .getErrorHandler()
                 .reportError(
                         Type.GENERIC,
-                        String.format(
-                                "Please add '%s=true' to your "
-                                        + "gradle.properties file to enable Java 8 "
-                                        + "language support.",
-                                missingFlag.name()),
-                        getVariantConfiguration().getFullName());
+                        new EvalIssueException(
+                                String.format(
+                                        "Please add '%s=true' to your "
+                                                + "gradle.properties file to enable Java 8 "
+                                                + "language support.",
+                                        missingFlag.name()),
+                                getVariantConfiguration().getFullName()));
         return Java8LangSupport.INVALID;
     }
 
@@ -2207,7 +2214,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                             invalid.stream().collect(Collectors.joining(",")));
             globalScope
                     .getErrorHandler()
-                    .reportError(Type.GENERIC, msg, getVariantConfiguration().getFullName());
+                    .reportError(
+                            Type.GENERIC,
+                            new EvalIssueException(msg, getVariantConfiguration().getFullName()));
             return false;
         }
     }

@@ -50,7 +50,7 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
             @NonNull GradleVariantConfiguration config,
             @NonNull Recorder recorder) {
         super(globalScope, androidConfig, taskManager, config, recorder);
-        testVariants = Maps.newEnumMap(VariantType.class);
+        testVariants = Maps.newHashMap();
 
         // create default output
         getOutputFactory()

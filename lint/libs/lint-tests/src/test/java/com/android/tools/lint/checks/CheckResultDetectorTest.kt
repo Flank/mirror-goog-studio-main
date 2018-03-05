@@ -332,6 +332,98 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 SUPPORT_ANNOTATIONS_JAR)
             .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
             .run()
+            .expect("""
+                src/test/pkg/test.kt:8: Warning: The result of foo is not used [CheckResult]
+                                            foo() // Unused
+                                            ~~~~~
+                0 errors, 1 warnings
+                """)
+    }
+
+    fun test73563032() {
+        // Regression test for
+        //   https://issuetracker.google.com/73563032
+        //   73563032: Lint is detecting a "CheckResult" issue when using lambdas in Kotlin
+        lint().files(
+            kotlin("""
+                @file:Suppress("unused", "RemoveExplicitTypeArguments", "UNUSED_PARAMETER", "ConstantConditionIf")
+
+                package test.pkg
+
+                import android.support.annotation.CheckResult
+
+                fun lambda1(): () -> Single<Int> = {
+                    if (true) {
+                        Single.just(3)
+                    } else {
+                        Single.just(5)
+                    }
+                }
+
+                fun lambda2(): () -> Single<Int> = {
+                    if (true)
+                        Single.just(3)
+                    else
+                        Single.just(5)
+                }
+
+                class Single<T> {
+                    companion object {
+                        @CheckResult
+                        fun just(int: Int): Single<Int> {
+                            return Single<Int>()
+                        }
+                    }
+                }
+                """).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR)
+            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .run()
             .expectClean()
+    }
+
+    fun testChainedCalls() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.support.annotation.CheckResult;
+
+                @SuppressWarnings({"WeakerAccess", "ClassNameDiffersFromFileName"})
+                public class CheckResultTest {
+                    public void test() {
+                        myMethod(); // WARN
+                        this.myMethod(); // WARN
+                        myMethod().print(); // OK
+                    }
+
+                    @CheckResult
+                    public MyClass myMethod() {
+                        return new MyClass();
+                    }
+
+                    class MyClass {
+                        void print() {
+                            System.out.println("World");
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR)
+            .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+            .run()
+            .expect("""
+                src/test/pkg/CheckResultTest.java:8: Warning: The result of myMethod is not used [CheckResult]
+                        myMethod(); // WARN
+                        ~~~~~~~~~~
+                src/test/pkg/CheckResultTest.java:9: Warning: The result of myMethod is not used [CheckResult]
+                        this.myMethod(); // WARN
+                        ~~~~~~~~~~~~~~~
+                0 errors, 2 warnings
+                """)
     }
 }

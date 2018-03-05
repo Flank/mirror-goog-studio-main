@@ -115,7 +115,7 @@ class NavigationXmlDocument(private val sourceFile: SourceFile, private val root
             val sourceFilePosition =
                     SourceFilePosition(sourceFile, PositionXmlParser.getPosition(element))
             if (deepLinkUri != null) {
-                deepLinks.add(DeepLink(sourceFilePosition, deepLinkUri, autoVerify))
+                deepLinks.add(DeepLink.fromUri(deepLinkUri, sourceFilePosition, autoVerify))
             } else {
                 val nsUriPrefix =
                         XmlUtils.lookupNamespacePrefix(element, SdkConstants.AUTO_URI, false)

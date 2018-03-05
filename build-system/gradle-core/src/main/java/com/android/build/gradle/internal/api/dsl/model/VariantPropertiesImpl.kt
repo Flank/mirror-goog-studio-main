@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.build.gradle.internal.api.dsl.sealing.SealableMap
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 import java.io.File
@@ -68,7 +69,7 @@ class VariantPropertiesImpl(dslScope: DslScope)
                 if (value !is SigningConfigImpl) {
                     dslScope.issueReporter.reportError(
                             EvalIssueReporter.Type.GENERIC,
-                            "BuildType.signingConfig set with an object not from android.signingConfigs")
+                        EvalIssueException("BuildType.signingConfig set with an object not from android.signingConfigs"))
                 }
                 field = value
             }

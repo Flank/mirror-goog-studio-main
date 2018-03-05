@@ -18,8 +18,11 @@ package com.android.build.gradle.internal.api
 
 import com.android.build.api.artifact.BuildArtifactTransformBuilder
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.api.artifact.InputArtifactProvider
+import com.android.build.api.artifact.OutputFileProvider
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.internal.api.artifact.BuildArtifactTransformBuilderImpl
+import com.android.build.gradle.internal.api.artifact.OutputFileProviderImpl
 import com.android.build.gradle.internal.api.artifact.SourceArtifactType
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
@@ -57,7 +60,7 @@ class DefaultAndroidSourceDirectorySet(
     private val filter = PatternSet()
 
     init {
-        artifactsHolder?.initializeFirstArtifactFiles(
+        artifactsHolder?.appendArtifact(
                 type,
                 project.files( Callable<Collection<File>> { srcDirs }))
     }
@@ -191,7 +194,7 @@ class DefaultAndroidSourceDirectorySet(
     override fun <T : Task> appendTo(
             taskName: String,
             taskType: Class<T>,
-            configurationAction: BuildArtifactTransformBuilder.SimpleConfigurationAction<T>) {
+            configurationAction: BuildArtifactTransformBuilder.ConfigurationAction<T>) {
         if (artifactsHolder == null || delayedActionsExecutor == null) {
             throw UnsupportedOperationException("appendTo is not supported by source set '$name'")
         }
@@ -201,16 +204,14 @@ class DefaultAndroidSourceDirectorySet(
                 delayedActionsExecutor,
                 taskName,
                 taskType,
-                dslScope!!)
-                .input(type)
-                .output(type, BuildArtifactTransformBuilder.OperationType.APPEND)
-                .outputFile(artifactsHolder.getArtifactFilename(type), type)
+                dslScope)
+                .append(type)
                 .create(configurationAction)
     }
 
     override fun <T : Task> replace(taskName: String,
             taskType: Class<T>,
-            configurationAction: BuildArtifactTransformBuilder.SimpleConfigurationAction<T>) {
+            configurationAction: BuildArtifactTransformBuilder.ConfigurationAction<T>) {
         if (artifactsHolder == null || delayedActionsExecutor == null) {
             throw UnsupportedOperationException("replace is not supported by source set '$name'")
         }
@@ -220,19 +221,15 @@ class DefaultAndroidSourceDirectorySet(
                 delayedActionsExecutor,
                 taskName,
                 taskType,
-                dslScope!!)
-                .input(type)
-                .output(type, BuildArtifactTransformBuilder.OperationType.REPLACE)
-                .outputFile(artifactsHolder.getArtifactFilename(type), type)
+                dslScope)
+                .replace(type)
                 .create(configurationAction)
     }
 
     override fun getBuildableArtifact() : BuildableArtifact {
-        if (artifactsHolder == null) {
-            throw UnsupportedOperationException(
+        return artifactsHolder?.getArtifactFiles(type)
+                ?: throw UnsupportedOperationException(
                     "getBuildableArtifact is not supported by source set '$name'")
-        }
-        return artifactsHolder.getArtifactFiles(type)
     }
 }
 

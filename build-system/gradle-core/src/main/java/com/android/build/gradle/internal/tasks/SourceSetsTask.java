@@ -65,7 +65,7 @@ public class SourceSetsTask extends AbstractReportTask {
 
                 renderDirectorySet("Java sources", sourceSet.getJava(), project);
 
-                if (!sourceSet.getName().startsWith(VariantType.UNIT_TEST.getPrefix())) {
+                if (!sourceSet.getName().startsWith(VariantType.UNIT_TEST_PREFIX)) {
                     renderKeyValue(
                             "Manifest file: ",
                             project.getRootProject().relativePath(

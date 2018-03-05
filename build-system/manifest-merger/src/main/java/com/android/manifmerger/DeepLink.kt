@@ -26,139 +26,151 @@ import java.net.URI
 import java.net.URISyntaxException
 import java.util.regex.Pattern
 
-/** Represents a loaded <deepLink></deepLink> element from a navigation xml file.
- * Has getters for the [SourceFilePosition] and the parsed input uri information.
+/**
+ * Represents a loaded <deepLink> element from a navigation xml file.
+ *
+ * @property schemes the list of uri schemes.
+ * @property host the uri's host or `null` if the uri contains no host.
+ * @property port the uri's port or `-1` if uri contains no port.
+ * @property path the uri's path
+ * @property sourceFilePosition the source file position of the deep link element in the
+ *                              navigation xml file.
+ * @property isAutoVerify true if the <deepLink> element has an android:autoVerify="true" attribute.
  */
 @VisibleForTesting
-class DeepLink
-constructor(
-        val sourceFilePosition: SourceFilePosition, uri: String, val isAutoVerify: Boolean) {
+data class DeepLink(
+        val schemes: List<String>,
+        val host: String?,
+        val port: Int,
+        val path: String,
+        val sourceFilePosition: SourceFilePosition,
+        val isAutoVerify: Boolean) {
 
-    /** The list of URI schemes. */
-    val schemes: List<String>
-    /** The input uri's host or `null` if input uri contains no host. */
-    val host: String?
-    /** The input uri's port or `-1` if input uri contains no port. */
-    val port: Int
-    /** The input uri's path or `"/"` if input uri contains no path. */
-    val path: String
-
-    init {
-        try {
-            val deepLinkUri = DeepLinkUri(uri)
-            this.schemes = deepLinkUri.schemes
-            this.host = deepLinkUri.host
-            this.port = deepLinkUri.port
-            this.path = deepLinkUri.path
-        } catch (e: URISyntaxException) {
-            throw DeepLinkException(e)
+    companion object {
+        /** factory method to generate DeepLink from uri String */
+        fun fromUri(
+                uri: String,
+                sourceFilePosition: SourceFilePosition,
+                isAutoVerify: Boolean): DeepLink {
+            val deepLinkUri = try {
+                DeepLinkUri.fromUri(uri)
+            } catch (e: URISyntaxException) {
+                throw DeepLinkException(e)
+            }
+            return DeepLink(
+                    deepLinkUri.schemes,
+                    deepLinkUri.host,
+                    deepLinkUri.port,
+                    deepLinkUri.path,
+                    sourceFilePosition,
+                    isAutoVerify)
         }
-
     }
 
     /**
      * A class representing an RFC 2396 compliant URI, following the same rules as java.net.URI,
      * except also allowing the following deviations in the input uri string:
      *
-     *
      * 1. use of ".*" or "{placeholder}" wildcards in the URI path.
-     *
      *
      * 2. use of "${applicationId}" in the URI host and path.
      *
-     *
      * 3. use of ".*" wildcard at the beginning of the URI host.
+     *
+     * @property schemes the list of uri schemes.
+     * @property host the uri's host or `null` if the uri contains no host.
+     * @property port the uri's port or `-1` if uri contains no port.
+     * @property path the uri's path
      */
     @VisibleForTesting
-    class DeepLinkUri
-    constructor(uri: String) {
-
-        val schemes: List<String>
-        val host: String?
-        val port: Int
-        val path: String
-
-        init {
-            var encodedUri = uri
-            // chooseEncoder() calls below cannot share any character input(s), or there could
-            // be inaccurate decoding.
-            // Use completely new char1 and char2 characters if adding a new Encoder in the future.
-            val applicationIdEncoder = chooseEncoder(encodedUri, 'a', 'b')
-            val pathWildcardEncoder = chooseEncoder(encodedUri, 'c', 'd')
-            val wildcardEncoder = chooseEncoder(encodedUri, 'e', 'f')
-            // must check for APPLICATION_ID_PLACEHOLDER before PATH_WILDCARD.
-            encodedUri = encodedUri.replace(APPLICATION_ID_PLACEHOLDER, applicationIdEncoder)
-            encodedUri = encodedUri.replace(PATH_WILDCARD.toRegex(), pathWildcardEncoder)
-            encodedUri = encodedUri.replace(WILDCARD, wildcardEncoder)
-
-            // If encodedUri doesn't contain regex "^[^/]*:/" (which would indicate it contains a
-            // scheme) or start with "/" (which would indicate it's just a path),
-            // then we want the first part of the uri to be interpreted as the host, but
-            // java.net.URI will interpret it as the scheme,
-            // unless we prepend it with "//", so we do.
-            if (!Pattern.compile("^[^/]*:/").matcher(encodedUri).find() && !encodedUri.startsWith("/")) {
-                encodedUri = "//" + encodedUri
-            }
-
-            // Attempt to construct URI after encoding all non-compliant characters.
-            // If still not compliant, will throw URISyntaxException.
-            val compliantUri = URI(encodedUri)
-
-            // assign schemes
-            val compliantScheme = compliantUri.scheme
-            schemes = if (compliantScheme == null) {
-                DEFAULT_SCHEMES
-            } else if (compliantScheme.contains(applicationIdEncoder)
-                    || compliantScheme.contains(pathWildcardEncoder)
-                    || compliantScheme.contains(wildcardEncoder)) {
-                throw DeepLinkException(
-                        "Improper use of wildcards and/or placeholders in deepLink URI scheme")
-            } else {
-                ImmutableList.of(compliantScheme)
-            }
-
-            // assign host
-            var compliantHost: String? = compliantUri.host
-            if (compliantHost != null) {
-                compliantHost = compliantHost.replace(applicationIdEncoder,
-                        APPLICATION_ID_PLACEHOLDER)
-                if (compliantHost.startsWith(wildcardEncoder)) {
-                    compliantHost = HOST_WILDCARD + compliantHost.substring(wildcardEncoder.length)
-                }
-                if (compliantHost.contains(pathWildcardEncoder) || compliantHost.contains(
-                        wildcardEncoder)) {
-                    throw DeepLinkException(
-                            "Improper use of wildcards and/or placeholders in deepLink URI host")
-                }
-            }
-            host = compliantHost
-
-            // assign port
-            port = compliantUri.port
-
-            // assign path
-            var compliantPath: String? = compliantUri.path
-            if (compliantPath == null || compliantPath.isEmpty()) {
-                compliantPath = "/"
-            }
-            compliantPath = compliantPath.replace(applicationIdEncoder, APPLICATION_ID_PLACEHOLDER)
-            // decode pathWildcardEncoder to WILDCARD instead of PATH_WILDCARD
-            compliantPath = compliantPath.replace(pathWildcardEncoder, WILDCARD)
-            compliantPath = compliantPath.replace(wildcardEncoder, WILDCARD)
-            // prepend compliantPath with "/" if not present
-            compliantPath = if (compliantPath.startsWith("/")) compliantPath else "/" + compliantPath
-            path = compliantPath
-        }
+    data class DeepLinkUri(
+            val schemes: List<String>, val host: String?, val port: Int, val path: String) {
 
         companion object {
 
             private val DEFAULT_SCHEMES = ImmutableList.of("http", "https")
             private val APPLICATION_ID_PLACEHOLDER =
                     "\${" + PlaceholderHandler.APPLICATION_ID + "}"
-            // PATH_WILDCARD looks for pairs of braces with anything except other braces between them
-            private val PATH_WILDCARD = "\\{[^{}]*}"
+            // PATH_WILDCARD looks for pairs of braces with anything except other braces in between
+            private val PATH_WILDCARD = Regex("\\{[^{}]*}")
             private val WILDCARD = ".*"
             private val HOST_WILDCARD = "*"
+
+            /** factory method to generate DeepLinkUri from uri String */
+            fun fromUri(uri: String): DeepLinkUri {
+
+                // chooseEncoder() calls below cannot share any character input(s), or there could
+                // be inaccurate decoding. Use completely new char1 and char2 characters if adding a
+                // new Encoder in the future.
+                val applicationIdEncoder = chooseEncoder(uri, 'a', 'b')
+                val pathWildcardEncoder = chooseEncoder(uri, 'c', 'd')
+                val wildcardEncoder = chooseEncoder(uri, 'e', 'f')
+                // Must call uri.replace() with APPLICATION_ID_PLACEHOLDER before PATH_WILDCARD.
+                // If encodedUri doesn't contain regex "^[^/]*:/" (which would indicate it contains
+                // a scheme) or start with "/" (which would indicate it's just a path), then we want
+                // the first part of the uri to be interpreted as the host, but java.net.URI will
+                // interpret it as the scheme, unless we prepend it with "//", so we do.
+                val encodedUri =
+                        uri.replace(APPLICATION_ID_PLACEHOLDER, applicationIdEncoder)
+                                .replace(PATH_WILDCARD, pathWildcardEncoder)
+                                .replace(WILDCARD, wildcardEncoder)
+                                .let {
+                                    if (!Pattern.compile("^[^/]*:/").matcher(it).find()
+                                            && !it.startsWith("/")) {
+                                        "//" + it
+                                    } else {
+                                        it
+                                    }
+                                }
+
+                // Attempt to construct URI after encoding all non-compliant characters.
+                // If still not compliant, will throw URISyntaxException.
+                val compliantUri = URI(encodedUri)
+
+                // determine schemes
+                val compliantScheme = compliantUri.scheme
+                val schemes = when {
+                    compliantScheme == null -> DEFAULT_SCHEMES
+                    applicationIdEncoder in compliantScheme ||
+                            pathWildcardEncoder in compliantScheme ||
+                            wildcardEncoder in compliantScheme ->
+                        throw DeepLinkException(
+                            "Improper use of wildcards and/or placeholders in deeplink URI scheme")
+                    else -> ImmutableList.of(compliantScheme)
+                }
+
+                // determine host
+                val host: String? =
+                        compliantUri.host?.replace(applicationIdEncoder, APPLICATION_ID_PLACEHOLDER)
+                                ?.let {
+                                    if (it.startsWith(wildcardEncoder)) {
+                                        HOST_WILDCARD + it.substring(wildcardEncoder.length)
+                                    } else {
+                                        it
+                                    }
+                                }
+                // throw exception if host contains an illegal wildcard encoder
+                if (host?.contains(pathWildcardEncoder) == true
+                        || host?.contains(wildcardEncoder) == true) {
+                    throw DeepLinkException(
+                            "Improper use of wildcards and/or placeholders in deeplink URI host")
+                }
+
+                // determine path
+                val path: String =
+                    if (compliantUri.path?.isEmpty() != false) {
+                        "/"
+                    } else {
+                        compliantUri.path.replace(applicationIdEncoder, APPLICATION_ID_PLACEHOLDER)
+                                .replace(pathWildcardEncoder, WILDCARD)
+                                .replace(wildcardEncoder, WILDCARD)
+                                .let {
+                                    if (it.startsWith("/")) it else "/" + it
+                                }
+                    }
+
+                return DeepLinkUri(schemes, host, compliantUri.port, path)
+            }
 
             /**
              * Returns a string which can be used as an encoder in the input uri string; i.e., the

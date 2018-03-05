@@ -24,6 +24,7 @@
 #include "utils/device_info.h"
 #include "utils/filesystem_notifier.h"
 #include "utils/trace.h"
+#include "utils/log.h"
 
 using std::string;
 
@@ -39,7 +40,8 @@ ActivityManager::ActivityManager()
 bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
                                      const string &app_package_name,
                                      int sampling_interval_us,
-                                     string *trace_path, string *error_string) {
+                                     string *trace_path, string *error_string,
+                                     bool is_startup_profiling) {
   Trace trace("CPU:StartProfiling ART");
   std::lock_guard<std::mutex> lock(profiled_lock_);
 
@@ -48,31 +50,35 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
     return false;
   }
   *trace_path = this->GenerateTracePath(app_package_name);
-
-  // Run command via actual am.
-  std::ostringstream parameters;
-  parameters << "profile start ";
-  if (profiling_mode == ActivityManager::SAMPLING) {
-    // A sample interval in microseconds is required after '--sampling'.
-    // Note that '--sampling 0' would direct ART into instrumentation mode.
-    // If there's no '--sampling X', instrumentation is used.
-    parameters << "--sampling " << sampling_interval_us << " ";
-  }
-  if (DeviceInfo::feature_level() >= 26) {
-    // Use streaming output mode on O or greater.
-    parameters << "--streaming ";
-  }
-  parameters << app_package_name << " " << *trace_path;
-  if (!bash_->Run(parameters.str(), error_string)) {
-    *error_string = "Unable to run profile start command";
-    return false;
+  // if |is_startup_profiling| is true, it means that profiling started with
+  // activity launch command, so there is no need to start profiling.
+  if (!is_startup_profiling) {
+    // Run command via actual am.
+    std::ostringstream parameters;
+    parameters << "profile start ";
+    if (profiling_mode == ActivityManager::SAMPLING) {
+      // A sample interval in microseconds is required after '--sampling'.
+      // Note that '--sampling 0' would direct ART into instrumentation mode.
+      // If there's no '--sampling X', instrumentation is used.
+      parameters << "--sampling " << sampling_interval_us << " ";
+    }
+    if (DeviceInfo::feature_level() >= 26) {
+      // Use streaming output mode on O or greater.
+      parameters << "--streaming ";
+    }
+    parameters << app_package_name << " " << *trace_path;
+    if (!bash_->Run(parameters.str(), error_string)) {
+      *error_string = "Unable to run profile start command";
+      return false;
+    }
   }
   AddProfiledApp(app_package_name, *trace_path);
   return true;
 }
 
 bool ActivityManager::StopProfiling(const string &app_package_name,
-                                    bool need_result, string *error_string) {
+                                    bool need_result, string *error_string,
+                                    bool is_startup_profiling) {
   Trace trace("CPU:StopProfiling ART");
   std::lock_guard<std::mutex> lock(profiled_lock_);
 
@@ -100,9 +106,13 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
   }
 
   if (need_result) {
+    // Art takes more than 5 Seconds to stop profiling started with "am start
+    // --start-profiler". We should investigate why 5 Seconds is not enough
+    // (http://b/73891014), for now 30 Seconds is a temporary fix.
+    int64_t timed_out_ms = is_startup_profiling ? 30000 : 5000;
     // Wait until ART has finished writing the trace to the file and closed the
     // file.
-    if (!notifier.WaitUntilEventOccurs()) {
+    if (!notifier.WaitUntilEventOccurs(timed_out_ms)) {
       *error_string = "Wait for ART trace file failed.";
       return false;
     }

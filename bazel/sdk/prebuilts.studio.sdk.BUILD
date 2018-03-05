@@ -26,18 +26,6 @@ java_binary(
     runtime_deps = [":dxlib-preview"],
 )
 
-# Fake "future" build tools for testing against before they are released
-filegroup(
-    name = "build-tools/future",
-    srcs = glob(
-        include = ["*/build-tools/4509860/**"],
-    ),
-    visibility = [
-        "//tools/base/build-system/builder:__subpackages__",
-        "//tools/base/build-system/integration-test:__subpackages__",
-    ],
-)
-
 filegroup(
     name = "build-tools/27.0.3",
     srcs = glob(

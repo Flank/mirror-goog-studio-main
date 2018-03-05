@@ -48,7 +48,8 @@ public class TestExtension extends BaseExtension implements TestAndroidConfig {
                 signingConfigs,
                 buildOutputs,
                 sourceSetManager,
-                extraModelInfo);
+                extraModelInfo,
+                false); // FIXME figure this out.
     }
 
     /**

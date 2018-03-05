@@ -41,6 +41,7 @@ import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
+import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
@@ -105,7 +106,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean isTestOnly();
 
-    boolean isBaseFeature();
+    @NonNull
+    VariantType getType();
 
     @NonNull
     DexingType getDexingType();

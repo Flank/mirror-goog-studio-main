@@ -17,9 +17,7 @@
 package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
-import com.android.build.api.dsl.variant.Variant
 import com.android.build.gradle.internal.api.dsl.DslScope
-import com.android.build.gradle.internal.api.dsl.extensions.AppExtensionImpl
 import com.android.build.gradle.internal.api.dsl.extensions.LibraryExtensionImpl
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrVariantImpl
@@ -28,14 +26,14 @@ import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
 import com.android.builder.core.VariantType
-import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.core.VariantTypeImpl
 
 class LibAndroidTestVariantFactory
     : VariantFactory2<LibraryExtensionImpl> {
 
-    override val generatedType: VariantType = VariantType.ANDROID_TEST
+    override val generatedType: VariantType = VariantTypeImpl.ANDROID_TEST
     override val testedBy: List<VariantType> = listOf()
-    override val testTarget: VariantType? = VariantType.LIBRARY
+    override val testTarget: VariantType? = VariantTypeImpl.LIBRARY
 
     override fun createVariant(
             extension: LibraryExtensionImpl,
@@ -49,7 +47,7 @@ class LibAndroidTestVariantFactory
             : SealableVariant {
 
         return AndroidTestVariantImpl(
-                VariantType.ANDROID_TEST,
+                VariantTypeImpl.ANDROID_TEST,
                 variantProperties,
                 productFlavorOrVariant,
                 buildTypOrVariant,

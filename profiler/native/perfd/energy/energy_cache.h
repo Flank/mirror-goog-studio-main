@@ -29,8 +29,9 @@ class EnergyCache {
  public:
   EnergyCache() = default;
 
-  // Add an energy event to internal cache.
-  void AddEnergyEvent(const proto::EnergyEvent& data);
+  // Add a copy of the passed-in energy event to the internal cache, returning a
+  // pointer to the copy (so the caller can optionally edit it further).
+  proto::EnergyEvent* AddEnergyEvent(const proto::EnergyEvent& data);
 
   // Query for all the energy events for a given app within the time range
   // (start_time_excl, end_time_incl].

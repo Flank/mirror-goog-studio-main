@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.tools.profiler.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
+import com.android.tools.profiler.TestUtils;
 import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.NetworkProfiler;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpConnectionData;
@@ -30,7 +31,6 @@ import com.android.tools.profiler.proto.Profiler.*;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +46,7 @@ public class OkHttpTest {
 
     private static final String ACTIVITY_CLASS = "com.activity.network.OkHttpActivity";
 
-    private boolean myIsOPlusDevice = true;
+    private boolean myIsOPlusDevice;
     private PerfDriver myPerfDriver;
     private FakeAndroidDriver myAndroidDriver;
     private GrpcUtils myGrpc;
@@ -79,7 +79,7 @@ public class OkHttpTest {
 
         final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                stubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         final long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -107,7 +107,7 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                stubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -131,7 +131,7 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                stubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -159,7 +159,7 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                stubWrapper.getNonEmptyHttpRange(mySession);
         assertThat(httpRangeResponse.getDataList().size()).isEqualTo(1);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
@@ -181,10 +181,11 @@ public class OkHttpTest {
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2AndOkHttp3Get");
         assertThat(myAndroidDriver.waitForInput(okhttp2AndOkHttp3Get)).isTrue();
 
-        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        final NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
-        assertThat(httpRangeResponse.getDataList().size()).isEqualTo(2);
+                TestUtils.waitForAndReturn(
+                        () -> stubWrapper.getNonEmptyHttpRange(mySession),
+                        resp -> resp.getDataList().size() == 2);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
         HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
@@ -205,8 +206,9 @@ public class OkHttpTest {
 
         NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
-        assertThat(httpRangeResponse.getDataList().size()).isEqualTo(2);
+                TestUtils.waitForAndReturn(
+                        () -> stubWrapper.getNonEmptyHttpRange(mySession),
+                        resp -> resp.getDataList().size() == 2);
 
         long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
         HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
@@ -241,15 +243,14 @@ public class OkHttpTest {
     private void assertNetworkErrorBehavior(final NetworkStubWrapper stubWrapper) {
         // Wait until get two responses: 1 aborted and 1 completed.
         // Both failed and successful requests should have valid time ranges.
-        stubWrapper.waitFor(
-                () -> {
-                    List<HttpConnectionData> list =
-                            stubWrapper.getAllHttpRange(mySession).getDataList();
-                    return list.size() == 2
-                            && list.stream().allMatch(item -> (item.getEndTimestamp() > 0));
-                });
         NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(mySession);
+                TestUtils.waitForAndReturn(
+                        () -> stubWrapper.getNonEmptyHttpRange(mySession),
+                        resp ->
+                                resp.getDataList().size() == 2
+                                        && resp.getDataList()
+                                                .stream()
+                                                .allMatch(item -> (item.getEndTimestamp() > 0)));
 
         // The first request should have no response fields after being aborted
         HttpConnectionData connectionAborted = httpRangeResponse.getDataList().get(0);
@@ -274,7 +275,7 @@ public class OkHttpTest {
 
     private static void waitForResponseFields200(
             final NetworkStubWrapper stubWrapper, final long connId) {
-        stubWrapper.waitFor(
+        TestUtils.waitFor(
                 () -> {
                     HttpDetailsResponse details = stubWrapper.getHttpDetails(connId, Type.RESPONSE);
                     return details.getResponse().getFields().contains("response-status-code = 200");

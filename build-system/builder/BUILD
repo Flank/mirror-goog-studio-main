@@ -29,8 +29,6 @@ kotlin_library(
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",
     resources = [":resources"],
-    # TODO b/73306170
-    tags = ["no_test_windows"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library/protos/src/main/proto",
@@ -80,9 +78,9 @@ kotlin_test(
     name = "tests",
     srcs = ["src/test/java"],
     data = [
-        "//prebuilts/studio/sdk:build-tools/future",
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platforms/latest",
+        "//tools/base/build-system/aapt2:aapt2_for_tests",
     ],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),

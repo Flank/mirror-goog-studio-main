@@ -40,7 +40,9 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.resources.AssetMerger;
 import com.android.ide.common.resources.AssetSet;
+import com.android.ide.common.resources.ResourceMerger;
 import com.android.ide.common.resources.ResourceSet;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
@@ -126,7 +128,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     /**
      * Optional tested config in case this variant is used for testing another variant.
      *
-     * @see VariantType#isForTesting()
+     * @see VariantType#isTestComponent()
      */
     private final VariantConfiguration<T, D, F> mTestedConfig;
 
@@ -217,10 +219,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         checkNotNull(buildType);
         checkNotNull(type);
         checkArgument(
-                !type.isForTesting() || testedConfig != null,
+                !type.isTestComponent() || testedConfig != null,
                 "You have to specify the tested variant for this variant type.");
         checkArgument(
-                type.isForTesting() || testedConfig == null,
+                type.isTestComponent() || testedConfig == null,
                 "This variant type doesn't need a tested variant.");
 
         mDefaultConfig = checkNotNull(defaultConfig);
@@ -283,12 +285,12 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             sb.append(buildType.getName());
         }
 
-        if (type == VariantType.FEATURE) {
+        if (type.isHybrid()) {
             sb.append("Feature");
         }
 
-        if (type.isForTesting()) {
-            if (testedType == VariantType.FEATURE) {
+        if (type.isTestComponent()) {
+            if (testedType != null && testedType.isHybrid()) {
                 sb.append("Feature");
             }
             sb.append(type.getSuffix());
@@ -314,7 +316,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         StringHelper.appendCapitalized(sb, mBuildType.getName());
 
-        if (mType.isForTesting()) {
+        if (mType.isTestComponent()) {
             sb.append(mType.getSuffix());
         }
 
@@ -372,7 +374,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
             sb.append(mBuildType.getName());
 
-            if (mType.isForTesting()) {
+            if (mType.isTestComponent()) {
                 sb.append('-').append(mType.getPrefix());
             }
 
@@ -400,7 +402,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         sb.append(splitName).append('-');
         sb.append(mBuildType.getName());
 
-        if (mType.isForTesting()) {
+        if (mType.isTestComponent()) {
             sb.append('-').append(mType.getPrefix());
         }
 
@@ -419,11 +421,11 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public String getDirName() {
         if (mDirName == null) {
             StringBuilder sb = new StringBuilder(mFlavors.size() * 20 + 100);
-            if (mType == VariantType.FEATURE) {
+            if (mType.isHybrid()) {
                 sb.append("feature/");
             }
 
-            if (mType.isForTesting()) {
+            if (mType.isTestComponent()) {
                 sb.append(mType.getPrefix()).append("/");
             }
 
@@ -453,11 +455,11 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         if (mDirSegments == null) {
             ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-            if (mType == VariantType.FEATURE) {
+            if (mType.isHybrid()) {
                 builder.add("feature");
             }
 
-            if (mType.isForTesting()) {
+            if (mType.isTestComponent()) {
                 builder.add(mType.getPrefix());
             }
 
@@ -491,7 +493,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public String computeDirNameWithSplits(@NonNull String... splitNames) {
         StringBuilder sb = new StringBuilder();
 
-        if (mType.isForTesting()) {
+        if (mType.isTestComponent()) {
             sb.append(mType.getPrefix()).append("/");
         }
 
@@ -681,7 +683,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public String getOriginalApplicationId() {
-        if (mType.isForTesting()) {
+        if (mType.isTestComponent()) {
             return getApplicationId();
         }
 
@@ -697,7 +699,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public String getApplicationId() {
         String id;
 
-        if (mType.isForTesting()) {
+        if (mType.isTestComponent()) {
             checkState(mTestedConfig != null);
 
             id = mMergedFlavor.getTestApplicationId();
@@ -727,7 +729,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
     @NonNull
     public String getTestApplicationId(){
-        checkState(mType.isForTesting());
+        checkState(mType.isTestComponent());
 
         if (!Strings.isNullOrEmpty(mMergedFlavor.getTestApplicationId())) {
             // if it's specified through build file read from there
@@ -741,9 +743,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
     @Nullable
     public String getTestedApplicationId() {
-        if (mType.isForTesting()) {
+        if (mType.isTestComponent()) {
             checkState(mTestedConfig != null);
-            if (mTestedConfig.mType == VariantType.LIBRARY) {
+            if (mTestedConfig.mType.isAar()) {
                 return getApplicationId();
             } else {
                 return mTestedConfig.getApplicationId();
@@ -793,7 +795,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         String versionName = mMergedFlavor.getVersionName();
         String versionSuffix = mMergedFlavor.getVersionNameSuffix();
 
-        if (versionName == null && !mType.isForTesting()) {
+        if (versionName == null && !mType.isTestComponent()) {
             versionName = getVersionNameFromManifest();
         }
 
@@ -818,7 +820,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         int versionCode = mMergedFlavor.getVersionCode() != null ?
                 mMergedFlavor.getVersionCode() : -1;
 
-        if (versionCode == -1 && !mType.isForTesting()) {
+        if (versionCode == -1 && !mType.isTestComponent()) {
             versionCode = getVersionCodeFromManifest();
         }
 
@@ -838,7 +840,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public String getInstrumentationRunner() {
         VariantConfiguration config = this;
-        if (mType.isForTesting()) {
+        if (mType.isTestComponent()) {
             config = getTestedConfig();
             checkState(config != null);
         }
@@ -866,7 +868,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public Map<String, String> getInstrumentationRunnerArguments() {
         VariantConfiguration config = this;
-        if (mType.isForTesting()) {
+        if (mType.isTestComponent()) {
             config = getTestedConfig();
             checkState(config != null);
         }
@@ -882,7 +884,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public Boolean getHandleProfiling() {
         VariantConfiguration config = this;
-        if (mType.isForTesting()) {
+        if (mType.isTestComponent()) {
             config = getTestedConfig();
             checkState(config != null);
         }
@@ -902,7 +904,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public Boolean getFunctionalTest() {
         VariantConfiguration config = this;
-        if (mType.isForTesting()) {
+        if (mType.isTestComponent()) {
             config = getTestedConfig();
             checkState(config != null);
         }
@@ -923,7 +925,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     /** Reads the package name from the manifest. This is unmodified by the build type. */
     @NonNull
     public String getPackageFromManifest() {
-        checkState(!mType.isForTesting());
+        checkState(!mType.isTestComponent());
 
         String packageName = getManifestAttributeSupplier().getPackage();
         if (packageName == null) {
@@ -1166,9 +1168,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     /**
      * Returns the dynamic list of {@link ResourceSet} for the source folders only.
      *
-     * The list is ordered in ascending order of importance, meaning the first set is meant to be
+     * <p>The list is ordered in ascending order of importance, meaning the first set is meant to be
      * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in a
-     * {@link com.android.ide.common.res2.ResourceMerger}.
+     * {@link ResourceMerger}.
      *
      * @return a list ResourceSet.
      */
@@ -1243,7 +1245,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      *
      * <p>The list is ordered in ascending order of importance, meaning the first set is meant to be
      * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in a
-     * {@link com.android.ide.common.res2.AssetMerger}.
+     * {@link AssetMerger}.
      *
      * @param function the function that return a collection of file based on the SourceProvider.
      *     this is usually a method referenceo on SourceProvider
@@ -1653,7 +1655,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * Returns true if the variant output is a bundle.
      */
     public boolean isBundled() {
-        return mType == VariantType.LIBRARY;
+        return mType.isAar();
     }
 
     @NonNull

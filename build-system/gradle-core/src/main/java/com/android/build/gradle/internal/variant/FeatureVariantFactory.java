@@ -39,11 +39,15 @@ import org.gradle.api.NamedDomainObjectContainer;
 
 public class FeatureVariantFactory extends BaseVariantFactory {
 
+    @NonNull private final VariantType variantType;
+
     public FeatureVariantFactory(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull AndroidConfig extension) {
+            @NonNull AndroidConfig extension,
+            @NonNull VariantType variantType) {
         super(globalScope, androidBuilder, extension);
+        this.variantType = variantType;
     }
 
     @NonNull
@@ -70,7 +74,7 @@ public class FeatureVariantFactory extends BaseVariantFactory {
     @NonNull
     @Override
     public Collection<VariantType> getVariantConfigurationTypes() {
-        return ImmutableList.of(VariantType.FEATURE);
+        return ImmutableList.of(variantType);
     }
 
     @Override

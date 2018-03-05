@@ -194,8 +194,9 @@ object NavGraphExpander {
      *
      * If duplicate [DeepLink]s are found, throws a [NavGraphException]
      */
+    @VisibleForTesting
     @Throws(NavGraphException::class)
-    private fun findDeepLinks(
+    fun findDeepLinks(
             navigationXmlId: String,
             loadedNavigationMap: Map<String, NavigationXmlDocument>): List<DeepLink> {
         val deepLinkList: MutableList<DeepLink> = mutableListOf()

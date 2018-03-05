@@ -26,10 +26,11 @@ import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
 import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 
 class TestVariantFactory : VariantFactory2<TestExtensionImpl> {
 
-    override val generatedType: VariantType = VariantType.APK
+    override val generatedType: VariantType = VariantTypeImpl.BASE_APK
     override val testedBy: List<VariantType> = listOf()
     override val testTarget: VariantType? = null
 
@@ -46,7 +47,7 @@ class TestVariantFactory : VariantFactory2<TestExtensionImpl> {
 
         // FIXME
         return AppVariantImpl(
-                VariantType.APK,
+                VariantTypeImpl.BASE_APK,
                 variantProperties,
                 productFlavorOrVariant,
                 buildTypOrVariant,

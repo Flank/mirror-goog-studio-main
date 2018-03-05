@@ -1,8 +1,5 @@
 package com.android.build.gradle;
 
-import static com.android.builder.core.VariantType.ANDROID_TEST;
-import static com.android.builder.core.VariantType.UNIT_TEST;
-
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
@@ -15,6 +12,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.VariantType;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -47,7 +45,8 @@ public abstract class TestedExtension extends BaseExtension implements TestedAnd
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull SourceSetManager sourceSetManager,
-            @NonNull ExtraModelInfo extraModelInfo) {
+            @NonNull ExtraModelInfo extraModelInfo,
+            boolean isBaseModule) {
         super(
                 project,
                 projectOptions,
@@ -58,10 +57,11 @@ public abstract class TestedExtension extends BaseExtension implements TestedAnd
                 signingConfigs,
                 buildOutputs,
                 sourceSetManager,
-                extraModelInfo);
+                extraModelInfo,
+                isBaseModule);
 
-        sourceSetManager.setUpTestSourceSet(ANDROID_TEST.getPrefix());
-        sourceSetManager.setUpTestSourceSet(UNIT_TEST.getPrefix());
+        sourceSetManager.setUpTestSourceSet(VariantType.ANDROID_TEST_PREFIX);
+        sourceSetManager.setUpTestSourceSet(VariantType.UNIT_TEST_PREFIX);
     }
 
     /**

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.sourcesets.AndroidSourceSet
 import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ConfigurationContainer
 
@@ -42,8 +43,8 @@ class DimensionData<out T>(
     }
 
     fun getSourceSet(type: VariantType) = when (type) {
-        VariantType.ANDROID_TEST -> androidTestSourceSet
-        VariantType.UNIT_TEST -> unitTestSourceSet
+        VariantTypeImpl.ANDROID_TEST -> androidTestSourceSet
+        VariantTypeImpl.UNIT_TEST -> unitTestSourceSet
         else -> sourceSet
     }
 }

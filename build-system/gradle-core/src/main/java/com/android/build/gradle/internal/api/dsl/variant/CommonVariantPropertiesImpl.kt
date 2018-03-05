@@ -21,6 +21,7 @@ import com.android.build.api.sourcesets.AndroidSourceSet
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.ImmutableList
 import org.gradle.api.Action
@@ -45,7 +46,7 @@ class CommonVariantPropertiesImpl(
         } else {
             dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "Calling variantSourceSet(Action) with a null variantSourceSet")
+                EvalIssueException("Calling variantSourceSet(Action) with a null variantSourceSet"))
         }
     }
 
@@ -55,7 +56,7 @@ class CommonVariantPropertiesImpl(
         } else {
             dslScope.issueReporter.reportError(
                     EvalIssueReporter.Type.GENERIC,
-                    "Calling multiFlavorSourceSet(Action) with a null multiFlavorSourceSet")
+                EvalIssueException("Calling multiFlavorSourceSet(Action) with a null multiFlavorSourceSet"))
         }
     }
 

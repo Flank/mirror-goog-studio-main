@@ -106,9 +106,12 @@ MemoryTrackingEnv* MemoryTrackingEnv::Instance(JavaVM* vm,
                                                int max_stack_depth,
                                                bool track_global_jni_refs) {
   if (g_env == nullptr) {
+    g_vm = vm;
+    // This will attach the current thread to the vm, otherwise
+    // CreateJvmtiEnv(g_vm) below will return JNI_EDETACHED error code.
+    GetThreadLocalJNI(g_vm);
     // Create a stand-alone jvmtiEnv to avoid any callback conflicts
     // with other profilers' agents.
-    g_vm = vm;
     jvmtiEnv* jvmti = CreateJvmtiEnv(g_vm);
     g_env = new MemoryTrackingEnv(jvmti, log_live_alloc_count, max_stack_depth,
                                   track_global_jni_refs);
@@ -196,9 +199,9 @@ void MemoryTrackingEnv::Initialize() {
       &MemoryTrackingEnv::HandleControlSignal, this, std::placeholders::_1));
   Agent::Instance().memory_component().OpenControlStream();
 
+  JNIEnv* jni = GetThreadLocalJNI(g_vm);
   // Start AllocWorkerThread - this is alive for the duration of the agent, but
   // it only sends data when a tracking session is ongoing.
-  JNIEnv* jni = GetThreadLocalJNI(g_vm);
   error =
       jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni), &AllocDataWorker,
                              this, JVMTI_THREAD_NORM_PRIORITY);

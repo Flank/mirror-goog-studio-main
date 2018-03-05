@@ -33,12 +33,13 @@ import com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValu
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UBlockExpression
+import org.jetbrains.uast.UClassInitializer
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
+import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.getQualifiedParentOrThis
 
 class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
@@ -84,25 +85,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             method: PsiMethod, annotation: UAnnotation,
             allMemberAnnotations: List<UAnnotation>,
             allClassAnnotations: List<UAnnotation>) {
-        val expression = element.getParentOfType<UExpression>(
-                UExpression::class.java, false) ?: return
-
-        val parent = expression.uastParent
-
-        var curr: UElement? = parent
-        while (curr != null) {
-            if (curr is ULambdaExpression) {
-                // Used in lambda
-                return
-            } else if (curr is UQualifiedReferenceExpression || curr is UBlockExpression) {
-                curr = curr.uastParent
-            } else {
-                break
-            }
-        }
-
-        if (isExpressionValueUnused(expression)) {
-
+        if (isExpressionValueUnused(element)) {
             // If this CheckResult annotation is from a class, check to see
             // if it's been reversed with @CanIgnoreReturnValue
             if (containsAnnotation(allMemberAnnotations, ERRORPRONE_CAN_IGNORE_RETURN_VALUE)
@@ -111,7 +94,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 return
             }
 
-            val methodName = JavaContext.getMethodName(expression)
+            val methodName = JavaContext.getMethodName(element)
             val suggested = getAnnotationStringValue(annotation,
                     AnnotationDetector.ATTR_SUGGEST)
 
@@ -146,14 +129,29 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 null
             }
 
-            val location = context.getLocation(expression)
-            report(context, issue, expression, location, message, fix)
+            val location = context.getLocation(element)
+            report(context, issue, element, location, message, fix)
         }
     }
 
-    private fun isExpressionValueUnused(expression: UExpression): Boolean {
-        val parent = expression.getQualifiedParentOrThis().uastParent
-        if (parent is UBlockExpression) {
+    private fun isExpressionValueUnused(element: UElement): Boolean {
+        var prev = element.getParentOfType<UExpression>(
+            UExpression::class.java, false) ?: return true
+
+        var curr = prev.uastParent ?: return true
+        while (curr is UQualifiedReferenceExpression && curr.selector === prev) {
+            prev = curr
+            curr = curr.uastParent ?: return true
+        }
+
+        if (curr is UBlockExpression) {
+            if (curr.uastParent is ULambdaExpression) {
+                // Lambda block: for now assume used (e.g. parameter
+                // in call. Later consider recursing here to
+                // detect if the lambda itself is unused.
+                return false
+            }
+
             // In Java, it's apparent when an expression is unused:
             // the parent is a block expression. However, in Kotlin it's
             // much trickier: values can flow through blocks and up through
@@ -164,28 +162,31 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             // in the block, OR, recursively the parent expression is not
             // used (e.g. you're in an if, but that if statement is itself
             // not doing anything with the value.)
-            val index = parent.expressions.indexOf(expression)
+            val block = curr
+            val expression = prev
+            val index = block.expressions.indexOf(expression)
             if (index == -1) {
-                if (parent.uastParent is ULambdaExpression) {
-                    return false
-                }
                 return true
             }
 
-            if (index < parent.expressions.size - 1) {
+            if (index < block.expressions.size - 1) {
                 // Not last child
                 return true
             }
 
             // It's the last child: see if the parent is unused
-            val parentExpression = expression.getParentOfType<UExpression>(
-                    UExpression::class.java, true
-            ) ?: return true
-
-            return isExpressionValueUnused(parentExpression)
+            val parent = curr.uastParent ?: return true
+            if (parent is UMethod || parent is UClassInitializer) {
+                return true
+            }
+            return isExpressionValueUnused(parent)
+        } else {
+            // Some other non block node type, such as assignment,
+            // method declaration etc: not unused
+            // TODO: Make sure that a void/unit method inline declaration
+            // works correctly
+            return false
         }
-
-        return false
     }
 
     companion object {

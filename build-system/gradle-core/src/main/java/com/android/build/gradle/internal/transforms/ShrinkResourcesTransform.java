@@ -207,7 +207,7 @@ public class ShrinkResourcesTransform extends Transform {
                                         ? Joiner.on(":").join(aaptOptions.getAdditionalParameters())
                                         : "",
                                 aaptOptions.getCruncherProcesses()));
-        params.put("variantType", variantType.name());
+        params.put("variantType", variantType.getName());
         params.put("isDebuggableBuildType", isDebuggableBuildType);
         params.put("splitHandlingPolicy", multiOutputPolicy);
 

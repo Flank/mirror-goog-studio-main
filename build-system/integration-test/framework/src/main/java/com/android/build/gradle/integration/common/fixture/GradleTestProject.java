@@ -605,40 +605,42 @@ public final class GradleTestProject implements TestRule {
         }
 
         if (withDependencyChecker) {
-            result =
-                    result
-                            + "// Check to ensure dependencies are not resolved during configuration.\n"
-                            + "//\n"
-                            + "// If it is intentional, create GradleTestProject without dependency checker"
-                            + "// {@see GradleTestProjectBuilder#withDependencyChecker} or remove the"
-                            + "// checker with:\n"
-                            + "//     gradle.removeListener(rootProject.ext.dependencyResolutionChecker)\n"
-                            + "//\n"
-                            + "// Tips: If you need to trace down where the Configuration is resolved, it \n"
-                            + "// may be helpful to call setCanBeResolved(false) on the Configuration of \n"
-                            + "// interest to get a stacktrace.\n"
-                            + "Boolean isTaskGraphReady = false\n"
-                            + "gradle.taskGraph.whenReady { isTaskGraphReady = true }\n"
-                            + "\n"
-                            + "ext.dependencyResolutionChecker = new DependencyResolutionListener() {\n"
-                            + "    @Override\n"
-                            + "    void beforeResolve(ResolvableDependencies resolvableDependencies) {\n"
-                            + "        if (!isTaskGraphReady\n"
-                            + "                && !resolvableDependencies.getName().equals('classpath')\n"
-                            // classpath is resolved to find the plugin.
-                            + "                && project.findProperty(\""
-                            + AndroidProject.PROPERTY_BUILD_MODEL_ONLY
-                            + "\")?.toBoolean() != true) {\n"
-                            + "            throw new RuntimeException(\n"
-                            + "                    \"Dependency '$resolvableDependencies.name' was resolved during configuration\")\n"
-                            + "        }\n"
-                            + "    }\n"
-                            + "\n"
-                            + "    @Override\n"
-                            + "    void afterResolve(ResolvableDependencies resolvableDependencies) {}\n"
-                            + "}\n"
-                            + "\n"
-                            + "gradle.addListener(dependencyResolutionChecker)\n";
+            String dependencyChecker =
+                    "// Check to ensure dependencies are not resolved during configuration.\n"
+                    + "//\n"
+                    + "// If it is intentional, create GradleTestProject without dependency checker\n"
+                    + "// {@see GradleTestProjectBuilder#withDependencyChecker} or remove the\n"
+                    + "// checker with:\n"
+                    + "//     gradle.removeListener(rootProject.ext.dependencyResolutionChecker)\n"
+                    + "//\n"
+                    + "// Tips: If you need to trace down where the Configuration is resolved, it \n"
+                    + "// may be helpful to call setCanBeResolved(false) on the Configuration of \n"
+                    + "// interest to get a stacktrace.\n"
+                    + "if (!rootProject.hasProperty(\"doneWithConfiguration\")) {\n"
+                    + "    rootProject.ext.doneWithConfiguration = false\n"
+                    + "    gradle.projectsEvaluated {\n"
+                    + "        rootProject.ext.doneWithConfiguration = true\n"
+                    + "    }\n"
+                    + "    ext.dependencyResolutionChecker = new DependencyResolutionListener() {\n"
+                    + "        @Override\n"
+                    + "        void beforeResolve(ResolvableDependencies resolvableDependencies) {\n"
+                    + "            if (!doneWithConfiguration\n"
+                                           // classpath is resolved to find the plugin.
+                    + "                    && !resolvableDependencies.getName().equals('classpath')\n"
+                    + "                    && project.findProperty(\""
+                    + AndroidProject.PROPERTY_BUILD_MODEL_ONLY
+                    + "\")?.toBoolean() != true) {\n"
+                    + "                throw new RuntimeException(\n"
+                    + "                        \"Dependency '$resolvableDependencies.name' was resolved during configuration\")\n"
+                    + "            }\n"
+                    + "        }\n"
+                    + "\n"
+                    + "        @Override\n"
+                    + "        void afterResolve(ResolvableDependencies resolvableDependencies) {}\n"
+                    + "    }\n"
+                    + "    gradle.addListener(dependencyResolutionChecker)\n"
+                    + "}\n";
+            result = result + dependencyChecker;
         }
         return result;
     }

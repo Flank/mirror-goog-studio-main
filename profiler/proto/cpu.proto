@@ -70,6 +70,9 @@ service CpuService {
   rpc CheckAppProfilingState(ProfilingStateRequest)
       returns (ProfilingStateResponse) {
   }
+
+  rpc StartStartupProfiling(StartupProfilingRequest) returns (StartupProfilingResponse) {
+  }
 }
 
 enum CpuProfilerType {
@@ -161,6 +164,16 @@ message CpuStartResponse {
   Status status = 1;
 }
 
+message StartupProfilingRequest {
+  string app_package = 1;
+  int64 device_id = 2;
+  CpuProfilerConfiguration configuration = 3;
+}
+
+message StartupProfilingResponse {
+  string file_path = 1;
+}
+
 message CpuStopRequest {
   Session session = 1;
 }
@@ -177,21 +190,11 @@ message CpuStopResponse {
 // Request profiling of app (identified by its |session|) to start.
 // INSTRUMENTED is support only when ART is the profiler.
 message CpuProfilingAppStartRequest {
-  enum Mode {
-    UNSTATED = 0;
-    SAMPLED = 1;
-    INSTRUMENTED = 2;
-  }
   Session session = 1;
-  Mode mode = 2;
-  CpuProfilerType profiler_type = 3;
-  // When using ART, the size of the in-memory buffer that holds tracing data.
-  int32 buffer_size_in_mb = 4;
-  // When using sampling, the sampling interval in microseconds.
-  int32 sampling_interval_us = 5;
+  CpuProfilerConfiguration configuration = 2;
   // ABI CPU architecture of the app to be profiled. It should be one the
   // values defined by SdkConstants.CPU_ARCH_*, e.g. 'arm', 'arm64', 'x86'.
-  string abi_cpu_arch = 6;
+  string abi_cpu_arch = 3;
 }
 
 // Returns the status and absolute path location (on device) where the trace
@@ -204,6 +207,20 @@ message CpuProfilingAppStartResponse {
   }
   Status status = 1;
   string error_message = 2;
+}
+
+message CpuProfilerConfiguration {
+  enum Mode {
+    UNSTATED = 0;
+    SAMPLED = 1;
+    INSTRUMENTED = 2;
+  }
+  Mode mode = 1;
+  CpuProfilerType profiler_type = 2;
+  // When using ART, the size of the in-memory buffer that holds tracing data.
+  int32 buffer_size_in_mb = 3;
+  // When using sampling, the sampling interval in microseconds.
+  int32 sampling_interval_us = 4;
 }
 
 // Request profiling of app (identified by its |session|) to stop.
@@ -228,8 +245,6 @@ message CpuProfilingAppStopResponse {
 
 message ProfilingStateRequest {
   Session session = 1;
-  // The given moment that this request is querying about.
-  int64 timestamp = 2;
 }
 
 message ProfilingStateResponse {
@@ -237,11 +252,13 @@ message ProfilingStateResponse {
   // StartProfilingApp call that's successful, and a subsequent StopProfilingApp
   // call hasn't happened.
   bool being_profiled = 1;
-  CpuProfilingAppStartRequest start_request = 2;
+  CpuProfilerConfiguration configuration = 2;
   // The timestamp when the profiling started if the app is being profiled.
   int64 start_timestamp = 3;
   // The timestamp when the profiling state was checked.
   int64 check_timestamp = 4;
+  // Whether the app in the request is being profiled by a startup profiling.
+  bool is_startup_profiling = 5;
 }
 
 // CPU usage data of an app process and the entire system at a given point.
@@ -269,6 +286,15 @@ message CpuUsageData {
   int64 system_cpu_time_in_millisec = 3;
   // Amount of time since the system start, measured in milliseconds.
   int64 elapsed_time_in_millisec = 4;
+  // System usage per core.
+  repeated CpuCoreUsageData cores = 5;
+}
+
+message CpuCoreUsageData {
+  int32 core = 1;
+  int64 system_cpu_time_in_millisec = 2;
+  int64 elapsed_time_in_millisec = 3;
+  int32 frequency_in_khz = 4;
 }
 
 // Requests the state of all the threads in the given time range.

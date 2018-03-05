@@ -1,9 +1,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
@@ -11,6 +9,7 @@ import com.android.build.gradle.integration.common.fixture.SourceSetContainerUti
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.core.VariantType;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProductFlavorContainer;
@@ -57,7 +56,7 @@ public class BasicMultiFlavorTest {
             new SourceProviderHelper(
                             model.getName(),
                             projectDir,
-                            StringHelper.appendCapitalized(ANDROID_TEST.getPrefix(), name),
+                            StringHelper.appendCapitalized(VariantType.ANDROID_TEST_PREFIX, name),
                             container.getSourceProvider())
                     .test();
         }

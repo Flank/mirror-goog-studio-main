@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.featuresplit.getVariant
 import com.android.builder.core.VariantType
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
@@ -65,18 +66,30 @@ class NamespacedResourcesTaskManager(
         createLinkResourcesTask()
         createNamespacedLibraryRFiles()
 
-        if (variantScope.variantData.type == VariantType.LIBRARY || variantScope.testedVariantData?.type == VariantType.LIBRARY) {
-            createNamespacedLibraryProcessResourcesTask(
+        if (variantScope.type.isTestComponent) {
+            if (variantScope.testedVariantData!!.type.isAar) {
+                createNamespacedLibraryTestProcessResourcesTask(
                     resPackageOutputFolder = resPackageOutputFolder,
-                    packageOutputType = packageOutputType)
-        } else {
-            createNamespacedAppProcessTask(
+                    packageOutputType = packageOutputType
+                )
+            } else {
+                createNamespacedAppProcessTask(
                     resPackageOutputFolder = resPackageOutputFolder,
                     packageOutputType = packageOutputType,
                     baseName = baseName,
-                    useAaptToGenerateLegacyMultidexMainDexProguardRules = useAaptToGenerateLegacyMultidexMainDexProguardRules)
+                    useAaptToGenerateLegacyMultidexMainDexProguardRules = false
+                )
+            }
+            createCompileRuntimeRClassTask()
+        } else if (variantScope.type.isApk) {
+            createNamespacedAppProcessTask(
+                resPackageOutputFolder = resPackageOutputFolder,
+                packageOutputType = packageOutputType,
+                baseName = baseName,
+                useAaptToGenerateLegacyMultidexMainDexProguardRules = useAaptToGenerateLegacyMultidexMainDexProguardRules
+            )
+            createCompileRuntimeRClassTask()
         }
-        createCompileRuntimeRClassTask()
     }
 
     private fun createNamespacedLibraryRFiles() {
@@ -133,7 +146,6 @@ class NamespacedResourcesTaskManager(
                         variantScope,
                         runtimeRClassSources,
                         resPackageOutputFolder,
-                        variantScope.variantData.type == VariantType.LIBRARY,
                         useAaptToGenerateLegacyMultidexMainDexProguardRules,
                         baseName))
         variantScope.addTaskOutput(
@@ -152,7 +164,7 @@ class NamespacedResourcesTaskManager(
         }
     }
 
-    private fun createNamespacedLibraryProcessResourcesTask(
+    private fun createNamespacedLibraryTestProcessResourcesTask(
             resPackageOutputFolder: File,
             packageOutputType: InternalArtifactType?) {
         val runtimeRClassSources = File(globalScope.generatedDir,
@@ -161,8 +173,8 @@ class NamespacedResourcesTaskManager(
                 ProcessAndroidAppResourcesTask.ConfigAction(
                         variantScope,
                         runtimeRClassSources,
-                        File(resPackageOutputFolder, "res.apk"),
-                        variantScope.variantData.type == VariantType.LIBRARY))
+                    File(resPackageOutputFolder, "res.apk"))
+        )
         variantScope.addTaskOutput(
                 InternalArtifactType.PROCESSED_RES,
                 resPackageOutputFolder,

@@ -119,40 +119,40 @@ android {
     sourceSets {
         free.res.replace("replace", GenerateFile.class) { task, input, output ->
                 task.filename = "raw/d.txt"
-                task.outputDir = output
+                task.outputDir = output.file
                 task.content = "TransformedFree"
-                task.dependsOn(input)
+                task.dependsOn(input.artifact)
         }
         play.res.appendTo("appendTo", GenerateFile.class) { task, input, output ->
                 task.filename = "raw/f.txt"
-                task.outputDir = output
+                task.outputDir = output.file
                 task.content = "TransformedPlay"
-                task.dependsOn(input)
+                task.dependsOn(input.artifact)
         }
         paid.res.appendTo("appendTo", GenerateFile.class) { task, input, output ->
                 task.filename = "raw/b.txt"
-                task.outputDir = output
+                task.outputDir = output.file
                 task.content = "TransformedPaid"
-                task.dependsOn(input)
+                task.dependsOn(input.artifact)
         }
         // chaining multiple transforms
         debug.res.replace("replace", GenerateFile.class) { task, input, output ->
                 task.filename = "raw/g.txt"
-                task.outputDir = output
+                task.outputDir = output.file
                 task.content = "TransformedDebug"
-                task.dependsOn(input)
+                task.dependsOn(input.artifact)
         }
         debug.res.appendTo("appendTo1", GenerateFile.class) { task, input, output ->
                 task.filename = "raw/a.txt"
-                task.outputDir = output
+                task.outputDir = output.file
                 task.content = "TransformedDebug"
-                task.dependsOn(input)
+                task.dependsOn(input.artifact)
         }
         debug.res.appendTo("appendTo2", GenerateFile.class) { task, input, output ->
                 task.filename = "raw/h.txt"
-                task.outputDir = output
+                task.outputDir = output.file
                 task.content = "TransformedDebug"
-                task.dependsOn(input)
+                task.dependsOn(input.artifact)
         }
     }
 }

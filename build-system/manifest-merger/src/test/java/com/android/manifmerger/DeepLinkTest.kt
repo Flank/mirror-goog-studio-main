@@ -28,36 +28,34 @@ class DeepLinkTest {
 
     @Test
     fun testSchemes() {
-        var deepLink: DeepLink
+        assertThat(DeepLink.fromUri("https://www.example.com", UNKNOWN, false).schemes)
+                .containsExactly("https")
 
-        deepLink = DeepLink(UNKNOWN, "https://www.example.com", false)
-        assertThat(deepLink.schemes).containsExactly("https")
+        assertThat(DeepLink.fromUri("www.example.com", UNKNOWN, false).schemes)
+                .containsExactly("http", "https")
 
-        deepLink = DeepLink(UNKNOWN, "www.example.com", false)
-        assertThat(deepLink.schemes).containsExactly("http", "https")
+        assertThat(DeepLink.fromUri("file:///foo", UNKNOWN, false).schemes)
+                .containsExactly("file")
 
-        deepLink = DeepLink(UNKNOWN, "file:///foo", false)
-        assertThat(deepLink.schemes).containsExactly("file")
+        assertThat(DeepLink.fromUri("file:/foo", UNKNOWN, false).schemes)
+                .containsExactly("file")
 
-        deepLink = DeepLink(UNKNOWN, "file:/foo", false)
-        assertThat(deepLink.schemes).containsExactly("file")
-
-        deepLink = DeepLink(UNKNOWN, "file:/c:/foo", false)
-        assertThat(deepLink.schemes).containsExactly("file")
+        assertThat(DeepLink.fromUri("file:/c:/foo", UNKNOWN, false).schemes)
+                .containsExactly("file")
     }
 
     @Test
     fun testSchemesExceptions() {
 
         try {
-            DeepLink(UNKNOWN, "http.*://www.example.com", false)
+            DeepLink.fromUri("http.*://www.example.com", UNKNOWN, false)
             fail("Expecting DeepLinkException")
         } catch (e: DeepLinkException) {
             // should throw DeepLinkException because wildcards not allowed in scheme
         }
 
         try {
-            DeepLink(UNKNOWN, "%http://www.example.com", false)
+            DeepLink.fromUri("%http://www.example.com", UNKNOWN, false)
             fail("Expecting DeepLinkException")
         } catch (e: DeepLinkException) {
             // should throw DeepLinkException because of invalid URI syntax
@@ -67,45 +65,40 @@ class DeepLinkTest {
 
     @Test
     fun testHost() {
-        var deepLink: DeepLink
+        assertThat(DeepLink.fromUri("https://foo:bar@www.example.com/baz", UNKNOWN, false).host)
+                .isEqualTo("www.example.com")
 
-        deepLink = DeepLink(UNKNOWN, "https://foo:bar@www.example.com/baz", false)
-        assertThat(deepLink.host).isEqualTo("www.example.com")
+        assertThat(DeepLink.fromUri("www.example.com", UNKNOWN, false).host)
+                .isEqualTo("www.example.com")
 
-        deepLink = DeepLink(UNKNOWN, "www.example.com", false)
-        assertThat(deepLink.host).isEqualTo("www.example.com")
+        assertThat(DeepLink.fromUri("www.example.com/c:/foo", UNKNOWN, false).host)
+                .isEqualTo("www.example.com")
 
-        deepLink = DeepLink(UNKNOWN, "www.example.com/c:/foo", false)
-        assertThat(deepLink.host).isEqualTo("www.example.com")
+        assertThat(DeepLink.fromUri("\${applicationId}", UNKNOWN, false).host)
+                .isEqualTo("\${applicationId}")
 
-        deepLink = DeepLink(UNKNOWN, "\${applicationId}", false)
-        assertThat(deepLink.host).isEqualTo("\${applicationId}")
+        assertThat(DeepLink.fromUri(".*.example.com", UNKNOWN, false).host)
+                .isEqualTo("*.example.com")
 
-        deepLink = DeepLink(UNKNOWN, ".*.example.com", false)
-        assertThat(deepLink.host).isEqualTo("*.example.com")
+        assertThat(DeepLink.fromUri("*.example.com", UNKNOWN, false).host).isNull()
 
-        deepLink = DeepLink(UNKNOWN, "*.example.com", false)
-        assertThat(deepLink.host).isNull()
+        assertThat(DeepLink.fromUri("file:///foo", UNKNOWN, false).host).isNull()
 
-        deepLink = DeepLink(UNKNOWN, "file:///foo", false)
-        assertThat(deepLink.host).isNull()
-
-        deepLink = DeepLink(UNKNOWN, "file:/foo", false)
-        assertThat(deepLink.host).isNull()
+        assertThat(DeepLink.fromUri("file:/foo", UNKNOWN, false).host).isNull()
     }
 
     @Test
     fun testHostExceptions() {
 
         try {
-            DeepLink(UNKNOWN, "http://www.{placeholder}.com", false)
+            DeepLink.fromUri("http://www.{placeholder}.com", UNKNOWN, false)
             fail("Expecting DeepLinkException")
         } catch (e: DeepLinkException) {
             // should throw DeepLinkException because host wildcards must be at beginning of host
         }
 
         try {
-            DeepLink(UNKNOWN, "http://www.{.com", false)
+            DeepLink.fromUri("http://www.{.com", UNKNOWN, false)
             fail("Expecting DeepLinkException")
         } catch (e: DeepLinkException) {
             // should throw DeepLinkException because of invalid URI syntax
@@ -115,78 +108,70 @@ class DeepLinkTest {
 
     @Test
     fun testPort() {
-        var deepLink: DeepLink
+        assertThat(DeepLink.fromUri("https://foo:bar@www.example.com:200/baz", UNKNOWN, false).port)
+                .isEqualTo(200)
 
-        deepLink = DeepLink(UNKNOWN, "https://foo:bar@www.example.com:200/baz", false)
-        assertThat(deepLink.port).isEqualTo(200)
+        assertThat(DeepLink.fromUri("www.example.com:201", UNKNOWN, false).port)
+                .isEqualTo(201)
 
-        deepLink = DeepLink(UNKNOWN, "www.example.com:201", false)
-        assertThat(deepLink.port).isEqualTo(201)
+        assertThat(DeepLink.fromUri("www.example.com", UNKNOWN, false).port).isEqualTo(-1)
 
-        deepLink = DeepLink(UNKNOWN, "www.example.com", false)
-        assertThat(deepLink.port).isEqualTo(-1)
-
-        deepLink = DeepLink(UNKNOWN, "www.example.com:foo", false)
-        assertThat(deepLink.port).isEqualTo(-1)
+        assertThat(DeepLink.fromUri("www.example.com:foo", UNKNOWN, false).port).isEqualTo(-1)
     }
 
     @Test
     fun testPath() {
-        var deepLink: DeepLink
+        assertThat(
+                DeepLink.fromUri(
+                        "https://foo:bar@www.example.com/baz?query#fragment",
+                        UNKNOWN,
+                        false)
+                        .path)
+                .isEqualTo("/baz")
 
-        deepLink = DeepLink(UNKNOWN, "https://foo:bar@www.example.com/baz?query#fragment", false)
-        assertThat(deepLink.path).isEqualTo("/baz")
+        assertThat(DeepLink.fromUri("www.example.com", UNKNOWN, false).path).isEqualTo("/")
 
-        deepLink = DeepLink(UNKNOWN, "www.example.com", false)
-        assertThat(deepLink.path).isEqualTo("/")
+        assertThat(DeepLink.fromUri("www.example.com/c:/foo", UNKNOWN, false).path)
+                .isEqualTo("/c:/foo")
 
-        deepLink = DeepLink(UNKNOWN, "www.example.com/c:/foo", false)
-        assertThat(deepLink.path).isEqualTo("/c:/foo")
+        assertThat(DeepLink.fromUri("/foo", UNKNOWN, false).path).isEqualTo("/foo")
 
-        deepLink = DeepLink(UNKNOWN, "/foo", false)
-        assertThat(deepLink.path).isEqualTo("/foo")
+        assertThat(DeepLink.fromUri("/c:/foo", UNKNOWN, false).path).isEqualTo("/c:/foo")
 
-        deepLink = DeepLink(UNKNOWN, "/c:/foo", false)
-        assertThat(deepLink.path).isEqualTo("/c:/foo")
+        assertThat(DeepLink.fromUri("file:///foo", UNKNOWN, false).path).isEqualTo("/foo")
 
-        deepLink = DeepLink(UNKNOWN, "file:///foo", false)
-        assertThat(deepLink.path).isEqualTo("/foo")
+        assertThat(DeepLink.fromUri("file:/foo", UNKNOWN, false).path).isEqualTo("/foo")
 
-        deepLink = DeepLink(UNKNOWN, "file:/foo", false)
-        assertThat(deepLink.path).isEqualTo("/foo")
+        assertThat(DeepLink.fromUri("file:/foo.*", UNKNOWN, false).path).isEqualTo("/foo.*")
 
-        deepLink = DeepLink(UNKNOWN, "file:/foo.*", false)
-        assertThat(deepLink.path).isEqualTo("/foo.*")
+        assertThat(DeepLink.fromUri("file:/foo{placeholder}", UNKNOWN, false).path)
+                .isEqualTo("/foo.*")
 
-        deepLink = DeepLink(UNKNOWN, "file:/foo{placeholder}", false)
-        assertThat(deepLink.path).isEqualTo("/foo.*")
+        assertThat(DeepLink.fromUri("file:/foo\${applicationId}", UNKNOWN, false).path)
+                .isEqualTo("/foo\${applicationId}")
 
-        deepLink = DeepLink(UNKNOWN, "file:/foo\${applicationId}", false)
-        assertThat(deepLink.path).isEqualTo("/foo\${applicationId}")
-
-        deepLink = DeepLink(UNKNOWN, "file:/{1}foo{2}", false)
-        assertThat(deepLink.path).isEqualTo("/.*foo.*")
+        assertThat(DeepLink.fromUri("file:/{1}foo{2}", UNKNOWN, false).path).isEqualTo("/.*foo.*")
     }
 
     @Test
     fun testPathExceptions() {
 
         try {
-            DeepLink(UNKNOWN, "http://www.example.com/{{nested}}", false)
+            DeepLink.fromUri("http://www.example.com/{{nested}}", UNKNOWN, false)
             fail("Expecting DeepLinkException")
         } catch (e: DeepLinkException) {
             // should throw DeepLinkException because of invalid URI syntax
         }
 
         try {
-            DeepLink(UNKNOWN, "http://www.example.com/hanging{", false)
+            DeepLink.fromUri("http://www.example.com/hanging{", UNKNOWN, false)
             fail("Expecting DeepLinkException")
         } catch (e: DeepLinkException) {
             // should throw DeepLinkException because of invalid URI syntax
         }
 
         try {
-            DeepLink(UNKNOWN, "http://www.example.com/nested/hanging{{}", false)
+            DeepLink.fromUri("http://www.example.com/nested/hanging{{}", UNKNOWN, false)
             fail("Expecting DeepLinkException")
         } catch (e: DeepLinkException) {
             // should throw DeepLinkException because of invalid URI syntax
@@ -196,21 +181,16 @@ class DeepLinkTest {
 
     @Test
     fun testSourceFilePosition() {
-        val deepLink: DeepLink
-
-        deepLink = DeepLink(UNKNOWN, "http://www.example.com", false)
-        assertThat(deepLink.sourceFilePosition).isEqualTo(UNKNOWN)
+        assertThat(DeepLink.fromUri("http://www.example.com", UNKNOWN, false).sourceFilePosition)
+                .isEqualTo(UNKNOWN)
     }
 
     @Test
     fun testAutoVerify() {
-        var deepLink: DeepLink
+        assertThat(DeepLink.fromUri("http://www.example.com", UNKNOWN, false).isAutoVerify)
+                .isFalse()
 
-        deepLink = DeepLink(UNKNOWN, "http://www.example.com", false)
-        assertThat(deepLink.isAutoVerify).isFalse()
-
-        deepLink = DeepLink(UNKNOWN, "http://www.example.com", true)
-        assertThat(deepLink.isAutoVerify).isTrue()
+        assertThat(DeepLink.fromUri("http://www.example.com", UNKNOWN, true).isAutoVerify).isTrue()
     }
 
     @Test

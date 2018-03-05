@@ -94,7 +94,7 @@ fun getAapt2FromMaven(project: Project): FileCollection {
         SdkConstants.PLATFORM_WINDOWS -> "windows"
         SdkConstants.PLATFORM_DARWIN -> "osx"
         SdkConstants.PLATFORM_LINUX -> "linux"
-        else -> throw IllegalStateException("Unknown platform '${System.getProperty("os.name")}'")
+        else -> error("Unknown platform '${System.getProperty("os.name")}'")
     }
     val version = Version.ANDROID_GRADLE_PLUGIN_VERSION
     project.dependencies.add(

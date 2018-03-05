@@ -22,7 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter;
 import com.android.builder.core.DefaultBuildType;
 import com.android.builder.core.DefaultProductFlavor;
-import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.signing.DefaultSigningConfig;
@@ -182,7 +182,7 @@ public class VariantConfigurationTest {
                         null,
                         mBuildType,
                         new MockSourceProvider("debug"),
-                        VariantType.APK,
+                        VariantTypeImpl.BASE_APK,
                         signingOverride,
                         mIssueReporter,
                         () -> true);
@@ -201,7 +201,7 @@ public class VariantConfigurationTest {
                         null,
                         mBuildType,
                         new MockSourceProvider("debug"),
-                        VariantType.APK,
+                        VariantTypeImpl.BASE_APK,
                         null /*signingConfigOverride*/,
                         mIssueReporter,
                         () -> true) {
@@ -226,7 +226,7 @@ public class VariantConfigurationTest {
                         null,
                         mBuildType,
                         new MockSourceProvider("debug"),
-                        VariantType.APK,
+                        VariantTypeImpl.BASE_APK,
                         null /*signingConfigOverride*/,
                         mIssueReporter,
                         () -> true) {
@@ -251,7 +251,7 @@ public class VariantConfigurationTest {
                         null,
                         mBuildType,
                         new MockSourceProvider(srcDir.getPath() + File.separatorChar + "debug"),
-                        VariantType.APK,
+                        VariantTypeImpl.BASE_APK,
                         null,
                         mIssueReporter,
                         () -> true);

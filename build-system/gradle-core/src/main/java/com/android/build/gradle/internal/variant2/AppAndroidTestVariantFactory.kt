@@ -26,12 +26,13 @@ import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
 import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 
 class AppAndroidTestVariantFactory : VariantFactory2<AppExtensionImpl> {
 
-    override val generatedType: VariantType = VariantType.ANDROID_TEST
+    override val generatedType: VariantType = VariantTypeImpl.ANDROID_TEST
     override val testedBy: List<VariantType> = listOf()
-    override val testTarget: VariantType? = VariantType.APK
+    override val testTarget: VariantType? = VariantTypeImpl.BASE_APK
 
     override fun createVariant(
             extension: AppExtensionImpl,
@@ -45,7 +46,7 @@ class AppAndroidTestVariantFactory : VariantFactory2<AppExtensionImpl> {
             : SealableVariant {
 
         return AndroidTestVariantImpl(
-                VariantType.ANDROID_TEST,
+                VariantTypeImpl.ANDROID_TEST,
                 variantProperties,
                 productFlavorOrVariant,
                 buildTypOrVariant,

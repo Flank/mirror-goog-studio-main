@@ -23,6 +23,8 @@ import android.app.PendingIntent;
 import android.os.Handler;
 import android.os.WorkSource;
 import com.android.tools.profiler.support.util.StudioLog;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A set of helpers for Android {@link AlarmManager} instrumentation, used by the Energy Profiler.
@@ -32,13 +34,19 @@ import com.android.tools.profiler.support.util.StudioLog;
  */
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class AlarmManagerWrapper {
+    private static final Map<OnAlarmListener, String> listenerTagMap =
+            new HashMap<OnAlarmListener, String>();
+    private static final Map<PendingIntent, Integer> operationIdMap =
+            new HashMap<PendingIntent, Integer>();
+    private static final Map<OnAlarmListener, Integer> listenerIdMap =
+            new HashMap<OnAlarmListener, Integer>();
 
     /**
      * Wraps the implementation method of various set alarm methods in {@link AlarmManager}.
      *
      * @param alarmManager the wrapped {@link AlarmManager} instance, i.e. "this".
      * @param type the type parameter passed to the original method.
-     * @param triggerAtMillis the type parameter passed to the original method.
+     * @param triggerAtMillis the triggerAtMillis parameter passed to the original method.
      * @param windowMillis the windowMillis parameter passed to the original method.
      * @param intervalMillis the intervalMillis parameter passed to the original method.
      * @param flags the flags parameter passed to the original method.
@@ -62,7 +70,33 @@ public final class AlarmManagerWrapper {
             Handler targetHandler,
             WorkSource workSource,
             AlarmClockInfo alarmClock) {
-        StudioLog.v("Calling setImpl");
+        if (operation != null) {
+            if (!operationIdMap.containsKey(operation)) {
+                operationIdMap.put(operation, EventIdGenerator.nextId());
+            }
+            sendIntentAlarmScheduled(
+                    operationIdMap.get(operation),
+                    type,
+                    triggerAtMillis,
+                    windowMillis,
+                    intervalMillis,
+                    operation.getCreatorPackage(),
+                    operation.getCreatorUid());
+        } else if (listener != null) {
+            if (!listenerIdMap.containsKey(listener)) {
+                listenerIdMap.put(listener, EventIdGenerator.nextId());
+            }
+            sendListenerAlarmScheduled(
+                    listenerIdMap.get(listener),
+                    type,
+                    triggerAtMillis,
+                    windowMillis,
+                    intervalMillis,
+                    listenerTag);
+            listenerTagMap.put(listener, listenerTag);
+        } else {
+            StudioLog.e("Invalid alarm: neither operation or listener is set.");
+        }
     }
 
     /**
@@ -72,7 +106,10 @@ public final class AlarmManagerWrapper {
      * @param operation the operation parameter passed to the original method.
      */
     public static void wrapCancel(AlarmManager alarmManager, PendingIntent operation) {
-        StudioLog.v("Calling cancel(PendingIntent)");
+        sendIntentAlarmCancelled(
+                operationIdMap.containsKey(operation) ? operationIdMap.get(operation) : 0,
+                operation.getCreatorPackage(),
+                operation.getCreatorUid());
     }
 
     /**
@@ -82,6 +119,31 @@ public final class AlarmManagerWrapper {
      * @param listener the listener parameter passed to the original method.
      */
     public static void wrapCancel(AlarmManager alarmManager, OnAlarmListener listener) {
-        StudioLog.v("Calling cancel(OnAlarmListener)");
+        sendListenerAlarmCancelled(
+                listenerIdMap.containsKey(listener) ? listenerIdMap.get(listener) : 0,
+                listenerTagMap.containsKey(listener) ? listenerTagMap.get(listener) : "");
     }
+
+    // Native functions to send alarm events to perfd.
+    private static native void sendIntentAlarmScheduled(
+            int eventId,
+            int type,
+            long triggerMs,
+            long windowMs,
+            long intervalMs,
+            String creatorPackage,
+            int creatorUid);
+
+    private static native void sendListenerAlarmScheduled(
+            int eventId,
+            int type,
+            long triggerMs,
+            long windowMs,
+            long intervalMs,
+            String listenerTag);
+
+    private static native void sendIntentAlarmCancelled(
+            int eventId, String creatorPackage, int creatorUid);
+
+    private static native void sendListenerAlarmCancelled(int eventId, String listenerTag);
 }

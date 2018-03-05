@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import java.io.File;
@@ -75,9 +76,10 @@ public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<
             if (defaultFiles.containsKey(consumerFile)) {
                 issueReporter.reportError(
                         Type.GENERIC,
-                        String.format(
-                                "Default file %s should not be used as a consumer configuration file.",
-                                defaultFiles.get(consumerFile)));
+                        new EvalIssueException(
+                                String.format(
+                                        "Default file %s should not be used as a consumer configuration file.",
+                                        defaultFiles.get(consumerFile))));
             }
         }
     }

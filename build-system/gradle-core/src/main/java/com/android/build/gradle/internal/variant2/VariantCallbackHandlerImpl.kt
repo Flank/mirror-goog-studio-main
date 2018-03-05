@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.variant2
 import com.android.build.api.dsl.extension.VariantCallbackHandler
 import com.android.build.api.dsl.variant.Variant
 import com.android.build.gradle.internal.api.dsl.DslScope
+import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.EvalIssueReporter.Type
 import org.gradle.api.Action
@@ -127,7 +128,7 @@ data class VariantPredicate(
     internal fun cloneWithName(name: String): VariantPredicate {
         if (this.name != null) {
             dslScope.issueReporter.reportError(
-                    Type.GENERIC,"Already filtered on variant name")
+                    Type.GENERIC, EvalIssueException("Already filtered on variant name"))
         }
 
         return VariantPredicate(
@@ -144,7 +145,7 @@ data class VariantPredicate(
     internal fun cloneWithClass(variantClass: Class<*>): VariantPredicate {
         if (this.theClass != null) {
             dslScope.issueReporter.reportError(
-                    Type.GENERIC,"Already filtered on variant type")
+                    Type.GENERIC,EvalIssueException("Already filtered on variant type"))
         }
 
         return VariantPredicate(
@@ -162,7 +163,7 @@ data class VariantPredicate(
     internal fun cloneWithBuildType(buildTypeName: String): VariantPredicate {
         if (this.buildTypeName != null) {
             dslScope.issueReporter.reportError(
-                    Type.GENERIC,"Already filtered on build type name")
+                    Type.GENERIC,EvalIssueException("Already filtered on build type name"))
         }
 
         return VariantPredicate(

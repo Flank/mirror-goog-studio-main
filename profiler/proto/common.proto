@@ -110,4 +110,8 @@ message SessionMetaData {
   // Session name as provided by the BeginSessionRequest.
   // For Studio-side display only.
   string session_name = 3;
+  // Whether JVMTI is used for the session
+  bool jvmti_enabled = 4;
+  // Whether JVMTI live allocation is enabled for the session.
+  bool live_allocation_enabled = 5;
 }

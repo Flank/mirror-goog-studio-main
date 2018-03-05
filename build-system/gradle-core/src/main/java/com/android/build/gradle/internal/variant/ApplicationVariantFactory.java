@@ -37,6 +37,8 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.core.VariantTypeImpl;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.profile.Recorder;
 import com.android.ide.common.build.ApkData;
@@ -61,15 +63,11 @@ import org.gradle.api.NamedDomainObjectContainer;
  */
 public class ApplicationVariantFactory extends BaseVariantFactory implements VariantFactory {
 
-    private final boolean isBaseApplication;
-
     public ApplicationVariantFactory(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull AndroidConfig extension,
-            boolean isBaseApplication) {
+            @NonNull AndroidConfig extension) {
         super(globalScope, androidBuilder, extension);
-        this.isBaseApplication = isBaseApplication;
     }
 
     @Override
@@ -80,12 +78,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             @NonNull Recorder recorder) {
         ApplicationVariantData variant =
                 new ApplicationVariantData(
-                        globalScope,
-                        extension,
-                        variantConfiguration,
-                        taskManager,
-                        recorder,
-                        isBaseApplication);
+                        globalScope, extension, taskManager, variantConfiguration, recorder);
 
         variant.calculateFilters(extension.getSplits());
 
@@ -167,10 +160,12 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         EvalIssueReporter issueReporter = globalScope.getAndroidBuilder().getIssueReporter();
         issueReporter.reportError(
                 EvalIssueReporter.Type.GENERIC,
-                String.format(
-                        "Conflicting configuration : '%1$s' in ndk abiFilters "
-                                + "cannot be present when splits abi filters are set : %2$s",
-                        Joiner.on(",").join(ndkConfigAbiFilters), Joiner.on(",").join(abiFilters)));
+                new EvalIssueException(
+                        String.format(
+                                "Conflicting configuration : '%1$s' in ndk abiFilters "
+                                        + "cannot be present when splits abi filters are set : %2$s",
+                                Joiner.on(",").join(ndkConfigAbiFilters),
+                                Joiner.on(",").join(abiFilters))));
     }
 
     private void restrictEnabledOutputs(
@@ -241,7 +236,10 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
     @NonNull
     @Override
     public Collection<VariantType> getVariantConfigurationTypes() {
-        return ImmutableList.of(VariantType.APK);
+        if (extension.getBaseFeature()) {
+            return ImmutableList.of(VariantTypeImpl.BASE_APK);
+        }
+        return ImmutableList.of(VariantTypeImpl.OPTIONAL_APK);
     }
 
     @Override

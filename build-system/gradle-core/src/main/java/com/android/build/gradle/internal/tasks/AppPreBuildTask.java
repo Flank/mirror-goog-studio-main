@@ -36,6 +36,7 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
@@ -51,6 +52,7 @@ public class AppPreBuildTask extends AndroidVariantTask {
     private ArtifactCollection compileManifests;
     private ArtifactCollection runtimeManifests;
     private File fakeOutputDirectory;
+    private boolean isBaseModule;
 
     @InputFiles
     @PathSensitive(PathSensitivity.NAME_ONLY)
@@ -67,6 +69,11 @@ public class AppPreBuildTask extends AndroidVariantTask {
     @OutputDirectory
     public File getFakeOutputDirectory() {
         return fakeOutputDirectory;
+    }
+
+    @Input
+    public boolean isBaseModule() {
+        return isBaseModule;
     }
 
     @TaskAction
@@ -92,11 +99,13 @@ public class AppPreBuildTask extends AndroidVariantTask {
                     (key, value) -> {
                         String runtimeVersion = runtimeIds.get(key);
                         if (runtimeVersion == null) {
-                            String display = compileId.getDisplayName();
-                            throw new RuntimeException(
-                                    "Android dependency '"
-                                            + display
-                                            + "' is set to compileOnly/provided which is not supported");
+                            if (isBaseModule) {
+                                String display = compileId.getDisplayName();
+                                throw new RuntimeException(
+                                        "Android dependency '"
+                                                + display
+                                                + "' is set to compileOnly/provided which is not supported");
+                            }
                         } else if (!runtimeVersion.isEmpty()) {
                             // compare versions.
                             if (!runtimeVersion.equals(value)) {
@@ -154,6 +163,7 @@ public class AppPreBuildTask extends AndroidVariantTask {
         public void execute(@NonNull AppPreBuildTask task) {
             task.setVariantName(variantScope.getFullVariantName());
 
+            task.isBaseModule = variantScope.getType().isBaseModule();
             task.compileManifests =
                     variantScope.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST);
             task.runtimeManifests =

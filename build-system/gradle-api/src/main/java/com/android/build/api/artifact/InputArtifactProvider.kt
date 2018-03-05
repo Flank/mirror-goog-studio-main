@@ -24,7 +24,7 @@ interface InputArtifactProvider {
     /**
      * Returns a [BuildableArtifact] for the specified [BuildArtifactType].
      */
-    fun getArtifact(type: BuildArtifactType): BuildableArtifact
+    fun getArtifact(type: ArtifactType): BuildableArtifact
 
     /**
      * Returns a [BuildableArtifact] for the default [BuildArtifactType].

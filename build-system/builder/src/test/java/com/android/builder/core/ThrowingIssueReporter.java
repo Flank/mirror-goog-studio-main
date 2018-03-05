@@ -18,8 +18,10 @@ package com.android.builder.core;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SyncIssue;
+import org.jetbrains.annotations.NotNull;
 
 /** a Fake EvalIssueReporter that throws on all error/warnings. */
 public class ThrowingIssueReporter implements EvalIssueReporter {
@@ -44,18 +46,6 @@ public class ThrowingIssueReporter implements EvalIssueReporter {
 
     @NonNull
     @Override
-    public SyncIssue reportError(@NonNull Type type, @NonNull String msg, @Nullable String data) {
-        throw new RuntimeException("fake");
-    }
-
-    @NonNull
-    @Override
-    public SyncIssue reportError(@NonNull Type type, @NonNull String msg) {
-        throw new RuntimeException("fake");
-    }
-
-    @NonNull
-    @Override
     public SyncIssue reportWarning(@NonNull Type type, @NonNull String msg, @Nullable String data) {
         throw new RuntimeException("fake");
     }
@@ -63,6 +53,19 @@ public class ThrowingIssueReporter implements EvalIssueReporter {
     @NonNull
     @Override
     public SyncIssue reportWarning(@NonNull Type type, @NonNull String msg) {
+        throw new RuntimeException("fake");
+    }
+
+    @NotNull
+    @Override
+    public SyncIssue reportIssue(
+            @NotNull Type type, @NotNull Severity severity, @NotNull EvalIssueException exception) {
+        throw new RuntimeException("fake");
+    }
+
+    @NotNull
+    @Override
+    public SyncIssue reportError(@NotNull Type type, @NotNull EvalIssueException exception) {
         throw new RuntimeException("fake");
     }
 }

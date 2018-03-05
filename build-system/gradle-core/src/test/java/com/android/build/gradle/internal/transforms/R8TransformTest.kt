@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
 import com.android.build.gradle.internal.transforms.testdata.Toy
-import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
@@ -305,7 +305,7 @@ class R8TransformTest {
                 outputProguardMapping = outputProguardMapping,
                 typesToOutput = typesToOutput,
                 proguardConfigurationFiles = proguardRulesFiles,
-                variantType = VariantType.APK
+                variantType = VariantTypeImpl.BASE_APK
         )
     }
 

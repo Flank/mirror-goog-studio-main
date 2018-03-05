@@ -12,7 +12,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../prebuilts/sdk/25/android.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../prebuilts/sdk/current/android.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

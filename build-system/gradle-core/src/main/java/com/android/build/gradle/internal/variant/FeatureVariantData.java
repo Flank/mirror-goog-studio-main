@@ -16,29 +16,15 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
-import com.google.common.collect.Maps;
-import java.util.Map;
-import java.util.regex.Pattern;
 
 /** Data about a variant that produce a feature split. */
-public class FeatureVariantData extends ApkVariantData implements TestedVariantData {
-
-    /** Regular expression defining the character to be replaced in the split name. */
-    private static final Pattern FEATURE_REPLACEMENT = Pattern.compile("-");
-
-    /** Regular expression defining the characters to be excluded from the split name. */
-    private static final Pattern FEATURE_EXCLUSION = Pattern.compile("[^a-zA-Z0-9_]");
-
-    private final Map<VariantType, TestVariantData> testVariants;
-    private final String featureName;
+public class FeatureVariantData extends ApplicationVariantData {
 
     public FeatureVariantData(
             @NonNull GlobalScope globalScope,
@@ -47,14 +33,6 @@ public class FeatureVariantData extends ApkVariantData implements TestedVariantD
             @NonNull GradleVariantConfiguration config,
             @NonNull Recorder recorder) {
         super(globalScope, androidConfig, taskManager, config, recorder);
-        testVariants = Maps.newEnumMap(VariantType.class);
-
-        // Compute the split value name for the manifest.
-        String splitName =
-                FEATURE_REPLACEMENT
-                        .matcher(getScope().getGlobalScope().getProjectBaseName())
-                        .replaceAll("_");
-        featureName = FEATURE_EXCLUSION.matcher(splitName).replaceAll("");
 
         // create default output
         getOutputFactory().addMainApk();
@@ -75,22 +53,5 @@ public class FeatureVariantData extends ApkVariantData implements TestedVariantD
             return StringHelper.capitalizeWithSuffix(
                     config.getBuildType().getName(), " feature split build");
         }
-    }
-
-    @Nullable
-    @Override
-    public TestVariantData getTestVariantData(@NonNull VariantType type) {
-        return testVariants.get(type);
-    }
-
-    @Override
-    public void setTestVariantData(
-            @NonNull TestVariantData testVariantData, @NonNull VariantType type) {
-        testVariants.put(type, testVariantData);
-    }
-
-    @NonNull
-    public String getFeatureName() {
-        return featureName;
     }
 }

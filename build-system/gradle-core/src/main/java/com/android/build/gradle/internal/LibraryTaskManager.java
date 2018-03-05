@@ -56,6 +56,7 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
@@ -69,7 +70,6 @@ import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -254,22 +254,7 @@ public class LibraryTaskManager extends TaskManager {
         createMergeJniLibFoldersTasks(variantScope);
         createStripNativeLibraryTask(taskFactory, variantScope);
 
-        recorder.record(
-                ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK,
-                projectPath,
-                variantName,
-                () -> {
-                    File rsFolder =
-                            variantScope.getIntermediateDir(
-                                    InternalArtifactType.RENDERSCRIPT_HEADERS);
-                    Sync task =
-                            taskFactory.create(
-                                    new PackageRenderscriptConfigAction(variantScope, rsFolder));
-
-                    // publish the renderscript intermediate files
-                    variantScope.addTaskOutput(
-                            InternalArtifactType.RENDERSCRIPT_HEADERS, rsFolder, task.getName());
-                });
+        taskFactory.create(new PackageRenderscriptConfigAction(variantScope));
 
         // merge consumer proguard files from different build types and flavors
         MergeFileTask mergeProguardFilesTask =
@@ -325,9 +310,10 @@ public class LibraryTaskManager extends TaskManager {
                                         .getIssueReporter()
                                         .reportError(
                                                 Type.GENERIC,
-                                                String.format(
-                                                        "Transforms with scopes '%s' cannot be applied to library projects.",
-                                                        scopes));
+                                                new EvalIssueException(
+                                                        String.format(
+                                                                "Transforms with scopes '%s' cannot be applied to library projects.",
+                                                                scopes)));
                             }
 
                             List<Object> deps = customTransformsDependencies.get(i);

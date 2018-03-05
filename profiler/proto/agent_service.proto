@@ -69,4 +69,6 @@ message AgentConfig {
   bool profiler_io_enabled = 7;
   // equivalent to StudioFlags.PROFILER_ENERGY_PROFILER_ENABLED.
   bool energy_profiler_enabled = 8;
+  // equivalent to StudioFlags.PROFILER_CPU_API_TRACING.
+  bool cpu_api_tracing_enabled = 9;
 }

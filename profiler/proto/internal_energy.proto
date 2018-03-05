@@ -25,7 +25,10 @@ service InternalEnergyService {
 }
 
 message AddEnergyEventRequest {
+  // Energy event includes information like id and event metadata.
   EnergyEvent energy_event = 1;
+  // Optional callstack for the event.
+  string callstack = 2;
 }
 
 message EmptyEnergyReply {}

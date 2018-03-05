@@ -18,6 +18,7 @@ package com.android.ide.common.resources;
 import static com.android.ide.common.rendering.api.ResourceNamespace.ANDROID;
 import static com.android.ide.common.rendering.api.ResourceNamespace.RES_AUTO;
 import static com.android.ide.common.rendering.api.ResourceNamespace.Resolver.EMPTY_RESOLVER;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -35,10 +36,12 @@ import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import junit.framework.TestCase;
 
 public class ResourceResolverNoNamespacesTest extends TestCase {
@@ -280,6 +283,19 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertNotNull(parent);
         assertEquals("Theme.Light", parent.getName());
 
+        // getChildren
+        StyleResourceValue randomStyle =
+                (StyleResourceValue) resolver.findResValue("@style/RandomStyle", false);
+        assertNotNull(randomStyle);
+        Collection<StyleResourceValue> children = resolver.getChildren(randomStyle);
+        List<String> childNames =
+                children.stream().map(StyleResourceValue::getName).collect(Collectors.toList());
+        assertThat(childNames).containsExactly("Theme", "RandomStyle2");
+
+        StyleResourceValue randomStyle2 =
+                (StyleResourceValue) resolver.findResValue("@style/RandomStyle2", false);
+        assertNotNull(randomStyle2);
+        assertThat(resolver.getChildren(randomStyle2)).isEmpty();
         // themeIsParentOf
         assertTrue(resolver.themeIsParentOf(themeLight, myTheme));
         assertFalse(resolver.themeIsParentOf(myTheme, themeLight));
@@ -300,8 +316,6 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertFalse(resolver.isTheme(resolver.findResValue("@style/Theme.FakeTheme", false), null));
         assertFalse(resolver.isTheme(resolver.findResValue("@style/Theme", false), null));
         //    check XML escaping in value resources
-        StyleResourceValue randomStyle = (StyleResourceValue) resolver.findResValue(
-                "@style/RandomStyle", false);
         assertEquals("\u00a9 Copyright", randomStyle.getItem(ANDROID, "text").getValue());
         assertTrue(resolver.isTheme(resolver.findResValue("@style/MyTheme.Dotted2", false), null));
         assertFalse(resolver.isTheme(resolver.findResValue("@style/MyTheme.Dotted1", false),

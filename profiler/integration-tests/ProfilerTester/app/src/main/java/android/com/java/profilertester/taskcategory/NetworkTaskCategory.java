@@ -175,8 +175,6 @@ public class NetworkTaskCategory extends TaskCategory {
     }
 
     private abstract class WifiLockTask extends WifiTask {
-        private final long LOCK_TIME = TimeUnit.SECONDS.toMillis(10);
-
         @Nullable
         @Override
         protected String wifiExecute(@NonNull WifiManager manager) {
@@ -185,7 +183,7 @@ public class NetworkTaskCategory extends TaskCategory {
 
             boolean lockReleased = false;
             try {
-                Thread.sleep(LOCK_TIME);
+                Thread.sleep(DEFAULT_TASK_TIME_MS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return "Interrupted while idling on locked mode!";

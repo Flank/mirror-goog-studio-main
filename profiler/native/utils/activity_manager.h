@@ -39,17 +39,21 @@ class ActivityManager {
   // and populate error_string.
   // |trace_path| is populated with absolute path where trace is being recorded.
   // Calling start twice in a row (without a stop) will result in an error.
+  // |is_startup_profiling| means that profiler started with application launch
+  // command, i.e "am start ... --start-profiler".
   bool StartProfiling(const ProfilingMode profiling_mode,
                       const std::string &app_package_name,
                       int sampling_interval, std::string *trace_path,
-                      std::string *error_string);
+                      std::string *error_string,
+                      bool is_startup_profiling = false);
 
   // Stops ongoing profiling. If no profiling was ongoing, this function is a
   // no-op. If |need_result|, waits ART for finishing writing the trace file.
   // Returns true is profiling stopped successfully. Otherwise false
   // and populate error_string.
   bool StopProfiling(const std::string &app_package_name, bool need_result,
-                     std::string *error_string);
+                     std::string *error_string,
+                     bool is_startup_profiling = false);
 
   bool TriggerHeapDump(int pid, const std::string &file_path,
                        std::string *error_string) const;

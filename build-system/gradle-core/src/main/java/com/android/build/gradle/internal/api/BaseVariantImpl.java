@@ -38,6 +38,7 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
@@ -173,7 +174,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         .getIssueReporter()
                         .reportError(
                                 EvalIssueReporter.Type.GENERIC,
-                                "Unknown SourceKind value: " + folderType);
+                                new EvalIssueException("Unknown SourceKind value: " + folderType));
         }
 
         return ImmutableList.of();

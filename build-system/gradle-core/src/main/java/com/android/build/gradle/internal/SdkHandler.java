@@ -28,6 +28,7 @@ import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.options.SyncOptions.EvaluationMode;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.LibraryRequest;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.OptionalCompilationStep;
@@ -185,22 +186,24 @@ public class SdkHandler {
                     .getIssueReporter()
                     .reportError(
                             EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
-                            e.getMessage(),
-                            e.getAffectedPackages()
-                                    .stream()
-                                    .map(RepoPackage::getPath)
-                                    .collect(Collectors.joining(" ")));
+                            new EvalIssueException(
+                                    e.getMessage(),
+                                    e.getAffectedPackages()
+                                            .stream()
+                                            .map(RepoPackage::getPath)
+                                            .collect(Collectors.joining(" "))));
             return false;
         } catch (InstallFailedException e) {
             androidBuilder
                     .getIssueReporter()
                     .reportError(
                             EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
-                            e.getMessage(),
-                            e.getAffectedPackages()
-                                    .stream()
-                                    .map(RepoPackage::getPath)
-                                    .collect(Collectors.joining(" ")));
+                            new EvalIssueException(
+                                    e.getMessage(),
+                                    e.getAffectedPackages()
+                                            .stream()
+                                            .map(RepoPackage::getPath)
+                                            .collect(Collectors.joining(" "))));
             return false;
         }
 

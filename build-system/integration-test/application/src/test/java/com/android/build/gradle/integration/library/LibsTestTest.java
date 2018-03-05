@@ -48,10 +48,16 @@ public class LibsTestTest {
         XPath xPath = AndroidXPathFactory.newXPath();
 
         final String testApkPackage = "com.android.tests.libstest.lib1.test";
-        assertThat(xPath.evaluate("/manifest/@package", manifest)).isEqualTo(testApkPackage);
+        assertThat(xPath.evaluate("/manifest/@package", manifest))
+                .named("package")
+                .isEqualTo(testApkPackage);
+
         assertThat(xPath.evaluate("/manifest/instrumentation/@android:name", manifest))
+                .named("instrumentation-name")
                 .isEqualTo("android.test.InstrumentationTestRunner");
+
         assertThat(xPath.evaluate("/manifest/instrumentation/@android:targetPackage", manifest))
+                .named("targetPackage")
                 .isEqualTo(testApkPackage);
     }
 }

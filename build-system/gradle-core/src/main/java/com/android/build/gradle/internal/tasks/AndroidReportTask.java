@@ -21,13 +21,13 @@ import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.BuilderConstants.FD_ANDROID_RESULTS;
 import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS;
 import static com.android.builder.core.BuilderConstants.FD_FLAVORS_ALL;
-import static com.android.builder.core.VariantType.ANDROID_TEST;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
+import com.android.builder.core.VariantType;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -182,7 +182,8 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
         @NonNull
         @Override
         public String getName() {
-            return (taskKind == TaskKind.CONNECTED ? CONNECTED : DEVICE) + ANDROID_TEST.getSuffix();
+            return (taskKind == TaskKind.CONNECTED ? CONNECTED : DEVICE)
+                    + VariantType.ANDROID_TEST_SUFFIX;
         }
 
         @NonNull

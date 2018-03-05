@@ -205,6 +205,12 @@ public final class ResourceValuesXmlParser {
             @Nullable SymbolTable platformAttrSymbols) {
 
         String type = child.getTagName();
+
+        if (type.equals(SdkConstants.TAG_EAT_COMMENT)) {
+            // Doesn't declare a resource.
+            return;
+        }
+
         if (type.equals(SdkConstants.TAG_ITEM)) {
             type = child.getAttribute(SdkConstants.ATTR_TYPE);
         }

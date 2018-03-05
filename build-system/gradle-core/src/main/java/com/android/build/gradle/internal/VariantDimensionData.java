@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.builder.core.VariantType;
+import com.google.common.base.Preconditions;
 
 /** Common parts of build type and product flavor data objects. */
 public abstract class VariantDimensionData {
@@ -44,16 +45,11 @@ public abstract class VariantDimensionData {
 
     @Nullable
     public final DefaultAndroidSourceSet getTestSourceSet(@NonNull VariantType type) {
-        switch (type) {
-            case ANDROID_TEST:
-                return androidTestSourceSet;
-            case UNIT_TEST:
-                return unitTestSourceSet;
-            default:
-                throw new IllegalArgumentException(
-                        String.format("Unknown test variant type %s", type));
+        Preconditions.checkState(type.isTestComponent(), "Unknown test variant type " + type);
+        if (type.isApk()) {
+            return androidTestSourceSet;
+        } else {
+            return unitTestSourceSet;
         }
     }
-
-
 }

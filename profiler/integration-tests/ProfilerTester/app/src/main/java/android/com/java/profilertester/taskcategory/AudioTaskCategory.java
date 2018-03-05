@@ -12,7 +12,6 @@ import android.support.v4.app.ActivityCompat;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public final class AudioTaskCategory extends TaskCategory {
     private final List<? extends Task> mTasks =
@@ -62,7 +61,7 @@ public final class AudioTaskCategory extends TaskCategory {
                             mHostActivity.getApplicationContext(), R.raw.sample_ringtone);
             mediaPlayer.start();
             try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+                Thread.sleep(DEFAULT_TASK_TIME_MS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 Thread.currentThread().interrupt();
@@ -101,7 +100,7 @@ public final class AudioTaskCategory extends TaskCategory {
             }
             recorder.start();
             try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+                Thread.sleep(DEFAULT_TASK_TIME_MS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 Thread.currentThread().interrupt();

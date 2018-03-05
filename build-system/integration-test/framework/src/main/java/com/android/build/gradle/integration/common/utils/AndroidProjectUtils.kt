@@ -89,7 +89,7 @@ fun AndroidProject.testDefaultSourceSets(projectDir: File) {
     SourceProviderHelper(
             name,
             projectDir,
-            VariantType.ANDROID_TEST.prefix,
+            VariantType.ANDROID_TEST_PREFIX,
             androidTestSourceProviders.sourceProvider)
             .test()
 

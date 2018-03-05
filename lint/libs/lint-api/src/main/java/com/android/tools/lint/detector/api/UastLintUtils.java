@@ -107,6 +107,16 @@ public class UastLintUtils {
                 }
             } catch (Throwable ignore) {
             }
+        } else if (name.equals("org.jetbrains.kotlin.asJava.elements.FakeFileForLightClass")) {
+            try {
+                Field declaredField = cls.getDeclaredField("ktFile");
+                declaredField.setAccessible(true);
+                Object o = declaredField.get(containingFile);
+                if (o instanceof PsiFile) {
+                    return (PsiFile) o;
+                }
+            } catch (Throwable ignore) {
+            }
         }
 
         return containingFile;

@@ -70,7 +70,7 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
 
     private AnnotationProcessorOptions annotationProcessorOptions;
 
-    private boolean isForTesting;
+    private boolean isTestComponent;
 
     private boolean dataBindingEnabled;
 
@@ -81,14 +81,14 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
             @NonNull ArtifactCollection annotationProcessorConfiguration,
             @NonNull ArtifactCollection compileClasspaths,
             @NonNull AnnotationProcessorOptions annotationProcessorOptions,
-            boolean isForTesting,
+            boolean isTestComponent,
             boolean dataBindingEnabled) {
         this.processorListFile = processorListFile;
         this.annotationProcessorConfigurationName = annotationProcessorConfigurationName;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.compileClasspaths = compileClasspaths;
         this.annotationProcessorOptions = annotationProcessorOptions;
-        this.isForTesting = isForTesting;
+        this.isTestComponent = isTestComponent;
         this.dataBindingEnabled = dataBindingEnabled;
     }
 
@@ -136,7 +136,7 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
                                 + "See "
                                 + "https://developer.android.com/r/tools/annotation-processor-error-message.html "
                                 + "for more details.";
-                if (isForTesting) {
+                if (isTestComponent) {
                     getLogger().warn(message);
                 } else {
                     throw new RuntimeException(message);
@@ -243,7 +243,7 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
         public void execute(@NonNull JavaPreCompileTask task) {
             task.init(
                     processorListFile,
-                    scope.getVariantData().getType().isForTesting()
+                    scope.getVariantData().getType().isTestComponent()
                             ? scope.getVariantData().getType().getPrefix() + "AnnotationProcessor"
                             : "annotationProcessor",
                     scope.getArtifactCollection(ANNOTATION_PROCESSOR, ALL, JAR),
@@ -251,7 +251,7 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
                     scope.getVariantConfiguration()
                             .getJavaCompileOptions()
                             .getAnnotationProcessorOptions(),
-                    scope.getVariantData().getType().isForTesting(),
+                    scope.getVariantData().getType().isTestComponent(),
                     false);
             task.setVariantName(scope.getFullVariantName());
         }

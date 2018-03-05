@@ -48,6 +48,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -175,16 +176,18 @@ public abstract class ExternalNativeJsonGenerator {
             androidBuilder
                     .getIssueReporter()
                     .reportError(
-                            Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION, e.getMessage(), variantName);
+                            Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                            new EvalIssueException(e, variantName));
         } catch (ProcessException e) {
             androidBuilder
                     .getIssueReporter()
                     .reportError(
                             Type.EXTERNAL_NATIVE_BUILD_PROCESS_EXCEPTION,
-                            String.format(
-                                    "executing external native build for %s %s",
-                                    getNativeBuildSystem().getName(), makefile),
-                            e.getMessage());
+                            new EvalIssueException(
+                                    String.format(
+                                            "executing external native build for %s %s",
+                                            getNativeBuildSystem().getName(), makefile),
+                                    e.getMessage()));
         }
     }
 
@@ -711,16 +714,17 @@ public abstract class ExternalNativeJsonGenerator {
                     .getIssueReporter()
                     .reportError(
                             Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                            String.format(
-                                    Locale.getDefault(),
-                                    "The build staging directory you specified ('%s')"
-                                            + " is a subdirectory of your project's temporary build directory ('%s')."
-                                            + "Files in this directory do not persist through clean builds.\n"
-                                            + "Either use the default build staging directory ('%s'),"
-                                            + "or specify a path outside the temporary build directory.",
-                                    invalidPath.getAbsolutePath(),
-                                    buildDir.getAbsolutePath(),
-                                    externalNativeBuildPath.getAbsolutePath()));
+                            new EvalIssueException(
+                                    String.format(
+                                            Locale.getDefault(),
+                                            "The build staging directory you specified ('%s')"
+                                                    + " is a subdirectory of your project's temporary build directory ('%s')."
+                                                    + "Files in this directory do not persist through clean builds.\n"
+                                                    + "Either use the default build staging directory ('%s'),"
+                                                    + "or specify a path outside the temporary build directory.",
+                                            invalidPath.getAbsolutePath(),
+                                            buildDir.getAbsolutePath(),
+                                            externalNativeBuildPath.getAbsolutePath())));
         }
 
         return externalNativeBuildPath;

@@ -46,6 +46,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.LibraryRequest;
+import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.sdk.TargetInfo;
@@ -179,6 +180,8 @@ public abstract class BaseExtension implements AndroidConfig {
 
     private final ProjectOptions projectOptions;
 
+    private final boolean isBaseModule;
+
     BaseExtension(
             @NonNull final Project project,
             @NonNull final ProjectOptions projectOptions,
@@ -189,7 +192,8 @@ public abstract class BaseExtension implements AndroidConfig {
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull SourceSetManager sourceSetManager,
-            @NonNull ExtraModelInfo extraModelInfo) {
+            @NonNull ExtraModelInfo extraModelInfo,
+            boolean isBaseModule) {
         this.androidBuilder = androidBuilder;
         this.sdkHandler = sdkHandler;
         this.buildTypes = buildTypes;
@@ -201,6 +205,7 @@ public abstract class BaseExtension implements AndroidConfig {
         this.project = project;
         this.projectOptions = projectOptions;
         this.sourceSetManager = sourceSetManager;
+        this.isBaseModule = isBaseModule;
 
         logger = Logging.getLogger(this.getClass());
 
@@ -913,7 +918,8 @@ public abstract class BaseExtension implements AndroidConfig {
             extraModelInfo
                     .getSyncIssueHandler()
                     .reportError(
-                            EvalIssueReporter.Type.GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE);
+                            EvalIssueReporter.Type.GENERIC,
+                            new EvalIssueException(ProguardFiles.UNKNOWN_FILENAME_MESSAGE));
         }
         return ProguardFiles.getDefaultProguardFile(name, project);
     }
@@ -1021,6 +1027,6 @@ public abstract class BaseExtension implements AndroidConfig {
     // For compatibility with FeatureExtension.
     @Override
     public Boolean getBaseFeature() {
-        throw new GradleException("baseFeature is not supported.");
+        return isBaseModule;
     }
 }

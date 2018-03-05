@@ -13,7 +13,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("ALL")
 public final class CameraTaskCategory extends TaskCategory {
@@ -72,7 +71,7 @@ public final class CameraTaskCategory extends TaskCategory {
             camera.setParameters(params);
             camera.startPreview();
             try {
-                Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+                Thread.sleep(DEFAULT_TASK_TIME_MS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 Thread.currentThread().interrupt();

@@ -16,16 +16,15 @@
 
 package com.android.build.gradle.internal.publishing
 
-import com.android.builder.core.VariantType
+import com.android.builder.core.VariantTypeImpl
 import com.google.common.truth.Truth
-import nl.jqno.equalsverifier.EqualsVerifier
 import org.junit.Test
 
 class PublishingSpecsTest {
 
     @Test
     fun allVariantTypeExist() {
-        for (type in VariantType.values()) {
+        for (type in VariantTypeImpl.values()) {
             Truth.assertThat(PublishingSpecs.getVariantMap()).containsKey(type)
         }
     }

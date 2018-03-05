@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import com.android.builder.model.SourceProvider
 import com.android.utils.FileUtils
-import com.google.common.collect.ImmutableList
 import groovy.lang.Closure
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
@@ -68,12 +67,11 @@ open class DefaultAndroidSourceSet @Inject constructor(
     private val displayName : String = GUtil.toWords(this.name)
     private val buildArtifactsHolder: BuildArtifactsHolder =
             BuildArtifactsHolder(
-                    project,
-                    name,
-                    FileUtils.join(project.buildDir, FD_INTERMEDIATES, "sources", name),
-                    name,
-                    ImmutableList.of(SourceArtifactType.ANDROID_RESOURCES),
-                    dslScope)
+                project,
+                name,
+                FileUtils.join(project.buildDir, FD_INTERMEDIATES, "sources", name),
+                name,
+                dslScope)
 
     internal val buildArtifactsReport
             : Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifactData>>

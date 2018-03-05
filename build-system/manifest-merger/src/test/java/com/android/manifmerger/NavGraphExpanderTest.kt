@@ -18,7 +18,9 @@ package com.android.manifmerger
 
 import com.android.ide.common.blame.SourceFile.UNKNOWN
 import com.android.ide.common.blame.SourceFilePosition
+import com.android.ide.common.blame.SourcePosition
 import com.android.manifmerger.NavGraphExpander.expandNavGraphs
+import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -41,8 +43,6 @@ class NavGraphExpanderTest {
         MockitoAnnotations.initMocks(this)
         Mockito.`when`(mergingReportBuilder.actionRecorder).thenReturn(actionRecorder)
     }
-
-    // TODO add unit test for NavGraphExpander::findDeepLinks
 
     @Test
     fun testExpandNavGraphs() {
@@ -223,6 +223,51 @@ class NavGraphExpanderTest {
                 Mockito.eq(
                         "Illegal circular reference among navigation files when traversing " +
                         "navigation file references starting with navigationXmlId: nav2"))
+    }
+
+    @Test
+    fun testFindDeepLinks() {
+
+        val navigationId1 = "nav1"
+        val navigationString1 =
+                """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <include app:graph="@navigation/nav2" />
+                    |    <deepLink app:uri="http://www.example.com" />
+                    |</navigation>""".trimMargin()
+
+        val navigationId2 = "nav2"
+        val navigationString2 =
+                """"|<?xml version="1.0" encoding="UTF-8"?>
+                    |<navigation
+                    |    xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
+                    |    <deepLink app:uri="www.example.com/foo/" />
+                    |</navigation>""".trimMargin()
+
+        val loadedNavigationMap: Map<String, NavigationXmlDocument> =
+            mapOf(
+                Pair(navigationId1, NavigationXmlLoader.load(UNKNOWN, navigationString1)),
+                Pair(navigationId2, NavigationXmlLoader.load(UNKNOWN, navigationString2)))
+
+        val deepLinks = NavGraphExpander.findDeepLinks(navigationId1, loadedNavigationMap)
+        assertThat(deepLinks).containsExactly(
+                DeepLink(
+                    ImmutableList.of("http"),
+                    "www.example.com",
+                    -1,
+                    "/",
+                    SourceFilePosition(UNKNOWN, SourcePosition(5, 4, 220, 5, 49, 265)),
+                    false),
+                DeepLink(
+                    ImmutableList.of("http", "https"),
+                    "www.example.com",
+                    -1,
+                    "/foo/",
+                    SourceFilePosition(UNKNOWN, SourcePosition(4, 4, 175, 4, 47, 218)),
+                    false))
     }
 
     @Test

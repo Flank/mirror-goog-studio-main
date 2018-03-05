@@ -42,7 +42,7 @@ class BuildArtifactsOptionsImpl(
     override fun <T : Task> appendTo(artifactType: ArtifactType,
             taskName: String,
             taskType: Class<T>,
-            configurationAction: BuildArtifactTransformBuilder.SimpleConfigurationAction<T>) {
+            configurationAction: BuildArtifactTransformBuilder.ConfigurationAction<T>) {
         appendTo(artifactType, taskName, taskType, configurationAction, null)
     }
 
@@ -57,7 +57,7 @@ class BuildArtifactsOptionsImpl(
     private fun <T : Task> appendTo(artifactType: ArtifactType,
             taskName : String,
             taskType : Class<T>,
-            action : BuildArtifactTransformBuilder.SimpleConfigurationAction<T>?,
+            action : BuildArtifactTransformBuilder.ConfigurationAction<T>?,
             function : (T.(BuildableArtifact, File) -> Unit)?) {
         val builder =
                 BuildArtifactTransformBuilderImpl(
@@ -67,9 +67,7 @@ class BuildArtifactsOptionsImpl(
                         taskName,
                         taskType,
                         dslScope)
-                        .input(artifactType)
-                        .output(artifactType, BuildArtifactTransformBuilder.OperationType.APPEND)
-                        .outputFile(artifactsHolder.getArtifactFilename(artifactType), artifactType)
+                        .append(artifactType)
         when {
             action != null -> builder.create(action)
             function != null -> builder.create(function)
@@ -81,7 +79,7 @@ class BuildArtifactsOptionsImpl(
             artifactType: ArtifactType,
             taskName: String,
             taskType: Class<T>,
-            configurationAction: BuildArtifactTransformBuilder.SimpleConfigurationAction<T>) {
+            configurationAction: BuildArtifactTransformBuilder.ConfigurationAction<T>) {
         replace(artifactType, taskName, taskType, configurationAction, null)
     }
 
@@ -96,7 +94,7 @@ class BuildArtifactsOptionsImpl(
     fun <T : Task> replace(artifactType: ArtifactType,
             taskName: String,
             taskType: Class<T>,
-            action: BuildArtifactTransformBuilder.SimpleConfigurationAction<T>?,
+            action: BuildArtifactTransformBuilder.ConfigurationAction<T>?,
             function : (T.(BuildableArtifact, File) -> Unit)?) {
         val builder =
                 BuildArtifactTransformBuilderImpl(
@@ -106,9 +104,7 @@ class BuildArtifactsOptionsImpl(
                         taskName,
                         taskType,
                         dslScope)
-                        .input(artifactType)
-                        .output(artifactType, BuildArtifactTransformBuilder.OperationType.REPLACE)
-                        .outputFile(artifactsHolder.getArtifactFilename(artifactType), artifactType)
+                        .replace(artifactType)
         when {
             action != null -> builder.create(action)
             function != null -> builder.create(function)

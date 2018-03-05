@@ -61,7 +61,7 @@ abstract class Aapt2Daemon(
             State.RUNNING -> {
                 // Already ready
             }
-            State.SHUTDOWN -> throw IllegalStateException("$displayName: Cannot restart a shutdown process")
+            State.SHUTDOWN -> error("$displayName: Cannot restart a shutdown process")
         }
     }
 
@@ -121,7 +121,7 @@ abstract class Aapt2Daemon(
                 }
                 State.SHUTDOWN
             }
-            State.SHUTDOWN -> throw IllegalStateException("Cannot call shutdown multiple times")
+            State.SHUTDOWN -> error("Cannot call shutdown multiple times")
         }
     }
 

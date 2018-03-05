@@ -103,10 +103,15 @@ public enum ProjectScenario {
         return flags.getCompiler() == Flags.Compiler.D8;
     }
 
+    /**
+     * The responsibility of this method is to ensure that a Gradle executor is configured in a way
+     * that accurately represents the flags set on the current ProjectScenario.
+     */
     public GradleTaskExecutor configureExecutor(GradleTaskExecutor executor) {
         return executor.withEnableInfoLogging(false)
                 .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
                 .with(BooleanOption.ENABLE_D8, useD8())
+                .with(BooleanOption.ENABLE_D8_DESUGARING, useD8())
                 .withUseDexArchive(useDexArchive());
     }
 }

@@ -47,16 +47,22 @@ android {
         debug.res.replace(
             "generateCustomResource",
             DefaultTask.class) { task, input, output ->
+                // force the output creation by looking up our output directory
+                output.file
             }
 
         main.res.appendTo(
             "generateCustomResource1",
             DefaultTask.class) { task, input, output ->
+                // force the output creation by looking up our output directory
+                output.file
             }
 
         main.res.appendTo(
             "generateCustomResource2",
             DefaultTask.class) { task, input, output ->
+                // force the output creation by looking up our output directory
+                output.file
         }
     }
 }
