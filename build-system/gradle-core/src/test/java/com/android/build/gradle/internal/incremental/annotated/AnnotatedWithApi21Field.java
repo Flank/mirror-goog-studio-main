@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,6 @@
 
 package com.android.build.gradle.internal.incremental.annotated;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-/**
- * Mock for android.annotation.TargetAPI annotation.
- */
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.CONSTRUCTOR})
-@Retention(RetentionPolicy.CLASS)
-public @interface TestTargetApi {
-    int value() default -1;
-
-    int api() default -1;
-}
-
+/** Sample test class for IncrementalVisitor.isClassTargetingNewerPlatform */
+@TestTargetApi(api = 21)
+public class AnnotatedWithApi21Field {}

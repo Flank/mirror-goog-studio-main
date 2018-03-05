@@ -68,6 +68,8 @@ public class IncrementalVisitor extends ClassVisitor {
             Type.getObjectType("com/android/tools/ir/api/DisableInstantRun");
     public static final Type TARGET_API_TYPE =
             Type.getObjectType("android/annotation/TargetApi");
+    public static final Type REQUIRES_API_TYPE =
+            Type.getObjectType("android/support/annotation/RequiresApi");
 
     protected static final boolean TRACING_ENABLED = Boolean.getBoolean("FDR_TRACING");
 
@@ -331,13 +333,22 @@ public class IncrementalVisitor extends ClassVisitor {
 
         // if we are targeting a more recent version than the current device, disable instant run
         // for that class.
-        AsmClassNode parentedClassNode =
+        boolean classTargetingNewerPlatform =
                 isClassTargetingNewerPlatform(
                                 targetApiLevel,
                                 TARGET_API_TYPE,
                                 directoryClassReader,
                                 classNode,
                                 logger)
+                        || isClassTargetingNewerPlatform(
+                                targetApiLevel,
+                                REQUIRES_API_TYPE,
+                                directoryClassReader,
+                                classNode,
+                                logger);
+
+        AsmClassNode parentedClassNode =
+                classTargetingNewerPlatform
                         ? null
                         : AsmUtils.loadClass(
                                 logger, directoryClassReader, classNode, targetApiLevel);
@@ -432,9 +443,13 @@ public class IncrementalVisitor extends ClassVisitor {
                 List values = classAnnotation.values;
                 while (valueIndex < values.size()) {
                     String name = (String) values.get(valueIndex);
-                    if (name.equals("value")) {
-                        Object value = values.get(valueIndex + 1);
-                        return Integer.class.cast(value) > targetApiLevel;
+                    if (name.equals("value") || name.equals("api")) {
+                        int value = Integer.class.cast(values.get(valueIndex + 1));
+                        // the docs for RequiresApi and TargetApi state that the value will always
+                        // be 1 or greater.
+                        if (value >= 1) {
+                            return value > targetApiLevel;
+                        }
                     }
                     valueIndex = valueIndex + 2;
                 }

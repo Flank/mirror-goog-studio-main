@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.incremental;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.internal.incremental.annotated.AnnotatedWithApi21Field;
 import com.android.build.gradle.internal.incremental.annotated.NoInnerClassFor21;
 import com.android.build.gradle.internal.incremental.annotated.NotAnnotatedClass;
 import com.android.build.gradle.internal.incremental.annotated.OuterClassFor21;
@@ -183,6 +184,27 @@ public class IncrementalVisitorTest {
                     IncrementalVisitor.isClassTargetingNewerPlatform(
                             19, Type.getType(TestTargetApi.class), classReaderProvider,
                             outerClass, logger));
+        }
+        {
+            ClassNode outerClass =
+                    AsmUtils.readClass(
+                            OuterClassFor21.class.getClassLoader(),
+                            Type.getType(AnnotatedWithApi21Field.class).getInternalName());
+
+            Assert.assertFalse(
+                    IncrementalVisitor.isClassTargetingNewerPlatform(
+                            24,
+                            Type.getType(TestTargetApi.class),
+                            classReaderProvider,
+                            outerClass,
+                            logger));
+            Assert.assertTrue(
+                    IncrementalVisitor.isClassTargetingNewerPlatform(
+                            19,
+                            Type.getType(TestTargetApi.class),
+                            classReaderProvider,
+                            outerClass,
+                            logger));
         }
     }
 
