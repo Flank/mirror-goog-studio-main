@@ -100,7 +100,7 @@ public abstract class BaseProcessOutputHandler implements ProcessOutputHandler {
                 throw new ProcessException("Output and Error streams not closed");
             }
             try {
-                return mStandardOutput.asByteSource()
+                return outputStream.asByteSource()
                         .asCharSource(Charsets.UTF_8).readLines(lineProcessor);
             } catch (IOException e) {
                 throw new ProcessException(e);
