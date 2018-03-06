@@ -26,42 +26,41 @@ import java.util.concurrent.CompletableFuture
  * is final.
  */
 interface UsbDeviceCollector {
-    /**
-     * returns list of [UsbDevice]
-     */
-    fun listUsbDevices() : CompletableFuture<List<UsbDevice>>
+  /**
+   * returns list of [UsbDevice]
+   */
+  fun listUsbDevices(): CompletableFuture<List<UsbDevice>>
 
-    /**
-     * returns if the given platform is supported.
-     */
-    fun isSupported(platform: String) : Boolean
+  /**
+   * returns if the given platform is supported.
+   */
+  fun isSupported(platform: String): Boolean
 
-    /**
-     * Returns an enum representing the platform OS
-     */
-    fun getPlatform() : Platform
+  /**
+   * Returns an enum representing the platform OS
+   */
+  fun getPlatform(): Platform
 }
 
 /**
  * Returns [UsbDevice] by parsing usb devices command output.
  */
 class UsbDeviceCollectorImpl : UsbDeviceCollector {
-    override fun listUsbDevices() : CompletableFuture<List<UsbDevice>> {
-        val currentOS = Platform.currentOS()
-        if (!currentOS.supported) return CompletableFuture.completedFuture(Collections.emptyList())
+  override fun listUsbDevices(): CompletableFuture<List<UsbDevice>> {
+    val currentOS = Platform.currentOS()
+    if (!currentOS.supported) return CompletableFuture.completedFuture(Collections.emptyList())
 
-        val parser = currentOS.parser()
-        return parser.parse(execute(currentOS.command!!))
+    return execute(currentOS.command!!).thenApply { it -> currentOS.parser().parse(it) }
+  }
+
+
+  override fun isSupported(platform: String) = Platform.currentOS(platform).supported
+
+  override fun getPlatform() = Platform.currentOS()
+
+  private fun execute(command: String): CompletableFuture<InputStream> {
+    return CompletableFuture.supplyAsync {
+      ProcessBuilder(command.split(" ")).redirectErrorStream(true).start().inputStream
     }
-
-    override fun isSupported(platform: String) = Platform.currentOS(platform).supported
-
-    override fun getPlatform() = Platform.currentOS()
-
-    private fun execute(command: String): InputStream {
-        val builder = ProcessBuilder(command.split(" "))
-        builder.redirectErrorStream(true)
-        val p = builder.start()
-        return p.inputStream
-    }
+  }
 }

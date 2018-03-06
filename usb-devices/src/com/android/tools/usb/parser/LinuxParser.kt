@@ -29,20 +29,19 @@ private val PATTERN_STRING: String = "Bus \\d{3} Device \\d{3}: ID (\\w{4}):(\\w
 private val BUS_REGEX: Regex = Regex(PATTERN_STRING)
 
 fun createUsbDevice(line: String): UsbDevice {
-    val matcher = BUS_REGEX.matchEntire(line) ?: throw UnexpectedException("Mismatched line: " + line)
-    assert(matcher.groupValues.size == 4)
-    val (_, vendorId, productId, productName) = matcher.groupValues
-    return UsbDevice(productName.trim(), "0x" + vendorId, "0x" + productId)
+  val matcher = BUS_REGEX.matchEntire(line) ?: throw UnexpectedException("Mismatched line: " + line)
+  assert(matcher.groupValues.size == 4)
+  val (_, vendorId, productId, productName) = matcher.groupValues
+  return UsbDevice(productName.trim(), "0x" + vendorId, "0x" + productId)
 }
 
 fun matchPattern(line: String): Boolean = line.matches(BUS_REGEX)
 
 class LinuxParser : OutputParser {
-    override fun parse(output: InputStream): CompletableFuture<List<UsbDevice>> {
-        return CompletableFuture.supplyAsync({
-            BufferedReader(InputStreamReader(output)).lines()
-                    .filter { l -> matchPattern(l) }
-                    .map { l -> createUsbDevice(l) }.collect(Collectors.toList())
-        })
-    }
+  override fun parse(output: InputStream): List<UsbDevice> {
+    return BufferedReader(InputStreamReader(output)).lines()
+      .filter { l -> matchPattern(l) }
+      .map { l -> createUsbDevice(l) }.collect(Collectors.toList())
+
+  }
 }

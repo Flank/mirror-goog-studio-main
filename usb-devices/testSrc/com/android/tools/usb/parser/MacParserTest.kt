@@ -34,7 +34,7 @@ class MacParserTest {
     @Test
     fun parseOutput() {
         val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/mac.txt");
-        val devices = parser.parse(file.inputStream()).get()
+        val devices = parser.parse(file.inputStream())
         assertEquals(4, devices.size)
         assertEquals("Card Reader", devices[0].name)
         assertEquals("0x05ac", devices[0].vendorId)

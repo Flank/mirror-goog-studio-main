@@ -25,14 +25,14 @@ import java.util.concurrent.CompletableFuture
  * Converts command output to List of UsbDevices
  */
 interface OutputParser {
-    fun parse(output: InputStream) : CompletableFuture<List<UsbDevice>>
+    fun parse(output: InputStream) : List<UsbDevice>
 }
 
 /**
  * Placeholder parser that returns an empty list.
  */
 class EmptyParser : OutputParser {
-    override fun parse(output: InputStream): CompletableFuture<List<UsbDevice>> {
-        return CompletableFuture.completedFuture(Collections.emptyList())
+    override fun parse(output: InputStream): List<UsbDevice> {
+        return Collections.emptyList()
     }
 }

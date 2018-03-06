@@ -34,7 +34,7 @@ class LinuxParserTest {
     @Test
     fun parseOutput() {
         val file = TestUtils.getWorkspaceFile("tools/base/usb-devices/testData/linux.txt");
-        val devices = parser.parse(file.inputStream()).get()
+        val devices = parser.parse(file.inputStream())
         assertEquals(12, devices.size)
         assertEquals("Intel Corp.", devices[0].name)
         assertEquals("0x8087", devices[0].vendorId)
