@@ -85,7 +85,7 @@ class Aapt2DaemonImplInternalErrorHandlingTest {
             versionString = "fake_version",
             daemonTimeouts = Aapt2DaemonTimeouts(
                 start = 10, startUnit = TimeUnit.SECONDS,
-                stop = 1, stopUnit = TimeUnit.NANOSECONDS),
+                stop = 10, stopUnit = TimeUnit.SECONDS),
             logger = logger)
 
         val compiledDir = temporaryFolder.newFolder()
@@ -117,7 +117,7 @@ class Aapt2DaemonImplInternalErrorHandlingTest {
             versionString = "fake_version",
             daemonTimeouts = Aapt2DaemonTimeouts(
                 start = 10, startUnit = TimeUnit.SECONDS,
-                stop = 1, stopUnit = TimeUnit.NANOSECONDS),
+                stop = 10, stopUnit = TimeUnit.SECONDS),
             logger = logger)
 
         val compiledDir = temporaryFolder.newFolder()
@@ -240,8 +240,16 @@ class Aapt2DaemonImplInternalErrorHandlingTest {
 
     @After
     fun assertNoWarningOrErrorLogs() {
-        assertThat(logger.messages.filter { !(isStartOrShutdownLog(it) || it.startsWith("V")) })
-                .isEmpty()
+        assertThat(
+                logger.messages.filter {
+                    !(isStartOrShutdownLog(it) ||
+                            it.startsWith("V") ||
+                            // Process might exit while the output handler expects no output,
+                            // which is only logged as it is on the wrong thread.
+                            it.endsWith("Unexpectedly exit."))
+                }
+        )
+            .isEmpty()
     }
 
     private fun isStartOrShutdownLog(line: String) =
