@@ -21,7 +21,7 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.AssumeUtil
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.FileSubject
 import org.junit.Rule
@@ -397,17 +397,17 @@ class NamespacedFeaturesTest {
         val idsList =
                 project.getSubproject(":baseFeature")
                         .getIntermediateFile(
-                            "feature_ids_declaration",
+                            "feature_set_metadata",
                             "debugFeature",
-                            "generateDebugFeatureFeaturePackageIds",
-                            "package_ids.json")
+                            "generateDebugFeatureFeatureMetadata",
+                            "feature-metadata.json")
         FileSubject.assertThat(idsList).exists()
-        val packageIds = FeatureSplitPackageIds.load(idsList)
-        assertThat(packageIds).isNotNull()
-        val otherFeature1PackageId = packageIds.getIdFor(":otherFeature1")
-        val otherFeature2PackageId = packageIds.getIdFor(":otherFeature2")
-        assertThat(otherFeature1PackageId).isAtLeast(FeatureSplitPackageIds.BASE_ID)
-        assertThat(otherFeature2PackageId).isAtLeast(FeatureSplitPackageIds.BASE_ID)
+        val featureSetMetadata = FeatureSetMetadata.load(idsList)
+        assertThat(featureSetMetadata).isNotNull()
+        val otherFeature1PackageId = featureSetMetadata.getResOffsetFor(":otherFeature1")
+        val otherFeature2PackageId = featureSetMetadata.getResOffsetFor(":otherFeature2")
+        assertThat(otherFeature1PackageId).isAtLeast(FeatureSetMetadata.BASE_ID)
+        assertThat(otherFeature2PackageId).isAtLeast(FeatureSetMetadata.BASE_ID)
         assertThat(otherFeature1PackageId).isNotEqualTo(otherFeature2PackageId)
 
         // TODO: check that resourceIds use correct packageIds - manually tested this.

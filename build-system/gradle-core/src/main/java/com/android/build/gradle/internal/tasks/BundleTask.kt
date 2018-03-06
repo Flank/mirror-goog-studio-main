@@ -23,9 +23,8 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.tools.build.bundletool.BuildBundleCommand
 import com.android.utils.FileUtils
+import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
-import org.gradle.api.artifacts.component.ComponentIdentifier
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
@@ -76,8 +75,8 @@ open class BundleTask : AndroidVariantTask() {
         }
 
         val builder = ImmutableList.builder<Path>()
-        builder.add(baseModuleZip.files.single().toPath())
-        featureZips.forEach { builder.add(it.toPath()) }
+        builder.add(getBundlePath(baseModuleZip.files.single()))
+        featureZips.forEach { builder.add(getBundlePath(it)) }
 
         val command = BuildBundleCommand.builder().setOutputPath(bundleFile.toPath())
             .setModulesPaths(builder.build())
@@ -86,6 +85,14 @@ open class BundleTask : AndroidVariantTask() {
         }
 
         command.build().execute()
+    }
+
+    private fun getBundlePath(folder: File): Path {
+        val children = folder.listFiles()
+        Preconditions.checkNotNull(children)
+        Preconditions.checkState(children.size == 1)
+
+        return children[0].toPath()
     }
 
     class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleTask> {

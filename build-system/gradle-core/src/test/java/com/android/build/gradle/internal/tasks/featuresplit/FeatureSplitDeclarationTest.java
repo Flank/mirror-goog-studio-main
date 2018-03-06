@@ -69,8 +69,8 @@ public class FeatureSplitDeclarationTest {
                                         temporaryFolder.getRoot(),
                                         FeatureSplitDeclaration.PERSISTED_FILE_NAME)));
         FeatureSplitDeclaration loadedDeclaration = FeatureSplitDeclaration.load(fileCollection);
-        assertThat(featureSplitDeclaration.getUniqueIdentifier())
-                .isEqualTo(loadedDeclaration.getUniqueIdentifier());
+        assertThat(featureSplitDeclaration.getModulePath())
+                .isEqualTo(loadedDeclaration.getModulePath());
         assertThat(featureSplitDeclaration.getApplicationId())
                 .isEqualTo(loadedDeclaration.getApplicationId());
     }

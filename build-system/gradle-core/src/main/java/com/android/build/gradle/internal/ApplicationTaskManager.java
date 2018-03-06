@@ -45,8 +45,8 @@ import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIdsWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask;
 import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBuilder;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
@@ -224,7 +224,8 @@ public class ApplicationTaskManager extends TaskManager {
         // Add feature related tasks if necessary
         if (variantScope.getType().isBaseModule()) {
             // Base feature specific tasks.
-            taskFactory.create(new FeatureSplitPackageIdsWriterTask.ConfigAction(variantScope));
+            taskFactory.create(new FeatureSetMetadataWriterTask.ConfigAction(variantScope));
+
             if (extension.getDataBinding().isEnabled()) {
                 // Create a task that will package the manifest ids(the R file packages) of all features into a
                 // file. This file's path is passed into the Data Binding annotation processor which uses it to

@@ -23,15 +23,19 @@ import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.builder.packaging.JarMerger
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.util.function.Supplier
 
 /**
  * Task that zips a module's bundle elements into a zip file. This gets published
@@ -40,9 +44,9 @@ import java.io.File
  */
 open class PerModuleBundleTask : AndroidVariantTask() {
 
-    @get:OutputFile
+    @get:OutputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var outputFile: File
+    lateinit var outputDir: File
         private set
 
     @get:InputFiles
@@ -70,10 +74,17 @@ open class PerModuleBundleTask : AndroidVariantTask() {
     lateinit var nativeLibsFiles: FileCollection
         private set
 
+    private lateinit var fileNameSupplier: Supplier<String>
+
+    @get:Input
+    val fileName: String
+        get() = fileNameSupplier.get()
+
+
     @TaskAction
     fun zip() {
-        FileUtils.mkdirs(outputFile.parentFile)
-        val jarMerger = JarMerger(outputFile.toPath())
+        FileUtils.cleanOutputDir(outputDir)
+        val jarMerger = JarMerger(File(outputDir, fileName).toPath())
 
         jarMerger.use { it ->
 
@@ -137,14 +148,15 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         override fun execute(task: PerModuleBundleTask) {
             task.variantName = variantScope.fullVariantName
 
-            // FIXME with proper feature name computation
-            val zipName = if (variantScope.type.isBaseModule)
-                "base.zip"
-            else
-                "${variantScope.globalScope.project.name}.zip"
+            task.fileNameSupplier = if (variantScope.type.isBaseModule)
+                Supplier { "base.zip"}
+            else {
+                val featureName: Supplier<String> = FeatureSetMetadata.getInstance().getFeatureNameSupplierForTask(variantScope, task)
+                Supplier { "${featureName.get()}.zip"}
+            }
 
-            task.outputFile = variantScope.buildArtifactsHolder.appendArtifact(
-                InternalArtifactType.MODULE_BUNDLE, task, zipName)
+            task.outputDir = variantScope.buildArtifactsHolder.appendArtifact(
+                InternalArtifactType.MODULE_BUNDLE, task)
 
             task.assetsFiles = variantScope.getOutput(InternalArtifactType.MERGED_ASSETS)
             task.resFiles = variantScope.getOutput(InternalArtifactType.LINKED_RES_FOR_BUNDLE)

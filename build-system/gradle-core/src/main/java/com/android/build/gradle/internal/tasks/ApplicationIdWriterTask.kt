@@ -35,12 +35,15 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Task responsible for calculating the application-id for this module.
+ * Task responsible for publishing the application ID for other modules to consume.
  *
- * If the module is not a feature module, it will just use the variant configuration.
- * If it a base feature, it will still use the variant configuration information and write it out.
- * If it is a non base feature, it will consume the file produced by the base feature to obtain
- * the application id.
+ * If the module is an application module, it publishes the value coming from the variant config.
+ *
+ * If the module is a base feature, it consumes the value coming from the (installed) application
+ * module and republishes it.
+ *
+ * Both dynamic-feature and feature modules consumes it, from the application module and the base
+ * feature module respectively.
  */
 open class ApplicationIdWriterTask : AndroidVariantTask() {
 

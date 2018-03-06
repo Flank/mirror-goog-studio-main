@@ -33,14 +33,6 @@ import java.util.regex.Pattern;
 public class ApplicationVariantData extends ApkVariantData implements TestedVariantData {
     private final Map<VariantType, TestVariantData> testVariants;
 
-    /** Regular expression defining the character to be replaced in the split name. */
-    private static final Pattern FEATURE_REPLACEMENT = Pattern.compile("-");
-
-    /** Regular expression defining the characters to be excluded from the split name. */
-    private static final Pattern FEATURE_EXCLUSION = Pattern.compile("[^a-zA-Z0-9_]");
-
-    private final String featureName;
-
     public ApplicationVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig,
@@ -49,13 +41,6 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
             @NonNull Recorder recorder) {
         super(globalScope, androidConfig, taskManager, config, recorder);
         testVariants = Maps.newHashMap();
-
-        // Compute the split value name for the manifest.
-        String splitName =
-                FEATURE_REPLACEMENT
-                        .matcher(getScope().getGlobalScope().getProjectBaseName())
-                        .replaceAll("_");
-        featureName = FEATURE_EXCLUSION.matcher(splitName).replaceAll("");
     }
 
     @Override
@@ -69,10 +54,5 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
     @Override
     public TestVariantData getTestVariantData(@NonNull VariantType type) {
         return testVariants.get(type);
-    }
-
-    @NonNull
-    public String getFeatureName() {
-        return featureName;
     }
 }

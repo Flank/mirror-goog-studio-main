@@ -77,7 +77,7 @@ public class AndroidArtifacts {
     private static final String TYPE_METADATA = "android-metadata";
 
     // types for feature-split content.
-    private static final String TYPE_FEATURE_IDS_DECLARATION = "android-feature-split-ids";
+    private static final String TYPE_FEATURE_SET_METADATA = "android-feature-all-metadata";
     private static final String TYPE_FEATURE_APPLICATION_ID = "android-feature-application-id";
     private static final String TYPE_FEATURE_RESOURCE_PKG = "android-feature-res-ap_";
     private static final String TYPE_FEATURE_TRANSITIVE_DEPS = "android-feature-transitive-deps";
@@ -195,9 +195,21 @@ public class AndroidArtifacts {
         BUNDLE(TYPE_BUNDLE),
 
         // Feature split related artifacts.
-        FEATURE_IDS_DECLARATION(TYPE_FEATURE_IDS_DECLARATION),
+
+        // file containing the metadata for the full feature set. This contains the feature names,
+        // the res ID offset, both tied to the feature module path. Published by the base for the
+        // other features to consume and find their own metadata.
+        FEATURE_SET_METADATA(TYPE_FEATURE_SET_METADATA),
+
+        // file containing the application ID to synchronize all base + dynamic feature. This is
+        // published by the base feature and installed application module.
         FEATURE_APPLICATION_ID_DECLARATION(TYPE_FEATURE_APPLICATION_ID),
+
+        // ?
         FEATURE_RESOURCE_PKG(TYPE_FEATURE_RESOURCE_PKG),
+
+        // File containing the list of transitive dependencies of a given feature. This is consumed
+        // by other features to avoid repackaging the same thing.
         FEATURE_TRANSITIVE_DEPS(TYPE_FEATURE_TRANSITIVE_DEPS),
 
         // Metadata artifacts

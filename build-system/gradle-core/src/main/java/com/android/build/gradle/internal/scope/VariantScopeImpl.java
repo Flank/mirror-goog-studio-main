@@ -1055,8 +1055,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         final VariantType type = getVariantConfiguration().getType();
         if (configType == RUNTIME_CLASSPATH
-                && type.isApk()
-                && !type.isBaseModule()
+                && type.isFeatureSplit()
                 && artifactType != ArtifactType.FEATURE_TRANSITIVE_DEPS) {
             fileCollection =
                     new FilteredArtifactCollection(
@@ -1101,8 +1100,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         final VariantType type = getVariantConfiguration().getType();
         if (configType == RUNTIME_CLASSPATH
-                && type.isApk()
-                && !type.isBaseModule()
+                && type.isFeatureSplit()
                 && artifactType != ArtifactType.FEATURE_TRANSITIVE_DEPS) {
             artifacts =
                     new FilteredArtifactCollection(

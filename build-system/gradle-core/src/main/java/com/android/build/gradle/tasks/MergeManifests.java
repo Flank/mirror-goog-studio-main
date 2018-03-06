@@ -46,7 +46,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ApplicationId;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.variant.ApplicationVariantData;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
@@ -108,7 +108,8 @@ public class MergeManifests extends ManifestProcessorTask {
     private Supplier<EnumSet<Feature>> optionalFeatures;
     private OutputScope outputScope;
 
-    private String featureName;
+    // supplier to read the file above to get the feature name for the current project.
+    @Nullable private Supplier<String> featureNameSupplier = null;
 
     @Override
     protected void doFullTaskAction() throws IOException {
@@ -425,7 +426,7 @@ public class MergeManifests extends ManifestProcessorTask {
     @Input
     @Optional
     public String getFeatureName() {
-        return featureName;
+        return featureNameSupplier != null ? featureNameSupplier.get() : null;
     }
 
     @InputFiles
@@ -532,24 +533,23 @@ public class MergeManifests extends ManifestProcessorTask {
             processManifestTask.apkList = variantScope.getOutput(InternalArtifactType.APK_LIST);
 
             // set optional inputs per module type
-            if (variantType.isApk()) {
-                if (variantType.isBaseModule()) {
-                    processManifestTask.packageManifest =
-                            variantScope.getArtifactFileCollection(
-                                    METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
+            if (variantType.isBaseModule()) {
+                processManifestTask.packageManifest =
+                        variantScope.getArtifactFileCollection(
+                                METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
 
-                    // This includes the other features.
-                    processManifestTask.featureManifests =
-                            variantScope.getArtifactCollection(
-                                    METADATA_VALUES, MODULE, METADATA_FEATURE_MANIFEST);
-                } else {
-                    processManifestTask.featureName =
-                            ((ApplicationVariantData) variantScope.getVariantData())
-                                    .getFeatureName();
-                    processManifestTask.packageManifest =
-                            variantScope.getArtifactFileCollection(
-                                    COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
-                }
+                // This includes the other features.
+                processManifestTask.featureManifests =
+                        variantScope.getArtifactCollection(
+                                METADATA_VALUES, MODULE, METADATA_FEATURE_MANIFEST);
+            } else if (variantType.isFeatureSplit()) {
+                processManifestTask.featureNameSupplier =
+                        FeatureSetMetadata.getInstance()
+                                .getFeatureNameSupplierForTask(variantScope, processManifestTask);
+
+                processManifestTask.packageManifest =
+                        variantScope.getArtifactFileCollection(
+                                COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
             }
 
             // set outputs.
@@ -558,7 +558,7 @@ public class MergeManifests extends ManifestProcessorTask {
             }
 
             // when dealing with a non-base feature, output is under a different type.
-            if (!variantType.isBaseModule()) {
+            if (variantType.isFeatureSplit()) {
                 buildArtifactsHolder.appendArtifact(
                         InternalArtifactType.METADATA_FEATURE_MANIFEST,
                         ImmutableList.of(processManifestTask.getManifestOutputDirectory()),

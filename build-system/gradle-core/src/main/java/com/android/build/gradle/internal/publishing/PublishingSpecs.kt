@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING
 import com.android.build.gradle.internal.scope.InternalArtifactType.DEFINED_ONLY_SYMBOL_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_APPLICATION_ID_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_CLASSES
-import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_IDS_DECLARATION
+import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_SET_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_TRANSITIVE_DEPS
 import com.android.build.gradle.internal.scope.InternalArtifactType.FULL_JAR
@@ -140,7 +140,7 @@ class PublishingSpecs {
                 metadata(BUNDLE, ArtifactType.BUNDLE)
 
                 // this is only for base modules.
-                api(FEATURE_IDS_DECLARATION, ArtifactType.FEATURE_IDS_DECLARATION)
+                api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
                 api(FEATURE_APPLICATION_ID_DECLARATION,
                     ArtifactType.FEATURE_APPLICATION_ID_DECLARATION)
 
@@ -242,7 +242,7 @@ class PublishingSpecs {
 
             variantSpec(VariantTypeImpl.BASE_FEATURE) {
 
-                api(FEATURE_IDS_DECLARATION, ArtifactType.FEATURE_IDS_DECLARATION)
+                api(FEATURE_SET_METADATA, ArtifactType.FEATURE_SET_METADATA)
                 api(FEATURE_APPLICATION_ID_DECLARATION,
                         ArtifactType.FEATURE_APPLICATION_ID_DECLARATION)
 

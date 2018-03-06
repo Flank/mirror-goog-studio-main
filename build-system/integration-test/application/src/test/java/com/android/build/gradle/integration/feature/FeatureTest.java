@@ -29,8 +29,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.internal.scope.ArtifactTypeUtilKt;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
@@ -94,7 +94,7 @@ public class FeatureTest {
         FeatureSplitDeclaration featureSplitDeclaration =
                 FeatureSplitDeclaration.load(featureSplit);
         assertThat(featureSplitDeclaration).isNotNull();
-        assertThat(featureSplitDeclaration.getUniqueIdentifier()).isEqualTo(":feature");
+        assertThat(featureSplitDeclaration.getModulePath()).isEqualTo(":feature");
 
         // Check the feature manifest contains only the feature data.
         File featureManifest =
@@ -156,14 +156,14 @@ public class FeatureTest {
         GradleTestProject baseProject = sProject.getSubproject(":baseFeature");
         File idsList =
                 baseProject.getIntermediateFile(
-                        "feature_ids_declaration",
+                        "feature_set_metadata",
                         "debugFeature",
-                        "generateDebugFeatureFeaturePackageIds",
-                        "package_ids.json");
+                        "generateDebugFeatureFeatureMetadata",
+                        "feature-metadata.json");
         assertThat(idsList).exists();
-        FeatureSplitPackageIds packageIds = FeatureSplitPackageIds.load(idsList);
+        FeatureSetMetadata packageIds = FeatureSetMetadata.load(idsList);
         assertThat(packageIds).isNotNull();
-        assertThat(packageIds.getIdFor(":feature")).isEqualTo(FeatureSplitPackageIds.BASE_ID);
+        assertThat(packageIds.getResOffsetFor(":feature")).isEqualTo(FeatureSetMetadata.BASE_ID);
 
         // Check that the base feature manifest contains the expected content.
         File baseFeatureManifest =

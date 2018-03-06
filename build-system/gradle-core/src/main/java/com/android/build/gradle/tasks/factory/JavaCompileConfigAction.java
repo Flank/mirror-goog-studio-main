@@ -198,26 +198,24 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                     javacTask.getName());
 
             VariantType variantType = scope.getType();
-            if (variantType.isApk() && !variantType.isForTesting()) {
-                if (variantType.isBaseModule()) {
-                    javacTask
-                            .getInputs()
-                            .file(
-                                    scope.getBuildArtifactsHolder()
-                                            .getFinalArtifactFiles(
-                                                    InternalArtifactType
-                                                            .FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
-                                            .get());
-                } else {
-                    javacTask
-                            .getInputs()
-                            .file(
-                                    scope.getBuildArtifactsHolder()
-                                            .getFinalArtifactFiles(
-                                                    InternalArtifactType
-                                                            .FEATURE_DATA_BINDING_FEATURE_INFO)
-                                            .get());
-                }
+            if (variantType.isBaseModule()) {
+                javacTask
+                        .getInputs()
+                        .file(
+                                scope.getBuildArtifactsHolder()
+                                        .getFinalArtifactFiles(
+                                                InternalArtifactType
+                                                        .FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
+                                        .get());
+            } else if (variantType.isFeatureSplit()) {
+                javacTask
+                        .getInputs()
+                        .file(
+                                scope.getBuildArtifactsHolder()
+                                        .getFinalArtifactFiles(
+                                                InternalArtifactType
+                                                        .FEATURE_DATA_BINDING_FEATURE_INFO)
+                                        .get());
             }
         }
 

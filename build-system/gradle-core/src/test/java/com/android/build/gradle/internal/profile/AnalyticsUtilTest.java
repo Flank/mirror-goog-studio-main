@@ -196,9 +196,9 @@ public class AnalyticsUtilTest {
                         .append(
                                 "s do not have corresponding logging proto enum values.\n"
                                         + "See tools/analytics-library/protos/src/main/proto/"
-                                        + "analytics_enums.proto")
+                                        + "analytics_enums.proto[")
                         .append(protoEnum.getFullName())
-                        .append(".\n");
+                        .append("].\n");
         List<String> suggestions =
                 missingTasks
                         .stream()

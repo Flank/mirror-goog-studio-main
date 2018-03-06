@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.FeatureVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -45,9 +46,11 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.ArgumentMatchers
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
+import java.util.function.Supplier
 
 /**
  * Tests for the [GenerateSplitAbiRes] class
@@ -55,17 +58,18 @@ import org.mockito.MockitoAnnotations
 class GenerateSplitAbiResTest {
 
     @get:Rule val temporaryFolder = TemporaryFolder()
-    @Mock lateinit internal var mockedGlobalScope: GlobalScope
-    @Mock lateinit internal var mockedVariantScope: VariantScope
-    @Mock lateinit internal var mockedOutputScope: OutputScope
-    @Mock lateinit internal var mockedAndroidBuilder: AndroidBuilder
-    @Mock lateinit internal var mockedVariantConfiguration: GradleVariantConfiguration
-    @Mock lateinit internal var mockedAndroidConfig: AndroidConfig
-    @Mock lateinit internal var mockedSplits: Splits
-    @Mock lateinit internal var mockedBuildType: CoreBuildType
-    @Mock lateinit internal var mockedVariantData: FeatureVariantData
-    @Mock lateinit internal var mockedAaptOptions: AaptOptions
-    @Mock lateinit internal var mockedOutputFactory: OutputFactory
+    @Mock private lateinit var mockedGlobalScope: GlobalScope
+    @Mock private lateinit var mockedVariantScope: VariantScope
+    @Mock private lateinit var mockedOutputScope: OutputScope
+    @Mock private lateinit var mockedAndroidBuilder: AndroidBuilder
+    @Mock private lateinit var mockedVariantConfiguration: GradleVariantConfiguration
+    @Mock private lateinit var mockedAndroidConfig: AndroidConfig
+    @Mock private lateinit var mockedSplits: Splits
+    @Mock private lateinit var mockedBuildType: CoreBuildType
+    @Mock private lateinit var mockedVariantData: FeatureVariantData
+    @Mock private lateinit var mockedAaptOptions: AaptOptions
+    @Mock private lateinit var mockedOutputFactory: OutputFactory
+    @Mock private lateinit var provider: FeatureSetMetadata.SupplierProvider
 
     private val apkData = OutputFactory.ConfigurationSplitApkData(
             "x86",
@@ -91,7 +95,7 @@ class GenerateSplitAbiResTest {
                 ))
             )
             `when`(extension).thenReturn(mockedAndroidConfig)
-            `when`(projectBaseName).thenReturn("featureA")
+//            `when`(projectBaseName).thenReturn("featureA")
             `when`(project).thenReturn(this@GenerateSplitAbiResTest.project)
         }
 
@@ -114,11 +118,14 @@ class GenerateSplitAbiResTest {
 
         with(mockedVariantData) {
             `when`(outputFactory).thenReturn(mockedOutputFactory)
-            `when`(featureName).thenReturn("featureA")
         }
 
         `when`(mockedSplits.abiFilters).thenReturn(ImmutableSet.of("arm", "x86"))
         `when`(mockedBuildType.isDebuggable).thenReturn(true)
+
+        `when`(provider.getFeatureNameSupplierForTask(
+                ArgumentMatchers.any(), ArgumentMatchers.any()))
+            .thenReturn(Supplier { "featureA" } )
     }
 
     @Test
@@ -213,13 +220,15 @@ class GenerateSplitAbiResTest {
     }
 
     private fun initTask(initializationLambda : (GenerateSplitAbiRes.ConfigAction) -> Unit = {}) : GenerateSplitAbiRes {
-        val configAction = GenerateSplitAbiRes.ConfigAction(mockedVariantScope, temporaryFolder.newFolder())
+        val configAction = GenerateSplitAbiRes.ConfigAction(
+            mockedVariantScope, temporaryFolder.newFolder(), provider)
 
         initCommonFields()
         initializationLambda(configAction)
 
         val task = project!!.tasks.create("test", GenerateSplitAbiRes::class.java)
         configAction.execute(task)
+
         return task
     }
 

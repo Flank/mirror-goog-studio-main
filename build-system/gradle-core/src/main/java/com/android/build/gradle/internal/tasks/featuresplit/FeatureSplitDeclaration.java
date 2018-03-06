@@ -36,18 +36,17 @@ public class FeatureSplitDeclaration {
 
     @VisibleForTesting static final String PERSISTED_FILE_NAME = "feature-split.json";
 
-    @NonNull private final String uniqueIdentifier;
+    @NonNull private final String modulePath;
     @NonNull private final String applicationId;
 
-    public FeatureSplitDeclaration(
-            @NonNull String uniqueIdentifier, @NonNull String applicationId) {
-        this.uniqueIdentifier = uniqueIdentifier;
+    public FeatureSplitDeclaration(@NonNull String modulePath, @NonNull String applicationId) {
+        this.modulePath = modulePath;
         this.applicationId = applicationId;
     }
 
     @NonNull
-    public String getUniqueIdentifier() {
-        return uniqueIdentifier;
+    public String getModulePath() {
+        return modulePath;
     }
 
     @NonNull

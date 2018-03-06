@@ -19,7 +19,6 @@ import static com.android.SdkConstants.FN_RES_BASE;
 import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_IDS_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -52,7 +51,7 @@ import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
@@ -94,7 +93,6 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -128,7 +126,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     @Nullable private FileCollection dependenciesFileCollection;
     @Nullable private FileCollection sharedLibraryDependencies;
-    @Nullable private ArtifactCollection packageIdsFiles;
+
+    @Nullable private Supplier<Integer> resOffsetSupplier = null;
 
     private MultiOutputPolicy multiOutputPolicy;
 
@@ -223,11 +222,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         BuildElements manifestBuildElements =
                 ExistingBuildElements.from(taskInputType, manifestFiles);
 
-        final Set<File> packageIdFileSet =
-                packageIdsFiles != null
-                        ? packageIdsFiles.getArtifactFiles().getAsFileTree().getFiles()
-                        : null;
-
         final Set<File> featureResourcePackages =
                 this.featureResourcePackages != null
                         ? this.featureResourcePackages.getFiles()
@@ -275,7 +269,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                     manifestBuildOutput,
                                     dependencies,
                                     imports,
-                                    packageIdFileSet,
                                     splitList,
                                     featureResourcePackages,
                                     apkInfo,
@@ -296,7 +289,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                                 manifestBuildOutput,
                                                 dependencies,
                                                 imports,
-                                                packageIdFileSet,
                                                 splitList,
                                                 featureResourcePackages,
                                                 apkInfo,
@@ -389,7 +381,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             BuildOutput manifestOutput,
             @NonNull Set<File> dependencies,
             Set<File> imports,
-            @Nullable Set<File> packageIdFileSet,
             @NonNull SplitList splitList,
             @NonNull Set<File> featureResourcePackages,
             ApkInfo apkData,
@@ -460,14 +451,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 ? buildTargetDensity
                                 : null;
 
-        Integer packageId = null;
-        if (packageIdFileSet != null
-                && FeatureSplitPackageIds.getOutputFile(packageIdFileSet) != null) {
-            FeatureSplitPackageIds featurePackageIds =
-                    FeatureSplitPackageIds.load(packageIdFileSet);
-            packageId = featurePackageIds.getIdFor(getProject().getPath());
-        }
-
         try {
 
             // If we are in instant run mode and we use a split APK for these resources.
@@ -508,7 +491,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                         splitList.getFilters(SplitList.RESOURCE_CONFIGS))
                                 .setSplits(getSplits(splitList))
                                 .setPreferredDensity(preferredDensity)
-                                .setPackageId(packageId)
+                                .setPackageId(getResOffset())
                                 .setDependentFeatures(featurePackagesBuilder.build())
                                 .setImports(imports)
                                 .setAndroidTarget(getBuilder().getTarget());
@@ -826,11 +809,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             processResources.supportDirectory =
                     new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");
 
-            if (!variantScope.getType().isBaseModule()) {
-                // sets the packageIds list.
-                processResources.packageIdsFiles =
-                        variantScope.getArtifactCollection(
-                                COMPILE_CLASSPATH, MODULE, FEATURE_IDS_DECLARATION);
+            if (variantScope.getType().isFeatureSplit()) {
+                processResources.resOffsetSupplier =
+                        FeatureSetMetadata.getInstance()
+                                .getResOffsetSupplierForTask(variantScope, processResources);
             }
         }
     }
@@ -966,10 +948,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         variantScope.getArtifactFileCollection(
                                 COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG);
 
-                if (variantType.isApk() && !variantType.isBaseModule()) {
-                    task.packageIdsFiles =
-                            variantScope.getArtifactCollection(
-                                    COMPILE_CLASSPATH, MODULE, FEATURE_IDS_DECLARATION);
+                if (variantType.isFeatureSplit()) {
+                    task.resOffsetSupplier =
+                            FeatureSetMetadata.getInstance()
+                                    .getResOffsetSupplierForTask(variantScope, task);
                 }
             }
 
@@ -982,10 +964,9 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     }
 
     @Optional
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getPackageIdsFiles() {
-        return packageIdsFiles != null ? packageIdsFiles.getArtifactFiles() : null;
+    @Input
+    public Integer getResOffset() {
+        return resOffsetSupplier != null ? resOffsetSupplier.get() : null;
     }
 
     /**

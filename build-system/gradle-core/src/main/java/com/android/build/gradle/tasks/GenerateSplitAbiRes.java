@@ -44,7 +44,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.ApplicationId;
-import com.android.build.gradle.internal.variant.FeatureVariantData;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
@@ -61,6 +61,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
@@ -102,7 +103,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     private OutputFactory outputFactory;
     private VariantType variantType;
     private VariantScope variantScope;
-    @Nullable private String featureName;
+    @VisibleForTesting @Nullable Supplier<String> featureNameSupplier;
     @Nullable private FileCollection applicationIdOverride;
     @Nullable private FileCollection aapt2FromMaven;
 
@@ -156,7 +157,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     @Optional
     @Nullable
     public String getFeatureName() {
-        return featureName;
+        return featureNameSupplier != null ? featureNameSupplier.get() : null;
     }
 
     @InputFiles
@@ -259,6 +260,8 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                         .or(CharMatcher.is('.'))
                         .negate();
 
+        String featureName = getFeatureName();
+
         String encodedSplitName =
                 (featureName != null ? featureName + "." : "")
                         + "config."
@@ -329,10 +332,20 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
         @NonNull private final VariantScope scope;
         @NonNull private final File outputDirectory;
+        @NonNull private final FeatureSetMetadata.SupplierProvider provider;
 
         public ConfigAction(@NonNull VariantScope scope, @NonNull File outputDirectory) {
+            this(scope, outputDirectory, FeatureSetMetadata.getInstance());
+        }
+
+        @VisibleForTesting
+        ConfigAction(
+                @NonNull VariantScope scope,
+                @NonNull File outputDirectory,
+                @NonNull FeatureSetMetadata.SupplierProvider provider) {
             this.scope = scope;
             this.outputDirectory = outputDirectory;
+            this.provider = provider;
         }
 
         @Override
@@ -355,11 +368,10 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             generateSplitAbiRes.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             generateSplitAbiRes.setVariantName(config.getFullName());
 
-            // FIXME we need a feature name in the base variant data?
-            generateSplitAbiRes.featureName =
-                    variantType.isApk() && !variantType.isBaseModule()
-                            ? ((FeatureVariantData) scope.getVariantData()).getFeatureName()
-                            : null;
+            if (variantType.isFeatureSplit()) {
+                generateSplitAbiRes.featureNameSupplier =
+                        provider.getFeatureNameSupplierForTask(scope, generateSplitAbiRes);
+            }
 
             // not used directly, but considered as input for the task.
             generateSplitAbiRes.versionCode = config.getVersionCode();
@@ -381,19 +393,17 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             generateSplitAbiRes.outputFactory = scope.getVariantData().getOutputFactory();
             generateSplitAbiRes.aapt2FromMaven =
                     Aapt2MavenUtils.getAapt2FromMavenIfEnabled(scope.getGlobalScope());
-            if (variantType.isApk() && !variantType.isForTesting()) {
-                if (variantType.isBaseModule()) {
-                    if (variantType.isHybrid()) {
-                        // only override in the case of BASE_FEATURE
-                        generateSplitAbiRes.applicationIdOverride =
-                                scope.getArtifactFileCollection(
-                                        METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
-                    }
-                } else {
-                    generateSplitAbiRes.applicationIdOverride =
-                            scope.getArtifactFileCollection(
-                                    COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
-                }
+
+            // if BASE_FEATURE get the app ID from the app module
+            if (variantType.isBaseModule() && variantType.isHybrid()) {
+                generateSplitAbiRes.applicationIdOverride =
+                        scope.getArtifactFileCollection(
+                                METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
+            } else if (variantType.isFeatureSplit()) {
+                // if feature split, get it from the base module
+                generateSplitAbiRes.applicationIdOverride =
+                        scope.getArtifactFileCollection(
+                                COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
             }
         }
     }

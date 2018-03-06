@@ -175,9 +175,16 @@ public enum InternalArtifactType implements ArtifactType {
     // the full bundle, including feature module. This is only valid for the base module.
     BUNDLE(Kind.OUTPUTS),
 
-    FEATURE_IDS_DECLARATION,
+    // file containing the metadata for the full feature set. This contains the feature names,
+    // the res ID offset, both tied to the feature module path. Published by the base for the
+    // other features to consume and find their own metadata.
+    FEATURE_SET_METADATA,
+    // file containing the application ID to synchronize all base + dynamic feature. This is
+    // published by the base feature and installed application module.
     FEATURE_APPLICATION_ID_DECLARATION,
     FEATURE_RESOURCE_PKG,
+    // File containing the list of transitive dependencies of a given feature. This is consumed
+    // by other features to avoid repackaging the same thing.
     FEATURE_TRANSITIVE_DEPS,
     // The information about the features in the app that is necessary for the data binding
     // annotation processor (for base feature compilation). Created by the

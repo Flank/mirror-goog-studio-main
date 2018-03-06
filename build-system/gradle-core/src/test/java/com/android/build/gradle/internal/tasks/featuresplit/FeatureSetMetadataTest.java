@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks.featuresplit;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -27,8 +26,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-/** Tests for {@link FeatureSplitPackageIds} class. */
-public class FeatureSplitPackageIdsTest {
+/** Tests for {@link FeatureSetMetadata} class. */
+public class FeatureSetMetadataTest {
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -38,17 +37,17 @@ public class FeatureSplitPackageIdsTest {
 
     @Test(expected = FileNotFoundException.class)
     public void testMissingPesistenceFile() throws IOException {
-        FeatureSplitPackageIds loaded = FeatureSplitPackageIds.load(ImmutableSet.of());
+        FeatureSetMetadata.load(new File(""));
     }
 
     @Test
     public void testPersistence() throws IOException {
-        FeatureSplitPackageIds featureSplitPackageIds = new FeatureSplitPackageIds();
-        featureSplitPackageIds.addFeatureSplit("one");
-        featureSplitPackageIds.addFeatureSplit("two");
-        featureSplitPackageIds.addFeatureSplit("three");
-        featureSplitPackageIds.save(
-                new File(temporaryFolder.getRoot(), FeatureSplitPackageIds.OUTPUT_FILE_NAME));
+        FeatureSetMetadata featureSetMetadata = new FeatureSetMetadata();
+        featureSetMetadata.addFeatureSplit(":one", "one");
+        featureSetMetadata.addFeatureSplit(":two", "two");
+        featureSetMetadata.addFeatureSplit(":three", "three");
+        featureSetMetadata.save(
+                new File(temporaryFolder.getRoot(), FeatureSetMetadata.OUTPUT_FILE_NAME));
         File[] files = temporaryFolder.getRoot().listFiles();
         assertThat(files).isNotNull();
         assertThat(files.length).isEqualTo(1);
@@ -56,10 +55,28 @@ public class FeatureSplitPackageIdsTest {
         assertThat(outputFile.exists()).isTrue();
 
         // now reload the file.
-        FeatureSplitPackageIds loaded = FeatureSplitPackageIds.load(ImmutableSet.of(outputFile));
+        FeatureSetMetadata loaded = FeatureSetMetadata.load(outputFile);
 
-        assertThat(loaded.getIdFor("one")).isEqualTo(FeatureSplitPackageIds.BASE_ID);
-        assertThat(loaded.getIdFor("two")).isEqualTo(FeatureSplitPackageIds.BASE_ID + 1);
-        assertThat(loaded.getIdFor("three")).isEqualTo(FeatureSplitPackageIds.BASE_ID + 2);
+        assertThat(loaded.getResOffsetFor(":one"))
+                .named("getResOffsetFor :one")
+                .isEqualTo(FeatureSetMetadata.BASE_ID);
+        assertThat(loaded.getFeatureNameFor(":one"))
+                .named("getFeatureNameFor :one")
+                .isEqualTo("one");
+
+        assertThat(loaded.getResOffsetFor(":two"))
+                .named("getResOffsetFor :two")
+                .isEqualTo(FeatureSetMetadata.BASE_ID + 1);
+        assertThat(loaded.getFeatureNameFor(":two"))
+                .named("getFeatureNameFor :two")
+                .isEqualTo("two");
+
+        assertThat(loaded.getResOffsetFor(":three"))
+                .named("getResOffsetFor :three")
+                .isEqualTo(FeatureSetMetadata.BASE_ID + 2);
+        assertThat(loaded.getFeatureNameFor(":three"))
+                .named("getFeatureNameFor :three")
+                .isEqualTo("three");
+
     }
 }
