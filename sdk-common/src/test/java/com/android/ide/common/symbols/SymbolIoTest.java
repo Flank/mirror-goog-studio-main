@@ -18,6 +18,7 @@ package com.android.ide.common.symbols;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -746,6 +747,27 @@ public class SymbolIoTest {
                                     + "File located at: "
                                     + file.toPath().toString());
         }
+    }
+
+
+    @Test
+    public void testMisorderedAarWithPackage() throws Exception {
+        Path misordered =
+                TestResources.getFile(SymbolIoTest.class, "/testData/symbolIo/misordered_R.txt")
+                        .toPath();
+        FileSystem fs = Jimfs.newFileSystem();
+        Path manifest = fs.getPath("AndroidManifest.xml");
+        java.nio.file.Files.write(
+                manifest,
+                ImmutableList.of("<manifest package=\"com.example.lib\"></manifest>"),
+                StandardCharsets.UTF_8);
+
+        Path output = fs.getPath("package-aware-r.txt");
+        SymbolIo.writeSymbolTableWithPackage(misordered, manifest, output);
+
+        SymbolTable symbolTable = SymbolIo.readTableWithPackage(output);
+        Symbol symbol = symbolTable.getSymbols().get(ResourceType.STYLEABLE, "AlertDialog");
+        assertNotNull(symbol);
     }
 
     @Test

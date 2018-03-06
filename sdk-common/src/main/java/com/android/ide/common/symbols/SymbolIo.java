@@ -135,7 +135,7 @@ public final class SymbolIo {
                             + file);
         }
 
-        SymbolTable.Builder table = readLines(lines, 2, file, ReadConfiguration.LOCAL);
+        SymbolTable.Builder table = readLines(lines, 2, file, ReadConfiguration.AAR);
         table.tablePackage(lines.get(0).trim());
 
         return table.build();
