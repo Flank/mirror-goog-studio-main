@@ -110,7 +110,7 @@ public class DexArchiveBuilderTransform extends Transform {
 
     public static final int DEFAULT_BUFFER_SIZE_IN_KB = 100;
 
-    public static final int NUMBER_OF_BUCKETS = 5;
+    public static final int NUMBER_OF_BUCKETS = 1;
 
     @NonNull private final Supplier<List<File>> androidJarClasspath;
     @NonNull private final DexOptions dexOptions;
