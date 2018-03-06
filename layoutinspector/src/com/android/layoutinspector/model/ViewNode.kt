@@ -15,6 +15,7 @@
  */
 package com.android.layoutinspector.model
 
+import com.android.layoutinspector.parser.ViewPropertyParser
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
@@ -69,15 +70,17 @@ class ViewNode// defaults in case properties are not available
 
         do {
             val index = data.indexOf('=', start)
-            val property = ViewProperty(data.substring(start, index))
+            val fullName = data.substring(start, index)
 
             val index2 = data.indexOf(',', index + 1)
             val length = Integer.parseInt(data.substring(index + 1, index2))
             start = index2 + 1 + length
-            property.value = data.substring(index2 + 1, index2 + 1 + length)
+
+            val value = data.substring(index2 + 1, index2 + 1 + length)
+            val property = ViewPropertyParser.parse(fullName, value)
 
             properties.add(property)
-            namedProperties.put(property.fullName, property)
+            namedProperties[property.fullName] = property
 
             addPropertyToGroup(property)
 
@@ -87,7 +90,7 @@ class ViewNode// defaults in case properties are not available
             }
         } while (!stop)
 
-        Collections.sort(properties)
+        properties.sort()
     }
 
     private fun addPropertyToGroup(property: ViewProperty) {
