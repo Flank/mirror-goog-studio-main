@@ -57,13 +57,14 @@ class LibraryDefinedSymbolTableTransform : ArtifactTransform() {
             ResourceDirectoryParser.parseDirectory(
                 resDir,
                 IdProvider.constant(),
-                null)
+                null
+            ).rename(pkg)
         } else {
             // If the /res directory does not exist, simply write an empty resource table.
-            SymbolTable.builder().build()
+            SymbolTable.builder().tablePackage(pkg).build()
         }
 
-        SymbolIo.writeSymbolTableWithPackage(symbols, pkg, outputFile)
+        SymbolIo.writeRDef(symbols, outputFile.toPath())
 
         return ImmutableList.of(outputFile)
     }

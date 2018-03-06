@@ -548,7 +548,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             if (generateCode
                     && (isLibrary || !dependencies.isEmpty())
                     && symbolsWithPackageNameOutputFile != null) {
-                SymbolIo.writeSymbolTableWithPackage(
+                SymbolIo.writeSymbolListWithPackageName(
                         Preconditions.checkNotNull(getTextSymbolOutputFile()).toPath(),
                         manifestFile.toPath(),
                         symbolsWithPackageNameOutputFile.toPath());

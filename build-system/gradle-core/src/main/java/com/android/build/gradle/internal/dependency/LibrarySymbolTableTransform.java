@@ -67,7 +67,7 @@ public class LibrarySymbolTableTransform extends ArtifactTransform {
         Path rTxt = explodedAar.resolve(FN_RESOURCE_TEXT);
         Files.createDirectories(outputDirectory);
         Path outputFile = outputDirectory.resolve("package-aware-r.txt");
-        SymbolIo.writeSymbolTableWithPackage(rTxt, manifest, outputFile);
+        SymbolIo.writeSymbolListWithPackageName(rTxt, manifest, outputFile);
         return outputFile;
     }
 }

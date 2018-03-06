@@ -165,7 +165,7 @@ fun mergeAndRenumberSymbols(
 fun loadDependenciesSymbolTables(libraries: Iterable<File>): ImmutableSet<SymbolTable> {
     return  ImmutableSet.builder<SymbolTable>().apply {
         for (dependency in libraries) {
-            add(SymbolIo.readTableWithPackage(dependency))
+            add(SymbolIo.readSymbolListWithPackageName(dependency.toPath()))
         }
     }.build()
 }
@@ -380,19 +380,3 @@ fun parseArrayLiteral(size: Int, valuesString: String): ImmutableList<Int> {
 
     return ints.build()
 }
-
-// Some AARs built with a preview version of the Android Gradle Plugin had badly sorted symbol
-// tables, so in that case the lenient method is used.
-fun parseArrayLiteralLenient(valuesString: String): ImmutableList<Int> =
-    ImmutableList.builder<Int>().apply {
-        VALUE_ID_SPLITTER.split(
-            valuesString.subSequence(
-                1,
-                valuesString.length - 1
-            )
-        ).forEach { value ->
-            if (!value.isEmpty()) {
-                add(valueStringToInt(value))
-            }
-        }
-    }.build()

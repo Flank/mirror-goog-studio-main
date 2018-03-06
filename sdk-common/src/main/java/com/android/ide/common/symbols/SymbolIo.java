@@ -27,15 +27,14 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -46,26 +45,51 @@ import java.util.stream.Stream;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
-/** Reads and writes symbol tables to files. */
+/**
+ * Reads and writes symbol tables to files.
+ *
+ * <pre>
+ * AAR Format:
+ *  - R.txt in AARs
+ *     - Format is <type> <class> <name> <value>
+ *     - Contains the resources for this library and all its
+ *       transitive dependencies.
+ *     - Written using writeForAar()
+ *     - Only read as part of writeSymbolListWithPackageName() as
+ *       there are corrupt files with stylable children not below
+ *       their parents in the wild.
+ *     - IDs and styleable children don't matter, as this is only
+ *       used to filtering symbols when generating R classes.
+ *
+ * AAPT2 Outputs the following formats:
+ *  - R.txt as output by AAPT2, where ID values matter.
+ *     - Format is <type> <class> <name> <value>
+ *     - Read using readFromAapt().
+ *     - This is what the R class is generated from.
+ *  - Partial R file format.
+ *     - Format is <access qualifier> <type> <class> <name>
+ *     - Contains only the resources defined in a single source file.
+ *     - Used to push R class generation earlier.
+ *
+ * Internal intermediates:
+ *  - Symbol list with package name. Used to filter down the generated R
+ *    class for this library in the non-namespaced case.
+ *     - Format is <type> <name>, with the first line as the package name.
+ *     - Contains resources from this sub-project and all its transitive dependencies.
+ *     - Read by readSymbolListWithPackageName()
+ *     - Generated from AARs and AAPT2 symbol tables by writeSymbolListWithPackageName()
+ *  - R def format,
+ *     - Used for namespace backward compatibility.
+ *     - Contains only the resources defined in a single library.
+ *     - Reuses the partial R file format, but with the package name as the
+ *       first line.
+ * </pre>
+ */
 public final class SymbolIo {
 
     public static final String ANDROID_ATTR_PREFIX = "android_";
 
     private SymbolIo() {}
-
-    /**
-     * Loads a symbol table from a symbol file.
-     *
-     * @param file the symbol file
-     * @param tablePackage the package name associated with the table
-     * @return the table read
-     * @throws IOException failed to read the table
-     */
-    @NonNull
-    public static SymbolTable read(@NonNull File file, @Nullable String tablePackage)
-            throws IOException {
-        return read(file, tablePackage, ReadConfiguration.AAR);
-    }
 
     /**
      * Loads a symbol table from a symbol file created by aapt.
@@ -117,19 +141,32 @@ public final class SymbolIo {
     /**
      * Loads a symbol table from a synthetic namespaced symbol file.
      *
-     * <p>This is just a symbol table, but with the addition of the table package as the first line.
+     * <p>See {@link #writeSymbolListWithPackageName(Path, Path, Path)} for format details.
      *
      * @param file the symbol file
      * @return the table read
      * @throws IOException failed to read the table
      */
     @NonNull
-    public static SymbolTable readTableWithPackage(@NonNull File file) throws IOException {
-        return readTableWithPackage(file.toPath());
+    public static SymbolTable readSymbolListWithPackageName(@NonNull Path file) throws IOException {
+        return readWithPackage(file, ReadConfiguration.SYMBOL_LIST_WITH_PACKAGE);
+    }
+
+    /**
+     * Loads a symbol table from an partial file.
+     *
+     * @param file the symbol file
+     * @return the table read
+     * @throws IOException failed to read the table
+     */
+    @NonNull
+    public static SymbolTable readRDef(@NonNull Path file) throws IOException {
+        return readWithPackage(file, ReadConfiguration.PARTIAL_FILE);
     }
 
     @NonNull
-    public static SymbolTable readTableWithPackage(@NonNull Path file) throws IOException {
+    private static SymbolTable readWithPackage(
+            @NonNull Path file, @NonNull ReadConfiguration readConfiguration) throws IOException {
         String tablePackage;
         SymbolTable.Builder table;
         try (Stream<String> lines = Files.lines(file, Charsets.UTF_8)) {
@@ -140,7 +177,7 @@ public final class SymbolIo {
                                 + file);
             }
             tablePackage = linesIterator.next().trim();
-            table = new SymbolLineReader(ReadConfiguration.AAR, linesIterator, file, 2).readLines();
+            table = new SymbolLineReader(readConfiguration, linesIterator, file, 2).readLines();
         }
 
         table.tablePackage(tablePackage);
@@ -158,8 +195,7 @@ public final class SymbolIo {
         private int currentLineNumber;
         @Nullable private String currentLineContent;
 
-        // Reuse lists to avoid allocations.
-        private final List<String> styleableChildrenCache = new ArrayList<>(10);
+        // Reuse list to avoid allocations.
         private final List<SymbolData> aaptStyleableChildrenCache = new ArrayList<>(10);
 
         SymbolLineReader(
@@ -190,19 +226,12 @@ public final class SymbolIo {
             readNextLine();
             try {
                 while (currentLineContent != null) {
-                    SymbolData data = readConfiguration.parseLine(currentLineContent, null);
+                    SymbolData data = readConfiguration.parseLine(currentLineContent);
                     if (data.resourceType == ResourceType.STYLEABLE) {
                         switch (data.javaType) {
                             case INT:
-                                // because there are some misordered file out there we want to make sure
-                                // both the resType is Styleable and the javaType is array.
-                                // We skip the non arrays that are out of sort
-                                if (!readConfiguration.bestEffortMisorderedFile) {
-                                    throw new IOException(
-                                            "Unexpected stylable child " + currentLineContent);
-                                }
-                                readNextLine();
-                                break;
+                                throw new IOException(
+                                        "Unexpected styleable child " + currentLineContent);
                             case INT_LIST:
                                 readNextLine();
                                 handleStyleable(table, data);
@@ -238,53 +267,39 @@ public final class SymbolIo {
             String styleableLineContent = currentLineContent;
             int styleableLineIndex = currentLineNumber;
             final String data_name = data.name + "_";
-            styleableChildrenCache.clear();
             aaptStyleableChildrenCache.clear();
-            SymbolData subData;
-            while (currentLineContent != null
-                    && (subData =
-                                    readConfiguration.parseLine(
-                                            currentLineContent, ONLY_STYLEABLE_CHILDREN))
-                            != null) {
-                if (readConfiguration.numericallySortedStyleableChildren) {
-                    if (subData.name.startsWith(data_name)) {
-                        styleableChildrenCache.add(computeItemName(data_name, subData.name));
-                    } else if (!readConfiguration.bestEffortMisorderedFile) {
-                        throw new IOException("Unexpected styleable child " + subData.name);
-                    }
-                } else {
-                    aaptStyleableChildrenCache.add(subData);
+            List<SymbolData> children = aaptStyleableChildrenCache;
+            while (currentLineContent != null) {
+                SymbolData subData = readConfiguration.parseLine(currentLineContent);
+                if (subData.resourceType != ResourceType.STYLEABLE
+                        || subData.javaType != SymbolJavaType.INT) {
+                    break;
                 }
+                children.add(subData);
                 readNextLine();
             }
 
-            ImmutableList<String> childNames;
-            if (readConfiguration.numericallySortedStyleableChildren) {
-                childNames = ImmutableList.copyOf(styleableChildrenCache);
-            } else {
+            // Having the attrs in order only matters if the values matter.
+            if (readConfiguration.readValues) {
                 try {
-                    aaptStyleableChildrenCache.sort(SYMBOL_DATA_VALUE_COMPARATOR);
+                    children.sort(SYMBOL_DATA_VALUE_COMPARATOR);
                 } catch (NumberFormatException e) {
                     // Report error from styleable parent.
                     currentLineContent = styleableLineContent;
                     currentLineNumber = styleableLineIndex;
                     throw new IOException(e);
                 }
-                ImmutableList.Builder<String> builder = ImmutableList.builder();
-                for (SymbolData aaptStyleableChild : aaptStyleableChildrenCache) {
-                    builder.add(computeItemName(data_name, aaptStyleableChild.name));
-                }
-                childNames = builder.build();
             }
+            ImmutableList.Builder<String> builder = ImmutableList.builder();
+            for (SymbolData aaptStyleableChild : children) {
+                builder.add(computeItemName(data_name, aaptStyleableChild.name));
+            }
+            ImmutableList<String> childNames = builder.build();
 
             ImmutableList<Integer> values;
             if (readConfiguration.readValues) {
                 try {
-                    if (readConfiguration.bestEffortMisorderedFile) {
-                        values = SymbolUtils.parseArrayLiteralLenient(data.value);
-                    } else {
-                        values = SymbolUtils.parseArrayLiteral(childNames.size(), data.value);
-                    }
+                    values = SymbolUtils.parseArrayLiteral(childNames.size(), data.value);
                 } catch (NumberFormatException e) {
                     // Report error from styleable parent.
                     currentLineContent = styleableLineContent;
@@ -299,11 +314,6 @@ public final class SymbolIo {
             table.add(
                     new Symbol.StyleableSymbol(data.name, values, childNames, data.accessibility));
         }
-
-        private static final SymbolFilter ONLY_STYLEABLE_CHILDREN =
-                (resType, javaType) ->
-                        resType.equals(ResourceType.STYLEABLE.getName())
-                                && javaType.equals(SymbolJavaType.INT.getTypeName());
 
         private static final Comparator<SymbolData> SYMBOL_DATA_VALUE_COMPARATOR =
                 Comparator.comparingInt(o -> Integer.parseInt(o.value));
@@ -342,14 +352,8 @@ public final class SymbolIo {
         }
     }
 
-    @FunctionalInterface
-    private interface SymbolFilter {
-        boolean validate(@NonNull String resourceType, @NonNull String javaType);
-    }
-
-    @Nullable
-    private static SymbolData readLine(@NonNull String line, @Nullable SymbolFilter filter)
-            throws IOException {
+    @NonNull
+    private static SymbolData readAaptLine(@NonNull String line) throws IOException {
         // format is "<type> <class> <name> <value>"
         // don't want to split on space as value could contain spaces.
         int pos = line.indexOf(' ');
@@ -361,9 +365,7 @@ public final class SymbolIo {
 
         int pos2 = line.indexOf(' ', pos + 1);
         String className = line.substring(pos + 1, pos2);
-        if (filter != null && !filter.validate(className, typeName)) {
-            return null;
-        }
+
         ResourceType resourceType = ResourceType.getEnum(className);
         if (resourceType == null) {
             throw new IOException("Invalid resource type " + className);
@@ -376,11 +378,9 @@ public final class SymbolIo {
         return new SymbolData(resourceType, name, type, value);
     }
 
-    @Nullable
-    private static SymbolData readPartialRLine(@NonNull String line, @Nullable SymbolFilter filter)
-            throws IOException {
+    @NonNull
+    private static SymbolData readPartialRLine(@NonNull String line) throws IOException {
         // format is "<access qualifier> <type> <class> <name>"
-        // value is 0 or empty be default
         int pos = line.indexOf(' ');
         String accessName = line.substring(0, pos);
         ResourceAccessibility accessibility = ResourceAccessibility.getEnum(accessName);
@@ -397,9 +397,7 @@ public final class SymbolIo {
 
         int pos3 = line.indexOf(' ', pos2 + 1);
         String className = line.substring(pos2 + 1, pos3);
-        if (filter != null && !filter.validate(className, typeName)) {
-            return null;
-        }
+
         ResourceType resourceType = ResourceType.getEnum(className);
         if (resourceType == null) {
             throw new IOException("Invalid resource type " + className);
@@ -407,9 +405,27 @@ public final class SymbolIo {
 
         String name = line.substring(pos3 + 1);
 
-        String value = type == SymbolJavaType.INT ? "0x000000" : "{ }";
+        return new SymbolData(accessibility, resourceType, name, type, "");
+    }
 
-        return new SymbolData(accessibility, resourceType, name, type, value);
+    @NonNull
+    private static SymbolData readSymbolListWithPackageLine(@NonNull String line)
+            throws IOException {
+        // format is "<type> <name>"
+        int pos = line.indexOf(' ');
+        String typeName = line.substring(0, pos);
+        ResourceType resourceType = ResourceType.getEnum(typeName);
+        if (resourceType == null) {
+            throw new IOException("Invalid symbol type " + typeName);
+        }
+        String name = line.substring(pos + 1);
+        // There are no styleable children in the symbol list with package, so
+        // the java type is determined by the symbol type.
+        SymbolJavaType javaType =
+                resourceType == ResourceType.STYLEABLE
+                        ? SymbolJavaType.INT_LIST
+                        : SymbolJavaType.INT;
+        return new SymbolData(resourceType, name, javaType, "");
     }
 
     private static String computeItemName(@NonNull String prefix, @NonNull String name) {
@@ -427,75 +443,61 @@ public final class SymbolIo {
     }
 
     private enum ReadConfiguration {
-        AAR(true, true, true) {
+        AAPT(true) {
+            @NonNull
             @Override
-            public SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
-                    throws IOException {
-                return SymbolIo.readLine(line, filter);
+            public SymbolData parseLine(@NonNull String line) throws IOException {
+                return readAaptLine(line);
             }
         },
-        AAPT(true, false, false) {
+        SYMBOL_LIST_WITH_PACKAGE(false) {
+            @NonNull
             @Override
-            public SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
-                    throws IOException {
-                return SymbolIo.readLine(line, filter);
+            public SymbolData parseLine(@NonNull String line) throws IOException {
+                return readSymbolListWithPackageLine(line);
             }
         },
-        LOCAL(true, false, false) {
+        PARTIAL_FILE(false) {
+            @NonNull
             @Override
-            public SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
-                    throws IOException {
-                return SymbolIo.readLine(line, filter);
-            }
-        },
-        PARTIAL_FILE(false, true, false) {
-            @Override
-            public SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
-                    throws IOException {
-                return readPartialRLine(line, filter);
+            public SymbolData parseLine(@NonNull String line) throws IOException {
+                return readPartialRLine(line);
             }
         },
         ;
 
-        ReadConfiguration(
-                boolean readValues,
-                boolean numericallySortedStyleableChildren,
-                boolean bestEffortMisorderedFile) {
+        ReadConfiguration(boolean readValues) {
             this.readValues = readValues;
-            this.numericallySortedStyleableChildren = numericallySortedStyleableChildren;
-            this.bestEffortMisorderedFile = bestEffortMisorderedFile;
         }
 
         final boolean readValues;
-        final boolean numericallySortedStyleableChildren;
-        final boolean bestEffortMisorderedFile;
 
-        abstract SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
-                throws IOException;
+        @NonNull
+        abstract SymbolData parseLine(@NonNull String line) throws IOException;
     }
     /**
      * Writes a symbol table to a symbol file.
      *
      * @param table the table
      * @param file the file where the table should be written
-     * @throws UncheckedIOException I/O error
+     * @throws IOException I/O error
      */
-    public static void write(@NonNull SymbolTable table, @NonNull File file) {
-        write(table, file.toPath(), null);
+    public static void writeForAar(@NonNull SymbolTable table, @NonNull File file)
+            throws IOException {
+        writeForAar(table, file.toPath());
     }
 
-    public static void write(@NonNull SymbolTable table, @NonNull Path file) {
-        write(table, file, null);
-    }
-
-    public static void write(
-            @NonNull SymbolTable table, @NonNull Path file, @Nullable String packageName) {
+    /**
+     * Writes a symbol table to a symbol file.
+     *
+     * @param table the table
+     * @param file the file where the table should be written
+     * @throws IOException I/O error
+     */
+    public static void writeForAar(@NonNull SymbolTable table, @NonNull Path file)
+            throws IOException {
         try (BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file));
                 PrintWriter pw = new PrintWriter(os)) {
-            if (packageName != null) {
-                pw.println(packageName);
-            }
-
             // loop on the resource types so that the order is always the same
             for (ResourceType resType : ResourceType.values()) {
                 List<Symbol> symbols = table.getSymbolByResourceType(resType);
@@ -539,8 +541,6 @@ public final class SymbolIo {
                     }
                 }
             }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
     }
 
@@ -557,11 +557,19 @@ public final class SymbolIo {
         pw.print(" }");
     }
 
-    public static void writePartialR(@NonNull SymbolTable table, @NonNull Path file) {
+    /**
+     * Writes a file listing the resources provided by the library.
+     *
+     * <p>This uses the partial-r file format of <access qualifier> <type> <class> <name> with the
+     * first line as the table package.
+     */
+    public static void writeRDef(@NonNull SymbolTable table, @NonNull Path file)
+            throws IOException {
 
         try (BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file));
                 PrintWriter pw = new PrintWriter(os)) {
-
+            pw.print(table.getTablePackage());
+            pw.print('\n');
             // loop on the resource types so that the order is always the same
             for (ResourceType resType : ResourceType.values()) {
                 List<Symbol> symbols = table.getSymbolByResourceType(resType);
@@ -599,13 +607,13 @@ public final class SymbolIo {
                     }
                 }
             }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
     }
 
     /**
-     * Writes the symbol table with the package name as the first line.
+     * Writes the abridged symbol table with the package name as the first line.
+     *
+     * <p>The subsequent lines have the format "<type> <name>"
      *
      * @param symbolTable The R.txt file. If it does not exist, the result will be a file containing
      *     only the package name
@@ -613,7 +621,7 @@ public final class SymbolIo {
      *     and written as the first line of the output.
      * @param outputFile The file to write the result to.
      */
-    public static void writeSymbolTableWithPackage(
+    public static void writeSymbolListWithPackageName(
             @NonNull Path symbolTable, @NonNull Path manifest, @NonNull Path outputFile)
             throws IOException {
         @Nullable String packageName;
@@ -622,17 +630,14 @@ public final class SymbolIo {
         } catch (SAXException | ParserConfigurationException e) {
             throw new IOException(e);
         }
-        writeSymbolTableWithPackage(symbolTable, packageName, outputFile);
-    }
-
-    /** Writes tye symbol table with the package name as the first line. */
-    public static void writeSymbolTableWithPackage(
-            @NonNull SymbolTable symbolTable, @NonNull String pkg, @NonNull File outputFile) {
-        write(symbolTable, outputFile.toPath(), pkg);
+        writeSymbolListWithPackageName(symbolTable, packageName, outputFile);
     }
 
     /**
      * Writes the symbol table with the package name as the first line.
+     *
+     * <p>This also removes styleable children and values so the subsequent lines have the format
+     * "<type> <name>"
      *
      * @param symbolTable The R.txt file. If it does not exist, the result will be a file containing
      *     only the package name
@@ -640,19 +645,44 @@ public final class SymbolIo {
      *     first line of output.
      * @param outputFile The file to write the result to.
      */
-    public static void writeSymbolTableWithPackage(
+    public static void writeSymbolListWithPackageName(
             @NonNull Path symbolTable, @Nullable String packageName, @NonNull Path outputFile)
             throws IOException {
-        try (OutputStream os = new BufferedOutputStream(Files.newOutputStream(outputFile))) {
+        try (Writer writer =
+                new PrintWriter(new BufferedOutputStream(Files.newOutputStream(outputFile)))) {
             if (packageName != null) {
-                os.write(packageName.getBytes(Charsets.UTF_8));
+                writer.write(packageName);
             }
-            os.write('\n');
+            writer.write('\n');
             if (!Files.exists(symbolTable)) {
                 return;
             }
-            try (InputStream is = new BufferedInputStream(Files.newInputStream(symbolTable))) {
-                ByteStreams.copy(is, os);
+            try (Stream<String> lines = Files.lines(symbolTable)) {
+                Iterator<String> iterator = lines.iterator();
+                while (iterator.hasNext()) {
+                    String line = iterator.next();
+                    // Ignore styleable children
+                    if (line.startsWith("int styleable ")) {
+                        continue;
+                    }
+                    // Only keep the type and the name.
+                    // e.g. "int[] styleable AppCompatTheme {750,75..."
+                    // becomes "styleable AppCompatTheme"
+                    int start = line.indexOf(' ') + 1;
+                    if (start == 0) {
+                        continue;
+                    }
+                    int middle = line.indexOf(' ', start) + 1;
+                    if (middle == 0) {
+                        continue;
+                    }
+                    int end = line.indexOf(' ', middle) + 1;
+                    if (end == 0) {
+                        continue;
+                    }
+                    writer.write(line, start, end - start - 1);
+                    writer.write('\n');
+                }
             }
         }
     }

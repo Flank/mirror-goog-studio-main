@@ -71,7 +71,7 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
         exportToCompiledJava(ImmutableList.of(resources), rJarFile.toPath())
 
         // Finally, generate the res-ids.txt file containing the package name and the resources list.
-        SymbolIo.writeSymbolTableWithPackage(resources, packageForR, resIdsFile)
+        SymbolIo.writeRDef(resources, resIdsFile.toPath())
     }
 
     class ConfigAction(

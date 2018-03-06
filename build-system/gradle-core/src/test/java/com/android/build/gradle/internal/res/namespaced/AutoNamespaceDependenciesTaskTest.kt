@@ -82,11 +82,12 @@ class AutoNamespaceDependenciesTaskTest {
 
         val rDef = tempFolder.newFile("com.example.mymodule-R-def.txt")
         val symbolTable = SymbolTable.builder()
+            .tablePackage("com.example.mymodule")
             .add(symbol("string", "s1"))
             .add(symbol("string", "s2"))
             .add(symbol("string", "s3"))
             .build()
-        SymbolIo.writeSymbolTableWithPackage(symbolTable, "com.example.mymodule", rDef)
+        SymbolIo.writeRDef(symbolTable, rDef.toPath())
 
         val node = createDependency("libA")
 
@@ -309,7 +310,7 @@ class AutoNamespaceDependenciesTaskTest {
         classesJars.put(name, classesJar)
 
         val rFile = tempFolder.newFile("com.example.$name-R-def.txt")
-        SymbolIo.writeSymbolTableWithPackage(symbolTable, "com.example.$name", rFile)
+        SymbolIo.writeRDef(symbolTable.rename( "com.example.$name"), rFile.toPath())
         rFiles.put(name, rFile)
     }
 

@@ -122,7 +122,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             // cache when reading for the first time, then just fetch the already build table.
             for (rFile in node.getTransitiveFiles(ArtifactType.DEFINED_ONLY_SYMBOL_LIST)) {
                 if (!symbolTablesCache.contains(rFile)) {
-                    val table = SymbolIo.readTableWithPackage(rFile)
+                    val table = SymbolIo.readRDef(rFile.toPath())
                     symbolTablesCache.put(rFile, table)
                 }
                 builder.add(symbolTablesCache[rFile]!!)

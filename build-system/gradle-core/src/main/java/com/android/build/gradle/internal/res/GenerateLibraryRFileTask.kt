@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.res
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -118,7 +117,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 platformSymbols = androidAttrSymbol,
                 disableMergeInLib = true)
 
-        SymbolIo.writeSymbolTableWithPackage(
+        SymbolIo.writeSymbolListWithPackageName(
                 textSymbolOutputFile.toPath(),
                 manifest.toPath(),
                 symbolsWithPackageNameOutputFile.toPath())
@@ -126,7 +125,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
     private fun getAndroidAttrSymbols(androidJar: File) =
             if (androidJar.exists())
-                SymbolIo.read(androidJar, "android")
+                SymbolIo.readFromAapt(androidJar, "android")
             else
                 SymbolTable.builder().tablePackage("android").build()
 

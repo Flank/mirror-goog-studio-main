@@ -22,10 +22,12 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
 import java.net.URLClassLoader
+import java.nio.file.Files
 import kotlin.test.assertFailsWith
 
 class PartialRTest {
@@ -92,12 +94,13 @@ class PartialRTest {
         val resIds = FileUtils.join(
                 project.getSubproject("app").intermediatesDir, "res-ids", "debug", "res-ids.txt")
         assertThat(resIds).exists()
-        assertThat(resIds).contains(
-                "" +
-                        "com.example.app\n" +
-                        "int string default_string 0x0\n" +
-                        "int string private_string 0x0\n" +
-                        "int string public_string 0x0")
+        assertThat(Files.readAllLines(resIds.toPath()))
+            .containsExactly(
+                        "com.example.app",
+                        "default int string default_string",
+                        "private int string private_string",
+                        "public int string public_string")
+            .inOrder()
 
         val rJar = FileUtils.join(
                 project.getSubproject("app").intermediatesDir, "res-rJar", "debug", "R.jar")

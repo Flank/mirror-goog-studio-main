@@ -124,7 +124,7 @@ class SymbolTablePartialRMergeTest {
         val layoutB = File(sourceSetB, "layout_layout-R.txt")
         Files.write(layoutB.toPath(), list("default int id idB", "default int layout layout"))
 
-        var result = SymbolTable.mergePartialTables(list(layoutA, layoutB), null)
+        var result = SymbolTable.mergePartialTables(list(layoutA, layoutB), "")
         assertThat(result.symbols.values()).hasSize(2)
         assertThat(result.symbols.values()).containsExactly(
                 Symbol.NormalSymbol(
@@ -138,7 +138,7 @@ class SymbolTablePartialRMergeTest {
                         0,
                     ResourceAccessibility.DEFAULT))
 
-        result = SymbolTable.mergePartialTables(list(layoutB, layoutA), null)
+        result = SymbolTable.mergePartialTables(list(layoutB, layoutA), "")
         assertThat(result.symbols.values()).hasSize(2)
         assertThat(result.symbols.values()).containsExactly(
             Symbol.NormalSymbol(
@@ -279,10 +279,11 @@ class SymbolTablePartialRMergeTest {
 
         // Write to a file so it's easier to check contents.
         val writtenResources = mTemporaryFolder.newFile("all-resources.txt")
-        SymbolIo.writePartialR(result, writtenResources.toPath())
+        SymbolIo.writeRDef(result, writtenResources.toPath())
         val lines = Files.readAllLines(writtenResources.toPath())
 
         assertThat(lines).containsExactly(
+                "com.boop.beep",
                 "default int color accent",
                 "default int color main",
                 "default int drawable image",

@@ -95,7 +95,6 @@ public class ResourceDirectoryParser {
         Preconditions.checkArgument(directory.isDirectory(), "!directory.isDirectory()");
 
         SymbolTable.Builder builder = SymbolTable.builder();
-
         File[] resourceDirectories = directory.listFiles();
         assert resourceDirectories != null;
 
