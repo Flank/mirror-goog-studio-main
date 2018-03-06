@@ -472,6 +472,7 @@ def iml_module(name,
     name = name + "_testlib",
     tags = tags,
     iml_module = ":" + name,
+    testonly = True,
     visibility = visibility,
     runtime_deps = runtime_deps + test_runtime_deps + [
       ":" + name + "_runtime",
@@ -631,6 +632,7 @@ def iml_project(name,modules=[], **kwargs):
   normalized_modules = [normalize_label(module) for module in modules]
   _iml_project(
     name = name,
+    testonly = True,  # since "_testlib" entries are added programmatically to modules list here
     modules = [n + "_runtime" for n in normalized_modules] + [n + "_testlib" for n in normalized_modules],
     **kwargs
   )

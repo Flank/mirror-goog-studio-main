@@ -1,6 +1,8 @@
 load("//tools/base/bazel:android.bzl", "dex_library")
 load("//tools/base/profiler:perf_test.bzl", "perf_test")
 
+package(default_testonly = True)
+
 sh_binary(
     name = "art-runner",
     srcs = ["//prebuilts/tools/linux-x86_64/art"],
