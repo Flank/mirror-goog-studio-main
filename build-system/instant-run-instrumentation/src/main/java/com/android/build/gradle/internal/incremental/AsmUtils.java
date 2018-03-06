@@ -81,12 +81,25 @@ public class AsmUtils {
         }
     }
 
+    public static final class ByteCodeNotFoundException extends IOException {
+        private final String className;
+
+        public ByteCodeNotFoundException(String className) {
+            this.className = className;
+        }
+
+        @Override
+        public String getMessage() {
+            return "Failed to find byte code for " + className;
+        }
+    }
+
     public static final ClassNodeProvider classLoaderBasedProvider =
             (className, logger) -> {
                 ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
                 try (InputStream is = classLoader.getResourceAsStream(className + ".class")) {
                     if (is == null) {
-                        throw new IOException("Failed to find byte code for " + className);
+                        throw new ByteCodeNotFoundException(className);
                     }
 
                     ClassReader classReader = new ClassReader(is);
@@ -312,7 +325,7 @@ public class AsmUtils {
             throws IOException {
        try (InputStream is = classLoader.getResourceAsStream(className + ".class")) {
            if (is == null) {
-               throw new IOException("Failed to find byte code for " + className);
+                throw new ByteCodeNotFoundException(className);
            }
 
            ClassReader parentClassReader = new ClassReader(is);
