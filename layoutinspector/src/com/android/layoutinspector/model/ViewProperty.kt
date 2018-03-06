@@ -18,6 +18,9 @@ package com.android.layoutinspector.model
 import com.google.common.collect.ComparisonChain
 import com.google.common.collect.Ordering
 
+/**
+ * Represents a property of a [com.android.layoutinspector.model.ViewNode].
+ */
 data class ViewProperty(val fullName: String, val name: String, val category: String?, val value: String) :
     Comparable<ViewProperty> {
     override fun toString(): String {

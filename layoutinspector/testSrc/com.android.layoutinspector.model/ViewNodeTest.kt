@@ -15,6 +15,7 @@
  */
 package com.android.layoutinspector.model
 
+import com.android.layoutinspector.parser.ViewNodeParser
 import org.junit.Assert.*
 
 import javax.swing.tree.TreePath
@@ -35,7 +36,7 @@ class ViewNodeTest {
     @Test
     @Throws(Exception::class)
     fun testParseNodeTree() {
-        val root = ViewNode.parseFlatString(viewNodeFlatString)
+        val root = ViewNodeParser.parse(viewNodeFlatString)
         assertEquals(root!!.id, "god")
         assertEquals(root.childCount.toLong(), 2)
         assertEquals(root.getChildAt(1).childCount.toLong(), 1)
@@ -44,18 +45,18 @@ class ViewNodeTest {
     @Test
     @Throws(Exception::class)
     fun testParseNodeAttrs() {
-        var node = ViewNode.parseFlatString(viewNodeFlatString)!!.getChildAt(0)
+        var node = ViewNodeParser.parse(viewNodeFlatString)!!.getChildAt(0)
         assertTrue(node.getProperty("cat:foo")!!.value!!.endsWith("happy"))
         assertEquals(node.getProperty("cow:child")!!.value, "calf")
 
-        node = ViewNode.parseFlatString(viewNodeFlatString)!!.getChildAt(1).getChildAt(0)
+        node = ViewNodeParser.parse(viewNodeFlatString)!!.getChildAt(1).getChildAt(0)
         assertEquals(node.getProperty("cat:foo")!!.value, "this is a long text")
     }
 
     @Test
     @Throws(Exception::class)
     fun testPropertiesOrdering() {
-        val root = ViewNode.parseFlatString(viewNodeFlatString)
+        val root = ViewNodeParser.parse(viewNodeFlatString)
 
         val prop1 = root!!.getChildAt(0).getProperty("cat:foo")
         val prop2 = root.getChildAt(1).getChildAt(0).getProperty("cat:foo")
@@ -85,7 +86,7 @@ class ViewNodeTest {
     @Test
     @Throws(Exception::class)
     fun testViewNodeTableModel() {
-        val node = ViewNode.parseFlatString(viewNodeFlatString)
+        val node = ViewNodeParser.parse(viewNodeFlatString)
         val model = ViewNodeTableModel()
         model.setNode(node!!)
         assertEquals(4, model.rowCount.toLong())
@@ -99,7 +100,7 @@ class ViewNodeTest {
     @Test
     @Throws(Exception::class)
     fun testViewNodeGroupProperties() {
-        val node = ViewNode.parseFlatString(viewNodeFlatString)
+        val node = ViewNodeParser.parse(viewNodeFlatString)
 
         assertEquals(node!!.groupedProperties.size.toLong(), 3)
         assertEquals(node.groupedProperties["properties"]!!.size.toLong(), 2)
@@ -111,7 +112,7 @@ class ViewNodeTest {
 
     @Test
     fun testGetPathNullRoot() {
-        val node = ViewNode.parseFlatString(viewNodeFlatString)
+        val node = ViewNodeParser.parse(viewNodeFlatString)
         val child = node!!.getChildAt(1).getChildAt(0)
 
         val nodes = arrayOf(child.getParent()?.getParent()!!, child.getParent()!!, child)
@@ -121,7 +122,7 @@ class ViewNodeTest {
 
     @Test
     fun testGetPathWithParent() {
-        val node = ViewNode.parseFlatString(viewNodeFlatString)
+        val node = ViewNodeParser.parse(viewNodeFlatString)
         val child = node!!.getChildAt(1).getChildAt(0)
         val root = child.getParent()
 
@@ -133,7 +134,7 @@ class ViewNodeTest {
     // root only affects the returned path if it's in the path.
     @Test
     fun testGetPathWithParentInvalid() {
-        val node = ViewNode.parseFlatString(viewNodeFlatString)
+        val node = ViewNodeParser.parse(viewNodeFlatString)
         val child = node!!.getChildAt(1).getChildAt(0)
         val root = node.getChildAt(0)
 
