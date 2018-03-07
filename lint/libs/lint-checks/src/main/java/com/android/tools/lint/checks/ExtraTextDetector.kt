@@ -67,6 +67,7 @@ developer believes the text to be functional)""",
                     || folderType == ResourceFolderType.ANIMATOR
                     || folderType == ResourceFolderType.DRAWABLE
                     || folderType == ResourceFolderType.COLOR
+                    || folderType == ResourceFolderType.NAVIGATION
 
     override fun visitDocument(context: XmlContext, document: Document) {
         foundText = false

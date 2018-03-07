@@ -1087,6 +1087,7 @@ public final class SdkConstants {
     // Tags: Navigation
     public static final String TAG_INCLUDE = "include";
     public static final String TAG_DEEP_LINK = "deepLink";
+    public static final String TAG_NAVIGATION = "navigation";
 
     public static final String VIEW = "View"; //$NON-NLS-1$
     public static final String VIEW_GROUP = "ViewGroup"; //$NON-NLS-1$
@@ -1352,6 +1353,7 @@ public final class SdkConstants {
     public static final String ATTR_URI = "uri";
     public static final String ATTR_AUTO_VERIFY = "autoVerify";
     public static final String ATTR_DEFAULT_NAV_HOST = "defaultNavHost";
+    public static final String ATTR_START_DESTINATION = "startDestination";
 
     // TextView attributes
     public static final String ATTR_TEXT_APPEARANCE = "textAppearance"; //$NON-NLS-1$
