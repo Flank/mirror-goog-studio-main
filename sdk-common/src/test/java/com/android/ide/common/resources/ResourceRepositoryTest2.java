@@ -161,7 +161,8 @@ public class ResourceRepositoryTest2 extends TestCase {
         assertTrue(mRepository.hasResourcesOfType(ResourceType.DRAWABLE));
         assertFalse(mRepository.hasResourcesOfType(ResourceType.ANIM));
 
-        Collection<ResourceType> availableResourceTypes = mRepository.getAvailableResourceTypes();
+        Collection<ResourceType> availableResourceTypes =
+                mRepository.getAvailableResourceTypes(ResourceNamespace.RES_AUTO);
         assertEquals(5, availableResourceTypes.size()); // layout, string, drawable, id, dimen
 
         Collection<String> allStrings = mRepository.getItemsOfType(ResourceType.STRING);

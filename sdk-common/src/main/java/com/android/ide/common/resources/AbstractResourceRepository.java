@@ -34,6 +34,7 @@ import com.android.resources.ResourceUrl;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
 import java.util.ArrayList;
@@ -414,19 +415,18 @@ public abstract class AbstractResourceRepository {
     }
 
     @NonNull
-    public Set<ResourceType> getAvailableResourceTypes() {
-        EnumSet<ResourceType> result = null;
+    public ImmutableSet<ResourceType> getAvailableResourceTypes(
+            @NonNull ResourceNamespace namespace) {
         synchronized (ITEM_MAP_LOCK) {
-            for (ResourceNamespace namespace : getNamespaces()) {
-                Set<ResourceType> types = getFullTable().row(namespace).keySet();
-                if (result == null) {
-                    result = EnumSet.copyOf(types);
-                } else {
-                    result.addAll(types);
+            EnumSet<ResourceType> result = EnumSet.noneOf(ResourceType.class);
+            for (ResourceType resourceType : ResourceType.values()) {
+                if (hasResourcesOfType(namespace, resourceType)) {
+                    result.add(resourceType);
                 }
             }
+
+            return Sets.immutableEnumSet(result);
         }
-        return result == null ? EnumSet.noneOf(ResourceType.class) : result;
     }
 
     /**
@@ -621,7 +621,7 @@ public abstract class AbstractResourceRepository {
 
             // look for the best match for the given configuration
             // the match has to be of type ResourceFile since that's what the input list contains
-            ResourceItem match = (ResourceItem) referenceConfig.findMatchingConfigurable(keyItems);
+            ResourceItem match = referenceConfig.findMatchingConfigurable(keyItems);
             return match != null ? match.getResourceValue() : null;
         }
     }

@@ -13,11 +13,15 @@
 // limitations under the License.
 package com.android.ide.common.rendering.api;
 
+import static com.android.SdkConstants.TOOLS_NS_NAME;
+import static com.android.SdkConstants.TOOLS_URI;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -80,6 +84,13 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
                         return null;
                     }
                 };
+
+        /**
+         * Contains a single mapping from "tools" to the tools URI. In the past we assumed the
+         * "tools:" prefix is defined, we need to keep doing this for projects that don't care about
+         * namespaces.
+         */
+        Resolver TOOLS_ONLY = fromBiMap(ImmutableBiMap.of(TOOLS_NS_NAME, TOOLS_URI));
 
         /**
          * Creates a new {@link Resolver} which looks up prefix definitions in the given {@link
@@ -184,7 +195,7 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
         if (uri.equals(SdkConstants.AUTO_URI)) {
             return RES_AUTO;
         }
-        if (uri.equals(SdkConstants.TOOLS_URI)) {
+        if (uri.equals(TOOLS_URI)) {
             return TOOLS;
         }
         if (uri.equals(SdkConstants.AAPT_URI)) {
@@ -258,7 +269,7 @@ public class ResourceNamespace implements Comparable<ResourceNamespace>, Seriali
 
     private static class ToolsNamespace extends ResourceNamespace {
         private ToolsNamespace() {
-            super(SdkConstants.TOOLS_URI, null);
+            super(TOOLS_URI, null);
         }
     }
 
