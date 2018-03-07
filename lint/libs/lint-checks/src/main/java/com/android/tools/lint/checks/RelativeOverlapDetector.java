@@ -397,8 +397,9 @@ public class RelativeOverlapDetector extends LayoutDetector {
                         nodeToBlame = left;
                         otherNode = right;
                     }
-                    context.report(ISSUE, nodeToBlame.getNode(),
-                            context.getLocation(nodeToBlame.getNode()),
+                    Element blameNode = nodeToBlame.getNode();
+                    context.report(ISSUE, blameNode,
+                            context.getElementLocation(blameNode),
                             String.format(
                                     "`%1$s` can overlap `%2$s` if %3$s %4$s due to localized text expansion",
                                     nodeToBlame.getNodeId(), otherNode.getNodeId(),

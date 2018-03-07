@@ -28,10 +28,10 @@ public class UseCompoundDrawableDetectorTest extends AbstractCheckTest {
     public void testCompound() throws Exception {
         //noinspection all // Sample code
         assertEquals(""
-                + "res/layout/compound.xml:3: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]\n"
-                + "<LinearLayout\n"
-                + "^\n"
-                + "0 errors, 1 warnings\n",
+                        + "res/layout/compound.xml:3: Warning: This tag and its children can be replaced by one <TextView/> and a compound drawable [UseCompoundDrawables]\n"
+                        + "<LinearLayout\n"
+                        + " ~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n",
             lintFiles(xml("res/layout/compound.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "\n"

@@ -49,7 +49,7 @@ layout "alias" file in a `layout/` folder rather than the `values/` folder where
     override fun visitDocument(context: XmlContext, document: Document) {
         val root = document.documentElement
         if (root != null && root.tagName == TAG_RESOURCES) {
-            context.report(ISSUE, root, context.getLocation(root),
+            context.report(ISSUE, root, context.getElementLocation(root),
                     "This file should be placed in a `values`/ folder, not a `layout`/ folder")
         }
     }

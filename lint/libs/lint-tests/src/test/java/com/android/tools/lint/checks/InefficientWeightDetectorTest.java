@@ -739,9 +739,9 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
     public void testIncremental4() {
         String expected = ""
                 + "res/layout/inefficient_weight3.xml:9: Warning: Use a layout_height of 0dp instead of (undefined) for better performance [InefficientWeight]\n"
-                + "    <Button\n"
-                + "    ^\n"
-                + "0 errors, 1 warnings\n";
+                + "    <Button\n" +
+                "     ~~~~~~\n" +
+                "0 errors, 1 warnings";
         lint().files(
                 mInefficient_weight3)
                 .incremental("res/layout/inefficient_weight3.xml")
@@ -762,8 +762,8 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
         String expected = ""
                 + "res/layout/inefficient_weight3.xml:9: Warning: Use a layout_height of 0dp instead of wrap_content for better performance [InefficientWeight]\n"
                 + "    <Button\n"
-                + "    ^\n"
-                + "0 errors, 1 warnings\n";
+                + "     ~~~~~~\n"
+                + "0 errors, 1 warnings";
         lint().files(
                 mInefficient_weight3,
                 mStyles_inherited_orientation)

@@ -30,15 +30,11 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
     public void testMissingConstraints() {
         String expected = ""
                 + "res/layout/layout1.xml:19: Error: This view is not constrained. It only has designtime positions, so it will jump to (0,0) at runtime unless you add the constraints [MissingConstraints]\n"
-                + "    <TextView\n"
-                + "    ^\n"
+                + "    <TextView\n" + "     ~~~~~~~~\n"
                 + "res/layout/layout1.xml:43: Error: This view is not constrained vertically: at runtime it will jump to the top unless you add a vertical constraint [MissingConstraints]\n"
-                + "    <TextView\n"
-                + "    ^\n"
+                + "    <TextView\n" + "     ~~~~~~~~\n"
                 + "res/layout/layout1.xml:53: Error: This view is not constrained horizontally: at runtime it will jump to the left unless you add a horizontal constraint [MissingConstraints]\n"
-                + "    <TextView\n"
-                + "    ^\n"
-                + "3 errors, 0 warnings\n";
+                + "    <TextView\n" + "     ~~~~~~~~\n" + "3 errors, 0 warnings";
 
         ProjectDescription project = project().files(
                 xml("res/layout/layout1.xml", ""

@@ -207,7 +207,7 @@ public class FullBackupContentDetector extends ResourceXmlDetector {
     private static String validateDomain(@NonNull XmlContext context, @NonNull Element element) {
         Attr domainNode = element.getAttributeNode(ATTR_DOMAIN);
         if (domainNode == null) {
-            context.report(ISSUE, element, context.getLocation(element),
+            context.report(ISSUE, element, context.getElementLocation(element),
                 String.format("Missing domain attribute, expected one of %1$s",
                         Joiner.on(", ").join(VALID_DOMAINS)));
             return null;

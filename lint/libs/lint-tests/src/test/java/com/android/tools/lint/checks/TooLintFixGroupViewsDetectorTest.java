@@ -28,10 +28,10 @@ public class TooLintFixGroupViewsDetectorTest extends AbstractCheckTest {
     public void testTooMany() throws Exception {
         //noinspection all // Sample code
         assertEquals(""
-                + "res/layout/too_many.xml:399: Warning: too_many.xml has more than 80 views, bad for performance [TooManyViews]\n"
-                + "                <Button\n"
-                + "                ^\n"
-                + "0 errors, 1 warnings\n",
+                        + "res/layout/too_many.xml:399: Warning: too_many.xml has more than 80 views, bad for performance [TooManyViews]\n"
+                        + "                <Button\n"
+                        + "                 ~~~~~~\n"
+                        + "0 errors, 1 warnings\n",
             lintFiles(xml("res/layout/too_many.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "\n"
@@ -451,10 +451,10 @@ public class TooLintFixGroupViewsDetectorTest extends AbstractCheckTest {
     public void testTooDeep() throws Exception {
         //noinspection all // Sample code
         assertEquals(""
-                + "res/layout/too_deep.xml:46: Warning: too_deep.xml has more than 10 levels, bad for performance [TooDeepLayout]\n"
-                + "                                    <LinearLayout\n"
-                + "                                    ^\n"
-                + "0 errors, 1 warnings\n",
+                        + "res/layout/too_deep.xml:46: Warning: too_deep.xml has more than 10 levels, bad for performance [TooDeepLayout]\n"
+                        + "                                    <LinearLayout\n"
+                        + "                                     ~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n",
             lintFiles(xml("res/layout/too_deep.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "\n"

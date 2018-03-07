@@ -309,7 +309,7 @@ public class InefficientWeightDetector extends LayoutDetector {
                         dimension, size);
                 context.report(INEFFICIENT_WEIGHT,
                         weightChild,
-                        context.getLocation(sizeNode != null ? sizeNode : weightChild), msg);
+                        context.getElementLocation(weightChild, sizeNode, null, null), msg);
 
             }
         }

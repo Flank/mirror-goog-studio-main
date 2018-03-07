@@ -28,10 +28,10 @@ public class NestedScrollingWidgetDetectorTest extends AbstractCheckTest {
     public void testNested() throws Exception {
         //noinspection all // Sample code
         assertEquals(""
-                + "res/layout/scrolling.xml:13: Warning: The vertically scrolling ScrollView should not contain another vertically scrolling widget (ListView) [NestedScrolling]\n"
-                + "  <ListView\n"
-                + "  ^\n"
-                + "0 errors, 1 warnings\n",
+                        + "res/layout/scrolling.xml:13: Warning: The vertically scrolling ScrollView should not contain another vertically scrolling widget (ListView) [NestedScrolling]\n"
+                        + "  <ListView\n"
+                        + "   ~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n",
 
             lintFiles(xml("res/layout/scrolling.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

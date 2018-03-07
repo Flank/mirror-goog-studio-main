@@ -47,4 +47,9 @@ abstract class Position {
      * @return the 0-based column number
      */
     abstract val column: Int
+
+    /** Returns true if this position is on the same lne as another position */
+    open fun sameLine(end: Position): Boolean {
+        return line == end.line
+    }
 }

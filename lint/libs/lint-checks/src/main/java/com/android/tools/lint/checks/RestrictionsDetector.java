@@ -146,13 +146,13 @@ public class RestrictionsDetector extends ResourceXmlDetector {
                 // It's okay to have <restrictions />
             } else if (restrictionType.equals(VALUE_BUNDLE_ARRAY)) {
                 if (children.size() != 1) {
-                    context.report(ISSUE, element, context.getLocation(element),
+                    context.report(ISSUE, element, context.getElementLocation(element),
                             "Expected exactly one child for restriction of type `bundle_array`");
                 }
             } else {
                 assert restrictionType.equals(VALUE_BUNDLE);
                 if (children.isEmpty()) {
-                    context.report(ISSUE, element, context.getLocation(element),
+                    context.report(ISSUE, element, context.getElementLocation(element),
                             "Restriction type `bundle` should have at least one nested "
                                     + "restriction");
 
@@ -160,7 +160,7 @@ public class RestrictionsDetector extends ResourceXmlDetector {
             }
 
             if (children.size() > MAX_NUMBER_OF_NESTED_RESTRICTIONS) {
-                context.report(ISSUE, element, context.getLocation(element), String.format(
+                context.report(ISSUE, element, context.getElementLocation(element), String.format(
                         // TODO: Reference Google Play store restriction here in error message,
                         // e.g. that violating this will cause APK to be rejected?
                         "Invalid nested restriction: too many nested restrictions "
@@ -168,7 +168,7 @@ public class RestrictionsDetector extends ResourceXmlDetector {
                         children.size(), MAX_NUMBER_OF_NESTED_RESTRICTIONS));
             } else if (depth > MAX_NESTING_DEPTH) {
                 // Same comment as for MAX_NUMBER_OF_NESTED_RESTRICTIONS: include source?
-                context.report(ISSUE, element, context.getLocation(element), String.format(
+                context.report(ISSUE, element, context.getElementLocation(element), String.format(
                         "Invalid nested restriction: nesting depth %1$d too large (max %2$d",
                         depth, MAX_NESTING_DEPTH));
             }
@@ -276,7 +276,7 @@ public class RestrictionsDetector extends ResourceXmlDetector {
             if (prefix != null) {
                 attribute = prefix + ':' + attribute;
             }
-            context.report(ISSUE, element, context.getLocation(element),
+            context.report(ISSUE, element, context.getElementLocation(element),
                     // TODO: Include namespace prefix?
                     String.format("Missing required attribute `%1$s`", attribute));
             return null;

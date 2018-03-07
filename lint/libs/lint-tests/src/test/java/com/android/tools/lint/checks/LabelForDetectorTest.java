@@ -85,65 +85,65 @@ public class LabelForDetectorTest extends AbstractCheckTest {
     }
 
     public void testWithLabelForBelow17() {
-        String expected =
-                "res/layout/labelfororhint_with_labelfor.xml:14: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
-                        + "    <EditText\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_with_labelfor.xml:31: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
-                        + "    <AutoCompleteTextView\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_with_labelfor.xml:46: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
-                        + "    <MultiAutoCompleteTextView\n"
-                        + "    ^\n"
-                        + "0 errors, 3 warnings";
+        String expected = ""
+                + "res/layout/labelfororhint_with_labelfor.xml:14: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
+                + "    <EditText\n"
+                + "     ~~~~~~~~\n"
+                + "res/layout/labelfororhint_with_labelfor.xml:31: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
+                + "    <AutoCompleteTextView\n"
+                + "     ~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/labelfororhint_with_labelfor.xml:46: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
+                + "    <MultiAutoCompleteTextView\n"
+                + "     ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 3 warnings";
         lint().files(manifest().minSdk(16), withLabelFor).run().expect(expected);
     }
 
 
     public void testWithNoHintAndNoLabelFor() {
-        String expected =
-                "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:5: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint [LabelFor]\n"
-                        + "    <EditText\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:14: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint [LabelFor]\n"
-                        + "    <AutoCompleteTextView\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:21: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint [LabelFor]\n"
-                        + "    <MultiAutoCompleteTextView\n"
-                        + "    ^\n"
-                        + "0 errors, 3 warnings";
+        String expected = ""
+                + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:5: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint [LabelFor]\n"
+                + "    <EditText\n"
+                + "     ~~~~~~~~\n"
+                + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:14: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint [LabelFor]\n"
+                + "    <AutoCompleteTextView\n"
+                + "     ~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:21: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint [LabelFor]\n"
+                + "    <MultiAutoCompleteTextView\n"
+                + "     ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 3 warnings";
 
         lint().files(manifest().minSdk(17), noHintNoLabelFor).run().expect(expected);
     }
 
     public void testWithNoHintAndNoLabelForBelow17() {
-        String expected =
-                "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:5: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
-                        + "    <EditText\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:14: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
-                        + "    <AutoCompleteTextView\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:21: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
-                        + "    <MultiAutoCompleteTextView\n"
-                        + "    ^\n"
-                        + "0 errors, 3 warnings";
+        String expected = ""
+                + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:5: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
+                + "    <EditText\n"
+                + "     ~~~~~~~~\n"
+                + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:14: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
+                + "    <AutoCompleteTextView\n"
+                + "     ~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:21: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
+                + "    <MultiAutoCompleteTextView\n"
+                + "     ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 3 warnings";
 
         lint().files(manifest().minSdk(16), noHintNoLabelFor).run().expect(expected);
     }
 
     public void testWithHintAndLabelFor() {
-        String expected =
-                "res/layout/labelfororhint_with_hint_and_labelfor.xml:14: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint, but not both [LabelFor]\n"
-                        + "    <EditText\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_with_hint_and_labelfor.xml:32: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint, but not both [LabelFor]\n"
-                        + "    <AutoCompleteTextView\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_with_hint_and_labelfor.xml:48: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint, but not both [LabelFor]\n"
-                        + "    <MultiAutoCompleteTextView\n"
-                        + "    ^\n"
-                        + "0 errors, 3 warnings";
+        String expected = ""
+                + "res/layout/labelfororhint_with_hint_and_labelfor.xml:14: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint, but not both [LabelFor]\n"
+                + "    <EditText\n"
+                + "     ~~~~~~~~\n"
+                + "res/layout/labelfororhint_with_hint_and_labelfor.xml:32: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint, but not both [LabelFor]\n"
+                + "    <AutoCompleteTextView\n"
+                + "     ~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/labelfororhint_with_hint_and_labelfor.xml:48: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint, but not both [LabelFor]\n"
+                + "    <MultiAutoCompleteTextView\n"
+                + "     ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 3 warnings";
 
         lint().files(manifest().minSdk(17), hintAndLabelFor).run().expect(expected);
     }
@@ -154,17 +154,17 @@ public class LabelForDetectorTest extends AbstractCheckTest {
 
 
     public void testWithLabelForNoTextNoContentDescription() {
-        String expected =
-                "res/layout/labelfororhint_no_text_no_contentdescription.xml:5: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
-                        + "    <TextView\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_no_text_no_contentdescription.xml:21: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
-                        + "    <TextView\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_no_text_no_contentdescription.xml:35: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
-                        + "    <TextView\n"
-                        + "    ^\n"
-                        + "0 errors, 3 warnings";
+        String expected = ""
+                + "res/layout/labelfororhint_no_text_no_contentdescription.xml:9: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                + "            android:labelFor=\"@+id/editText1\"\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/labelfororhint_no_text_no_contentdescription.xml:25: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                + "            android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/labelfororhint_no_text_no_contentdescription.xml:39: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                + "            android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 3 warnings";
         lint().files(manifest().minSdk(17),
                 xml("res/layout/labelfororhint_no_text_no_contentdescription.xml",
                         "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -223,64 +223,63 @@ public class LabelForDetectorTest extends AbstractCheckTest {
                 .expect(expected)
                 .verifyFixes()
                 .window(2)
-                .expectFixDiffs(
-                        ""
-                                + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 4: Set text:\n"
-                                + "@@ -12 +12\n"
-                                + "          android:layout_height=\"wrap_content\"\n"
-                                + "          android:labelFor=\"@+id/editText1\"\n"
-                                + "+         android:text=\"|\"\n"
-                                + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
-                                + "  \n"
-                                + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 4: Set contentDescription:\n"
-                                + "@@ -11 +11\n"
-                                + "          android:layout_width=\"wrap_content\"\n"
-                                + "          android:layout_height=\"wrap_content\"\n"
-                                + "+         android:contentDescription=\"|\"\n"
-                                + "          android:labelFor=\"@+id/editText1\"\n"
-                                + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
-                                + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 20: Set text:\n"
-                                + "@@ -29 +29\n"
-                                + "          android:layout_height=\"wrap_content\"\n"
-                                + "          android:labelFor=\"@+id/autoCompleteTextView1\"\n"
-                                + "+         android:text=\"|\"\n"
-                                + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
-                                + "  \n"
-                                + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 20: Set contentDescription:\n"
-                                + "@@ -28 +28\n"
-                                + "          android:layout_width=\"wrap_content\"\n"
-                                + "          android:layout_height=\"wrap_content\"\n"
-                                + "+         android:contentDescription=\"|\"\n"
-                                + "          android:labelFor=\"@+id/autoCompleteTextView1\"\n"
-                                + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
-                                + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 34: Set text:\n"
-                                + "@@ -43 +43\n"
-                                + "          android:layout_height=\"wrap_content\"\n"
-                                + "          android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
-                                + "+         android:text=\"|\"\n"
-                                + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
-                                + "  \n"
-                                + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 34: Set contentDescription:\n"
-                                + "@@ -42 +42\n"
-                                + "          android:layout_width=\"wrap_content\"\n"
-                                + "          android:layout_height=\"wrap_content\"\n"
-                                + "+         android:contentDescription=\"|\"\n"
-                                + "          android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
-                                + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n");
+                .expectFixDiffs(""
+                        + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 8: Set text:\n"
+                        + "@@ -12 +12\n"
+                        + "          android:layout_height=\"wrap_content\"\n"
+                        + "          android:labelFor=\"@+id/editText1\"\n"
+                        + "+         android:text=\"|\"\n"
+                        + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
+                        + "  \n"
+                        + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 8: Set contentDescription:\n"
+                        + "@@ -11 +11\n"
+                        + "          android:layout_width=\"wrap_content\"\n"
+                        + "          android:layout_height=\"wrap_content\"\n"
+                        + "+         android:contentDescription=\"|\"\n"
+                        + "          android:labelFor=\"@+id/editText1\"\n"
+                        + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
+                        + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 24: Set text:\n"
+                        + "@@ -29 +29\n"
+                        + "          android:layout_height=\"wrap_content\"\n"
+                        + "          android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                        + "+         android:text=\"|\"\n"
+                        + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
+                        + "  \n"
+                        + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 24: Set contentDescription:\n"
+                        + "@@ -28 +28\n"
+                        + "          android:layout_width=\"wrap_content\"\n"
+                        + "          android:layout_height=\"wrap_content\"\n"
+                        + "+         android:contentDescription=\"|\"\n"
+                        + "          android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                        + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
+                        + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 38: Set text:\n"
+                        + "@@ -43 +43\n"
+                        + "          android:layout_height=\"wrap_content\"\n"
+                        + "          android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                        + "+         android:text=\"|\"\n"
+                        + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
+                        + "  \n"
+                        + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 38: Set contentDescription:\n"
+                        + "@@ -42 +42\n"
+                        + "          android:layout_width=\"wrap_content\"\n"
+                        + "          android:layout_height=\"wrap_content\"\n"
+                        + "+         android:contentDescription=\"|\"\n"
+                        + "          android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                        + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />");
     }
 
     public void testWithLabelForEmptyText() {
-        String expected =
-                "res/layout/labelfororhint_empty_text.xml:6: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
-                        + "    <TextView\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_empty_text.xml:23: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
-                        + "    <TextView\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_empty_text.xml:38: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
-                        + "    <TextView\n"
-                        + "    ^\n"
-                        + "0 errors, 3 warnings";
+        String expected = ""
+                + "res/layout/labelfororhint_empty_text.xml:10: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                + "            android:labelFor=\"@+id/editText1\"\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/labelfororhint_empty_text.xml:27: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                + "            android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/labelfororhint_empty_text.xml:42: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                + "            android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 3 warnings";
 
         lint().files(manifest().minSdk(17),
                 xml("res/layout/labelfororhint_empty_text.xml",
@@ -339,17 +338,17 @@ public class LabelForDetectorTest extends AbstractCheckTest {
     }
 
     public void testWithLabelForEmptyContentDescription() {
-        String expected =
-                "res/layout/labelfororhint_empty_contentdescription.xml:5: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
-                        + "    <TextView\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_empty_contentdescription.xml:22: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
-                        + "    <TextView\n"
-                        + "    ^\n"
-                        + "res/layout/labelfororhint_empty_contentdescription.xml:37: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
-                        + "    <TextView\n"
-                        + "    ^\n"
-                        + "0 errors, 3 warnings";
+        String expected = ""
+                + "res/layout/labelfororhint_empty_contentdescription.xml:9: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                + "            android:labelFor=\"@+id/editText1\"\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/labelfororhint_empty_contentdescription.xml:26: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                + "            android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/layout/labelfororhint_empty_contentdescription.xml:41: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                + "            android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 3 warnings";
 
         lint().files(manifest().minSdk(17),
                 xml("res/layout/labelfororhint_empty_contentdescription.xml",

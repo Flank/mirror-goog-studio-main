@@ -149,7 +149,7 @@ public class ResourcePrefixDetector extends Detector implements
                     if (xmlContext.document != null) {
                         Element root = xmlContext.document.getDocumentElement();
                         if (root != null) {
-                            xmlContext.report(ISSUE, root, xmlContext.getLocation(root),
+                            xmlContext.report(ISSUE, root, xmlContext.getElementLocation(root),
                                     getErrorMessage(name, folderType));
                             return;
                         }

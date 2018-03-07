@@ -27,10 +27,10 @@ public class WrongLocationDetectorTest extends AbstractCheckTest {
 
     public void test() throws Exception {
         assertEquals(""
-                + "res/layout/alias.xml:17: Error: This file should be placed in a values/ folder, not a layout/ folder [WrongFolder]\n"
-                + "<resources>\n"
-                + "^\n"
-                + "1 errors, 0 warnings\n",
+                        + "res/layout/alias.xml:17: Error: This file should be placed in a values/ folder, not a layout/ folder [WrongFolder]\n"
+                        + "<resources>\n"
+                        + " ~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
 
         lintProject(mStrings));
     }

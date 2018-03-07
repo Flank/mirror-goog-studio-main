@@ -35,11 +35,11 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
                 + "res/drawable-mdpi/frame.png: Error: Resource named 'frame' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_frame' ? [ResourceName]\n"
                 + "res/layout/layout1.xml:2: Error: Resource named 'layout1' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_layout1' ? [ResourceName]\n"
                 + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "^\n"
+                + " ~~~~~~~~~~~~\n"
                 + "res/menu/menu.xml:2: Error: Resource named 'menu' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_menu' ? [ResourceName]\n"
                 + "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\" >\n"
-                + "^\n"
-                + "3 errors, 0 warnings\n";
+                + " ~~~~\n"
+                + "3 errors, 0 warnings";
 
         ProjectDescription project = project(
                 xml("res/layout/layout1.xml", ""
@@ -136,8 +136,8 @@ public class ResourcePrefixDetectorTest extends AbstractCheckTest {
                 + "              ~~~~~~~~~~~~~~~~\n"
                 + "res/layout/customattrlayout.xml:2: Error: Resource named 'customattrlayout' does not start with the project's resource prefix 'unit_test_prefix_'; rename to 'unit_test_prefix_customattrlayout' ? [ResourceName]\n"
                 + "<foo.bar.ContentFrame\n"
-                + "^\n"
-                + "4 errors, 0 warnings\n";
+                + " ~~~~~~~~~~~~~~~~~~~~\n"
+                + "4 errors, 0 warnings";
 
         //noinspection all // Sample code
         ProjectDescription project = project(

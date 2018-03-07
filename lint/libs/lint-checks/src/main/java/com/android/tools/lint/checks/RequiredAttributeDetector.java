@@ -527,7 +527,7 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
                             + escapedLayoutWidthPercent).replace(escapedLayoutHeight,
                             escapedLayoutHeight + " or " + escapedLayoutHeightPercent);
                 }
-                context.report(ISSUE, element, context.getLocation(element),
+                context.report(ISSUE, element, context.getElementLocation(element),
                         message);
             }
         }

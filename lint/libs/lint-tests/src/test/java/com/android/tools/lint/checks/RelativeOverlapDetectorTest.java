@@ -28,10 +28,10 @@ public class RelativeOverlapDetectorTest extends AbstractCheckTest {
     public void testOneOverlap() throws Exception {
         //noinspection all // Sample code
         assertEquals(""
-                + "res/layout/relative_overlap.xml:17: Warning: @id/label2 can overlap @id/label1 if @string/label1_text, @string/label2_text grow due to localized text expansion [RelativeOverlap]\n"
-                + "        <TextView\n"
-                + "        ^\n"
-                + "0 errors, 1 warnings\n",
+                        + "res/layout/relative_overlap.xml:17: Warning: @id/label2 can overlap @id/label1 if @string/label1_text, @string/label2_text grow due to localized text expansion [RelativeOverlap]\n"
+                        + "        <TextView\n"
+                        + "         ~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n",
             lintFiles(xml("res/layout/relative_overlap.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -129,10 +129,10 @@ public class RelativeOverlapDetectorTest extends AbstractCheckTest {
 
     public void testOneOverlapPercent() throws Exception {
         assertEquals(""
-                + "res/layout/relative_percent_overlap.xml:17: Warning: @id/label2 can overlap @id/label1 if @string/label1_text, @string/label2_text grow due to localized text expansion [RelativeOverlap]\n"
-                + "        <TextView\n"
-                + "        ^\n"
-                + "0 errors, 1 warnings\n",
+                        + "res/layout/relative_percent_overlap.xml:17: Warning: @id/label2 can overlap @id/label1 if @string/label1_text, @string/label2_text grow due to localized text expansion [RelativeOverlap]\n"
+                        + "        <TextView\n"
+                        + "         ~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n",
                 lintProject(xml("res/layout/relative_percent_overlap.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"

@@ -261,9 +261,6 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         element: Element?,
         defaultLocale: String?
     ) {
-        if (name == "abc_action_bar_embed_tabs") {
-            println("here")
-        }
         when (type) {
             MIPMAP,
                 // Extra translation checks don't apply to some of the resource types
@@ -637,9 +634,6 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         }
 
         if (element != null && context is XmlContext) {
-            // TODO: Use different issue types for strings and others
-            val locationNode = element.getAttributeNode(ATTR_NAME) ?: element
-
             // Offer quickfix only for resource item values for now, not whole files
             // (which would require additional to LintFix infrastructure)
             val fix = if (context.resourceFolderType == VALUES) {
@@ -659,10 +653,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                 EXTRA
             else
                 MISSING_BASE
-            context.report(
-                issue, element, context.getLocation(locationNode), message,
-                fix
-            )
+            val location = context.getElementLocation(element, attribute = ATTR_NAME)
+            context.report(issue, element, location, message, fix)
         } else {
             // Non-XML violation: bitmaps in drawable folders
             val location = Location.create(context.file)
