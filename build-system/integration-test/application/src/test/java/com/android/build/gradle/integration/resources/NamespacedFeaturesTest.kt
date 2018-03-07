@@ -31,26 +31,29 @@ import org.objectweb.asm.Opcodes
 /**
  * Tests the new namespaced resource pipeline for a project with many features.
  *
- * Project roughly structured as follows (see coded dependencies below for exact structure) :
+ * Project roughly structured as follows (see implementation below for exact structure) :
  *
  * <pre>
- *   instantApp  --->                 --->  library3  -------->
- *                     otherFeature2                             library2
- *        ---------->                 --->                 --->            ------>
- *   app                                    otherFeature1                           library1
- *        ------------------------------->                 --->  baseFeature  --->
+ *                  ---------->  library3  -------->
+ *   otherFeature2                                    library2
+ *                  ---------->                 --->            ------>
+ *                               otherFeature1                           library1
+ *   notNamespacedFeature  --->                 --->  baseFeature  --->
+ *
+ *
+ * More explicitly,
+ *        otherFeature2  depends on  library3, otherFeature1, baseFeature
+ * notNamespacedFeature  depends on  otherFeature1, baseFeature
+ *        otherFeature1  depends on  library2, baseFeature
+ *          baseFeature  depends on  library1
+ *             library3  depends on  library2
+ *             library2  depends on  library1
  * </pre>
  */
 class NamespacedFeaturesTest {
 
-    // TODO: add a non-namespaced feature to project?
-
-    private val buildScriptContent = """
-        android.aaptOptions.namespaced = true
-    """
-
     private val lib1 = MinimalSubProject.lib("com.example.lib1")
-            .appendToBuild(buildScriptContent)
+            .appendToBuild("android.aaptOptions.namespaced = true\n")
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources><string name="lib1String">Lib1 string</string></resources>""")
@@ -78,7 +81,7 @@ class NamespacedFeaturesTest {
                     </resources>""")
 
     private val lib2 = MinimalSubProject.lib("com.example.lib2")
-            .appendToBuild(buildScriptContent)
+            .appendToBuild("android.aaptOptions.namespaced = true\n")
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources>
@@ -111,7 +114,7 @@ class NamespacedFeaturesTest {
                     </resources>""")
 
     private val lib3 = MinimalSubProject.lib("com.example.lib3")
-            .appendToBuild(buildScriptContent)
+            .appendToBuild("android.aaptOptions.namespaced = true\n")
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources>
@@ -157,7 +160,8 @@ class NamespacedFeaturesTest {
                     </resources>""")
 
     private val baseFeature = MinimalSubProject.feature("com.example.baseFeature")
-            .appendToBuild(buildScriptContent + "\nandroid.baseFeature true")
+            .appendToBuild("android.aaptOptions.namespaced = true\n")
+            .appendToBuild("android.baseFeature true\n")
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources>
@@ -179,7 +183,7 @@ class NamespacedFeaturesTest {
                     </resources>""")
 
     private val otherFeature1 = MinimalSubProject.feature("com.example.otherFeature1")
-            .appendToBuild(buildScriptContent)
+            .appendToBuild("android.aaptOptions.namespaced = true\n")
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources>
@@ -217,7 +221,7 @@ class NamespacedFeaturesTest {
 
 
     private val otherFeature2 = MinimalSubProject.feature("com.example.otherFeature2")
-            .appendToBuild(buildScriptContent)
+            .appendToBuild("android.aaptOptions.namespaced = true\n")
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources xmlns:lib3="http://schemas.android.com/apk/res/com.example.lib3">
@@ -255,8 +259,15 @@ class NamespacedFeaturesTest {
                         <public type="string" name="lib1String" />
                     </resources>""")
 
+    private val notNamespacedFeature = MinimalSubProject.feature("com.example.notNamespacedFeature")
+            .withFile(
+                    "src/main/res/values/strings.xml",
+                    """<resources>
+                        <string name="notNamespacedFeatureString">Not Namespaced Feature String</string>
+                    </resources>""")
+
     private val app = MinimalSubProject.app("com.example.app")
-            .appendToBuild(buildScriptContent)
+            .appendToBuild("android.aaptOptions.namespaced = true\n")
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources>
@@ -284,14 +295,18 @@ class NamespacedFeaturesTest {
                     .subproject(":baseFeature", baseFeature)
                     .subproject(":otherFeature1", otherFeature1)
                     .subproject(":otherFeature2", otherFeature2)
+                    .subproject(":notNamespacedFeature", notNamespacedFeature)
                     .subproject(":app", app)
                     .subproject(":instantApp", instantApp)
                     .dependency(app, otherFeature1)
                     .dependency(app, otherFeature2)
+                    .dependency(app, notNamespacedFeature)
                     .dependency(otherFeature2, otherFeature1)
                     // TODO: (b/73948401) get rid of direct dependency of otherFeature2 on baseFeature.
                     .dependency(otherFeature2, baseFeature)
                     .dependency(otherFeature2, lib3)
+                    .dependency(notNamespacedFeature, otherFeature1)
+                    .dependency(notNamespacedFeature, baseFeature)
                     .dependency(lib3, lib2)
                     .dependency(otherFeature1, lib2)
                     .dependency(otherFeature1, baseFeature)
@@ -300,10 +315,12 @@ class NamespacedFeaturesTest {
                     .dependency(instantApp, baseFeature)
                     .dependency(instantApp, otherFeature1)
                     .dependency(instantApp, otherFeature2)
+                    .dependency(instantApp, notNamespacedFeature)
                     // Reverse dependencies for the instant app.
                     .dependency("application", baseFeature, app)
                     .dependency("feature", baseFeature, otherFeature1)
                     .dependency("feature", baseFeature, otherFeature2)
+                    .dependency("feature", baseFeature, notNamespacedFeature)
                     .build()
 
     @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
@@ -317,6 +334,8 @@ class NamespacedFeaturesTest {
                         ":otherFeature1:assembleDebugAndroidTest",
                         ":otherFeature2:assembleDebug",
                         ":otherFeature2:assembleDebugAndroidTest",
+                        ":notNamespacedFeature:assembleDebug",
+                        ":notNamespacedFeature:assembleDebugAndroidTest",
                         ":app:assembleDebug",
                         ":app:assembleDebugAndroidTest")
 
