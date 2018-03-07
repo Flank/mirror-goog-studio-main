@@ -853,10 +853,11 @@ public class TestLintClient extends LintCliClient {
         ILogger logger = new StdLogger(StdLogger.Level.INFO);
         ResourceMerger merger = new ResourceMerger(0);
 
+        ResourceNamespace namespace = project.getResourceNamespace();
         ResourceSet resourceSet =
                 new ResourceSet(
                         project.getName(),
-                        ResourceNamespace.RES_AUTO,
+                        namespace,
                         getProjectResourceLibraryName(),
                         true) {
                     @Override

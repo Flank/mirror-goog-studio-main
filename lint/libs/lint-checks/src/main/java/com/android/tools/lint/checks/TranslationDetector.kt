@@ -25,7 +25,6 @@ import com.android.SdkConstants.TAG_STRING_ARRAY
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VALUE_FALSE
 import com.android.builder.model.ProductFlavorContainer
-import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.resources.LocaleManager
 import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.configuration.DensityQualifier
@@ -311,7 +310,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             .getResourceRepository(context.mainProject, true, false) ?: return
 
         val items: List<ResourceItem> =
-            resources.getResourceItems(ResourceNamespace.RES_AUTO, type, name)
+            resources.getResourceItems(context.project.resourceNamespace, type, name)
         val hasDefault = items.filter { isDefaultFolder(null, null, it.qualifiers) }.any()
         if (!hasDefault) {
             reportExtraResource(type, name, context, element)

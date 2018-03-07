@@ -1180,6 +1180,24 @@ class TranslationDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testNamespaces() {
+        // Regression test for issue 74227702: Make sure we correctly handle
+        // namespaced resources
+        lint().files(
+            xml("res/layout/activity_main.xml", """<merge/>""").indented(),
+            gradle(
+                """
+                    buildscript {
+                        dependencies {
+                            classpath 'com.android.tools.build:gradle:3.2.0-alpha4'
+                        }
+                    }
+                    android.aaptOptions.namespaced true
+                    """
+            ).indented()
+        ).run().expectClean()
+    }
+
     fun testExtraResourcesOfOtherTypesIncremental() {
         lint().files(
             xml(
