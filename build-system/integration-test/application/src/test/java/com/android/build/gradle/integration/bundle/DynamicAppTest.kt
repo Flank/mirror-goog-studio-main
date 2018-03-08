@@ -16,11 +16,13 @@
 
 package com.android.build.gradle.integration.bundle
 
+import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.AndroidProject
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
 import com.google.common.truth.Truth
+import org.junit.Assume
 import org.junit.ClassRule
 import org.junit.Test
 import java.io.File
@@ -56,6 +58,7 @@ class DynamicAppTest {
 
     @Test
     fun testBundle() {
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
         project.execute("bundle:bundle")
 
         val bundleFile = File(project.getSubproject("bundle").buildDir, "bundle.aab")

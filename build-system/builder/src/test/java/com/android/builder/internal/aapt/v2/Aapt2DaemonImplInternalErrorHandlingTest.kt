@@ -133,7 +133,8 @@ class Aapt2DaemonImplInternalErrorHandlingTest {
         assertThat(exception.message).isEqualTo(
                 "AAPT2 fake_version Daemon " +
                         "'Aapt2DaemonImplTest.testBinaryThatExitsAfterReady': " +
-                        "Unexpected error during compile 'values/does_not_matter.xml', " +
+                        "Unexpected error during compile 'values" + File.separatorChar +
+                        "does_not_matter.xml', " +
                         "attempting to stop daemon.\n" +
                         "This should not happen under normal circumstances, " +
                         "please file an issue if it does.")
