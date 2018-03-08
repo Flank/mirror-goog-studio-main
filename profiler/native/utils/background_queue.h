@@ -17,6 +17,7 @@
 #define UTILS_BACKGROUND_QUEUE_H
 
 #include <atomic>
+#include <functional>
 #include <string>
 #include <thread>
 

@@ -17,6 +17,7 @@
 #define PERFD_SESSIONS_SESSIONS_MANAGER_H
 
 #include <climits>
+#include <functional>
 #include <list>
 #include <mutex>
 #include <string>
