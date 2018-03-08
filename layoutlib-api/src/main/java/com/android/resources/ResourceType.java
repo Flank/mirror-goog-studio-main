@@ -131,19 +131,6 @@ public enum ResourceType {
         return sNameToType.get(name);
     }
 
-    /**
-     * Returns an array with all the names defined by this enum.
-     */
-    @NonNull
-    public static String[] getNames() {
-        ResourceType[] values = values();
-        String[] names = new String[values.length];
-        for (int i = values.length; --i >= 0;) {
-            names[i] = values[i].getName();
-        }
-        return names;
-    }
-
     @Override
     public String toString() {
         return getName();

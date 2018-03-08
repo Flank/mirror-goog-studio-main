@@ -395,7 +395,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         } else if (expectedType.contains(ResourceEvaluator.DIMENSION_MARKER_TYPE)) {
             message = String.format("Should pass resolved pixel size instead of resource id here: " + "`getResources().getDimension*(%1\$s)`",
                     argument.asSourceString())
-        } else if (expectedType.size < ResourceType.getNames().size - 2) { // -2: marker types
+        } else if (expectedType.size < ResourceType.values().size - 2) { // -2: marker types
             message = String.format("Expected resource of type %1\$s",
                     Joiner.on(" or ").join(expectedType))
         } else {
