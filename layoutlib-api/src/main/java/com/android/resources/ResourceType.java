@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.resources;
-
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -26,31 +24,31 @@ import java.util.Map;
  * Enum representing a type of compiled resource.
  */
 public enum ResourceType {
-    ANIM("anim", "Animation"), //$NON-NLS-1$
-    ANIMATOR("animator", "Animator"), //$NON-NLS-1$
-    ARRAY("array", "Array", "string-array", "integer-array"), //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-4$
-    ATTR("attr", "Attr"), //$NON-NLS-1$
-    BOOL("bool", "Boolean"), //$NON-NLS-1$
-    COLOR("color", "Color"), //$NON-NLS-1$
-    DECLARE_STYLEABLE("declare-styleable", "Declare Styleable"), //$NON-NLS-1$
-    DIMEN("dimen", "Dimension"), //$NON-NLS-1$
-    DRAWABLE("drawable", "Drawable"), //$NON-NLS-1$
-    FONT("font", "Font"), //$NON-NLS-1$
-    FRACTION("fraction", "Fraction"), //$NON-NLS-1$
-    ID("id", "ID"), //$NON-NLS-1$
-    INTEGER("integer", "Integer"), //$NON-NLS-1$
-    INTERPOLATOR("interpolator", "Interpolator"), //$NON-NLS-1$
-    LAYOUT("layout", "Layout"), //$NON-NLS-1$
-    MENU("menu", "Menu"), //$NON-NLS-1$
-    MIPMAP("mipmap", "Mip Map"), //$NON-NLS-1$
-    NAVIGATION("navigation", "Navigation"), //$NON-NLS-1$
-    PLURALS("plurals", "Plurals"), //$NON-NLS-1$
-    RAW("raw", "Raw"), //$NON-NLS-1$
-    STRING("string", "String"), //$NON-NLS-1$
-    STYLE("style", "Style"), //$NON-NLS-1$
-    STYLEABLE("styleable", "Styleable"), //$NON-NLS-1$
-    TRANSITION("transition", "Transition"), //$NON-NLS-1$
-    XML("xml", "XML"), //$NON-NLS-1$
+    ANIM("anim", "Animation"),
+    ANIMATOR("animator", "Animator"),
+    ARRAY("array", "Array", "string-array", "integer-array"),
+    ATTR("attr", "Attr"),
+    BOOL("bool", "Boolean"),
+    COLOR("color", "Color"),
+    DECLARE_STYLEABLE("declare-styleable", "Declare Styleable"),
+    DIMEN("dimen", "Dimension"),
+    DRAWABLE("drawable", "Drawable"),
+    FONT("font", "Font"),
+    FRACTION("fraction", "Fraction"),
+    ID("id", "ID"),
+    INTEGER("integer", "Integer"),
+    INTERPOLATOR("interpolator", "Interpolator"),
+    LAYOUT("layout", "Layout"),
+    MENU("menu", "Menu"),
+    MIPMAP("mipmap", "Mip Map"),
+    NAVIGATION("navigation", "Navigation"),
+    PLURALS("plurals", "Plurals"),
+    RAW("raw", "Raw"),
+    STRING("string", "String"),
+    STYLE("style", "Style"),
+    STYLEABLE("styleable", "Styleable"),
+    TRANSITION("transition", "Transition"),
+    XML("xml", "XML"),
 
     /**
      * This is not actually used. Only there because they get parsed and since we want to detect new
@@ -140,7 +138,7 @@ public enum ResourceType {
     public static String[] getNames() {
         ResourceType[] values = values();
         String[] names = new String[values.length];
-        for (int i = values.length - 1; i >= 0; --i) {
+        for (int i = values.length; --i >= 0;) {
             names[i] = values[i].getName();
         }
         return names;
