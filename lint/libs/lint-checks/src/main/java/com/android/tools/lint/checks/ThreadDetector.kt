@@ -33,6 +33,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
+import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UAnonymousClass
@@ -229,7 +230,6 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
     /** Attempts to infer the current thread context at the site of the given method call  */
     private fun getThreadContext(context: JavaContext, methodCall: UElement): List<String>? {
-
         val method = methodCall.getParentOfType<UElement>(UMethod::class.java, true,
                 UAnonymousClass::class.java, ULambdaExpression::class.java) as? PsiMethod
         return getThreads(context, method)
@@ -244,14 +244,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             while (method != null) {
                 for (annotation in method.modifierList.annotations) {
-                    val name = annotation.qualifiedName
-                    if (name != null && SUPPORT_ANNOTATIONS_PREFIX.isPrefix(name)
-                            && name.endsWith(THREAD_SUFFIX)) {
-                        if (result == null) {
-                            result = ArrayList(4)
-                        }
-                        result.add(name)
-                    }
+                    result = addThreadAnnotations(annotation, result)
                 }
                 if (result != null) {
                     // We don't accumulate up the chain: one method replaces the requirements
@@ -266,14 +259,7 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 val modifierList = cls.modifierList
                 if (modifierList != null) {
                     for (annotation in modifierList.annotations) {
-                        val name = annotation.qualifiedName
-                        if (name != null && SUPPORT_ANNOTATIONS_PREFIX.isPrefix(name)
-                                && name.endsWith(THREAD_SUFFIX)) {
-                            if (result == null) {
-                                result = ArrayList(4)
-                            }
-                            result.add(name)
-                        }
+                        result = addThreadAnnotations(annotation, result)
                     }
                     if (result != null) {
                         // We don't accumulate up the chain: one class replaces the requirements
@@ -292,6 +278,32 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         // this thread too (assuming the call is direct).
 
         return null
+    }
+
+    private fun addThreadAnnotations(
+        annotation: PsiAnnotation,
+        result: MutableList<String>?
+    ): MutableList<String>? {
+        var resultList = result
+        val name = annotation.qualifiedName
+        if (name != null && SUPPORT_ANNOTATIONS_PREFIX.isPrefix(name)
+            && name.endsWith(THREAD_SUFFIX)) {
+            if (resultList == null) {
+                resultList = ArrayList(4)
+            }
+
+            // Ensure that we always use the same package such that we don't think
+            // android.support.annotation.UiThread != androidx.annotation.UiThread
+
+            if (name.startsWith(SUPPORT_ANNOTATIONS_PREFIX.newName())) {
+                val oldName = SUPPORT_ANNOTATIONS_PREFIX.oldName() +
+                        name.substring(SUPPORT_ANNOTATIONS_PREFIX.newName().length)
+                resultList.add(oldName)
+            } else {
+                resultList.add(name)
+            }
+        }
+        return resultList
     }
 
     companion object {
