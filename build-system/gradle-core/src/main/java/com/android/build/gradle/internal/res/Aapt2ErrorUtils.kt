@@ -42,9 +42,13 @@ fun rewriteCompileException(e: Aapt2Exception, request: CompileResourceRequest):
             e // Nothing to rewrite.
         } else {
             Aapt2Exception(
-                    "Failed to compile android resource " +
-                            "'${request.originalInputFile.absolutePath}'.",
-                    e
+                description = "Failed to compile android resource " +
+                        "'${request.originalInputFile.absolutePath}'.",
+                cause = e,
+                output = e.output?.replace(request.inputFile.absolutePath, request.originalInputFile.absolutePath),
+                processName = e.processName,
+                command = e.command
+
             )
         }
     }
@@ -91,14 +95,16 @@ private fun rewriteException(
             return e
         }
         return Aapt2Exception(
-                e.message!!,
-                messages.map { message ->
-                    message.copy(
-                            sourceFilePositions =
-                            rewritePositions(message.sourceFilePositions, blameLookup)
-                    )
-                }.joinToString("\n") { humanReadableMessage(it) },
-                e
+            description = e.message!!,
+            cause = e,
+            output = messages.map { message ->
+                message.copy(
+                    sourceFilePositions =
+                    rewritePositions(message.sourceFilePositions, blameLookup)
+                )
+            }.joinToString("\n") { humanReadableMessage(it) },
+            processName = e.processName,
+            command = e.command
         )
     } catch (e2: Exception) {
         // Something went wrong, report the original error with the error reporting error supressed.
