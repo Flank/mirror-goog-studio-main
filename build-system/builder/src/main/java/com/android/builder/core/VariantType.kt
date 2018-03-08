@@ -172,7 +172,7 @@ enum class VariantTypeImpl(
         suffix = "",
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
-        analyticsVariantType = GradleBuildVariant.VariantType.APPLICATION,
+        analyticsVariantType = GradleBuildVariant.VariantType.OPTIONAL_APK,
         canHaveSplits = true,
         consumeTypeOptional = ATTR_APK,
         publishType = ATTR_APK),
@@ -230,7 +230,7 @@ enum class VariantTypeImpl(
         suffix = "",
         artifactName = AndroidProject.ARTIFACT_MAIN,
         artifactType = ArtifactMetaData.TYPE_ANDROID,
-        analyticsVariantType = GradleBuildVariant.VariantType.APPLICATION,
+        analyticsVariantType = GradleBuildVariant.VariantType.TEST_APK,
         consumeTypeOptional = ATTR_APK,
         publishType = null),
     ANDROID_TEST(

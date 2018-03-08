@@ -16,7 +16,9 @@
 
 package com.android.build.gradle;
 
+import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidProject;
+import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -31,4 +33,11 @@ public class OptionalApkPlugin extends AbstractAppPlugin {
     protected int getProjectType() {
         return AndroidProject.PROJECT_TYPE_DYNAMIC_FEATURE;
     }
+
+    @NonNull
+    @Override
+    protected GradleBuildProject.PluginType getAnalyticsPluginType() {
+        return GradleBuildProject.PluginType.DYNAMIC_FEATURE;
+    }
+
 }
