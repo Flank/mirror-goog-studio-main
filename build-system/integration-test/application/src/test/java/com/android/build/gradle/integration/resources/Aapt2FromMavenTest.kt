@@ -18,8 +18,8 @@ package com.android.build.gradle.integration.resources
 
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.internal.res.namespaced.getAapt2FromMaven
-import com.android.build.gradle.internal.res.namespaced.getAapt2FromMavenIfEnabled
+import com.android.build.gradle.internal.res.getAapt2FromMaven
+import com.android.build.gradle.internal.res.getAapt2FromMavenIfEnabled
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.res.namespaced.useAaptDaemon
 import com.android.build.gradle.internal.scope.GlobalScope

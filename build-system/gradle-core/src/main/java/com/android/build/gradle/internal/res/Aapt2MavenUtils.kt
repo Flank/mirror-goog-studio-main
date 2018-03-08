@@ -19,7 +19,7 @@
  */
 @file:JvmName("Aapt2MavenUtils")
 
-package com.android.build.gradle.internal.res.namespaced
+package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
 import com.android.annotations.VisibleForTesting
@@ -38,12 +38,26 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
+import java.util.Properties
 import java.util.zip.ZipInputStream
 import javax.inject.Inject
 
 private const val TYPE_EXTRACTED_AAPT2_BINARY = "_internal-android-aapt2-binary"
 private const val AAPT2_CONFIG_NAME = "_internal_aapt2_binary"
 
+private object Aapt2Version {
+    val BUILD_NUMBER: String by lazy(LazyThreadSafetyMode.PUBLICATION) {
+        Aapt2Version::class.java
+            .getResourceAsStream("aapt2_version.properties")
+            .buffered()
+            .use { stream ->
+                Properties().let { properties ->
+                    properties.load(stream)
+                    properties.getProperty("aapt2Version")
+                }
+            }
+    }
+}
 /**
  * Returns a file collection, which will contain the directory with AAPT2 to be used.
  *
@@ -96,7 +110,7 @@ fun getAapt2FromMaven(project: Project): FileCollection {
         SdkConstants.PLATFORM_LINUX -> "linux"
         else -> error("Unknown platform '${System.getProperty("os.name")}'")
     }
-    val version = Version.ANDROID_GRADLE_PLUGIN_VERSION
+    val version = "${Version.ANDROID_GRADLE_PLUGIN_VERSION}-${Aapt2Version.BUILD_NUMBER}"
     project.dependencies.add(
         config.name,
         mapOf<String, String>(
@@ -159,3 +173,5 @@ class Aapt2Extractor @Inject constructor() : ArtifactTransform() {
         return ImmutableList.of(outDir.toFile())
     }
 }
+
+

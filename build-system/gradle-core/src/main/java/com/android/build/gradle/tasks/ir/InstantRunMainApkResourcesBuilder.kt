@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks.ir
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.aapt.AaptGeneration
-import com.android.build.gradle.internal.res.namespaced.getAapt2FromMavenIfEnabled
+import com.android.build.gradle.internal.res.getAapt2FromMavenIfEnabled
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
