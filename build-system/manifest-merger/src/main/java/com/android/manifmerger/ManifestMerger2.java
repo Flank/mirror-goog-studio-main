@@ -408,62 +408,32 @@ public class ManifestMerger2 {
 
         if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_XML_STRING)) {
             mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.MERGED,
-                    XmlPrettyPrinter.prettyPrint(
-                            document,
-                            XmlFormatPreferences.defaults(),
-                            XmlFormatStyle.get(document.getDocumentElement()),
-                            null, /* endOfLineSeparator */
-                            false /* endWithNewLine */));
+                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.MAKE_AAPT_SAFE)) {
             PlaceholderEncoder.visit(document);
             mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.AAPT_SAFE,
-                    XmlPrettyPrinter.prettyPrint(
-                            document,
-                            XmlFormatPreferences.defaults(),
-                            XmlFormatStyle.get(document.getDocumentElement()),
-                            null, /* endOfLineSeparator */
-                            false /* endWithNewLine */));
+                    MergingReport.MergedManifestKind.AAPT_SAFE, prettyPrint(document));
         }
 
         // Always save the pre InstantRun state in case some APT plugins require it.
         if (mOptionalFeatures.contains(Invoker.Feature.INSTANT_RUN_REPLACEMENT)) {
             instantRunReplacement(document);
             mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.INSTANT_RUN,
-                    XmlPrettyPrinter.prettyPrint(
-                            document,
-                            XmlFormatPreferences.defaults(),
-                            XmlFormatStyle.get(document.getDocumentElement()),
-                            null, /* endOfLineSeparator */
-                            false /* endWithNewLine */));
+                    MergingReport.MergedManifestKind.INSTANT_RUN, prettyPrint(document));
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_FEATURE_SPLIT_INFO)) {
             addFeatureSplitAttributes(document, mFeatureName);
             mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.MERGED,
-                    XmlPrettyPrinter.prettyPrint(
-                            document,
-                            XmlFormatPreferences.defaults(),
-                            XmlFormatStyle.get(document.getDocumentElement()),
-                            null, /* endOfLineSeparator */
-                            false /* endWithNewLine */));
+                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.TARGET_SANDBOX_VERSION)) {
             addTargetSandboxVersionAttribute(document);
             mergingReport.setMergedDocument(
-                    MergingReport.MergedManifestKind.MERGED,
-                    XmlPrettyPrinter.prettyPrint(
-                            document,
-                            XmlFormatPreferences.defaults(),
-                            XmlFormatStyle.get(document.getDocumentElement()),
-                            null, /* endOfLineSeparator */
-                            false /* endWithNewLine */));
+                    MergingReport.MergedManifestKind.MERGED, prettyPrint(document));
         }
     }
 
@@ -706,6 +676,17 @@ public class ManifestMerger2 {
             }
         }
         return childListBuilder.build();
+    }
+
+    /** Returns a pretty string representation of the document. */
+    @NonNull
+    private static String prettyPrint(Document document) {
+        return XmlPrettyPrinter.prettyPrint(
+                document,
+                XmlFormatPreferences.defaults(),
+                XmlFormatStyle.get(document.getDocumentElement()),
+                null, /* endOfLineSeparator */
+                false /* endWithNewLine */);
     }
 
     /**

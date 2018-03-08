@@ -47,7 +47,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.LINKED_RES_F
 import com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
-import com.android.build.gradle.internal.scope.InternalArtifactType.METADADA_FEATURE_MANIFEST
+import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_APP_ID_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
@@ -195,7 +195,7 @@ class PublishingSpecs {
 
                 // this is only for non-base modules.
                 metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)
-                metadata(METADADA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
+                metadata(METADATA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
 
                 // ----
 
@@ -272,7 +272,7 @@ class PublishingSpecs {
 
             variantSpec(VariantTypeImpl.FEATURE) {
                 metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)
-                metadata(METADADA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
+                metadata(METADATA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
                 api(FEATURE_CLASSES, ArtifactType.CLASSES)

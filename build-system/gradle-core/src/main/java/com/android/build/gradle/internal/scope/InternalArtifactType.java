@@ -193,7 +193,7 @@ public enum InternalArtifactType implements ArtifactType {
 
     // Project metadata
     METADATA_FEATURE_DECLARATION,
-    METADADA_FEATURE_MANIFEST,
+    METADATA_FEATURE_MANIFEST,
     METADATA_APP_ID_DECLARATION;
 
     /**

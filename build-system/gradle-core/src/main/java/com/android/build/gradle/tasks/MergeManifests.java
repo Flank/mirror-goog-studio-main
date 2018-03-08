@@ -560,7 +560,7 @@ public class MergeManifests extends ManifestProcessorTask {
             // when dealing with a non-base feature, output is under a different type.
             if (!variantType.isBaseModule()) {
                 buildArtifactsHolder.appendArtifact(
-                        InternalArtifactType.METADADA_FEATURE_MANIFEST,
+                        InternalArtifactType.METADATA_FEATURE_MANIFEST,
                         ImmutableList.of(processManifestTask.getManifestOutputDirectory()),
                         processManifestTask);
             }
