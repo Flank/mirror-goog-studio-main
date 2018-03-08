@@ -319,10 +319,10 @@ message JobInfo {
   // Which content URIs must change for the job to be scheduled.
   repeated string trigger_content_uris = 11;
   // When triggering on content URI changes, this is the maximum delay before
-  // the job is scheduled.
+  // the job is scheduled. It is in milliseconds.
   int64 trigger_content_max_delay = 12;
   // When triggering on content URI changes, this is the delay from when a
-  // change is detected until the job is scheduled.
+  // change is detected until the job is scheduled. It is in milliseconds.
   int64 trigger_content_update_delay = 13;
   // Whether or not this job should be persisted across device reboots.
   bool is_persisted = 14;
