@@ -17,12 +17,16 @@
 package com.android.build.gradle.integration.databinding;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.BooleanOption;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.MatcherAssert;
+import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,23 +44,32 @@ public class DataBindingExternalArtifactDependencyTest {
 
     @Rule public TemporaryFolder mavenRepo = new TemporaryFolder();
 
-    public DataBindingExternalArtifactDependencyTest(boolean enableV2) {
-        String v2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + enableV2;
+    private final boolean incompatible;
+
+    public DataBindingExternalArtifactDependencyTest(boolean libEnableV2, boolean appEnableV2) {
+        String libV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + libEnableV2;
+        String appV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + appEnableV2;
         library =
                 GradleTestProject.builder()
                         .fromDataBindingIntegrationTest("IndependentLibrary")
-                        .addGradleProperties(v2)
+                        .addGradleProperties(libV2)
                         .create();
         app =
                 GradleTestProject.builder()
                         .fromDataBindingIntegrationTest("MultiModuleTestApp")
-                        .addGradleProperties(v2)
+                        .addGradleProperties(appV2)
                         .create();
+
+        incompatible = libEnableV2 && !appEnableV2;
     }
 
-    @Parameterized.Parameters(name = "useV2_{0}")
-    public static Iterable<Boolean> classNames() {
-        return ImmutableList.of(true, false);
+    @Parameterized.Parameters(name = "use_lib_V2_{0}_use_app_V2_{1}")
+    public static Iterable<Boolean[]> params() {
+        return ImmutableList.of(
+                new Boolean[] {false, false},
+                new Boolean[] {false, true},
+                new Boolean[] {true, false},
+                new Boolean[] {true, true});
     }
 
     @Before
@@ -76,8 +89,26 @@ public class DataBindingExternalArtifactDependencyTest {
 
     @Test
     public void compile() throws Exception {
+        if (incompatible) {
+            throw new AssumptionViolatedException("this tests success");
+        }
         List<String> args = createLibraryArtifact();
         app.execute(args, "assembleDebug");
         app.execute(args, "assembleDebugAndroidTest");
+    }
+
+    @Test
+    public void incompatibilityDetection() throws IOException, InterruptedException {
+        if (!incompatible) {
+            throw new AssumptionViolatedException("this tests incompatible case");
+        }
+        List<String> args = createLibraryArtifact();
+        GradleBuildResult exception =
+                app.executor().withArguments(args).expectFailure().run("assembleDebug");
+        String expectedMessage =
+                new IncompatibleClassChangeError("android.databinding.test.independentlibrary")
+                        .getMessage();
+        MatcherAssert.assertThat(
+                exception.getFailureMessage(), CoreMatchers.containsString(expectedMessage));
     }
 }

@@ -44,23 +44,29 @@ public class DataBindingExternalArtifactDependencyConnectedTest {
 
     @Rule public Adb adb = new Adb();
 
-    public DataBindingExternalArtifactDependencyConnectedTest(boolean enableV2) {
-        String v2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + enableV2;
+    public DataBindingExternalArtifactDependencyConnectedTest(
+            boolean libEnableV2, boolean appEnableV2) {
+        String libV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + libEnableV2;
+        String appV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + appEnableV2;
         library =
                 GradleTestProject.builder()
                         .fromDataBindingIntegrationTest("IndependentLibrary")
-                        .addGradleProperties(v2)
+                        .addGradleProperties(libV2)
                         .create();
         app =
                 GradleTestProject.builder()
                         .fromDataBindingIntegrationTest("MultiModuleTestApp")
-                        .addGradleProperties(v2)
+                        .addGradleProperties(appV2)
                         .create();
+
     }
 
-    @Parameterized.Parameters(name = "useV2_{0}")
-    public static Iterable<Boolean> classNames() {
-        return ImmutableList.of(true, false);
+    @Parameterized.Parameters(name = "use_lib_V2_{0}_use_app_V2_{1}")
+    public static Iterable<Boolean[]> params() {
+        return ImmutableList.of(
+                new Boolean[] {false, false},
+                new Boolean[] {false, true},
+                new Boolean[] {true, true});
     }
 
     @Test
