@@ -108,6 +108,10 @@ public class ProguardUsagesMap {
             String currentClass = null;
 
             while ((line = br.readLine()) != null) {
+                String trimmedLine = line.trim();
+                if (line.isEmpty() || trimmedLine.charAt(0) == '#') {
+                    continue;
+                }
                 if (!Character.isWhitespace(line.charAt(0))) {
                     if (line.endsWith(":")) {
                         // indicates that the lines following this line contain methods and fields
@@ -119,7 +123,7 @@ public class ProguardUsagesMap {
                         currentClass = null;
                     }
                 } else {
-                    line = line.trim();
+                    line = trimmedLine;
 
                     if (currentClass == null) {
                         String msg =

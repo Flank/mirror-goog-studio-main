@@ -27,7 +27,10 @@ public class ProguardUsageMapTest {
     @Test
     public void parseFileTest() throws IOException, ParseException {
         String seedsFile =
-                "com.example.wkal.emptyapk.BuildConfig\n"
+                "# Comment without indent, then\n"
+                        + "    # Comment with indent, then empty line\n"
+                        + "\n"
+                        + "com.example.wkal.emptyapk.BuildConfig\n"
                         + "com.example.wkal.emptyapk.MyAbstractClas:\n"
                         + "    public abstract void abstractMethod(int,java.lang.String)\n"
                         + "    public abstract com.example.wkal.emptyapk.MyAbstractClas anotherAbstract(com.example.wkal.emptyapk.MyClass)\n"
