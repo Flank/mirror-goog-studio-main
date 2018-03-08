@@ -80,6 +80,17 @@ public abstract class AbstractResourceRepository {
     }
 
     /**
+     * Returns all leaf resource repositories contained in this resource repository including this
+     * repository itself, if it does not contain any other repositories.
+     *
+     * @param result the collection to add the leaf repositories to
+     */
+    public void getLeafResourceRepositories(
+            @NonNull Collection<AbstractResourceRepository> result) {
+        result.add(this);
+    }
+
+    /**
      * Returns the fully computed {@link ResourceTable} for this repository.
      *
      * <p>The returned object should be accessed only while holding {@link #ITEM_MAP_LOCK}.
@@ -167,7 +178,7 @@ public abstract class AbstractResourceRepository {
      * predicate.
      *
      * @param namespace the namespace of the resources to return
-     * @param resourceType the namespace of the resources to return
+     * @param resourceType the type of the resources to return
      * @param nameFilter the predicate for checking resource names
      * @return the resources matching the namespace, type, and satisfying the name filter
      */
@@ -192,6 +203,27 @@ public abstract class AbstractResourceRepository {
         }
 
         return result == null ? Collections.emptyList() : result;
+    }
+
+    /**
+     * Returns the resources with the given namespace and type.
+     *
+     * @param namespace the namespace of the resources to return
+     * @param resourceType the type of the resources to return
+     * @return the resources matching the namespace and type
+     */
+    @NonNull
+    public List<ResourceItem> getResourceItems(
+            @NonNull ResourceNamespace namespace, @NonNull ResourceType resourceType) {
+        List<ResourceItem> result = new ArrayList<>();
+        synchronized (ITEM_MAP_LOCK) {
+            ListMultimap<String, ResourceItem> map = getMap(namespace, resourceType, false);
+            if (map != null) {
+                result.addAll(map.values());
+            }
+        }
+
+        return result;
     }
 
     @NonNull
@@ -368,7 +400,7 @@ public abstract class AbstractResourceRepository {
      *
      * <p>Do not call this method if you you are going to call
      * {@link #getItemsOfType(ResourceNamespace, ResourceType)} or
-     * {@link #getResourceItemsOfType(ResourceNamespace, ResourceType)} immediately after.
+     * {@link #getResourceItems(ResourceNamespace, ResourceType)} immediately after.
      *
      * @param resourceType the type of resource to check.
      * @return true if the repository contains resources of the given type, false otherwise.
