@@ -19,7 +19,11 @@ maven_pom(
         "windows",
     ],
     group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:build_version",
+    properties_files = [
+        "//tools/buildSrc/base:version.properties",
+        "//prebuilts/tools/common/aapt:aapt2_version.properties",
+    ],
+    version_property = "${buildVersion}-${aapt2Version}",
     visibility = ["//visibility:public"],
 )
 

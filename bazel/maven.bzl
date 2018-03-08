@@ -28,6 +28,9 @@ def _maven_pom_impl(ctx):
         clsjars[classifier] = depset()
       clsjars[classifier] += file.files
 
+  if ctx.attr.properties and ctx.files.properties_files:
+    fail("Cannot set both properties and properties_files for a maven_pom.")
+
   parent_poms = depset([], order="postorder")
   parent_jars = {}
   parent_clsjars = {} # pom -> classifier -> depset(jars)
@@ -94,6 +97,9 @@ def _maven_pom_impl(ctx):
   if ctx.attr.properties:
     args += ["--properties", ctx.file.properties.path]
     inputs += [ctx.file.properties]
+  if ctx.files.properties_files:
+    args += ["--properties", ":".join([file.path for file in ctx.files.properties_files])]
+    inputs += ctx.files.properties_files
   if ctx.attr.version_property:
     args += ["--version_property", ctx.attr.version_property]
 
@@ -161,6 +167,10 @@ maven_pom = rule(
     "properties" : attr.label(
         allow_files = True,
         single_file = True,
+    ),
+    "properties_files": attr.label_list(
+        allow_files = True,
+        default = [],
     ),
     "version_property" : attr.string(),
     "parent" : attr.label(
