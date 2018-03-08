@@ -19,7 +19,6 @@ package com.android.build.gradle.internal;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
-import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -392,41 +391,35 @@ public class ApplicationTaskManager extends TaskManager {
                 scope.getVariantData().getAllPostJavacGeneratedBytecode();
 
         // Create the classes artifact for uses by external test modules.
-        File dest =
-                new File(
-                        globalScope.getBuildDir(),
-                        FileUtils.join(
-                                FD_INTERMEDIATES,
-                                "classes-jar",
-                                scope.getVariantConfiguration().getDirName()));
+        taskFactory.create(
+                new TaskConfigAction<Jar>() {
+                    @NonNull
+                    @Override
+                    public String getName() {
+                        return scope.getTaskName("bundleAppClasses");
+                    }
 
-        Jar task =
-                taskFactory.create(
-                        new TaskConfigAction<Jar>() {
-                            @NonNull
-                            @Override
-                            public String getName() {
-                                return scope.getTaskName("bundleAppClasses");
-                            }
+                    @NonNull
+                    @Override
+                    public Class<Jar> getType() {
+                        return Jar.class;
+                    }
 
-                            @NonNull
-                            @Override
-                            public Class<Jar> getType() {
-                                return Jar.class;
-                            }
-
-                            @Override
-                            public void execute(@NonNull Jar task) {
-                                task.from(javacOutput);
-                                task.from(preJavacGeneratedBytecode);
-                                task.from(postJavacGeneratedBytecode);
-                                task.setDestinationDir(dest);
-                                task.setArchiveName("classes.jar");
-                            }
-                        });
-
-        scope.addTaskOutput(
-                InternalArtifactType.APP_CLASSES, new File(dest, "classes.jar"), task.getName());
+                    @Override
+                    public void execute(@NonNull Jar task) {
+                        File outputFile =
+                                scope.getBuildArtifactsHolder()
+                                        .appendArtifact(
+                                                InternalArtifactType.APP_CLASSES,
+                                                task,
+                                                "classes.jar");
+                        task.from(javacOutput);
+                        task.from(preJavacGeneratedBytecode);
+                        task.from(postJavacGeneratedBytecode);
+                        task.setDestinationDir(outputFile.getParentFile());
+                        task.setArchiveName(outputFile.getName());
+                    }
+                });
 
         // create a lighter weight version for usage inside the same module (unit tests basically)
         ConfigurableFileCollection fileCollection =
