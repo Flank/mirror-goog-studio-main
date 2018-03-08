@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MOCKABLE_JAR_RETURN_DEFAULT_VALUES;
 import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
 import static com.android.builder.core.VariantTypeImpl.UNIT_TEST;
@@ -45,6 +46,7 @@ import com.android.build.gradle.internal.dependency.JarTransform;
 import com.android.build.gradle.internal.dependency.JetifyTransform;
 import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTransform;
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
+import com.android.build.gradle.internal.dependency.MockableJarTransform;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -717,6 +719,25 @@ public class VariantManager implements VariantModel {
                     reg.getFrom().attribute(ARTIFACT_FORMAT, maybeJetifiedAar);
                     reg.getTo().attribute(ARTIFACT_FORMAT, explodedAarType);
                     reg.artifactTransform(ExtractAarTransform.class);
+                });
+
+        dependencies.registerTransform(
+                reg -> {
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JAR);
+                    reg.getFrom().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, true);
+                    reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_MOCKABLE_JAR);
+                    reg.getTo().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, true);
+                    reg.artifactTransform(
+                            MockableJarTransform.class, config -> config.params(true));
+                });
+        dependencies.registerTransform(
+                reg -> {
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_JAR);
+                    reg.getFrom().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, false);
+                    reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_MOCKABLE_JAR);
+                    reg.getTo().attribute(MOCKABLE_JAR_RETURN_DEFAULT_VALUES, false);
+                    reg.artifactTransform(
+                            MockableJarTransform.class, config -> config.params(false));
                 });
 
         boolean sharedLibSupport =

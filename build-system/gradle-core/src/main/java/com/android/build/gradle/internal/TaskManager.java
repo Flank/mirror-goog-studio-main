@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANDROID_JAR;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
@@ -45,6 +46,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MOCKABLE_JAR;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -108,7 +110,6 @@ import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
-import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
 import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
@@ -213,6 +214,7 @@ import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
@@ -300,7 +302,7 @@ public abstract class TaskManager {
     @NonNull protected final TaskFactory taskFactory;
 
     // Tasks. TODO: remove the mutable state from here.
-    public MockableAndroidJarTask createMockableJar;
+    public Task createMockableJar;
 
     public TaskManager(
             @NonNull GlobalScope globalScope,
@@ -427,6 +429,8 @@ public abstract class TaskManager {
         // anchor task.
         createGlobalLintTask();
         configureCustomLintChecksConfig();
+
+        globalScope.setAndroidJarConfig(createAndroidJarConfig(project));
 
         if (buildCache != null) {
             taskFactory.create(new CleanBuildCache.ConfigAction(globalScope));
@@ -561,6 +565,34 @@ public abstract class TaskManager {
                 }
             }
         }
+    }
+
+    public void createMockableJarTask() {
+        FileCollection mockableJar = globalScope.getMockableJarArtifact();
+        project.getDependencies()
+                .add(
+                        CONFIG_NAME_ANDROID_JAR,
+                        project.files(
+                                globalScope
+                                        .getAndroidBuilder()
+                                        .getTarget()
+                                        .getPath(IAndroidTarget.ANDROID_JAR)));
+
+        // Adding this task to help the IDE find the mockable JAR.
+        createMockableJar = project.getTasks().create("createMockableJar");
+        createMockableJar.dependsOn(mockableJar);
+
+        globalScope.getArtifacts().appendArtifact(MOCKABLE_JAR, mockableJar);
+    }
+
+    @NonNull
+    public static Configuration createAndroidJarConfig(@NonNull Project project) {
+        Configuration androidJarConfig =
+                project.getConfigurations().maybeCreate(CONFIG_NAME_ANDROID_JAR);
+        androidJarConfig.setDescription(
+                "Configuration providing various types of Android JAR file");
+        androidJarConfig.setCanBeConsumed(false);
+        return androidJarConfig;
     }
 
     protected void createDependencyStreams(@NonNull final VariantScope variantScope) {
@@ -1698,7 +1730,6 @@ public abstract class TaskManager {
         createRunUnitTestTask(variantScope);
 
         DefaultTask assembleUnitTests = variantScope.getAssembleTask();
-        assembleUnitTests.dependsOn(createMockableJar);
 
         // This hides the assemble unit test task from the task list.
         assembleUnitTests.setGroup(null);
@@ -1851,8 +1882,7 @@ public abstract class TaskManager {
     }
 
     public void createTopLevelTestTasks(boolean hasFlavors) {
-        createMockableJar =
-                taskFactory.create(new MockableAndroidJarTask.ConfigAction(globalScope));
+        createMockableJarTask();
         taskFactory.create(new PlatformAttrExtractorTask.ConfigAction(globalScope));
 
         final List<String> reportTasks = Lists.newArrayListWithExpectedSize(2);

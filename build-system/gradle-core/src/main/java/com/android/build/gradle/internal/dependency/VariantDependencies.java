@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dependency;
 
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.attributes.BuildTypeAttr;
@@ -65,6 +66,7 @@ public class VariantDependencies {
     public static final String CONFIG_NAME_APK = "apk";
     public static final String CONFIG_NAME_PROVIDED = "provided";
     public static final String CONFIG_NAME_WEAR_APP = "wearApp";
+    public static final String CONFIG_NAME_ANDROID_JAR = "androidApi";
     public static final String CONFIG_NAME_ANNOTATION_PROCESSOR = "annotationProcessor";
 
     public static final String CONFIG_NAME_API = "api";

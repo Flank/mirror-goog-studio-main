@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.factory.AndroidJavaCompile;
 import com.android.builder.core.AndroidBuilder;
@@ -525,10 +524,12 @@ public class PluginDslTest {
         android.setCompileSdkVersion(
                 "Google Inc.:Google APIs:" + TestConstants.COMPILE_SDK_VERSION_WITH_GOOGLE_APIS);
         plugin.createAndroidTasks();
+        Map<String, VariantScope> variantMap = getVariantMap();
+        Map.Entry<String, VariantScope> vsentry = variantMap.entrySet().iterator().next();
+        File mockableJarFile =
+                vsentry.getValue().getGlobalScope().getMockableJarArtifact().getSingleFile();
+        assertThat(mockableJarFile).isNotNull();
 
-        MockableAndroidJarTask mockableAndroidJar =
-                (MockableAndroidJarTask) project.getTasks().getByName("mockableAndroidJar");
-        File mockableJarFile = mockableAndroidJar.getOutputFile();
         if (SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS) {
             // Windows paths contain : to identify drives.
             assertThat(mockableJarFile.getAbsolutePath())
@@ -536,9 +537,7 @@ public class PluginDslTest {
                     .doesNotContain(":");
         }
 
-        assertThat(mockableJarFile.getName())
-                .named("Mockable jar name")
-                .isEqualTo("mockable-Google-Inc.-Google-APIs-24.v3.jar");
+        assertThat(mockableJarFile.getName()).named("Mockable jar name").isEqualTo("android.jar");
     }
 
     @Test
