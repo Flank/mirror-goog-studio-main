@@ -58,12 +58,12 @@ class BatteryDetector : ResourceXmlDetector(), SourceCodeScanner {
 Generally, you should be using `JobScheduler` or `GcmNetworkManager` instead.
 
 For more details on how to update your code, please seehttp://developer.android.com/preview/features/background-optimization.html""",
+"http://developer.android.com/preview/features/background-optimization.html",
 
                 Category.CORRECTNESS,
                 5,
                 Severity.WARNING,
                 IMPLEMENTATION)
-                .addMoreInfo("http://developer.android.com/preview/features/background-optimization.html")
     }
 
     override fun getApplicableElements(): Collection<String>? = listOf(TAG_ACTION)

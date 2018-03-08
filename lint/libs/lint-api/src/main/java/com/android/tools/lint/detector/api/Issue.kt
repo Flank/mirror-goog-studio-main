@@ -246,5 +246,49 @@ class Issue private constructor(
             return Issue(id, briefDescription, explanation, category, priority,
                     severity, implementation)
         }
+
+        /**
+         * Creates a new issue. The description strings can use some simple markup;
+         * see the [TextFormat.RAW] documentation
+         * for details.
+         *
+         * @param id the fixed id of the issue
+         * @param briefDescription short summary (typically 5-6 words or less), typically
+         * describing the **problem** rather than the **fix**
+         * (e.g. "Missing minSdkVersion")
+         * @param explanation a full explanation of the issue, with suggestions for
+         * @param moreInfo additional information URL
+         * how to fix it
+         * @param category the associated category, if any
+         * @param priority the priority, a number from 1 to 10 with 10 being most
+         * important/severe
+         * @param severity the default severity of the issue
+         * @param implementation the default implementation for this issue
+         * @return a new [Issue]
+         */
+        fun create(
+            id: String,
+            briefDescription: String,
+            explanation: String,
+            moreInfo: String? = null,
+            category: Category = Category.CORRECTNESS,
+            priority: Int = 5,
+            severity: Severity = Severity.WARNING,
+            implementation: Implementation,
+            enabledByDefault: Boolean = true
+        ): Issue {
+            val issue = Issue(
+                id, briefDescription, explanation, category, priority,
+                severity, implementation
+            )
+            if (moreInfo != null) {
+                issue.addMoreInfo(moreInfo)
+            }
+            if (!enabledByDefault) {
+                issue.setEnabledByDefault(false)
+            }
+
+            return issue
+        }
     }
 }

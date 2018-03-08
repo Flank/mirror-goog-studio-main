@@ -65,12 +65,11 @@ layout.""",
                 """
 AdapterViews such as ListViews must be configured with data from Java code, such as a \
 ListAdapter.""",
+"http://developer.android.com/reference/android/widget/AdapterView.html",
                 Category.CORRECTNESS,
                 10,
                 Severity.WARNING,
                 IMPLEMENTATION)
-                .addMoreInfo(
-                        "http://developer.android.com/reference/android/widget/AdapterView.html")
     }
 
     override fun getApplicableElements(): Collection<String>? = Arrays.asList(

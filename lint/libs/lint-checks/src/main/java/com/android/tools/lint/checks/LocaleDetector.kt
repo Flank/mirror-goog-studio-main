@@ -193,12 +193,11 @@ class LocaleDetector : Detector(), SourceCodeScanner {
                     + "If you want the methods to just perform ASCII replacement, for example to convert "
                     + "an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to "
                     + "use the current locale, call `String#toUpperCase(Locale.getDefault())` instead.",
+            "http://developer.android.com/reference/java/util/Locale.html#default_locale",
             Category.CORRECTNESS,
             6,
             Severity.WARNING,
             IMPLEMENTATION
-        ).addMoreInfo(
-            "http://developer.android.com/reference/java/util/Locale.html#default_locale"
         )
 
         /** Assuming locale doesn't change  */

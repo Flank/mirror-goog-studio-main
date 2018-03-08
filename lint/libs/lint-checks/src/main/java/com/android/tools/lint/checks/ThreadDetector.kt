@@ -319,12 +319,11 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             "Ensures that a method which expects to be called on a specific thread, is actually " +
             "called from that thread. For example, calls on methods in widgets should always " +
             "be made on the UI thread.",
+            "http://developer.android.com/guide/components/processes-and-threads.html#Threads",
 
             Category.CORRECTNESS,
             6,
             Severity.ERROR,
             IMPLEMENTATION)
-            .addMoreInfo(
-                    "http://developer.android.com/guide/components/processes-and-threads.html#Threads")
     }
 }

@@ -49,6 +49,7 @@ expect files to be encoded with UTF-8 (see the EnforceUTF8 issue), the BOM chara
 necessary, and they are not handled correctly by all tools. For example, if you have a BOM as \
 part of a resource name in one particular translation, that name will not be considered identical \
 to the base resource's name and the translation will not be used.""",
+"http://en.wikipedia.org/wiki/Byte_order_mark",
                 Category.I18N,
                 8,
                 Severity.FATAL,
@@ -64,7 +65,6 @@ to the base resource's name and the translation will not be used.""",
                         Scope.GRADLE_SCOPE,
                         Scope.PROPERTY_SCOPE,
                         Scope.PROGUARD_SCOPE))
-                .addMoreInfo("http://en.wikipedia.org/wiki/Byte_order_mark")
     }
 
     override fun beforeCheckFile(context: Context) {

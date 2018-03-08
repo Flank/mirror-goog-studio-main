@@ -42,13 +42,13 @@ For applications built for API levels below 17, `WebView#addJavascriptInterface`
 security hazard as JavaScript on the target web page has the ability to use reflection to access \
 the injected object's public fields and thus manipulate the host application in unintended ways.
 """,
+"https://labs.mwrinfosecurity.com/blog/2013/09/24/webview-addjavascriptinterface-remote-code-execution/",
                 Category.SECURITY,
                 9,
                 Severity.WARNING,
                 Implementation(
                         AddJavascriptInterfaceDetector::class.java,
-                        Scope.JAVA_FILE_SCOPE)).addMoreInfo(
-                "https://labs.mwrinfosecurity.com/blog/2013/09/24/webview-addjavascriptinterface-remote-code-execution/")
+                        Scope.JAVA_FILE_SCOPE))
 
         const val WEB_VIEW = "android.webkit.WebView"
         const val ADD_JAVASCRIPT_INTERFACE = "addJavascriptInterface"

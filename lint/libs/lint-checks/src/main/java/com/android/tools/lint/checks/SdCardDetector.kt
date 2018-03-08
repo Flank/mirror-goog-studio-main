@@ -45,6 +45,7 @@ Your code should not reference the `/sdcard` path directly; instead use \
 
 Similarly, do not reference the `/data/data/` path directly; it can vary in multi-user scenarios. \
 Instead, use `Context.getFilesDir().getPath()`.""",
+"http://developer.android.com/guide/topics/data/data-storage.html#filesExternal",
 
                 Category.CORRECTNESS,
                 6,
@@ -52,8 +53,6 @@ Instead, use `Context.getFilesDir().getPath()`.""",
                 Implementation(
                         SdCardDetector::class.java,
                         Scope.JAVA_FILE_SCOPE))
-                .addMoreInfo(
-                        "http://developer.android.com/guide/topics/data/data-storage.html#filesExternal")
     }
 
     override fun getApplicableUastTypes(): List<Class<out UElement>>? =

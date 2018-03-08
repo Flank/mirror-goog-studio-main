@@ -626,6 +626,5 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                 8,
                 Severity.FATAL,
                 IMPLEMENTATION)
-                .addMoreInfo("https://code.google.com/p/android/issues/detail?id=20479")
     }
 }

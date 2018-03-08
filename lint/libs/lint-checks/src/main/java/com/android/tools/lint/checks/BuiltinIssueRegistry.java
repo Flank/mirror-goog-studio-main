@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 322;
+    static final int INITIAL_CAPACITY = 324;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -88,6 +88,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ChromeOsDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE);
         issues.add(ChromeOsDetector.UNSUPPORTED_CHROME_OS_HARDWARE);
         issues.add(CipherGetInstanceDetector.ISSUE);
+        issues.add(CipherGetInstanceDetector.DEPRECATED_PROVIDER);
         issues.add(CleanupDetector.APPLY_SHARED_PREF);
         issues.add(CleanupDetector.COMMIT_FRAGMENT);
         issues.add(CleanupDetector.RECYCLE_RESOURCE);
@@ -100,6 +101,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(CustomViewDetector.ISSUE);
         issues.add(CutPasteDetector.ISSUE);
         issues.add(DateFormatDetector.DATE_FORMAT);
+        issues.add(DeletedProviderDetector.ISSUE);
         issues.add(DeprecationDetector.ISSUE);
         issues.add(DetectMissingPrefix.MISSING_NAMESPACE);
         issues.add(DosLineEndingDetector.ISSUE);

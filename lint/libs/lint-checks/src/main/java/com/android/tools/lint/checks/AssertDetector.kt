@@ -61,6 +61,7 @@ throw new AssertionError() }`.
 
 (Note: This lint check does not flag assertions purely asserting nullness or non-nullness; these \
 are typically more intended for tools usage than runtime checks.)""",
+"https://code.google.com/p/android/issues/detail?id=65183",
 
                 Category.CORRECTNESS,
                 6,
@@ -68,7 +69,6 @@ are typically more intended for tools usage than runtime checks.)""",
                 Implementation(
                         AssertDetector::class.java,
                         Scope.JAVA_FILE_SCOPE))
-                .addMoreInfo("https://code.google.com/p/android/issues/detail?id=65183")
     }
 
     override fun getApplicableUastTypes(): List<Class<out UElement>>? =

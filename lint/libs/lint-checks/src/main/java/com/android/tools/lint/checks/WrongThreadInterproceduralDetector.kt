@@ -149,13 +149,12 @@ class WrongThreadInterproceduralDetector : Detector(), SourceCodeScanner {
                 "Searches for interprocedural call paths that violate thread annotations in the " +
                         "program. Tracks the flow of instantiated types and lambda expressions " +
                         "to increase accuracy across method boundaries.",
+                "https://developer.android.com/guide/components/processes-and-threads.html#Threads",
                 Category.CORRECTNESS,
                 /*priority*/ 6,
                 Severity.ERROR,
                 Implementation(WrongThreadInterproceduralDetector::class.java,
-                        EnumSet.of(Scope.ALL_JAVA_FILES)))
-                .addMoreInfo("http://developer.android.com/guide/components/" +
-                        "processes-and-threads.html#Threads")
-                .setEnabledByDefault(false)
+                        EnumSet.of(Scope.ALL_JAVA_FILES)),
+                enabledByDefault = false)
     }
 }

@@ -43,6 +43,7 @@ On Windows, line endings are typically recorded as carriage return plus newline:
 This detector looks for invalid line endings with repeated carriage return characters \
 (without newlines). Previous versions of the ADT plugin could accidentally introduce these \
 into the file, and when editing the file, the editor could produce confusing visual artifacts.""",
+"https://bugs.eclipse.org/bugs/show_bug.cgi?id=375421",
 
                 Category.CORRECTNESS,
                 2,
@@ -51,7 +52,6 @@ into the file, and when editing the file, the editor could produce confusing vis
                         DosLineEndingDetector::class.java,
                         Scope.RESOURCE_FILE_SCOPE))
                 .setEnabledByDefault(false) // This check is probably not relevant for most users anymore
-                .addMoreInfo("https://bugs.eclipse.org/bugs/show_bug.cgi?id=375421")
     }
 
     override fun visitDocument(context: XmlContext, document: Document) {
