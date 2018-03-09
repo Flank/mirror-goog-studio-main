@@ -31,14 +31,14 @@ public class Aapt2DaemonUtil {
 
     public static void requestCompile(
             @NonNull Writer writer, @NonNull CompileResourceRequest command) throws IOException {
-        request(writer, "c", AaptV2CommandBuilder.makeCompile(command));
+        request(writer, "c", AaptV2CommandBuilder.makeCompileCommand(command));
     }
 
     public static void requestLink(@NonNull Writer writer, @NonNull AaptPackageConfig command)
             throws IOException {
         ImmutableList<String> args;
         try {
-            args = AaptV2CommandBuilder.makeLink(command);
+            args = AaptV2CommandBuilder.makeLinkCommand(command);
         } catch (AaptException e) {
             throw new IOException("Unable to make AAPT link command.", e);
         }
