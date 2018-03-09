@@ -16,13 +16,17 @@
 
 package com.android.build.gradle.internal.transforms
 
+import com.android.SdkConstants
 import com.android.build.api.transform.Format
 import com.android.build.api.transform.QualifiedContent
+import com.android.build.api.transform.QualifiedContent.DefaultContentType.*
 import com.android.build.api.transform.SecondaryFile
+import com.android.build.api.transform.TransformInput
 import com.android.build.api.transform.TransformInvocation
+import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_DEX
+import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_DEX_WITH_RESOURCES
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_JARS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.TransformInputUtil.getAllFiles
@@ -32,6 +36,8 @@ import com.android.builder.dexing.ProguardConfig
 import com.android.builder.dexing.R8OutputType
 import com.android.builder.dexing.ToolConfig
 import com.android.builder.dexing.runR8
+import com.android.builder.packaging.JarMerger
+import com.android.builder.packaging.ZipEntryFilter
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import java.io.File
@@ -56,7 +62,7 @@ class R8Transform(
     private val mainDexRulesFiles: FileCollection,
     private val inputProguardMapping: FileCollection,
     private val outputProguardMapping: File,
-    private val typesToOutput: MutableSet<QualifiedContent.ContentType>,
+    private val typesToOutput: MutableSet<out QualifiedContent.ContentType>,
     proguardConfigurationFiles: ConfigurableFileCollection,
     variantType: VariantType
 ) :
@@ -83,7 +89,7 @@ class R8Transform(
                     mainDexRulesFiles,
                     inputProguardMapping,
                     outputProguardMapping,
-                    if (scope.variantData.type.isAar) CONTENT_JARS else CONTENT_DEX,
+                    if (scope.variantData.type.isAar) CONTENT_JARS else CONTENT_DEX_WITH_RESOURCES,
                     scope.globalScope.project.files(),
                     scope.variantData.type
             )
@@ -142,6 +148,7 @@ class R8Transform(
                 { "No output provider set" }
         )
         outputProvider.deleteAll()
+        copyResources(transformInvocation.inputs, outputProvider)
 
         val r8OutputType: R8OutputType
         val outputFormat: Format
@@ -198,4 +205,33 @@ class R8Transform(
                 mainDexListConfig
         )
     }
+
+    /**
+     * In the future, R8 will provide an API to handle Java resources, but because there is not one
+     * at the moment, we simple copy them to output.
+     */
+    private fun copyResources(inputs: Collection<TransformInput>, output: TransformOutputProvider) {
+        val outputLocation =
+            output.getContentLocation("java_res", setOf(RESOURCES), scopes, Format.JAR)
+
+        JarMerger(
+            outputLocation.toPath(),
+            ZipEntryFilter { name -> !name.endsWith(SdkConstants.DOT_CLASS) }).use { jarMerger ->
+            inputs.forEach { input ->
+                input.directoryInputs.forEach { dirInput ->
+                    if (containsResources(dirInput)) {
+                        jarMerger.addDirectory(dirInput.file.toPath())
+                    }
+                }
+                input.jarInputs.forEach { jarInput ->
+                    if (containsResources(jarInput)) {
+                        jarMerger.addJar(jarInput.file.toPath())
+                    }
+                }
+            }
+        }
+    }
+
+    private fun containsResources(content: QualifiedContent): Boolean =
+        content.contentTypes.contains(RESOURCES)
 }
