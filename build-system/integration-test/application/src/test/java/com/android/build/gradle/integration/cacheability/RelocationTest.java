@@ -61,7 +61,6 @@ public class RelocationTest {
     private static final ImmutableSet<String> KNOWN_PROBLEMS =
             ImmutableSet.<String>builder()
                     // Legitimately uncacheable or unrelocatable tasks.
-                    .add(":clean")
                     .add(":validateSigningDebug")
 
                     // Tasks we need to work on to achieve relocatability. Anything in this list
@@ -80,6 +79,7 @@ public class RelocationTest {
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .dontOutputLogOnFailure()
+                    .withName("projectCopy1")
                     .create();
 
     @Rule
@@ -87,11 +87,12 @@ public class RelocationTest {
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .dontOutputLogOnFailure()
+                    .withName("projectCopy2")
                     .create();
 
     /**
-     * Each GradleTestProject is exactly the same, and the GradleTestProject class ensures that they
-     * live in separate directories already so there's no need to move them. This test simply runs a
+     * Each GradleTestProject is exactly the same, and the "withName" method ensures that they live
+     * in separate directories already so there's no need to move them. This test simply runs a
      * clean build on both and asserts that there are no tasks that did work in the second build
      * unless we have specifically listed them in {@code KNOWN_PROBLEMS} above.
      *
@@ -101,6 +102,10 @@ public class RelocationTest {
      */
     @Test
     public void testRelocatability() throws Exception {
+        // Make sure the projects are in two separate directories.
+        assertThat(projectCopy1.getMainSrcDir().getAbsolutePath())
+                .isNotEqualTo(projectCopy2.getMainSrcDir().getAbsolutePath());
+
         projectCopy1.executor().withArgument("--build-cache").run("clean", "assembleDebug");
         GradleBuildResult result =
                 projectCopy2.executor().withArgument("--build-cache").run("clean", "assembleDebug");
