@@ -35,7 +35,7 @@ import java.io.File
 /**
  * Task that zips a single module into a zip file.
  *
- * This is an input for [BundleTask]
+ * This is an input for [OldBundleTask]
  */
 open class ZipModuleTask: DefaultTask() {
 

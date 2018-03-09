@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks
+package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -24,14 +24,13 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.RES_BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.LINKED_RES_FOR_BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_DEX
 import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_NATIVE_LIBS
-import com.android.build.gradle.internal.scope.InternalArtifactType.LINKED_RES_FOR_BUNDLE
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.builder.packaging.JarMerger
 import com.android.tools.build.bundletool.BuildBundleCommand
@@ -47,7 +46,10 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
-open class BundleDynamicModules : AndroidVariantTask() {
+/**
+ * Creates the final bundle containing the base module and the feature splits.
+ */
+open class BundleTask : AndroidVariantTask() {
     private lateinit var baseModuleArtifacts: Map<InternalArtifactType, FileCollection>
     private lateinit var dynamicModuleArtifacts: Map<AndroidArtifacts.ArtifactType, ArtifactCollection>
 
@@ -143,7 +145,7 @@ open class BundleDynamicModules : AndroidVariantTask() {
                 ?: componentId.displayName
     }
 
-    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleDynamicModules> {
+    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleTask> {
         companion object {
             private val TASK_OUTPUT_TYPES = listOf(
                 MERGED_ASSETS,
@@ -162,9 +164,9 @@ open class BundleDynamicModules : AndroidVariantTask() {
         }
 
         override fun getName() = scope.getTaskName("bundle")
-        override fun getType() = BundleDynamicModules::class.java
+        override fun getType() = BundleTask::class.java
 
-        override fun execute(task: BundleDynamicModules) {
+        override fun execute(task: BundleTask) {
             task.variantName = scope.fullVariantName
 
             // Map ArtifactType enums to collections of build outputs

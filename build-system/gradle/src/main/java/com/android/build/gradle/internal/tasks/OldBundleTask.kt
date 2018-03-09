@@ -36,8 +36,10 @@ import org.gradle.api.tasks.TaskAction
  * Task that bundles the different module into a single bundle.
  *
  * The inputs should be files created by [ZipModuleTask].
+ *
+ * @Deprecated
  */
-open class BundleTask: DefaultTask() {
+open class OldBundleTask: DefaultTask() {
 
     @get:OutputFile
     lateinit var outputFile: Provider<RegularFile>

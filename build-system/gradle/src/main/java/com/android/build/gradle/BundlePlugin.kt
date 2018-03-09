@@ -18,7 +18,7 @@ package com.android.build.gradle
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.dsl.BundleExtensionImpl
-import com.android.build.gradle.internal.tasks.BundleTask
+import com.android.build.gradle.internal.tasks.OldBundleTask
 import com.android.build.gradle.options.ProjectOptions
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -33,7 +33,7 @@ class BundlePlugin: Plugin<Project> {
         val extension = project.extensions.create("android", BundleExtensionImpl::class.java, project)
 
         // create the single task
-        val task = project.tasks.create("bundle", BundleTask::class.java)
+        val task = project.tasks.create("bundle", OldBundleTask::class.java)
         task.extension = extension
         task.outputFile = project.layout.buildDirectory.file("bundle.aab")
     }
