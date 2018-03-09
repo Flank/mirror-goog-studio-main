@@ -73,6 +73,9 @@ service CpuService {
 
   rpc StartStartupProfiling(StartupProfilingRequest) returns (StartupProfilingResponse) {
   }
+
+  rpc GetCpuCoreConfig(CpuCoreConfigRequest) returns (CpuCoreConfigResponse) {
+  }
 }
 
 enum CpuProfilerType {
@@ -262,6 +265,21 @@ message ProfilingStateResponse {
   int64 check_timestamp = 4;
   // Whether the app in the request is being profiled by a startup profiling.
   bool is_startup_profiling = 5;
+}
+
+message CpuCoreConfigRequest {
+  int64 device_id = 1;
+}
+
+message CpuCoreConfigResponse {
+  repeated CpuCoreConfigData configs = 1;
+
+  // CPU per-core physical configuration data.
+  message CpuCoreConfigData {
+    int32 core = 1;
+    int32 min_frequency_in_khz = 2;
+    int32 max_frequency_in_khz = 3;
+  }
 }
 
 // CPU usage data of an app process and the entire system at a given point.

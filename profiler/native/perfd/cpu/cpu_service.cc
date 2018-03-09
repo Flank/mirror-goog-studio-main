@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 
+#include "perfd/cpu/cpu_config.h"
 #include "perfd/cpu/profiling_app.h"
 #include "perfd/cpu/simpleperf_manager.h"
 #include "proto/common.pb.h"
@@ -29,6 +30,8 @@
 using grpc::ServerContext;
 using grpc::Status;
 using grpc::StatusCode;
+using profiler::proto::CpuCoreConfigRequest;
+using profiler::proto::CpuCoreConfigResponse;
 using profiler::proto::CpuDataRequest;
 using profiler::proto::CpuDataResponse;
 using profiler::proto::CpuProfilerConfiguration;
@@ -315,6 +318,12 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
 
   cache_.AddStartupProfilingStart(app.app_pkg_name, app);
   return Status::OK;
+}
+
+Status CpuServiceImpl::GetCpuCoreConfig(ServerContext* context,
+                                        const CpuCoreConfigRequest* request,
+                                        CpuCoreConfigResponse* response) {
+  return CpuConfig::GetCpuCoreConfig(response);
 }
 
 }  // namespace profiler

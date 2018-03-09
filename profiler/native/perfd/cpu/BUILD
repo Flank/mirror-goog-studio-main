@@ -6,6 +6,7 @@ cc_library(
         "atrace_manager.cc",
         "cpu_cache.cc",
         "cpu_collector.cc",
+        "cpu_config.cc",
         "cpu_service.cc",
         "cpu_usage_sampler.cc",
         "internal_cpu_service.cc",
@@ -17,6 +18,7 @@ cc_library(
         "atrace_manager.h",
         "cpu_cache.h",
         "cpu_collector.h",
+        "cpu_config.h",
         "cpu_profiler_component.h",
         "cpu_service.h",
         "cpu_usage_sampler.h",
@@ -44,6 +46,7 @@ cc_test(
     name = "perfd_cpu_tests",
     srcs = [
         "atrace_manager_test.cc",
+        "cpu_config_test.cc",
         "cpu_usage_sampler_test.cc",
         "simpleperf_manager_test.cc",
         "simpleperf_test.cc",

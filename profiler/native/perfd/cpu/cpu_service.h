@@ -85,6 +85,11 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
       const profiler::proto::StartupProfilingRequest* request,
       profiler::proto::StartupProfilingResponse* response) override;
 
+  grpc::Status GetCpuCoreConfig(
+      grpc::ServerContext* context,
+      const profiler::proto::CpuCoreConfigRequest* request,
+      profiler::proto::CpuCoreConfigResponse* response) override;
+
  private:
   // Stops profiling process of |pid|, regardless of whether it is alive or
   // dead. If |response| is not null, populate it with the capture data (trace);

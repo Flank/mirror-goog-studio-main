@@ -201,12 +201,11 @@ bool CollectProcessUsageData(int32_t pid, const string& usage_file,
   return false;
 }
 
-bool CollectCpuFrequency(const string& freq_file, CpuCoreUsageData* data) {
+void CollectCpuFrequency(const string& freq_file, CpuCoreUsageData* data) {
   string buffer;
   if (FileReader::Read(freq_file, &buffer)) {
     data->set_frequency_in_khz(atoi(buffer.c_str()));
   }
-  return false;
 }
 
 }  // namespace
@@ -255,7 +254,7 @@ bool CpuUsageSampler::SampleAProcess(int32_t pid) {
       // We do not fail if there is no file, just not set it.
       CpuCoreUsageData* data_core = data.mutable_cores(i);
       CollectCpuFrequency(
-          usage_files_->GetSystemCpuFrequencyPath(data_core->core()),
+          usage_files_->GetSystemCurrentCpuFrequencyPath(data_core->core()),
           data_core);
     }
     data.set_end_timestamp(clock_->GetCurrentTime());
