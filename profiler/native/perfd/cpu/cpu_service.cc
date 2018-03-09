@@ -307,6 +307,10 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
                                        request->abi_cpu_arch(),
                                        app.configuration.sampling_interval_us(),
                                        &app.trace_path, &error, true);
+  } else if (profiler_type == CpuProfilerType::ATRACE) {
+    atrace_manager_.StartProfiling(app.app_pkg_name,
+                                   app.configuration.sampling_interval_us(),
+                                   &app.trace_path, &error);
   }
 
   cache_.AddStartupProfilingStart(app.app_pkg_name, app);
