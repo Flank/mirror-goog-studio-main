@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dependency;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -37,8 +38,9 @@ public class JarTransform extends ArtifactTransform {
     @Inject
     public JarTransform() {}
 
+    @NonNull
     @Override
-    public List<File> transform(File file) {
+    public List<File> transform(@NonNull File file) {
         return ImmutableList.of(file);
     }
 }
