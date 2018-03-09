@@ -60,19 +60,21 @@ public class LintCoreProjectEnvironment extends JavaCoreProjectEnvironment {
         MockProject project = getProject();
         ExtensionsArea area = Extensions.getArea(project);
 
-        project.registerService(CoreJavaFileManager.class,
+        project.registerService(
+                CoreJavaFileManager.class,
                 (CoreJavaFileManager) ServiceManager.getService(project, JavaFileManager.class));
 
-        area.getExtensionPoint(PsiElementFinder.EP_NAME).registerExtension(
-                new PsiElementFinderImpl(
-                        project, ServiceManager.getService(project, JavaFileManager.class)));
-
+        area.getExtensionPoint(PsiElementFinder.EP_NAME)
+                .registerExtension(
+                        new PsiElementFinderImpl(
+                                project,
+                                ServiceManager.getService(project, JavaFileManager.class)));
 
         super.registerJavaPsiFacade();
     }
 
-    public LintCoreProjectEnvironment(Disposable parentDisposable,
-            CoreApplicationEnvironment applicationEnvironment) {
+    public LintCoreProjectEnvironment(
+            Disposable parentDisposable, CoreApplicationEnvironment applicationEnvironment) {
         super(parentDisposable, applicationEnvironment);
 
         MockProject project = getProject();

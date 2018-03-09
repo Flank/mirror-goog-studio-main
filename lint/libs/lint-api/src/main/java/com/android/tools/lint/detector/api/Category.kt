@@ -36,16 +36,17 @@ data class Category
  * @param priority a sorting priority, with higher being more important
  */
 constructor(
-        /**
-         * The parent category, or null if this is a top level category
-         */
-        val parent: Category?,
+    /**
+     * The parent category, or null if this is a top level category
+     */
+    val parent: Category?,
 
-        /**
-         * The name of this category
-         */
-        val name: String,
-        private val priority: Int) : Comparable<Category> {
+    /**
+     * The name of this category
+     */
+    val name: String,
+    private val priority: Int
+) : Comparable<Category> {
 
     /**
      * Returns a full name for this category. For a top level category, this is just
@@ -91,8 +92,9 @@ constructor(
          *
          * @return a new category
          */
-        @JvmStatic fun create(name: String, priority: Int): Category =
-                Category(null, name, priority)
+        @JvmStatic
+        fun create(name: String, priority: Int): Category =
+            Category(null, name, priority)
 
         /**
          * Creates a new top level [Category] with the given sorting priority.
@@ -105,45 +107,58 @@ constructor(
          *
          * @return a new category
          */
-        @JvmStatic fun create(parent: Category?, name: String, priority: Int): Category =
-                Category(parent, name, priority)
+        @JvmStatic
+        fun create(parent: Category?, name: String, priority: Int): Category =
+            Category(parent, name, priority)
 
         /** Issues related to running lint itself  */
-        @JvmField val LINT = create("Lint", 110)
+        @JvmField
+        val LINT = create("Lint", 110)
 
         /** Issues related to correctness  */
-        @JvmField val CORRECTNESS = create("Correctness", 100)
+        @JvmField
+        val CORRECTNESS = create("Correctness", 100)
 
         /** Issues related to security  */
-        @JvmField val SECURITY = create("Security", 90)
+        @JvmField
+        val SECURITY = create("Security", 90)
 
         /** Issues related to performance  */
-        @JvmField val PERFORMANCE = create("Performance", 80)
+        @JvmField
+        val PERFORMANCE = create("Performance", 80)
 
         /** Issues related to usability  */
-        @JvmField val USABILITY = create("Usability", 70)
+        @JvmField
+        val USABILITY = create("Usability", 70)
 
         /** Issues related to accessibility  */
-        @JvmField val A11Y = create("Accessibility", 60)
+        @JvmField
+        val A11Y = create("Accessibility", 60)
 
         /** Issues related to internationalization  */
-        @JvmField val I18N = create("Internationalization", 50)
+        @JvmField
+        val I18N = create("Internationalization", 50)
 
         // Sub categories
 
         /** Issues related to icons  */
-        @JvmField val ICONS = create(USABILITY, "Icons", 73)
+        @JvmField
+        val ICONS = create(USABILITY, "Icons", 73)
 
         /** Issues related to typography  */
-        @JvmField val TYPOGRAPHY = create(USABILITY, "Typography", 76)
+        @JvmField
+        val TYPOGRAPHY = create(USABILITY, "Typography", 76)
 
         /** Issues related to messages/strings  */
-        @JvmField val MESSAGES = create(CORRECTNESS, "Messages", 95)
+        @JvmField
+        val MESSAGES = create(CORRECTNESS, "Messages", 95)
 
         /** Issues related to Chrome OS devices  */
-        @JvmField val CHROME_OS = create(CORRECTNESS, "Chrome OS", 93)
+        @JvmField
+        val CHROME_OS = create(CORRECTNESS, "Chrome OS", 93)
 
         /** Issues related to right to left and bidirectional text support  */
-        @JvmField val RTL = create(I18N, "Bidirectional Text", 40)
+        @JvmField
+        val RTL = create(I18N, "Bidirectional Text", 40)
     }
 }

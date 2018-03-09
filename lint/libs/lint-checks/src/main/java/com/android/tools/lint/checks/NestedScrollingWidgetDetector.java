@@ -36,30 +36,27 @@ import java.util.Collection;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-/**
- * Checks whether a scroll view contains a nested scrolling widget
- */
+/** Checks whether a scroll view contains a nested scrolling widget */
 public class NestedScrollingWidgetDetector extends LayoutDetector {
     private int mVisitingHorizontalScroll;
     private int mVisitingVerticalScroll;
 
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "NestedScrolling",
-            "Nested scrolling widgets",
-            // TODO: Better description!
-            "A scrolling widget such as a `ScrollView` should not contain any nested " +
-            "scrolling widgets since this has various usability issues",
-            Category.CORRECTNESS,
-            7,
-            Severity.WARNING,
-            new Implementation(
-                    NestedScrollingWidgetDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "NestedScrolling",
+                    "Nested scrolling widgets",
+                    // TODO: Better description!
+                    "A scrolling widget such as a `ScrollView` should not contain any nested "
+                            + "scrolling widgets since this has various usability issues",
+                    Category.CORRECTNESS,
+                    7,
+                    Severity.WARNING,
+                    new Implementation(
+                            NestedScrollingWidgetDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     /** Constructs a new {@link NestedScrollingWidgetDetector} */
-    public NestedScrollingWidgetDetector() {
-    }
+    public NestedScrollingWidgetDetector() {}
 
     @Override
     public void beforeCheckFile(@NonNull Context context) {
@@ -76,8 +73,7 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
                 GRID_VIEW,
                 // Horizontal
                 GALLERY,
-                HORIZONTAL_SCROLL_VIEW
-        );
+                HORIZONTAL_SCROLL_VIEW);
     }
 
     private Element findOuterScrollingWidget(Node node, boolean vertical) {
@@ -86,8 +82,7 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
             if (node instanceof Element) {
                 Element element = (Element) node;
                 String tagName = element.getTagName();
-                if (applicableElements.contains(tagName)
-                        && vertical == isVerticalScroll(element)) {
+                if (applicableElements.contains(tagName) && vertical == isVerticalScroll(element)) {
                     return element;
                 }
             }
@@ -112,11 +107,13 @@ public class NestedScrollingWidgetDetector extends LayoutDetector {
             if (parent != null) {
                 String format;
                 if (mVisitingVerticalScroll > 1) {
-                    format = "The vertically scrolling `%1$s` should not contain another " +
-                            "vertically scrolling widget (`%2$s`)";
+                    format =
+                            "The vertically scrolling `%1$s` should not contain another "
+                                    + "vertically scrolling widget (`%2$s`)";
                 } else {
-                    format = "The horizontally scrolling `%1$s` should not contain another " +
-                            "horizontally scrolling widget (`%2$s`)";
+                    format =
+                            "The horizontally scrolling `%1$s` should not contain another "
+                                    + "horizontally scrolling widget (`%2$s`)";
                 }
                 String msg = String.format(format, parent.getTagName(), element.getTagName());
                 context.report(ISSUE, element, context.getElementLocation(element), msg);

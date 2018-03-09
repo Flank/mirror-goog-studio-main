@@ -75,41 +75,38 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/**
- * Check which looks for access of private resources.
- */
+/** Check which looks for access of private resources. */
 public class PrivateResourceDetector extends ResourceXmlDetector implements SourceCodeScanner {
     /** Attribute for overriding a resource */
     private static final String ATTR_OVERRIDE = "override";
 
     @SuppressWarnings("unchecked")
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            PrivateResourceDetector.class,
-            Scope.JAVA_AND_RESOURCE_FILES,
-            Scope.JAVA_FILE_SCOPE,
-            Scope.RESOURCE_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(
+                    PrivateResourceDetector.class,
+                    Scope.JAVA_AND_RESOURCE_FILES,
+                    Scope.JAVA_FILE_SCOPE,
+                    Scope.RESOURCE_FILE_SCOPE);
 
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "PrivateResource",
-            "Using private resources",
-
-            "Private resources should not be referenced; the may not be present everywhere, and " +
-            "even where they are they may disappear without notice.\n" +
-            "\n" +
-            "To fix this, copy the resource into your own project instead.",
-
-            Category.CORRECTNESS,
-            3,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue ISSUE =
+            Issue.create(
+                    "PrivateResource",
+                    "Using private resources",
+                    "Private resources should not be referenced; the may not be present everywhere, and "
+                            + "even where they are they may disappear without notice.\n"
+                            + "\n"
+                            + "To fix this, copy the resource into your own project instead.",
+                    Category.CORRECTNESS,
+                    3,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     /** List of resource URLs overriding private resources locally */
     private List<String> overriding;
 
     /** Constructs a new detector */
-    public PrivateResourceDetector() {
-    }
+    public PrivateResourceDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -119,8 +116,12 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
     }
 
     @Override
-    public void visitResourceReference(@NonNull JavaContext context, @NonNull UElement node,
-            @NonNull ResourceType resourceType, @NonNull String name, boolean isFramework) {
+    public void visitResourceReference(
+            @NonNull JavaContext context,
+            @NonNull UElement node,
+            @NonNull ResourceType resourceType,
+            @NonNull String name,
+            boolean isFramework) {
         if (context.getProject().isGradleProject() && !isFramework) {
             Project project = context.getProject();
             if (project.getGradleProjectModel() != null && project.getCurrentVariant() != null) {
@@ -128,13 +129,13 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
                     // See if it's a local package reference
                     boolean foreignPackage = false;
                     if (node instanceof UReferenceExpression) {
-                        PsiElement resolved = ((UReferenceExpression)node).resolve();
+                        PsiElement resolved = ((UReferenceExpression) node).resolve();
                         if (resolved instanceof PsiField) {
                             PsiPackage pkg = context.getEvaluator().getPackage(resolved);
                             if (pkg != null) {
                                 String pkgName = pkg.getQualifiedName();
                                 if (!(pkgName.equals(context.getProject().getPackage())
-                                    || pkgName.equals(context.getMainProject().getPackage()))) {
+                                        || pkgName.equals(context.getMainProject().getPackage()))) {
                                     foreignPackage = true;
                                 }
                             }
@@ -144,8 +145,9 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
                     // See if this is resource we're overriding locally
                     if (!foreignPackage) {
                         AbstractResourceRepository repository =
-                            context.getClient().getResourceRepository(context.getMainProject(),
-                                    true, false);
+                                context.getClient()
+                                        .getResourceRepository(
+                                                context.getMainProject(), true, false);
                         if (repository != null && repository.hasResourceItem(resourceType, name)) {
                             return;
                         }
@@ -191,8 +193,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
                 TAG_ARRAY,
                 TAG_STRING_ARRAY,
                 TAG_INTEGER_ARRAY,
-                TAG_PLURALS
-        );
+                TAG_PLURALS);
     }
 
     @Override
@@ -284,8 +285,8 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
                         if (c == '@') {
                             ResourceUrl url = ResourceUrl.parse(text.trim());
                             if (isPrivate(context, url)) {
-                                String message = createUsageErrorMessage(context, url.type,
-                                        url.name);
+                                String message =
+                                        createUsageErrorMessage(context, url.type, url.name);
                                 context.report(ISSUE, item, context.getLocation(child), message);
                             }
                             break;
@@ -326,25 +327,27 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Sour
         }
     }
 
-    private static String createOverrideErrorMessage(@NonNull Context context,
-            @NonNull ResourceType type, @NonNull String name) {
+    private static String createOverrideErrorMessage(
+            @NonNull Context context, @NonNull ResourceType type, @NonNull String name) {
         String libraryName = getLibraryName(context, type, name);
-        return String.format("Overriding `@%1$s/%2$s` which is marked as private in %3$s. If "
+        return String.format(
+                "Overriding `@%1$s/%2$s` which is marked as private in %3$s. If "
                         + "deliberate, use tools:override=\"true\", otherwise pick a "
-                        + "different name.", type, name, libraryName);
+                        + "different name.",
+                type, name, libraryName);
     }
 
-    private static String createUsageErrorMessage(@NonNull Context context,
-            @NonNull ResourceType type, @NonNull String name) {
+    private static String createUsageErrorMessage(
+            @NonNull Context context, @NonNull ResourceType type, @NonNull String name) {
         String libraryName = getLibraryName(context, type, name);
-        return String.format("The resource `@%1$s/%2$s` is marked as private in %3$s", type,
-                name, libraryName);
+        return String.format(
+                "The resource `@%1$s/%2$s` is marked as private in %3$s", type, name, libraryName);
     }
 
     /** Pick a suitable name to describe the library defining the private resource */
     @Nullable
-    private static String getLibraryName(@NonNull Context context, @NonNull ResourceType type,
-            @NonNull String name) {
+    private static String getLibraryName(
+            @NonNull Context context, @NonNull ResourceType type, @NonNull String name) {
         ResourceVisibilityLookup lookup = context.getProject().getResourceVisibility();
         AndroidLibrary library = lookup.getPrivateIn(type, name);
         if (library != null) {

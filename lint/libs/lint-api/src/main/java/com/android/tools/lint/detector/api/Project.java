@@ -98,11 +98,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 /**
- * A project contains information about an Android project being scanned for
- * Lint errors.
- * <p>
- * <b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ * A project contains information about an Android project being scanned for Lint errors.
+ *
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
 @Beta
 public class Project {
@@ -127,10 +126,11 @@ public class Project {
     protected SdkInfo sdkInfo;
 
     /**
-     * If non null, specifies a non-empty list of specific files under this
-     * project which should be checked.
+     * If non null, specifies a non-empty list of specific files under this project which should be
+     * checked.
      */
     protected List<File> files;
+
     protected List<File> proguardFiles;
     protected List<File> gradleFiles;
     protected List<File> manifestFiles;
@@ -166,9 +166,7 @@ public class Project {
      */
     @NonNull
     public static Project create(
-            @NonNull LintClient client,
-            @NonNull File dir,
-            @NonNull File referenceDir) {
+            @NonNull LintClient client, @NonNull File dir, @NonNull File referenceDir) {
         return new Project(client, dir, referenceDir);
     }
 
@@ -196,9 +194,8 @@ public class Project {
     }
 
     /**
-     * Returns the project model for this project if it corresponds to
-     * a Gradle project. This is the case if {@link #isGradleProject()}
-     * is true and {@link #isLibrary()} is false.
+     * Returns the project model for this project if it corresponds to a Gradle project. This is the
+     * case if {@link #isGradleProject()} is true and {@link #isLibrary()} is false.
      *
      * @return the project model, or null
      */
@@ -208,8 +205,8 @@ public class Project {
     }
 
     /**
-     * If this is a Gradle project with a valid Gradle model, return the version
-     * of the model/plugin.
+     * If this is a Gradle project with a valid Gradle model, return the version of the
+     * model/plugin.
      *
      * @return the Gradle plugin version, or null if invalid or not a Gradle project
      */
@@ -226,9 +223,8 @@ public class Project {
     }
 
     /**
-     * Returns the project model for this project if it corresponds to
-     * a Gradle library. This is the case if both
-     * {@link #isGradleProject()} and {@link #isLibrary()} return true.
+     * Returns the project model for this project if it corresponds to a Gradle library. This is the
+     * case if both {@link #isGradleProject()} and {@link #isLibrary()} return true.
      *
      * @return the project model, or null
      */
@@ -252,10 +248,9 @@ public class Project {
     }
 
     /**
-     * Returns the merged manifest of this project. This may return null
-     * if not called on the main project. Note that the file reference
-     * in the merged manifest isn't accurate; the merged manifest accumulates
-     * information from a wide variety of locations.
+     * Returns the merged manifest of this project. This may return null if not called on the main
+     * project. Note that the file reference in the merged manifest isn't accurate; the merged
+     * manifest accumulates information from a wide variety of locations.
      *
      * @return The merged manifest, if available.
      */
@@ -269,10 +264,7 @@ public class Project {
     }
 
     /** Creates a new Project. Use one of the factory methods to create. */
-    protected Project(
-            @NonNull LintClient client,
-            @NonNull File dir,
-            @NonNull File referenceDir) {
+    protected Project(@NonNull LintClient client, @NonNull File dir, @NonNull File referenceDir) {
         this.client = client;
         this.dir = dir;
         this.referenceDir = referenceDir;
@@ -295,8 +287,8 @@ public class Project {
                     if (proguardPath != null) {
                         this.proguardPath = proguardPath;
                     }
-                    mergeManifests = VALUE_TRUE.equals(properties.getProperty(
-                            "manifestmerger.enabled"));
+                    mergeManifests =
+                            VALUE_TRUE.equals(properties.getProperty("manifestmerger.enabled"));
                     String target = properties.getProperty("target");
                     if (target != null) {
                         setBuildTargetHash(target);
@@ -336,8 +328,7 @@ public class Project {
                         }
 
                         try {
-                            Project libraryPrj = client.getProject(libraryDir,
-                                    libraryReferenceDir);
+                            Project libraryPrj = client.getProject(libraryDir, libraryReferenceDir);
                             directLibraries.add(libraryPrj);
                             // By default, we don't report issues in inferred library projects.
                             // The driver will set report = true for those library explicitly
@@ -375,10 +366,10 @@ public class Project {
                 // only set BuildSdk for projects other than frameworks and
                 // the ones that don't have one set in project.properties.
                 buildSdk = getClient().getHighestKnownApiLevel();
-                buildTargetHash = AndroidTargetHash.getPlatformHashString(new AndroidVersion(
-                        HIGHEST_KNOWN_API, null));
+                buildTargetHash =
+                        AndroidTargetHash.getPlatformHashString(
+                                new AndroidVersion(HIGHEST_KNOWN_API, null));
             }
-
         }
     }
 
@@ -391,7 +382,6 @@ public class Project {
         } else {
             return AaptOptions.Namespacing.DISABLED;
         }
-
     }
 
     private ResourceNamespace namespace;
@@ -423,19 +413,22 @@ public class Project {
 
     @Override
     public boolean equals(@Nullable Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         Project other = (Project) obj;
         return dir.equals(other.dir);
     }
 
     /**
-     * Adds the given file to the list of files which should be checked in this
-     * project. If no files are added, the whole project will be checked.
+     * Adds the given file to the list of files which should be checked in this project. If no files
+     * are added, the whole project will be checked.
      *
      * @param file the file to be checked
      */
@@ -447,8 +440,8 @@ public class Project {
     }
 
     /**
-     * The list of files to be checked in this project. If null, the whole
-     * project should be checked.
+     * The list of files to be checked in this project. If null, the whole project should be
+     * checked.
      *
      * @return the subset of files to be checked, or null for the whole project
      */
@@ -493,6 +486,7 @@ public class Project {
 
     /**
      * Returns the list of output folders for class files
+     *
      * @return a list of output folders to search for .class files
      */
     @NonNull
@@ -504,7 +498,7 @@ public class Project {
                     File out = new File(top, "out");
                     if (out.exists()) {
                         String relative =
-                            "target/common/obj/JAVA_LIBRARIES/framework_intermediates/classes.jar";
+                                "target/common/obj/JAVA_LIBRARIES/framework_intermediates/classes.jar";
                         File jar = new File(out, relative.replace('/', File.separatorChar));
                         if (jar.exists()) {
                             javaClassFolders = Collections.singletonList(jar);
@@ -527,17 +521,14 @@ public class Project {
     }
 
     /**
-     * Returns the list of Java libraries (typically .jar files) that this
-     * project depends on. Note that this refers to jar libraries, not Android
-     * library projects which are processed in a separate pass with their own
-     * source and class folders.
+     * Returns the list of Java libraries (typically .jar files) that this project depends on. Note
+     * that this refers to jar libraries, not Android library projects which are processed in a
+     * separate pass with their own source and class folders.
      *
-     * @param includeProvided If true, included provided libraries too (libraries
-     *                        that are not packaged with the app, but are provided
-     *                        for compilation purposes and are assumed to be present
-     *                        in the running environment)
-     * @return a list of .jar files (or class folders) that this project depends
-     *         on.
+     * @param includeProvided If true, included provided libraries too (libraries that are not
+     *     packaged with the app, but are provided for compilation purposes and are assumed to be
+     *     present in the running environment)
+     * @return a list of .jar files (or class folders) that this project depends on.
      */
     @NonNull
     public List<File> getJavaLibraries(boolean includeProvided) {
@@ -550,8 +541,9 @@ public class Project {
                 if (isAospBuildEnvironment()) {
                     // We still need to add the support-annotations library in the case of AOSP
                     File out = new File(getAospTop(), "out");
-                    String relative = "target/common/obj/JAVA_LIBRARIES/"
-                            + "android-support-annotations_intermediates/classes";
+                    String relative =
+                            "target/common/obj/JAVA_LIBRARIES/"
+                                    + "android-support-annotations_intermediates/classes";
                     File annotationsDir = new File(out, relative.replace('/', File.separatorChar));
                     if (annotationsDir.exists()) {
                         javaLibraries.add(annotationsDir);
@@ -599,7 +591,7 @@ public class Project {
      * Returns the resource folders.
      *
      * @return a list of files pointing to the resource folders, which might be empty if the project
-     * does not provide any resources.
+     *     does not provide any resources.
      */
     @NonNull
     public List<File> getResourceFolders() {
@@ -634,7 +626,7 @@ public class Project {
      * Returns the asset folders.
      *
      * @return a list of files pointing to the asset folders, which might be empty if the project
-     * does not provide any resources.
+     *     does not provide any resources.
      */
     @NonNull
     public List<File> getAssetFolders() {
@@ -646,27 +638,27 @@ public class Project {
     }
 
     /**
-     * Returns the relative path of a given file relative to the user specified
-     * directory (which is often the project directory but sometimes a higher up
-     * directory when a directory tree is being scanned
+     * Returns the relative path of a given file relative to the user specified directory (which is
+     * often the project directory but sometimes a higher up directory when a directory tree is
+     * being scanned
      *
      * @param file the file under this project to check
      * @return the path relative to the reference directory (often the project directory)
      */
     @NonNull
     public String getDisplayPath(@NonNull File file) {
-       String path = file.getPath();
-       String referencePath = referenceDir.getPath();
-       if (path.startsWith(referencePath)) {
-           int length = referencePath.length();
-           if (path.length() > length && path.charAt(length) == File.separatorChar) {
-               length++;
-           }
+        String path = file.getPath();
+        String referencePath = referenceDir.getPath();
+        if (path.startsWith(referencePath)) {
+            int length = referencePath.length();
+            if (path.length() > length && path.charAt(length) == File.separatorChar) {
+                length++;
+            }
 
-           return client.getDisplayPath(new File(path.substring(length)));
-       }
+            return client.getDisplayPath(new File(path.substring(length)));
+        }
 
-       return client.getDisplayPath(file);
+        return client.getDisplayPath(file);
     }
 
     /**
@@ -677,18 +669,18 @@ public class Project {
      */
     @NonNull
     public String getRelativePath(@NonNull File file) {
-       String path = file.getPath();
-       String referencePath = dir.getPath();
-       if (path.startsWith(referencePath)) {
-           int length = referencePath.length();
-           if (path.length() > length && path.charAt(length) == File.separatorChar) {
-               length++;
-           }
+        String path = file.getPath();
+        String referencePath = dir.getPath();
+        if (path.startsWith(referencePath)) {
+            int length = referencePath.length();
+            if (path.length() > length && path.charAt(length) == File.separatorChar) {
+                length++;
+            }
 
-           return path.substring(length);
-       }
+            return path.substring(length);
+        }
 
-       return path;
+        return path;
     }
 
     /**
@@ -702,10 +694,9 @@ public class Project {
     }
 
     /**
-     * Returns the original user supplied directory where the lint search
-     * started. For example, if you run lint against {@code /tmp/foo}, and it
-     * finds a project to lint in {@code /tmp/foo/dev/src/project1}, then the
-     * {@code dir} is {@code /tmp/foo/dev/src/project1} and the
+     * Returns the original user supplied directory where the lint search started. For example, if
+     * you run lint against {@code /tmp/foo}, and it finds a project to lint in {@code
+     * /tmp/foo/dev/src/project1}, then the {@code dir} is {@code /tmp/foo/dev/src/project1} and the
      * {@code referenceDir} is {@code /tmp/foo/}.
      *
      * @return the reference directory, never null
@@ -750,9 +741,9 @@ public class Project {
     }
 
     /**
-     * Returns the minimum API <b>level</b> requested by the manifest, or -1 if not
-     * specified. Use {@link #getMinSdkVersion()} to get a full version if you need
-     * to check if the platform is a preview platform etc.
+     * Returns the minimum API <b>level</b> requested by the manifest, or -1 if not specified. Use
+     * {@link #getMinSdkVersion()} to get a full version if you need to check if the platform is a
+     * preview platform etc.
      *
      * @return the minimum API level or -1 if unknown
      */
@@ -768,14 +759,13 @@ public class Project {
      */
     @NonNull
     public AndroidVersion getTargetSdkVersion() {
-        return manifestTargetSdk == AndroidVersion.DEFAULT
-                ? getMinSdkVersion() : manifestTargetSdk;
+        return manifestTargetSdk == AndroidVersion.DEFAULT ? getMinSdkVersion() : manifestTargetSdk;
     }
 
     /**
-     * Returns the target API <b>level</b> specified by the manifest, or -1 if not
-     * specified. Use {@link #getTargetSdkVersion()} to get a full version if you need
-     * to check if the platform is a preview platform etc.
+     * Returns the target API <b>level</b> specified by the manifest, or -1 if not specified. Use
+     * {@link #getTargetSdkVersion()} to get a full version if you need to check if the platform is
+     * a preview platform etc.
      *
      * @return the target API level or -1 if unknown
      */
@@ -785,10 +775,9 @@ public class Project {
     }
 
     /**
-     * Returns the compile SDK version used to build the project, or null if not known.
-     * This is the string name of the compileSdkVersion. If you want the numeric
-     * API level, use {@link #getBuildTargetHash()} instead, or to get the
-     * actual
+     * Returns the compile SDK version used to build the project, or null if not known. This is the
+     * string name of the compileSdkVersion. If you want the numeric API level, use {@link
+     * #getBuildTargetHash()} instead, or to get the actual
      *
      * @return the compileSdkVersion or -1 if unknown
      */
@@ -797,11 +786,10 @@ public class Project {
     }
 
     /**
-     * Returns the target API used to build the project, or null if not known.
-     * Note that this is returning a String rather than a {@link AndroidVersion}
-     * since it may refer to either a {@link AndroidTargetHash} for a platform
-     * or for an add-on, and {@link AndroidVersion} can only express platform
-     * versions.
+     * Returns the target API used to build the project, or null if not known. Note that this is
+     * returning a String rather than a {@link AndroidVersion} since it may refer to either a {@link
+     * AndroidTargetHash} for a platform or for an add-on, and {@link AndroidVersion} can only
+     * express platform versions.
      *
      * @return the build target API or -1 if unknown
      */
@@ -810,10 +798,9 @@ public class Project {
         return buildTargetHash;
     }
 
-
     /**
-     * Sets the build target hash to be used for this project. This is only
-     * intended for lint internal usage.
+     * Sets the build target hash to be used for this project. This is only intended for lint
+     * internal usage.
      *
      * @param buildTargetHash the target hash
      */
@@ -824,8 +811,7 @@ public class Project {
         if (version != null) {
             buildSdk = version.getFeatureLevel();
         } else {
-            client.log(Severity.WARNING, null,
-                    "Unexpected build target format: %1$s", target);
+            client.log(Severity.WARNING, null, "Unexpected build target format: %1$s", target);
         }
     }
 
@@ -913,8 +899,7 @@ public class Project {
     /**
      * Returns the list of library projects referenced by this project
      *
-     * @return the list of library projects referenced by this project, never
-     *         null
+     * @return the list of library projects referenced by this project, never null
      */
     @NonNull
     public List<Project> getDirectLibraries() {
@@ -946,20 +931,25 @@ public class Project {
     }
 
     /**
-     * Adds this project's library project and their library projects
-     * recursively into the given collection of projects
+     * Adds this project's library project and their library projects recursively into the given
+     * collection of projects
      *
      * @param collection the collection to add the projects into
      * @param seen full set of projects we've processed
      * @param path the current path of library dependencies followed
      */
-    private void addLibraryProjects(@NonNull Collection<Project> collection,
-            @NonNull Set<Project> seen, @NonNull Set<Project> path) {
+    private void addLibraryProjects(
+            @NonNull Collection<Project> collection,
+            @NonNull Set<Project> seen,
+            @NonNull Set<Project> path) {
         for (Project library : directLibraries) {
             if (seen.contains(library)) {
                 if (path.contains(library)) {
-                    client.log(Severity.WARNING, null,
-                            "Internal lint error: cyclic library dependency for %1$s", library);
+                    client.log(
+                            Severity.WARNING,
+                            null,
+                            "Internal lint error: cyclic library dependency for %1$s",
+                            library);
                 }
                 continue;
             }
@@ -987,9 +977,9 @@ public class Project {
     }
 
     /**
-     * Gets the paths to the manifest files in this project, if any exists. The manifests
-     * should be provided such that the main manifest comes first, then any flavor versions,
-     * then any build types.
+     * Gets the paths to the manifest files in this project, if any exists. The manifests should be
+     * provided such that the main manifest comes first, then any flavor versions, then any build
+     * types.
      *
      * @return the path to the manifest file, or null if it does not exist
      */
@@ -1125,8 +1115,8 @@ public class Project {
     }
 
     /**
-     * Sets whether lint should report issues in this project. See
-     * {@link #getReportIssues()} for a full description of what that means.
+     * Sets whether lint should report issues in this project. See {@link #getReportIssues()} for a
+     * full description of what that means.
      *
      * @param reportIssues whether lint should report issues in this project
      */
@@ -1136,15 +1126,14 @@ public class Project {
 
     /**
      * Returns whether lint should report issues in this project.
-     * <p>
-     * If a user specifies a project and its library projects for analysis, then
-     * those library projects are all "included", and all errors found in all
-     * the projects are reported. But if the user is only running lint on the
-     * main project, we shouldn't report errors in any of the library projects.
-     * We still need to <b>consider</b> them for certain types of checks, such
-     * as determining whether resources found in the main project are unused, so
-     * the detectors must still get a chance to look at these projects. The
-     * {@code #getReportIssues()} attribute is used for this purpose.
+     *
+     * <p>If a user specifies a project and its library projects for analysis, then those library
+     * projects are all "included", and all errors found in all the projects are reported. But if
+     * the user is only running lint on the main project, we shouldn't report errors in any of the
+     * library projects. We still need to <b>consider</b> them for certain types of checks, such as
+     * determining whether resources found in the main project are unused, so the detectors must
+     * still get a chance to look at these projects. The {@code #getReportIssues()} attribute is
+     * used for this purpose.
      *
      * @return whether lint should report issues in this project
      */
@@ -1161,7 +1150,6 @@ public class Project {
         return mergeManifests;
     }
 
-
     // ---------------------------------------------------------------------------
     // Support for running lint on the AOSP source tree itself
 
@@ -1177,16 +1165,16 @@ public class Project {
     }
 
     /**
-     * Is this the frameworks or related AOSP project? Needs some hardcoded support since
-     * it doesn't have a manifest file, etc.
+     * Is this the frameworks or related AOSP project? Needs some hardcoded support since it doesn't
+     * have a manifest file, etc.
      *
-     * A frameworks AOSP projects can be any directory under "frameworks" that
-     * 1. Is not the "support" directory (which uses the public support annotations)
-     * 2. Doesn't have an AndroidManifest.xml (it's an app instead)
+     * <p>A frameworks AOSP projects can be any directory under "frameworks" that 1. Is not the
+     * "support" directory (which uses the public support annotations) 2. Doesn't have an
+     * AndroidManifest.xml (it's an app instead)
      *
      * @param dir the project directory to check
-     * @return true if this looks like the frameworks/dir project and does not have
-     *         an AndroidManifest.xml
+     * @return true if this looks like the frameworks/dir project and does not have an
+     *     AndroidManifest.xml
      */
     public static boolean isAospFrameworksRelatedProject(@NonNull File dir) {
         if (isAospBuildEnvironment()) {
@@ -1205,15 +1193,14 @@ public class Project {
 
     /**
      * Is this the actual frameworks project.
+     *
      * @param dir the project directory to check.
      * @return true if this is the frameworks project.
      */
     public static boolean isAospFrameworksProject(@NonNull File dir) {
         String top = getAospTop();
         if (top != null) {
-            File toCompare = new File(top, "frameworks"
-                    + separator + "base"
-                    + separator + "core");
+            File toCompare = new File(top, "frameworks" + separator + "base" + separator + "core");
             try {
                 return dir.getCanonicalFile().equals(toCompare) && dir.exists();
             } catch (IOException e) {
@@ -1256,7 +1243,8 @@ public class Project {
         }
 
         if (sources.isEmpty()) {
-            client.log(null,
+            client.log(
+                    null,
                     "Warning: Could not find sources or generated sources for project %1$s",
                     getName());
         }
@@ -1280,8 +1268,7 @@ public class Project {
         }
 
         if (classDirs.isEmpty()) {
-            client.log(null,
-                    "No bytecode found: Has the project been built? (%1$s)", getName());
+            client.log(null, "No bytecode found: Has the project been built? (%1$s)", getName());
         }
 
         return classDirs;
@@ -1305,22 +1292,22 @@ public class Project {
         }
 
         String top = getAospTop();
-        final String[] outFolders = new String[] {
-            top + "/out/host/common/obj",
-            top + "/out/target/common/obj",
-            getAospHostOut() + "/obj",
-            getAospProductOut() + "/obj"
-        };
-        final String[] moduleClasses = new String[] {
-                "APPS",
-                "JAVA_LIBRARIES",
-        };
+        final String[] outFolders =
+                new String[] {
+                    top + "/out/host/common/obj",
+                    top + "/out/target/common/obj",
+                    getAospHostOut() + "/obj",
+                    getAospProductOut() + "/obj"
+                };
+        final String[] moduleClasses =
+                new String[] {
+                    "APPS", "JAVA_LIBRARIES",
+                };
 
         for (String out : outFolders) {
             assert new File(out.replace('/', File.separatorChar)).exists() : out;
             for (String moduleClass : moduleClasses) {
-                String path = out + '/' + moduleClass + '/' + moduleName
-                        + "_intermediates";
+                String path = out + '/' + moduleClass + '/' + moduleName + "_intermediates";
                 File file = new File(path.replace('/', File.separatorChar));
                 if (file.exists()) {
                     intermediates.add(file);
@@ -1348,8 +1335,8 @@ public class Project {
                         if (version.equals("current")) {
                             manifestMinSdk = findCurrentAospVersion();
                         } else {
-                            manifestMinSdk = SdkVersionInfo.getVersion(version,
-                                    client.getTargets());
+                            manifestMinSdk =
+                                    SdkVersionInfo.getVersion(version, client.getTargets());
                         }
                         break;
                     }
@@ -1370,8 +1357,10 @@ public class Project {
     /** In an AOSP build environment, identify the currently built image version, if available */
     private static AndroidVersion findCurrentAospVersion() {
         if (sCurrentVersion == null) {
-            File versionMk = new File(getAospTop(), "build/core/version_defaults.mk"
-                    .replace('/', File.separatorChar));
+            File versionMk =
+                    new File(
+                            getAospTop(),
+                            "build/core/version_defaults.mk".replace('/', File.separatorChar));
 
             if (!versionMk.exists()) {
                 sCurrentVersion = AndroidVersion.DEFAULT;
@@ -1404,14 +1393,12 @@ public class Project {
     }
 
     /**
-     * Returns true if this project depends on the given artifact. Note that
-     * the project doesn't have to be a Gradle project; the artifact is just
-     * an identifier for name a specific library, such as com.android.support:support-v4
-     * to identify the support library
+     * Returns true if this project depends on the given artifact. Note that the project doesn't
+     * have to be a Gradle project; the artifact is just an identifier for name a specific library,
+     * such as com.android.support:support-v4 to identify the support library
      *
      * @param artifact the Gradle/Maven name of a library
-     * @return true if the library is installed, false if it is not, and null if
-     *   we're not sure
+     * @return true if the library is installed, false if it is not, and null if we're not sure
      */
     @Nullable
     public Boolean dependsOn(@NonNull String artifact) {
@@ -1419,8 +1406,7 @@ public class Project {
             if (supportLib == null) {
                 for (File file : getJavaLibraries(true)) {
                     String name = file.getName();
-                    if (name.equals("android-support-v4.jar")
-                            || name.startsWith("support-v4-")) {
+                    if (name.equals("android-support-v4.jar") || name.startsWith("support-v4-")) {
                         supportLib = true;
                         break;
                     }
@@ -1476,7 +1462,7 @@ public class Project {
      * restrictions and all densities apply.
      *
      * @return the list of specific densities that apply in this project, or null if all densities
-     * apply
+     *     apply
      */
     @Nullable
     public List<String> getApplicableDensities() {
@@ -1489,15 +1475,16 @@ public class Project {
             //     }
             // }
             // ...then we should only enforce hdpi densities, not all these others!
-            if (isGradleProject() && getGradleProjectModel() != null &&
-                    getCurrentVariant() != null) {
+            if (isGradleProject()
+                    && getGradleProjectModel() != null
+                    && getCurrentVariant() != null) {
                 Set<String> relevantDensities = Sets.newHashSet();
                 Variant variant = getCurrentVariant();
                 List<String> variantFlavors = variant.getProductFlavors();
                 AndroidProject gradleProjectModel = getGradleProjectModel();
 
-                addResConfigsFromFlavor(relevantDensities, null,
-                        getGradleProjectModel().getDefaultConfig());
+                addResConfigsFromFlavor(
+                        relevantDensities, null, getGradleProjectModel().getDefaultConfig());
                 for (ProductFlavorContainer container : gradleProjectModel.getProductFlavors()) {
                     addResConfigsFromFlavor(relevantDensities, variantFlavors, container);
                 }
@@ -1537,8 +1524,9 @@ public class Project {
     }
 
     /**
-     * Returns a super class map for this project. The keys and values are internal
-     * class names (e.g. java/lang/Integer, not java.lang.Integer).
+     * Returns a super class map for this project. The keys and values are internal class names
+     * (e.g. java/lang/Integer, not java.lang.Integer).
+     *
      * @return a map, possibly empty but never null
      */
     @NonNull
@@ -1551,10 +1539,11 @@ public class Project {
     }
 
     /**
-     * Adds in the resConfig values specified by the given flavor container, assuming
-     * it's in one of the relevant variantFlavors, into the given set
+     * Adds in the resConfig values specified by the given flavor container, assuming it's in one of
+     * the relevant variantFlavors, into the given set
      */
-    private static void addResConfigsFromFlavor(@NonNull Set<String> relevantDensities,
+    private static void addResConfigsFromFlavor(
+            @NonNull Set<String> relevantDensities,
             @Nullable List<String> variantFlavors,
             @NonNull ProductFlavorContainer container) {
         ProductFlavor flavor = container.getProductFlavor();
@@ -1562,8 +1551,10 @@ public class Project {
             if (!flavor.getResourceConfigurations().isEmpty()) {
                 for (String densityName : flavor.getResourceConfigurations()) {
                     Density density = Density.getEnum(densityName);
-                    if (density != null && density.isRecommended()
-                            && density != Density.NODPI && density != Density.ANYDPI) {
+                    if (density != null
+                            && density.isRecommended()
+                            && density != Density.NODPI
+                            && density != Density.ANYDPI) {
                         relevantDensities.add(densityName);
                     }
                 }
@@ -1583,13 +1574,13 @@ public class Project {
                 AndroidProject project = getGradleProjectModel();
                 Variant variant = getCurrentVariant();
                 if (project != null && variant != null) {
-                    resourceVisibility = client.getResourceVisibilityProvider().get(project,
-                            variant);
+                    resourceVisibility =
+                            client.getResourceVisibilityProvider().get(project, variant);
 
                 } else if (getGradleLibraryModel() != null) {
                     try {
-                        resourceVisibility = client.getResourceVisibilityProvider()
-                                .get(getGradleLibraryModel());
+                        resourceVisibility =
+                                client.getResourceVisibilityProvider().get(getGradleLibraryModel());
                     } catch (Exception ignore) {
                         // Handle talking to older Gradle plugins (where we don't
                         // have access to the model version to check up front

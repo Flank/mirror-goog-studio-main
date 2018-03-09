@@ -44,22 +44,25 @@ import org.jetbrains.uast.UTypeReferenceExpression
 class PrivateApiDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         /** Using hidden/private APIs  */
-        @JvmField val ISSUE = Issue.create(
-                "PrivateApi",
-                "Using Private APIs",
+        @JvmField
+        val ISSUE = Issue.create(
+            "PrivateApi",
+            "Using Private APIs",
 
-                """
+            """
 Using reflection to access hidden/private Android APIs is not safe; it will often not work on \
 devices from other vendors, and it may suddenly stop working (if the API is removed) or crash \
 spectacularly (if the API behavior changes, since there are no guarantees for compatibility).
 """,
 
-                Category.CORRECTNESS,
-                6,
-                Severity.WARNING,
-                Implementation(
-                        PrivateApiDetector::class.java,
-                        Scope.JAVA_FILE_SCOPE))
+            Category.CORRECTNESS,
+            6,
+            Severity.WARNING,
+            Implementation(
+                PrivateApiDetector::class.java,
+                Scope.JAVA_FILE_SCOPE
+            )
+        )
 
         private const val LOAD_CLASS = "loadClass"
         private const val FOR_NAME = "forName"
@@ -72,13 +75,14 @@ spectacularly (if the API behavior changes, since there are no guarantees for co
     // ---- Implements JavaPsiScanner ----
 
     override fun getApplicableMethodNames(): List<String>? =
-            listOf(FOR_NAME, LOAD_CLASS, GET_DECLARED_METHOD)
+        listOf(FOR_NAME, LOAD_CLASS, GET_DECLARED_METHOD)
 
     override fun visitMethod(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         val evaluator = context.evaluator
         if (LOAD_CLASS == method.name) {
             if (evaluator.isMemberInClass(method, "java.lang.ClassLoader")
-                    || evaluator.isMemberInClass(method, "dalvik.system.DexFile")) {
+                || evaluator.isMemberInClass(method, "dalvik.system.DexFile")
+            ) {
                 checkLoadClass(context, node)
             }
         } else {
@@ -93,8 +97,10 @@ spectacularly (if the API behavior changes, since there are no guarantees for co
         }
     }
 
-    private fun checkGetDeclaredMethod(context: JavaContext,
-                                       call: UCallExpression) {
+    private fun checkGetDeclaredMethod(
+        context: JavaContext,
+        call: UCallExpression
+    ) {
         val cls = getClassFromMemberLookup(call) ?: return
 
         if (!(cls.startsWith("com.android.") || cls.startsWith("android."))) {
@@ -117,8 +123,10 @@ spectacularly (if the API behavior changes, since there are no guarantees for co
         }
     }
 
-    private fun checkLoadClass(context: JavaContext,
-                               call: UCallExpression) {
+    private fun checkLoadClass(
+        context: JavaContext,
+        call: UCallExpression
+    ) {
         val arguments = call.valueArguments
         if (arguments.isEmpty()) {
             return
@@ -129,7 +137,8 @@ spectacularly (if the API behavior changes, since there are no guarantees for co
         if (value.startsWith("com.android.internal.")) {
             isInternal = true
         } else if (value.startsWith("com.android.") || value.startsWith("android.") &&
-                !value.startsWith("android.support.")) {
+            !value.startsWith("android.support.")
+        ) {
             // Attempting to access internal API? Look in two places:
             //  (1) SDK class
             //  (2) API database
@@ -138,8 +147,10 @@ spectacularly (if the API behavior changes, since there are no guarantees for co
             if (aClass != null) { // Found in SDK: not internal
                 return
             }
-            val apiLookup = ApiLookup.get(context.client,
-                    context.mainProject.buildTarget) ?: return
+            val apiLookup = ApiLookup.get(
+                context.client,
+                context.mainProject.buildTarget
+            ) ?: return
             isInternal = !apiLookup.containsClass(value)
         }
 
@@ -158,11 +169,12 @@ spectacularly (if the API behavior changes, since there are no guarantees for co
      * @return the fully qualified name of the class, if found
      */
     private fun getClassFromMemberLookup(call: UCallExpression): String? =
-            findReflectionClass(call.receiver)
+        findReflectionClass(call.receiver)
 
     private fun findReflectionClass(element: UElement?): String? {
         if (element is UQualifiedReferenceExpression &&
-                element.selector is UCallExpression) {
+            element.selector is UCallExpression
+        ) {
             return findReflectionClass(element.selector)
         }
         if (element is UCallExpression) {

@@ -15,7 +15,6 @@
  */
 package com.android.tools.lint.checks;
 
-
 import static com.android.SdkConstants.ATTR_VALUE;
 import static com.android.tools.lint.checks.AnnotationDetector.ATTR_ALL_OF;
 import static com.android.tools.lint.checks.AnnotationDetector.ATTR_ANY_OF;
@@ -39,8 +38,8 @@ import java.util.Set;
 import org.jetbrains.uast.UAnnotation;
 
 /**
- * A permission requirement is a boolean expression of permission names that a
- * caller must satisfy for a given Android API.
+ * A permission requirement is a boolean expression of permission names that a caller must satisfy
+ * for a given Android API.
  */
 public abstract class PermissionRequirement {
     public static final String ATTR_PROTECTION_LEVEL = "protectionLevel";
@@ -51,62 +50,60 @@ public abstract class PermissionRequirement {
     private int lastApi;
 
     @SuppressWarnings("ConstantConditions")
-    public static final PermissionRequirement NONE = new PermissionRequirement(null) {
-        @Override
-        public boolean isSatisfied(@NonNull PermissionHolder available) {
-            return true;
-        }
+    public static final PermissionRequirement NONE =
+            new PermissionRequirement(null) {
+                @Override
+                public boolean isSatisfied(@NonNull PermissionHolder available) {
+                    return true;
+                }
 
-        @Override
-        public boolean appliesTo(@NonNull PermissionHolder available) {
-            return false;
-        }
+                @Override
+                public boolean appliesTo(@NonNull PermissionHolder available) {
+                    return false;
+                }
 
-        @Override
-        public boolean isConditional() {
-            return false;
-        }
+                @Override
+                public boolean isConditional() {
+                    return false;
+                }
 
-        @Override
-        public boolean isRevocable(@NonNull PermissionHolder revocable) {
-            return false;
-        }
+                @Override
+                public boolean isRevocable(@NonNull PermissionHolder revocable) {
+                    return false;
+                }
 
-        @Override
-        public String toString() {
-            return "None";
-        }
+                @Override
+                public String toString() {
+                    return "None";
+                }
 
-        @Override
-        protected void addMissingPermissions(@NonNull PermissionHolder available,
-          @NonNull Set<String> result) {
-        }
+                @Override
+                protected void addMissingPermissions(
+                        @NonNull PermissionHolder available, @NonNull Set<String> result) {}
 
-        @Override
-        protected void addRevocablePermissions(@NonNull Set<String> result,
-                @NonNull PermissionHolder revocable) {
-        }
+                @Override
+                protected void addRevocablePermissions(
+                        @NonNull Set<String> result, @NonNull PermissionHolder revocable) {}
 
-        @Nullable
-        @Override
-        public IElementType getOperator() {
-            return null;
-        }
+                @Nullable
+                @Override
+                public IElementType getOperator() {
+                    return null;
+                }
 
-        @NonNull
-        @Override
-        public Iterable<PermissionRequirement> getChildren() {
-            return Collections.emptyList();
-        }
-    };
+                @NonNull
+                @Override
+                public Iterable<PermissionRequirement> getChildren() {
+                    return Collections.emptyList();
+                }
+            };
 
     private PermissionRequirement(@NonNull UAnnotation annotation) {
         this.annotation = annotation;
     }
 
     @NonNull
-    public static PermissionRequirement create(
-            @NonNull UAnnotation annotation) {
+    public static PermissionRequirement create(@NonNull UAnnotation annotation) {
         String value = getAnnotationStringValue(annotation, ATTR_VALUE);
         if (value != null && !value.isEmpty()) {
             return new Single(annotation, value);
@@ -134,10 +131,10 @@ public abstract class PermissionRequirement {
     }
 
     /**
-     * Returns false if this permission does not apply given the specified minimum and target
-     * sdk versions
+     * Returns false if this permission does not apply given the specified minimum and target sdk
+     * versions
      *
-     * @param available   the permission holder which also knows the min and target versions
+     * @param available the permission holder which also knows the min and target versions
      * @return true if this permission requirement applies for the given versions
      */
     protected boolean appliesTo(@NonNull PermissionHolder available) {
@@ -158,9 +155,9 @@ public abstract class PermissionRequirement {
     }
 
     /**
-     * Returns the level of the last applicable API level for this permission requirement,
-     * if the requirement no longer applies. Returns {@link Integer#MAX_VALUE} if the permission
-     * is not specific to a range and applies for all current API levels.
+     * Returns the level of the last applicable API level for this permission requirement, if the
+     * requirement no longer applies. Returns {@link Integer#MAX_VALUE} if the permission is not
+     * specific to a range and applies for all current API levels.
      *
      * @return the last applicable API level, or {@link Integer#MAX_VALUE} if applies anywhere.
      */
@@ -170,8 +167,8 @@ public abstract class PermissionRequirement {
     }
 
     /**
-     * Returns the level of the first applicable API level, or 1 if the requirement does
-     * not have a specific API range.
+     * Returns the level of the first applicable API level, or 1 if the requirement does not have a
+     * specific API range.
      *
      * @return the first applicable API level
      */
@@ -212,19 +209,16 @@ public abstract class PermissionRequirement {
     }
 
     /**
-     * Returns whether this requirement is conditional, meaning that there are
-     * some circumstances in which the requirement is not necessary. For
-     * example, consider
-     * {@code android.app.backup.BackupManager.dataChanged(java.lang.String)} .
-     * Here the {@code android.permission.BACKUP} is required but only if the
-     * argument is not your own package.
-     * <p>
-     * This is used to handle permissions differently between the "missing" and
-     * "unused" checks. When checking for missing permissions, we err on the
-     * side of caution: if you are missing a permission, but the permission is
-     * conditional, you may not need it so we may not want to complain. However,
-     * when looking for unused permissions, we don't want to flag the
-     * conditional permissions as unused since they may be required.
+     * Returns whether this requirement is conditional, meaning that there are some circumstances in
+     * which the requirement is not necessary. For example, consider {@code
+     * android.app.backup.BackupManager.dataChanged(java.lang.String)} . Here the {@code
+     * android.permission.BACKUP} is required but only if the argument is not your own package.
+     *
+     * <p>This is used to handle permissions differently between the "missing" and "unused" checks.
+     * When checking for missing permissions, we err on the side of caution: if you are missing a
+     * permission, but the permission is conditional, you may not need it so we may not want to
+     * complain. However, when looking for unused permissions, we don't want to flag the conditional
+     * permissions as unused since they may be required.
      *
      * @return true if this requirement is conditional
      */
@@ -237,8 +231,8 @@ public abstract class PermissionRequirement {
     }
 
     /**
-     * Returns whether this requirement is for a single permission (rather than
-     * a boolean expression such as one permission or another.)
+     * Returns whether this requirement is for a single permission (rather than a boolean expression
+     * such as one permission or another.)
      *
      * @return true if this requirement is just a simple permission name
      */
@@ -266,8 +260,8 @@ public abstract class PermissionRequirement {
         return result;
     }
 
-    protected abstract void addMissingPermissions(@NonNull PermissionHolder available,
-        @NonNull Set<String> result);
+    protected abstract void addMissingPermissions(
+            @NonNull PermissionHolder available, @NonNull Set<String> result);
 
     /** Returns the permissions in the requirement that are revocable */
     public Set<String> getRevocablePermissions(@NonNull PermissionHolder revocable) {
@@ -276,8 +270,8 @@ public abstract class PermissionRequirement {
         return result;
     }
 
-    protected abstract void addRevocablePermissions(@NonNull Set<String> result,
-            @NonNull PermissionHolder revocable);
+    protected abstract void addRevocablePermissions(
+            @NonNull Set<String> result, @NonNull PermissionHolder revocable);
 
     /**
      * Returns whether this permission is revocable
@@ -294,9 +288,7 @@ public abstract class PermissionRequirement {
     @Nullable
     public abstract IElementType getOperator();
 
-    /**
-     * Returns nested requirements, combined via {@link #getOperator()}
-     */
+    /** Returns nested requirements, combined via {@link #getOperator()} */
     @NonNull
     public abstract Iterable<PermissionRequirement> getChildren();
 
@@ -347,16 +339,16 @@ public abstract class PermissionRequirement {
         }
 
         @Override
-        protected void addMissingPermissions(@NonNull PermissionHolder available,
-            @NonNull Set<String> missing) {
+        protected void addMissingPermissions(
+                @NonNull PermissionHolder available, @NonNull Set<String> missing) {
             if (!isSatisfied(available)) {
                 missing.add(name);
             }
         }
 
         @Override
-        protected void addRevocablePermissions(@NonNull Set<String> result,
-                @NonNull PermissionHolder revocable) {
+        protected void addRevocablePermissions(
+                @NonNull Set<String> result, @NonNull PermissionHolder revocable) {
             if (isRevocable(revocable)) {
                 result.add(name);
             }
@@ -376,20 +368,14 @@ public abstract class PermissionRequirement {
         sb.append(' ');
     }
 
-    /**
-     * Require a series of permissions, all with the same operator.
-     */
+    /** Require a series of permissions, all with the same operator. */
     private static class Many extends PermissionRequirement {
         public final IElementType operator;
         public final List<PermissionRequirement> permissions;
 
-        public Many(
-                @NonNull UAnnotation annotation,
-                IElementType operator,
-                String[] names) {
+        public Many(@NonNull UAnnotation annotation, IElementType operator, String[] names) {
             super(annotation);
-            assert operator == JavaTokenType.OROR
-                    || operator == JavaTokenType.ANDAND : operator;
+            assert operator == JavaTokenType.OROR || operator == JavaTokenType.ANDAND : operator;
             assert names.length >= 2;
             this.operator = operator;
             this.permissions = Lists.newArrayListWithExpectedSize(names.length);
@@ -455,8 +441,8 @@ public abstract class PermissionRequirement {
         }
 
         @Override
-        protected void addMissingPermissions(@NonNull PermissionHolder available,
-          @NonNull Set<String> missing) {
+        protected void addMissingPermissions(
+                @NonNull PermissionHolder available, @NonNull Set<String> missing) {
             for (PermissionRequirement requirement : permissions) {
                 if (!requirement.isSatisfied(available)) {
                     requirement.addMissingPermissions(available, missing);
@@ -465,8 +451,8 @@ public abstract class PermissionRequirement {
         }
 
         @Override
-        protected void addRevocablePermissions(@NonNull Set<String> result,
-                @NonNull PermissionHolder revocable) {
+        protected void addRevocablePermissions(
+                @NonNull Set<String> result, @NonNull PermissionHolder revocable) {
             for (PermissionRequirement requirement : permissions) {
                 requirement.addRevocablePermissions(result, revocable);
             }
@@ -501,8 +487,8 @@ public abstract class PermissionRequirement {
     }
 
     /**
-     * Returns true if the given permission name is a revocable permission for
-     * targetSdkVersion &ge; 23
+     * Returns true if the given permission name is a revocable permission for targetSdkVersion &ge;
+     * 23
      *
      * @param name permission name
      * @return true if this is a revocable permission
@@ -512,32 +498,33 @@ public abstract class PermissionRequirement {
     }
 
     @VisibleForTesting
-    static final String[] REVOCABLE_PERMISSION_NAMES = new String[] {
-            "android.permission.ACCESS_COARSE_LOCATION",
-            "android.permission.ACCESS_FINE_LOCATION",
-            "android.permission.ANSWER_PHONE_CALLS",
-            "android.permission.BODY_SENSORS",
-            "android.permission.CALL_PHONE",
-            "android.permission.CAMERA",
-            "android.permission.PROCESS_OUTGOING_CALLS",
-            "android.permission.READ_CALENDAR",
-            "android.permission.READ_CALL_LOG",
-            "android.permission.READ_CELL_BROADCASTS",
-            "android.permission.READ_CONTACTS",
-            "android.permission.READ_EXTERNAL_STORAGE",
-            "android.permission.READ_PHONE_NUMBERS",
-            "android.permission.READ_PHONE_STATE",
-            "android.permission.READ_SMS",
-            "android.permission.RECEIVE_MMS",
-            "android.permission.RECEIVE_SMS",
-            "android.permission.RECEIVE_WAP_PUSH",
-            "android.permission.RECORD_AUDIO",
-            "android.permission.SEND_SMS",
-            "android.permission.USE_SIP",
-            "android.permission.WRITE_CALENDAR",
-            "android.permission.WRITE_CALL_LOG",
-            "android.permission.WRITE_CONTACTS",
-            "android.permission.WRITE_EXTERNAL_STORAGE",
-            "com.android.voicemail.permission.ADD_VOICEMAIL",
-    };
+    static final String[] REVOCABLE_PERMISSION_NAMES =
+            new String[] {
+                "android.permission.ACCESS_COARSE_LOCATION",
+                "android.permission.ACCESS_FINE_LOCATION",
+                "android.permission.ANSWER_PHONE_CALLS",
+                "android.permission.BODY_SENSORS",
+                "android.permission.CALL_PHONE",
+                "android.permission.CAMERA",
+                "android.permission.PROCESS_OUTGOING_CALLS",
+                "android.permission.READ_CALENDAR",
+                "android.permission.READ_CALL_LOG",
+                "android.permission.READ_CELL_BROADCASTS",
+                "android.permission.READ_CONTACTS",
+                "android.permission.READ_EXTERNAL_STORAGE",
+                "android.permission.READ_PHONE_NUMBERS",
+                "android.permission.READ_PHONE_STATE",
+                "android.permission.READ_SMS",
+                "android.permission.RECEIVE_MMS",
+                "android.permission.RECEIVE_SMS",
+                "android.permission.RECEIVE_WAP_PUSH",
+                "android.permission.RECORD_AUDIO",
+                "android.permission.SEND_SMS",
+                "android.permission.USE_SIP",
+                "android.permission.WRITE_CALENDAR",
+                "android.permission.WRITE_CALL_LOG",
+                "android.permission.WRITE_CONTACTS",
+                "android.permission.WRITE_EXTERNAL_STORAGE",
+                "com.android.voicemail.permission.ADD_VOICEMAIL",
+            };
 }

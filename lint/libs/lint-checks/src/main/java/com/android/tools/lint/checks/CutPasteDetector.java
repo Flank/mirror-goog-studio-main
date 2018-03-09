@@ -60,28 +60,23 @@ import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
-/**
- * Detector looking for cut &amp; paste issues
- */
+/** Detector looking for cut &amp; paste issues */
 public class CutPasteDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "CutPasteId",
-            "Likely cut & paste mistakes",
-
-            "This lint check looks for cases where you have cut & pasted calls to " +
-            "`findViewById` but have forgotten to update the R.id field. It's possible " +
-            "that your code is simply (redundantly) looking up the field repeatedly, " +
-            "but lint cannot distinguish that from a case where you for example want to " +
-            "initialize fields `prev` and `next` and you cut & pasted `findViewById(R.id.prev)` " +
-            "and forgot to update the second initialization to `R.id.next`.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            new Implementation(
-                    CutPasteDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "CutPasteId",
+                    "Likely cut & paste mistakes",
+                    "This lint check looks for cases where you have cut & pasted calls to "
+                            + "`findViewById` but have forgotten to update the R.id field. It's possible "
+                            + "that your code is simply (redundantly) looking up the field repeatedly, "
+                            + "but lint cannot distinguish that from a case where you for example want to "
+                            + "initialize fields `prev` and `next` and you cut & pasted `findViewById(R.id.prev)` "
+                            + "and forgot to update the second initialization to `R.id.next`.",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.WARNING,
+                    new Implementation(CutPasteDetector.class, Scope.JAVA_FILE_SCOPE));
 
     private PsiMethod lastMethod;
     private Map<String, UCallExpression> ids;
@@ -89,8 +84,7 @@ public class CutPasteDetector extends Detector implements SourceCodeScanner {
     private Map<String, String> callOperands;
 
     /** Constructs a new {@link CutPasteDetector} check */
-    public CutPasteDetector() {
-    }
+    public CutPasteDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -100,11 +94,13 @@ public class CutPasteDetector extends Detector implements SourceCodeScanner {
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod calledMethod) {
         // If it's in a comparison, don't do anything
-        if (call.getUastParent() instanceof UBinaryExpression &&
-                !UastExpressionUtils.isAssignment(call.getUastParent())) {
+        if (call.getUastParent() instanceof UBinaryExpression
+                && !UastExpressionUtils.isAssignment(call.getUastParent())) {
             return;
         }
 
@@ -123,8 +119,7 @@ public class CutPasteDetector extends Detector implements SourceCodeScanner {
             lastMethod = method;
         }
 
-        String callOperand = call.getReceiver() != null
-                ? call.getReceiver().asSourceString() : "";
+        String callOperand = call.getReceiver() != null ? call.getReceiver().asSourceString() : "";
 
         List<UExpression> arguments = call.getValueArguments();
         if (arguments.isEmpty()) {
@@ -134,9 +129,10 @@ public class CutPasteDetector extends Detector implements SourceCodeScanner {
         if (first instanceof UReferenceExpression) {
             UReferenceExpression psiReferenceExpression = (UReferenceExpression) first;
             String id = psiReferenceExpression.getResolvedName();
-            UElement operand = (first instanceof UQualifiedReferenceExpression)
-                    ? ((UQualifiedReferenceExpression) first).getReceiver()
-                    : null;
+            UElement operand =
+                    (first instanceof UQualifiedReferenceExpression)
+                            ? ((UQualifiedReferenceExpression) first).getReceiver()
+                            : null;
 
             if (operand instanceof UReferenceExpression) {
                 UReferenceExpression type = (UReferenceExpression) operand;
@@ -156,16 +152,20 @@ public class CutPasteDetector extends Detector implements SourceCodeScanner {
                         Location secondary = context.getLocation(earlierCall);
                         secondary.setMessage("First usage here");
                         location.setSecondary(secondary);
-                        context.report(ISSUE, call, location, String.format(
-                            "The id `%1$s` has already been looked up in this method; possible "
-                                    + "cut & paste error?", first.asSourceString()));
+                        context.report(
+                                ISSUE,
+                                call,
+                                location,
+                                String.format(
+                                        "The id `%1$s` has already been looked up in this method; possible "
+                                                + "cut & paste error?",
+                                        first.asSourceString()));
                     } else {
                         ids.put(id, call);
                         lhs.put(id, leftSide);
                         callOperands.put(id, callOperand);
                     }
                 }
-
             }
         }
     }
@@ -199,9 +199,7 @@ public class CutPasteDetector extends Detector implements SourceCodeScanner {
     }
 
     static boolean isReachableFrom(
-            @NonNull UMethod method,
-            @NonNull UElement from,
-            @NonNull UElement to) {
+            @NonNull UMethod method, @NonNull UElement from, @NonNull UElement to) {
         ReachabilityVisitor visitor = new ReachabilityVisitor(from, to);
         method.accept(visitor);
         return visitor.isReachable();

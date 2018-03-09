@@ -61,13 +61,11 @@ import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
- * Class responsible for driving lint from within Gradle.
- * The purpose of this class is to isolate all lint API access to this
- * single class, such that Gradle can load this driver in its own
- * class loader and thereby have lint itself run in its own
- * class loader, such that classes in the Gradle plugins (such as
- * the Kotlin compiler) does not interfere with classes used by lint
- * (such as a different bundled version of the Kotlin compiler.)
+ * Class responsible for driving lint from within Gradle. The purpose of this class is to isolate
+ * all lint API access to this single class, such that Gradle can load this driver in its own class
+ * loader and thereby have lint itself run in its own class loader, such that classes in the Gradle
+ * plugins (such as the Kotlin compiler) does not interfere with classes used by lint (such as a
+ * different bundled version of the Kotlin compiler.)
  */
 @SuppressWarnings("unused") // Used vi reflection from LintExecutionRequest
 public class LintGradleExecution {
@@ -83,8 +81,8 @@ public class LintGradleExecution {
     public void analyze() throws IOException {
         ToolingModelBuilderRegistry toolingRegistry = descriptor.getToolingRegistry();
         if (toolingRegistry != null) {
-            AndroidProject modelProject = createAndroidProject(descriptor.getProject(),
-                    toolingRegistry);
+            AndroidProject modelProject =
+                    createAndroidProject(descriptor.getProject(), toolingRegistry);
             String variantName = descriptor.getVariantName();
 
             if (variantName != null) {
@@ -129,51 +127,60 @@ public class LintGradleExecution {
         String message;
         if (isAndroid) {
             if (isFatalOnly()) {
-                message = ""
-                        + "Lint found fatal errors while assembling a release target.\n"
-                        + "\n"
-                        + "To proceed, either fix the issues identified by lint, or modify your build script as follows:\n"
-                        + "...\n"
-                        + "android {\n"
-                        + "    lintOptions {\n"
-                        + "        checkReleaseBuilds false\n"
-                        + "        // Or, if you prefer, you can continue to check for errors in release builds,\n"
-                        + "        // but continue the build even when errors are found:\n"
-                        + "        abortOnError false\n"
-                        + "    }\n"
-                        + "}\n"
-                        + "...";
+                message =
+                        ""
+                                + "Lint found fatal errors while assembling a release target.\n"
+                                + "\n"
+                                + "To proceed, either fix the issues identified by lint, or modify your build script as follows:\n"
+                                + "...\n"
+                                + "android {\n"
+                                + "    lintOptions {\n"
+                                + "        checkReleaseBuilds false\n"
+                                + "        // Or, if you prefer, you can continue to check for errors in release builds,\n"
+                                + "        // but continue the build even when errors are found:\n"
+                                + "        abortOnError false\n"
+                                + "    }\n"
+                                + "}\n"
+                                + "...";
             } else {
-                message = ""
-                        + "Lint found errors in the project; aborting build.\n"
-                        + "\n"
-                        + "Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n"
-                        + "...\n"
-                        + "android {\n"
-                        + "    lintOptions {\n"
-                        + "        abortOnError false\n"
-                        + "    }\n"
-                        + "}\n"
-                        + "...";
+                message =
+                        ""
+                                + "Lint found errors in the project; aborting build.\n"
+                                + "\n"
+                                + "Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n"
+                                + "...\n"
+                                + "android {\n"
+                                + "    lintOptions {\n"
+                                + "        abortOnError false\n"
+                                + "    }\n"
+                                + "}\n"
+                                + "...";
             }
         } else {
-            message = ""
-                    + "Lint found errors in the project; aborting build.\n"
-                    + "\n"
-                    + "Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n"
-                    + "...\n"
-                    + "lintOptions {\n"
-                    + "    abortOnError false\n"
-                    + "}\n"
-                    + "...";
+            message =
+                    ""
+                            + "Lint found errors in the project; aborting build.\n"
+                            + "\n"
+                            + "Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n"
+                            + "...\n"
+                            + "lintOptions {\n"
+                            + "    abortOnError false\n"
+                            + "}\n"
+                            + "...";
         }
 
-        if (warnings != null && client != null &&
+        if (warnings != null
+                && client != null
+                &&
                 // See if there's at least one text reporter
-                client.getFlags().getReporters().stream().
-                        noneMatch(reporter -> reporter instanceof TextReporter)) {
-            List<Warning> errors = warnings.stream().filter(
-                    warning -> warning.severity.isError()).collect(Collectors.toList());
+                client.getFlags()
+                        .getReporters()
+                        .stream()
+                        .noneMatch(reporter -> reporter instanceof TextReporter)) {
+            List<Warning> errors =
+                    warnings.stream()
+                            .filter(warning -> warning.severity.isError())
+                            .collect(Collectors.toList());
             if (!errors.isEmpty()) {
                 String prefix = "Errors found:\n\n";
                 if (errors.size() > 3) {
@@ -184,8 +191,8 @@ public class LintGradleExecution {
                 StringWriter writer = new StringWriter();
                 LintCliFlags flags = client.getFlags();
                 flags.setExplainIssues(false);
-                TextReporter reporter = Reporter
-                        .createTextReporter(client, flags, null, writer, false);
+                TextReporter reporter =
+                        Reporter.createTextReporter(client, flags, null, writer, false);
                 try {
                     Reporter.Stats stats = new Reporter.Stats(errors.size(), 0);
                     reporter.setWriteStats(false);
@@ -203,7 +210,8 @@ public class LintGradleExecution {
     private Pair<List<Warning>, LintBaseline> runLint(
             @Nullable Variant variant,
             @NonNull VariantInputs variantInputs,
-            boolean report, boolean isAndroid) {
+            boolean report,
+            boolean isAndroid) {
         IssueRegistry registry = createIssueRegistry(isAndroid);
         LintCliFlags flags = new LintCliFlags();
         LintGradleClient client =
@@ -234,12 +242,26 @@ public class LintGradleExecution {
                     fatalOnly);
         } else {
             // Set up some default reporters
-            flags.getReporters().add(Reporter.createTextReporter(client, flags, null,
-                    new PrintWriter(System.out, true), false));
-            File html = validateOutputFile(createOutputPath(descriptor.getProject(), null, ".html",
-                    null, flags.isFatalOnly()));
-            File xml = validateOutputFile(createOutputPath(descriptor.getProject(), null, DOT_XML,
-                    null, flags.isFatalOnly()));
+            flags.getReporters()
+                    .add(
+                            Reporter.createTextReporter(
+                                    client, flags, null, new PrintWriter(System.out, true), false));
+            File html =
+                    validateOutputFile(
+                            createOutputPath(
+                                    descriptor.getProject(),
+                                    null,
+                                    ".html",
+                                    null,
+                                    flags.isFatalOnly()));
+            File xml =
+                    validateOutputFile(
+                            createOutputPath(
+                                    descriptor.getProject(),
+                                    null,
+                                    DOT_XML,
+                                    null,
+                                    flags.isFatalOnly()));
             try {
                 flags.getReporters().add(Reporter.createHtmlReporter(client, html, flags));
                 flags.getReporters().add(Reporter.createXmlReporter(client, xml, false));
@@ -276,7 +298,8 @@ public class LintGradleExecution {
             boolean report,
             boolean fatalOnly) {
         if (options != null) {
-            SyncOptions.syncTo(options,
+            SyncOptions.syncTo(
+                    options,
                     client,
                     flags,
                     variant != null ? variant.getName() : null,
@@ -293,8 +316,8 @@ public class LintGradleExecution {
         }
     }
 
-    protected static AndroidProject createAndroidProject(@NonNull Project gradleProject,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry) {
+    protected static AndroidProject createAndroidProject(
+            @NonNull Project gradleProject, @NonNull ToolingModelBuilderRegistry toolingRegistry) {
         String modelName = AndroidProject.class.getName();
         ToolingModelBuilder modelBuilder = toolingRegistry.getBuilder(modelName);
 
@@ -363,8 +386,8 @@ public class LintGradleExecution {
     }
 
     /**
-     * Runs lint for a non-Android project (such as a project that only applies the
-     * Kotlin Gradle plugin, not the Android Gradle plugin
+     * Runs lint for a non-Android project (such as a project that only applies the Kotlin Gradle
+     * plugin, not the Android Gradle plugin
      */
     public void lintNonAndroid() {
         VariantInputs variantInputs = descriptor.getVariantInputs("");
@@ -434,8 +457,7 @@ public class LintGradleExecution {
         // We pick the first variant to generate the full report and don't generate if we don't
         // have any variants.
         if (!modelProject.getVariants().isEmpty()) {
-            Set<Variant> allVariants =
-                    Sets.newTreeSet(Comparator.comparing(Variant::getName));
+            Set<Variant> allVariants = Sets.newTreeSet(Comparator.comparing(Variant::getName));
 
             allVariants.addAll(modelProject.getVariants());
             Variant variant = allVariants.iterator().next();
@@ -444,16 +466,17 @@ public class LintGradleExecution {
             LintCliFlags flags = new LintCliFlags();
             VariantInputs variantInputs = descriptor.getVariantInputs(variant.getName());
             assert variantInputs != null : variant.getName();
-            LintGradleClient client = new LintGradleClient(
-                    descriptor.getGradlePluginVersion(),
-                    registry,
-                    flags,
-                    descriptor.getProject(),
-                    getSdkHome(),
-                    variant,
-                    variantInputs,
-                    descriptor.getBuildTools(),
-                    true);
+            LintGradleClient client =
+                    new LintGradleClient(
+                            descriptor.getGradlePluginVersion(),
+                            registry,
+                            flags,
+                            descriptor.getProject(),
+                            getSdkHome(),
+                            variant,
+                            variantInputs,
+                            descriptor.getBuildTools(),
+                            true);
             syncOptions(
                     lintOptions,
                     client,

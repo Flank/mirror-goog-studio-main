@@ -130,8 +130,7 @@ class IntRangeConstraint extends RangeConstraint {
             }
 
             // Both represent infinity
-            if (otherRange.to > to
-                    && !(Double.isInfinite(otherRange.to) && to == Long.MAX_VALUE)) {
+            if (otherRange.to > to && !(Double.isInfinite(otherRange.to) && to == Long.MAX_VALUE)) {
                 return false;
             }
 

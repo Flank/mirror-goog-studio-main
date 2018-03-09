@@ -365,11 +365,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         sIssues = Collections.unmodifiableList(issues);
     }
 
-    /**
-     * Constructs a new {@link BuiltinIssueRegistry}
-     */
-    public BuiltinIssueRegistry() {
-    }
+    /** Constructs a new {@link BuiltinIssueRegistry} */
+    public BuiltinIssueRegistry() {}
 
     @NonNull
     @Override
@@ -409,8 +406,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
 
     /**
      * Reset the registry such that it recomputes its available issues.
-     * <p>
-     * NOTE: This is only intended for testing purposes.
+     *
+     * <p>NOTE: This is only intended for testing purposes.
      */
     @VisibleForTesting
     public static void reset() {

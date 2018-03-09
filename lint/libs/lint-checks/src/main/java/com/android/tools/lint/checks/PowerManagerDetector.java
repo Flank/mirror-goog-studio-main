@@ -111,7 +111,9 @@ public class PowerManagerDetector extends Detector implements Detector.UastScann
 
     /** Tags with wrapped with stars are used by the platform, e.g. *alarm* or *job*\/myjob. */
     private static boolean isReservedTagName(@NonNull String tagName) {
-        if (tagName.length() < 2) return false;
+        if (tagName.length() < 2) {
+            return false;
+        }
         return tagName.charAt(0) == '*' && tagName.indexOf('*', 1) != -1;
     }
 }

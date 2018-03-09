@@ -64,47 +64,37 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-/**
- * Checks for missing onClick handlers
- */
+/** Checks for missing onClick handlers */
 public class OnClickDetector extends LayoutDetector implements SourceCodeScanner {
 
-    /**
-     * Missing onClick handlers
-     */
-    public static final Issue ISSUE = Issue.create(
-            "OnClick",
-            "`onClick` method does not exist",
-
-            "The `onClick` attribute value should be the name of a method in this View's context " +
-                    "to invoke when the view is clicked. This name must correspond to a public method "
-                    +
-                    "that takes exactly one parameter of type `View`.\n" +
-                    "\n" +
-                    "Must be a string value, using '\\\\;' to escape characters such as '\\\\n' or "
-                    +
-                    "'\\\\uxxxx' for a unicode character.",
-            Category.CORRECTNESS,
-            10,
-            Severity.ERROR,
-            new Implementation(
-                    OnClickDetector.class,
-                    Scope.JAVA_AND_RESOURCE_FILES,
-                    Scope.RESOURCE_FILE_SCOPE));
+    /** Missing onClick handlers */
+    public static final Issue ISSUE =
+            Issue.create(
+                    "OnClick",
+                    "`onClick` method does not exist",
+                    "The `onClick` attribute value should be the name of a method in this View's context "
+                            + "to invoke when the view is clicked. This name must correspond to a public method "
+                            + "that takes exactly one parameter of type `View`.\n"
+                            + "\n"
+                            + "Must be a string value, using '\\\\;' to escape characters such as '\\\\n' or "
+                            + "'\\\\uxxxx' for a unicode character.",
+                    Category.CORRECTNESS,
+                    10,
+                    Severity.ERROR,
+                    new Implementation(
+                            OnClickDetector.class,
+                            Scope.JAVA_AND_RESOURCE_FILES,
+                            Scope.RESOURCE_FILE_SCOPE));
 
     private Map<String, Location.Handle> names;
     private Map<String, List<String>> similar;
 
-    /**
-     * Constructs a new {@link OnClickDetector}
-     */
-    public OnClickDetector() {
-    }
+    /** Constructs a new {@link OnClickDetector} */
+    public OnClickDetector() {}
 
     @Override
     public void afterCheckProject(@NonNull Context context) {
-        if (names != null && !names.isEmpty() &&
-                context.getScope().contains(Scope.JAVA_FILE)) {
+        if (names != null && !names.isEmpty() && context.getScope().contains(Scope.JAVA_FILE)) {
             List<String> missing = new ArrayList<>(names.keySet());
             Collections.sort(missing);
             LintDriver driver = context.getDriver();
@@ -119,13 +109,17 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
                 }
 
                 Location location = handle.resolve();
-                String message = String.format("Corresponding method handler '`public void "
-                        + "%1$s(android.view.View)`' not found", name);
+                String message =
+                        String.format(
+                                "Corresponding method handler '`public void "
+                                        + "%1$s(android.view.View)`' not found",
+                                name);
                 List<String> matches = similar != null ? similar.get(name) : null;
                 if (matches != null) {
                     Collections.sort(matches);
-                    message += String.format(" (did you mean `%1$s` ?)",
-                            Joiner.on(", ").join(matches));
+                    message +=
+                            String.format(
+                                    " (did you mean `%1$s` ?)", Joiner.on(", ").join(matches));
                 }
                 context.report(ISSUE, location, message);
             }
@@ -173,7 +167,10 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
 
         String value = attribute.getValue();
         if (value.isEmpty() || value.trim().isEmpty()) {
-            context.report(ISSUE, attribute, context.getLocation(attribute),
+            context.report(
+                    ISSUE,
+                    attribute,
+                    context.getLocation(attribute),
                     "`onClick` attribute value cannot be empty");
         } else if (value.startsWith(PREFIX_BINDING_EXPR)
                 || value.startsWith(PREFIX_TWOWAY_BINDING_EXPR)) {
@@ -182,7 +179,10 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
             //noinspection UnnecessaryReturnStatement
             return;
         } else if (value.contains(" ")) {
-            context.report(ISSUE, attribute, context.getValueLocation(attribute),
+            context.report(
+                    ISSUE,
+                    attribute,
+                    context.getValueLocation(attribute),
                     "There should be no spaces in the `onClick` handler name");
         } else if (!value.startsWith(PREFIX_RESOURCE_REF)) { // Not resolved
             // Replace unicode characters with the actual value since that's how they
@@ -205,7 +205,10 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
 
             String validationError = validateJavaIdentifier(value);
             if (validationError != null) {
-                context.report(ISSUE, attribute, context.getValueLocation(attribute),
+                context.report(
+                        ISSUE,
+                        attribute,
+                        context.getValueLocation(attribute),
                         "`onClick` handler method name " + validationError);
                 return;
             }
@@ -239,9 +242,8 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
                             for (PsiMethod method : methods) {
                                 boolean rightArguments =
                                         method.getParameterList().getParametersCount() == 1
-                                                &&
-                                                evaluator.parameterHasType(method, 0,
-                                                        CLASS_VIEW);
+                                                && evaluator.parameterHasType(
+                                                        method, 0, CLASS_VIEW);
                                 if (rightArguments) {
                                     found = true;
                                     break;
@@ -249,12 +251,17 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
                             }
 
                             if (!found) {
-                                String message = String.format("Corresponding method handler "
-                                        + "'`public void %1$s(android.view.View)`' not "
-                                        + "found", value);
-                                context.report(ISSUE, attribute,
-                                        context.getValueLocation(attribute), message);
-
+                                String message =
+                                        String.format(
+                                                "Corresponding method handler "
+                                                        + "'`public void %1$s(android.view.View)`' not "
+                                                        + "found",
+                                                value);
+                                context.report(
+                                        ISSUE,
+                                        attribute,
+                                        context.getValueLocation(attribute),
+                                        message);
                             }
                         }
                     }
@@ -283,8 +290,9 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
         for (PsiMethod method : declaration.getMethods()) {
             // TODO: Remember methods of the same names if they don't have the right arguments?
             String methodName = method.getName();
-            boolean rightArguments = method.getParameterList().getParametersCount() == 1 &&
-                    evaluator.parameterHasType(method, 0, CLASS_VIEW);
+            boolean rightArguments =
+                    method.getParameterList().getParametersCount() == 1
+                            && evaluator.parameterHasType(method, 0, CLASS_VIEW);
             if (!names.containsKey(methodName)) {
                 if (rightArguments) {
                     // See if there's a possible typo instead
@@ -305,9 +313,9 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
                 // Make sure the method is public
                 if (!evaluator.isPublic(method)) {
                     Location location = context.getLocation(method);
-                    String message = String.format(
-                            "`onClick` handler `%1$s(View)` must be public",
-                            methodName);
+                    String message =
+                            String.format(
+                                    "`onClick` handler `%1$s(View)` must be public", methodName);
                     context.report(ISSUE, method, location, message);
                 } else if (evaluator.isStatic(method)) {
                     PsiElement locationNode = method;
@@ -325,9 +333,10 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
                         }
                     }
                     Location location = context.getLocation(locationNode);
-                    String message = String.format(
-                            "`onClick` handler `%1$s(View)` should not be static",
-                            methodName);
+                    String message =
+                            String.format(
+                                    "`onClick` handler `%1$s(View)` should not be static",
+                                    methodName);
                     context.report(ISSUE, method, location, message);
                 }
 

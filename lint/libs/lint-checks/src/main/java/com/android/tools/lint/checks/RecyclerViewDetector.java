@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-
 import static com.android.tools.lint.checks.CutPasteDetector.isReachableFrom;
 import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 
@@ -60,45 +59,44 @@ import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
-/**
- * Checks related to RecyclerView usage.
- */
+/** Checks related to RecyclerView usage. */
 public class RecyclerViewDetector extends Detector implements SourceCodeScanner {
 
-    public static final Implementation IMPLEMENTATION = new Implementation(
-            RecyclerViewDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    public static final Implementation IMPLEMENTATION =
+            new Implementation(RecyclerViewDetector.class, Scope.JAVA_FILE_SCOPE);
 
-    public static final Issue FIXED_POSITION = Issue.create(
-            "RecyclerView",
-            "RecyclerView Problems",
-            "`RecyclerView` will **not** call `onBindViewHolder` again when the position of " +
-            "the item changes in the data set unless the item itself is " +
-            "invalidated or the new position cannot be determined.\n" +
-            "\n" +
-            "For this reason, you should **only** use the position parameter " +
-            "while acquiring the related data item inside this method, and " +
-            "should **not** keep a copy of it.\n" +
-            "\n" +
-            "If you need the position of an item later on (e.g. in a click " +
-            "listener), use `getAdapterPosition()` which will have the updated " +
-            "adapter position.",
-            Category.CORRECTNESS,
-            8,
-            Severity.ERROR,
-            IMPLEMENTATION);
+    public static final Issue FIXED_POSITION =
+            Issue.create(
+                    "RecyclerView",
+                    "RecyclerView Problems",
+                    "`RecyclerView` will **not** call `onBindViewHolder` again when the position of "
+                            + "the item changes in the data set unless the item itself is "
+                            + "invalidated or the new position cannot be determined.\n"
+                            + "\n"
+                            + "For this reason, you should **only** use the position parameter "
+                            + "while acquiring the related data item inside this method, and "
+                            + "should **not** keep a copy of it.\n"
+                            + "\n"
+                            + "If you need the position of an item later on (e.g. in a click "
+                            + "listener), use `getAdapterPosition()` which will have the updated "
+                            + "adapter position.",
+                    Category.CORRECTNESS,
+                    8,
+                    Severity.ERROR,
+                    IMPLEMENTATION);
 
-    public static final Issue DATA_BINDER = Issue.create(
-            "PendingBindings",
-            "Missing Pending Bindings",
-            "When using a `ViewDataBinding` in a `onBindViewHolder` method, you **must** " +
-            "call `executePendingBindings()` before the method exits; otherwise " +
-            "the data binding runtime will update the UI in the next animation frame " +
-            "causing a delayed update and potential jumps if the item resizes.",
-            Category.CORRECTNESS,
-            8,
-            Severity.ERROR,
-            IMPLEMENTATION);
+    public static final Issue DATA_BINDER =
+            Issue.create(
+                    "PendingBindings",
+                    "Missing Pending Bindings",
+                    "When using a `ViewDataBinding` in a `onBindViewHolder` method, you **must** "
+                            + "call `executePendingBindings()` before the method exits; otherwise "
+                            + "the data binding runtime will update the UI in the next animation frame "
+                            + "causing a delayed update and potential jumps if the item resizes.",
+                    Category.CORRECTNESS,
+                    8,
+                    Severity.ERROR,
+                    IMPLEMENTATION);
 
     private static final String VIEW_ADAPTER = "android.support.v7.widget.RecyclerView.Adapter";
     private static final String ON_BIND_VIEW_HOLDER = "onBindViewHolder";
@@ -122,8 +120,8 @@ public class RecyclerViewDetector extends Detector implements SourceCodeScanner 
         }
     }
 
-    private static void checkMethod(@NonNull JavaContext context,
-            @NonNull PsiMethod declaration, @NonNull PsiClass cls) {
+    private static void checkMethod(
+            @NonNull JavaContext context, @NonNull PsiMethod declaration, @NonNull PsiClass cls) {
         PsiParameter[] parameters = declaration.getParameterList().getParameters();
         PsiParameter viewHolder = parameters[0];
         PsiParameter parameter = parameters[1];
@@ -140,21 +138,24 @@ public class RecyclerViewDetector extends Detector implements SourceCodeScanner 
         checkDataBinders(context, method, dataBinderReferences);
     }
 
-    private static void reportError(@NonNull JavaContext context, PsiParameter viewHolder,
-            PsiParameter parameter) {
+    private static void reportError(
+            @NonNull JavaContext context, PsiParameter viewHolder, PsiParameter parameter) {
         String variablePrefix = viewHolder.getName();
         if (variablePrefix == null) {
             variablePrefix = "ViewHolder";
         }
-        String message = String.format("Do not treat position as fixed; only use immediately "
-                + "and call `%1$s.getAdapterPosition()` to look it up later",
-                variablePrefix);
-        context.report(FIXED_POSITION, parameter, context.getLocation(parameter),
-                message);
+        String message =
+                String.format(
+                        "Do not treat position as fixed; only use immediately "
+                                + "and call `%1$s.getAdapterPosition()` to look it up later",
+                        variablePrefix);
+        context.report(FIXED_POSITION, parameter, context.getLocation(parameter), message);
     }
 
-    private static void checkDataBinders(@NonNull JavaContext context,
-            @NonNull UMethod declaration, List<UCallExpression> references) {
+    private static void checkDataBinders(
+            @NonNull JavaContext context,
+            @NonNull UMethod declaration,
+            List<UCallExpression> references) {
         if (references != null && !references.isEmpty()) {
             List<UCallExpression> targets = Lists.newArrayList();
             List<UCallExpression> sources = Lists.newArrayList();
@@ -180,7 +181,8 @@ public class RecyclerViewDetector extends Detector implements SourceCodeScanner 
                 // this means that the *last* element will overwrite previous entries,
                 // and we end up with the last reference for each parent which is what we
                 // want
-                UExpression statement = UastUtils.getParentOfType(reference, UExpression.class, true);
+                UExpression statement =
+                        UastUtils.getParentOfType(reference, UExpression.class, true);
                 if (statement != null) {
                     parentToChildren.put(statement.getUastParent(), reference);
                 }
@@ -202,13 +204,14 @@ public class RecyclerViewDetector extends Detector implements SourceCodeScanner 
                     }
                 }
                 if (!reachesTarget) {
-                    String message = String.format(
-                            "You must call `%1$s.executePendingBindings()` "
-                                + "before the `onBind` method exits, otherwise, the DataBinding "
-                                + "library will update the UI in the next animation frame "
-                                + "causing a delayed update & potential jumps if the item "
-                                + "resizes.",
-                            sourceBinderReference.asSourceString());
+                    String message =
+                            String.format(
+                                    "You must call `%1$s.executePendingBindings()` "
+                                            + "before the `onBind` method exits, otherwise, the DataBinding "
+                                            + "library will update the UI in the next animation frame "
+                                            + "causing a delayed update & potential jumps if the item "
+                                            + "resizes.",
+                                    sourceBinderReference.asSourceString());
                     Location location = context.getLocation(source);
                     context.report(DATA_BINDER, source, location, message);
                 }
@@ -236,8 +239,8 @@ public class RecyclerViewDetector extends Detector implements SourceCodeScanner 
     }
 
     /**
-     * Determines whether a given variable "escapes" either to a field or to a nested
-     * runnable. (We deliberately ignore variables that escape via method calls.)
+     * Determines whether a given variable "escapes" either to a field or to a nested runnable. (We
+     * deliberately ignore variables that escape via method calls.)
      */
     private static class ParameterEscapesVisitor extends AbstractUastVisitor {
         protected final JavaContext mContext;
@@ -246,9 +249,8 @@ public class RecyclerViewDetector extends Detector implements SourceCodeScanner 
         private boolean mEscapes;
         private boolean mFoundInnerClass;
 
-        private ParameterEscapesVisitor(JavaContext context,
-                @NonNull PsiClass bindClass,
-                @NonNull PsiParameter variable) {
+        private ParameterEscapesVisitor(
+                JavaContext context, @NonNull PsiClass bindClass, @NonNull PsiParameter variable) {
             mContext = context;
             mVariables = Lists.newArrayList(variable);
             mBindClass = bindClass;

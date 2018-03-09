@@ -64,8 +64,8 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 /**
- * Utility methods for checking whether a given element is surrounded (or preceded!) by
- * an API check using SDK_INT (or other version checking utilities such as BuildCompat#isAtLeastN)
+ * Utility methods for checking whether a given element is surrounded (or preceded!) by an API check
+ * using SDK_INT (or other version checking utilities such as BuildCompat#isAtLeastN)
  */
 public class VersionChecks {
 
@@ -197,8 +197,9 @@ public class VersionChecks {
 
     public static boolean isPrecededByVersionCheckExit(@NonNull UElement element, int api) {
         //noinspection unchecked
-        UExpression currentExpression = UastUtils.getParentOfType(element, UExpression.class,
-                true, UMethod.class, UClass.class);
+        UExpression currentExpression =
+                UastUtils.getParentOfType(
+                        element, UExpression.class, true, UMethod.class, UClass.class);
 
         while (currentExpression != null) {
             VersionCheckWithExitFinder visitor = new VersionCheckWithExitFinder(element, api);
@@ -210,8 +211,13 @@ public class VersionChecks {
 
             element = currentExpression;
             //noinspection unchecked
-            currentExpression = UastUtils.getParentOfType(currentExpression, UExpression.class,
-                    true, UMethod.class, UClass.class); // TODO: what about lambdas?
+            currentExpression =
+                    UastUtils.getParentOfType(
+                            currentExpression,
+                            UExpression.class,
+                            true,
+                            UMethod.class,
+                            UClass.class); // TODO: what about lambdas?
         }
 
         return false;
@@ -254,7 +260,9 @@ public class VersionChecks {
             UExpression elseBranch = ifStatement.getElseExpression();
 
             if (thenBranch != null) {
-                Boolean level = isVersionCheckConditional(api, ifStatement.getCondition(), false, null, null);
+                Boolean level =
+                        isVersionCheckConditional(
+                                api, ifStatement.getCondition(), false, null, null);
 
                 //noinspection VariableNotUsedInsideIf
                 if (level != null && level) {
@@ -267,7 +275,9 @@ public class VersionChecks {
             }
 
             if (elseBranch != null) {
-                Boolean level = isVersionCheckConditional(api, ifStatement.getCondition(), true, null, null);
+                Boolean level =
+                        isVersionCheckConditional(
+                                api, ifStatement.getCondition(), true, null, null);
 
                 //noinspection VariableNotUsedInsideIf
                 if (level != null && level) {
@@ -297,14 +307,15 @@ public class VersionChecks {
     }
 
     public static boolean isWithinVersionCheckConditional(
-            @NonNull JavaEvaluator evaluator, @NonNull UElement element,
-            int api) {
+            @NonNull JavaEvaluator evaluator, @NonNull UElement element, int api) {
         return isWithinVersionCheckConditional(evaluator, element, api, null);
     }
 
     public static boolean isWithinVersionCheckConditional(
-            @NonNull JavaEvaluator evaluator, @NonNull UElement element,
-            int api, @Nullable ApiLevelLookup apiLookup) {
+            @NonNull JavaEvaluator evaluator,
+            @NonNull UElement element,
+            int api,
+            @Nullable ApiLevelLookup apiLookup) {
         UElement current = skipParentheses(element.getUastParent());
         UElement prev = element;
         while (current != null) {
@@ -313,14 +324,15 @@ public class VersionChecks {
                 UExpression condition = ifStatement.getCondition();
                 if (prev != condition) {
                     boolean fromThen = prev.equals(ifStatement.getThenExpression());
-                    Boolean ok = isVersionCheckConditional(api, condition, fromThen, prev, apiLookup);
+                    Boolean ok =
+                            isVersionCheckConditional(api, condition, fromThen, prev, apiLookup);
                     if (ok != null && ok) {
                         return true;
                     }
                 }
-            } else if (current instanceof UPolyadicExpression &&
-                    (isAndedWithConditional(current, api, prev) ||
-                            isOredWithConditional(current, api, prev))) {
+            } else if (current instanceof UPolyadicExpression
+                    && (isAndedWithConditional(current, api, prev)
+                            || isOredWithConditional(current, api, prev))) {
                 return true;
             } else if (current instanceof USwitchClauseExpressionWithBody) {
                 USwitchClauseExpressionWithBody body = (USwitchClauseExpressionWithBody) current;
@@ -347,50 +359,55 @@ public class VersionChecks {
                 UCallExpression call = (UCallExpression) current;
                 PsiMethod method = call.resolve();
                 if (method != null) {
-                    Map<UExpression, PsiParameter> mapping = evaluator
-                            .computeArgumentMapping(call, method);
+                    Map<UExpression, PsiParameter> mapping =
+                            evaluator.computeArgumentMapping(call, method);
                     PsiParameter parameter = mapping.get(prev);
                     if (parameter != null) {
                         UastContext context = UastUtils.getUastContext(element);
                         UMethod uMethod = context.getMethod(method);
                         Ref<UCallExpression> match = new Ref<>();
                         String parameterName = parameter.getName();
-                        uMethod.accept(new AbstractUastVisitor() {
-                            @Override
-                            public boolean visitCallExpression(UCallExpression node) {
-                                String callName = LintUtils.getMethodName(node);
-                                if (Objects.equals(callName, parameterName)) {
-                                    // Potentially not correct due to scopes, but these lambda
-                                    // utility methods tend to be short and for lambda function
-                                    // calls, resolve on call returns null
-                                    match.set(node);
-                                }
-                                return super.visitCallExpression(node);
-                            }
-                        });
+                        uMethod.accept(
+                                new AbstractUastVisitor() {
+                                    @Override
+                                    public boolean visitCallExpression(UCallExpression node) {
+                                        String callName = LintUtils.getMethodName(node);
+                                        if (Objects.equals(callName, parameterName)) {
+                                            // Potentially not correct due to scopes, but these lambda
+                                            // utility methods tend to be short and for lambda function
+                                            // calls, resolve on call returns null
+                                            match.set(node);
+                                        }
+                                        return super.visitCallExpression(node);
+                                    }
+                                });
                         UCallExpression lambdaInvocation = match.get();
-                        ApiLevelLookup newApiLookup = arg -> {
-                            if (arg instanceof UReferenceExpression) {
-                                PsiElement resolved = ((UReferenceExpression) arg)
-                                        .resolve();
-                                if (resolved instanceof PsiParameter) {
-                                    PsiParameter parameter1 = (PsiParameter) resolved;
-                                    PsiParameterList parameterList = PsiTreeUtil.getParentOfType(resolved,
-                                            PsiParameterList.class);
-                                    if (parameterList != null) {
-                                        int index = parameterList.getParameterIndex(parameter1);
-                                        List<UExpression> arguments = call.getValueArguments();
-                                        if (index != -1 && index < arguments.size()) {
-                                            return getApiLevel(arguments.get(index), null);
+                        ApiLevelLookup newApiLookup =
+                                arg -> {
+                                    if (arg instanceof UReferenceExpression) {
+                                        PsiElement resolved =
+                                                ((UReferenceExpression) arg).resolve();
+                                        if (resolved instanceof PsiParameter) {
+                                            PsiParameter parameter1 = (PsiParameter) resolved;
+                                            PsiParameterList parameterList =
+                                                    PsiTreeUtil.getParentOfType(
+                                                            resolved, PsiParameterList.class);
+                                            if (parameterList != null) {
+                                                int index =
+                                                        parameterList.getParameterIndex(parameter1);
+                                                List<UExpression> arguments =
+                                                        call.getValueArguments();
+                                                if (index != -1 && index < arguments.size()) {
+                                                    return getApiLevel(arguments.get(index), null);
+                                                }
+                                            }
                                         }
                                     }
-                                }
-                            }
-                            return -1;
-                        };
-                        if (lambdaInvocation != null &&
-                                isWithinVersionCheckConditional(evaluator, lambdaInvocation, api,
-                                        newApiLookup)) {
+                                    return -1;
+                                };
+                        if (lambdaInvocation != null
+                                && isWithinVersionCheckConditional(
+                                        evaluator, lambdaInvocation, api, newApiLookup)) {
                             return true;
                         }
                     }
@@ -406,8 +423,11 @@ public class VersionChecks {
     }
 
     @Nullable
-    private static Boolean isVersionCheckConditional(int api,
-            @NonNull UElement element, boolean and, @Nullable UElement prev,
+    private static Boolean isVersionCheckConditional(
+            int api,
+            @NonNull UElement element,
+            boolean and,
+            @Nullable UElement prev,
             @Nullable ApiLevelLookup apiLookup) {
         if (element instanceof UPolyadicExpression) {
             if (element instanceof UBinaryExpression) {
@@ -424,7 +444,7 @@ public class VersionChecks {
                     return true;
                 }
 
-            }  else if (!and && tokenType == UastBinaryOperator.LOGICAL_OR) {
+            } else if (!and && tokenType == UastBinaryOperator.LOGICAL_OR) {
                 if (isOredWithConditional(element, api, prev)) {
                     return true;
                 }
@@ -449,14 +469,17 @@ public class VersionChecks {
                         }
                     }
                 }
-            } else if (resolved instanceof PsiMethod &&
-                    element instanceof UQualifiedReferenceExpression &&
-                    ((UQualifiedReferenceExpression)element).getSelector() instanceof UCallExpression) {
-                UCallExpression call = (UCallExpression) ((UQualifiedReferenceExpression)element).getSelector();
+            } else if (resolved instanceof PsiMethod
+                    && element instanceof UQualifiedReferenceExpression
+                    && ((UQualifiedReferenceExpression) element).getSelector()
+                            instanceof UCallExpression) {
+                UCallExpression call =
+                        (UCallExpression) ((UQualifiedReferenceExpression) element).getSelector();
                 return isValidVersionCall(api, and, call);
-            } else if (resolved instanceof PsiMethod &&
-                    element instanceof UQualifiedReferenceExpression &&
-                    ((UQualifiedReferenceExpression)element).getReceiver() instanceof UReferenceExpression) {
+            } else if (resolved instanceof PsiMethod
+                    && element instanceof UQualifiedReferenceExpression
+                    && ((UQualifiedReferenceExpression) element).getReceiver()
+                            instanceof UReferenceExpression) {
                 // Method call via Kotlin property syntax
                 return isValidVersionCall(api, and, element, (PsiMethod) resolved);
             }
@@ -474,8 +497,7 @@ public class VersionChecks {
     }
 
     @Nullable
-    private static Boolean isValidVersionCall(int api, boolean and,
-            UCallExpression call) {
+    private static Boolean isValidVersionCall(int api, boolean and, UCallExpression call) {
         PsiMethod method = call.resolve();
         if (method == null) {
             return null;
@@ -484,13 +506,14 @@ public class VersionChecks {
     }
 
     @Nullable
-    private static Boolean isValidVersionCall(int api, boolean and,
-            @NonNull UElement call, @NonNull PsiMethod method) {
+    private static Boolean isValidVersionCall(
+            int api, boolean and, @NonNull UElement call, @NonNull PsiMethod method) {
         String name = method.getName();
         if (name.startsWith("isAtLeast")) {
             PsiClass containingClass = method.getContainingClass();
-            if (containingClass != null && "android.support.v4.os.BuildCompat".equals(
-                    containingClass.getQualifiedName())) {
+            if (containingClass != null
+                    && "android.support.v4.os.BuildCompat"
+                            .equals(containingClass.getQualifiedName())) {
                 if (name.equals("isAtLeastN")) {
                     return api <= 24;
                 } else if (name.equals("isAtLeastNMR1")) {
@@ -534,43 +557,45 @@ public class VersionChecks {
                 }
                 if (returnValue != null) {
                     List<UExpression> arguments =
-                            call instanceof UCallExpression ?
-                                    ((UCallExpression)call).getValueArguments() :
+                            call instanceof UCallExpression
+                                    ? ((UCallExpression) call).getValueArguments()
+                                    :
                                     // Property syntax
                                     Collections.emptyList();
                     if (arguments.isEmpty()) {
                         if (returnValue instanceof UPolyadicExpression
                                 || returnValue instanceof UCallExpression
                                 || returnValue instanceof UQualifiedReferenceExpression) {
-                            Boolean isConditional = isVersionCheckConditional(api,
-                                    returnValue,
-                                    and, null, null);
+                            Boolean isConditional =
+                                    isVersionCheckConditional(api, returnValue, and, null, null);
                             if (isConditional != null) {
                                 return isConditional;
                             }
                         }
                     } else if (arguments.size() == 1) {
                         // See if we're passing in a value to the version utility method
-                        ApiLevelLookup lookup = arg -> {
-                            if (arg instanceof UReferenceExpression) {
-                                PsiElement resolved = ((UReferenceExpression) arg)
-                                        .resolve();
-                                if (resolved instanceof PsiParameter) {
-                                    PsiParameter parameter = (PsiParameter) resolved;
-                                    PsiParameterList parameterList = PsiTreeUtil.getParentOfType(resolved,
-                                                    PsiParameterList.class);
-                                    if (parameterList != null) {
-                                        int index = parameterList.getParameterIndex(parameter);
-                                        if (index != -1 && index < arguments.size()) {
-                                            return getApiLevel(arguments.get(index), null);
+                        ApiLevelLookup lookup =
+                                arg -> {
+                                    if (arg instanceof UReferenceExpression) {
+                                        PsiElement resolved =
+                                                ((UReferenceExpression) arg).resolve();
+                                        if (resolved instanceof PsiParameter) {
+                                            PsiParameter parameter = (PsiParameter) resolved;
+                                            PsiParameterList parameterList =
+                                                    PsiTreeUtil.getParentOfType(
+                                                            resolved, PsiParameterList.class);
+                                            if (parameterList != null) {
+                                                int index =
+                                                        parameterList.getParameterIndex(parameter);
+                                                if (index != -1 && index < arguments.size()) {
+                                                    return getApiLevel(arguments.get(index), null);
+                                                }
+                                            }
                                         }
                                     }
-                                }
-                            }
-                            return -1;
-                        };
-                        Boolean ok = isVersionCheckConditional(api, returnValue,
-                                and, null, lookup);
+                                    return -1;
+                                };
+                        Boolean ok = isVersionCheckConditional(api, returnValue, and, null, lookup);
                         if (ok != null) {
                             return ok;
                         }
@@ -633,10 +658,10 @@ public class VersionChecks {
     }
 
     private static final String[] VERSION_METHOD_NAME_PREFIXES = {
-      "isAtLeast",  "isRunning", "is", "runningOn", "running"
+        "isAtLeast", "isRunning", "is", "runningOn", "running"
     };
     private static final String[] VERSION_METHOD_NAME_SUFFIXES = {
-      "OrLater", "OrAbove", "OrHigher", "OrNewer", "Sdk"
+        "OrLater", "OrAbove", "OrHigher", "OrNewer", "Sdk"
     };
 
     @VisibleForTesting
@@ -673,14 +698,18 @@ public class VersionChecks {
     }
 
     @Nullable
-    private static Boolean isVersionCheckConditional(int api,
+    private static Boolean isVersionCheckConditional(
+            int api,
             boolean fromThen,
             @NonNull UBinaryExpression binary,
             @Nullable ApiLevelLookup apiLevelLookup) {
         UastBinaryOperator tokenType = binary.getOperator();
-        if (tokenType == UastBinaryOperator.GREATER || tokenType == UastBinaryOperator.GREATER_OR_EQUALS ||
-                tokenType == UastBinaryOperator.LESS_OR_EQUALS || tokenType == UastBinaryOperator.LESS ||
-                tokenType == UastBinaryOperator.EQUALS || tokenType == UastBinaryOperator.IDENTITY_EQUALS) {
+        if (tokenType == UastBinaryOperator.GREATER
+                || tokenType == UastBinaryOperator.GREATER_OR_EQUALS
+                || tokenType == UastBinaryOperator.LESS_OR_EQUALS
+                || tokenType == UastBinaryOperator.LESS
+                || tokenType == UastBinaryOperator.EQUALS
+                || tokenType == UastBinaryOperator.IDENTITY_EQUALS) {
             UExpression left = binary.getLeftOperand();
             int level;
             UExpression right;
@@ -700,20 +729,16 @@ public class VersionChecks {
                 if (tokenType == UastBinaryOperator.GREATER_OR_EQUALS) {
                     // if (SDK_INT >= ICE_CREAM_SANDWICH) { <call> } else { ... }
                     return level >= api && fromThen;
-                }
-                else if (tokenType == UastBinaryOperator.GREATER) {
+                } else if (tokenType == UastBinaryOperator.GREATER) {
                     // if (SDK_INT > ICE_CREAM_SANDWICH) { <call> } else { ... }
                     return level >= api - 1 && fromThen;
-                }
-                else if (tokenType == UastBinaryOperator.LESS_OR_EQUALS) {
+                } else if (tokenType == UastBinaryOperator.LESS_OR_EQUALS) {
                     // if (SDK_INT <= ICE_CREAM_SANDWICH) { ... } else { <call> }
                     return level >= api - 1 && !fromThen;
-                }
-                else if (tokenType == UastBinaryOperator.LESS) {
+                } else if (tokenType == UastBinaryOperator.LESS) {
                     // if (SDK_INT < ICE_CREAM_SANDWICH) { ... } else { <call> }
                     return level >= api && !fromThen;
-                }
-                else if (tokenType == UastBinaryOperator.EQUALS
+                } else if (tokenType == UastBinaryOperator.EQUALS
                         || tokenType == UastBinaryOperator.IDENTITY_EQUALS) {
                     // if (SDK_INT == ICE_CREAM_SANDWICH) { <call> } else {  }
                     return level >= api && fromThen;
@@ -726,17 +751,16 @@ public class VersionChecks {
     }
 
     private static int getApiLevel(
-            @Nullable UExpression element,
-            @Nullable ApiLevelLookup apiLevelLookup) {
+            @Nullable UExpression element, @Nullable ApiLevelLookup apiLevelLookup) {
         int level = -1;
         if (element instanceof UReferenceExpression) {
-            UReferenceExpression ref2 = (UReferenceExpression)element;
+            UReferenceExpression ref2 = (UReferenceExpression) element;
             String codeName = ref2.getResolvedName();
             if (codeName != null) {
                 level = SdkVersionInfo.getApiByBuildCode(codeName, false);
             }
         } else if (element instanceof ULiteralExpression) {
-            ULiteralExpression lit = (ULiteralExpression)element;
+            ULiteralExpression lit = (ULiteralExpression) element;
             Object value = lit.getValue();
             if (value instanceof Integer) {
                 level = (Integer) value;
@@ -748,8 +772,8 @@ public class VersionChecks {
         return level;
     }
 
-    private static boolean isOredWithConditional(@NonNull UElement element, int api,
-            @Nullable UElement before) {
+    private static boolean isOredWithConditional(
+            @NonNull UElement element, int api, @Nullable UElement before) {
         if (element instanceof UBinaryExpression) {
             UBinaryExpression inner = (UBinaryExpression) element;
             if (inner.getOperator() == UastBinaryOperator.LOGICAL_OR) {
@@ -785,8 +809,8 @@ public class VersionChecks {
         return false;
     }
 
-    private static boolean isAndedWithConditional(@NonNull UElement element, int api,
-            @Nullable UElement before) {
+    private static boolean isAndedWithConditional(
+            @NonNull UElement element, int api, @Nullable UElement before) {
         if (element instanceof UBinaryExpression) {
             UBinaryExpression inner = (UBinaryExpression) element;
             if (inner.getOperator() == UastBinaryOperator.LOGICAL_AND) {
@@ -824,12 +848,14 @@ public class VersionChecks {
 
     // TODO: Merge with the other isVersionCheckConditional
     @Nullable
-    public static Boolean isVersionCheckConditional(int api,
-            @NonNull UBinaryExpression binary) {
+    public static Boolean isVersionCheckConditional(int api, @NonNull UBinaryExpression binary) {
         UastBinaryOperator tokenType = binary.getOperator();
-        if (tokenType == UastBinaryOperator.GREATER || tokenType == UastBinaryOperator.GREATER_OR_EQUALS ||
-                tokenType == UastBinaryOperator.LESS_OR_EQUALS || tokenType == UastBinaryOperator.LESS ||
-                tokenType == UastBinaryOperator.EQUALS || tokenType == UastBinaryOperator.IDENTITY_EQUALS) {
+        if (tokenType == UastBinaryOperator.GREATER
+                || tokenType == UastBinaryOperator.GREATER_OR_EQUALS
+                || tokenType == UastBinaryOperator.LESS_OR_EQUALS
+                || tokenType == UastBinaryOperator.LESS
+                || tokenType == UastBinaryOperator.EQUALS
+                || tokenType == UastBinaryOperator.IDENTITY_EQUALS) {
             UExpression left = binary.getLeftOperand();
             if (left instanceof UReferenceExpression) {
                 UReferenceExpression ref = (UReferenceExpression) left;
@@ -863,8 +889,8 @@ public class VersionChecks {
                             // SDK_INT < ICE_CREAM_SANDWICH
                             return false;
                         } else if ((tokenType == UastBinaryOperator.EQUALS
-                                || tokenType == UastBinaryOperator.IDENTITY_EQUALS) &&
-                                level < api) {
+                                        || tokenType == UastBinaryOperator.IDENTITY_EQUALS)
+                                && level < api) {
                             return false;
                         }
                     }
@@ -875,8 +901,8 @@ public class VersionChecks {
     }
 
     /**
-     * Control flow graph which skips control flow edges that check
-     * a given SDK_VERSION requirement that is not met by a given call
+     * Control flow graph which skips control flow edges that check a given SDK_VERSION requirement
+     * that is not met by a given call
      */
     private static class ApiCheckGraph extends ControlFlowGraph {
         private final int mRequiredApi;
@@ -887,9 +913,9 @@ public class VersionChecks {
 
         @Override
         protected void add(@NonNull AbstractInsnNode from, @NonNull AbstractInsnNode to) {
-            if (from.getType() == AbstractInsnNode.JUMP_INSN &&
-                    from.getPrevious() != null &&
-                    from.getPrevious().getType() == AbstractInsnNode.INT_INSN) {
+            if (from.getType() == AbstractInsnNode.JUMP_INSN
+                    && from.getPrevious() != null
+                    && from.getPrevious().getType() == AbstractInsnNode.INT_INSN) {
                 IntInsnNode intNode = (IntInsnNode) from.getPrevious();
                 if (intNode.getPrevious() != null && isSdkVersionLookup(intNode.getPrevious())) {
                     JumpInsnNode jumpNode = (JumpInsnNode) from;

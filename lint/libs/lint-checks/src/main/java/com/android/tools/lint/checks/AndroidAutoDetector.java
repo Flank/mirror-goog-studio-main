@@ -54,82 +54,91 @@ import org.w3c.dom.Element;
 
 /**
  * Detector for Android Auto issues.
- * <p> Uses a {@code <meta-data>} tag with a {@code name="com.google.android.gms.car.application"}
- * as a trigger for validating Automotive specific issues.
+ *
+ * <p>Uses a {@code <meta-data>} tag with a {@code name="com.google.android.gms.car.application"} as
+ * a trigger for validating Automotive specific issues.
  */
-public class AndroidAutoDetector extends Detector
-        implements XmlScanner, SourceCodeScanner {
+public class AndroidAutoDetector extends Detector implements XmlScanner, SourceCodeScanner {
 
     // TODO: Use the new merged manifest model
 
     @SuppressWarnings("unchecked")
-    public static final Implementation IMPL = new Implementation(
-            AndroidAutoDetector.class,
-            EnumSet.of(Scope.RESOURCE_FILE, Scope.MANIFEST, Scope.JAVA_FILE),
-            Scope.RESOURCE_FILE_SCOPE);
+    public static final Implementation IMPL =
+            new Implementation(
+                    AndroidAutoDetector.class,
+                    EnumSet.of(Scope.RESOURCE_FILE, Scope.MANIFEST, Scope.JAVA_FILE),
+                    Scope.RESOURCE_FILE_SCOPE);
 
-    /** Invalid attribute for uses tag.*/
-    public static final Issue INVALID_USES_TAG_ISSUE = Issue.create(
-            "InvalidUsesTagAttribute",
-            "Invalid `name` attribute for `uses` element.",
-            "The <uses> element in `<automotiveApp>` should contain a " +
-            "valid value for the `name` attribute.\n" +
-            "Valid values are `media` or `notification`.",
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            IMPL).addMoreInfo(
-            "https://developer.android.com/training/auto/start/index.html#auto-metadata");
+    /** Invalid attribute for uses tag. */
+    public static final Issue INVALID_USES_TAG_ISSUE =
+            Issue.create(
+                            "InvalidUsesTagAttribute",
+                            "Invalid `name` attribute for `uses` element.",
+                            "The <uses> element in `<automotiveApp>` should contain a "
+                                    + "valid value for the `name` attribute.\n"
+                                    + "Valid values are `media` or `notification`.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            IMPL)
+                    .addMoreInfo(
+                            "https://developer.android.com/training/auto/start/index.html#auto-metadata");
 
     /** Missing MediaBrowserService action */
-    public static final Issue MISSING_MEDIA_BROWSER_SERVICE_ACTION_ISSUE = Issue.create(
-            "MissingMediaBrowserServiceIntentFilter",
-            "Missing intent-filter with action `android.media.browse.MediaBrowserService`.",
-            "An Automotive Media App requires an exported service that extends " +
-            "`android.service.media.MediaBrowserService` with an " +
-            "`intent-filter` for the action `android.media.browse.MediaBrowserService` " +
-            "to be able to browse and play media.\n" +
-            "To do this, add\n" +
-            "`<intent-filter>`\n" +
-            "    `<action android:name=\"android.media.browse.MediaBrowserService\" />`\n" +
-            "`</intent-filter>`\n to the service that extends " +
-            "`android.service.media.MediaBrowserService`",
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            IMPL).addMoreInfo(
-            "https://developer.android.com/training/auto/audio/index.html#config_manifest");
+    public static final Issue MISSING_MEDIA_BROWSER_SERVICE_ACTION_ISSUE =
+            Issue.create(
+                            "MissingMediaBrowserServiceIntentFilter",
+                            "Missing intent-filter with action `android.media.browse.MediaBrowserService`.",
+                            "An Automotive Media App requires an exported service that extends "
+                                    + "`android.service.media.MediaBrowserService` with an "
+                                    + "`intent-filter` for the action `android.media.browse.MediaBrowserService` "
+                                    + "to be able to browse and play media.\n"
+                                    + "To do this, add\n"
+                                    + "`<intent-filter>`\n"
+                                    + "    `<action android:name=\"android.media.browse.MediaBrowserService\" />`\n"
+                                    + "`</intent-filter>`\n to the service that extends "
+                                    + "`android.service.media.MediaBrowserService`",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            IMPL)
+                    .addMoreInfo(
+                            "https://developer.android.com/training/auto/audio/index.html#config_manifest");
 
     /** Missing intent-filter for Media Search. */
-    public static final Issue MISSING_INTENT_FILTER_FOR_MEDIA_SEARCH = Issue.create(
-            "MissingIntentFilterForMediaSearch",
-            "Missing intent-filter with action `android.media.action.MEDIA_PLAY_FROM_SEARCH`",
-            "To support voice searches on Android Auto, you should also register an " +
-            "`intent-filter` for the action `android.media.action.MEDIA_PLAY_FROM_SEARCH`" +
-            ".\nTo do this, add\n" +
-            "`<intent-filter>`\n" +
-            "    `<action android:name=\"android.media.action.MEDIA_PLAY_FROM_SEARCH\" />`\n" +
-            "`</intent-filter>`\n" +
-            "to your `<activity>` or `<service>`.",
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            IMPL).addMoreInfo(
-            "https://developer.android.com/training/auto/audio/index.html#support_voice");
+    public static final Issue MISSING_INTENT_FILTER_FOR_MEDIA_SEARCH =
+            Issue.create(
+                            "MissingIntentFilterForMediaSearch",
+                            "Missing intent-filter with action `android.media.action.MEDIA_PLAY_FROM_SEARCH`",
+                            "To support voice searches on Android Auto, you should also register an "
+                                    + "`intent-filter` for the action `android.media.action.MEDIA_PLAY_FROM_SEARCH`"
+                                    + ".\nTo do this, add\n"
+                                    + "`<intent-filter>`\n"
+                                    + "    `<action android:name=\"android.media.action.MEDIA_PLAY_FROM_SEARCH\" />`\n"
+                                    + "`</intent-filter>`\n"
+                                    + "to your `<activity>` or `<service>`.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            IMPL)
+                    .addMoreInfo(
+                            "https://developer.android.com/training/auto/audio/index.html#support_voice");
 
-    /** Missing implementation of MediaSession.Callback#onPlayFromSearch*/
-    public static final Issue MISSING_ON_PLAY_FROM_SEARCH = Issue.create(
-            "MissingOnPlayFromSearch",
-            "Missing `onPlayFromSearch`.",
-            "To support voice searches on Android Auto, in addition to adding an " +
-            "`intent-filter` for the action `onPlayFromSearch`," +
-            " you also need to override and implement " +
-            "`onPlayFromSearch(String query, Bundle bundle)`",
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            IMPL).addMoreInfo(
-            "https://developer.android.com/training/auto/audio/index.html#support_voice");
+    /** Missing implementation of MediaSession.Callback#onPlayFromSearch */
+    public static final Issue MISSING_ON_PLAY_FROM_SEARCH =
+            Issue.create(
+                            "MissingOnPlayFromSearch",
+                            "Missing `onPlayFromSearch`.",
+                            "To support voice searches on Android Auto, in addition to adding an "
+                                    + "`intent-filter` for the action `onPlayFromSearch`,"
+                                    + " you also need to override and implement "
+                                    + "`onPlayFromSearch(String query, Bundle bundle)`",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.ERROR,
+                            IMPL)
+                    .addMoreInfo(
+                            "https://developer.android.com/training/auto/audio/index.html#support_voice");
 
     private static final String CAR_APPLICATION_METADATA_NAME =
             "com.google.android.gms.car.application";
@@ -146,13 +155,12 @@ public class AndroidAutoDetector extends Detector
             "android.media.session.MediaSession.Callback";
     private static final String CLASS_V4MEDIA_SESSION_COMPAT_CALLBACK =
             "android.support.v4.media.session.MediaSessionCompat.Callback";
-    private static final String METHOD_MEDIA_SESSION_PLAY_FROM_SEARCH =
-            "onPlayFromSearch";
+    private static final String METHOD_MEDIA_SESSION_PLAY_FROM_SEARCH = "onPlayFromSearch";
     private static final String BUNDLE_ARG = "android.os.Bundle";
 
     /**
-     * Indicates whether we identified that the current app is an automotive app and
-     * that we should validate all the automotive specific issues.
+     * Indicates whether we identified that the current app is an automotive app and that we should
+     * validate all the automotive specific issues.
      */
     private boolean mDoAutomotiveAppCheck;
 
@@ -172,8 +180,7 @@ public class AndroidAutoDetector extends Detector
     private Location.Handle mMainApplicationHandle;
 
     /** Constructs a new {@link AndroidAutoDetector} check */
-    public AndroidAutoDetector() {
-    }
+    public AndroidAutoDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -185,11 +192,11 @@ public class AndroidAutoDetector extends Detector
     public Collection<String> getApplicableElements() {
         return Arrays.asList(
                 TAG_AUTOMOTIVE_APP, // Root element of a declared automotive descriptor.
-                NODE_METADATA,      // meta-data from AndroidManifest.xml
-                TAG_SERVICE,        // service from AndroidManifest.xml
-                TAG_INTENT_FILTER,  // Any declared intent-filter from AndroidManifest.xml
-                NODE_APPLICATION    // Used for storing the application element/location.
-        );
+                NODE_METADATA, // meta-data from AndroidManifest.xml
+                TAG_SERVICE, // service from AndroidManifest.xml
+                TAG_INTENT_FILTER, // Any declared intent-filter from AndroidManifest.xml
+                NODE_APPLICATION // Used for storing the application element/location.
+                );
     }
 
     @Override
@@ -231,8 +238,7 @@ public class AndroidAutoDetector extends Detector
             if (autoFileName != null && autoFileName.startsWith("@xml/")) {
                 // Store the fact that we need to check all the auto issues.
                 mDoAutomotiveAppCheck = true;
-                mAutomotiveResourceFileName =
-                        autoFileName.substring("@xml/".length()) + DOT_XML;
+                mAutomotiveResourceFileName = autoFileName.substring("@xml/".length()) + DOT_XML;
             }
         }
     }
@@ -242,7 +248,7 @@ public class AndroidAutoDetector extends Detector
         // in AndroidManifest.xml.
         boolean isMetadataResource =
                 mAutomotiveResourceFileName != null
-                && mAutomotiveResourceFileName.equals(context.file.getName());
+                        && mAutomotiveResourceFileName.equals(context.file.getName());
 
         for (Element child : XmlUtils.getSubTags(element)) {
 
@@ -258,11 +264,18 @@ public class AndroidAutoDetector extends Detector
                         // no name specified
                         continue;
                     }
-                    context.report(INVALID_USES_TAG_ISSUE, node,
+                    context.report(
+                            INVALID_USES_TAG_ISSUE,
+                            node,
                             context.getLocation(node),
-                            "Expecting one of `" + VAL_NAME_MEDIA + "` or `" +
-                            VAL_NAME_NOTIFICATION + "` for the name " +
-                            "attribute in " + TAG_USES + " tag.");
+                            "Expecting one of `"
+                                    + VAL_NAME_MEDIA
+                                    + "` or `"
+                                    + VAL_NAME_NOTIFICATION
+                                    + "` for the name "
+                                    + "attribute in "
+                                    + TAG_USES
+                                    + " tag.");
                 }
             }
         }
@@ -277,25 +290,28 @@ public class AndroidAutoDetector extends Detector
 
             if (!mMediaIntentFilterFound
                     && context.isEnabled(MISSING_MEDIA_BROWSER_SERVICE_ACTION_ISSUE)) {
-                context.report(MISSING_MEDIA_BROWSER_SERVICE_ACTION_ISSUE, node,
+                context.report(
+                        MISSING_MEDIA_BROWSER_SERVICE_ACTION_ISSUE,
+                        node,
                         mMainApplicationHandle.resolve(),
-                        "Missing `intent-filter` for action " +
-                                "`android.media.browse.MediaBrowserService` that is required for " +
-                                "android auto support");
+                        "Missing `intent-filter` for action "
+                                + "`android.media.browse.MediaBrowserService` that is required for "
+                                + "android auto support");
             }
             if (!mMediaSearchIntentFilterFound
                     && context.isEnabled(MISSING_INTENT_FILTER_FOR_MEDIA_SEARCH)) {
-                context.report(MISSING_INTENT_FILTER_FOR_MEDIA_SEARCH, node,
+                context.report(
+                        MISSING_INTENT_FILTER_FOR_MEDIA_SEARCH,
+                        node,
                         mMainApplicationHandle.resolve(),
-                        "Missing `intent-filter` for action " +
-                                "`android.media.action.MEDIA_PLAY_FROM_SEARCH`.");
+                        "Missing `intent-filter` for action "
+                                + "`android.media.action.MEDIA_PLAY_FROM_SEARCH`.");
             }
         }
     }
 
     private void checkServiceForBrowserServiceIntentFilter(Element element) {
-        if (TAG_SERVICE.equals(element.getTagName())
-                && !mMediaIntentFilterFound) {
+        if (TAG_SERVICE.equals(element.getTagName()) && !mMediaIntentFilterFound) {
 
             for (Element child : XmlUtils.getSubTags(element)) {
                 String tagName = child.getTagName();
@@ -335,9 +351,8 @@ public class AndroidAutoDetector extends Detector
     @Nullable
     public List<String> applicableSuperClasses() {
         // We currently enable scanning only for media apps.
-        return mIsAutomotiveMediaApp ?
-                Arrays.asList(CLASS_MEDIA_SESSION_CALLBACK,
-                        CLASS_V4MEDIA_SESSION_COMPAT_CALLBACK)
+        return mIsAutomotiveMediaApp
+                ? Arrays.asList(CLASS_MEDIA_SESSION_CALLBACK, CLASS_V4MEDIA_SESSION_COMPAT_CALLBACK)
                 : null;
     }
 
@@ -350,19 +365,22 @@ public class AndroidAutoDetector extends Detector
             if (!visitor.isPlayFromSearchMethodFound()
                     && context.isEnabled(MISSING_ON_PLAY_FROM_SEARCH)) {
 
-                context.report(MISSING_ON_PLAY_FROM_SEARCH, declaration,
+                context.report(
+                        MISSING_ON_PLAY_FROM_SEARCH,
+                        declaration,
                         context.getNameLocation(declaration),
-                        "This class does not override `" +
-                        METHOD_MEDIA_SESSION_PLAY_FROM_SEARCH + "` from `MediaSession.Callback`" +
-                        " The method should be overridden and implemented to support " +
-                        "Voice search on Android Auto.");
+                        "This class does not override `"
+                                + METHOD_MEDIA_SESSION_PLAY_FROM_SEARCH
+                                + "` from `MediaSession.Callback`"
+                                + " The method should be overridden and implemented to support "
+                                + "Voice search on Android Auto.");
             }
         }
     }
 
     /**
-     * A Visitor class to search for {@code MediaSession.Callback#onPlayFromSearch(..)}
-     * method declaration.
+     * A Visitor class to search for {@code MediaSession.Callback#onPlayFromSearch(..)} method
+     * declaration.
      */
     private static class MediaSessionCallbackVisitor extends AbstractUastVisitor {
 
@@ -381,8 +399,7 @@ public class AndroidAutoDetector extends Detector
         @Override
         public boolean visitMethod(UMethod method) {
             if (METHOD_MEDIA_SESSION_PLAY_FROM_SEARCH.equals(method.getName())
-                    && mContext.getEvaluator().parametersMatch(method, TYPE_STRING,
-                    BUNDLE_ARG)) {
+                    && mContext.getEvaluator().parametersMatch(method, TYPE_STRING, BUNDLE_ARG)) {
                 mOnPlayFromSearchFound = true;
             }
             return super.visitMethod(method);
@@ -393,6 +410,6 @@ public class AndroidAutoDetector extends Detector
     @SuppressWarnings("unused")
     @NonNull
     public static String[] getAllowedAutomotiveAppTypes() {
-        return new String[]{VAL_NAME_MEDIA, VAL_NAME_NOTIFICATION};
+        return new String[] {VAL_NAME_MEDIA, VAL_NAME_NOTIFICATION};
     }
 }

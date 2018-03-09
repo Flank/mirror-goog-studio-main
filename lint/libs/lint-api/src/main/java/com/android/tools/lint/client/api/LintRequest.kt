@@ -30,19 +30,20 @@ import java.util.EnumSet
  */
 @Beta
 open class LintRequest(
-        /**
-         * The lint client requesting the lint check
-         *
-         * @return the client, never null
-         */
-        val client: LintClient,
+    /**
+     * The lint client requesting the lint check
+     *
+     * @return the client, never null
+     */
+    val client: LintClient,
 
-        /**
-         * The set of files to check with lint. This can reference Android projects,
-         * or directories containing Android projects, or individual XML or Java files
-         * (typically for incremental IDE analysis).
-         */
-        val files: List<File>) {
+    /**
+     * The set of files to check with lint. This can reference Android projects,
+     * or directories containing Android projects, or individual XML or Java files
+     * (typically for incremental IDE analysis).
+     */
+    val files: List<File>
+) {
 
     @JvmField
     protected var scope: EnumSet<Scope>? = null
@@ -116,7 +117,7 @@ open class LintRequest(
      */
     open fun getMainProject(project: Project): Project = project
 
-    open fun getProjects() : Collection<Project>? = projects
+    open fun getProjects(): Collection<Project>? = projects
 
     fun setProjects(projects: Collection<Project>?): LintRequest {
         this.projects = projects

@@ -21,9 +21,9 @@ import com.google.common.annotations.Beta;
 
 /**
  * Enum which describes the different computation speeds of various detectors
- * <p>
- * <b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ *
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
 @Beta
 public enum Speed {
@@ -46,8 +46,7 @@ public enum Speed {
     }
 
     /**
-     * Returns the user-visible description of the speed of the given
-     * detector
+     * Returns the user-visible description of the speed of the given detector
      *
      * @return the description of the speed to display to the user
      */

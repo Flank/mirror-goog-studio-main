@@ -76,8 +76,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 import org.w3c.dom.Document;
 
 /**
- * An implementation of Lint's {@link Project} class wrapping a Gradle model (project or
- * library)
+ * An implementation of Lint's {@link Project} class wrapping a Gradle model (project or library)
  */
 public class LintGradleProject extends Project {
     protected AndroidVersion minSdkVersion;
@@ -143,7 +142,8 @@ public class LintGradleProject extends Project {
             }
 
             addJarsFromJavaLibrariesTransitively(library.getJavaDependencies(), list, skipProvided);
-            addJarsFromAndroidLibrariesTransitively(library.getLibraryDependencies(), list, skipProvided);
+            addJarsFromAndroidLibrariesTransitively(
+                    library.getLibraryDependencies(), list, skipProvided);
         }
     }
 
@@ -171,8 +171,8 @@ public class LintGradleProject extends Project {
         return true;
     }
 
-    protected static boolean dependsOn(@NonNull Dependencies dependencies,
-            @NonNull String artifact) {
+    protected static boolean dependsOn(
+            @NonNull Dependencies dependencies, @NonNull String artifact) {
         for (AndroidLibrary library : dependencies.getLibraries()) {
             if (dependsOn(library, artifact)) {
                 return true;
@@ -324,9 +324,8 @@ public class LintGradleProject extends Project {
                 for (SourceProvider provider : getSourceProviders()) {
                     Collection<File> resDirs = provider.getResDirectories();
                     // model returns path whether or not it exists
-                    resourceFolders.addAll(resDirs.stream()
-                            .filter(File::exists)
-                            .collect(Collectors.toList()));
+                    resourceFolders.addAll(
+                            resDirs.stream().filter(File::exists).collect(Collectors.toList()));
                 }
             }
 
@@ -338,7 +337,9 @@ public class LintGradleProject extends Project {
         public List<File> getGeneratedResourceFolders() {
             if (generatedResourceFolders == null) {
                 generatedResourceFolders =
-                        mVariant.getMainArtifact().getGeneratedResourceFolders().stream()
+                        mVariant.getMainArtifact()
+                                .getGeneratedResourceFolders()
+                                .stream()
                                 .filter(File::exists)
                                 .collect(Collectors.toList());
             }
@@ -354,9 +355,8 @@ public class LintGradleProject extends Project {
                 for (SourceProvider provider : getSourceProviders()) {
                     Collection<File> dirs = provider.getAssetsDirectories();
                     // model returns path whether or not it exists
-                    assetFolders.addAll(dirs.stream()
-                            .filter(File::exists)
-                            .collect(Collectors.toList()));
+                    assetFolders.addAll(
+                            dirs.stream().filter(File::exists).collect(Collectors.toList()));
                 }
             }
 
@@ -371,9 +371,8 @@ public class LintGradleProject extends Project {
                 for (SourceProvider provider : getSourceProviders()) {
                     Collection<File> srcDirs = provider.getJavaDirectories();
                     // model returns path whether or not it exists
-                    javaSourceFolders.addAll(srcDirs.stream()
-                            .filter(File::exists)
-                            .collect(Collectors.toList()));
+                    javaSourceFolders.addAll(
+                            srcDirs.stream().filter(File::exists).collect(Collectors.toList()));
                 }
             }
 
@@ -385,7 +384,9 @@ public class LintGradleProject extends Project {
         public List<File> getGeneratedSourceFolders() {
             if (generatedSourceFolders == null) {
                 AndroidArtifact artifact = mVariant.getMainArtifact();
-                generatedSourceFolders = artifact.getGeneratedSourceFolders().stream()
+                generatedSourceFolders =
+                        artifact.getGeneratedSourceFolders()
+                                .stream()
                                 .filter(File::exists)
                                 .collect(Collectors.toList());
             }
@@ -400,9 +401,11 @@ public class LintGradleProject extends Project {
                 testSourceFolders = Lists.newArrayList();
                 for (SourceProvider provider : getTestSourceProviders()) {
                     // model returns path whether or not it exists
-                    testSourceFolders.addAll(provider.getJavaDirectories().stream()
-                            .filter(File::exists)
-                            .collect(Collectors.toList()));
+                    testSourceFolders.addAll(
+                            provider.getJavaDirectories()
+                                    .stream()
+                                    .filter(File::exists)
+                                    .collect(Collectors.toList()));
                 }
             }
 
@@ -493,12 +496,12 @@ public class LintGradleProject extends Project {
                             || AndroidProject.ARTIFACT_UNIT_TEST.equals(artifact.getName())) {
                         Dependencies dependencies = artifact.getDependencies();
 
-                        addJarsFromJavaLibrariesTransitively(dependencies.getJavaLibraries(),
-                                testLibraries, false);
+                        addJarsFromJavaLibrariesTransitively(
+                                dependencies.getJavaLibraries(), testLibraries, false);
                         // Note that we don't include these for getJavaLibraries, but we need to
                         // for tests since we don't keep them otherwise
-                        addJarsFromAndroidLibrariesTransitively(dependencies.getLibraries(),
-                                testLibraries, false);
+                        addJarsFromAndroidLibrariesTransitively(
+                                dependencies.getLibraries(), testLibraries, false);
                     }
                 }
             }
@@ -512,8 +515,8 @@ public class LintGradleProject extends Project {
             // package. As part of the Gradle work on the Lint API we should make two separate
             // package lookup methods -- one for the manifest package, one for the build package
             if (pkg == null) { // only used as a fallback in case manifest somehow is null
-                String packageName = mProject.getDefaultConfig().getProductFlavor()
-                        .getApplicationId();
+                String packageName =
+                        mProject.getDefaultConfig().getProductFlavor().getApplicationId();
                 if (packageName != null) {
                     return packageName;
                 }
@@ -730,10 +733,10 @@ public class LintGradleProject extends Project {
             if (javaLibraries == null) {
                 javaLibraries =
                         Stream.concat(
-                                Stream.of(mLibrary.getJarFile()),
-                                mLibrary.getLocalJars().stream())
-                        .filter(File::exists)
-                        .collect(Collectors.toList());
+                                        Stream.of(mLibrary.getJarFile()),
+                                        mLibrary.getLocalJars().stream())
+                                .filter(File::exists)
+                                .collect(Collectors.toList());
             }
 
             return javaLibraries;
@@ -759,23 +762,22 @@ public class LintGradleProject extends Project {
     }
 
     /**
-     * Class which creates a lint project hierarchy based on a corresponding
-     * Gradle project hierarchy, looking up project dependencies by name, creating
-     * wrapper projects for Java libraries, looking up tooling models for each project,
-     * etc.
+     * Class which creates a lint project hierarchy based on a corresponding Gradle project
+     * hierarchy, looking up project dependencies by name, creating wrapper projects for Java
+     * libraries, looking up tooling models for each project, etc.
      */
     static class ProjectSearch {
-        public final Map<AndroidProject,Project> appProjects = Maps.newHashMap();
-        public final Map<AndroidLibrary,Project> libraryProjects = Maps.newHashMap();
-        public final Map<MavenCoordinates,Project> libraryProjectsByCoordinate = Maps.newHashMap();
-        public final Map<String,Project> namedProjects = Maps.newHashMap();
-        public final Map<JavaLibrary,Project> javaLibraryProjects = Maps.newHashMap();
-        public final Map<MavenCoordinates,Project> javaLibraryProjectsByCoordinate = Maps.newHashMap();
-        public final Map<org.gradle.api.Project,AndroidProject> gradleProjects = Maps.newHashMap();
+        public final Map<AndroidProject, Project> appProjects = Maps.newHashMap();
+        public final Map<AndroidLibrary, Project> libraryProjects = Maps.newHashMap();
+        public final Map<MavenCoordinates, Project> libraryProjectsByCoordinate = Maps.newHashMap();
+        public final Map<String, Project> namedProjects = Maps.newHashMap();
+        public final Map<JavaLibrary, Project> javaLibraryProjects = Maps.newHashMap();
+        public final Map<MavenCoordinates, Project> javaLibraryProjectsByCoordinate =
+                Maps.newHashMap();
+        public final Map<org.gradle.api.Project, AndroidProject> gradleProjects = Maps.newHashMap();
         private final Set<Object> mSeen = Sets.newHashSet();
 
-        public ProjectSearch() {
-        }
+        public ProjectSearch() {}
 
         @Nullable
         private static AndroidProject createAndroidProject(
@@ -857,8 +859,8 @@ public class LintGradleProject extends Project {
             // Make plain vanilla project; this is what happens for Java projects (which
             // don't have a Gradle model)
 
-            JavaPluginConvention convention = gradleProject.getConvention()
-                    .findPlugin(JavaPluginConvention.class);
+            JavaPluginConvention convention =
+                    gradleProject.getConvention().findPlugin(JavaPluginConvention.class);
             if (convention == null) {
                 return null;
             }
@@ -906,35 +908,36 @@ public class LintGradleProject extends Project {
 
                 File projectDir = gradleProject.getProjectDir();
                 final List<Project> dependencies = Lists.newArrayList();
-                Project project = new Project(lintClient, projectDir, projectDir) {
-                    @Override
-                    protected void initialize() {
-                        // Deliberately not calling super; that code is for ADT compatibility
-                        gradleProject = true;
-                        mergeManifests = true;
-                        directLibraries = dependencies;
-                        javaSourceFolders = sources;
-                        javaClassFolders = classes;
-                        javaLibraries = libs;
-                        testSourceFolders = tests;
-                    }
+                Project project =
+                        new Project(lintClient, projectDir, projectDir) {
+                            @Override
+                            protected void initialize() {
+                                // Deliberately not calling super; that code is for ADT compatibility
+                                gradleProject = true;
+                                mergeManifests = true;
+                                directLibraries = dependencies;
+                                javaSourceFolders = sources;
+                                javaClassFolders = classes;
+                                javaLibraries = libs;
+                                testSourceFolders = tests;
+                            }
 
-                    @Override
-                    public boolean isGradleProject() {
-                        return true;
-                    }
+                            @Override
+                            public boolean isGradleProject() {
+                                return true;
+                            }
 
-                    @Override
-                    public boolean isAndroidProject() {
-                        return false;
-                    }
+                            @Override
+                            public boolean isAndroidProject() {
+                                return false;
+                            }
 
-                    @Nullable
-                    @Override
-                    public IAndroidTarget getBuildTarget() {
-                        return null;
-                    }
-                };
+                            @Nullable
+                            @Override
+                            public IAndroidTarget getBuildTarget() {
+                                return null;
+                            }
+                        };
 
                 // Dependencies
                 ConfigurationContainer configurations = gradleProject.getConfigurations();
@@ -944,8 +947,8 @@ public class LintGradleProject extends Project {
                         org.gradle.api.Project p =
                                 ((ProjectDependency) dependency).getDependencyProject();
                         if (p != null) {
-                            Project lintProject = getProject(lintClient, p.getPath(), p,
-                                    variantName);
+                            Project lintProject =
+                                    getProject(lintClient, p.getPath(), p, variantName);
                             if (lintProject != null) {
                                 dependencies.add(lintProject);
                             }
@@ -960,8 +963,8 @@ public class LintGradleProject extends Project {
                             //    dependencies { compile name: 'guava-18.0' }
                             continue;
                         }
-                        MavenCoordinatesImpl coordinates = new MavenCoordinatesImpl(group,
-                                name, version);
+                        MavenCoordinatesImpl coordinates =
+                                new MavenCoordinatesImpl(group, name, version);
                         Project javaLib = javaLibraryProjectsByCoordinate.get(coordinates);
                         //noinspection StatementWithEmptyBody
                         if (javaLib != null) {
@@ -1024,8 +1027,8 @@ public class LintGradleProject extends Project {
             // look up from Gradle project directly
             List<String> processedProjects = null;
             ConfigurationContainer configurations = gradleProject.getConfigurations();
-            Configuration compileConfiguration = configurations
-                    .getByName(variant.getName() + "CompileClasspath");
+            Configuration compileConfiguration =
+                    configurations.getByName(variant.getName() + "CompileClasspath");
             for (Dependency dependency : compileConfiguration.getAllDependencies()) {
                 if (dependency instanceof ProjectDependency) {
                     org.gradle.api.Project p =
@@ -1055,8 +1058,8 @@ public class LintGradleProject extends Project {
                     if (processedProjects != null && processedProjects.contains(projectName)) {
                         continue;
                     }
-                    Project libLintProject = getProject(client, projectName, gradleProject,
-                            variant.getName());
+                    Project libLintProject =
+                            getProject(client, projectName, gradleProject, variant.getName());
                     if (libLintProject != null) {
                         lintProject.addDirectLibrary(libLintProject);
                         continue;
@@ -1109,8 +1112,8 @@ public class LintGradleProject extends Project {
             }
 
             if (library.getProject() != null) {
-                Project project = getProject(client, library.getProject(), gradleProject,
-                        variant.getName());
+                Project project =
+                        getProject(client, library.getProject(), gradleProject, variant.getName());
                 if (project != null) {
                     libraryProjects.put(library, project);
                     return project;
@@ -1131,9 +1134,7 @@ public class LintGradleProject extends Project {
         }
 
         @NonNull
-        private Project getLibrary(
-                @NonNull LintGradleClient client,
-                @NonNull JavaLibrary library) {
+        private Project getLibrary(@NonNull LintGradleClient client, @NonNull JavaLibrary library) {
             Project cached = javaLibraryProjects.get(library);
             if (cached != null) {
                 return cached;

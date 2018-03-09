@@ -18,12 +18,11 @@ package com.android.tools.lint.client.api;
 
 import com.google.common.annotations.Beta;
 
-/**
- * Temporarily here for compat purposes
- */
+/** Temporarily here for compat purposes */
 @SuppressWarnings({"deprecation", "unused"})
 @Beta
-@Deprecated public abstract class JavaParser {
+@Deprecated
+public abstract class JavaParser {
     @Deprecated public static final String TYPE_OBJECT = JavaEvaluatorKt.TYPE_OBJECT;
     @Deprecated public static final String TYPE_STRING = JavaEvaluatorKt.TYPE_STRING;
     @Deprecated public static final String TYPE_INT = JavaEvaluatorKt.TYPE_INT;
@@ -35,11 +34,22 @@ import com.google.common.annotations.Beta;
     @Deprecated public static final String TYPE_SHORT = JavaEvaluatorKt.TYPE_SHORT;
     @Deprecated public static final String TYPE_BYTE = JavaEvaluatorKt.TYPE_BYTE;
     @Deprecated public static final String TYPE_NULL = JavaEvaluatorKt.TYPE_NULL;
-    @Deprecated public static final String TYPE_INTEGER_WRAPPER = JavaEvaluatorKt.TYPE_INTEGER_WRAPPER;
-    @Deprecated public static final String TYPE_BOOLEAN_WRAPPER = JavaEvaluatorKt.TYPE_BOOLEAN_WRAPPER;
+
+    @Deprecated
+    public static final String TYPE_INTEGER_WRAPPER = JavaEvaluatorKt.TYPE_INTEGER_WRAPPER;
+
+    @Deprecated
+    public static final String TYPE_BOOLEAN_WRAPPER = JavaEvaluatorKt.TYPE_BOOLEAN_WRAPPER;
+
     @Deprecated public static final String TYPE_BYTE_WRAPPER = JavaEvaluatorKt.TYPE_BYTE_WRAPPER;
     @Deprecated public static final String TYPE_SHORT_WRAPPER = JavaEvaluatorKt.TYPE_SHORT_WRAPPER;
     @Deprecated public static final String TYPE_LONG_WRAPPER = JavaEvaluatorKt.TYPE_LONG_WRAPPER;
-    @Deprecated public static final String TYPE_DOUBLE_WRAPPER = JavaEvaluatorKt.TYPE_DOUBLE_WRAPPER;
+
+    @Deprecated
+    public static final String TYPE_DOUBLE_WRAPPER = JavaEvaluatorKt.TYPE_DOUBLE_WRAPPER;
+
     @Deprecated public static final String TYPE_FLOAT_WRAPPER = JavaEvaluatorKt.TYPE_FLOAT_WRAPPER;
-    @Deprecated public static final String TYPE_CHARACTER_WRAPPER = JavaEvaluatorKt.TYPE_CHARACTER_WRAPPER;}
+
+    @Deprecated
+    public static final String TYPE_CHARACTER_WRAPPER = JavaEvaluatorKt.TYPE_CHARACTER_WRAPPER;
+}

@@ -36,23 +36,29 @@ import java.util.EnumSet;
 import junit.framework.TestCase;
 
 public class ImplementationTest extends TestCase {
-    /** Copy of ApiDetector#UNSUPPORTED but including CLASS_FILE scope; ApiDetector
-     * no longer uses it but it was used in this test to check scope handling */
-    private static final Issue OLD_UNSUPPORTED = Issue.create(
-            "NewApi2",
-            "not used",
-            "not used",
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            new Implementation(
-                    ApiDetector.class,
-                    EnumSet.of(Scope.CLASS_FILE, Scope.JAVA_FILE, Scope.RESOURCE_FILE, Scope.MANIFEST),
-                    Scope.CLASS_FILE_SCOPE,
-                    Scope.JAVA_FILE_SCOPE,
-                    Scope.RESOURCE_FILE_SCOPE,
-                    Scope.MANIFEST_SCOPE));
-
+    /**
+     * Copy of ApiDetector#UNSUPPORTED but including CLASS_FILE scope; ApiDetector no longer uses it
+     * but it was used in this test to check scope handling
+     */
+    private static final Issue OLD_UNSUPPORTED =
+            Issue.create(
+                    "NewApi2",
+                    "not used",
+                    "not used",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.ERROR,
+                    new Implementation(
+                            ApiDetector.class,
+                            EnumSet.of(
+                                    Scope.CLASS_FILE,
+                                    Scope.JAVA_FILE,
+                                    Scope.RESOURCE_FILE,
+                                    Scope.MANIFEST),
+                            Scope.CLASS_FILE_SCOPE,
+                            Scope.JAVA_FILE_SCOPE,
+                            Scope.RESOURCE_FILE_SCOPE,
+                            Scope.MANIFEST_SCOPE));
 
     @SuppressWarnings("unchecked")
     public void testIsAdequate() {
@@ -64,8 +70,8 @@ public class ImplementationTest extends TestCase {
         assertFalse(implementation.isAdequate(RESOURCE_FILE_SCOPE));
         assertTrue(implementation.isAdequate(EnumSet.of(ALL_RESOURCE_FILES, JAVA_FILE)));
 
-        implementation = new Implementation(Detector.class, ALL_RESOURCES_SCOPE,
-                RESOURCE_FILE_SCOPE);
+        implementation =
+                new Implementation(Detector.class, ALL_RESOURCES_SCOPE, RESOURCE_FILE_SCOPE);
         assertTrue(implementation.isAdequate(ALL_RESOURCES_SCOPE));
         assertTrue(implementation.isAdequate(EnumSet.of(ALL_RESOURCE_FILES)));
         assertFalse(implementation.isAdequate(JAVA_FILE_SCOPE));
@@ -82,8 +88,12 @@ public class ImplementationTest extends TestCase {
         assertFalse(implementation.isAdequate(EnumSet.of(RESOURCE_FILE, CLASS_FILE)));
         assertTrue(implementation.isAdequate(ALL));
 
-        implementation = new Implementation(Detector.class, EnumSet.of(RESOURCE_FILE, JAVA_FILE),
-                RESOURCE_FILE_SCOPE, JAVA_FILE_SCOPE);
+        implementation =
+                new Implementation(
+                        Detector.class,
+                        EnumSet.of(RESOURCE_FILE, JAVA_FILE),
+                        RESOURCE_FILE_SCOPE,
+                        JAVA_FILE_SCOPE);
         assertTrue(implementation.isAdequate(JAVA_FILE_SCOPE));
         assertTrue(implementation.isAdequate(RESOURCE_FILE_SCOPE));
         assertTrue(implementation.isAdequate(ALL));
@@ -92,14 +102,22 @@ public class ImplementationTest extends TestCase {
         assertTrue(OLD_UNSUPPORTED.getImplementation().isAdequate(CLASS_FILE_SCOPE));
         assertTrue(OLD_UNSUPPORTED.getImplementation().isAdequate(RESOURCE_FILE_SCOPE));
         assertTrue(OLD_UNSUPPORTED.getImplementation().isAdequate(MANIFEST_SCOPE));
-        assertTrue(DetectMissingPrefix.MISSING_NAMESPACE.getImplementation().isAdequate(
-                RESOURCE_FILE_SCOPE));
-        assertTrue(DetectMissingPrefix.MISSING_NAMESPACE.getImplementation().isAdequate(
-                MANIFEST_SCOPE));
-        assertFalse(DetectMissingPrefix.MISSING_NAMESPACE.getImplementation().isAdequate(
-                JAVA_FILE_SCOPE));
+        assertTrue(
+                DetectMissingPrefix.MISSING_NAMESPACE
+                        .getImplementation()
+                        .isAdequate(RESOURCE_FILE_SCOPE));
+        assertTrue(
+                DetectMissingPrefix.MISSING_NAMESPACE
+                        .getImplementation()
+                        .isAdequate(MANIFEST_SCOPE));
+        assertFalse(
+                DetectMissingPrefix.MISSING_NAMESPACE
+                        .getImplementation()
+                        .isAdequate(JAVA_FILE_SCOPE));
         assertTrue(RtlDetector.COMPAT.getImplementation().isAdequate(MANIFEST_SCOPE));
-        assertTrue(DuplicateResourceDetector.ISSUE.getImplementation().isAdequate(
-                RESOURCE_FILE_SCOPE));
+        assertTrue(
+                DuplicateResourceDetector.ISSUE
+                        .getImplementation()
+                        .isAdequate(RESOURCE_FILE_SCOPE));
     }
 }

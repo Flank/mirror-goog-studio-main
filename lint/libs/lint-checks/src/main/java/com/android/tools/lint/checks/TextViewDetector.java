@@ -65,59 +65,53 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 
-/**
- * Checks for cases where a TextView should probably be an EditText instead
- */
+/** Checks for cases where a TextView should probably be an EditText instead */
 public class TextViewDetector extends LayoutDetector {
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            TextViewDetector.class,
-            Scope.RESOURCE_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(TextViewDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "TextViewEdits",
-            "TextView should probably be an EditText instead",
-
-            "Using a `<TextView>` to input text is generally an error, you should be " +
-            "using `<EditText>` instead.  `EditText` is a subclass of `TextView`, and some " +
-            "of the editing support is provided by `TextView`, so it's possible to set " +
-            "some input-related properties on a `TextView`. However, using a `TextView` " +
-            "along with input attributes is usually a cut & paste error. To input " +
-            "text you should be using `<EditText>`.\n" +
-            "\n" +
-            "This check also checks subclasses of `TextView`, such as `Button` and `CheckBox`, " +
-            "since these have the same issue: they should not be used with editable " +
-            "attributes.",
-
-            Category.CORRECTNESS,
-            7,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue ISSUE =
+            Issue.create(
+                    "TextViewEdits",
+                    "TextView should probably be an EditText instead",
+                    "Using a `<TextView>` to input text is generally an error, you should be "
+                            + "using `<EditText>` instead.  `EditText` is a subclass of `TextView`, and some "
+                            + "of the editing support is provided by `TextView`, so it's possible to set "
+                            + "some input-related properties on a `TextView`. However, using a `TextView` "
+                            + "along with input attributes is usually a cut & paste error. To input "
+                            + "text you should be using `<EditText>`.\n"
+                            + "\n"
+                            + "This check also checks subclasses of `TextView`, such as `Button` and `CheckBox`, "
+                            + "since these have the same issue: they should not be used with editable "
+                            + "attributes.",
+                    Category.CORRECTNESS,
+                    7,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     /** Text could be selectable */
-    public static final Issue SELECTABLE = Issue.create(
-            "SelectableText",
-            "Dynamic text should probably be selectable",
-
-            "If a `<TextView>` is used to display data, the user might want to copy that " +
-            "data and paste it elsewhere. To allow this, the `<TextView>` should specify " +
-            "`android:textIsSelectable=\"true\"`.\n" +
-            "\n" +
-            "This lint check looks for TextViews which are likely to be displaying data: " +
-            "views whose text is set dynamically. This value will be ignored on platforms " +
-            "older than API 11, so it is okay to set it regardless of your `minSdkVersion`.",
-
-            Category.USABILITY,
-            7,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            // Apparently setting this can have some undesirable side effects
-            .setEnabledByDefault(false);
+    public static final Issue SELECTABLE =
+            Issue.create(
+                            "SelectableText",
+                            "Dynamic text should probably be selectable",
+                            "If a `<TextView>` is used to display data, the user might want to copy that "
+                                    + "data and paste it elsewhere. To allow this, the `<TextView>` should specify "
+                                    + "`android:textIsSelectable=\"true\"`.\n"
+                                    + "\n"
+                                    + "This lint check looks for TextViews which are likely to be displaying data: "
+                                    + "views whose text is set dynamically. This value will be ignored on platforms "
+                                    + "older than API 11, so it is okay to set it regardless of your `minSdkVersion`.",
+                            Category.USABILITY,
+                            7,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    // Apparently setting this can have some undesirable side effects
+                    .setEnabledByDefault(false);
 
     /** Constructs a new {@link TextViewDetector} */
-    public TextViewDetector() {
-    }
+    public TextViewDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
@@ -128,8 +122,7 @@ public class TextViewDetector extends LayoutDetector {
                 CHECK_BOX,
                 RADIO_BUTTON,
                 CHECKED_TEXT_VIEW,
-                SWITCH
-        );
+                SWITCH);
     }
 
     @Override
@@ -143,9 +136,13 @@ public class TextViewDetector extends LayoutDetector {
                     && context.getMainProject().getTargetSdk() >= 11
                     && context.isEnabled(SELECTABLE)) {
                 LintFix fix = fix().set(ANDROID_URI, ATTR_TEXT_IS_SELECTABLE, VALUE_TRUE).build();
-                context.report(SELECTABLE, element, context.getNameLocation(element),
-                        "Consider making the text value selectable by specifying " +
-                        "`android:textIsSelectable=\"true\"`", fix);
+                context.report(
+                        SELECTABLE,
+                        element,
+                        context.getNameLocation(element),
+                        "Consider making the text value selectable by specifying "
+                                + "`android:textIsSelectable=\"true\"`",
+                        fix);
             }
         }
 
@@ -160,70 +157,86 @@ public class TextViewDetector extends LayoutDetector {
 
             boolean isEditAttribute = false;
             switch (name.charAt(0)) {
-                case 'a': {
-                    isEditAttribute = name.equals(ATTR_AUTO_TEXT);
-                    break;
-                }
-                case 'b': {
-                    isEditAttribute = name.equals(ATTR_BUFFER_TYPE) &&
-                            attribute.getValue().equals(VALUE_EDITABLE);
-                    break;
-                }
-                case 'p': {
-                    isEditAttribute = name.equals(ATTR_PASSWORD)
-                            || name.equals(ATTR_PHONE_NUMBER)
-                            || name.equals(ATTR_PRIVATE_IME_OPTIONS);
-                    break;
-                }
-                case 'c': {
-                    isEditAttribute = name.equals(ATTR_CAPITALIZE)
-                            || name.equals(ATTR_CURSOR_VISIBLE);
-                    break;
-                }
-                case 'd': {
-                    isEditAttribute = name.equals(ATTR_DIGITS);
-                    break;
-                }
-                case 'e': {
-                    if (name.equals(ATTR_EDITABLE)) {
-                        isEditAttribute = attribute.getValue().equals(VALUE_TRUE);
-                    } else {
-                        isEditAttribute = name.equals(ATTR_EDITOR_EXTRAS);
+                case 'a':
+                    {
+                        isEditAttribute = name.equals(ATTR_AUTO_TEXT);
+                        break;
                     }
-                    break;
-                }
-                case 'i': {
-                    if (name.equals(ATTR_INPUT_TYPE)) {
-                        String value = attribute.getValue();
-                        isEditAttribute = !value.isEmpty() && !value.equals(VALUE_NONE);
-                    } else {
-                        isEditAttribute = name.equals(ATTR_INPUT_TYPE)
-                                || name.equals(ATTR_IME_OPTIONS)
-                                || name.equals(ATTR_IME_ACTION_LABEL)
-                                || name.equals(ATTR_IME_ACTION_ID)
-                                || name.equals(ATTR_INPUT_METHOD);
+                case 'b':
+                    {
+                        isEditAttribute =
+                                name.equals(ATTR_BUFFER_TYPE)
+                                        && attribute.getValue().equals(VALUE_EDITABLE);
+                        break;
                     }
-                    break;
-                }
-                case 'n': {
-                    isEditAttribute = name.equals(ATTR_NUMERIC);
-                    break;
-                }
+                case 'p':
+                    {
+                        isEditAttribute =
+                                name.equals(ATTR_PASSWORD)
+                                        || name.equals(ATTR_PHONE_NUMBER)
+                                        || name.equals(ATTR_PRIVATE_IME_OPTIONS);
+                        break;
+                    }
+                case 'c':
+                    {
+                        isEditAttribute =
+                                name.equals(ATTR_CAPITALIZE) || name.equals(ATTR_CURSOR_VISIBLE);
+                        break;
+                    }
+                case 'd':
+                    {
+                        isEditAttribute = name.equals(ATTR_DIGITS);
+                        break;
+                    }
+                case 'e':
+                    {
+                        if (name.equals(ATTR_EDITABLE)) {
+                            isEditAttribute = attribute.getValue().equals(VALUE_TRUE);
+                        } else {
+                            isEditAttribute = name.equals(ATTR_EDITOR_EXTRAS);
+                        }
+                        break;
+                    }
+                case 'i':
+                    {
+                        if (name.equals(ATTR_INPUT_TYPE)) {
+                            String value = attribute.getValue();
+                            isEditAttribute = !value.isEmpty() && !value.equals(VALUE_NONE);
+                        } else {
+                            isEditAttribute =
+                                    name.equals(ATTR_INPUT_TYPE)
+                                            || name.equals(ATTR_IME_OPTIONS)
+                                            || name.equals(ATTR_IME_ACTION_LABEL)
+                                            || name.equals(ATTR_IME_ACTION_ID)
+                                            || name.equals(ATTR_INPUT_METHOD);
+                        }
+                        break;
+                    }
+                case 'n':
+                    {
+                        isEditAttribute = name.equals(ATTR_NUMERIC);
+                        break;
+                    }
             }
 
-            if (isEditAttribute && ANDROID_URI.equals(attribute.getNamespaceURI()) && context.isEnabled(ISSUE)) {
+            if (isEditAttribute
+                    && ANDROID_URI.equals(attribute.getNamespaceURI())
+                    && context.isEnabled(ISSUE)) {
                 Location location = context.getLocation(attribute);
                 String message;
                 String view = element.getTagName();
                 if (view.equals(TEXT_VIEW)) {
-                    message = String.format(
-                            "Attribute `%1$s` should not be used with `<TextView>`: " +
-                            "Change element type to `<EditText>` ?", attribute.getName());
+                    message =
+                            String.format(
+                                    "Attribute `%1$s` should not be used with `<TextView>`: "
+                                            + "Change element type to `<EditText>` ?",
+                                    attribute.getName());
                 } else {
-                    message = String.format(
-                            "Attribute `%1$s` should not be used with `<%2$s>`: " +
-                            "intended for editable text widgets",
-                            attribute.getName(), view);
+                    message =
+                            String.format(
+                                    "Attribute `%1$s` should not be used with `<%2$s>`: "
+                                            + "intended for editable text widgets",
+                                    attribute.getName(), view);
                 }
                 context.report(ISSUE, attribute, location, message);
             }

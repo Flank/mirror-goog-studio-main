@@ -49,55 +49,49 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 /**
- * Checks for problems with wakelocks (such as failing to release them)
- * which can lead to unnecessary battery usage.
+ * Checks for problems with wakelocks (such as failing to release them) which can lead to
+ * unnecessary battery usage.
  */
 public class WakelockDetector extends Detector implements ClassScanner, SourceCodeScanner {
     public static final String ANDROID_APP_ACTIVITY = "android/app/Activity";
 
     /** Problems using wakelocks */
-    public static final Issue ISSUE = Issue.create(
-            "Wakelock",
-            "Incorrect `WakeLock` usage",
-
-            "Failing to release a wakelock properly can keep the Android device in " +
-            "a high power mode, which reduces battery life. There are several causes " +
-            "of this, such as releasing the wake lock in `onDestroy()` instead of in " +
-            "`onPause()`, failing to call `release()` in all possible code paths after " +
-            "an `acquire()`, and so on.\n" +
-            "\n" +
-            "NOTE: If you are using the lock just to keep the screen on, you should " +
-            "strongly consider using `FLAG_KEEP_SCREEN_ON` instead. This window flag " +
-            "will be correctly managed by the platform as the user moves between " +
-            "applications and doesn't require a special permission. See " +
-            "http://developer.android.com/reference/android/view/WindowManager.LayoutParams.html#FLAG_KEEP_SCREEN_ON.",
-
-            Category.PERFORMANCE,
-            9,
-            Severity.WARNING,
-            new Implementation(
-                    WakelockDetector.class,
-                    Scope.CLASS_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "Wakelock",
+                    "Incorrect `WakeLock` usage",
+                    "Failing to release a wakelock properly can keep the Android device in "
+                            + "a high power mode, which reduces battery life. There are several causes "
+                            + "of this, such as releasing the wake lock in `onDestroy()` instead of in "
+                            + "`onPause()`, failing to call `release()` in all possible code paths after "
+                            + "an `acquire()`, and so on.\n"
+                            + "\n"
+                            + "NOTE: If you are using the lock just to keep the screen on, you should "
+                            + "strongly consider using `FLAG_KEEP_SCREEN_ON` instead. This window flag "
+                            + "will be correctly managed by the platform as the user moves between "
+                            + "applications and doesn't require a special permission. See "
+                            + "http://developer.android.com/reference/android/view/WindowManager.LayoutParams.html#FLAG_KEEP_SCREEN_ON.",
+                    Category.PERFORMANCE,
+                    9,
+                    Severity.WARNING,
+                    new Implementation(WakelockDetector.class, Scope.CLASS_FILE_SCOPE));
 
     /** Using non-timeout version of wakelock acquire */
-    public static final Issue TIMEOUT = Issue.create(
-            "WakelockTimeout",
-            "Using wakeLock without timeout",
-
-            "Wakelocks have two acquire methods: one with a timeout, and one without. "
-                    + "You should generally always use the one with a timeout. A typical "
-                    + "timeout is 10 minutes. If the task takes longer than it is critical "
-                    + "that it happens (i.e. can't use `JobScheduler`) then maybe they "
-                    + "should consider a foreground service instead (which is a stronger "
-                    + "run guarantee and lets the user know something long/important is "
-                    + "happening).",
-
-            Category.PERFORMANCE,
-            9,
-            Severity.WARNING,
-            new Implementation(
-                    WakelockDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue TIMEOUT =
+            Issue.create(
+                    "WakelockTimeout",
+                    "Using wakeLock without timeout",
+                    "Wakelocks have two acquire methods: one with a timeout, and one without. "
+                            + "You should generally always use the one with a timeout. A typical "
+                            + "timeout is 10 minutes. If the task takes longer than it is critical "
+                            + "that it happens (i.e. can't use `JobScheduler`) then maybe they "
+                            + "should consider a foreground service instead (which is a stronger "
+                            + "run guarantee and lets the user know something long/important is "
+                            + "happening).",
+                    Category.PERFORMANCE,
+                    9,
+                    Severity.WARNING,
+                    new Implementation(WakelockDetector.class, Scope.JAVA_FILE_SCOPE));
 
     private static final String WAKELOCK_OWNER = "android/os/PowerManager$WakeLock";
     private static final String RELEASE_METHOD = "release";
@@ -106,15 +100,15 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
     private static final String POWER_MANAGER = "android/os/PowerManager";
     private static final String NEW_WAKE_LOCK_METHOD = "newWakeLock";
 
-    /** Print diagnostics during analysis (display flow control graph etc).
-     * Make sure you add the asm-debug or asm-util jars to the runtime classpath
-     * as well since the opcode integer to string mapping display routine looks for
-     * it via reflection. */
+    /**
+     * Print diagnostics during analysis (display flow control graph etc). Make sure you add the
+     * asm-debug or asm-util jars to the runtime classpath as well since the opcode integer to
+     * string mapping display routine looks for it via reflection.
+     */
     private static final boolean DEBUG = false;
 
     /** Constructs a new {@link WakelockDetector} */
-    public WakelockDetector() {
-    }
+    public WakelockDetector() {}
 
     @Override
     public void afterCheckProject(@NonNull Context context) {
@@ -139,8 +133,11 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
     }
 
     @Override
-    public void checkCall(@NonNull ClassContext context, @NonNull ClassNode classNode,
-            @NonNull MethodNode method, @NonNull MethodInsnNode call) {
+    public void checkCall(
+            @NonNull ClassContext context,
+            @NonNull ClassNode classNode,
+            @NonNull MethodNode method,
+            @NonNull MethodInsnNode call) {
         if (!context.getProject().getReportIssues()) {
             // If this is a library project not being analyzed, ignore it
             return;
@@ -149,15 +146,20 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
         if (call.owner.equals(WAKELOCK_OWNER)) {
             String name = call.name;
             if (name.equals(ACQUIRE_METHOD)) {
-                if (call.desc.equals("(J)V")) { // acquire(long timeout) does not require a corresponding release
+                if (call.desc.equals(
+                        "(J)V")) { // acquire(long timeout) does not require a corresponding release
                     return;
                 }
                 mHasAcquire = true;
 
                 if (context.getDriver().getPhase() == 2) {
                     assert !mHasRelease;
-                    context.report(ISSUE, method, call, context.getLocation(call),
-                        "Found a wakelock `acquire()` but no `release()` calls anywhere");
+                    context.report(
+                            ISSUE,
+                            method,
+                            call,
+                            context.getLocation(call),
+                            "Found a wakelock `acquire()` but no `release()` calls anywhere");
                 } else {
                     assert context.getDriver().getPhase() == 1;
                     // Perform flow analysis in this method to see if we're
@@ -172,10 +174,13 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
                 // See if the release is happening in an onDestroy method, in an
                 // activity.
                 if ("onDestroy".equals(method.name)
-                        && context.getDriver().isSubclassOf(
-                                classNode, ANDROID_APP_ACTIVITY)) {
-                    context.report(ISSUE, method, call, context.getLocation(call),
-                        "Wakelocks should be released in `onPause`, not `onDestroy`");
+                        && context.getDriver().isSubclassOf(classNode, ANDROID_APP_ACTIVITY)) {
+                    context.report(
+                            ISSUE,
+                            method,
+                            call,
+                            context.getLocation(call),
+                            "Wakelocks should be released in `onPause`, not `onDestroy`");
                 }
             }
         } else if (call.owner.equals(POWER_MANAGER)) {
@@ -198,19 +203,25 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
                     final int ACQUIRE_CAUSES_WAKEUP = 0x10000000;
                     final int both = PARTIAL_WAKE_LOCK | ACQUIRE_CAUSES_WAKEUP;
                     if ((flag & both) == both) {
-                        context.report(ISSUE, method, call, context.getLocation(call),
+                        context.report(
+                                ISSUE,
+                                method,
+                                call,
+                                context.getLocation(call),
                                 "Should not set both `PARTIAL_WAKE_LOCK` and `ACQUIRE_CAUSES_WAKEUP`. "
                                         + "If you do not want the screen to turn on, get rid of "
                                         + "`ACQUIRE_CAUSES_WAKEUP`");
                     }
                 }
-
             }
         }
     }
 
-    private static void checkFlow(@NonNull ClassContext context, @NonNull ClassNode classNode,
-            @NonNull MethodNode method, @NonNull MethodInsnNode acquire) {
+    private static void checkFlow(
+            @NonNull ClassContext context,
+            @NonNull ClassNode classNode,
+            @NonNull MethodNode method,
+            @NonNull MethodInsnNode acquire) {
         final InsnList instructions = method.instructions;
         MethodInsnNode release = null;
 
@@ -220,8 +231,7 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
             int type = instruction.getType();
             if (type == AbstractInsnNode.METHOD_INSN) {
                 MethodInsnNode call = (MethodInsnNode) instruction;
-                if (call.name.equals(RELEASE_METHOD) &&
-                        call.owner.equals(WAKELOCK_OWNER)) {
+                if (call.name.equals(RELEASE_METHOD) && call.owner.equals(WAKELOCK_OWNER)) {
                     release = call;
                     break;
                 }
@@ -254,8 +264,7 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
                     message = "The `release()` call is not always reached";
                 }
 
-                context.report(ISSUE, method, acquire,
-                        context.getLocation(release), message);
+                context.report(ISSUE, method, acquire, context.getLocation(release), message);
             }
         } catch (AnalyzerException e) {
             context.log(e, null);
@@ -287,8 +296,8 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
                         next = LintUtils.getNextInstruction(next);
                         if (next != null && next.getType() == AbstractInsnNode.METHOD_INSN) {
                             MethodInsnNode method = (MethodInsnNode) next;
-                            if (method.name.equals(RELEASE_METHOD) &&
-                                    method.owner.equals(WAKELOCK_OWNER)) {
+                            if (method.name.equals(RELEASE_METHOD)
+                                    && method.owner.equals(WAKELOCK_OWNER)) {
                                 // This isn't entirely correct; this will also trigger
                                 // for "if (lock == null) { lock.release(); }" but that's
                                 // not likely (and caught by other null checking in tools)
@@ -303,8 +312,8 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
                     AbstractInsnNode prev = LintUtils.getPrevInstruction(from);
                     if (prev != null && prev.getType() == AbstractInsnNode.METHOD_INSN) {
                         MethodInsnNode method = (MethodInsnNode) prev;
-                        if (method.name.equals(IS_HELD_METHOD) &&
-                                method.owner.equals(WAKELOCK_OWNER)) {
+                        if (method.name.equals(IS_HELD_METHOD)
+                                && method.owner.equals(WAKELOCK_OWNER)) {
                             AbstractInsnNode next = LintUtils.getNextInstruction(from);
                             if (next != null) {
                                 super.add(from, next);
@@ -319,25 +328,26 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
         }
     }
 
-    /** Search from the given node towards the target; return false if we reach
-     * an exit point such as a return or a call on the way there that is not within
-     * a try/catch clause.
+    /**
+     * Search from the given node towards the target; return false if we reach an exit point such as
+     * a return or a call on the way there that is not within a try/catch clause.
      *
      * @param node the current node
-     * @return true if the target was reached
-     *    XXX RETURN VALUES ARE WRONG AS OF RIGHT NOW
+     * @return true if the target was reached XXX RETURN VALUES ARE WRONG AS OF RIGHT NOW
      */
     protected static int dfs(ControlFlowGraph.Node node) {
         AbstractInsnNode instruction = node.instruction;
         if (instruction.getType() == AbstractInsnNode.JUMP_INSN) {
             int opcode = instruction.getOpcode();
-            if (opcode == Opcodes.RETURN || opcode == Opcodes.ARETURN
-                    || opcode == Opcodes.LRETURN || opcode == Opcodes.IRETURN
-                    || opcode == Opcodes.DRETURN || opcode == Opcodes.FRETURN
+            if (opcode == Opcodes.RETURN
+                    || opcode == Opcodes.ARETURN
+                    || opcode == Opcodes.LRETURN
+                    || opcode == Opcodes.IRETURN
+                    || opcode == Opcodes.DRETURN
+                    || opcode == Opcodes.FRETURN
                     || opcode == Opcodes.ATHROW) {
                 if (DEBUG) {
-                    System.out.println("Found exit via explicit return: "
-                            + node.toString(false));
+                    System.out.println("Found exit via explicit return: " + node.toString(false));
                 }
                 return SEEN_RETURN;
             }
@@ -384,8 +394,9 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
 
                     if (!foundFrame) {
                         if (DEBUG) {
-                            System.out.println("Found exit via unguarded method call: "
-                                    + node.toString(false));
+                            System.out.println(
+                                    "Found exit via unguarded method call: "
+                                            + node.toString(false));
                         }
                         return SEEN_RETURN;
                     }
@@ -409,8 +420,7 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
                 status = dfs(successor) | status;
                 if ((status & SEEN_RETURN) != 0) {
                     if (DEBUG) {
-                        System.out.println("Found exit via exception: "
-                                + node.toString(false));
+                        System.out.println("Found exit via exception: " + node.toString(false));
                     }
                     return status;
                 }
@@ -432,8 +442,7 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
                 status = dfs(successor) | status;
                 if ((status & SEEN_RETURN) != 0) {
                     if (DEBUG) {
-                        System.out.println("Found exit via branches: "
-                                + node.toString(false));
+                        System.out.println("Found exit via branches: " + node.toString(false));
                     }
                     return status;
                 }
@@ -443,8 +452,7 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
         if (implicitReturn) {
             status |= SEEN_RETURN;
             if (DEBUG) {
-                System.out.println("Found exit: via implicit return: "
-                        + node.toString(false));
+                System.out.println("Found exit: via implicit return: " + node.toString(false));
             }
         }
 
@@ -460,26 +468,35 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         if (call.getValueArgumentCount() > 0) {
             return;
         }
 
-        if (!context.getEvaluator().isMemberInClass(method,
-                "android.os.PowerManager.WakeLock")) {
+        if (!context.getEvaluator().isMemberInClass(method, "android.os.PowerManager.WakeLock")) {
             return;
         }
 
         Location location = context.getLocation(call);
-        LintFix fix = fix().name("Set timeout to 10 minutes").replace()
-                .pattern("acquire\\(()\\)")
-                .with("10*60*1000L /*10 minutes*/").build();
+        LintFix fix =
+                fix().name("Set timeout to 10 minutes")
+                        .replace()
+                        .pattern("acquire\\(()\\)")
+                        .with("10*60*1000L /*10 minutes*/")
+                        .build();
 
-        context.report(TIMEOUT, call, location, ""
-                + "Provide a timeout when requesting a wakelock with "
-                + "`PowerManager.Wakelock.acquire(long timeout)`. This will ensure the OS will "
-                + "cleanup any wakelocks that last longer than you intend, and will save your "
-                + "user's battery.", fix);
+        context.report(
+                TIMEOUT,
+                call,
+                location,
+                ""
+                        + "Provide a timeout when requesting a wakelock with "
+                        + "`PowerManager.Wakelock.acquire(long timeout)`. This will ensure the OS will "
+                        + "cleanup any wakelocks that last longer than you intend, and will save your "
+                        + "user's battery.",
+                fix);
     }
 }

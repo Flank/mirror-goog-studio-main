@@ -82,8 +82,10 @@ private const val ATTR_MODULE = "module"
  * have library definitions in one referenced from another descriptor.
  */
 fun computeMetadata(client: LintClient, descriptor: File): ProjectMetadata {
-    val initializer = ProjectInitializer(client, descriptor,
-            descriptor.parentFile ?: descriptor)
+    val initializer = ProjectInitializer(
+        client, descriptor,
+        descriptor.parentFile ?: descriptor
+    )
     return initializer.computeMetadata()
 }
 
@@ -92,20 +94,21 @@ fun computeMetadata(client: LintClient, descriptor: File): ProjectMetadata {
  * set of projects, any SDK or cache directories configured within the file, etc
  */
 data class ProjectMetadata(
-        /** List of projects. Will be empty if there was an error in the configuration. */
-        val projects: List<Project> = emptyList(),
-        /** A baseline file to apply, if any */
-        val baseline: File? = null,
-        /** The SDK to use, if overriding the default */
-        val sdk: File? = null,
-        /** The cache directory to use, if overriding the default */
-        val cache: File? = null,
-        /** A map from module to a merged manifest for that module, if any */
-        val mergedManifests: Map<Project, File?> = emptyMap(),
-        /** A map from module to a baseline to apply to that module, if any */
-        val moduleBaselines: Map<Project, File?> = emptyMap(),
-        /** A map from module to a list of custom rule JAR files to apply, if any */
-        val lintChecks: Map<Project, List<File>> = emptyMap())
+    /** List of projects. Will be empty if there was an error in the configuration. */
+    val projects: List<Project> = emptyList(),
+    /** A baseline file to apply, if any */
+    val baseline: File? = null,
+    /** The SDK to use, if overriding the default */
+    val sdk: File? = null,
+    /** The cache directory to use, if overriding the default */
+    val cache: File? = null,
+    /** A map from module to a merged manifest for that module, if any */
+    val mergedManifests: Map<Project, File?> = emptyMap(),
+    /** A map from module to a baseline to apply to that module, if any */
+    val moduleBaselines: Map<Project, File?> = emptyMap(),
+    /** A map from module to a list of custom rule JAR files to apply, if any */
+    val lintChecks: Map<Project, List<File>> = emptyMap()
+)
 
 /**
  * Class which handles initialization of a project hierarchy from a config XML file.
@@ -119,8 +122,11 @@ data class ProjectMetadata(
  * @param root the root project directory (relative paths in the config file are considered
  *             relative to this directory)
  */
-private class ProjectInitializer(val client: LintClient, val file: File,
-        var root: File) {
+private class ProjectInitializer(
+    val client: LintClient,
+    val file: File,
+    var root: File
+) {
 
     /** map from module name to module instance */
     private val modules = mutableMapOf<String, ManualProject>()
@@ -177,9 +183,11 @@ private class ProjectInitializer(val client: LintClient, val file: File,
             node != null -> client.xmlParser.getLocation(file, node)
             else -> Location.create(file)
         }
-        LintClient.report(client = client, issue = IssueRegistry.LINT_ERROR, message = message,
-                location = location,
-                file = file)
+        LintClient.report(
+            client = client, issue = IssueRegistry.LINT_ERROR, message = message,
+            location = location,
+            file = file
+        )
     }
 
     private fun parseModules(projectElement: Element): ProjectMetadata {
@@ -269,13 +277,14 @@ private class ProjectInitializer(val client: LintClient, val file: File,
         }
 
         return ProjectMetadata(
-                projects = sortedModules,
-                sdk = sdk,
-                baseline = baseline,
-                lintChecks = lintChecks,
-                cache = cache,
-                moduleBaselines = baselines,
-                mergedManifests = mergedManifests)
+            projects = sortedModules,
+            sdk = sdk,
+            baseline = baseline,
+            lintChecks = lintChecks,
+            cache = cache,
+            moduleBaselines = baselines,
+            mergedManifests = mergedManifests
+        )
     }
 
     private fun parseModule(moduleElement: Element) {
@@ -288,13 +297,17 @@ private class ProjectInitializer(val client: LintClient, val file: File,
         // use this as the module directory, otherwise fall back to the default root
         name.indexOf(':', name.lastIndexOf(File.separatorChar))
         val dir =
-                if (name.contains(File.separator) && name.indexOf(':', name.lastIndexOf(File.separator)) != -1) {
-                    File(name.substring(0, name.indexOf(':', name.lastIndexOf(File.separator))))
-                } else {
-                    root
-                }
+            if (name.contains(File.separator) && name.indexOf(
+                    ':',
+                    name.lastIndexOf(File.separator)
+                ) != -1
+            ) {
+                File(name.substring(0, name.indexOf(':', name.lastIndexOf(File.separator))))
+            } else {
+                root
+            }
         val module = ManualProject(client, dir, name, library, android)
-        modules.put(name, module)
+        modules[name] = module
 
         val sources = mutableListOf<File>()
         val testSources = mutableListOf<File>()
@@ -415,8 +428,7 @@ private class ProjectInitializer(val client: LintClient, val file: File,
                 // Expand into temp dir
                 val cacheDir = if (cache != null) {
                     File(cache, "aars")
-                }
-                else {
+                } else {
                     client.getCacheDir("aars", true)
                 }
                 val target = File(cacheDir, name)
@@ -459,8 +471,8 @@ private class ProjectInitializer(val client: LintClient, val file: File,
             project.setClasspath(jarList, false)
         }
 
-        jarAarMap.put(aarFile, name)
-        modules.put(name, project)
+        jarAarMap[aarFile] = name
+        modules[name] = project
         return name
     }
 
@@ -479,8 +491,8 @@ private class ProjectInitializer(val client: LintClient, val file: File,
         val project = ManualProject(client, jarFile, name, true, false)
         project.reportIssues = false
         project.setClasspath(listOf(jarFile), false)
-        jarAarMap.put(jarFile, name)
-        modules.put(name, project)
+        jarAarMap[jarFile] = name
+        modules[name] = project
         return name
     }
 
@@ -502,8 +514,10 @@ private class ProjectInitializer(val client: LintClient, val file: File,
         }
     }
 
-    private fun computeTestSourceRoots(testSources: MutableList<File>,
-            sourceRoots: MutableList<File>): List<File> {
+    private fun computeTestSourceRoots(
+        testSources: MutableList<File>,
+        sourceRoots: MutableList<File>
+    ): List<File> {
         when {
             !testSources.isNotEmpty() -> return emptyList()
             else -> {
@@ -512,8 +526,10 @@ private class ProjectInitializer(val client: LintClient, val file: File,
                 // We don't allow the test sources and product sources to overlap
                 for (root in testSourceRoots) {
                     if (sourceRoots.contains(root)) {
-                        reportError("Tests cannot be in the same source root as production files; " +
-                                "source root $root is also a test root")
+                        reportError(
+                            "Tests cannot be in the same source root as production files; " +
+                                    "source root $root is also a test root"
+                        )
                         break
                     }
                 }
@@ -548,10 +564,10 @@ private class ProjectInitializer(val client: LintClient, val file: File,
                 // But what if the source file itself was just passed as "Foo.java" ?
                 // In that case it is relative to the pwd, so we get the *absolute*
                 // path of the file instead, and take its parent path.
-                val root = findRoot(file) ?: file.parentFile ?: file.absoluteFile.parentFile ?:
-                        continue
+                val root = findRoot(file) ?: file.parentFile ?: file.absoluteFile.parentFile
+                ?: continue
 
-                dirToRootCache.put(parent.path, root)
+                dirToRootCache[parent.path] = root
 
                 if (!sourceRoots.contains(root)) {
                     sourceRoots.add(root)
@@ -566,8 +582,12 @@ private class ProjectInitializer(val client: LintClient, val file: File,
      * produces a full path to the file. If [attribute] is specified, only the specific
      * file attribute name is checked.
      */
-    private fun getFile(element: Element, dir: File, attribute: String? = null,
-            required: Boolean = false): File {
+    private fun getFile(
+        element: Element,
+        dir: File,
+        attribute: String? = null,
+        required: Boolean = false
+    ): File {
         var path: String
         if (attribute != null) {
             path = element.getAttribute(attribute)
@@ -600,9 +620,11 @@ private class ProjectInitializer(val client: LintClient, val file: File,
         if (!source.exists()) {
             val relativePath = if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
                 dir.canonicalPath.replace(File.separator, "\\\\")
-                else dir.canonicalPath
-            reportError("$path ${if (!File(path).isAbsolute) "(relative to " +
-                    relativePath + ") " else ""}does not exist", element)
+            else dir.canonicalPath
+            reportError(
+                "$path ${if (!File(path).isAbsolute) "(relative to " +
+                        relativePath + ") " else ""}does not exist", element
+            )
         }
         return source
     }
@@ -640,8 +662,13 @@ private class ProjectInitializer(val client: LintClient, val file: File,
  * with custom source locations, custom library types, etc.
  */
 private class ManualProject
-constructor(client: LintClient, dir: File, name: String, library: Boolean,
-        private var android: Boolean) : Project(client, dir, dir) {
+constructor(
+    client: LintClient,
+    dir: File,
+    name: String,
+    library: Boolean,
+    private var android: Boolean
+) : Project(client, dir, dir) {
 
     init {
         setName(name)
@@ -723,24 +750,25 @@ constructor(client: LintClient, dir: File, name: String, library: Boolean,
 
     /** Sets the global class path for this module */
     fun setClasspath(allClasses: List<File>, useForAnalysis: Boolean) =
-            if (useForAnalysis) {
-                this.javaClassFolders = allClasses
-            } else {
-                this.javaLibraries = allClasses
-            }
+        if (useForAnalysis) {
+            this.javaClassFolders = allClasses
+        } else {
+            this.javaLibraries = allClasses
+        }
 
     fun setCompileSdkVersion(buildApi: String) {
         if (!buildApi.isEmpty()) {
             buildTargetHash = if (Character.isDigit(buildApi[0]))
                 PLATFORM_HASH_PREFIX + buildApi
-            else
-                buildApi
+            else buildApi
             val version = AndroidTargetHash.getPlatformVersion(buildApi)
             if (version != null) {
                 buildSdk = version.featureLevel
             } else {
-                client.log(Severity.WARNING, null,
-                        "Unexpected build target format: %1\$s", buildApi)
+                client.log(
+                    Severity.WARNING, null,
+                    "Unexpected build target format: %1\$s", buildApi
+                )
             }
         }
     }

@@ -61,9 +61,7 @@ import org.gradle.api.GradleException;
 import org.w3c.dom.Document;
 
 public class LintGradleClient extends LintCliClient {
-    /**
-     * Variant to run the client on, if any
-     */
+    /** Variant to run the client on, if any */
     @Nullable private final Variant variant;
 
     private final org.gradle.api.Project gradleProject;
@@ -119,8 +117,8 @@ public class LintGradleClient extends LintCliClient {
 
             Map<String, Integer> overrides = lintOptions.getSeverityOverrides();
             if (overrides != null && !overrides.isEmpty()) {
-                return new CliConfiguration(lintXml, getConfiguration(), project,
-                        flags.isFatalOnly()) {
+                return new CliConfiguration(
+                        lintXml, getConfiguration(), project, flags.isFatalOnly()) {
                     @NonNull
                     @Override
                     public Severity getSeverity(@NonNull Issue issue) {
@@ -162,8 +160,8 @@ public class LintGradleClient extends LintCliClient {
     }
 
     @Override
-    protected boolean addBootClassPath(@NonNull Collection<? extends Project> knownProjects,
-            List<File> files) {
+    protected boolean addBootClassPath(
+            @NonNull Collection<? extends Project> knownProjects, List<File> files) {
         if (!super.addBootClassPath(knownProjects, files) && !isAndroid) {
             // Non android project, e.g. perhaps a pure Kotlin project
 
@@ -180,8 +178,7 @@ public class LintGradleClient extends LintCliClient {
                     files.add(rt);
                     return true;
                 }
-                rt = new File(javaHome, "jre" + File.separator + "lib" + File.separator +
-                        "rt.jar");
+                rt = new File(javaHome, "jre" + File.separator + "lib" + File.separator + "rt.jar");
                 if (rt.exists()) {
                     files.add(rt);
                     return true;
@@ -190,12 +187,15 @@ public class LintGradleClient extends LintCliClient {
 
             String cp = System.getProperty("sun.boot.class.path");
             if (cp != null) {
-                Splitter.on(File.pathSeparatorChar).split(cp).forEach((path) -> {
-                    File file = new File(path);
-                    if (file.exists()) {
-                        files.add(file);
-                    }
-                });
+                Splitter.on(File.pathSeparatorChar)
+                        .split(cp)
+                        .forEach(
+                                (path) -> {
+                                    File file = new File(path);
+                                    if (file.exists()) {
+                                        files.add(file);
+                                    }
+                                });
                 return true;
             }
         }
@@ -239,8 +239,8 @@ public class LintGradleClient extends LintCliClient {
     protected LintRequest createLintRequest(@NonNull List<File> files) {
         LintRequest lintRequest = new LintRequest(this, files);
         LintGradleProject.ProjectSearch search = new LintGradleProject.ProjectSearch();
-        Project project = search.getProject(this, gradleProject,
-                variant != null ? variant.getName() : null);
+        Project project =
+                search.getProject(this, gradleProject, variant != null ? variant.getName() : null);
         lintRequest.setProjects(Collections.singletonList(project));
 
         return lintRequest;
@@ -253,7 +253,7 @@ public class LintGradleClient extends LintCliClient {
 
     /** Run lint with the given registry and return the resulting warnings */
     @NonNull
-    public Pair<List<Warning>,LintBaseline> run(@NonNull IssueRegistry registry)
+    public Pair<List<Warning>, LintBaseline> run(@NonNull IssueRegistry registry)
             throws IOException {
         int exitCode = run(registry, Collections.emptyList());
 
@@ -268,16 +268,16 @@ public class LintGradleClient extends LintCliClient {
     }
 
     /**
-     * Given a list of results from separate variants, merge them into a single
-     * list of warnings, and mark their
+     * Given a list of results from separate variants, merge them into a single list of warnings,
+     * and mark their
+     *
      * @param warningMap a map from variant to corresponding warnings
      * @param project the project model
      * @return a merged list of issues
      */
     @NonNull
     public static List<Warning> merge(
-            @NonNull Map<Variant,List<Warning>> warningMap,
-            @NonNull AndroidProject project) {
+            @NonNull Map<Variant, List<Warning>> warningMap, @NonNull AndroidProject project) {
         // Easy merge?
         if (warningMap.size() == 1) {
             return warningMap.values().iterator().next();
@@ -297,19 +297,21 @@ public class LintGradleClient extends LintCliClient {
 
         // Map fro issue to message to line number to column number to
         // file name to canonical warning
-        Map<Issue,Map<String, Map<Integer, Map<Integer, Map<String, Warning>>>>> map =
+        Map<Issue, Map<String, Map<Integer, Map<Integer, Map<String, Warning>>>>> map =
                 Maps.newHashMapWithExpectedSize(2 * maxCount);
 
-        for (Map.Entry<Variant,List<Warning>> entry : warningMap.entrySet()) {
+        for (Map.Entry<Variant, List<Warning>> entry : warningMap.entrySet()) {
             Variant variant = entry.getKey();
             List<Warning> warnings = entry.getValue();
             for (Warning warning : warnings) {
-                Map<String, Map<Integer, Map<Integer, Map<String, Warning>>>> messageMap = map.get(warning.issue);
+                Map<String, Map<Integer, Map<Integer, Map<String, Warning>>>> messageMap =
+                        map.get(warning.issue);
                 if (messageMap == null) {
                     messageMap = Maps.newHashMap();
                     map.put(warning.issue, messageMap);
                 }
-                Map<Integer, Map<Integer, Map<String, Warning>>> lineMap = messageMap.get(warning.message);
+                Map<Integer, Map<Integer, Map<String, Warning>>> lineMap =
+                        messageMap.get(warning.message);
                 if (lineMap == null) {
                     lineMap = Maps.newHashMap();
                     messageMap.put(warning.message, lineMap);
@@ -345,7 +347,6 @@ public class LintGradleClient extends LintCliClient {
                 // If this error is present in all variants, just clear it out
                 warning.variants = null;
             }
-
         }
 
         Collections.sort(merged);
@@ -365,8 +366,13 @@ public class LintGradleClient extends LintCliClient {
     }
 
     @Override
-    public void report(@NonNull Context context, @NonNull Issue issue, @NonNull Severity severity,
-            @NonNull Location location, @NonNull String message, @NonNull TextFormat format,
+    public void report(
+            @NonNull Context context,
+            @NonNull Issue issue,
+            @NonNull Severity severity,
+            @NonNull Location location,
+            @NonNull String message,
+            @NonNull TextFormat format,
             @Nullable LintFix fix) {
         if (issue == IssueRegistry.LINT_ERROR
                 && message.startsWith("No `.class` files were found in project")) {

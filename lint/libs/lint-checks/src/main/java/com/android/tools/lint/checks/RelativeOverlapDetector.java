@@ -70,22 +70,27 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Check for potential item overlaps in a RelativeLayout when left- and
- * right-aligned text items are used.
+ * Check for potential item overlaps in a RelativeLayout when left- and right-aligned text items are
+ * used.
  */
 public class RelativeOverlapDetector extends LayoutDetector {
-    public static final Issue ISSUE = Issue.create(
-            "RelativeOverlap",
-            "Overlapping items in RelativeLayout",
-            "If relative layout has text or button items aligned to left and right " +
-            "sides they can overlap each other due to localized text expansion " +
-            "unless they have mutual constraints like `toEndOf`/`toStartOf`.",
-            Category.I18N, 3, Severity.WARNING,
-            new Implementation(RelativeOverlapDetector.class, Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "RelativeOverlap",
+                    "Overlapping items in RelativeLayout",
+                    "If relative layout has text or button items aligned to left and right "
+                            + "sides they can overlap each other due to localized text expansion "
+                            + "unless they have mutual constraints like `toEndOf`/`toStartOf`.",
+                    Category.I18N,
+                    3,
+                    Severity.WARNING,
+                    new Implementation(RelativeOverlapDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     private static class LayoutNode {
         private enum Bucket {
-            TOP, BOTTOM, SKIP
+            TOP,
+            BOTTOM,
+            SKIP
         }
 
         private final int mIndex;
@@ -132,14 +137,11 @@ public class RelativeOverlapDetector extends LayoutDetector {
         }
 
         public boolean isInvisible() {
-            String visibility = mNode.getAttributeNS(ANDROID_URI,
-                    ATTR_VISIBILITY);
+            String visibility = mNode.getAttributeNS(ANDROID_URI, ATTR_VISIBILITY);
             return visibility.equals("gone") || visibility.equals("invisible");
         }
 
-        /**
-         * Determine if not can grow due to localization or not.
-         */
+        /** Determine if not can grow due to localization or not. */
         public boolean fixedWidth() {
             String width = mNode.getAttributeNS(ANDROID_URI, ATTR_LAYOUT_WIDTH);
             if (width.equals(VALUE_WRAP_CONTENT)) {
@@ -150,8 +152,7 @@ public class RelativeOverlapDetector extends LayoutDetector {
                 for (int i = 0; i < childNodes.getLength(); i++) {
                     Node child = childNodes.item(i);
                     if (child.getNodeType() == Node.ELEMENT_NODE) {
-                        LayoutNode childLayout = new LayoutNode((Element) child,
-                                i);
+                        LayoutNode childLayout = new LayoutNode((Element) child, i);
                         if (!childLayout.fixedWidth()) {
                             return false;
                         }
@@ -162,15 +163,15 @@ public class RelativeOverlapDetector extends LayoutDetector {
                 String text = mNode.getAttributeNS(ANDROID_URI, ATTR_TEXT);
                 if (!text.isEmpty()) {
                     return !text.startsWith(PREFIX_RESOURCE_REF)
-                        && !text.startsWith(PREFIX_THEME_REF);
+                            && !text.startsWith(PREFIX_THEME_REF);
                 }
 
                 String nodeName = mNode.getTagName();
-                if (nodeName.contains("Image") || nodeName.contains("Progress")
+                if (nodeName.contains("Image")
+                        || nodeName.contains("Progress")
                         || nodeName.contains("Radio")) {
                     return true;
-                } else if (nodeName.contains("Button")
-                        || nodeName.contains("Text")) {
+                } else if (nodeName.contains("Button") || nodeName.contains("Text")) {
                     return false;
                 }
             }
@@ -183,8 +184,8 @@ public class RelativeOverlapDetector extends LayoutDetector {
         }
 
         /**
-         * Process a node of a layout. Put it into one of three processing
-         * units and determine its right and left neighbours.
+         * Process a node of a layout. Put it into one of three processing units and determine its
+         * right and left neighbours.
          */
         public void processNode(@NonNull Map<String, LayoutNode> nodes) {
             if (mProcessed) {
@@ -192,11 +193,11 @@ public class RelativeOverlapDetector extends LayoutDetector {
             }
             mProcessed = true;
 
-            if (isInvisible() ||
-                hasAttr(ATTR_LAYOUT_ALIGN_RIGHT) ||
-                hasAttr(ATTR_LAYOUT_ALIGN_END) ||
-                hasAttr(ATTR_LAYOUT_ALIGN_LEFT) ||
-                hasAttr(ATTR_LAYOUT_ALIGN_START)) {
+            if (isInvisible()
+                    || hasAttr(ATTR_LAYOUT_ALIGN_RIGHT)
+                    || hasAttr(ATTR_LAYOUT_ALIGN_END)
+                    || hasAttr(ATTR_LAYOUT_ALIGN_LEFT)
+                    || hasAttr(ATTR_LAYOUT_ALIGN_START)) {
                 mBucket = Bucket.SKIP;
             } else if (hasTrueAttr(ATTR_LAYOUT_ALIGN_PARENT_TOP)) {
                 mBucket = Bucket.TOP;
@@ -206,12 +207,11 @@ public class RelativeOverlapDetector extends LayoutDetector {
                 if (hasAttr(ATTR_LAYOUT_ABOVE) || hasAttr(ATTR_LAYOUT_BELOW)) {
                     mBucket = Bucket.SKIP;
                 } else {
-                    String[] checkAlignment = { ATTR_LAYOUT_ALIGN_TOP,
-                            ATTR_LAYOUT_ALIGN_BOTTOM,
-                            ATTR_LAYOUT_ALIGN_BASELINE };
+                    String[] checkAlignment = {
+                        ATTR_LAYOUT_ALIGN_TOP, ATTR_LAYOUT_ALIGN_BOTTOM, ATTR_LAYOUT_ALIGN_BASELINE
+                    };
                     for (String alignment : checkAlignment) {
-                        String value = mNode.getAttributeNS(ANDROID_URI,
-                                alignment);
+                        String value = mNode.getAttributeNS(ANDROID_URI, alignment);
                         if (!value.isEmpty()) {
                             LayoutNode otherNode = nodes.get(uniformId(value));
                             if (otherNode != null) {
@@ -234,11 +234,11 @@ public class RelativeOverlapDetector extends LayoutDetector {
             }
             // Avoid circular dependency
             for (LayoutNode n = mToLeft; n != null; n = n.mToLeft) {
-              if (n.equals(this)) {
-                mToLeft = null;
-                mBucket = Bucket.SKIP;
-                break;
-              }
+                if (n.equals(this)) {
+                    mToLeft = null;
+                    mBucket = Bucket.SKIP;
+                    break;
+                }
             }
             if (mToLeft != null) {
                 mToLeft.mLastLeft = false;
@@ -251,11 +251,11 @@ public class RelativeOverlapDetector extends LayoutDetector {
             }
             // Avoid circular dependency
             for (LayoutNode n = mToRight; n != null; n = n.mToRight) {
-              if (n.equals(this)) {
-                mToRight = null;
-                mBucket = Bucket.SKIP;
-                break;
-              }
+                if (n.equals(this)) {
+                    mToRight = null;
+                    mBucket = Bucket.SKIP;
+                    break;
+                }
             }
             if (mToRight != null) {
                 mToRight.mLastRight = false;
@@ -308,17 +308,14 @@ public class RelativeOverlapDetector extends LayoutDetector {
             return nodes;
         }
 
-        /**
-         * Determines if not should be skipped from checking.
-         */
+        /** Determines if not should be skipped from checking. */
         public boolean skip() {
             if (mBucket == Bucket.SKIP) {
                 return true;
             }
 
             // Skip all includes and Views
-            return mNode.getTagName().equals(VIEW_INCLUDE)
-                    || mNode.getTagName().equals(VIEW);
+            return mNode.getTagName().equals(VIEW_INCLUDE) || mNode.getTagName().equals(VIEW);
         }
 
         public boolean sameBucket(@NonNull LayoutNode node) {
@@ -327,8 +324,7 @@ public class RelativeOverlapDetector extends LayoutDetector {
 
         @Nullable
         private LayoutNode findNodeByAttr(
-                @NonNull Map<String, LayoutNode> nodes,
-                @NonNull String attrName) {
+                @NonNull Map<String, LayoutNode> nodes, @NonNull String attrName) {
             String value = mNode.getAttributeNS(ANDROID_URI, attrName);
             if (!value.isEmpty()) {
                 return nodes.get(uniformId(value));
@@ -351,8 +347,7 @@ public class RelativeOverlapDetector extends LayoutDetector {
         }
     }
 
-    public RelativeOverlapDetector() {
-    }
+    public RelativeOverlapDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
@@ -383,8 +378,7 @@ public class RelativeOverlapDetector extends LayoutDetector {
             }
             Set<LayoutNode> canGrowLeft = right.canGrowLeft();
             for (LayoutNode left : nodes.values()) {
-                if (left == right || !left.mLastRight || left.skip()
-                        || !left.sameBucket(right)) {
+                if (left == right || !left.mLastRight || left.skip() || !left.sameBucket(right)) {
                     continue;
                 }
                 Set<LayoutNode> canGrowRight = left.canGrowRight();
@@ -392,17 +386,19 @@ public class RelativeOverlapDetector extends LayoutDetector {
                     canGrowRight.addAll(canGrowLeft);
                     LayoutNode nodeToBlame = right;
                     LayoutNode otherNode = left;
-                    if (!canGrowRight.contains(right)
-                            && canGrowRight.contains(left)) {
+                    if (!canGrowRight.contains(right) && canGrowRight.contains(left)) {
                         nodeToBlame = left;
                         otherNode = right;
                     }
                     Element blameNode = nodeToBlame.getNode();
-                    context.report(ISSUE, blameNode,
+                    context.report(
+                            ISSUE,
+                            blameNode,
                             context.getElementLocation(blameNode),
                             String.format(
                                     "`%1$s` can overlap `%2$s` if %3$s %4$s due to localized text expansion",
-                                    nodeToBlame.getNodeId(), otherNode.getNodeId(),
+                                    nodeToBlame.getNodeId(),
+                                    otherNode.getNodeId(),
                                     Joiner.on(", ").join(canGrowRight),
                                     canGrowRight.size() > 1 ? "grow" : "grows"));
                 }

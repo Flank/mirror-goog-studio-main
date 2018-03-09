@@ -58,8 +58,7 @@ public class UastLintUtils {
     /** Returns the containing file for the given element */
     @Nullable
     public static PsiFile getContainingFile(
-            @NonNull JavaContext context,
-            @Nullable PsiElement element) {
+            @NonNull JavaContext context, @Nullable PsiElement element) {
         if (element == null) {
             return null;
         }
@@ -185,21 +184,21 @@ public class UastLintUtils {
 
     @Nullable
     public static UExpression findLastAssignment(
-            @NonNull PsiVariable variable,
-            @NonNull UElement call) {
+            @NonNull PsiVariable variable, @NonNull UElement call) {
         UElement lastAssignment = null;
 
         if (variable instanceof UVariable) {
             variable = ((UVariable) variable).getPsi();
         }
 
-        if (!variable.hasModifierProperty(PsiModifier.FINAL) &&
-                (variable instanceof PsiLocalVariable || variable instanceof PsiParameter)) {
+        if (!variable.hasModifierProperty(PsiModifier.FINAL)
+                && (variable instanceof PsiLocalVariable || variable instanceof PsiParameter)) {
             UMethod containingFunction = UastUtils.getContainingUMethod(call);
             if (containingFunction != null) {
                 UastContext context = UastUtils.getUastContext(call);
                 ConstantEvaluator.LastAssignmentFinder finder =
-                        new ConstantEvaluator.LastAssignmentFinder(variable, call, context, null, -1);
+                        new ConstantEvaluator.LastAssignmentFinder(
+                                variable, call, context, null, -1);
                 containingFunction.accept(finder);
                 lastAssignment = finder.getLastAssignment();
             }
@@ -237,13 +236,13 @@ public class UastLintUtils {
             @NonNull ConstantEvaluator evaluator) {
         Object value = null;
 
-        if (!variable.hasModifierProperty(PsiModifier.FINAL) &&
-                (variable instanceof PsiLocalVariable || variable instanceof PsiParameter)) {
+        if (!variable.hasModifierProperty(PsiModifier.FINAL)
+                && (variable instanceof PsiLocalVariable || variable instanceof PsiParameter)) {
             UMethod containingFunction = UastUtils.getContainingUMethod(call);
             if (containingFunction != null) {
-                ConstantEvaluator.LastAssignmentFinder
-                        finder = new ConstantEvaluator.LastAssignmentFinder(
-                        variable, call, context, evaluator, 1);
+                ConstantEvaluator.LastAssignmentFinder finder =
+                        new ConstantEvaluator.LastAssignmentFinder(
+                                variable, call, context, evaluator, 1);
                 containingFunction.getUastBody().accept(finder);
                 value = finder.getCurrentValue();
             }
@@ -265,7 +264,8 @@ public class UastLintUtils {
     public static boolean areIdentifiersEqual(UExpression first, UExpression second) {
         String firstIdentifier = getIdentifier(first);
         String secondIdentifier = getIdentifier(second);
-        return firstIdentifier != null && secondIdentifier != null
+        return firstIdentifier != null
+                && secondIdentifier != null
                 && firstIdentifier.equals(secondIdentifier);
     }
 
@@ -304,7 +304,7 @@ public class UastLintUtils {
     public static boolean isZero(@NonNull UElement argument) {
         if (argument instanceof ULiteralExpression) {
             Object value = ((ULiteralExpression) argument).getValue();
-            return value instanceof Number && ((Number)value).intValue() == 0;
+            return value instanceof Number && ((Number) value).intValue() == 0;
         }
         return false;
     }
@@ -313,8 +313,8 @@ public class UastLintUtils {
         if (argument instanceof UUnaryExpression) {
             UUnaryExpression expression = (UUnaryExpression) argument;
             UExpression operand = expression.getOperand();
-            if (operand instanceof ULiteralExpression &&
-                    expression.getOperator() == UastPrefixOperator.UNARY_MINUS) {
+            if (operand instanceof ULiteralExpression
+                    && expression.getOperator() == UastPrefixOperator.UNARY_MINUS) {
                 Object value = ((ULiteralExpression) operand).getValue();
                 return value instanceof Number && ((Number) value).intValue() == 1;
             } else {
@@ -335,9 +335,11 @@ public class UastLintUtils {
         return value;
     }
 
-    public static long getLongAttribute(@NonNull JavaContext context,
+    public static long getLongAttribute(
+            @NonNull JavaContext context,
             @NonNull UAnnotation annotation,
-            @NonNull String name, long defaultValue) {
+            @NonNull String name,
+            long defaultValue) {
         Long value = getAnnotationLongValue(annotation, name);
         if (value != null) {
             return value;
@@ -346,9 +348,11 @@ public class UastLintUtils {
         return defaultValue;
     }
 
-    public static double getDoubleAttribute(@NonNull JavaContext context,
+    public static double getDoubleAttribute(
+            @NonNull JavaContext context,
             @NonNull UAnnotation annotation,
-            @NonNull String name, double defaultValue) {
+            @NonNull String name,
+            double defaultValue) {
         Double value = getAnnotationDoubleValue(annotation, name);
         if (value != null) {
             return value;
@@ -357,9 +361,11 @@ public class UastLintUtils {
         return defaultValue;
     }
 
-    public static boolean getBoolean(@NonNull JavaContext context,
+    public static boolean getBoolean(
+            @NonNull JavaContext context,
             @NonNull UAnnotation annotation,
-            @NonNull String name, boolean defaultValue) {
+            @NonNull String name,
+            boolean defaultValue) {
         Boolean value = getAnnotationBooleanValue(annotation, name);
         if (value != null) {
             return value;
@@ -370,8 +376,7 @@ public class UastLintUtils {
 
     @Nullable
     public static Boolean getAnnotationBooleanValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name) {
+            @Nullable UAnnotation annotation, @NonNull String name) {
         if (annotation != null) {
             UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
             if (attributeValue == null && ATTR_VALUE.equals(name)) {
@@ -390,9 +395,7 @@ public class UastLintUtils {
     }
 
     public static boolean getAnnotationBooleanValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name,
-            boolean defaultValue) {
+            @Nullable UAnnotation annotation, @NonNull String name, boolean defaultValue) {
         Boolean value = getAnnotationBooleanValue(annotation, name);
         if (value != null) {
             return value;
@@ -402,8 +405,7 @@ public class UastLintUtils {
 
     @Nullable
     public static Long getAnnotationLongValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name) {
+            @Nullable UAnnotation annotation, @NonNull String name) {
         if (annotation != null) {
             UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
             if (attributeValue == null && ATTR_VALUE.equals(name)) {
@@ -413,7 +415,7 @@ public class UastLintUtils {
             if (attributeValue != null) {
                 Object o = ConstantEvaluator.evaluate(null, attributeValue);
                 if (o instanceof Number) {
-                    return ((Number)o).longValue();
+                    return ((Number) o).longValue();
                 }
             }
         }
@@ -422,9 +424,7 @@ public class UastLintUtils {
     }
 
     public static long getAnnotationLongValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name,
-            long defaultValue) {
+            @Nullable UAnnotation annotation, @NonNull String name, long defaultValue) {
         Long value = getAnnotationLongValue(annotation, name);
         if (value != null) {
             return value;
@@ -434,8 +434,7 @@ public class UastLintUtils {
 
     @Nullable
     public static Double getAnnotationDoubleValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name) {
+            @Nullable UAnnotation annotation, @NonNull String name) {
         if (annotation != null) {
             UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
             if (attributeValue == null && ATTR_VALUE.equals(name)) {
@@ -445,7 +444,7 @@ public class UastLintUtils {
             if (attributeValue != null) {
                 Object o = ConstantEvaluator.evaluate(null, attributeValue);
                 if (o instanceof Number) {
-                    return ((Number)o).doubleValue();
+                    return ((Number) o).doubleValue();
                 }
             }
         }
@@ -454,9 +453,7 @@ public class UastLintUtils {
     }
 
     public static double getAnnotationDoubleValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name,
-            double defaultValue) {
+            @Nullable UAnnotation annotation, @NonNull String name, double defaultValue) {
         Double value = getAnnotationDoubleValue(annotation, name);
         if (value != null) {
             return value;
@@ -466,8 +463,7 @@ public class UastLintUtils {
 
     @Nullable
     public static String getAnnotationStringValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name) {
+            @Nullable UAnnotation annotation, @NonNull String name) {
         if (annotation != null) {
             UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
             if (attributeValue == null && ATTR_VALUE.equals(name)) {
@@ -487,8 +483,7 @@ public class UastLintUtils {
 
     @Nullable
     public static String[] getAnnotationStringValues(
-            @Nullable UAnnotation annotation,
-            @NonNull String name) {
+            @Nullable UAnnotation annotation, @NonNull String name) {
         if (annotation != null) {
             UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
             if (attributeValue == null && ATTR_VALUE.equals(name)) {
@@ -505,7 +500,7 @@ public class UastLintUtils {
                 for (UExpression element : initializers) {
                     Object o = constantEvaluator.evaluate(element);
                     if (o instanceof String) {
-                        result.add((String)o);
+                        result.add((String) o);
                     }
                 }
                 if (result.isEmpty()) {
@@ -517,9 +512,9 @@ public class UastLintUtils {
                 // Use constant evaluator since we want to resolve field references as well
                 Object o = ConstantEvaluator.evaluate(null, attributeValue);
                 if (o instanceof String) {
-                    return new String[]{(String) o};
+                    return new String[] {(String) o};
                 } else if (o instanceof String[]) {
-                    return (String[])o;
+                    return (String[]) o;
                 } else if (o instanceof Object[]) {
                     Object[] array = (Object[]) o;
                     List<String> strings = Lists.newArrayListWithCapacity(array.length);
@@ -537,8 +532,7 @@ public class UastLintUtils {
     }
 
     public static boolean containsAnnotation(
-            @NonNull List<UAnnotation> list,
-            @NonNull UAnnotation annotation) {
+            @NonNull List<UAnnotation> list, @NonNull UAnnotation annotation) {
         for (UAnnotation a : list) {
             if (a == annotation) {
                 return true;
@@ -549,8 +543,7 @@ public class UastLintUtils {
     }
 
     public static boolean containsAnnotation(
-            @NonNull List<UAnnotation> list,
-            @NonNull String qualifiedName) {
+            @NonNull List<UAnnotation> list, @NonNull String qualifiedName) {
         for (UAnnotation annotation : list) {
             if (qualifiedName.equals(annotation.getQualifiedName())) {
                 return true;

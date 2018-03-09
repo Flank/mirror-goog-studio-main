@@ -41,19 +41,22 @@ import com.intellij.psi.PsiModifierListOwner
 import java.util.EnumSet
 
 data class AnnotatedCallPath(
-        val contextualNodes: List<ContextualEdge>,
-        val sourceAnnotation: String,
-        val sinkAnnotation: String)
+    val contextualNodes: List<ContextualEdge>,
+    val sourceAnnotation: String,
+    val sinkAnnotation: String
+)
 
 /** Returns a collection of call paths that violate thread annotations found in source code. */
 fun searchForInterproceduralThreadAnnotationViolations( // public because accessed from tools/adt/idea tests
-        callGraph: CallGraph,
-        receiverEval: IntraproceduralDispatchReceiverEvaluator): Collection<AnnotatedCallPath> {
+    callGraph: CallGraph,
+    receiverEval: IntraproceduralDispatchReceiverEvaluator
+): Collection<AnnotatedCallPath> {
 
     fun PsiModifierListOwner.isAnnotatedWith(annotation: String) =
-            AnnotationUtil.isAnnotated(
-                    this, annotation,
-                    /*inHierarchy*/ true, /*skipExternal*/ false)
+        AnnotationUtil.isAnnotated(
+            this, annotation,
+            /*inHierarchy*/ true, /*skipExternal*/ false
+        )
 
     fun CallTarget.isAnnotatedWith(annotation: String) = when (this) {
         is CallTarget.Method -> {
@@ -66,10 +69,14 @@ fun searchForInterproceduralThreadAnnotationViolations( // public because access
 
     val contextualGraph = callGraph.buildContextualCallGraph(receiverEval)
     val uiSearchNodes = contextualGraph.contextualNodes.filter {
-        it.node.target.isAnnotatedWith(AnnotationDetector.UI_THREAD_ANNOTATION.oldName()) || it.node.target.isAnnotatedWith(AnnotationDetector.UI_THREAD_ANNOTATION.newName())
+        it.node.target.isAnnotatedWith(AnnotationDetector.UI_THREAD_ANNOTATION.oldName()) || it.node.target.isAnnotatedWith(
+            AnnotationDetector.UI_THREAD_ANNOTATION.newName()
+        )
     }
     val workerSearchNodes = contextualGraph.contextualNodes.filter {
-        it.node.target.isAnnotatedWith(AnnotationDetector.WORKER_THREAD_ANNOTATION.oldName()) || it.node.target.isAnnotatedWith(AnnotationDetector.WORKER_THREAD_ANNOTATION.newName())
+        it.node.target.isAnnotatedWith(AnnotationDetector.WORKER_THREAD_ANNOTATION.oldName()) || it.node.target.isAnnotatedWith(
+            AnnotationDetector.WORKER_THREAD_ANNOTATION.newName()
+        )
     }
 
     // Some methods take in a lambda (say) and run it on a different thread.
@@ -79,36 +86,57 @@ fun searchForInterproceduralThreadAnnotationViolations( // public because access
     // To do this we find each parameter with a thread annotation, and treat all contextual
     // receivers for that parameters as if they had the thread annotation directly.
     fun paramSearchNodes(annotation: String) = contextualGraph.contextualNodes
-            .flatMap { searchNode ->
-                searchNode.paramContext.params
-                        .filter { (param, _) -> param.psi.isAnnotatedWith(annotation) }
-                        .map { it.second } // Pulls out receivers.
+        .flatMap { searchNode ->
+            searchNode.paramContext.params
+                .filter { (param, _) -> param.psi.isAnnotatedWith(annotation) }
+                .map { it.second } // Pulls out receivers.
+        }
+        .mapNotNull { receiver ->
+            val target = when (receiver) {
+                is DispatchReceiver.Class -> null
+                is DispatchReceiver.Functional -> receiver.toTarget()
             }
-            .mapNotNull { receiver ->
-                val target = when (receiver) {
-                    is DispatchReceiver.Class -> null
-                    is DispatchReceiver.Functional -> receiver.toTarget()
-                }
-                // We use an empty parameter context for the lambda (say) that will be invoked on
-                // the new thread, as we don't know what arguments will be used when invoked later.
-                target?.let {
-                    ContextualNode(
-                            callGraph.getNode(it.element),
-                            ParamContext.EMPTY)
-                }
+            // We use an empty parameter context for the lambda (say) that will be invoked on
+            // the new thread, as we don't know what arguments will be used when invoked later.
+            target?.let {
+                ContextualNode(
+                    callGraph.getNode(it.element),
+                    ParamContext.EMPTY
+                )
             }
+        }
 
-    val allUiSearchNodes = uiSearchNodes + paramSearchNodes(UI_THREAD_ANNOTATION.oldName()) + paramSearchNodes(UI_THREAD_ANNOTATION.newName())
-    val allWorkerSearchNodes = workerSearchNodes + paramSearchNodes(WORKER_THREAD_ANNOTATION.oldName()) + paramSearchNodes(WORKER_THREAD_ANNOTATION.oldName())
+    val allUiSearchNodes =
+        uiSearchNodes + paramSearchNodes(UI_THREAD_ANNOTATION.oldName()) + paramSearchNodes(
+            UI_THREAD_ANNOTATION.newName()
+        )
+    val allWorkerSearchNodes =
+        workerSearchNodes + paramSearchNodes(WORKER_THREAD_ANNOTATION.oldName()) + paramSearchNodes(
+            WORKER_THREAD_ANNOTATION.oldName()
+        )
     val workerThreadAnnotationName = WORKER_THREAD_ANNOTATION.defaultName().substringAfterLast(".")
     val uiPaths = contextualGraph.searchForContextualPaths(
-            allUiSearchNodes,
-            allWorkerSearchNodes)
-            .map { AnnotatedCallPath(it, UI_THREAD_ANNOTATION.defaultName().substringAfterLast("."), workerThreadAnnotationName) }
+        allUiSearchNodes,
+        allWorkerSearchNodes
+    )
+        .map {
+            AnnotatedCallPath(
+                it,
+                UI_THREAD_ANNOTATION.defaultName().substringAfterLast("."),
+                workerThreadAnnotationName
+            )
+        }
     val workerPaths = contextualGraph.searchForContextualPaths(
-            allWorkerSearchNodes,
-            allUiSearchNodes)
-            .map { AnnotatedCallPath(it, workerThreadAnnotationName, UI_THREAD_ANNOTATION.defaultName().substringAfterLast(".")) }
+        allWorkerSearchNodes,
+        allUiSearchNodes
+    )
+        .map {
+            AnnotatedCallPath(
+                it,
+                workerThreadAnnotationName,
+                UI_THREAD_ANNOTATION.defaultName().substringAfterLast(".")
+            )
+        }
 
     return uiPaths + workerPaths
 }
@@ -118,8 +146,9 @@ class WrongThreadInterproceduralDetector : Detector(), SourceCodeScanner {
 
     override fun analyzeCallGraph(context: Context, callGraph: CallGraphResult) {
         val badPaths = searchForInterproceduralThreadAnnotationViolations(
-                callGraph.callGraph,
-                callGraph.receiverEval)
+            callGraph.callGraph,
+            callGraph.receiverEval
+        )
         for ((searchNodes, sourceAnnotation, sinkAnnotation) in badPaths) {
             if (searchNodes.size == 1) {
                 // This means that a node in the graph was annotated with both UiThread and
@@ -144,17 +173,20 @@ class WrongThreadInterproceduralDetector : Detector(), SourceCodeScanner {
     companion object {
         @JvmField
         val ISSUE = Issue.create(
-                "WrongThreadInterprocedural",
-                "Wrong Thread (Interprocedural)",
-                "Searches for interprocedural call paths that violate thread annotations in the " +
-                        "program. Tracks the flow of instantiated types and lambda expressions " +
-                        "to increase accuracy across method boundaries.",
-                "https://developer.android.com/guide/components/processes-and-threads.html#Threads",
-                Category.CORRECTNESS,
-                /*priority*/ 6,
-                Severity.ERROR,
-                Implementation(WrongThreadInterproceduralDetector::class.java,
-                        EnumSet.of(Scope.ALL_JAVA_FILES)),
-                enabledByDefault = false)
+            "WrongThreadInterprocedural",
+            "Wrong Thread (Interprocedural)",
+            "Searches for interprocedural call paths that violate thread annotations in the " +
+                    "program. Tracks the flow of instantiated types and lambda expressions " +
+                    "to increase accuracy across method boundaries.",
+            "https://developer.android.com/guide/components/processes-and-threads.html#Threads",
+            Category.CORRECTNESS,
+            /*priority*/ 6,
+            Severity.ERROR,
+            Implementation(
+                WrongThreadInterproceduralDetector::class.java,
+                EnumSet.of(Scope.ALL_JAVA_FILES)
+            ),
+            enabledByDefault = false
+        )
     }
 }

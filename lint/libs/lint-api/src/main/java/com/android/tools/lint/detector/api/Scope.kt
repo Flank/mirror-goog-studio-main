@@ -166,8 +166,9 @@ enum class Scope {
          */
         @JvmStatic
         fun intersect(
-                scope1: EnumSet<Scope>,
-                scope2: EnumSet<Scope>): EnumSet<Scope> {
+            scope1: EnumSet<Scope>,
+            scope2: EnumSet<Scope>
+        ): EnumSet<Scope> {
             val scope = EnumSet.copyOf(scope1)
             scope.retainAll(scope2)
 
@@ -272,7 +273,8 @@ enum class Scope {
 
         /** Resource XML files and manifest files  */
         @JvmField
-        val MANIFEST_AND_RESOURCE_SCOPE: EnumSet<Scope> = EnumSet.of(Scope.MANIFEST, Scope.RESOURCE_FILE)
+        val MANIFEST_AND_RESOURCE_SCOPE: EnumSet<Scope> =
+            EnumSet.of(Scope.MANIFEST, Scope.RESOURCE_FILE)
 
         /** Scope-set used for detectors which are affected by single XML and Java source files  */
         @JvmField
@@ -280,11 +282,13 @@ enum class Scope {
 
         /** Scope-set used for analyzing individual class files and all resource files  */
         @JvmField
-        val CLASS_AND_ALL_RESOURCE_FILES: EnumSet<Scope> = EnumSet.of(ALL_RESOURCE_FILES, CLASS_FILE)
+        val CLASS_AND_ALL_RESOURCE_FILES: EnumSet<Scope> =
+            EnumSet.of(ALL_RESOURCE_FILES, CLASS_FILE)
 
         /** Scope-set used for analyzing all class files, including those in libraries  */
         @JvmField
-        val ALL_CLASSES_AND_LIBRARIES: EnumSet<Scope> = EnumSet.of(Scope.ALL_CLASS_FILES, Scope.JAVA_LIBRARIES)
+        val ALL_CLASSES_AND_LIBRARIES: EnumSet<Scope> =
+            EnumSet.of(Scope.ALL_CLASS_FILES, Scope.JAVA_LIBRARIES)
 
         /** Scope-set used for detectors which are affected by Java libraries  */
         @JvmField

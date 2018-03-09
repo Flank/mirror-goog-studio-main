@@ -33,15 +33,13 @@ import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nls;
 
 /**
- * A <b>description</b> of a quickfix for a lint warning, which provides
- * structured data for use by the IDE to create an actual fix implementation.
- * For example, a {@linkplain LintFix} can state that it aims to set a given
- * attribute to a given value. When lint is running in the IDE, the quickfix
- * machinery will look at the {@linkplain LintFix} objects and add an actual
- * implementation which sets the attribute.
- * <p>
- * The set of operations is quite limited at the moment; more will be
- * added over time.
+ * A <b>description</b> of a quickfix for a lint warning, which provides structured data for use by
+ * the IDE to create an actual fix implementation. For example, a {@linkplain LintFix} can state
+ * that it aims to set a given attribute to a given value. When lint is running in the IDE, the
+ * quickfix machinery will look at the {@linkplain LintFix} objects and add an actual implementation
+ * which sets the attribute.
+ *
+ * <p>The set of operations is quite limited at the moment; more will be added over time.
  */
 public class LintFix {
     @Nls @Nullable public final String displayName;
@@ -57,19 +55,20 @@ public class LintFix {
     }
 
     /** Return display name */
-    @Nls @Nullable
+    @Nls
+    @Nullable
     public String getDisplayName() {
         return displayName;
     }
 
     /**
-     * Convenience wrapper which checks whether the given fix is a map, and
-     * if so returns the value stored by its key
+     * Convenience wrapper which checks whether the given fix is a map, and if so returns the value
+     * stored by its key
      */
     @Nullable
     public static <T> T getData(@Nullable LintFix fix, @NonNull Class<T> key) {
         if (fix instanceof DataMap) {
-            return ((DataMap)fix).get(key);
+            return ((DataMap) fix).get(key);
         }
 
         return null;
@@ -79,12 +78,11 @@ public class LintFix {
     public static class Builder {
         @Nls protected String displayName;
 
-        private Builder() {
-        }
+        private Builder() {}
 
         /**
-         * Sets display name. If not supplied a default will be created based on the
-         * type of quickfix.
+         * Sets display name. If not supplied a default will be created based on the type of
+         * quickfix.
          *
          * @param displayName the display name
          * @return this
@@ -94,23 +92,20 @@ public class LintFix {
             return this;
         }
 
-        /**
-         * Creates a group of fixes
-         */
+        /** Creates a group of fixes */
         @SuppressWarnings("MethodMayBeStatic")
         public GroupBuilder group() {
             return new GroupBuilder(displayName).type(GroupType.ALTERNATIVES);
         }
 
         /**
-         * Creates a composite fix: multiple lint fixes which will all be applied as
-         * a single unit.
-         * <p>
-         * <b>NOTE:</b> Be careful combining multiple fixes that are potentially overlapping,
+         * Creates a composite fix: multiple lint fixes which will all be applied as a single unit.
+         *
+         * <p><b>NOTE:</b> Be careful combining multiple fixes that are potentially overlapping,
          * such as replace strings.
          *
-         * The test infrastructure may not apply these correctly. This is primarily
-         * intended for fixes that are clearly separate, such as setting multiple attributes.
+         * <p>The test infrastructure may not apply these correctly. This is primarily intended for
+         * fixes that are clearly separate, such as setting multiple attributes.
          */
         @SuppressWarnings("MethodMayBeStatic")
         public GroupBuilder composite() {
@@ -118,24 +113,22 @@ public class LintFix {
         }
 
         /**
-         * Creates a composite fix: multiple lint fixes which will all be applied as
-         * a single unit.
-         * <p>
-         * <b>NOTE:</b> Be careful combining multiple fixes that are potentially overlapping,
+         * Creates a composite fix: multiple lint fixes which will all be applied as a single unit.
+         *
+         * <p><b>NOTE:</b> Be careful combining multiple fixes that are potentially overlapping,
          * such as replace strings.
          *
-         * The test infrastructure may not apply these correctly. This is primarily
-         * intended for fixes that are clearly separate, such as setting multiple attributes.
+         * <p>The test infrastructure may not apply these correctly. This is primarily intended for
+         * fixes that are clearly separate, such as setting multiple attributes.
          */
         @SuppressWarnings("MethodMayBeStatic")
         public LintFix composite(LintFix... fixes) {
-            return new GroupBuilder(displayName).type(GroupType.COMPOSITE)
-                    .join(fixes).build();
+            return new GroupBuilder(displayName).type(GroupType.COMPOSITE).join(fixes).build();
         }
 
         /**
-         * Creates a fix list from a set of lint fixes. The IDE will show all of these
-         * as separate options.
+         * Creates a fix list from a set of lint fixes. The IDE will show all of these as separate
+         * options.
          *
          * @param fixes fixes to combine
          * @return a fix representing the list
@@ -147,6 +140,7 @@ public class LintFix {
 
         /**
          * Replace a string or regular expression
+         *
          * @return a string replace builder
          */
         public ReplaceStringBuilder replace() {
@@ -155,6 +149,7 @@ public class LintFix {
 
         /**
          * Set or clear an attribute
+         *
          * @return a set attribute builder
          */
         public SetAttributeBuilder set() {
@@ -163,6 +158,7 @@ public class LintFix {
 
         /**
          * Clear an attribute
+         *
          * @return a set attribute builder
          */
         public SetAttributeBuilder unset() {
@@ -171,31 +167,37 @@ public class LintFix {
 
         /**
          * Sets a specific attribute
+         *
          * @return a set attribute builder
          */
-        public SetAttributeBuilder set(@Nullable String namespace, @NonNull String attribute,
-                @Nullable String value) {
-            return new SetAttributeBuilder(displayName).namespace(namespace)
-                    .attribute(attribute).value(value);
+        public SetAttributeBuilder set(
+                @Nullable String namespace, @NonNull String attribute, @Nullable String value) {
+            return new SetAttributeBuilder(displayName)
+                    .namespace(namespace)
+                    .attribute(attribute)
+                    .value(value);
         }
 
         /**
          * Sets a specific attribute
+         *
          * @return a set attribute builder
          */
         public SetAttributeBuilder unset(@Nullable String namespace, @NonNull String attribute) {
-            return new SetAttributeBuilder(displayName).namespace(namespace)
-                    .attribute(attribute).value(null);
+            return new SetAttributeBuilder(displayName)
+                    .namespace(namespace)
+                    .attribute(attribute)
+                    .value(null);
+        }
+
+        /** Provides a map with details for the quickfix implementation */
+        public FixMapBuilder map() {
+            return new FixMapBuilder(displayName);
         }
 
         /**
-         * Provides a map with details for the quickfix implementation
-         */
-        public FixMapBuilder map() { return new FixMapBuilder(displayName); }
-
-        /**
-         * Provides a map with details for the quickfix implementation, pre-initialized
-         * with the given objects
+         * Provides a map with details for the quickfix implementation, pre-initialized with the
+         * given objects
          */
         @NonNull
         public FixMapBuilder map(@NonNull Object... args) {
@@ -209,9 +211,8 @@ public class LintFix {
         }
 
         /**
-         * Passes one or more pieces of data; this will be transferred as a map
-         * behind the scenes. This is a convenience wrapper around
-         * {@link #map()} and {@link FixMapBuilder#build()}.
+         * Passes one or more pieces of data; this will be transferred as a map behind the scenes.
+         * This is a convenience wrapper around {@link #map()} and {@link FixMapBuilder#build()}.
          *
          * @return a fix
          */
@@ -233,8 +234,8 @@ public class LintFix {
         }
 
         /**
-         * Sets display name. If not supplied a default will be created based on the
-         * type of quickfix.
+         * Sets display name. If not supplied a default will be created based on the type of
+         * quickfix.
          *
          * @param displayName the display name
          * @return this
@@ -276,7 +277,10 @@ public class LintFix {
         private String oldText;
         private boolean shortenNames;
         private boolean reformat;
-        @Language("RegExp") private String oldPattern;
+
+        @Language("RegExp")
+        private String oldPattern;
+
         private Location range;
 
         /** Constructed from {@link Builder#replace()} */
@@ -285,8 +289,8 @@ public class LintFix {
         }
 
         /**
-         * Sets display name. If not supplied a default will be created based on the
-         * type of quickfix.
+         * Sets display name. If not supplied a default will be created based on the type of
+         * quickfix.
          *
          * @param displayName the display name
          * @return this
@@ -317,9 +321,8 @@ public class LintFix {
         }
 
         /**
-         * Sets a location range to use for searching for the text or pattern. Useful
-         * if you want to make a replacement that is larger than the error range
-         * highlighted as the problem range.
+         * Sets a location range to use for searching for the text or pattern. Useful if you want to
+         * make a replacement that is larger than the error range highlighted as the problem range.
          */
         public ReplaceStringBuilder range(@NonNull Location range) {
             this.range = range;
@@ -332,10 +335,9 @@ public class LintFix {
         }
 
         /**
-         * The text to replace the old text or pattern with.
-         * Note that the special syntax \g{n} can be used to
-         * reference the n'th group, if and only if this replacement
-         * is using {@link #pattern(String)}}.
+         * The text to replace the old text or pattern with. Note that the special syntax \g{n} can
+         * be used to reference the n'th group, if and only if this replacement is using {@link
+         * #pattern(String)}}.
          */
         public ReplaceStringBuilder with(String newText) {
             assert this.newText == null;
@@ -343,8 +345,10 @@ public class LintFix {
             return this;
         }
 
-        /** The IDE should simplify fully qualified names in the element after this fix has
-         * been run (off by default) */
+        /**
+         * The IDE should simplify fully qualified names in the element after this fix has been run
+         * (off by default)
+         */
         public ReplaceStringBuilder shortenNames() {
             this.shortenNames = true;
             return this;
@@ -359,9 +363,14 @@ public class LintFix {
         /** Constructs a {@link LintFix} for this string replacement */
         @NonNull
         public LintFix build() {
-            return new ReplaceString(displayName, oldText, oldPattern,
-                    newText != null ? newText : "", shortenNames,
-                    reformat, range);
+            return new ReplaceString(
+                    displayName,
+                    oldText,
+                    oldPattern,
+                    newText != null ? newText : "",
+                    shortenNames,
+                    reformat,
+                    range);
         }
     }
 
@@ -379,8 +388,8 @@ public class LintFix {
         }
 
         /**
-         * Sets display name. If not supplied a default will be created based on the
-         * type of quickfix.
+         * Sets display name. If not supplied a default will be created based on the type of
+         * quickfix.
          *
          * @param displayName the display name
          * @return this
@@ -391,8 +400,8 @@ public class LintFix {
         }
 
         /**
-         * Sets the namespace to the Android namespace (shortcut for {@link
-         * #namespace(String)} passing in {@link SdkConstants#ANDROID_URI}
+         * Sets the namespace to the Android namespace (shortcut for {@link #namespace(String)}
+         * passing in {@link SdkConstants#ANDROID_URI}
          */
         public SetAttributeBuilder android() {
             assert this.namespace == null;
@@ -408,8 +417,8 @@ public class LintFix {
         }
 
         /**
-         * Sets the value to the given value. Null means delete (though it's
-         * more natural to call {@link #remove(String)}
+         * Sets the value to the given value. Null means delete (though it's more natural to call
+         * {@link #remove(String)}
          */
         public SetAttributeBuilder value(@Nullable String value) {
             this.value = value;
@@ -445,15 +454,18 @@ public class LintFix {
         }
 
         /**
-         * Sets the value to TＯDＯ meant for values that aren't optional.
-         * You can also supply a prefix and/or a suffix.
+         * Sets the value to TＯDＯ meant for values that aren't optional. You can also supply a
+         * prefix and/or a suffix.
          *
          * @param prefix optional prefix to add before the TＯDＯ marker
          * @param suffix optional suffix to add after the TＯDＯ marker
          * @return a builder for TＯDＯ edits
          */
-        public SetAttributeBuilder todo(@Nullable String namespace, @NonNull String attribute,
-                @Nullable String prefix, @Nullable String suffix) {
+        public SetAttributeBuilder todo(
+                @Nullable String namespace,
+                @NonNull String attribute,
+                @Nullable String prefix,
+                @Nullable String suffix) {
             namespace(namespace);
             attribute(attribute);
             StringBuilder sb = new StringBuilder();
@@ -471,9 +483,7 @@ public class LintFix {
             return this;
         }
 
-        /**
-         * Sets the value to TＯDＯ meant for values that aren't optional.
-         */
+        /** Sets the value to TＯDＯ meant for values that aren't optional. */
         public SetAttributeBuilder todo(@Nullable String namespace, @NonNull String attribute) {
             return todo(namespace, attribute, null, null);
         }
@@ -487,25 +497,20 @@ public class LintFix {
         }
 
         /**
-         * Moves the caret to the given offset (relative to the position
-         * of the value text; can be negative ({@link Integer#MIN_VALUE means not set}
+         * Moves the caret to the given offset (relative to the position of the value text; can be
+         * negative ({@link Integer#MIN_VALUE means not set}
          */
         public SetAttributeBuilder caret(int valueStartDelta) {
             this.mark = this.dot = valueStartDelta;
             return this;
         }
 
-        /**
-         * Moves the caret to the beginning of the value after applying the new attribute
-         */
+        /** Moves the caret to the beginning of the value after applying the new attribute */
         public SetAttributeBuilder caretBegin() {
             return caret(0);
         }
 
-
-        /**
-         * Moves the caret to the end of the value after applying the new attribute
-         */
+        /** Moves the caret to the end of the value after applying the new attribute */
         public SetAttributeBuilder caretEnd() {
             assert value != null; // must be set first
             return caret(value.length());
@@ -514,8 +519,7 @@ public class LintFix {
         /** Constructs a {@link LintFix} for this attribute operation */
         @NonNull
         public LintFix build() {
-            return new SetAttribute(displayName, namespace, attribute, value,
-                    dot, mark);
+            return new SetAttribute(displayName, namespace, attribute, value, dot, mark);
         }
     }
 
@@ -567,11 +571,10 @@ public class LintFix {
     }
 
     /**
-     * General map storage for quickfix data; clients can look up via map keys or
-     * types of values
-     * <p>
-     * This class/API is <b>only</b> intended for IDE use. Lint checks should be
-     * accessing the builder class instead - {@link #create()}.
+     * General map storage for quickfix data; clients can look up via map keys or types of values
+     *
+     * <p>This class/API is <b>only</b> intended for IDE use. Lint checks should be accessing the
+     * builder class instead - {@link #create()}.
      */
     public static class DataMap extends LintFix implements Iterable {
         private final Map<Object, Object> map;
@@ -585,7 +588,7 @@ public class LintFix {
         @Nullable
         public <T> T get(@NonNull Class<T> key) {
             //noinspection unchecked
-            T t = (T)map.get(key);
+            T t = (T) map.get(key);
             if (t != null) {
                 return t;
             }
@@ -593,10 +596,9 @@ public class LintFix {
             // See if there are other matches for this class.
             for (Map.Entry<Object, Object> entry : map.entrySet()) {
                 Object k = entry.getKey();
-                if (k instanceof Class &&
-                        key.isAssignableFrom((Class<?>)k)) {
+                if (k instanceof Class && key.isAssignableFrom((Class<?>) k)) {
                     //noinspection unchecked
-                    return (T)entry.getValue();
+                    return (T) entry.getValue();
                 }
             }
 
@@ -659,23 +661,18 @@ public class LintFix {
 
     /** Captures the various types of a {@link LintFixGroup} */
     public enum GroupType {
-        /**
-         * This group represents a single fix where all the fixes should be applied
-         * as one
-         */
+        /** This group represents a single fix where all the fixes should be applied as one */
         COMPOSITE,
 
-        /**
-         * This group represents separate fix alternatives the user can choose between
-         */
+        /** This group represents separate fix alternatives the user can choose between */
         ALTERNATIVES
     }
 
     /**
      * A list of quickfixes
-     * <p>
-     * This class/API is <b>only</b> intended for IDE use. Lint checks should be
-     * accessing the builder class instead - {@link #create()}.
+     *
+     * <p>This class/API is <b>only</b> intended for IDE use. Lint checks should be accessing the
+     * builder class instead - {@link #create()}.
      */
     public static class LintFixGroup extends LintFix {
         /** A list of fixes */
@@ -684,7 +681,9 @@ public class LintFix {
         /** The type of group */
         @NonNull public final GroupType type;
 
-        public LintFixGroup(@Nullable String displayName, @NonNull GroupType type,
+        public LintFixGroup(
+                @Nullable String displayName,
+                @NonNull GroupType type,
                 @NonNull List<LintFix> fixes) {
             super(displayName);
             this.type = type;
@@ -710,11 +709,11 @@ public class LintFix {
     }
 
     /**
-     * Convenience class for the common scenario of suggesting a fix which involves
-     * setting an XML attribute.
-     * <p>
-     * This class/API is <b>only</b> intended for IDE use. Lint checks should be
-     * accessing the builder class instead - {@link #create()}.
+     * Convenience class for the common scenario of suggesting a fix which involves setting an XML
+     * attribute.
+     *
+     * <p>This class/API is <b>only</b> intended for IDE use. Lint checks should be accessing the
+     * builder class instead - {@link #create()}.
      */
     public static class SetAttribute extends LintFix {
         /** The namespace */
@@ -726,8 +725,10 @@ public class LintFix {
         /** The value (or null to delete the attribute) */
         @Nullable public final String value;
 
-        /** The caret location to show, OR {@link Integer#MIN_VALUE} if not set.
-         * If {@link #mark} is set, the end of the selection too. */
+        /**
+         * The caret location to show, OR {@link Integer#MIN_VALUE} if not set. If {@link #mark} is
+         * set, the end of the selection too.
+         */
         public final int dot;
 
         /** The selection anchor, OR {@link Integer#MIN_VALUE} if not set */
@@ -737,16 +738,19 @@ public class LintFix {
          * Set or reset the given attribute
          *
          * @param displayName the displayName
-         * @param namespace   optional name space
-         * @param attribute   attribute name
-         * @param value       value, or null to delete (if already set) or to edit (if already set)
-         * @param dot   the caret position
-         * @param mark  the selection end point (dot is the other)
+         * @param namespace optional name space
+         * @param attribute attribute name
+         * @param value value, or null to delete (if already set) or to edit (if already set)
+         * @param dot the caret position
+         * @param mark the selection end point (dot is the other)
          */
         private SetAttribute(
                 @Nullable String displayName,
-                @Nullable String namespace, @NonNull String attribute,
-                @Nullable String value, int dot, int mark) {
+                @Nullable String namespace,
+                @NonNull String attribute,
+                @Nullable String value,
+                int dot,
+                int mark) {
             super(displayName);
             this.namespace = namespace;
             this.attribute = attribute;
@@ -774,25 +778,26 @@ public class LintFix {
     }
 
     /**
-     * Convenience class for the common scenario of suggesting a fix which involves
-     * replacing a static string or regular expression with a replacement string
-     * <p>
-     * This class/API is <b>only</b> intended for IDE use. Lint checks should be
-     * accessing the builder class instead - {@link #create()}.
+     * Convenience class for the common scenario of suggesting a fix which involves replacing a
+     * static string or regular expression with a replacement string
+     *
+     * <p>This class/API is <b>only</b> intended for IDE use. Lint checks should be accessing the
+     * builder class instead - {@link #create()}.
      */
     public static class ReplaceString extends LintFix {
         /** The string literal to replace. */
         @Nullable public final String oldString;
-        /** The regex to replace. Will always have at least one group, which should
-         * be the replacement range. */
+        /**
+         * The regex to replace. Will always have at least one group, which should be the
+         * replacement range.
+         */
         @Nullable public final String oldPattern;
         /** The replacement string. */
         @NonNull public final String replacement;
 
         /**
-         * A location range to use for searching for the text or pattern. Useful
-         * if you want to make a replacement that is larger than the error range
-         * highlighted as the problem range.
+         * A location range to use for searching for the text or pattern. Useful if you want to make
+         * a replacement that is larger than the error range highlighted as the problem range.
          */
         @Nullable public final Location range;
         /** Whether symbols should be shortened after replacement */
@@ -803,24 +808,25 @@ public class LintFix {
         /**
          * Replace the given string within the range of the element this warning is marked on
          *
-         * @param displayName  the displayName
-         * @param oldString    the literal string to replace
-         * @param oldPattern   the regular expression to replace (provided as a string such that it
-         *                     only needs to be compiled if actually referenced by the IDE. If there
-         *                     is a group in the regexp, the substitution will be placed within the
-         *                     group. If there is more than one group, it will be placed in
-         *                     the group named "target"; if no group is named "target" it will be
-         *                     placed in the first group.
-         * @param replacement  the replacement literal string
+         * @param displayName the displayName
+         * @param oldString the literal string to replace
+         * @param oldPattern the regular expression to replace (provided as a string such that it
+         *     only needs to be compiled if actually referenced by the IDE. If there is a group in
+         *     the regexp, the substitution will be placed within the group. If there is more than
+         *     one group, it will be placed in the group named "target"; if no group is named
+         *     "target" it will be placed in the first group.
+         * @param replacement the replacement literal string
          * @param shortenNames whether to shorten references in the replaced range
-         * @param reformat     whether to reformat the replaced range
-         * @param range        a range to use for searching for the old text, if different/larger
-         *                     than the warning highlight range
+         * @param reformat whether to reformat the replaced range
+         * @param range a range to use for searching for the old text, if different/larger than the
+         *     warning highlight range
          */
         private ReplaceString(
-          @NonNull String displayName,
-          @Nullable String oldString, @Nullable String oldPattern,
-          @NonNull String replacement, boolean shortenNames,
+                @NonNull String displayName,
+                @Nullable String oldString,
+                @Nullable String oldPattern,
+                @NonNull String replacement,
+                boolean shortenNames,
                 boolean reformat,
                 @Nullable Location range) {
             super(displayName);
@@ -844,11 +850,10 @@ public class LintFix {
         }
 
         /**
-         * If this {@linkplain ReplaceString} specified a regular expression in
-         * {@link #oldPattern}, and the replacement string {@link #replacement}
-         * specifies one or more "back references" (with {@code (?<name>)} with the syntax
-         * {@code \k<name>} then this method will substitute in the matching
-         * group. Note that "target" is a reserved name, used to identify the range
+         * If this {@linkplain ReplaceString} specified a regular expression in {@link #oldPattern},
+         * and the replacement string {@link #replacement} specifies one or more "back references"
+         * (with {@code (?<name>)} with the syntax {@code \k<name>} then this method will substitute
+         * in the matching group. Note that "target" is a reserved name, used to identify the range
          * that should be completed.
          */
         public String expandBackReferences(@NonNull Matcher matcher) {
@@ -856,11 +861,11 @@ public class LintFix {
         }
 
         /**
-         * Given a matched regular expression and a back reference expression,
-         * this method produces the expression with back references substituted in.
+         * Given a matched regular expression and a back reference expression, this method produces
+         * the expression with back references substituted in.
          */
-        public static String expandBackReferences(@NonNull String replacement,
-                @NonNull Matcher matcher) {
+        public static String expandBackReferences(
+                @NonNull String replacement, @NonNull Matcher matcher) {
             if (!replacement.contains("\\k<")) {
                 return replacement;
             }

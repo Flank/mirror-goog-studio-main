@@ -57,44 +57,43 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
-/**
- * Checks whether the current node can be removed without affecting the layout.
- */
+/** Checks whether the current node can be removed without affecting the layout. */
 public class UselessViewDetector extends LayoutDetector {
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            UselessViewDetector.class,
-            Scope.RESOURCE_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(UselessViewDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
     /** Issue of including a parent that has no value on its own */
-    public static final Issue USELESS_PARENT = Issue.create(
-            "UselessParent",
-            "Useless parent layout",
-            "A layout with children that has no siblings, is not a scrollview or " +
-            "a root layout, and does not have a background, can be removed and have " +
-            "its children moved directly into the parent for a flatter and more " +
-            "efficient layout hierarchy.",
-            Category.PERFORMANCE,
-            2,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue USELESS_PARENT =
+            Issue.create(
+                    "UselessParent",
+                    "Useless parent layout",
+                    "A layout with children that has no siblings, is not a scrollview or "
+                            + "a root layout, and does not have a background, can be removed and have "
+                            + "its children moved directly into the parent for a flatter and more "
+                            + "efficient layout hierarchy.",
+                    Category.PERFORMANCE,
+                    2,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     /** Issue of including a leaf that isn't shown */
-    public static final Issue USELESS_LEAF = Issue.create(
-            "UselessLeaf",
-            "Useless leaf layout",
-            "A layout that has no children or no background can often be removed (since it " +
-            "is invisible) for a flatter and more efficient layout hierarchy.",
-            Category.PERFORMANCE,
-            2,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue USELESS_LEAF =
+            Issue.create(
+                    "UselessLeaf",
+                    "Useless leaf layout",
+                    "A layout that has no children or no background can often be removed (since it "
+                            + "is invisible) for a flatter and more efficient layout hierarchy.",
+                    Category.PERFORMANCE,
+                    2,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     /** Constructs a new {@link UselessViewDetector} */
-    public UselessViewDetector() {
-    }
+    public UselessViewDetector() {}
 
     private static final List<String> CONTAINERS = new ArrayList<>(18);
+
     static {
         CONTAINERS.add(ABSOLUTE_LAYOUT);
         CONTAINERS.add(FRAME_LAYOUT);
@@ -126,6 +125,7 @@ public class UselessViewDetector extends LayoutDetector {
         //  CONTAINERS.add("TabWidget");
         //  CONTAINERS.add("TabHost");
     }
+
     @Override
     public Collection<String> getApplicableElements() {
         return CONTAINERS;
@@ -161,8 +161,9 @@ public class UselessViewDetector extends LayoutDetector {
 
         Element parent = (Element) parentNode;
         String parentTag = parent.getTagName();
-        if (parentTag.equals(SCROLL_VIEW) || parentTag.equals(HORIZONTAL_SCROLL_VIEW) ||
-                parentTag.equals(VIEW_MERGE)) {
+        if (parentTag.equals(SCROLL_VIEW)
+                || parentTag.equals(HORIZONTAL_SCROLL_VIEW)
+                || parentTag.equals(VIEW_MERGE)) {
             // Can't remove if the parent is a scroll view or a merge
             return;
         }
@@ -204,13 +205,14 @@ public class UselessViewDetector extends LayoutDetector {
 
         // If we define a padding, and the parent provides a background, then
         // this view is not *necessarily* useless.
-        if (parentHasBackground && (element.hasAttributeNS(ANDROID_URI, ATTR_PADDING)
-                || element.hasAttributeNS(ANDROID_URI, ATTR_PADDING_LEFT)
-                || element.hasAttributeNS(ANDROID_URI, ATTR_PADDING_RIGHT)
-                || element.hasAttributeNS(ANDROID_URI, ATTR_PADDING_TOP)
-                || element.hasAttributeNS(ANDROID_URI, ATTR_PADDING_BOTTOM)
-                || element.hasAttributeNS(ANDROID_URI, ATTR_PADDING_START)
-                || element.hasAttributeNS(ANDROID_URI, ATTR_PADDING_END))) {
+        if (parentHasBackground
+                && (element.hasAttributeNS(ANDROID_URI, ATTR_PADDING)
+                        || element.hasAttributeNS(ANDROID_URI, ATTR_PADDING_LEFT)
+                        || element.hasAttributeNS(ANDROID_URI, ATTR_PADDING_RIGHT)
+                        || element.hasAttributeNS(ANDROID_URI, ATTR_PADDING_TOP)
+                        || element.hasAttributeNS(ANDROID_URI, ATTR_PADDING_BOTTOM)
+                        || element.hasAttributeNS(ANDROID_URI, ATTR_PADDING_START)
+                        || element.hasAttributeNS(ANDROID_URI, ATTR_PADDING_END))) {
             return;
         }
 
@@ -284,8 +286,10 @@ public class UselessViewDetector extends LayoutDetector {
 
         Location location = context.getNameLocation(element);
         String tag = element.getTagName();
-        String message = String.format(
-                "This `%1$s` view is useless (no children, no `background`, no `id`, no `style`)", tag);
+        String message =
+                String.format(
+                        "This `%1$s` view is useless (no children, no `background`, no `id`, no `style`)",
+                        tag);
         context.report(USELESS_LEAF, element, location, message);
     }
 }

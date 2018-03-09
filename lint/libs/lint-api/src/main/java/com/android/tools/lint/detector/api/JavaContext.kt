@@ -57,23 +57,24 @@ open class JavaContext
  * the given scope, in the given project reporting errors to the given
  * client.
  */
-(
-        /** the driver running through the checks */
-        driver: LintDriver,
+    (
+    /** the driver running through the checks */
+    driver: LintDriver,
 
-        /** the project to run lint on which contains the given file */
-        project: Project,
+    /** the project to run lint on which contains the given file */
+    project: Project,
 
-        /**
-         * The main project if this project is a library project, or
-         * null if this is not a library project. The main project is
-         * the root project of all library projects, not necessarily the
-         * directly including project.
-         */
-        main: Project?,
+    /**
+     * The main project if this project is a library project, or
+     * null if this is not a library project. The main project is
+     * the root project of all library projects, not necessarily the
+     * directly including project.
+     */
+    main: Project?,
 
-        /** the file to be analyzed */
-        file: File) : Context(driver, project, main, file) {
+    /** the file to be analyzed */
+    file: File
+) : Context(driver, project, main, file) {
 
     /** The parse tree, when using PSI  */
     var psiFile: PsiFile? = null
@@ -92,62 +93,67 @@ open class JavaContext
      * Returns a location for the given node range (from the starting offset of the first node to
      * the ending offset of the second node).
      *
-     * @param from      the AST node to get a starting location from
+     * @param from the AST node to get a starting location from
      *
      * @param fromDelta Offset delta to apply to the starting offset
      *
-     * @param to        the AST node to get a ending location from
+     * @param to the AST node to get a ending location from
      *
-     * @param toDelta   Offset delta to apply to the ending offset
+     * @param toDelta Offset delta to apply to the ending offset
      *
      * @return a location for the given node
      */
     fun getRangeLocation(
-            from: PsiElement,
-            fromDelta: Int,
-            to: PsiElement,
-            toDelta: Int): Location =
-            uastParser.getRangeLocation(this, from, fromDelta, to, toDelta)
+        from: PsiElement,
+        fromDelta: Int,
+        to: PsiElement,
+        toDelta: Int
+    ): Location =
+        uastParser.getRangeLocation(this, from, fromDelta, to, toDelta)
 
     fun getRangeLocation(
-            from: UElement,
-            fromDelta: Int,
-            to: UElement,
-            toDelta: Int): Location =
-            uastParser.getRangeLocation(this, from, fromDelta, to, toDelta)
+        from: UElement,
+        fromDelta: Int,
+        to: UElement,
+        toDelta: Int
+    ): Location =
+        uastParser.getRangeLocation(this, from, fromDelta, to, toDelta)
 
     // Disambiguate since UDeclarations implement both PsiElement and UElement
     fun getRangeLocation(
-            from: UDeclaration,
-            fromDelta: Int,
-            to: UDeclaration,
-            toDelta: Int): Location =
-            uastParser.getRangeLocation(this, from as PsiElement, fromDelta, to, toDelta)
+        from: UDeclaration,
+        fromDelta: Int,
+        to: UDeclaration,
+        toDelta: Int
+    ): Location =
+        uastParser.getRangeLocation(this, from as PsiElement, fromDelta, to, toDelta)
 
     /**
      * Returns a location for the given node range (from the starting offset of the first node to
      * the ending offset of the second node).
      *
-     * @param from      the AST node to get a starting location from
+     * @param from the AST node to get a starting location from
      *
      * @param fromDelta Offset delta to apply to the starting offset
      *
-     * @param length    The number of characters to add from the delta
+     * @param length The number of characters to add from the delta
      *
      * @return a location for the given node
      */
     @Suppress("unused", "unused")
     fun getRangeLocation(
-            from: PsiElement,
-            fromDelta: Int,
-            length: Int): Location =
-            uastParser.getRangeLocation(this, from, fromDelta, fromDelta + length)
+        from: PsiElement,
+        fromDelta: Int,
+        length: Int
+    ): Location =
+        uastParser.getRangeLocation(this, from, fromDelta, fromDelta + length)
 
     fun getRangeLocation(
-            from: UElement,
-            fromDelta: Int,
-            length: Int): Location =
-            uastParser.getRangeLocation(this, from, fromDelta, fromDelta + length)
+        from: UElement,
+        fromDelta: Int,
+        length: Int
+    ): Location =
+        uastParser.getRangeLocation(this, from, fromDelta, fromDelta + length)
 
     /**
      * Returns a [Location] for the given element. This attempts to pick a shorter
@@ -233,17 +239,17 @@ open class JavaContext
     }
 
     fun getLocation(element: UMethod): Location =
-            uastParser.getLocation(this, element as PsiMethod)
+        uastParser.getLocation(this, element as PsiMethod)
 
     fun getLocation(element: UField): Location =
-            uastParser.getLocation(this, element as PsiField)
+        uastParser.getLocation(this, element as PsiField)
 
     /**
      * Creates a location for the given call.
      *
-     * @param call             the call to create a location range for
+     * @param call the call to create a location range for
      *
-     * @param includeReceiver  whether we should include the receiver of the method call if
+     * @param includeReceiver whether we should include the receiver of the method call if
      *                         applicable
      *
      * @param includeArguments whether we should include the arguments to the call
@@ -251,10 +257,11 @@ open class JavaContext
      * @return a location
      */
     fun getCallLocation(
-            call: UCallExpression,
-            includeReceiver: Boolean,
-            includeArguments: Boolean): Location =
-            uastParser.getCallLocation(this, call, includeReceiver, includeArguments)
+        call: UCallExpression,
+        includeReceiver: Boolean,
+        includeArguments: Boolean
+    ): Location =
+        uastParser.getCallLocation(this, call, includeReceiver, includeArguments)
 
     val evaluator: JavaEvaluator
         get() = uastParser.evaluator
@@ -265,8 +272,10 @@ open class JavaContext
      * @return the parsed Java source file
      */
     @Suppress("unused")
-    @Deprecated("Use {@link #getPsiFile()} instead",
-            replaceWith = ReplaceWith("psiFile"))
+    @Deprecated(
+        "Use {@link #getPsiFile()} instead",
+        replaceWith = ReplaceWith("psiFile")
+    )
     val javaFile: PsiJavaFile?
         get() {
             return if (psiFile is PsiJavaFile) {
@@ -286,8 +295,12 @@ open class JavaContext
         this.psiFile = javaFile
     }
 
-    override fun report(issue: Issue, location: Location,
-                        message: String, quickfixData: LintFix?) {
+    override fun report(
+        issue: Issue,
+        location: Location,
+        message: String,
+        quickfixData: LintFix?
+    ) {
         if (driver.isSuppressed(this, issue, psiFile)) {
             return
         }
@@ -298,25 +311,27 @@ open class JavaContext
      * Reports an issue applicable to a given AST node. The AST node is used as the
      * scope to check for suppress lint annotations.
      *
-     * @param issue        the issue to report
+     * @param issue the issue to report
      *
-     * @param scope        the AST node scope the error applies to. The lint infrastructure will
+     * @param scope the AST node scope the error applies to. The lint infrastructure will
      *                     check whether there are suppress annotations on this node (or its
      *                     enclosing nodes) and if so suppress the warning without involving the
      *                     client.
      *
-     * @param location     the location of the issue, or null if not known
+     * @param location the location of the issue, or null if not known
      *
-     * @param message      the message for this warning
+     * @param message the message for this warning
      *
      * @param quickfixData optional data to pass to the IDE for use by a quickfix.
      */
-    @JvmOverloads fun report(
-            issue: Issue,
-            scope: PsiElement?,
-            location: Location,
-            message: String,
-            quickfixData: LintFix? = null) {
+    @JvmOverloads
+    fun report(
+        issue: Issue,
+        scope: PsiElement?,
+        location: Location,
+        message: String,
+        quickfixData: LintFix? = null
+    ) {
         if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return
         }
@@ -324,38 +339,43 @@ open class JavaContext
     }
 
     @Suppress("DeprecatedCallableAddReplaceWith")
-    @Deprecated("Here for temporary compatibility; the new typed quickfix data parameter " +
-            "should be used instead")
+    @Deprecated(
+        "Here for temporary compatibility; the new typed quickfix data parameter " +
+                "should be used instead"
+    )
     fun report(
-            issue: Issue,
-            scope: PsiElement?,
-            location: Location,
-            message: String,
-            quickfixData: Any?) = report(issue, scope, location, message)
+        issue: Issue,
+        scope: PsiElement?,
+        location: Location,
+        message: String,
+        quickfixData: Any?
+    ) = report(issue, scope, location, message)
 
     /**
      * Reports an issue applicable to a given AST node. The AST node is used as the
      * scope to check for suppress lint annotations.
      *
-     * @param issue        the issue to report
+     * @param issue the issue to report
      *
-     * @param scope        the AST node scope the error applies to. The lint infrastructure will
+     * @param scope the AST node scope the error applies to. The lint infrastructure will
      *                     check whether there are suppress annotations on this node (or its
      *                     enclosing nodes) and if so suppress the warning without involving the
      *                     client.
      *
-     * @param location     the location of the issue, or null if not known
+     * @param location the location of the issue, or null if not known
      *
-     * @param message      the message for this warning
+     * @param message the message for this warning
      *
      * @param quickfixData optional data to pass to the IDE for use by a quickfix.
      */
-    @JvmOverloads fun report(
-            issue: Issue,
-            scope: UElement?,
-            location: Location,
-            message: String,
-            quickfixData: LintFix? = null) {
+    @JvmOverloads
+    fun report(
+        issue: Issue,
+        scope: UElement?,
+        location: Location,
+        message: String,
+        quickfixData: LintFix? = null
+    ) {
         if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return
         }
@@ -363,14 +383,17 @@ open class JavaContext
     }
 
     @Suppress("DeprecatedCallableAddReplaceWith")
-    @Deprecated("Here for temporary compatibility; the new typed quickfix data parameter " +
-            "should be used instead")
+    @Deprecated(
+        "Here for temporary compatibility; the new typed quickfix data parameter " +
+                "should be used instead"
+    )
     fun report(
-            issue: Issue,
-            scope: UElement?,
-            location: Location,
-            message: String,
-            quickfixData: Any?) = report(issue, scope, location, message)
+        issue: Issue,
+        scope: UElement?,
+        location: Location,
+        message: String,
+        quickfixData: Any?
+    ) = report(issue, scope, location, message)
 
     /**
      * [UClass] is both a [PsiElement] and a [UElement] so this method
@@ -378,10 +401,11 @@ open class JavaContext
      * an explicit cast.
      */
     fun report(
-            issue: Issue,
-            scopeClass: UClass?,
-            location: Location,
-            message: String) = report(issue, scopeClass as UElement?, location, message)
+        issue: Issue,
+        scopeClass: UClass?,
+        location: Location,
+        message: String
+    ) = report(issue, scopeClass as UElement?, location, message)
 
     /**
      * [UClass] is both a [PsiElement] and a [UElement] so this method
@@ -389,11 +413,12 @@ open class JavaContext
      * an explicit cast.
      */
     fun report(
-            issue: Issue,
-            scopeClass: UClass?,
-            location: Location,
-            message: String,
-            quickfixData: LintFix?) = report(issue, scopeClass as UElement?, location, message, quickfixData)
+        issue: Issue,
+        scopeClass: UClass?,
+        location: Location,
+        message: String,
+        quickfixData: LintFix?
+    ) = report(issue, scopeClass as UElement?, location, message, quickfixData)
 
     /**
      * [UMethod] is both a [PsiElement] and a [UElement] so this method
@@ -401,10 +426,11 @@ open class JavaContext
      * an explicit cast.
      */
     fun report(
-            issue: Issue,
-            scopeClass: UMethod?,
-            location: Location,
-            message: String) = report(issue, scopeClass as UElement?, location, message)
+        issue: Issue,
+        scopeClass: UMethod?,
+        location: Location,
+        message: String
+    ) = report(issue, scopeClass as UElement?, location, message)
 
     /**
      * [UMethod] is both a [PsiElement] and a [UElement] so this method
@@ -412,12 +438,13 @@ open class JavaContext
      * an explicit cast.
      */
     fun report(
-            issue: Issue,
-            scopeClass: UMethod?,
-            location: Location,
-            message: String,
-            quickfixData: LintFix?) =
-            report(issue, scopeClass as UElement?, location, message, quickfixData)
+        issue: Issue,
+        scopeClass: UMethod?,
+        location: Location,
+        message: String,
+        quickfixData: LintFix?
+    ) =
+        report(issue, scopeClass as UElement?, location, message, quickfixData)
 
     /**
      * [UField] is both a [PsiElement] and a [UElement] so this method
@@ -425,11 +452,12 @@ open class JavaContext
      * an explicit cast.
      */
     fun report(
-            issue: Issue,
-            scopeClass: UField?,
-            location: Location,
-            message: String) =
-            report(issue, scopeClass as UElement?, location, message)
+        issue: Issue,
+        scopeClass: UField?,
+        location: Location,
+        message: String
+    ) =
+        report(issue, scopeClass as UElement?, location, message)
 
     /**
      * [UField] is both a [PsiElement] and a [UElement] so this method
@@ -437,12 +465,13 @@ open class JavaContext
      * an explicit cast.
      */
     fun report(
-            issue: Issue,
-            scopeClass: UField?,
-            location: Location,
-            message: String,
-            quickfixData: LintFix?) =
-            report(issue, scopeClass as UElement?, location, message, quickfixData)
+        issue: Issue,
+        scopeClass: UField?,
+        location: Location,
+        message: String,
+        quickfixData: LintFix?
+    ) =
+        report(issue, scopeClass as UElement?, location, message, quickfixData)
 
     override val suppressCommentPrefix: String?
         get() = SUPPRESS_JAVA_COMMENT_PREFIX
@@ -471,11 +500,11 @@ open class JavaContext
         // TODO: Move to LintUtils etc
         @JvmStatic
         fun getMethodName(call: UElement): String? =
-                when (call) {
-                    is UEnumConstant -> call.name
-                    is UCallExpression -> call.methodName ?: call.classReference?.resolvedName
-                    else -> null
-                }
+            when (call) {
+                is UEnumConstant -> call.name
+                is UCallExpression -> call.methodName ?: call.classReference?.resolvedName
+                else -> null
+            }
 
         /**
          * Searches for a name node corresponding to the given node
@@ -499,7 +528,6 @@ open class JavaContext
                 is PsiLabeledStatement -> return element.labelIdentifier
                 else -> return null
             }
-
         }
 
         @JvmStatic

@@ -194,17 +194,18 @@ enum class TextFormat {
                 if (tag.equals("br", ignoreCase = true)) {
                     sb.append('\n')
                 } else if (tag.equals("p", ignoreCase = true) // Most common block tags
-                        || tag.equals("div", ignoreCase = true)
-                        || tag.equals("pre", ignoreCase = true)
-                        || tag.equals("blockquote", ignoreCase = true)
-                        || tag.equals("dl", ignoreCase = true)
-                        || tag.equals("dd", ignoreCase = true)
-                        || tag.equals("dt", ignoreCase = true)
-                        || tag.equals("ol", ignoreCase = true)
-                        || tag.equals("ul", ignoreCase = true)
-                        || tag.equals("li", ignoreCase = true)
-                        || (tag.length == 2 && tag.startsWith("h")
-                        && Character.isDigit(tag[1]))) {
+                    || tag.equals("div", ignoreCase = true)
+                    || tag.equals("pre", ignoreCase = true)
+                    || tag.equals("blockquote", ignoreCase = true)
+                    || tag.equals("dl", ignoreCase = true)
+                    || tag.equals("dd", ignoreCase = true)
+                    || tag.equals("dt", ignoreCase = true)
+                    || tag.equals("ol", ignoreCase = true)
+                    || tag.equals("ul", ignoreCase = true)
+                    || tag.equals("li", ignoreCase = true)
+                    || (tag.length == 2 && tag.startsWith("h")
+                            && Character.isDigit(tag[1]))
+                ) {
                     // Block tag: ensure new line
                     if (sb.isNotEmpty() && sb[sb.length - 1] != '\n') {
                         sb.append('\n')
@@ -232,7 +233,6 @@ enum class TextFormat {
                                 s = Character.toString(value.toChar())
                             } catch (ignore: NumberFormatException) {
                             }
-
                         }
                     }
                     sb.append(s)
@@ -313,7 +313,8 @@ enum class TextFormat {
                             i++
                             continue
                         } else if (end2 != -1 && end2 > end + 1 && end2 < n - 1 &&
-                                text[end2 + 1] == '*') {
+                            text[end2 + 1] == '*'
+                        ) {
                             end = end2
                             bold = true
                         }
@@ -342,14 +343,14 @@ enum class TextFormat {
                     }
                 }
             } else if (html
-                    && c == 'h' && i < n - 1 && text[i + 1] == 't'
-                    && (text.startsWith(HTTP_PREFIX, i) || text.startsWith(HTTPS_PREFIX, i))
-                    && !Character.isLetterOrDigit(prev)) {
+                && c == 'h' && i < n - 1 && text[i + 1] == 't' &&
+                (text.startsWith(HTTP_PREFIX, i) || text.startsWith(HTTPS_PREFIX, i))
+                && !Character.isLetterOrDigit(prev)
+            ) {
                 // Find url end
                 val length = if (text.startsWith(HTTP_PREFIX, i))
                     HTTP_PREFIX.length
-                else
-                    HTTPS_PREFIX.length
+                else HTTPS_PREFIX.length
                 var end = i + length
                 while (end < n) {
                     val d = text[end]
@@ -421,8 +422,8 @@ enum class TextFormat {
             return sb.toString()
         }
 
-        private val HTTP_PREFIX = "http://"
-        private val HTTPS_PREFIX = "https://"
+        private const val HTTP_PREFIX = "http://"
+        private const val HTTPS_PREFIX = "https://"
 
         private fun terminatesUrl(c: Char): Boolean {
             return when (c) {
@@ -432,7 +433,6 @@ enum class TextFormat {
                 '-', '_', '.', '*', '+', '%', '/', '#' -> false
                 else -> true
             }
-
         }
 
         private fun removeNumericEntities(html: String): String {
@@ -458,7 +458,6 @@ enum class TextFormat {
                         } catch (ignore: NumberFormatException) {
                             // fall through to not escape this
                         }
-
                     }
                 }
                 sb.append(c)
@@ -468,8 +467,14 @@ enum class TextFormat {
             return sb.toString()
         }
 
-        private fun appendEscapedText(sb: StringBuilder, text: String,
-                html: Boolean, start: Int, end: Int, escapeUnicode: Boolean) {
+        private fun appendEscapedText(
+            sb: StringBuilder,
+            text: String,
+            html: Boolean,
+            start: Int,
+            end: Int,
+            escapeUnicode: Boolean
+        ) {
             if (html) {
                 for (i in start until end) {
                     val c = text[i]

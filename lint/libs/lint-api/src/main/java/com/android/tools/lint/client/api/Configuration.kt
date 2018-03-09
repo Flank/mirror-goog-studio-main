@@ -59,10 +59,11 @@ abstract class Configuration {
      * @return true if this issue should be suppressed
      */
     open fun isIgnored(
-            context: Context,
-            issue: Issue,
-            location: Location?,
-            message: String): Boolean {
+        context: Context,
+        issue: Issue,
+        location: Location?,
+        message: String
+    ): Boolean {
         return false
     }
 
@@ -100,10 +101,11 @@ abstract class Configuration {
      * @param message The message for the warning
      */
     abstract fun ignore(
-            context: Context,
-            issue: Issue,
-            location: Location?,
-            message: String)
+        context: Context,
+        issue: Issue,
+        location: Location?,
+        message: String
+    )
 
     /**
      * Marks the given issue and file combination as being ignored.

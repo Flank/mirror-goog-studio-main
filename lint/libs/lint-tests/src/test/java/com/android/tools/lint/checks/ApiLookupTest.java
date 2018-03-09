@@ -32,17 +32,32 @@ public class ApiLookupTest extends AbstractCheckTest {
     private final ApiLookup mDb = ApiLookup.get(createClient());
 
     public void testBasic() {
-        assertEquals(5, mDb.getFieldVersion("android.Manifest$permission", "AUTHENTICATE_ACCOUNTS"));
-        assertEquals(5, mDb.getFieldVersion("android.Manifest.permission", "AUTHENTICATE_ACCOUNTS"));
-        assertEquals(5, mDb.getFieldVersion("android/Manifest$permission", "AUTHENTICATE_ACCOUNTS"));
+        assertEquals(
+                5, mDb.getFieldVersion("android.Manifest$permission", "AUTHENTICATE_ACCOUNTS"));
+        assertEquals(
+                5, mDb.getFieldVersion("android.Manifest.permission", "AUTHENTICATE_ACCOUNTS"));
+        assertEquals(
+                5, mDb.getFieldVersion("android/Manifest$permission", "AUTHENTICATE_ACCOUNTS"));
         assertTrue(mDb.getFieldVersion("android/R$attr", "absListViewStyle") <= 1);
         assertEquals(11, mDb.getFieldVersion("android/R$attr", "actionMenuTextAppearance"));
-        assertEquals(5, mDb.getMethodVersion("android.graphics.drawable.BitmapDrawable",
-                "<init>", "(Landroid.content.res.Resources;Ljava.lang.String;)V"));
-        assertEquals(5, mDb.getMethodVersion("android/graphics/drawable/BitmapDrawable",
-                "<init>", "(Landroid/content/res/Resources;Ljava/lang/String;)V"));
-        assertEquals(4, mDb.getMethodVersion("android/graphics/drawable/BitmapDrawable",
-                "setTargetDensity", "(Landroid/util/DisplayMetrics;)V"));
+        assertEquals(
+                5,
+                mDb.getMethodVersion(
+                        "android.graphics.drawable.BitmapDrawable",
+                        "<init>",
+                        "(Landroid.content.res.Resources;Ljava.lang.String;)V"));
+        assertEquals(
+                5,
+                mDb.getMethodVersion(
+                        "android/graphics/drawable/BitmapDrawable",
+                        "<init>",
+                        "(Landroid/content/res/Resources;Ljava/lang/String;)V"));
+        assertEquals(
+                4,
+                mDb.getMethodVersion(
+                        "android/graphics/drawable/BitmapDrawable",
+                        "setTargetDensity",
+                        "(Landroid/util/DisplayMetrics;)V"));
         assertEquals(7, mDb.getClassVersion("android/app/WallpaperInfo"));
         assertEquals(11, mDb.getClassVersion("android/widget/StackView"));
         assertTrue(mDb.getClassVersion("ava/text/ChoiceFormat") <= 1);
@@ -54,14 +69,23 @@ public class ApiLookupTest extends AbstractCheckTest {
         // Field lookup: Unknown field
         assertEquals(-1, mDb.getFieldVersion("android/Manifest$permission", "FOOBAR"));
         // Method lookup: Unknown class
-        assertEquals(-1, mDb.getMethodVersion("foo/Bar",
-                "<init>", "(Landroid/content/res/Resources;Ljava/lang/String;)V"));
+        assertEquals(
+                -1,
+                mDb.getMethodVersion(
+                        "foo/Bar",
+                        "<init>",
+                        "(Landroid/content/res/Resources;Ljava/lang/String;)V"));
         // Method lookup: Unknown name
-        assertEquals(-1, mDb.getMethodVersion("android/graphics/drawable/BitmapDrawable",
-                "foo", "(Landroid/content/res/Resources;Ljava/lang/String;)V"));
+        assertEquals(
+                -1,
+                mDb.getMethodVersion(
+                        "android/graphics/drawable/BitmapDrawable",
+                        "foo",
+                        "(Landroid/content/res/Resources;Ljava/lang/String;)V"));
         // Method lookup: Unknown argument list
-        assertEquals(-1, mDb.getMethodVersion("android/graphics/drawable/BitmapDrawable",
-                "<init>", "(I)V"));
+        assertEquals(
+                -1,
+                mDb.getMethodVersion("android/graphics/drawable/BitmapDrawable", "<init>", "(I)V"));
     }
 
     public void testWildcardSyntax() {
@@ -77,24 +101,32 @@ public class ApiLookupTest extends AbstractCheckTest {
 
     public void testNoInheritedConstructors() {
         assertTrue(mDb.getMethodVersion("java/util/zip/ZipOutputStream", "<init>", "()") <= 1);
-        assertTrue(mDb.getMethodVersion("android/app/AliasActivity", "<init>", "(Landroid/content/Context;I)") <= 1);
+        assertTrue(
+                mDb.getMethodVersion(
+                                "android/app/AliasActivity",
+                                "<init>",
+                                "(Landroid/content/Context;I)")
+                        <= 1);
     }
 
     public void testIssue35190() {
-        assertEquals(9, mDb.getMethodVersion("java/io/IOException", "<init>",
-                "(Ljava/lang/Throwable;)V"));
+        assertEquals(
+                9,
+                mDb.getMethodVersion("java/io/IOException", "<init>", "(Ljava/lang/Throwable;)V"));
     }
 
     public void testDeprecatedFields() {
         // Not deprecated:
-        assertEquals(-1, mDb.getFieldDeprecatedIn("android/Manifest$permission", "GET_PACKAGE_SIZE"));
+        assertEquals(
+                -1, mDb.getFieldDeprecatedIn("android/Manifest$permission", "GET_PACKAGE_SIZE"));
         // Field only has since > 1, no deprecation
         assertEquals(9, mDb.getFieldVersion("android/Manifest$permission", "NFC"));
 
         // Deprecated
         assertEquals(21, mDb.getFieldDeprecatedIn("android/Manifest$permission", "GET_TASKS"));
         // Field both deprecated and since > 1
-        assertEquals(21, mDb.getFieldDeprecatedIn("android/Manifest$permission", "READ_SOCIAL_STREAM"));
+        assertEquals(
+                21, mDb.getFieldDeprecatedIn("android/Manifest$permission", "READ_SOCIAL_STREAM"));
         assertEquals(15, mDb.getFieldVersion("android/Manifest$permission", "READ_SOCIAL_STREAM"));
     }
 
@@ -102,13 +134,29 @@ public class ApiLookupTest extends AbstractCheckTest {
         // Not deprecated:
         //assertEquals(12, mDb.getMethodVersion("android/app/Fragment", "onInflate",
         //        "(Landroid/app/Activity;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
-        assertEquals(23, mDb.getMethodDeprecatedIn("android/app/Fragment", "onInflate",
-                "(Landroid/app/Activity;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
-        assertEquals(-1, mDb.getMethodDeprecatedIn("android/app/Fragment", "onInflate",
-                "(Landroid/content/Context;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
+        assertEquals(
+                23,
+                mDb.getMethodDeprecatedIn(
+                        "android/app/Fragment",
+                        "onInflate",
+                        "(Landroid/app/Activity;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
+        assertEquals(
+                -1,
+                mDb.getMethodDeprecatedIn(
+                        "android/app/Fragment",
+                        "onInflate",
+                        "(Landroid/content/Context;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
         // Deprecated
-        assertEquals(16, mDb.getMethodDeprecatedIn("android/app/Service", "onStart", "(Landroid/content/Intent;I)V"));
-        assertEquals(16, mDb.getMethodDeprecatedIn("android/app/Fragment", "onInflate", "(Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
+        assertEquals(
+                16,
+                mDb.getMethodDeprecatedIn(
+                        "android/app/Service", "onStart", "(Landroid/content/Intent;I)V"));
+        assertEquals(
+                16,
+                mDb.getMethodDeprecatedIn(
+                        "android/app/Fragment",
+                        "onInflate",
+                        "(Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
     }
 
     public void testDeprecatedClasses() {
@@ -134,11 +182,16 @@ public class ApiLookupTest extends AbstractCheckTest {
 
     public void testRemovedMethods() {
         // Not removed
-        assertEquals(-1, mDb.getMethodRemovedIn("android/app/Activity", "enterPictureInPictureMode",
-                "(Landroid/app/PictureInPictureArgs;)Z"));
+        assertEquals(
+                -1,
+                mDb.getMethodRemovedIn(
+                        "android/app/Activity",
+                        "enterPictureInPictureMode",
+                        "(Landroid/app/PictureInPictureArgs;)Z"));
         // Moved to an interface
         assertEquals(
-                -1, mDb.getMethodRemovedIn("android/database/sqlite/SQLiteDatabase", "close", "()V"));
+                -1,
+                mDb.getMethodRemovedIn("android/database/sqlite/SQLiteDatabase", "close", "()V"));
         // Removed
         assertEquals(11, mDb.getMethodRemovedIn("android/app/Activity", "setPersistent", "(Z)V"));
     }
@@ -162,8 +215,10 @@ public class ApiLookupTest extends AbstractCheckTest {
         assertTrue(
                 removedMethods.contains(new ApiMember("compile(Ljava/lang/String;Z)", 1, 0, 16)));
         // Method moved to a super class
-        assertTrue(removedMethods.stream()
-                .noneMatch(member -> member.getSignature().equals("close()")));
+        assertTrue(
+                removedMethods
+                        .stream()
+                        .noneMatch(member -> member.getSignature().equals("close()")));
     }
 
     public void testRemovedClasses() {
@@ -177,27 +232,41 @@ public class ApiLookupTest extends AbstractCheckTest {
         // The onPreferenceStartFragment is inherited via the
         // android/preference/PreferenceFragment$OnPreferenceStartFragmentCallback
         // interface
-        assertEquals(11, mDb.getMethodVersion("android/preference/PreferenceActivity",
-                "onPreferenceStartFragment",
-                "(Landroid/preference/PreferenceFragment;Landroid/preference/Preference;)"));
+        assertEquals(
+                11,
+                mDb.getMethodVersion(
+                        "android/preference/PreferenceActivity",
+                        "onPreferenceStartFragment",
+                        "(Landroid/preference/PreferenceFragment;Landroid/preference/Preference;)"));
     }
 
     public void testInterfaceApi() {
         assertEquals(21, mDb.getClassVersion("android/animation/StateListAnimator"));
-        assertEquals(11, mDb.getValidCastVersion("android/animation/AnimatorListenerAdapter",
-                "android/animation/Animator$AnimatorListener"));
-        assertEquals(19, mDb.getValidCastVersion("android/animation/AnimatorListenerAdapter",
-                "android/animation/Animator$AnimatorPauseListener"));
+        assertEquals(
+                11,
+                mDb.getValidCastVersion(
+                        "android/animation/AnimatorListenerAdapter",
+                        "android/animation/Animator$AnimatorListener"));
+        assertEquals(
+                19,
+                mDb.getValidCastVersion(
+                        "android/animation/AnimatorListenerAdapter",
+                        "android/animation/Animator$AnimatorPauseListener"));
 
-        assertEquals(11, mDb.getValidCastVersion("android/animation/Animator",
-                "java/lang/Cloneable"));
-        assertEquals(22, mDb.getValidCastVersion("android/animation/StateListAnimator",
-                "java/lang/Cloneable"));
+        assertEquals(
+                11, mDb.getValidCastVersion("android/animation/Animator", "java/lang/Cloneable"));
+        assertEquals(
+                22,
+                mDb.getValidCastVersion(
+                        "android/animation/StateListAnimator", "java/lang/Cloneable"));
     }
 
     public void testSuperClassCast() {
-        assertEquals(22, mDb.getValidCastVersion("android/view/animation/AccelerateDecelerateInterpolator",
-                "android/view/animation/BaseInterpolator"));
+        assertEquals(
+                22,
+                mDb.getValidCastVersion(
+                        "android/view/animation/AccelerateDecelerateInterpolator",
+                        "android/view/animation/BaseInterpolator"));
     }
 
     public void testIsValidPackage() {
@@ -222,11 +291,15 @@ public class ApiLookupTest extends AbstractCheckTest {
     }
 
     private File mCacheDir;
+
     @SuppressWarnings("StringBufferField")
     private final StringBuilder mLogBuffer = new StringBuilder();
 
-    @SuppressWarnings({"ConstantConditions", "IOResourceOpenedButNotSafelyClosed",
-            "ResultOfMethodCallIgnored"})
+    @SuppressWarnings({
+        "ConstantConditions",
+        "IOResourceOpenedButNotSafelyClosed",
+        "ResultOfMethodCallIgnored"
+    })
     @Override
     protected TestLintClient createClient() {
         mCacheDir = new File(getTempDir(), "lint-test-cache");
@@ -235,8 +308,11 @@ public class ApiLookupTest extends AbstractCheckTest {
         return new LookupTestClient();
     }
 
-    @SuppressWarnings({"ConstantConditions", "IOResourceOpenedButNotSafelyClosed",
-            "ResultOfMethodCallIgnored"})
+    @SuppressWarnings({
+        "ConstantConditions",
+        "IOResourceOpenedButNotSafelyClosed",
+        "ResultOfMethodCallIgnored"
+    })
     public void testCorruptedCacheHandling() throws Exception {
         if (ApiLookup.DEBUG_FORCE_REGENERATE_BINARY) {
             System.err.println("Skipping " + getName() + ": not valid while regenerating indices");
@@ -265,14 +341,17 @@ public class ApiLookupTest extends AbstractCheckTest {
         ApiLookup.dispose();
 
         // Now truncate cache file
-        File cacheFile = new File(mCacheDir,
-                ApiLookup.getCacheFileName("api-versions.xml",
-                        ApiLookup.getPlatformVersion(new LookupTestClient())));
+        File cacheFile =
+                new File(
+                        mCacheDir,
+                        ApiLookup.getCacheFileName(
+                                "api-versions.xml",
+                                ApiLookup.getPlatformVersion(new LookupTestClient())));
         mLogBuffer.setLength(0);
         assertTrue(cacheFile.exists());
         RandomAccessFile raf = new RandomAccessFile(cacheFile, "rw");
         // Truncate file in half
-        raf.setLength(100);  // Broken header
+        raf.setLength(100); // Broken header
         raf.close();
         ApiLookup.get(new LookupTestClient());
         String message = mLogBuffer.toString();
@@ -318,18 +397,32 @@ public class ApiLookupTest extends AbstractCheckTest {
 
     public void testDeprecatedIn() {
         assertEquals(9, mDb.getClassDeprecatedIn("org/xml/sax/Parser"));
-        assertEquals(16, mDb.getFieldDeprecatedIn("dalvik/bytecode/Opcodes", "OP_IPUT_WIDE_VOLATILE"));
+        assertEquals(
+                16, mDb.getFieldDeprecatedIn("dalvik/bytecode/Opcodes", "OP_IPUT_WIDE_VOLATILE"));
 
-        assertEquals(20, mDb.getMethodDeprecatedIn("android/view/View", "fitSystemWindows", "(Landroid/graphics/Rect;)"));
-        assertEquals(16, mDb.getMethodVersion("android/widget/CalendarView", "getWeekNumberColor", "()"));
-        assertEquals(23, mDb.getMethodDeprecatedIn("android/widget/CalendarView", "getWeekNumberColor", "()"));
-        assertEquals(19, mDb.getMethodVersion("android/webkit/WebView", "createPrintDocumentAdapter", "()"));
+        assertEquals(
+                20,
+                mDb.getMethodDeprecatedIn(
+                        "android/view/View", "fitSystemWindows", "(Landroid/graphics/Rect;)"));
+        assertEquals(
+                16,
+                mDb.getMethodVersion("android/widget/CalendarView", "getWeekNumberColor", "()"));
+        assertEquals(
+                23,
+                mDb.getMethodDeprecatedIn(
+                        "android/widget/CalendarView", "getWeekNumberColor", "()"));
+        assertEquals(
+                19,
+                mDb.getMethodVersion("android/webkit/WebView", "createPrintDocumentAdapter", "()"));
         // Regression test for 65376457: CreatePrintDocumentAdapter() was deprecated in api 21,
         // not api 3 as lint reports.
         // (The root bug was that for deprecation we also lowered it if superclasses were
         // deprecated (such as AbsoluteLayout, a superclass of WebView) - this is necessary when
         // computing version-requirements but not deprecation versions.
-        assertEquals(21, mDb.getMethodDeprecatedIn("android/webkit/WebView", "createPrintDocumentAdapter", "()"));
+        assertEquals(
+                21,
+                mDb.getMethodDeprecatedIn(
+                        "android/webkit/WebView", "createPrintDocumentAdapter", "()"));
     }
 
     public void testClassLookupInnerClasses() {
@@ -380,8 +473,8 @@ public class ApiLookupTest extends AbstractCheckTest {
             for (Pair<String, Integer> pair : cls.getInterfaces()) {
                 String interfaceName = pair.getFirst();
                 int api = pair.getSecond();
-                assertSameApi(interfaceName, api,
-                        mDb.getValidCastVersion(className, interfaceName));
+                assertSameApi(
+                        interfaceName, api, mDb.getValidCastVersion(className, interfaceName));
             }
         }
 
@@ -393,8 +486,8 @@ public class ApiLookupTest extends AbstractCheckTest {
                     continue;
                 }
                 if (classDeprecatedIn >= 1) {
-                    assertSameApi(className, classDeprecatedIn,
-                            mDb.getClassDeprecatedIn(className));
+                    assertSameApi(
+                            className, classDeprecatedIn, mDb.getClassDeprecatedIn(className));
                 } else {
                     assertSameApi(className, -1, mDb.getClassDeprecatedIn(className));
                 }
@@ -407,7 +500,9 @@ public class ApiLookupTest extends AbstractCheckTest {
                     int index = method.indexOf('(');
                     String name = method.substring(0, index);
                     String desc = method.substring(index);
-                    assertSameApi(method + " in " + className, deprecatedIn,
+                    assertSameApi(
+                            method + " in " + className,
+                            deprecatedIn,
                             mDb.getMethodDeprecatedIn(className, name, desc));
                 }
                 for (String method : cls.getAllFields(info)) {
@@ -415,15 +510,16 @@ public class ApiLookupTest extends AbstractCheckTest {
                     if (deprecatedIn == 0) {
                         deprecatedIn = -1;
                     }
-                    assertSameApi(method, deprecatedIn, mDb.getFieldDeprecatedIn(className,
-                            method));
+                    assertSameApi(
+                            method, deprecatedIn, mDb.getFieldDeprecatedIn(className, method));
                 }
             }
         }
     }
 
     public void testLookUpContractSettings() {
-        assertEquals(14, mDb.getFieldVersion("android/provider/ContactsContract$Settings", "DATA_SET"));
+        assertEquals(
+                14, mDb.getFieldVersion("android/provider/ContactsContract$Settings", "DATA_SET"));
     }
 
     private final class LookupTestClient extends ToolsBaseTestLintClient {

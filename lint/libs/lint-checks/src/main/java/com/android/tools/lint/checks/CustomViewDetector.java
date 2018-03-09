@@ -40,38 +40,32 @@ import org.jetbrains.uast.UClass;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UastUtils;
 
-/**
- * Makes sure that custom views use a declare styleable that matches
- * the name of the custom view
- */
+/** Makes sure that custom views use a declare styleable that matches the name of the custom view */
 public class CustomViewDetector extends Detector implements SourceCodeScanner {
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            CustomViewDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(CustomViewDetector.class, Scope.JAVA_FILE_SCOPE);
 
     /** Mismatched style and class names */
-    public static final Issue ISSUE = Issue.create(
-            "CustomViewStyleable",
-            "Mismatched Styleable/Custom View Name",
-
-            "The convention for custom views is to use a `declare-styleable` whose name " +
-            "matches the custom view class name. The IDE relies on this convention such that " +
-            "for example code completion can be offered for attributes in a custom view " +
-            "in layout XML resource files.\n" +
-            "\n" +
-            "(Similarly, layout parameter classes should use the suffix `_Layout`.)",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION);
+    public static final Issue ISSUE =
+            Issue.create(
+                    "CustomViewStyleable",
+                    "Mismatched Styleable/Custom View Name",
+                    "The convention for custom views is to use a `declare-styleable` whose name "
+                            + "matches the custom view class name. The IDE relies on this convention such that "
+                            + "for example code completion can be offered for attributes in a custom view "
+                            + "in layout XML resource files.\n"
+                            + "\n"
+                            + "(Similarly, layout parameter classes should use the suffix `_Layout`.)",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     private static final String OBTAIN_STYLED_ATTRIBUTES = "obtainStyledAttributes";
 
     /** Constructs a new {@link CustomViewDetector} check */
-    public CustomViewDetector() {
-    }
+    public CustomViewDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -81,7 +75,9 @@ public class CustomViewDetector extends Detector implements SourceCodeScanner {
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression node,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
         if (!context.getEvaluator().isMemberInSubClassOf(method, CLASS_CONTEXT, false)) {
             return;
@@ -114,15 +110,16 @@ public class CustomViewDetector extends Detector implements SourceCodeScanner {
         String styleableName = reference.getName();
         if (context.getEvaluator().extendsClass(cls, CLASS_VIEW, false)) {
             if (!styleableName.equals(className)) {
-                String message = String.format(
-                        "By convention, the custom view (`%1$s`) and the declare-styleable (`%2$s`) "
-                                + "should have the same name (various editor features rely on "
-                                + "this convention)",
-                        className, styleableName);
+                String message =
+                        String.format(
+                                "By convention, the custom view (`%1$s`) and the declare-styleable (`%2$s`) "
+                                        + "should have the same name (various editor features rely on "
+                                        + "this convention)",
+                                className, styleableName);
                 context.report(ISSUE, node, context.getLocation(expression), message);
             }
-        } else if (context.getEvaluator().extendsClass(cls,
-                CLASS_VIEWGROUP + DOT_LAYOUT_PARAMS, false)) {
+        } else if (context.getEvaluator()
+                .extendsClass(cls, CLASS_VIEWGROUP + DOT_LAYOUT_PARAMS, false)) {
             UClass outer = UastUtils.getParentOfType(cls, UClass.class, true);
             if (outer == null) {
                 return;
@@ -130,12 +127,13 @@ public class CustomViewDetector extends Detector implements SourceCodeScanner {
             String layoutClassName = outer.getName();
             String expectedName = layoutClassName + "_Layout";
             if (!styleableName.equals(expectedName)) {
-                String message = String.format(
-                        "By convention, the declare-styleable (`%1$s`) for a layout parameter "
-                                + "class (`%2$s`) is expected to be the surrounding "
-                                + "class (`%3$s`) plus \"`_Layout`\", e.g. `%4$s`. "
-                                + "(Various editor features rely on this convention.)",
-                        styleableName, className, layoutClassName, expectedName);
+                String message =
+                        String.format(
+                                "By convention, the declare-styleable (`%1$s`) for a layout parameter "
+                                        + "class (`%2$s`) is expected to be the surrounding "
+                                        + "class (`%3$s`) plus \"`_Layout`\", e.g. `%4$s`. "
+                                        + "(Various editor features rely on this convention.)",
+                                styleableName, className, layoutClassName, expectedName);
                 context.report(ISSUE, node, context.getLocation(expression), message);
             }
         }

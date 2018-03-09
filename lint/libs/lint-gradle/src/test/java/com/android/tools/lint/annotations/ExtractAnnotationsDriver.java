@@ -45,16 +45,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The extract annotations driver is a command line interface to extracting annotations
- * from a source tree. It's similar to the gradle ExtractAnnotations task,
- * but usable from the command line and outside Gradle, for example
- * to extract annotations from the Android framework itself (which is not built with
- * Gradle). It also allows other options only interesting for extracting
- * platform annotations, such as filtering all APIs and constants through an
- * API white-list (such that we for example can pull annotations from the master
- * branch which has the latest metadata, but only expose APIs that are actually in
- * a released platform), as well as translating android.annotation annotations into
- * android.support.annotations.
+ * The extract annotations driver is a command line interface to extracting annotations from a
+ * source tree. It's similar to the gradle ExtractAnnotations task, but usable from the command line
+ * and outside Gradle, for example to extract annotations from the Android framework itself (which
+ * is not built with Gradle). It also allows other options only interesting for extracting platform
+ * annotations, such as filtering all APIs and constants through an API white-list (such that we for
+ * example can pull annotations from the master branch which has the latest metadata, but only
+ * expose APIs that are actually in a released platform), as well as translating android.annotation
+ * annotations into android.support.annotations.
  */
 public class ExtractAnnotationsDriver {
     public static void main(String[] args) throws IOException {
@@ -63,23 +61,38 @@ public class ExtractAnnotationsDriver {
 
     private static void usage(PrintStream output) {
         output.println("Usage: " + ExtractAnnotationsDriver.class.getSimpleName() + " <flags>");
-        output.println(" --sources <paths>       : Source directories to extract annotations from. ");
-        output.println("                           Separate paths with " + pathSeparator + ", and you can use @ ");
-        output.println("                           as a filename prefix to have the filenames fed from a file");
-        output.println("--classpath <paths>      : Directories and .jar files to resolve symbols from");
-        output.println("--output <zip path>      : The .zip file to write the extracted annotations to, if any");
-        output.println("--proguard <path>        : The proguard.cfg file to write the keep rules to, if any");
+        output.println(
+                " --sources <paths>       : Source directories to extract annotations from. ");
+        output.println(
+                "                           Separate paths with "
+                        + pathSeparator
+                        + ", and you can use @ ");
+        output.println(
+                "                           as a filename prefix to have the filenames fed from a file");
+        output.println(
+                "--classpath <paths>      : Directories and .jar files to resolve symbols from");
+        output.println(
+                "--output <zip path>      : The .zip file to write the extracted annotations to, if any");
+        output.println(
+                "--proguard <path>        : The proguard.cfg file to write the keep rules to, if any");
         output.println();
         output.println("Optional flags:");
         output.println("--merge-zips <paths>     : Existing external annotation files to merge in");
         output.println("--quiet                  : Don't print summary information");
-        output.println("--rmtypedefs <folder>    : Remove typedef classes found in the given folder");
-        output.println("--allow-missing-types    : Don't fail even if some types can't be resolved");
-        output.println("--allow-errors           : Don't fail even if there are some compiler errors");
-        output.println("--api-filter <api.txt>   : A framework API definition to restrict included APIs to");
-        output.println("--hide-filtered          : If filtering out non-APIs, supply this flag to hide listing matches");
-        output.println("--skip-class-retention   : Don't extract annotations that have class retention");
-        output.println("--typedef-file <path>    : Write a packaging recipe description to the given file");
+        output.println(
+                "--rmtypedefs <folder>    : Remove typedef classes found in the given folder");
+        output.println(
+                "--allow-missing-types    : Don't fail even if some types can't be resolved");
+        output.println(
+                "--allow-errors           : Don't fail even if there are some compiler errors");
+        output.println(
+                "--api-filter <api.txt>   : A framework API definition to restrict included APIs to");
+        output.println(
+                "--hide-filtered          : If filtering out non-APIs, supply this flag to hide listing matches");
+        output.println(
+                "--skip-class-retention   : Don't extract annotations that have class retention");
+        output.println(
+                "--typedef-file <path>    : Write a packaging recipe description to the given file");
         System.exit(-1);
     }
 
@@ -166,8 +179,8 @@ public class ExtractAnnotationsDriver {
                         if (!deleted) {
                             abort("Could not delete previous version of " + proguard);
                         }
-                    } else if (proguard.getParentFile() != null && !proguard.getParentFile()
-                            .exists()) {
+                    } else if (proguard.getParentFile() != null
+                            && !proguard.getParentFile().exists()) {
                         abort(proguard.getParentFile() + " does not exist");
                     }
                     break;
@@ -198,8 +211,8 @@ public class ExtractAnnotationsDriver {
                     rmTypeDefs.add(classDir);
                     break;
                 default:
-                    System.err
-                            .println("Unknown flag " + flag + ": Use --help for usage information");
+                    System.err.println(
+                            "Unknown flag " + flag + ": Use --help for usage information");
                     break;
             }
         }
@@ -228,14 +241,14 @@ public class ExtractAnnotationsDriver {
             }
         }
 
-        Extractor extractor = new Extractor(database, rmTypeDefs, verbose, !skipClassRetention,
-                true);
+        Extractor extractor =
+                new Extractor(database, rmTypeDefs, verbose, !skipClassRetention, true);
         extractor.setListIgnored(listFiltered);
 
         LintCoreApplicationEnvironment appEnv = LintCoreApplicationEnvironment.get();
         Disposable parentDisposable = Disposer.newDisposable();
-        LintCoreProjectEnvironment projectEnvironment = LintCoreProjectEnvironment.create(
-                parentDisposable, appEnv);
+        LintCoreProjectEnvironment projectEnvironment =
+                LintCoreProjectEnvironment.create(parentDisposable, appEnv);
 
         List<File> sourceRoots = findSourceRoots(sources);
         List<File> joined = Lists.newArrayList(sourceRoots);
@@ -291,7 +304,7 @@ public class ExtractAnnotationsDriver {
     @NonNull
     private static List<File> findSourceRoots(@NonNull List<File> sources) {
         List<File> roots = Lists.newArrayList();
-        for (File sourceFile: sources) {
+        for (File sourceFile : sources) {
             if (sourceFile.isDirectory()) {
                 if (!roots.contains(sourceFile)) {
                     roots.add(sourceFile);
@@ -331,8 +344,12 @@ public class ExtractAnnotationsDriver {
                             roots.add(root);
                         }
                     } else {
-                        abort("File found in a folder that doesn't appear to match the package " +
-                                "declaration: package=" + pkg + " and file path=" + path);
+                        abort(
+                                "File found in a folder that doesn't appear to match the package "
+                                        + "declaration: package="
+                                        + pkg
+                                        + " and file path="
+                                        + path);
                     }
                 }
             } catch (IOException e) {
@@ -369,8 +386,11 @@ public class ExtractAnnotationsDriver {
                                     if (!l.isEmpty()) {
                                         file = new File(l);
                                         if (!file.exists()) {
-                                            System.err.println("Warning: Could not find file " + l +
-                                                    " listed in " + sourcePath);
+                                            System.err.println(
+                                                    "Warning: Could not find file "
+                                                            + l
+                                                            + " listed in "
+                                                            + sourcePath);
                                         }
                                         files.add(file);
                                     }

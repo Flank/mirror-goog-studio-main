@@ -24,155 +24,164 @@ public class ParcelDetectorTest extends AbstractCheckTest {
     }
 
     public void testParcelables() {
-        String expected = ""
-                + "src/test/bytecode/MyParcelable1.java:6: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
-                + "public class MyParcelable1 implements Parcelable {\n"
-                + "             ~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n";
+        String expected =
+                ""
+                        + "src/test/bytecode/MyParcelable1.java:6: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
+                        + "public class MyParcelable1 implements Parcelable {\n"
+                        + "             ~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
-                classpath(),
-                manifest().minSdk(10),
-                java(""
-                        + "package test.bytecode;\n"
-                        + "\n"
-                        + "import android.os.Parcel;\n"
-                        + "import android.os.Parcelable;\n"
-                        + "\n"
-                        + "public class MyParcelable1 implements Parcelable {\n"
-                        + "\t@Override\n"
-                        + "\tpublic int describeContents() {\n"
-                        + "\t\treturn 0;\n"
-                        + "\t}\n"
-                        + "\n"
-                        + "\t@Override\n"
-                        + "\tpublic void writeToParcel(Parcel arg0, int arg1) {\n"
-                        + "\t}\n"
-                        + "}\n"),
-                java(""
-                        + "package test.bytecode;\n"
-                        + "\n"
-                        + "import android.os.Parcel;\n"
-                        + "import android.os.Parcelable;\n"
-                        + "\n"
-                        + "public class MyParcelable2 implements Parcelable {\n"
-                        + "\tpublic static final Parcelable.Creator<MyParcelable2> CREATOR = new Parcelable.Creator<MyParcelable2>() {\n"
-                        + "\t\tpublic MyParcelable2 createFromParcel(Parcel in) {\n"
-                        + "\t\t\treturn new MyParcelable2();\n"
-                        + "\t\t}\n"
-                        + "\n"
-                        + "\t\tpublic MyParcelable2[] newArray(int size) {\n"
-                        + "\t\t\treturn new MyParcelable2[size];\n"
-                        + "\t\t}\n"
-                        + "\t};\n"
-                        + "\n"
-                        + "\t@Override\n"
-                        + "\tpublic int describeContents() {\n"
-                        + "\t\treturn 0;\n"
-                        + "\t}\n"
-                        + "\n"
-                        + "\t@Override\n"
-                        + "\tpublic void writeToParcel(Parcel arg0, int arg1) {\n"
-                        + "\t}\n"
-                        + "}\n"),
-                java(""
-                        + "package test.bytecode;\n"
-                        + "\n"
-                        + "import android.os.Parcel;\n"
-                        + "import android.os.Parcelable;\n"
-                        + "\n"
-                        + "public class MyParcelable3 implements Parcelable {\n"
-                        + "\tpublic static final int CREATOR = 0; // Wrong type\n"
-                        + "\n"
-                        + "\t@Override\n"
-                        + "\tpublic int describeContents() {\n"
-                        + "\t\treturn 0;\n"
-                        + "\t}\n"
-                        + "\n"
-                        + "\t@Override\n"
-                        + "\tpublic void writeToParcel(Parcel arg0, int arg1) {\n"
-                        + "\t}\n"
-                        + "}\n"),
-                java(""
-                        + "package test.bytecode;\n"
-                        + "\n"
-                        + "import android.os.Parcel;\n"
-                        + "import android.os.Parcelable;\n"
-                        + "\n"
-                        + "public abstract class MyParcelable4 implements Parcelable {\n"
-                        + "    @Override\n"
-                        + "    public int describeContents() {\n"
-                        + "        return 0;\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @Override\n"
-                        + "    public void writeToParcel(Parcel arg0, int arg1) {\n"
-                        + "    }\n"
-                        + "}\n"),
-                java(""
-                        + "package test.bytecode;\n"
-                        + "\n"
-                        + "import android.os.Parcelable;\n"
-                        + "\n"
-                        + "public interface MyParcelable5 extends Parcelable {\n"
-                        + "    @Override\n"
-                        + "    public int describeContents();\n"
-                        + "}\n"))
+                        classpath(),
+                        manifest().minSdk(10),
+                        java(
+                                ""
+                                        + "package test.bytecode;\n"
+                                        + "\n"
+                                        + "import android.os.Parcel;\n"
+                                        + "import android.os.Parcelable;\n"
+                                        + "\n"
+                                        + "public class MyParcelable1 implements Parcelable {\n"
+                                        + "\t@Override\n"
+                                        + "\tpublic int describeContents() {\n"
+                                        + "\t\treturn 0;\n"
+                                        + "\t}\n"
+                                        + "\n"
+                                        + "\t@Override\n"
+                                        + "\tpublic void writeToParcel(Parcel arg0, int arg1) {\n"
+                                        + "\t}\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package test.bytecode;\n"
+                                        + "\n"
+                                        + "import android.os.Parcel;\n"
+                                        + "import android.os.Parcelable;\n"
+                                        + "\n"
+                                        + "public class MyParcelable2 implements Parcelable {\n"
+                                        + "\tpublic static final Parcelable.Creator<MyParcelable2> CREATOR = new Parcelable.Creator<MyParcelable2>() {\n"
+                                        + "\t\tpublic MyParcelable2 createFromParcel(Parcel in) {\n"
+                                        + "\t\t\treturn new MyParcelable2();\n"
+                                        + "\t\t}\n"
+                                        + "\n"
+                                        + "\t\tpublic MyParcelable2[] newArray(int size) {\n"
+                                        + "\t\t\treturn new MyParcelable2[size];\n"
+                                        + "\t\t}\n"
+                                        + "\t};\n"
+                                        + "\n"
+                                        + "\t@Override\n"
+                                        + "\tpublic int describeContents() {\n"
+                                        + "\t\treturn 0;\n"
+                                        + "\t}\n"
+                                        + "\n"
+                                        + "\t@Override\n"
+                                        + "\tpublic void writeToParcel(Parcel arg0, int arg1) {\n"
+                                        + "\t}\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package test.bytecode;\n"
+                                        + "\n"
+                                        + "import android.os.Parcel;\n"
+                                        + "import android.os.Parcelable;\n"
+                                        + "\n"
+                                        + "public class MyParcelable3 implements Parcelable {\n"
+                                        + "\tpublic static final int CREATOR = 0; // Wrong type\n"
+                                        + "\n"
+                                        + "\t@Override\n"
+                                        + "\tpublic int describeContents() {\n"
+                                        + "\t\treturn 0;\n"
+                                        + "\t}\n"
+                                        + "\n"
+                                        + "\t@Override\n"
+                                        + "\tpublic void writeToParcel(Parcel arg0, int arg1) {\n"
+                                        + "\t}\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package test.bytecode;\n"
+                                        + "\n"
+                                        + "import android.os.Parcel;\n"
+                                        + "import android.os.Parcelable;\n"
+                                        + "\n"
+                                        + "public abstract class MyParcelable4 implements Parcelable {\n"
+                                        + "    @Override\n"
+                                        + "    public int describeContents() {\n"
+                                        + "        return 0;\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    @Override\n"
+                                        + "    public void writeToParcel(Parcel arg0, int arg1) {\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java(
+                                ""
+                                        + "package test.bytecode;\n"
+                                        + "\n"
+                                        + "import android.os.Parcelable;\n"
+                                        + "\n"
+                                        + "public interface MyParcelable5 extends Parcelable {\n"
+                                        + "    @Override\n"
+                                        + "    public int describeContents();\n"
+                                        + "}\n"))
                 .run()
                 .expect(expected);
     }
 
     public void testInterfaceOnSuperClass() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=171522
-        String expected = ""
-                + "src/test/pkg/ParcelableDemo.java:14: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
-                + "    private static class JustParcelable implements Parcelable {\n"
-                + "                         ~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/ParcelableDemo.java:19: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
-                + "    private static class JustParcelableSubclass extends JustParcelable {\n"
-                + "                         ~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/ParcelableDemo.java:22: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
-                + "    private static class ParcelableThroughAbstractSuper extends AbstractParcelable {\n"
-                + "                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/ParcelableDemo.java:27: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
-                + "    private static class ParcelableThroughInterface implements MoreThanParcelable {\n"
-                + "                         ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "4 errors, 0 warnings\n";
+        String expected =
+                ""
+                        + "src/test/pkg/ParcelableDemo.java:14: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
+                        + "    private static class JustParcelable implements Parcelable {\n"
+                        + "                         ~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/ParcelableDemo.java:19: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
+                        + "    private static class JustParcelableSubclass extends JustParcelable {\n"
+                        + "                         ~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/ParcelableDemo.java:22: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
+                        + "    private static class ParcelableThroughAbstractSuper extends AbstractParcelable {\n"
+                        + "                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/ParcelableDemo.java:27: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
+                        + "    private static class ParcelableThroughInterface implements MoreThanParcelable {\n"
+                        + "                         ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "4 errors, 0 warnings\n";
         //noinspection all // sample code
         lint().files(
-                java("src/test/pkg/ParcelableDemo.java", ""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.os.Parcel;\n"
-                        + "import android.os.Parcelable;\n"
-                        + "\n"
-                        + "public class ParcelableDemo {\n"
-                        + "    private interface MoreThanParcelable extends Parcelable {\n"
-                        + "        void somethingMore();\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    private abstract static class AbstractParcelable implements Parcelable {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    private static class JustParcelable implements Parcelable {\n"
-                        + "        public int describeContents() {return 0;}\n"
-                        + "        public void writeToParcel(Parcel dest, int flags) {}\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    private static class JustParcelableSubclass extends JustParcelable {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    private static class ParcelableThroughAbstractSuper extends AbstractParcelable {\n"
-                        + "        public int describeContents() {return 0;}\n"
-                        + "        public void writeToParcel(Parcel dest, int flags) {}\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    private static class ParcelableThroughInterface implements MoreThanParcelable {\n"
-                        + "        public int describeContents() {return 0;}\n"
-                        + "        public void writeToParcel(Parcel dest, int flags) {}\n"
-                        + "        public void somethingMore() {}\n"
-                        + "    }\n"
-                        + "}"))
+                        java(
+                                "src/test/pkg/ParcelableDemo.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.os.Parcel;\n"
+                                        + "import android.os.Parcelable;\n"
+                                        + "\n"
+                                        + "public class ParcelableDemo {\n"
+                                        + "    private interface MoreThanParcelable extends Parcelable {\n"
+                                        + "        void somethingMore();\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    private abstract static class AbstractParcelable implements Parcelable {\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    private static class JustParcelable implements Parcelable {\n"
+                                        + "        public int describeContents() {return 0;}\n"
+                                        + "        public void writeToParcel(Parcel dest, int flags) {}\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    private static class JustParcelableSubclass extends JustParcelable {\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    private static class ParcelableThroughAbstractSuper extends AbstractParcelable {\n"
+                                        + "        public int describeContents() {return 0;}\n"
+                                        + "        public void writeToParcel(Parcel dest, int flags) {}\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    private static class ParcelableThroughInterface implements MoreThanParcelable {\n"
+                                        + "        public int describeContents() {return 0;}\n"
+                                        + "        public void writeToParcel(Parcel dest, int flags) {}\n"
+                                        + "        public void somethingMore() {}\n"
+                                        + "    }\n"
+                                        + "}"))
                 .run()
                 .expect(expected);
     }
@@ -181,17 +190,19 @@ public class ParcelDetectorTest extends AbstractCheckTest {
         // Regression test for https://code.google.com/p/android/issues/detail?id=192841
         //noinspection all // sample code
         lint().files(
-                java("src/test/pkg/TestSpan.java", ""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.text.TextPaint;\n"
-                        + "import android.text.style.URLSpan;\n"
-                        + "\n"
-                        + "public class TestSpan extends URLSpan {\n"
-                        + "    public TestSpan(String url) {\n"
-                        + "        super(url);\n"
-                        + "    }\n"
-                        + "}"))
+                        java(
+                                "src/test/pkg/TestSpan.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.text.TextPaint;\n"
+                                        + "import android.text.style.URLSpan;\n"
+                                        + "\n"
+                                        + "public class TestSpan extends URLSpan {\n"
+                                        + "    public TestSpan(String url) {\n"
+                                        + "        super(url);\n"
+                                        + "    }\n"
+                                        + "}"))
                 .run()
                 .expectClean();
     }
@@ -199,18 +210,20 @@ public class ParcelDetectorTest extends AbstractCheckTest {
     @SuppressWarnings("all") // sample code
     public void testTypeParameters() throws Exception {
         lint().files(
-                java("src/test/pkg/ParcelTest.java", ""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.os.Bundle;\n"
-                        + "import android.os.Parcelable;\n"
-                        + "\n"
-                        + "@SuppressWarnings(\"unused\")\n"
-                        + "public class ParcelTest {\n"
-                        + "    public static <T extends Parcelable> T getParcelable(Bundle args, String key) {\n"
-                        + "        return args == null ? null : args.<T>getParcelable(key);\n"
-                        + "    }\n"
-                        + "}\n"))
+                        java(
+                                "src/test/pkg/ParcelTest.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.os.Bundle;\n"
+                                        + "import android.os.Parcelable;\n"
+                                        + "\n"
+                                        + "@SuppressWarnings(\"unused\")\n"
+                                        + "public class ParcelTest {\n"
+                                        + "    public static <T extends Parcelable> T getParcelable(Bundle args, String key) {\n"
+                                        + "        return args == null ? null : args.<T>getParcelable(key);\n"
+                                        + "    }\n"
+                                        + "}\n"))
                 .run()
                 .expectClean();
     }
@@ -218,177 +231,189 @@ public class ParcelDetectorTest extends AbstractCheckTest {
     @SuppressWarnings("all") // sample code
     public void testInheritedCreatorField() throws Exception {
         lint().files(
-                java("src/test/pkg/ParcelableTest.java", ""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.os.Parcel;\n"
-                        + "import android.os.Parcelable;\n"
-                        + "\n"
-                        + "public class ParcelableTest {\n"
-                        + "    public static abstract class AbstractParcelable implements Parcelable {\n"
-                        + "        public static Creator CREATOR;\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public class MyParcelable extends AbstractParcelable {\n"
-                        + "        @Override\n"
-                        + "        public int describeContents() {\n"
-                        + "            return 0;\n"
-                        + "        }\n"
-                        + "\n"
-                        + "        @Override\n"
-                        + "        public void writeToParcel(Parcel parcel, int i) {\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "}\n"))
+                        java(
+                                "src/test/pkg/ParcelableTest.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.os.Parcel;\n"
+                                        + "import android.os.Parcelable;\n"
+                                        + "\n"
+                                        + "public class ParcelableTest {\n"
+                                        + "    public static abstract class AbstractParcelable implements Parcelable {\n"
+                                        + "        public static Creator CREATOR;\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    public class MyParcelable extends AbstractParcelable {\n"
+                                        + "        @Override\n"
+                                        + "        public int describeContents() {\n"
+                                        + "            return 0;\n"
+                                        + "        }\n"
+                                        + "\n"
+                                        + "        @Override\n"
+                                        + "        public void writeToParcel(Parcel parcel, int i) {\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}\n"))
                 .run()
                 .expectClean();
     }
 
     public void testKotlin() {
         lint().files(
-                kotlin("package test.pkg\n" +
-                        "\n" +
-                        "import android.os.Parcel\n" +
-                        "import android.os.Parcelable\n" +
-                        "\n" +
-                        "class MissingParcelable1a : Parcelable {\n" +
-                        "    override fun describeContents(): Int { return 0 }\n" +
-                        "    override fun writeToParcel(dest: Parcel, flags: Int) {}\n" +
-                        "}"))
+                        kotlin(
+                                "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.os.Parcel\n"
+                                        + "import android.os.Parcelable\n"
+                                        + "\n"
+                                        + "class MissingParcelable1a : Parcelable {\n"
+                                        + "    override fun describeContents(): Int { return 0 }\n"
+                                        + "    override fun writeToParcel(dest: Parcel, flags: Int) {}\n"
+                                        + "}"))
                 .incremental()
                 .run()
-                .expect("src/test/pkg/MissingParcelable1a.kt:6: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n" +
-                        "class MissingParcelable1a : Parcelable {\n" +
-                        "      ~~~~~~~~~~~~~~~~~~~\n" +
-                        "1 errors, 0 warnings\n");
+                .expect(
+                        "src/test/pkg/MissingParcelable1a.kt:6: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
+                                + "class MissingParcelable1a : Parcelable {\n"
+                                + "      ~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings\n");
     }
 
     public void testKotlinMissingJvmField() {
         lint().files(
-                // Error: CREATOR field is missing @JvmField
-                kotlin("" +
-                        "package test.pkg\n" +
-                        "\n" +
-                        "import android.os.Parcel\n" +
-                        "import android.os.Parcelable\n" +
-                        "\n" +
-                        "class MyClass(val something: String) : Parcelable {\n" +
-                        "\n" +
-                        "    private constructor(p: Parcel) : this(\n" +
-                        "            something = p.readString()\n" +
-                        "    )\n" +
-                        "\n" +
-                        "    override fun writeToParcel(dest: Parcel, flags: Int) {\n" +
-                        "        dest.writeString(something)\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    override fun describeContents() = 0\n" +
-                        "\n" +
-                        "    companion object {\n" +
-                        "        val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR\n" +
-                        "            override fun createFromParcel(parcel: Parcel) = MyClass(parcel)\n" +
-                        "            override fun newArray(size: Int) = arrayOfNulls<MyClass>(size)\n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "}"),
+                        // Error: CREATOR field is missing @JvmField
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.os.Parcel\n"
+                                        + "import android.os.Parcelable\n"
+                                        + "\n"
+                                        + "class MyClass(val something: String) : Parcelable {\n"
+                                        + "\n"
+                                        + "    private constructor(p: Parcel) : this(\n"
+                                        + "            something = p.readString()\n"
+                                        + "    )\n"
+                                        + "\n"
+                                        + "    override fun writeToParcel(dest: Parcel, flags: Int) {\n"
+                                        + "        dest.writeString(something)\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    override fun describeContents() = 0\n"
+                                        + "\n"
+                                        + "    companion object {\n"
+                                        + "        val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR\n"
+                                        + "            override fun createFromParcel(parcel: Parcel) = MyClass(parcel)\n"
+                                        + "            override fun newArray(size: Int) = arrayOfNulls<MyClass>(size)\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}"),
 
-                // OK: It's there
-                kotlin("" +
-                        "package test.pkg\n" +
-                        "\n" +
-                        "import android.os.Parcel\n" +
-                        "import android.os.Parcelable\n" +
-                        "\n" +
-                        "class MyClass2(val something: String) : Parcelable {\n" +
-                        "\n" +
-                        "    private constructor(p: Parcel) : this(\n" +
-                        "            something = p.readString()\n" +
-                        "    )\n" +
-                        "\n" +
-                        "    override fun writeToParcel(dest: Parcel, flags: Int) {\n" +
-                        "        dest.writeString(something)\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    override fun describeContents() = 0\n" +
-                        "\n" +
-                        "    companion object {\n" +
-                        "        @JvmField val CREATOR = object : Parcelable.Creator<MyClass2> { // OK\n" +
-                        "            override fun createFromParcel(parcel: Parcel) = MyClass2(parcel)\n" +
-                        "            override fun newArray(size: Int) = arrayOfNulls<MyClass2>(size)\n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "}"),
-                // OK: It's not using a field but a companion object
-                kotlin("" +
-                        "package tet.pkg\n" +
-                        "\n" +
-                        "import android.os.Parcel\n" +
-                        "import android.os.Parcelable\n" +
-                        "\n" +
-                        "class MyClass3() : Parcelable {\n" +
-                        "    constructor(parcel: Parcel) : this() {\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    override fun writeToParcel(parcel: Parcel, flags: Int) {\n" +
-                        "\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    override fun describeContents(): Int {\n" +
-                        "        return 0\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    companion object CREATOR : Parcelable.Creator<KotlinParc> {\n" +
-                        "        override fun createFromParcel(parcel: Parcel): KotlinParc {\n" +
-                        "            return KotlinParc(parcel)\n" +
-                        "        }\n" +
-                        "\n" +
-                        "        override fun newArray(size: Int): Array<KotlinParc?> {\n" +
-                        "            return arrayOfNulls(size)\n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "\n" +
-                        "}"))
+                        // OK: It's there
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.os.Parcel\n"
+                                        + "import android.os.Parcelable\n"
+                                        + "\n"
+                                        + "class MyClass2(val something: String) : Parcelable {\n"
+                                        + "\n"
+                                        + "    private constructor(p: Parcel) : this(\n"
+                                        + "            something = p.readString()\n"
+                                        + "    )\n"
+                                        + "\n"
+                                        + "    override fun writeToParcel(dest: Parcel, flags: Int) {\n"
+                                        + "        dest.writeString(something)\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    override fun describeContents() = 0\n"
+                                        + "\n"
+                                        + "    companion object {\n"
+                                        + "        @JvmField val CREATOR = object : Parcelable.Creator<MyClass2> { // OK\n"
+                                        + "            override fun createFromParcel(parcel: Parcel) = MyClass2(parcel)\n"
+                                        + "            override fun newArray(size: Int) = arrayOfNulls<MyClass2>(size)\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}"),
+                        // OK: It's not using a field but a companion object
+                        kotlin(
+                                ""
+                                        + "package tet.pkg\n"
+                                        + "\n"
+                                        + "import android.os.Parcel\n"
+                                        + "import android.os.Parcelable\n"
+                                        + "\n"
+                                        + "class MyClass3() : Parcelable {\n"
+                                        + "    constructor(parcel: Parcel) : this() {\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    override fun writeToParcel(parcel: Parcel, flags: Int) {\n"
+                                        + "\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    override fun describeContents(): Int {\n"
+                                        + "        return 0\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    companion object CREATOR : Parcelable.Creator<KotlinParc> {\n"
+                                        + "        override fun createFromParcel(parcel: Parcel): KotlinParc {\n"
+                                        + "            return KotlinParc(parcel)\n"
+                                        + "        }\n"
+                                        + "\n"
+                                        + "        override fun newArray(size: Int): Array<KotlinParc?> {\n"
+                                        + "            return arrayOfNulls(size)\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "}"))
                 .run()
-                .expect("src/test/pkg/MyClass.kt:19: Error: Field should be annotated with @JvmField [ParcelCreator]\n" +
-                        "        val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR\n" +
-                        "            ~~~~~~~\n" +
-                        "1 errors, 0 warnings")
-                .expectFixDiffs("" +
-                        "Fix for src/test/pkg/MyClass.kt line 18: Add @JvmField:\n" +
-                        "@@ -19 +19\n" +
-                        "-         val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR\n" +
-                        "+         @JvmField val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR");
+                .expect(
+                        "src/test/pkg/MyClass.kt:19: Error: Field should be annotated with @JvmField [ParcelCreator]\n"
+                                + "        val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR\n"
+                                + "            ~~~~~~~\n"
+                                + "1 errors, 0 warnings")
+                .expectFixDiffs(
+                        ""
+                                + "Fix for src/test/pkg/MyClass.kt line 18: Add @JvmField:\n"
+                                + "@@ -19 +19\n"
+                                + "-         val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR\n"
+                                + "+         @JvmField val CREATOR = object : Parcelable.Creator<MyClass> { // ERROR");
     }
 
     public void testParcelizeSuggestions() {
         lint().files(
-                kotlin("" +
-                        "@file:JvmName(\"TestKt\")\n" +
-                        "package test\n" +
-                        "\n" +
-                        "import kotlinx.android.parcel.*\n" +
-                        "import android.os.Parcel\n" +
-                        "import android.os.Parcelable\n" +
-                        "\n" +
-                        "@Parcelize\n" +
-                        "data class Test(val a: List<String>) : Parcelable // OK: Has parcelable\n" +
-                        "\n" +
-                        "class Test2(val a: List<String>) : Parcelable // Missing field but don't suggest @Parcelize\n" +
-                        "\n" +
-                        "data class Test3(val a: List<String>) : Parcelable // Warn: Missing @Parcelize\n" +
-                        "\n"),
-                kotlin("" +
-                        "package kotlinx.android.parcel\n" +
-                        "@Target(AnnotationTarget.CLASS)\n" +
-                        "@Retention(AnnotationRetention.BINARY)\n" +
-                        "annotation class Parcelize"))
+                        kotlin(
+                                ""
+                                        + "@file:JvmName(\"TestKt\")\n"
+                                        + "package test\n"
+                                        + "\n"
+                                        + "import kotlinx.android.parcel.*\n"
+                                        + "import android.os.Parcel\n"
+                                        + "import android.os.Parcelable\n"
+                                        + "\n"
+                                        + "@Parcelize\n"
+                                        + "data class Test(val a: List<String>) : Parcelable // OK: Has parcelable\n"
+                                        + "\n"
+                                        + "class Test2(val a: List<String>) : Parcelable // Missing field but don't suggest @Parcelize\n"
+                                        + "\n"
+                                        + "data class Test3(val a: List<String>) : Parcelable // Warn: Missing @Parcelize\n"
+                                        + "\n"),
+                        kotlin(
+                                ""
+                                        + "package kotlinx.android.parcel\n"
+                                        + "@Target(AnnotationTarget.CLASS)\n"
+                                        + "@Retention(AnnotationRetention.BINARY)\n"
+                                        + "annotation class Parcelize"))
                 .run()
-                .expect("src/test/Test.kt:11: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n" +
-                        "class Test2(val a: List<String>) : Parcelable // Missing field but don't suggest @Parcelize\n" +
-                        "      ~~~~~\n" +
-                        "src/test/Test.kt:13: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n" +
-                        "data class Test3(val a: List<String>) : Parcelable // Warn: Missing @Parcelize\n" +
-                        "           ~~~~~\n" +
-                        "2 errors, 0 warnings");
+                .expect(
+                        "src/test/Test.kt:11: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
+                                + "class Test2(val a: List<String>) : Parcelable // Missing field but don't suggest @Parcelize\n"
+                                + "      ~~~~~\n"
+                                + "src/test/Test.kt:13: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
+                                + "data class Test3(val a: List<String>) : Parcelable // Warn: Missing @Parcelize\n"
+                                + "           ~~~~~\n"
+                                + "2 errors, 0 warnings");
     }
 }

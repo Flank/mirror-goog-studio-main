@@ -39,29 +39,25 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 
-/**
- * Checks for unreachable states in an Android state list definition
- */
+/** Checks for unreachable states in an Android state list definition */
 public class StateListDetector extends ResourceXmlDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "StateListReachable",
-            "Unreachable state in a `<selector>`",
-            "In a selector, only the last child in the state list should omit a " +
-            "state qualifier. If not, all subsequent items in the list will be ignored " +
-            "since the given item will match all.",
-            Category.CORRECTNESS,
-            5,
-            Severity.WARNING,
-            new Implementation(
-                    StateListDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "StateListReachable",
+                    "Unreachable state in a `<selector>`",
+                    "In a selector, only the last child in the state list should omit a "
+                            + "state qualifier. If not, all subsequent items in the list will be ignored "
+                            + "since the given item will match all.",
+                    Category.CORRECTNESS,
+                    5,
+                    Severity.WARNING,
+                    new Implementation(StateListDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     private static final String STATE_PREFIX = "state_";
 
     /** Constructs a new {@link StateListDetector} */
-    public StateListDetector() {
-    }
+    public StateListDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -78,8 +74,7 @@ public class StateListDetector extends ResourceXmlDetector {
         Element root = document.getDocumentElement();
         if (root != null && root.getTagName().equals("selector")) {
             List<Element> children = LintUtils.getChildren(root);
-            Map<Element, Set<String>> states =
-                    Maps.newHashMapWithExpectedSize(children.size());
+            Map<Element, Set<String>> states = Maps.newHashMapWithExpectedSize(children.size());
 
             for (Element child : children) {
                 NamedNodeMap attributes = child.getAttributes();
@@ -87,18 +82,18 @@ public class StateListDetector extends ResourceXmlDetector {
                 states.put(child, stateNames);
 
                 for (int j = 0; j < attributes.getLength(); j++) {
-                    Attr attribute = (Attr)attributes.item(j);
+                    Attr attribute = (Attr) attributes.item(j);
                     String name = attribute.getLocalName();
                     if (name == null) {
                         continue;
                     }
                     if (name.startsWith(STATE_PREFIX)) {
                         stateNames.add(name + '=' + attribute.getValue());
-                    }
-                    else {
+                    } else {
                         String namespaceUri = attribute.getNamespaceURI();
-                        if (namespaceUri != null && !namespaceUri.isEmpty() &&
-                            !ANDROID_URI.equals(namespaceUri)) {
+                        if (namespaceUri != null
+                                && !namespaceUri.isEmpty()
+                                && !ANDROID_URI.equals(namespaceUri)) {
                             // There is a custom attribute on this item.
                             // This could be a state, see
                             //   http://code.google.com/p/android/issues/detail?id=22339
@@ -125,9 +120,13 @@ public class StateListDetector extends ResourceXmlDetector {
                         Location secondary = context.getLocation(prev);
                         secondary.setMessage("Earlier item which masks item");
                         location.setSecondary(secondary);
-                        context.report(ISSUE, current, location, String.format(
-                                "This item is unreachable because a previous item (item #%1$d) is a more general match than this one",
-                                i + 1));
+                        context.report(
+                                ISSUE,
+                                current,
+                                location,
+                                String.format(
+                                        "This item is unreachable because a previous item (item #%1$d) is a more general match than this one",
+                                        i + 1));
                         // Don't keep reporting errors for all the remaining cases in this file
                         return;
                     }

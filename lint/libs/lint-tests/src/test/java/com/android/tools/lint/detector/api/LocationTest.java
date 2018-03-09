@@ -69,29 +69,30 @@ public class LocationTest extends TestCase {
     }
 
     public void testCycles() {
-        File[] paths = new File[] {
-                new File("values-zh-rTW/arrays.xml"), new File("values-zh-rCN/arrays.xml"),
-                new File("values-vi/arrays.xml"), new File("values-uk/arrays.xml"),
-                new File("values-tr/arrays.xml"), new File("values-tl/arrays.xml"),
-                new File("values-th/arrays.xml"), new File("values-sv/arrays.xml"),
-                new File("values-sr/arrays.xml"), new File("values-sl/arrays.xml"),
-                new File("values-sk/arrays.xml"), new File("values-ru/arrays.xml"),
-                new File("values-ro/arrays.xml"), new File("values-rm/arrays.xml"),
-                new File("values-pt-rPT/arrays.xml"), new File("values-pt/arrays.xml"),
-                new File("values-pl/arrays.xml"), new File("values-nl/arrays.xml"),
-                new File("values-nb/arrays.xml"), new File("values-lv/arrays.xml"),
-                new File("values-lt/arrays.xml"), new File("values-ko/arrays.xml"),
-                new File("values-ja/arrays.xml"), new File("values-iw/arrays.xml"),
-                new File("values-it/arrays.xml"), new File("values-in/arrays.xml"),
-                new File("values-hu/arrays.xml"), new File("values-hr/arrays.xml"),
-                new File("values-fr/arrays.xml"), new File("values-fi/arrays.xml"),
-                new File("values-fa/arrays.xml"), new File("values-es-rUS/arrays.xml"),
-                new File("values-es/arrays.xml"), new File("values-en-rGB/arrays.xml"),
-                new File("values-el/arrays.xml"), new File("values-de/arrays.xml"),
-                new File("values-da/arrays.xml"), new File("values-cs/arrays.xml"),
-                new File("values-ca/arrays.xml"), new File("values-bg/arrays.xml"),
-                new File("values-ar/arrays.xml"), new File("values/arrays.xml")
-        };
+        File[] paths =
+                new File[] {
+                    new File("values-zh-rTW/arrays.xml"), new File("values-zh-rCN/arrays.xml"),
+                    new File("values-vi/arrays.xml"), new File("values-uk/arrays.xml"),
+                    new File("values-tr/arrays.xml"), new File("values-tl/arrays.xml"),
+                    new File("values-th/arrays.xml"), new File("values-sv/arrays.xml"),
+                    new File("values-sr/arrays.xml"), new File("values-sl/arrays.xml"),
+                    new File("values-sk/arrays.xml"), new File("values-ru/arrays.xml"),
+                    new File("values-ro/arrays.xml"), new File("values-rm/arrays.xml"),
+                    new File("values-pt-rPT/arrays.xml"), new File("values-pt/arrays.xml"),
+                    new File("values-pl/arrays.xml"), new File("values-nl/arrays.xml"),
+                    new File("values-nb/arrays.xml"), new File("values-lv/arrays.xml"),
+                    new File("values-lt/arrays.xml"), new File("values-ko/arrays.xml"),
+                    new File("values-ja/arrays.xml"), new File("values-iw/arrays.xml"),
+                    new File("values-it/arrays.xml"), new File("values-in/arrays.xml"),
+                    new File("values-hu/arrays.xml"), new File("values-hr/arrays.xml"),
+                    new File("values-fr/arrays.xml"), new File("values-fi/arrays.xml"),
+                    new File("values-fa/arrays.xml"), new File("values-es-rUS/arrays.xml"),
+                    new File("values-es/arrays.xml"), new File("values-en-rGB/arrays.xml"),
+                    new File("values-el/arrays.xml"), new File("values-de/arrays.xml"),
+                    new File("values-da/arrays.xml"), new File("values-cs/arrays.xml"),
+                    new File("values-ca/arrays.xml"), new File("values-bg/arrays.xml"),
+                    new File("values-ar/arrays.xml"), new File("values/arrays.xml")
+                };
 
         Location last = null;
         for (int i = paths.length - 1; i >= 0; i--) {
@@ -136,9 +137,19 @@ public class LocationTest extends TestCase {
     public void testInfiniteLoop() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=229500
         // Prior to the fix, these two statements would hang
-        Location.create(new File("foo"), "this is a test", 0, "", "",
+        Location.create(
+                new File("foo"),
+                "this is a test",
+                0,
+                "",
+                "",
                 SearchHints.create(SearchDirection.FORWARD).matchWholeWord());
-        Location.create(new File("foo"), "this is a test", 0, "", "",
+        Location.create(
+                new File("foo"),
+                "this is a test",
+                0,
+                "",
+                "",
                 SearchHints.create(SearchDirection.BACKWARD).matchWholeWord());
     }
 
@@ -174,8 +185,8 @@ public class LocationTest extends TestCase {
         //noinspection all // sample code
         Pair<JavaContext, Disposable> pair =
                 parse("package test.pkg;\nclass Foo{}\n", new File("src/test/pkg/Test.java"));
-        Location.DefaultLocationHandle handle = new Location.DefaultLocationHandle(
-                pair.getFirst(), 0, 10);
+        Location.DefaultLocationHandle handle =
+                new Location.DefaultLocationHandle(pair.getFirst(), 0, 10);
         Location location = handle.resolve();
         assertEquals(10, location.getEnd().getOffset());
     }

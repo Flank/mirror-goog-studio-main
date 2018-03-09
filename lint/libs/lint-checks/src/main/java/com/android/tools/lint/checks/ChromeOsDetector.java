@@ -47,44 +47,47 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
-/**
- * Detects various issues for Chrome OS devices.
- */
+/** Detects various issues for Chrome OS devices. */
 public class ChromeOsDetector extends Detector implements XmlScanner {
     private static final Implementation IMPLEMENTATION =
             new Implementation(ChromeOsDetector.class, Scope.MANIFEST_SCOPE);
 
     /** Using hardware unsupported by Chrome OS devices */
-    public static final Issue UNSUPPORTED_CHROME_OS_HARDWARE = Issue.create(
-            "UnsupportedChromeOsHardware", //$NON-NLS-1$
-            "Unsupported Chrome OS Hardware Feature",
-            "The `<uses-feature>` element should not require this unsupported Chrome OS hardware " +
-            "feature. Any uses-feature not explicitly marked with `required=\"false\"` is " +
-            "necessary on the device to be installed on. Ensure that any features that might " +
-            "prevent it from being installed on a Chrome OS device are reviewed and marked as " +
-            "not required in the manifest.",
-            Category.CHROME_OS,
-            6,
-            Severity.ERROR,
-            IMPLEMENTATION).setEnabledByDefault(false).
-            addMoreInfo("https://developer.android.com/topic/arc/manifest.html#incompat-entries");
+    public static final Issue UNSUPPORTED_CHROME_OS_HARDWARE =
+            Issue.create(
+                            "UnsupportedChromeOsHardware", //$NON-NLS-1$
+                            "Unsupported Chrome OS Hardware Feature",
+                            "The `<uses-feature>` element should not require this unsupported Chrome OS hardware "
+                                    + "feature. Any uses-feature not explicitly marked with `required=\"false\"` is "
+                                    + "necessary on the device to be installed on. Ensure that any features that might "
+                                    + "prevent it from being installed on a Chrome OS device are reviewed and marked as "
+                                    + "not required in the manifest.",
+                            Category.CHROME_OS,
+                            6,
+                            Severity.ERROR,
+                            IMPLEMENTATION)
+                    .setEnabledByDefault(false)
+                    .addMoreInfo(
+                            "https://developer.android.com/topic/arc/manifest.html#incompat-entries");
 
     /** Permission implies required hardware unsupported by Chrome OS */
-    public static final Issue PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE = Issue.create(
-            "PermissionImpliesUnsupportedChromeOsHardware", //$NON-NLS-1$
-            "Permission Implies Unsupported Chrome OS Hardware",
-            "The `<uses-permission>` element should not require a permission that implies an " +
-            "unsupported Chrome OS hardware feature. Google Play assumes that certain " +
-            "hardware related permissions indicate that the underlying hardware features are " +
-            "required by default. To fix the issue, consider declaring the corresponding " +
-            "uses-feature element with `required=\"false\"` attribute.",
-            Category.CHROME_OS,
-            3,
-            Severity.ERROR,
-            IMPLEMENTATION).setEnabledByDefault(false).
-            addMoreInfo("https://developer.android.com/topic/arc/manifest.html#implied-features");
+    public static final Issue PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE =
+            Issue.create(
+                            "PermissionImpliesUnsupportedChromeOsHardware", //$NON-NLS-1$
+                            "Permission Implies Unsupported Chrome OS Hardware",
+                            "The `<uses-permission>` element should not require a permission that implies an "
+                                    + "unsupported Chrome OS hardware feature. Google Play assumes that certain "
+                                    + "hardware related permissions indicate that the underlying hardware features are "
+                                    + "required by default. To fix the issue, consider declaring the corresponding "
+                                    + "uses-feature element with `required=\"false\"` attribute.",
+                            Category.CHROME_OS,
+                            3,
+                            Severity.ERROR,
+                            IMPLEMENTATION)
+                    .setEnabledByDefault(false)
+                    .addMoreInfo(
+                            "https://developer.android.com/topic/arc/manifest.html#implied-features");
 
     private static final String HARDWARE_FEATURE_CAMERA = "android.hardware.camera"; //$NON-NLS-1$
 
@@ -98,48 +101,49 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
             "android.permission.CAMERA"; //$NON-NLS-1$
 
     // https://developer.android.com/topic/arc/manifest.html#incompat-entries
-    private static final String[] UNSUPPORTED_HARDWARE_FEATURES = new String[] {
-            HARDWARE_FEATURE_CAMERA,
-            HARDWARE_FEATURE_CAMERA_AUTOFOCUS,
-            "android.hardware.camera.capability.manual_post_processing",
-            "android.hardware.camera.capability.manual_sensor",
-            "android.hardware.camera.capability.raw",
-            "android.hardware.camera.flash",
-            "android.hardware.camera.level.full",
-            "android.hardware.consumerir",
-            "android.hardware.location.gps",
-            "android.hardware.nfc",
-            "android.hardware.nfc.hce",
-            "android.hardware.sensor.barometer",
-            HARDWARE_FEATURE_TELEPHONY,
-            "android.hardware.telephony.cdma",
-            "android.hardware.telephony.gsm",
-            "android.hardware.touchscreen",
-            "android.hardware.type.automotive",
-            "android.hardware.type.television",
-            "android.hardware.usb.accessory",
-            "android.hardware.usb.host",
-            // Partially-supported, only on some Chrome OS devices.
-            "android.hardware.sensor.accelerometer",
-            "android.hardware.sensor.compass",
-            "android.hardware.sensor.gyroscope",
-            "android.hardware.sensor.light",
-            "android.hardware.sensor.proximity",
-            "android.hardware.sensor.stepcounter",
-            "android.hardware.sensor.stepdetector",
-            // Software features not currently supported on Chrome OS devices.
-            "android.software.app_widgets",
-            "android.software.device_admin",
-            "android.software.home_screen",
-            "android.software.input_methods",
-            "android.software.leanback",
-            "android.software.live_wallpaper",
-            "android.software.live_tv",
-            "android.software.managed_users",
-            "android.software.midi",
-            "android.software.sip",
-            "android.software.sip.voip"
-    };
+    private static final String[] UNSUPPORTED_HARDWARE_FEATURES =
+            new String[] {
+                HARDWARE_FEATURE_CAMERA,
+                HARDWARE_FEATURE_CAMERA_AUTOFOCUS,
+                "android.hardware.camera.capability.manual_post_processing",
+                "android.hardware.camera.capability.manual_sensor",
+                "android.hardware.camera.capability.raw",
+                "android.hardware.camera.flash",
+                "android.hardware.camera.level.full",
+                "android.hardware.consumerir",
+                "android.hardware.location.gps",
+                "android.hardware.nfc",
+                "android.hardware.nfc.hce",
+                "android.hardware.sensor.barometer",
+                HARDWARE_FEATURE_TELEPHONY,
+                "android.hardware.telephony.cdma",
+                "android.hardware.telephony.gsm",
+                "android.hardware.touchscreen",
+                "android.hardware.type.automotive",
+                "android.hardware.type.television",
+                "android.hardware.usb.accessory",
+                "android.hardware.usb.host",
+                // Partially-supported, only on some Chrome OS devices.
+                "android.hardware.sensor.accelerometer",
+                "android.hardware.sensor.compass",
+                "android.hardware.sensor.gyroscope",
+                "android.hardware.sensor.light",
+                "android.hardware.sensor.proximity",
+                "android.hardware.sensor.stepcounter",
+                "android.hardware.sensor.stepdetector",
+                // Software features not currently supported on Chrome OS devices.
+                "android.software.app_widgets",
+                "android.software.device_admin",
+                "android.software.home_screen",
+                "android.software.input_methods",
+                "android.software.leanback",
+                "android.software.live_wallpaper",
+                "android.software.live_tv",
+                "android.software.managed_users",
+                "android.software.midi",
+                "android.software.sip",
+                "android.software.sip.voip"
+            };
 
     /** Constructs a new {@link ChromeOsDetector} check */
     public ChromeOsDetector() {}
@@ -153,7 +157,7 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
     /** All permissions that imply unsupported Chrome OS hardware. */
     private List<String> unsupportedHardwareImpliedPermissions;
 
-    /** All Unsupported Chrome OS uses features in use by the current manifest.*/
+    /** All Unsupported Chrome OS uses features in use by the current manifest. */
     private Set<String> allUnsupportedChromeOsUsesFeatures;
 
     /** Set containing unsupported Chrome OS uses-features elements without required="false" */
@@ -183,44 +187,51 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
             // required = false;
             if (!unsupportedChromeOsUsesFeatures.isEmpty()
                     && xmlContext.isEnabled(UNSUPPORTED_CHROME_OS_HARDWARE)) {
-                List<Element> usesFeatureElements = AndroidTvDetector.findUsesFeatureElements(
-                        unsupportedChromeOsUsesFeatures, xmlContext.document);
+                List<Element> usesFeatureElements =
+                        AndroidTvDetector.findUsesFeatureElements(
+                                unsupportedChromeOsUsesFeatures, xmlContext.document);
                 for (Element element : usesFeatureElements) {
                     Attr attrRequired = element.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_REQUIRED);
-                    Location location = attrRequired == null
-                            ? xmlContext.getNameLocation(element)
-                            : xmlContext.getLocation(attrRequired);
+                    Location location =
+                            attrRequired == null
+                                    ? xmlContext.getNameLocation(element)
+                                    : xmlContext.getLocation(attrRequired);
                     LintFix fix = fix().set(ANDROID_URI, ATTRIBUTE_REQUIRED, VALUE_FALSE).build();
-                    xmlContext.report(UNSUPPORTED_CHROME_OS_HARDWARE, element, location,
+                    xmlContext.report(
+                            UNSUPPORTED_CHROME_OS_HARDWARE,
+                            element,
+                            location,
                             "Expecting `android:required=\"false\"` for this hardware "
                                     + "feature that may not be supported by all Chrome OS "
-                                    + "devices.", fix);
+                                    + "devices.",
+                            fix);
                 }
             }
 
             // Report permissions implying unsupported hardware
             if (!unsupportedHardwareImpliedPermissions.isEmpty()
                     && xmlContext.isEnabled(PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE)) {
-                Predicate<String> p = (String input) -> {
-                    // Special-case handling for camera permission - needs to check that
-                    // both camera and camera autofocus features are present and set to
-                    // android:required="false".
-                    if (ANDROID_PERMISSION_CAMERA.equals(input)) {
-                        return (!usesFeatureCamera || !usesFeatureCameraAutofocus);
-                    }
-                    // Filter out all permissions that already have their corresponding
-                    // implied hardware declared in the AndroidManifest.xml.
-                    String usesFeature = input != null
-                            ? getImpliedUnsupportedHardware(input) : null;
-                    return usesFeature != null
-                            && !allUnsupportedChromeOsUsesFeatures.contains(usesFeature);
-                };
+                Predicate<String> p =
+                        (String input) -> {
+                            // Special-case handling for camera permission - needs to check that
+                            // both camera and camera autofocus features are present and set to
+                            // android:required="false".
+                            if (ANDROID_PERMISSION_CAMERA.equals(input)) {
+                                return (!usesFeatureCamera || !usesFeatureCameraAutofocus);
+                            }
+                            // Filter out all permissions that already have their corresponding
+                            // implied hardware declared in the AndroidManifest.xml.
+                            String usesFeature =
+                                    input != null ? getImpliedUnsupportedHardware(input) : null;
+                            return usesFeature != null
+                                    && !allUnsupportedChromeOsUsesFeatures.contains(usesFeature);
+                        };
 
                 Collection<String> filteredPermissions =
                         unsupportedHardwareImpliedPermissions
-                        .stream()
-                        .filter(p)
-                        .collect(Collectors.toCollection(HashSet::new));
+                                .stream()
+                                .filter(p)
+                                .collect(Collectors.toCollection(HashSet::new));
 
                 List<Element> permissionsWithoutUsesFeatures =
                         AndroidTvDetector.findPermissionElements(
@@ -244,13 +255,18 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
 
                     for (String unsupportedHardwareName : unsupportedHardwareNames) {
                         if (unsupportedHardwareName != null) {
-                            String message = String.format(
-                              "Permission exists without corresponding hardware `<uses-feature "
-                              + "android:name=\"%1$s\" required=\"false\">` tag.", unsupportedHardwareName);
+                            String message =
+                                    String.format(
+                                            "Permission exists without corresponding hardware `<uses-feature "
+                                                    + "android:name=\"%1$s\" required=\"false\">` tag.",
+                                            unsupportedHardwareName);
                             LintFix fix = fix().data(unsupportedHardwareName);
-                            xmlContext.report(PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE,
-                                    permissionElement, xmlContext.getNameLocation(permissionElement),
-                                    message, fix);
+                            xmlContext.report(
+                                    PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE,
+                                    permissionElement,
+                                    xmlContext.getNameLocation(permissionElement),
+                                    message,
+                                    fix);
                         }
                     }
                 }

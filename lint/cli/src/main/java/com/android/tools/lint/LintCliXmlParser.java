@@ -39,11 +39,10 @@ import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 /**
- * A customization of the {@link PositionXmlParser} which creates position
- * objects that directly extend the lint
- * {@link com.android.tools.lint.detector.api.Position} class.
- * <p>
- * It also catches and reports parser errors as lint errors.
+ * A customization of the {@link PositionXmlParser} which creates position objects that directly
+ * extend the lint {@link com.android.tools.lint.detector.api.Position} class.
+ *
+ * <p>It also catches and reports parser errors as lint errors.
  */
 public class LintCliXmlParser extends XmlParser {
     private final LintClient client;
@@ -88,29 +87,33 @@ public class LintCliXmlParser extends XmlParser {
             context.report(
                     // Must provide an issue since API guarantees that the issue parameter
                     // is valid
-                    IssueRegistry.PARSER_ERROR, Location.create(context.file),
-                    e.getCause() != null ? e.getCause().getLocalizedMessage() :
-                            e.getLocalizedMessage()
-            );
+                    IssueRegistry.PARSER_ERROR,
+                    Location.create(context.file),
+                    e.getCause() != null
+                            ? e.getCause().getLocalizedMessage()
+                            : e.getLocalizedMessage());
         } catch (SAXException e) {
             Location location = Location.create(context.file);
-            String message = e.getCause() != null ? e.getCause().getLocalizedMessage() :
-                    e.getLocalizedMessage();
-            if (message.startsWith("The processing instruction target matching "
-                    + "\"[xX][mM][lL]\" is not allowed.")) {
+            String message =
+                    e.getCause() != null
+                            ? e.getCause().getLocalizedMessage()
+                            : e.getLocalizedMessage();
+            if (message.startsWith(
+                    "The processing instruction target matching "
+                            + "\"[xX][mM][lL]\" is not allowed.")) {
                 int prologue = xml.indexOf("<?xml ");
                 int comment = xml.indexOf("<!--");
                 if (prologue != -1 && comment != -1 && comment < prologue) {
-                    message = "The XML prologue should appear before, not after, the first XML "
-                            + "header/copyright comment. " + message;
+                    message =
+                            "The XML prologue should appear before, not after, the first XML "
+                                    + "header/copyright comment. "
+                                    + message;
                 }
             }
             context.report(
                     // Must provide an issue since API guarantees that the issue parameter
                     // is valid
-                    IssueRegistry.PARSER_ERROR, location,
-                    message
-            );
+                    IssueRegistry.PARSER_ERROR, location, message);
         } catch (Throwable t) {
             context.log(t, null);
         }
@@ -137,10 +140,10 @@ public class LintCliXmlParser extends XmlParser {
 
     @NonNull
     @Override
-    public Location getLocation(@NonNull XmlContext context, @NonNull Node node,
-            int start, int end) {
+    public Location getLocation(
+            @NonNull XmlContext context, @NonNull Node node, int start, int end) {
         File file = context.file;
-        Pair<File,? extends Node> mergedSource = findManifestSource(node);
+        Pair<File, ? extends Node> mergedSource = findManifestSource(node);
         if (mergedSource != null) {
             file = mergedSource.getFirst();
             node = mergedSource.getSecond();
@@ -151,7 +154,7 @@ public class LintCliXmlParser extends XmlParser {
     }
 
     @Nullable
-    private Pair<File,? extends Node> findManifestSource(@NonNull Node node) {
+    private Pair<File, ? extends Node> findManifestSource(@NonNull Node node) {
         if (client.isMergeManifestNode(node)) {
             return client.findManifestSourceNode(node);
         }
@@ -171,9 +174,11 @@ public class LintCliXmlParser extends XmlParser {
         int length = node.getNodeName().length();
         int startOffset = start.getOffset() + delta;
         int startColumn = start.getColumn() + delta;
-        return Location.create(location.getFile(),
-                new DefaultPosition(start.getLine(), startColumn, startOffset),
-                new DefaultPosition(start.getLine(), startColumn + length, startOffset + length))
+        return Location.create(
+                        location.getFile(),
+                        new DefaultPosition(start.getLine(), startColumn, startOffset),
+                        new DefaultPosition(
+                                start.getLine(), startColumn + length, startOffset + length))
                 .withSource(node);
     }
 
@@ -191,9 +196,11 @@ public class LintCliXmlParser extends XmlParser {
         int delta = totalLength - 1 - length;
         int startOffset = start.getOffset() + delta;
         int startColumn = start.getColumn() + delta;
-        return Location.create(location.getFile(),
-                new DefaultPosition(start.getLine(), startColumn, startOffset),
-                new DefaultPosition(end.getLine(), startColumn + length, startOffset + length))
+        return Location.create(
+                        location.getFile(),
+                        new DefaultPosition(start.getLine(), startColumn, startOffset),
+                        new DefaultPosition(
+                                end.getLine(), startColumn + length, startOffset + length))
                 .withSource(node);
     }
 
@@ -205,7 +212,7 @@ public class LintCliXmlParser extends XmlParser {
 
     @Override
     public int getNodeStartOffset(@NonNull XmlContext context, @NonNull Node node) {
-        Pair<File,? extends Node> mergedSource = findManifestSource(node);
+        Pair<File, ? extends Node> mergedSource = findManifestSource(node);
         if (mergedSource != null) {
             node = mergedSource.getSecond();
         }
@@ -214,7 +221,7 @@ public class LintCliXmlParser extends XmlParser {
 
     @Override
     public int getNodeEndOffset(@NonNull XmlContext context, @NonNull Node node) {
-        Pair<File,? extends Node> mergedSource = findManifestSource(node);
+        Pair<File, ? extends Node> mergedSource = findManifestSource(node);
         if (mergedSource != null) {
             node = mergedSource.getSecond();
         }

@@ -21,36 +21,38 @@ import com.android.tools.lint.detector.api.Detector;
 public class ExifInterfaceDetectorTest extends AbstractCheckTest {
 
     public void test() {
-        String expected = ""
-                + "src/test/pkg/ExifUsage.java:3: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
-                + "import android.media.ExifInterface;\n"
-                + "       ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
-                + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
-                + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
-                + "                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 3 warnings\n";
+        String expected =
+                ""
+                        + "src/test/pkg/ExifUsage.java:3: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
+                        + "import android.media.ExifInterface;\n"
+                        + "       ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
+                        + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/ExifUsage.java:13: Warning: Avoid using android.media.ExifInterface; use android.support.media.ExifInterface from the support library instead [ExifInterface]\n"
+                        + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
+                        + "                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 3 warnings\n";
 
         //noinspection all
         lint().files(
-                java(""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.media.ExifInterface;\n"
-                        + "\n"
-                        + "@SuppressWarnings(\"unused\")\n"
-                        + "public class ExifUsage {\n"
-                        + "    // platform usage\n"
-                        + "    private void setExifLatLong(String path, String lat, String lon) throws Exception {\n"
-                        + "        ExifInterface exif = new ExifInterface(path);\n"
-                        + "        exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, lat);\n"
-                        + "        exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, lon);\n"
-                        + "        exif.saveAttributes();\n"
-                        + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
-                        + "    }\n"
-                        + "}\n"))
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.media.ExifInterface;\n"
+                                        + "\n"
+                                        + "@SuppressWarnings(\"unused\")\n"
+                                        + "public class ExifUsage {\n"
+                                        + "    // platform usage\n"
+                                        + "    private void setExifLatLong(String path, String lat, String lon) throws Exception {\n"
+                                        + "        ExifInterface exif = new ExifInterface(path);\n"
+                                        + "        exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, lat);\n"
+                                        + "        exif.setAttribute(ExifInterface.TAG_GPS_LONGITUDE, lon);\n"
+                                        + "        exif.saveAttributes();\n"
+                                        + "        android.media.ExifInterface exif2 = new android.media.ExifInterface(path);\n"
+                                        + "    }\n"
+                                        + "}\n"))
                 .run()
                 .expect(expected);
     }
@@ -58,20 +60,21 @@ public class ExifInterfaceDetectorTest extends AbstractCheckTest {
     public void testNonAndroidMediaUsage() {
         //noinspection all
         lint().files(
-                java(""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "public class ExifUsage {\n"
-                        + "    // platform usage\n"
-                        + "    private void setExifLatLong(String path, String lat, String lon) throws Exception {\n"
-                        + "        ExifInterface exif = new ExifInterface(path);\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    private class ExifInterface {\n"
-                        + "        public ExifInterface(String path) {\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "}\n"))
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "public class ExifUsage {\n"
+                                        + "    // platform usage\n"
+                                        + "    private void setExifLatLong(String path, String lat, String lon) throws Exception {\n"
+                                        + "        ExifInterface exif = new ExifInterface(path);\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    private class ExifInterface {\n"
+                                        + "        public ExifInterface(String path) {\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}\n"))
                 .run()
                 .expectClean();
     }

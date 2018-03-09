@@ -40,34 +40,31 @@ import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 
 /**
- * Looks for addJavascriptInterface calls on interfaces have been properly annotated
- * with {@code @JavaScriptInterface}
+ * Looks for addJavascriptInterface calls on interfaces have been properly annotated with
+ * {@code @JavaScriptInterface}
  */
 public class JavaScriptInterfaceDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "JavascriptInterface",
-            "Missing @JavascriptInterface on methods",
-
-            "As of API 17, you must annotate methods in objects registered with the " +
-            "`addJavascriptInterface` method with a `@JavascriptInterface` annotation.",
-
-            Category.SECURITY,
-            8,
-            Severity.ERROR,
-            new Implementation(
-                    JavaScriptInterfaceDetector.class,
-                    Scope.JAVA_FILE_SCOPE))
-            .addMoreInfo(
-            "http://developer.android.com/reference/android/webkit/WebView.html#addJavascriptInterface(java.lang.Object, java.lang.String)");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "JavascriptInterface",
+                            "Missing @JavascriptInterface on methods",
+                            "As of API 17, you must annotate methods in objects registered with the "
+                                    + "`addJavascriptInterface` method with a `@JavascriptInterface` annotation.",
+                            Category.SECURITY,
+                            8,
+                            Severity.ERROR,
+                            new Implementation(
+                                    JavaScriptInterfaceDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .addMoreInfo(
+                            "http://developer.android.com/reference/android/webkit/WebView.html#addJavascriptInterface(java.lang.Object, java.lang.String)");
 
     private static final String ADD_JAVASCRIPT_INTERFACE = "addJavascriptInterface";
     private static final String JAVASCRIPT_INTERFACE_CLS = "android.webkit.JavascriptInterface";
     private static final String WEB_VIEW_CLS = "android.webkit.WebView";
 
     /** Constructs a new {@link JavaScriptInterfaceDetector} check */
-    public JavaScriptInterfaceDetector() {
-    }
+    public JavaScriptInterfaceDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -78,7 +75,9 @@ public class JavaScriptInterfaceDetector extends Detector implements SourceCodeS
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         if (context.getMainProject().getTargetSdk() < 17) {
             return;
@@ -107,10 +106,12 @@ public class JavaScriptInterfaceDetector extends Detector implements SourceCodeS
             }
 
             Location location = context.getNameLocation(call);
-            String message = String.format(
-                    "None of the methods in the added interface (%1$s) have been annotated " +
-                    "with `@android.webkit.JavascriptInterface`; they will not " +
-                    "be visible in API 17", cls.getName());
+            String message =
+                    String.format(
+                            "None of the methods in the added interface (%1$s) have been annotated "
+                                    + "with `@android.webkit.JavascriptInterface`; they will not "
+                                    + "be visible in API 17",
+                            cls.getName());
             context.report(ISSUE, call, location, message);
         }
     }

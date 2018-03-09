@@ -113,7 +113,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         val nameToLocales = translations
         if (nameToLocales?.isNotEmpty() == true &&
             context.isEnabled(MISSING) &&
-            pendingLocales != null) {
+            pendingLocales != null
+        ) {
             val allLocales = filterLocalesByResConfigs(context.project, pendingLocales!!)
 
             // TODO: Complain if we have languages that only have region specific folders
@@ -167,7 +168,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         if (context.driver.scope.contains(Scope.ALL_RESOURCE_FILES) &&
             context.driver.phase == 1 &&
             // Only count locales from non-reporting libraries
-            context.project.reportIssues) {
+            context.project.reportIssues
+        ) {
             val language = getLanguageTagFromFolder(folderName) ?: return
             if (pendingLocales == null) {
                 pendingLocales = HashSet()
@@ -317,7 +319,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         } else if (type == STRING &&
             !folderName.contains('-') &&
             element != null &&
-            context is XmlContext) {
+            context is XmlContext
+        ) {
             // Incrementally check for missing translations
 
             if (handleNonTranslatable(name, element, context, true)) {
@@ -476,7 +479,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
 
                 // Cheap underestimate:
                 if (!qualifiers.contains("dpi") &&
-                    !(qualifiers.startsWith("v") || qualifiers.contains("-v"))) {
+                    !(qualifiers.startsWith("v") || qualifiers.contains("-v"))
+                ) {
                     return false
                 }
 
@@ -531,7 +535,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             if (!isDefaultFolder &&
                 // Ensure that we're really in a locale folder, not just some non-default
                 // folder (for example, values-en is a locale folder, values-v19 is not)
-                LintUtils.getLocaleAndRegion(context.file.parentFile.name) != null) {
+                LintUtils.getLocaleAndRegion(context.file.parentFile.name) != null
+            ) {
                 reportTranslatedUntranslatable(context, name, element, translatable, true)
             }
             recordTranslatable(context, name)
@@ -539,14 +544,16 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         } else if ((isServiceKey(name)
                     // Older versions of the templates shipped with these not marked as
                     // non-translatable; don't flag them
-                    || name == "google_maps_key"
-                    || name == "google_maps_key_instructions")) {
+                    || name == "google_maps_key" ||
+                    name == "google_maps_key_instructions")
+        ) {
             // Mark translatable, but don't flag it as an error do have these translatable
             //  in other folders
             recordTranslatable(context, name)
             return true
         } else if (!isDefaultFolder && nonTranslatable?.contains(name) == true &&
-            LintUtils.getLocaleAndRegion(context.file.parentFile.name) != null) {
+            LintUtils.getLocaleAndRegion(context.file.parentFile.name) != null
+        ) {
             reportTranslatedUntranslatable(
                 context,
                 name,
@@ -586,7 +593,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                 context,
                 EXTRA,
                 locationNode
-            )) {
+            )
+        ) {
             return
         }
 
@@ -648,10 +656,10 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             // Use the ExtraTranslation id for string related problems (historical) and
             // the new MissingDefaultResource for everything else
             val issue = if (type == STRING ||
-                type == ARRAY && element.tagName == TAG_STRING_ARRAY)
+                type == ARRAY && element.tagName == TAG_STRING_ARRAY
+            )
                 EXTRA
-            else
-                MISSING_BASE
+            else MISSING_BASE
             val location = context.getElementLocation(element, attribute = ATTR_NAME)
             context.report(issue, element, location, message, fix)
         } else {
@@ -750,7 +758,8 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
 
     private fun getResConfigLanguages(project: Project): List<String>? {
         if (project.isGradleProject && project.gradleProjectModel != null &&
-            project.currentVariant != null) {
+            project.currentVariant != null
+        ) {
             val relevantDensities = Sets.newHashSet<String>()
             val variant = project.currentVariant
             val variantFlavors = variant!!.productFlavors

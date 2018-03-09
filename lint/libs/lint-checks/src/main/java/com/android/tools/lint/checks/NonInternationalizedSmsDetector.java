@@ -35,38 +35,36 @@ import org.jetbrains.uast.ULiteralExpression;
 /** Detector looking for text messages sent to an unlocalized phone number. */
 public class NonInternationalizedSmsDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "UnlocalizedSms",
-            "SMS phone number missing country code",
-
-            "SMS destination numbers must start with a country code or the application code " +
-            "must ensure that the SMS is only sent when the user is in the same country as " +
-            "the receiver.",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.WARNING,
-            new Implementation(
-                    NonInternationalizedSmsDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
-
+    public static final Issue ISSUE =
+            Issue.create(
+                    "UnlocalizedSms",
+                    "SMS phone number missing country code",
+                    "SMS destination numbers must start with a country code or the application code "
+                            + "must ensure that the SMS is only sent when the user is in the same country as "
+                            + "the receiver.",
+                    Category.CORRECTNESS,
+                    5,
+                    Severity.WARNING,
+                    new Implementation(
+                            NonInternationalizedSmsDetector.class, Scope.JAVA_FILE_SCOPE));
 
     /** Constructs a new {@link NonInternationalizedSmsDetector} check */
-    public NonInternationalizedSmsDetector() {
-    }
+    public NonInternationalizedSmsDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
     @Override
     public List<String> getApplicableMethodNames() {
-      List<String> methodNames = new ArrayList<>(2);
-      methodNames.add("sendTextMessage");
-      methodNames.add("sendMultipartTextMessage");
-      return methodNames;
+        List<String> methodNames = new ArrayList<>(2);
+        methodNames.add("sendTextMessage");
+        methodNames.add("sendMultipartTextMessage");
+        return methodNames;
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         if (call.getReceiver() == null) {
             // "sendTextMessage"/"sendMultipartTextMessage" in the code with no operand
@@ -81,7 +79,7 @@ public class NonInternationalizedSmsDetector extends Detector implements SourceC
         if (!(destinationAddress instanceof ULiteralExpression)) {
             return;
         }
-        Object literal = ((ULiteralExpression)destinationAddress).getValue();
+        Object literal = ((ULiteralExpression) destinationAddress).getValue();
         if (!(literal instanceof String)) {
             return;
         }
@@ -89,9 +87,12 @@ public class NonInternationalizedSmsDetector extends Detector implements SourceC
         if (number.startsWith("+")) {
             return;
         }
-        context.report(ISSUE, call, context.getLocation(destinationAddress),
-            "To make sure the SMS can be sent by all users, please start the SMS number " +
-            "with a + and a country code or restrict the code invocation to people in the " +
-            "country you are targeting.");
+        context.report(
+                ISSUE,
+                call,
+                context.getLocation(destinationAddress),
+                "To make sure the SMS can be sent by all users, please start the SMS number "
+                        + "with a + and a country code or restrict the code invocation to people in the "
+                        + "country you are targeting.");
     }
 }

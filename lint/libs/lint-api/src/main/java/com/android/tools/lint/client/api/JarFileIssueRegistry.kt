@@ -43,11 +43,12 @@ import java.util.jar.JarFile
  */
 class JarFileIssueRegistry
 private constructor(
-        client: LintClient,
-        /** The jar file the rules were loaded from */
-        val jarFile: File,
-        /** The custom lint check's issue registry that this [JarFileIssueRegistry] wraps */
-        registry: IssueRegistry) : IssueRegistry() {
+    client: LintClient,
+    /** The jar file the rules were loaded from */
+    val jarFile: File,
+    /** The custom lint check's issue registry that this [JarFileIssueRegistry] wraps */
+    registry: IssueRegistry
+) : IssueRegistry() {
 
     override val issues: List<Issue> = registry.issues.toList()
     private var timestamp: Long = jarFile.lastModified()
@@ -67,7 +68,7 @@ private constructor(
     companion object Factory {
         /** Service key for automatic discovery of lint rules */
         private const val SERVICE_KEY =
-                "META-INF/services/com.android.tools.lint.client.api.IssueRegistry"
+            "META-INF/services/com.android.tools.lint.client.api.IssueRegistry"
 
         /**
          * Manifest constant for declaring an issue provider.
@@ -147,8 +148,10 @@ private constructor(
             // Ensure that the scope-to-detector map doesn't return stale results
             IssueRegistry.reset()
 
-            val userRegistry = loadIssueRegistry(client, jarFile, registryClassName,
-                    currentProject)
+            val userRegistry = loadIssueRegistry(
+                client, jarFile, registryClassName,
+                currentProject
+            )
             return if (userRegistry != null) {
                 val jarIssueRegistry = JarFileIssueRegistry(client, jarFile, userRegistry)
                 cache!![jarFile] = SoftReference(jarIssueRegistry)
@@ -183,8 +186,10 @@ private constructor(
             // Make a class loader for this jar
             val url = SdkUtils.fileToUrl(jarFile)
             return try {
-                val loader = client.createUrlClassLoader(arrayOf(url),
-                        JarFileIssueRegistry::class.java.classLoader)
+                val loader = client.createUrlClassLoader(
+                    arrayOf(url),
+                    JarFileIssueRegistry::class.java.classLoader
+                )
                 val registryClass = Class.forName(className, true, loader)
                 val registry = registryClass.newInstance() as IssueRegistry
 
@@ -199,7 +204,8 @@ private constructor(
                             "lint checks are updated to the new APIs. The issue registry class " +
                             "is $className. The class loading issue is ${e.message}: $stacktrace"
 
-                    LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
+                    LintClient.report(
+                        client = client, issue = OBSOLETE_LINT_CHECK,
                         message = message, file = jarFile, project = currentProject
                     )
                     return null
@@ -217,8 +223,10 @@ private constructor(
                                 "Custom check API version is $api (${describeApi(api)}), " +
                                 "current lint API level is $CURRENT_API " +
                                 "(${describeApi(CURRENT_API)})"
-                        LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
-                                message = message, file = jarFile, project = currentProject)
+                        LintClient.report(
+                            client = client, issue = OBSOLETE_LINT_CHECK,
+                            message = message, file = jarFile, project = currentProject
+                        )
                         // Not returning here: try to run the checks
                     } else {
                         try {
@@ -228,8 +236,10 @@ private constructor(
                                         "requires a newer API level. That means that the custom " +
                                         "lint checks are intended for a newer lint version; please " +
                                         "upgrade"
-                                LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
-                                        message = message, file = jarFile, project = currentProject)
+                                LintClient.report(
+                                    client = client, issue = OBSOLETE_LINT_CHECK,
+                                    message = message, file = jarFile, project = currentProject
+                                )
                                 return null
                             }
                         } catch (ignore: Throwable) {
@@ -237,36 +247,39 @@ private constructor(
                     }
                 } catch (e: Throwable) {
                     var message = "Lint found an issue registry (`$className`) which did not " +
-                        "specify the Lint API version it was compiled with.\n" +
-                        "\n" +
-                        "**This means that the lint checks are likely not compatible.**\n" +
-                        "\n" +
-                        "If you are the author of this lint check, make your lint " +
-                        "`IssueRegistry` class contain\n" +
-                        "\u00a0\u00a0override val api: Int = com.android.tools.lint.detector.api.CURRENT_API\n" +
-                        "or from Java,\n" +
-                        "\u00a0\u00a0@Override public int getApi() { return com.android.tools.lint.detector.api.ApiKt.CURRENT_API; }"
+                            "specify the Lint API version it was compiled with.\n" +
+                            "\n" +
+                            "**This means that the lint checks are likely not compatible.**\n" +
+                            "\n" +
+                            "If you are the author of this lint check, make your lint " +
+                            "`IssueRegistry` class contain\n" +
+                            "\u00a0\u00a0override val api: Int = com.android.tools.lint.detector.api.CURRENT_API\n" +
+                            "or from Java,\n" +
+                            "\u00a0\u00a0@Override public int getApi() { return com.android.tools.lint.detector.api.ApiKt.CURRENT_API; }"
 
                     val issueIds = issues.map { it.id }.sorted()
                     if (issueIds.any()) {
                         message += ("\n" +
-                            "\n" +
-                            "If you are just using lint checks from a third party library " +
-                            "you have no control over, you can disable these lint checks (if " +
-                            "they misbehave) like this:\n" +
-                            "\n" +
-                            "    android {\n" +
-                            "        lintOptions {\n" +
-                            "            disable ${issueIds.joinToString(
-                                separator = ",\n                    ") { "\"$it\"" }}\n" +
-                            "        }\n" +
-                            "    }\n").
-                                // Force indentation
+                                "\n" +
+                                "If you are just using lint checks from a third party library " +
+                                "you have no control over, you can disable these lint checks (if " +
+                                "they misbehave) like this:\n" +
+                                "\n" +
+                                "    android {\n" +
+                                "        lintOptions {\n" +
+                                "            disable ${issueIds.joinToString(
+                                    separator = ",\n                    "
+                                ) { "\"$it\"" }}\n" +
+                                "        }\n" +
+                                "    }\n")
+                            .// Force indentation
                                 replace("    ", "\u00a0\u00a0\u00a0\u00a0")
                     }
 
-                    LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
-                            message = message, file = jarFile, project = currentProject)
+                    LintClient.report(
+                        client = client, issue = OBSOLETE_LINT_CHECK,
+                        message = message, file = jarFile, project = currentProject
+                    )
                     // Not returning here: try to run the checks
                 }
 
@@ -282,9 +295,10 @@ private constructor(
          * that contains it
          */
         private fun findRegistries(
-                client: LintClient,
-                jarFiles: Collection<File>): Map<String,File> {
-            val registryClassToJarFile = HashMap<String,File>()
+            client: LintClient,
+            jarFiles: Collection<File>
+        ): Map<String, File> {
+            val registryClassToJarFile = HashMap<String, File>()
             for (jarFile in jarFiles) {
                 JarFile(jarFile).use { file ->
                     val manifest = file.manifest
@@ -326,7 +340,8 @@ private constructor(
                                             line.trim()
                                         }
                                         if (!className.isEmpty() &&
-                                                registryClassToJarFile[className] == null) {
+                                            registryClassToJarFile[className] == null
+                                        ) {
                                             registryClassToJarFile[className] = jarFile
                                         }
                                     }
@@ -335,12 +350,14 @@ private constructor(
                             return registryClassToJarFile
                         }
 
-                        client.log(Severity.ERROR, null,
-                                "Custom lint rule jar %1\$s does not contain a valid " +
-                                "registry manifest key (%2\$s).\n" +
-                                "Either the custom jar is invalid, or it uses an outdated " +
-                                "API not supported this lint client",
-                                jarFile.path, MF_LINT_REGISTRY)
+                        client.log(
+                            Severity.ERROR, null,
+                            "Custom lint rule jar %1\$s does not contain a valid " +
+                                    "registry manifest key (%2\$s).\n" +
+                                    "Either the custom jar is invalid, or it uses an outdated " +
+                                    "API not supported this lint client",
+                            jarFile.path, MF_LINT_REGISTRY
+                        )
                     }
                 }
             }
@@ -369,9 +386,10 @@ private constructor(
          * @param loader the URLClassLoader we should close
          */
         private fun loadAndCloseURLClassLoader(
-                client: LintClient,
-                file: File,
-                loader: URLClassLoader) {
+            client: LintClient,
+            file: File,
+            loader: URLClassLoader
+        ) {
             if (SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS) {
                 // We don't need to close the class loader on other platforms than Windows
                 return
@@ -388,8 +406,8 @@ private constructor(
                         if (path.endsWith(DOT_CLASS) && path.indexOf('$') == -1) {
                             // Strip .class suffix and change .jar file path (/)
                             // to class name (.'s).
-                            val name = path.substring(0, path.length - DOT_CLASS.length).
-                                    replace('/', '.')
+                            val name = path.substring(0, path.length - DOT_CLASS.length)
+                                .replace('/', '.')
                             try {
                                 val cls = Class.forName(name, true, loader)
                                 // Actually, initialize them too to make sure basic classes
@@ -403,8 +421,10 @@ private constructor(
                                     }
                                 }
                             } catch (e: Throwable) {
-                                client.log(Severity.ERROR, e,
-                                        "Failed to prefetch $name from $file")
+                                client.log(
+                                    Severity.ERROR, e,
+                                    "Failed to prefetch $name from $file"
+                                )
                             }
                         }
                     }

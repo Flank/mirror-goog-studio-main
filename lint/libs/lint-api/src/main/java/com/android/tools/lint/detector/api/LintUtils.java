@@ -145,15 +145,14 @@ import org.w3c.dom.NodeList;
 
 /**
  * Useful utility methods related to lint.
- * <p>
- * <b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ *
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
 @Beta
 public class LintUtils {
     // Utility class, do not instantiate
-    private LintUtils() {
-    }
+    private LintUtils() {}
 
     @Nullable
     public static String getInternalName(@NonNull PsiClass psiClass) {
@@ -164,7 +163,8 @@ public class LintUtils {
                 if (internalName == null) {
                     return null;
                 }
-                return internalName + JavaAnonymousClassesHelper.getName((PsiAnonymousClass)psiClass);
+                return internalName
+                        + JavaAnonymousClassesHelper.getName((PsiAnonymousClass) psiClass);
             }
         }
         String sig = ClassUtil.getJVMClassName(psiClass);
@@ -187,8 +187,7 @@ public class LintUtils {
     public static String getInternalMethodName(@NonNull PsiMethod method) {
         if (method.isConstructor()) {
             return SdkConstants.CONSTRUCTOR_NAME;
-        }
-        else {
+        } else {
             return method.getName();
         }
     }
@@ -201,7 +200,7 @@ public class LintUtils {
             if (firstChild instanceof PsiWhiteSpace) {
                 firstChild = firstChild.getNextSibling();
             } else if (firstChild instanceof PsiParenthesizedExpression) {
-                firstChild = ((PsiParenthesizedExpression)firstChild).getExpression();
+                firstChild = ((PsiParenthesizedExpression) firstChild).getExpression();
             } else {
                 break;
             }
@@ -212,7 +211,7 @@ public class LintUtils {
                 if (lastChild instanceof PsiWhiteSpace) {
                     lastChild = lastChild.getPrevSibling();
                 } else if (lastChild instanceof PsiParenthesizedExpression) {
-                    lastChild = ((PsiParenthesizedExpression)lastChild).getExpression();
+                    lastChild = ((PsiParenthesizedExpression) lastChild).getExpression();
                 } else {
                     break;
                 }
@@ -223,8 +222,8 @@ public class LintUtils {
     }
 
     /**
-     * Format a list of strings, and cut of the list at {@code maxItems} if the
-     * number of items are greater.
+     * Format a list of strings, and cut of the list at {@code maxItems} if the number of items are
+     * greater.
      *
      * @param strings the list of strings to print out as a comma separated list
      * @param maxItems the maximum number of items to print
@@ -239,9 +238,9 @@ public class LintUtils {
      * Format a list of strings, and cut of the list at {@code maxItems} if the number of items are
      * greater.
      *
-     * @param strings  the list of strings to print out as a comma separated list
+     * @param strings the list of strings to print out as a comma separated list
      * @param maxItems the maximum number of items to print
-     * @param sort     whether the items should be sorted before printing.
+     * @param sort whether the items should be sorted before printing.
      * @return a comma separated list-string
      */
     public static String formatList(@NonNull List<String> strings, int maxItems, boolean sort) {
@@ -269,8 +268,7 @@ public class LintUtils {
     }
 
     /**
-     * Determine if the given type corresponds to a resource that has a unique
-     * file
+     * Determine if the given type corresponds to a resource that has a unique file
      *
      * @param type the resource type to check
      * @return true if the given type corresponds to a file-type resource
@@ -298,15 +296,17 @@ public class LintUtils {
     /**
      * Case insensitive ends with
      *
-     * @param string the string to be tested whether it ends with the given
-     *            suffix
+     * @param string the string to be tested whether it ends with the given suffix
      * @param suffix the suffix to check
-     * @return true if {@code string} ends with {@code suffix},
-     *         case-insensitively.
+     * @return true if {@code string} ends with {@code suffix}, case-insensitively.
      */
     public static boolean endsWith(@NonNull String string, @NonNull String suffix) {
-        return string.regionMatches(true /* ignoreCase */, string.length() - suffix.length(),
-                suffix, 0, suffix.length());
+        return string.regionMatches(
+                true /* ignoreCase */,
+                string.length() - suffix.length(),
+                suffix,
+                0,
+                suffix.length());
     }
 
     /**
@@ -315,8 +315,7 @@ public class LintUtils {
      * @param string the string to be tested whether it starts with the given prefix
      * @param prefix the prefix to check
      * @param offset the offset to start checking with
-     * @return true if {@code string} starts with {@code prefix},
-     *         case-insensitively.
+     * @return true if {@code string} starts with {@code prefix}, case-insensitively.
      */
     public static boolean startsWith(@NonNull String string, @NonNull String prefix, int offset) {
         return string.regionMatches(true /* ignoreCase */, offset, prefix, 0, prefix.length());
@@ -338,18 +337,18 @@ public class LintUtils {
     }
 
     /**
-     * Returns a description of counts for errors and warnings, such as
-     * "5 errors and 2 warnings" or "3 errors" or "2 warnings"
+     * Returns a description of counts for errors and warnings, such as "5 errors and 2 warnings" or
+     * "3 errors" or "2 warnings"
      *
-     * @param errorCount   the count of errors
+     * @param errorCount the count of errors
      * @param warningCount the count of warnings
-     * @param comma        if true, use a comma to separate messages, otherwise "and"
-     * @param capitalize   whether we should capitalize sentence
+     * @param comma if true, use a comma to separate messages, otherwise "and"
+     * @param capitalize whether we should capitalize sentence
      * @return a description string
      */
     @NonNull
-    public static String describeCounts(int errorCount, int warningCount, boolean comma,
-            boolean capitalize) {
+    public static String describeCounts(
+            int errorCount, int warningCount, boolean comma, boolean capitalize) {
         if (errorCount == 0 && warningCount == 0) {
             if (capitalize) {
                 return "No errors or warnings";
@@ -365,7 +364,8 @@ public class LintUtils {
             return String.format("%1$d %2$s", errorCount, errors);
         } else {
             String conjunction = comma ? "," : " and";
-            return String.format("%1$d %2$s%3$s %4$d %5$s",
+            return String.format(
+                    "%1$d %2$s%3$s %4$d %5$s",
                     errorCount, errors, conjunction, warningCount, warnings);
         }
     }
@@ -439,8 +439,8 @@ public class LintUtils {
     }
 
     /**
-     * Returns true if the given two id references match. This is similar to
-     * String equality, but it also considers "{@code @+id/foo == @id/foo}.
+     * Returns true if the given two id references match. This is similar to String equality, but it
+     * also considers "{@code @+id/foo == @id/foo}.
      *
      * @param id1 the first id to compare
      * @param id2 the second id to compare
@@ -456,8 +456,10 @@ public class LintUtils {
             } else {
                 assert id2.startsWith(ID_PREFIX) : id2;
                 return ((id1.length() - id2.length())
-                            == (NEW_ID_PREFIX.length() - ID_PREFIX.length()))
-                        && id1.regionMatches(NEW_ID_PREFIX.length(), id2,
+                                == (NEW_ID_PREFIX.length() - ID_PREFIX.length()))
+                        && id1.regionMatches(
+                                NEW_ID_PREFIX.length(),
+                                id2,
                                 ID_PREFIX.length(),
                                 id2.length() - ID_PREFIX.length());
             }
@@ -468,8 +470,10 @@ public class LintUtils {
             } else {
                 assert id2.startsWith(NEW_ID_PREFIX);
                 return (id2.length() - id1.length()
-                            == (NEW_ID_PREFIX.length() - ID_PREFIX.length()))
-                        && id2.regionMatches(NEW_ID_PREFIX.length(), id1,
+                                == (NEW_ID_PREFIX.length() - ID_PREFIX.length()))
+                        && id2.regionMatches(
+                                NEW_ID_PREFIX.length(),
+                                id1,
                                 ID_PREFIX.length(),
                                 id1.length() - ID_PREFIX.length());
             }
@@ -477,42 +481,40 @@ public class LintUtils {
     }
 
     /**
-     * Computes a canonical "display path" for a resource (which typically
-     * is the parent name plus a file separator, plus the file name)
+     * Computes a canonical "display path" for a resource (which typically is the parent name plus a
+     * file separator, plus the file name)
      *
      * @param client lint client used for formatting
-     * @param file   resource file
+     * @param file resource file
      * @return the display path
      */
     @NonNull
-    public static String getFileNameWithParent(@NonNull LintClient client,
-            @NonNull File file) {
-        return client.getDisplayPath(
-                new File(file.getParentFile().getName(), file.getName()));
+    public static String getFileNameWithParent(@NonNull LintClient client, @NonNull File file) {
+        return client.getDisplayPath(new File(file.getParentFile().getName(), file.getName()));
     }
 
     /**
-     * Returns true if the first string can be edited (Via insertions, deletions or
-     * substitutions) into the second string in at most the given number of editing
-     * operations. This computes the edit distance between the two strings and returns
-     * true if it is less than or equal to the given threshold.
+     * Returns true if the first string can be edited (Via insertions, deletions or substitutions)
+     * into the second string in at most the given number of editing operations. This computes the
+     * edit distance between the two strings and returns true if it is less than or equal to the
+     * given threshold.
      *
-     * @param s   the first string to compare
-     * @param t   the second string to compare
+     * @param s the first string to compare
+     * @param t the second string to compare
      * @param max the maximum number of edit operations allowed
      * @return true if the first string is editable to the second string in at most the given number
-     * of steps
+     *     of steps
      */
     public static boolean isEditableTo(@NonNull String s, @NonNull String t, int max) {
         return editDistance(s, t, max) <= max;
     }
 
     /**
-     * Computes the edit distance (number of insertions, deletions or substitutions
-     * to edit one string into the other) between two strings. In particular,
-     * this will compute the Levenshtein distance.
-     * <p>
-     * See http://en.wikipedia.org/wiki/Levenshtein_distance for details.
+     * Computes the edit distance (number of insertions, deletions or substitutions to edit one
+     * string into the other) between two strings. In particular, this will compute the Levenshtein
+     * distance.
+     *
+     * <p>See http://en.wikipedia.org/wiki/Levenshtein_distance for details.
      *
      * @param s the first string to compare
      * @param t the second string to compare
@@ -523,19 +525,19 @@ public class LintUtils {
     }
 
     /**
-     * Computes the edit distance (number of insertions, deletions or substitutions
-     * to edit one string into the other) between two strings. In particular,
-     * this will compute the Levenshtein distance.
-     * <p>
-     * See http://en.wikipedia.org/wiki/Levenshtein_distance for details.
+     * Computes the edit distance (number of insertions, deletions or substitutions to edit one
+     * string into the other) between two strings. In particular, this will compute the Levenshtein
+     * distance.
      *
-     * @param s   the first string to compare
-     * @param t   the second string to compare
+     * <p>See http://en.wikipedia.org/wiki/Levenshtein_distance for details.
+     *
+     * @param s the first string to compare
+     * @param t the second string to compare
      * @param max the maximum edit distance that we care about; if for example the string length
-     *            delta is greater than this we don't bother computing the exact edit distance since
-     *            the caller has indicated they're not interested in the result
+     *     delta is greater than this we don't bother computing the exact edit distance since the
+     *     caller has indicated they're not interested in the result
      * @return the edit distance between the two strings, or some other value greater than that if
-     * the edit distance is at least as big as the {@code max} parameter
+     *     the edit distance is at least as big as the {@code max} parameter
      */
     public static int editDistance(@NonNull String s, @NonNull String t, int max) {
         if (s.equals(t)) {
@@ -590,8 +592,7 @@ public class LintUtils {
      * Returns the layout resource name for the given layout file
      *
      * @param layoutFile the file pointing to the layout
-     * @return the layout resource name, not including the {@code @layout}
-     *         prefix
+     * @return the layout resource name, not including the {@code @layout} prefix
      */
     public static String getLayoutName(File layoutFile) {
         String name = layoutFile.getName();
@@ -603,13 +604,11 @@ public class LintUtils {
     }
 
     /**
-     * Splits the given path into its individual parts, attempting to be
-     * tolerant about path separators (: or ;). It can handle possibly ambiguous
-     * paths, such as {@code c:\foo\bar:\other}, though of course these are to
-     * be avoided if possible.
+     * Splits the given path into its individual parts, attempting to be tolerant about path
+     * separators (: or ;). It can handle possibly ambiguous paths, such as {@code
+     * c:\foo\bar:\other}, though of course these are to be avoided if possible.
      *
-     * @param path the path variable to split, which can use both : and ; as
-     *            path separators.
+     * @param path the path variable to split, which can use both : and ; as path separators.
      * @return the individual path components as an Iterable of strings
      */
     public static Iterable<String> splitPath(@NonNull String path) {
@@ -621,14 +620,17 @@ public class LintUtils {
         Iterables.addAll(combined, Splitter.on(':').omitEmptyStrings().trimResults().split(path));
         for (int i = 0, n = combined.size(); i < n; i++) {
             String p = combined.get(i);
-            if (p.length() == 1 && i < n - 1 && Character.isLetter(p.charAt(0))
+            if (p.length() == 1
+                    && i < n - 1
+                    && Character.isLetter(p.charAt(0))
                     // Technically, Windows paths do not have to have a \ after the :,
                     // which means it would be using the current directory on that drive,
                     // but that's unlikely to be the case in a path since it would have
                     // unpredictable results
-                    && !combined.get(i+1).isEmpty() && combined.get(i+1).charAt(0) == '\\') {
-                combined.set(i, p + ':' + combined.get(i+1));
-                combined.remove(i+1);
+                    && !combined.get(i + 1).isEmpty()
+                    && combined.get(i + 1).charAt(0) == '\\') {
+                combined.set(i, p + ':' + combined.get(i + 1));
+                combined.remove(i + 1);
                 n--;
             }
         }
@@ -669,8 +671,7 @@ public class LintUtils {
      *
      * @param file1 the first file to be compared
      * @param file2 the second file to be compared
-     * @return the closest common ancestor file, or null if the two files have
-     *         no common parent
+     * @return the closest common ancestor file, or null if the two files have no common parent
      */
     @Nullable
     public static File getCommonParent(@NonNull File file1, @NonNull File file2) {
@@ -702,22 +703,21 @@ public class LintUtils {
     private static final String UTF_16LE = "UTF_16LE";
 
     /**
-     * Returns the encoded String for the given file. This is usually the
-     * same as {@code Files.toString(file, Charsets.UTF8}, but if there's a UTF byte order mark
-     * (for UTF8, UTF_16 or UTF_16LE), use that instead.
+     * Returns the encoded String for the given file. This is usually the same as {@code
+     * Files.toString(file, Charsets.UTF8}, but if there's a UTF byte order mark (for UTF8, UTF_16
+     * or UTF_16LE), use that instead.
      *
-     * @param client       the client to use for I/O operations
-     * @param file         the file to read from
+     * @param client the client to use for I/O operations
+     * @param file the file to read from
      * @param createString If true, create a {@link String} instead of a general {@link
-     *                     CharSequence}
+     *     CharSequence}
      * @return the string
      * @throws IOException if the file cannot be read properly
      */
     @NonNull
     public static CharSequence getEncodedString(
-            @NonNull LintClient client,
-            @NonNull File file,
-            boolean createString) throws IOException {
+            @NonNull LintClient client, @NonNull File file, boolean createString)
+            throws IOException {
         byte[] bytes = client.readBytes(file);
         if (endsWith(file.getName(), DOT_XML)) {
             return PositionXmlParser.getXmlString(bytes);
@@ -733,8 +733,8 @@ public class LintUtils {
      * @return true if this is a data binding expression
      */
     public static boolean isDataBindingExpression(@NonNull String expression) {
-        return (expression.startsWith(PREFIX_BINDING_EXPR) ||
-                expression.startsWith(PREFIX_TWOWAY_BINDING_EXPR));
+        return (expression.startsWith(PREFIX_BINDING_EXPR)
+                || expression.startsWith(PREFIX_TWOWAY_BINDING_EXPR));
     }
 
     /** Returns true if the given resource value is a manifest place holder expression */
@@ -743,17 +743,17 @@ public class LintUtils {
     }
 
     /**
-     * Returns the String corresponding to the given data. This is usually the
-     * same as {@code new String(data)}, but if there's a UTF byte order mark
-     * (for UTF8, UTF_16 or UTF_16LE), use that instead.
-     * <p>
-     * NOTE: For XML files, there is the additional complication that there
-     * could be a {@code encoding=} attribute in the prologue. For those files,
-     * use {@link PositionXmlParser#getXmlString(byte[])} instead.
+     * Returns the String corresponding to the given data. This is usually the same as {@code new
+     * String(data)}, but if there's a UTF byte order mark (for UTF8, UTF_16 or UTF_16LE), use that
+     * instead.
      *
-     * @param data         the byte array to construct the string from
+     * <p>NOTE: For XML files, there is the additional complication that there could be a {@code
+     * encoding=} attribute in the prologue. For those files, use {@link
+     * PositionXmlParser#getXmlString(byte[])} instead.
+     *
+     * @param data the byte array to construct the string from
      * @param createString If true, create a {@link String} instead of a general {@link
-     *                     CharSequence}
+     *     CharSequence}
      * @return the string
      */
     @NonNull
@@ -770,26 +770,30 @@ public class LintUtils {
         // for files which do not specify the encoding.
         // See http://unicode.org/faq/utf_bom.html#BOM for more.
         if (data.length > 4) {
-            if (data[0] == (byte)0xef && data[1] == (byte)0xbb && data[2] == (byte)0xbf) {
+            if (data[0] == (byte) 0xef && data[1] == (byte) 0xbb && data[2] == (byte) 0xbf) {
                 // UTF-8
                 defaultCharset = charset = UTF_8;
                 offset += 3;
-            } else if (data[0] == (byte)0xfe && data[1] == (byte)0xff) {
+            } else if (data[0] == (byte) 0xfe && data[1] == (byte) 0xff) {
                 //  UTF-16, big-endian
                 defaultCharset = charset = UTF_16;
                 offset += 2;
-            } else if (data[0] == (byte)0x0 && data[1] == (byte)0x0
-                    && data[2] == (byte)0xfe && data[3] == (byte)0xff) {
+            } else if (data[0] == (byte) 0x0
+                    && data[1] == (byte) 0x0
+                    && data[2] == (byte) 0xfe
+                    && data[3] == (byte) 0xff) {
                 // UTF-32, big-endian
                 defaultCharset = charset = "UTF_32";
                 offset += 4;
-            } else if (data[0] == (byte)0xff && data[1] == (byte)0xfe
-                    && data[2] == (byte)0x0 && data[3] == (byte)0x0) {
+            } else if (data[0] == (byte) 0xff
+                    && data[1] == (byte) 0xfe
+                    && data[2] == (byte) 0x0
+                    && data[3] == (byte) 0x0) {
                 // UTF-32, little-endian. We must check for this *before* looking for
                 // UTF_16LE since UTF_32LE has the same prefix!
                 defaultCharset = charset = "UTF_32LE";
                 offset += 4;
-            } else if (data[0] == (byte)0xff && data[1] == (byte)0xfe) {
+            } else if (data[0] == (byte) 0xff && data[1] == (byte) 0xfe) {
                 //  UTF-16, little-endian
                 defaultCharset = charset = UTF_16LE;
                 offset += 2;
@@ -836,7 +840,6 @@ public class LintUtils {
                 }
             }
         }
-
 
         CharSequence text = null;
         try {
@@ -901,12 +904,10 @@ public class LintUtils {
     }
 
     /**
-     * Returns the previous opcode prior to the given node, ignoring label and
-     * line number nodes
+     * Returns the previous opcode prior to the given node, ignoring label and line number nodes
      *
      * @param node the node to look up the previous opcode for
-     * @return the previous opcode, or {@link Opcodes#NOP} if no previous node
-     *         was found
+     * @return the previous opcode, or {@link Opcodes#NOP} if no previous node was found
      */
     public static int getPrevOpcode(@NonNull AbstractInsnNode node) {
         AbstractInsnNode prev = getPrevInstruction(node);
@@ -918,8 +919,8 @@ public class LintUtils {
     }
 
     /**
-     * Returns the previous instruction prior to the given node, ignoring label
-     * and line number nodes.
+     * Returns the previous instruction prior to the given node, ignoring label and line number
+     * nodes.
      *
      * @param node the node to look up the previous instruction for
      * @return the previous instruction, or null if no previous node was found
@@ -933,7 +934,8 @@ public class LintUtils {
                 return null;
             } else {
                 int type = prev.getType();
-                if (type != AbstractInsnNode.LINE && type != AbstractInsnNode.LABEL
+                if (type != AbstractInsnNode.LINE
+                        && type != AbstractInsnNode.LABEL
                         && type != AbstractInsnNode.FRAME) {
                     return prev;
                 }
@@ -942,8 +944,7 @@ public class LintUtils {
     }
 
     /**
-     * Returns the next opcode after to the given node, ignoring label and line
-     * number nodes
+     * Returns the next opcode after to the given node, ignoring label and line number nodes
      *
      * @param node the node to look up the next opcode for
      * @return the next opcode, or {@link Opcodes#NOP} if no next node was found
@@ -958,8 +959,7 @@ public class LintUtils {
     }
 
     /**
-     * Returns the next instruction after to the given node, ignoring label and
-     * line number nodes.
+     * Returns the next instruction after to the given node, ignoring label and line number nodes.
      *
      * @param node the node to look up the next node for
      * @return the next instruction, or null if no next node was found
@@ -973,7 +973,8 @@ public class LintUtils {
                 return null;
             } else {
                 int type = next.getType();
-                if (type != AbstractInsnNode.LINE && type != AbstractInsnNode.LABEL
+                if (type != AbstractInsnNode.LINE
+                        && type != AbstractInsnNode.LABEL
                         && type != AbstractInsnNode.FRAME) {
                     return next;
                 }
@@ -1008,9 +1009,8 @@ public class LintUtils {
     }
 
     /**
-     * Look up the locale and region from the given parent folder name and
-     * return it as a combined string, such as "en", "en-rUS", b+eng-US, etc, or null if
-     * no language is specified.
+     * Look up the locale and region from the given parent folder name and return it as a combined
+     * string, such as "en", "en-rUS", b+eng-US, etc, or null if no language is specified.
      *
      * @param folderName the folder name
      * @return the locale+region string or null
@@ -1141,8 +1141,7 @@ public class LintUtils {
 
     @Nullable
     public static List<StyleResourceValue> getInheritedStyles(
-            @NonNull Project project, @NonNull LintClient client,
-            @NonNull String styleUrl) {
+            @NonNull Project project, @NonNull LintClient client, @NonNull String styleUrl) {
         if (!client.supportsProjectResources()) {
             return null;
         }
@@ -1216,21 +1215,20 @@ public class LintUtils {
         return result;
     }
 
-    /** Returns true if the given two paths point to the same logical resource file within
-     * a source set. This means that it only checks the parent folder name and individual
-     * file name, not the path outside the parent folder.
+    /**
+     * Returns true if the given two paths point to the same logical resource file within a source
+     * set. This means that it only checks the parent folder name and individual file name, not the
+     * path outside the parent folder.
      *
      * @param file1 the first file to compare
      * @param file2 the second file to compare
      * @return true if the two files have the same parent and file names
      */
     public static boolean isSameResourceFile(@Nullable File file1, @Nullable File file2) {
-        if (file1 != null && file2 != null
-                && file1.getName().equals(file2.getName())) {
+        if (file1 != null && file2 != null && file1.getName().equals(file2.getName())) {
             File parent1 = file1.getParentFile();
             File parent2 = file2.getParentFile();
-            if (parent1 != null && parent2 != null &&
-                    parent1.getName().equals(parent2.getName())) {
+            if (parent1 != null && parent2 != null && parent1.getName().equals(parent2.getName())) {
                 return true;
             }
         }
@@ -1239,11 +1237,10 @@ public class LintUtils {
     }
 
     /**
-     * Whether we should attempt to look up the prefix from the model. Set to false
-     * if we encounter a model which is too old.
-     * <p>
-     * This is public such that code which for example syncs to a new gradle model
-     * can reset it.
+     * Whether we should attempt to look up the prefix from the model. Set to false if we encounter
+     * a model which is too old.
+     *
+     * <p>This is public such that code which for example syncs to a new gradle model can reset it.
      */
     public static boolean sTryPrefixLookup = true;
 
@@ -1270,8 +1267,8 @@ public class LintUtils {
     }
 
     /** Computes a suggested name given a resource prefix and resource name */
-    public static String computeResourceName(@NonNull String prefix, @NonNull String name,
-            @Nullable ResourceFolderType folderType) {
+    public static String computeResourceName(
+            @NonNull String prefix, @NonNull String name, @Nullable ResourceFolderType folderType) {
         if (prefix.isEmpty()) {
             return name;
         }
@@ -1318,16 +1315,15 @@ public class LintUtils {
      * corresponding API level (it just reflects the string entered by the user in the gradle file)
      * so we perform a search here (since lint really wants to know the actual numeric API level)
      *
-     * @param api     the api version to convert
+     * @param api the api version to convert
      * @param targets if known, the installed targets (used to resolve platform codenames, only
-     *                needed to resolve platforms newer than the tools since {@link
-     *                com.android.sdklib.SdkVersionInfo} knows the rest)
+     *     needed to resolve platforms newer than the tools since {@link
+     *     com.android.sdklib.SdkVersionInfo} knows the rest)
      * @return the corresponding version
      */
     @NonNull
     public static AndroidVersion convertVersion(
-            @NonNull ApiVersion api,
-            @Nullable IAndroidTarget[] targets) {
+            @NonNull ApiVersion api, @Nullable IAndroidTarget[] targets) {
         String codename = api.getCodename();
         if (codename != null) {
             AndroidVersion version = SdkVersionInfo.getVersion(codename, targets);
@@ -1339,19 +1335,19 @@ public class LintUtils {
         return new AndroidVersion(api.getApiLevel(), null);
     }
 
-    /**
-     * Returns true if the given Gradle model is older than the given version number
-     */
-    public static boolean isModelOlderThan(@NonNull Project project,
-            int major, int minor, int micro) {
+    /** Returns true if the given Gradle model is older than the given version number */
+    public static boolean isModelOlderThan(
+            @NonNull Project project, int major, int minor, int micro) {
         return isModelOlderThan(project, major, minor, micro, false);
     }
 
-    /**
-     * Returns true if the given Gradle model is older than the given version number
-     */
-    public static boolean isModelOlderThan(@NonNull Project project,
-            int major, int minor, int micro, boolean defaultForNonGradleProjects) {
+    /** Returns true if the given Gradle model is older than the given version number */
+    public static boolean isModelOlderThan(
+            @NonNull Project project,
+            int major,
+            int minor,
+            int micro,
+            boolean defaultForNonGradleProjects) {
         GradleVersion version = project.getGradleModelVersion();
         if (version == null) {
             return defaultForNonGradleProjects;
@@ -1366,15 +1362,13 @@ public class LintUtils {
         return version.getMicro() < micro;
     }
 
-
     /**
-     * Returns the Java language level for the given element, or the default level
-     * if an applicable the language level is not found (for example if the element
-     * is not a Java element
+     * Returns the Java language level for the given element, or the default level if an applicable
+     * the language level is not found (for example if the element is not a Java element
      */
     @NonNull
-    public static LanguageLevel getLanguageLevel(@NonNull UElement element,
-            @NonNull LanguageLevel defaultLevel) {
+    public static LanguageLevel getLanguageLevel(
+            @NonNull UElement element, @NonNull LanguageLevel defaultLevel) {
         UFile containingFile = UastUtils.getContainingFile(element);
         if (containingFile == null) {
             return defaultLevel;
@@ -1384,16 +1378,14 @@ public class LintUtils {
     }
 
     /**
-     * Returns the Java language level for the given element, or the default level
-     * if an applicable the language level is not found (for example if the element
-     * is not a Java element
+     * Returns the Java language level for the given element, or the default level if an applicable
+     * the language level is not found (for example if the element is not a Java element
      */
     @NonNull
-    public static LanguageLevel getLanguageLevel(@NonNull PsiElement element,
-            @NonNull LanguageLevel defaultLevel) {
-        PsiFile containingFile = element instanceof PsiFile
-                ? (PsiFile) element
-                : element.getContainingFile();
+    public static LanguageLevel getLanguageLevel(
+            @NonNull PsiElement element, @NonNull LanguageLevel defaultLevel) {
+        PsiFile containingFile =
+                element instanceof PsiFile ? (PsiFile) element : element.getContainingFile();
         if (containingFile instanceof PsiJavaFile) {
             return ((PsiJavaFile) containingFile).getLanguageLevel();
         }
@@ -1402,8 +1394,8 @@ public class LintUtils {
     }
 
     /**
-     * Looks for a certain string within a larger string, which should immediately follow
-     * the given prefix and immediately precede the given suffix.
+     * Looks for a certain string within a larger string, which should immediately follow the given
+     * prefix and immediately precede the given suffix.
      *
      * @param string the full string to search
      * @param prefix the optional prefix to follow
@@ -1411,8 +1403,8 @@ public class LintUtils {
      * @return the corresponding substring, if present
      */
     @Nullable
-    public static String findSubstring(@NonNull String string, @Nullable String prefix,
-            @Nullable String suffix) {
+    public static String findSubstring(
+            @NonNull String string, @Nullable String prefix, @Nullable String suffix) {
         int start = 0;
         if (prefix != null) {
             start = string.indexOf(prefix);
@@ -1434,10 +1426,10 @@ public class LintUtils {
     }
 
     /**
-     * Splits up the given message coming from a given string format (where the string
-     * format follows the very specific convention of having only strings formatted exactly
-     * with the format %n$s where n is between 1 and 9 inclusive, and each formatting parameter
-     * appears exactly once, and in increasing order.
+     * Splits up the given message coming from a given string format (where the string format
+     * follows the very specific convention of having only strings formatted exactly with the format
+     * %n$s where n is between 1 and 9 inclusive, and each formatting parameter appears exactly
+     * once, and in increasing order.
      *
      * @param format the format string responsible for creating the error message
      * @param errorMessage an error message formatted with the format string
@@ -1445,8 +1437,7 @@ public class LintUtils {
      */
     @NonNull
     public static List<String> getFormattedParameters(
-            @NonNull String format,
-            @NonNull String errorMessage) {
+            @NonNull String format, @NonNull String errorMessage) {
         StringBuilder pattern = new StringBuilder(format.length());
         int parameter = 1;
         for (int i = 0, n = format.length(); i < n; i++) {
@@ -1489,8 +1480,8 @@ public class LintUtils {
      * Returns the locale for the given parent folder.
      *
      * @param parent the name of the parent folder
-     * @return null if the locale is not known, or a locale qualifier providing the language
-     *    and possibly region
+     * @return null if the locale is not known, or a locale qualifier providing the language and
+     *     possibly region
      */
     @Nullable
     public static LocaleQualifier getLocale(@NonNull String parent) {
@@ -1507,8 +1498,8 @@ public class LintUtils {
      * Returns the locale for the given context.
      *
      * @param context the context to look up the locale for
-     * @return null if the locale is not known, or a locale qualifier providing the language
-     *    and possibly region
+     * @return null if the locale is not known, or a locale qualifier providing the language and
+     *     possibly region
      */
     @Nullable
     public static LocaleQualifier getLocale(@NonNull XmlContext context) {
@@ -1519,8 +1510,8 @@ public class LintUtils {
                 if (locale.indexOf('-') == -1) {
                     return LocaleQualifier.getQualifier(locale);
                 }
-                FolderConfiguration config = FolderConfiguration.getConfigForQualifierString(
-                        locale);
+                FolderConfiguration config =
+                        FolderConfiguration.getConfigForQualifierString(locale);
                 if (config != null) {
                     return config.getLocaleQualifier();
                 }
@@ -1532,9 +1523,10 @@ public class LintUtils {
 
     /**
      * Check whether the given resource file is in an English locale
+     *
      * @param context the XML context for the resource file
-     * @param assumeForBase whether the base folder (e.g. no locale specified) should be
-     *                      treated as English
+     * @param assumeForBase whether the base folder (e.g. no locale specified) should be treated as
+     *     English
      */
     public static boolean isEnglishResource(@NonNull XmlContext context, boolean assumeForBase) {
         LocaleQualifier locale = LintUtils.getLocale(context);
@@ -1546,12 +1538,13 @@ public class LintUtils {
     }
 
     /**
-     * Create a {@link Location} for an error in the top level build.gradle file.
-     * This is necessary when we're doing an analysis based on the Gradle interpreted model,
-     * not from parsing Gradle files - and the model doesn't provide source positions.
+     * Create a {@link Location} for an error in the top level build.gradle file. This is necessary
+     * when we're doing an analysis based on the Gradle interpreted model, not from parsing Gradle
+     * files - and the model doesn't provide source positions.
+     *
      * @param project the project containing the gradle file being analyzed
-     * @return location for the top level gradle file if it exists, otherwise fall back to
-     *     the project directory.
+     * @return location for the top level gradle file if it exists, otherwise fall back to the
+     *     project directory.
      */
     @NonNull
     public static Location guessGradleLocation(@NonNull Project project) {
@@ -1567,20 +1560,18 @@ public class LintUtils {
     }
 
     /**
-     * Attempts to find a string in the build.gradle file for a given project directory.
-     * It will skip comments.
+     * Attempts to find a string in the build.gradle file for a given project directory. It will
+     * skip comments.
      *
-     * @param client     the client (used to read the file)
+     * @param client the client (used to read the file)
      * @param projectDir the project directory
-     * @param string     the string to locate
+     * @param string the string to locate
      * @return a suitable location (or just the build.gradle file, or the project directory, if not
-     * found)
+     *     found)
      */
     @NonNull
     public static Location guessGradleLocation(
-            @NonNull LintClient client,
-            @NonNull File projectDir,
-            @Nullable String string) {
+            @NonNull LintClient client, @NonNull File projectDir, @Nullable String string) {
         File gradle = new File(projectDir, FN_BUILD_GRADLE);
         if (gradle.isFile()) {
             if (string == null) {
@@ -1691,7 +1682,7 @@ public class LintUtils {
 
     public static boolean isString(@NonNull PsiType type) {
         if (type instanceof PsiClassType) {
-            final String shortName = ((PsiClassType)type).getClassName();
+            final String shortName = ((PsiClassType) type).getClassName();
             if (!Objects.equal(shortName, CommonClassNames.JAVA_LANG_STRING_SHORT)) {
                 return false;
             }
@@ -1746,8 +1737,8 @@ public class LintUtils {
     }
 
     /**
-     * Returns the fully qualified class name for a manifest entry element that
-     * specifies a name attribute. Will also replace $ with dots for inner classes.
+     * Returns the fully qualified class name for a manifest entry element that specifies a name
+     * attribute. Will also replace $ with dots for inner classes.
      *
      * @param element the element
      * @return the fully qualified class name
@@ -1759,12 +1750,16 @@ public class LintUtils {
         if (className.startsWith(".")) { //$NON-NLS-1$
             // If the activity class name starts with a '.', it is shorthand for prepending the
             // package name specified in the manifest.
-            String pkg = element.getOwnerDocument().getDocumentElement()
-                    .getAttribute(ATTR_PACKAGE);   // required to exist
+            String pkg =
+                    element.getOwnerDocument()
+                            .getDocumentElement()
+                            .getAttribute(ATTR_PACKAGE); // required to exist
             return pkg + className;
         } else if (className.indexOf('.') == -1) {
-            String pkg = element.getOwnerDocument().getDocumentElement()
-                    .getAttribute(ATTR_PACKAGE);   // required to exist
+            String pkg =
+                    element.getOwnerDocument()
+                            .getDocumentElement()
+                            .getAttribute(ATTR_PACKAGE); // required to exist
 
             // According to the <activity> manifest element documentation, this is not
             // valid ( http://developer.android.com/guide/topics/manifest/activity-element.html )
@@ -1778,8 +1773,7 @@ public class LintUtils {
 
     @NonNull
     public static List<SourceProvider> getSourceProviders(
-            @NonNull AndroidProject project,
-            @NonNull Variant variant) {
+            @NonNull AndroidProject project, @NonNull Variant variant) {
         List<SourceProvider> providers = new ArrayList<>();
         AndroidArtifact mainArtifact = variant.getMainArtifact();
 
@@ -1823,8 +1817,7 @@ public class LintUtils {
 
     @NonNull
     public static List<SourceProvider> getTestSourceProviders(
-            @NonNull AndroidProject project,
-            @NonNull Variant variant) {
+            @NonNull AndroidProject project, @NonNull Variant variant) {
         List<SourceProvider> providers = new ArrayList<>();
 
         ProductFlavorContainer defaultConfig = project.getDefaultConfig();
@@ -1926,10 +1919,8 @@ public class LintUtils {
 
     /** Reads the data from the given URL, with an optional timeout (in milliseconds) */
     @Nullable
-    public static byte[] readUrlData(
-            @NonNull LintClient client,
-            @NonNull String query,
-            int timeout) throws IOException {
+    public static byte[] readUrlData(@NonNull LintClient client, @NonNull String query, int timeout)
+            throws IOException {
         URL url = new URL(query);
 
         URLConnection connection = client.openConnection(url, timeout);
@@ -1948,14 +1939,12 @@ public class LintUtils {
     }
 
     /**
-     * Reads the data from the given URL, with an optional timeout (in milliseconds),
-     * and returns it as a UTF-8 encoded String
+     * Reads the data from the given URL, with an optional timeout (in milliseconds), and returns it
+     * as a UTF-8 encoded String
      */
     @Nullable
     public static String readUrlDataAsString(
-            @NonNull LintClient client,
-            @NonNull String query,
-            int timeout) throws IOException {
+            @NonNull LintClient client, @NonNull String query, int timeout) throws IOException {
         byte[] bytes = readUrlData(client, query, timeout);
         if (bytes != null) {
             return new String(bytes, Charsets.UTF_8);
@@ -1976,9 +1965,9 @@ public class LintUtils {
     }
 
     /**
-     * Looks up the method name of a given call. You should be able to just
-     * call {@link UCallExpression#getMethodName()} but due to bugs in UAST
-     * a workaround is currently necessary in some cases.
+     * Looks up the method name of a given call. You should be able to just call {@link
+     * UCallExpression#getMethodName()} but due to bugs in UAST a workaround is currently necessary
+     * in some cases.
      *
      * @param call the call to look up
      * @return the call name, if any

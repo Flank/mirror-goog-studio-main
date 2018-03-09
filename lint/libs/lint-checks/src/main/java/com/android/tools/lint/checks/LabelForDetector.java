@@ -52,46 +52,41 @@ import java.util.Set;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
-/**
- * Detector which finds unlabeled text fields
- */
+/** Detector which finds unlabeled text fields */
 public class LabelForDetector extends LayoutDetector {
-    /**
-     * The main issue discovered by this detector
-     */
-    public static final Issue ISSUE = Issue.create(
-            "LabelFor",
-            "Missing accessibility label",
-            "Editable text fields should provide an `android:hint` or, provided your " +
-             "`minSdkVersion` is at least 17, they may be referenced by a view " +
-             "with a `android:labelFor` attribute.\n" +
-             "\n" +
-             "When using `android:labelFor`, be sure to provide an `android:text` or an " +
-             "`android:contentDescription`.\n" +
-             "\n" +
-             "If your view is labeled but by a label in a different layout which " +
-             "includes this one, just suppress this warning from lint.",
-            Category.A11Y,
-            2,
-            Severity.WARNING,
-            new Implementation(LabelForDetector.class, Scope.RESOURCE_FILE_SCOPE));
+    /** The main issue discovered by this detector */
+    public static final Issue ISSUE =
+            Issue.create(
+                    "LabelFor",
+                    "Missing accessibility label",
+                    "Editable text fields should provide an `android:hint` or, provided your "
+                            + "`minSdkVersion` is at least 17, they may be referenced by a view "
+                            + "with a `android:labelFor` attribute.\n"
+                            + "\n"
+                            + "When using `android:labelFor`, be sure to provide an `android:text` or an "
+                            + "`android:contentDescription`.\n"
+                            + "\n"
+                            + "If your view is labeled but by a label in a different layout which "
+                            + "includes this one, just suppress this warning from lint.",
+                    Category.A11Y,
+                    2,
+                    Severity.WARNING,
+                    new Implementation(LabelForDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     private static final String PREFIX = "Missing accessibility label";
 
-    private static final String PROVIDE_HINT =  "where minSdk < 17, you should provide an " +
-            "`android:hint`";
+    private static final String PROVIDE_HINT =
+            "where minSdk < 17, you should provide an `android:hint`";
 
-    private static final String PROVIDE_LABEL_FOR_OR_HINT = "provide either a view with an " +
-            "`android:labelFor` that references this view or provide an `android:hint`";
+    private static final String PROVIDE_LABEL_FOR_OR_HINT =
+            "provide either a view with an "
+                    + "`android:labelFor` that references this view or provide an `android:hint`";
 
     private Set<String> mLabels;
     private List<Element> mEditableTextFields;
 
-    /**
-     * Constructs a new {@link LabelForDetector}
-     */
-    public LabelForDetector() {
-    }
+    /** Constructs a new {@link LabelForDetector} */
+    public LabelForDetector() {}
 
     @Override
     @Nullable
@@ -101,11 +96,7 @@ public class LabelForDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(
-                EDIT_TEXT,
-                AUTO_COMPLETE_TEXT_VIEW,
-                MULTI_AUTO_COMPLETE_TEXT_VIEW
-        );
+        return Arrays.asList(EDIT_TEXT, AUTO_COMPLETE_TEXT_VIEW, MULTI_AUTO_COMPLETE_TEXT_VIEW);
     }
 
     @Override
@@ -183,10 +174,13 @@ public class LabelForDetector extends LayoutDetector {
 
         if ((textAttributeNode == null || textAttributeNode.getValue().isEmpty())
                 && (contentDescriptionNode == null
-                || contentDescriptionNode.getValue().isEmpty())) {
-            LintFix fix = fix().group(
-                    fix().set(ANDROID_URI, ATTR_TEXT, "").caretBegin().build(),
-                    fix().set(ANDROID_URI, ATTR_CONTENT_DESCRIPTION, "").caretBegin().build());
+                        || contentDescriptionNode.getValue().isEmpty())) {
+            LintFix fix =
+                    fix().group(
+                                    fix().set(ANDROID_URI, ATTR_TEXT, "").caretBegin().build(),
+                                    fix().set(ANDROID_URI, ATTR_CONTENT_DESCRIPTION, "")
+                                            .caretBegin()
+                                            .build());
 
             context.report(
                     ISSUE,

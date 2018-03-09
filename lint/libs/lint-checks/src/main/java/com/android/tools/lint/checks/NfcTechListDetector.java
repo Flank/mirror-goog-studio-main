@@ -33,34 +33,30 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Check which makes sure NFC tech lists do not include spaces around {@code <tech>} values
- * since that's not handled correctly by the inflater
+ * Check which makes sure NFC tech lists do not include spaces around {@code <tech>} values since
+ * that's not handled correctly by the inflater
  */
 public class NfcTechListDetector extends ResourceXmlDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "NfcTechWhitespace",
-            "Whitespace in NFC tech lists",
-
-            "In a <tech-list>, there can be whitespace around the <tech> elements," +
-            "but not inside them. This is because the code which reads in the tech " +
-            "list is currently very strict and will include the whitespace as part " +
-            "of the name.\n" +
-            "\n" +
-            "In other words, use <tech>name</tech>, not <tech> name </tech>.",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.FATAL,
-            new Implementation(
-                    NfcTechListDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE))
-            .addMoreInfo(
-            "https://code.google.com/p/android/issues/detail?id=65351");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "NfcTechWhitespace",
+                            "Whitespace in NFC tech lists",
+                            "In a <tech-list>, there can be whitespace around the <tech> elements,"
+                                    + "but not inside them. This is because the code which reads in the tech "
+                                    + "list is currently very strict and will include the whitespace as part "
+                                    + "of the name.\n"
+                                    + "\n"
+                                    + "In other words, use <tech>name</tech>, not <tech> name </tech>.",
+                            Category.CORRECTNESS,
+                            5,
+                            Severity.FATAL,
+                            new Implementation(
+                                    NfcTechListDetector.class, Scope.RESOURCE_FILE_SCOPE))
+                    .addMoreInfo("https://code.google.com/p/android/issues/detail?id=65351");
 
     /** Constructs a new {@link NfcTechListDetector} */
-    public NfcTechListDetector() {
-    }
+    public NfcTechListDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -76,8 +72,9 @@ public class NfcTechListDetector extends ResourceXmlDetector {
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         Node parentNode = element.getParentNode();
-        if (parentNode == null || parentNode.getNodeType() != Node.ELEMENT_NODE ||
-                !"tech-list".equals(parentNode.getNodeName())) {
+        if (parentNode == null
+                || parentNode.getNodeType() != Node.ELEMENT_NODE
+                || !"tech-list".equals(parentNode.getNodeName())) {
             return;
         }
 

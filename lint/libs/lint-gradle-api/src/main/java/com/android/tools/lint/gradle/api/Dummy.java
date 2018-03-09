@@ -17,8 +17,7 @@
 package com.android.tools.lint.gradle.api;
 
 /**
- * This class should not be here; it is temporarily working around
- * a bug in the javadoc publishing task
+ * This class should not be here; it is temporarily working around a bug in the javadoc publishing
+ * task
  */
-public class Dummy {
-}
+public class Dummy {}

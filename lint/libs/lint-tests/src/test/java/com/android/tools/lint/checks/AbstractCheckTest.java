@@ -73,6 +73,7 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
     }
 
     static File sdk;
+
     static {
         sdk = TestUtils.getSdk();
     }
@@ -89,9 +90,10 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         // detector results below
         TestLintTask task = TestLintTask.lint();
 
-        task.checkMessage((context, issue, severity, location, message, fix)
-                -> AbstractCheckTest.super.checkReportedError(context, issue, severity, location,
-                message, fix));
+        task.checkMessage(
+                (context, issue, severity, location, message, fix) ->
+                        AbstractCheckTest.super.checkReportedError(
+                                context, issue, severity, location, message, fix));
 
         // We call getIssues() instead of setting task.detector() because the above
         // getIssues call will ensure that we only check issues registered in the class
@@ -99,20 +101,24 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
 
         // Now check check the discrepancy to look for unregistered issues and
         // highlight these
-// TODO: Handle problems from getRegisteredIssuesFromDetector and if no fields are found
-// don't assert the below. Basically, let the ISSUE field live outside the detector class
-// (such as in a companion.)
+        // TODO: Handle problems from getRegisteredIssuesFromDetector and if no fields are found
+        // don't assert the below. Basically, let the ISSUE field live outside the detector class
+        // (such as in a companion.)
         List<Issue> computedIssues = getRegisteredIssuesFromDetector();
         if (getIssues().equals(computedIssues)) {
             Set<Issue> checkedIssues = Sets.newHashSet(task.getCheckedIssues());
             Set<Issue> detectorIssues = Sets.newHashSet(computedIssues);
             if (!checkedIssues.equals(detectorIssues)) {
                 Set<Issue> difference = Sets.symmetricDifference(checkedIssues, detectorIssues);
-                fail("Discrepancy in issues listed in detector class " +
-                        getDetectorInstance().getClass().getSimpleName() + " and issues " +
-                        "found in the issue registry: " + difference + ". If the issue fields " +
-                        "are not meant to be included in the registry, you can rename them to " +
-                        "begin with an underscore.");
+                fail(
+                        "Discrepancy in issues listed in detector class "
+                                + getDetectorInstance().getClass().getSimpleName()
+                                + " and issues "
+                                + "found in the issue registry: "
+                                + difference
+                                + ". If the issue fields "
+                                + "are not meant to be included in the registry, you can rename them to "
+                                + "begin with an underscore.");
             }
         }
 
@@ -122,9 +128,9 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
     }
 
     /**
-     * Overrides TestLintClient to use the checked-in SDK that is available in the tools/base
-     * repo. The "real" TestLintClient is a public utility for writing lint tests, so it cannot
-     * make assumptions specific to tools/base.
+     * Overrides TestLintClient to use the checked-in SDK that is available in the tools/base repo.
+     * The "real" TestLintClient is a public utility for writing lint tests, so it cannot make
+     * assumptions specific to tools/base.
      */
     protected class ToolsBaseTestLintClient extends TestLintClient {
         @Nullable
@@ -135,8 +141,7 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
     }
 
     public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
-    protected TestFile SUPPORT_ANNOTATIONS_JAR = base64gzip(SUPPORT_JAR_PATH,
-            SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);
+    protected TestFile SUPPORT_ANNOTATIONS_JAR =
+            base64gzip(SUPPORT_JAR_PATH, SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);
     protected TestFile SUPPORT_ANNOTATIONS_CLASS_PATH = classpath(SUPPORT_JAR_PATH);
-
 }

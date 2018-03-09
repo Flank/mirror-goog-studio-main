@@ -27,15 +27,20 @@ public class StringAuthLeakDetectorTest extends AbstractCheckTest {
     }
 
     public void testStringAuthLeak() throws Exception {
-        String expected = "src/test/pkg/AuthDemo.java:2: Warning: Possible credential leak [AuthLeak]\n"
-                + "  private static final String AUTH_IP = \"scheme://user:pwd@127.0.0.1:8000\";\n"
-                + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n";
-        String result = lintProject(java("src/test/pkg/AuthDemo.java", ""
-                + "public class AuthDemo {\n"
-                + "  private static final String AUTH_IP = \"scheme://user:pwd@127.0.0.1:8000\";\n"
-                + "  private static final String AUTH_NO_LEAK = \"scheme://user:%s@www.google.com\";\n"
-                + "}\n"));
+        String expected =
+                "src/test/pkg/AuthDemo.java:2: Warning: Possible credential leak [AuthLeak]\n"
+                        + "  private static final String AUTH_IP = \"scheme://user:pwd@127.0.0.1:8000\";\n"
+                        + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n";
+        String result =
+                lintProject(
+                        java(
+                                "src/test/pkg/AuthDemo.java",
+                                ""
+                                        + "public class AuthDemo {\n"
+                                        + "  private static final String AUTH_IP = \"scheme://user:pwd@127.0.0.1:8000\";\n"
+                                        + "  private static final String AUTH_NO_LEAK = \"scheme://user:%s@www.google.com\";\n"
+                                        + "}\n"));
         assertEquals(expected, result);
     }
 }

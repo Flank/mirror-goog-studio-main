@@ -76,36 +76,32 @@ import org.w3c.dom.Node;
 public class InstantAppDetector extends ResourceXmlDetector implements SourceCodeScanner {
 
     @SuppressWarnings("unchecked")
-    public static final Implementation IMPLEMENTATION = new Implementation(
-            InstantAppDetector.class,
-            EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE),
-            Scope.MANIFEST_SCOPE,
-            Scope.JAVA_FILE_SCOPE);
+    public static final Implementation IMPLEMENTATION =
+            new Implementation(
+                    InstantAppDetector.class,
+                    EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE),
+                    Scope.MANIFEST_SCOPE,
+                    Scope.JAVA_FILE_SCOPE);
+
+    /** Instant App related issues */
+    public static final Issue ISSUE =
+            Issue.create(
+                    "InstantApps",
+                    "Instant App Issues",
+
+                    // TODO: Need full explanation here
+                    "This issue flags code that will not work correctly in Instant Apps",
+                    Category.CORRECTNESS,
+                    5,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
+
+    /** Constructs a new {@link InstantAppDetector} */
+    public InstantAppDetector() {}
 
     /**
-     * Instant App related issues
-     */
-    public static final Issue ISSUE = Issue.create(
-            "InstantApps",
-            "Instant App Issues",
-
-            // TODO: Need full explanation here
-            "This issue flags code that will not work correctly in Instant Apps",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.WARNING,
-            IMPLEMENTATION);
-
-    /**
-     * Constructs a new {@link InstantAppDetector}
-     */
-    public InstantAppDetector() {
-    }
-
-    /**
-     * Checks whether the source is part of an Instant App module -- or a module included
-     * from an instant app module
+     * Checks whether the source is part of an Instant App module -- or a module included from an
+     * instant app module
      */
     private static boolean isInstantApp(@NonNull Context context) {
         Project mainProject = context.getMainProject();
@@ -142,12 +138,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
     @Override
     public Collection<String> getApplicableElements() {
         return Arrays.asList(
-                TAG_PROVIDER,
-                TAG_RECEIVER,
-                TAG_SERVICE,
-                TAG_USES_SDK,
-                TAG_USES_PERMISSION
-        );
+                TAG_PROVIDER, TAG_RECEIVER, TAG_SERVICE, TAG_USES_SDK, TAG_USES_PERMISSION);
     }
 
     @Override
@@ -156,56 +147,71 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
         switch (tag) {
             case TAG_PROVIDER:
             case TAG_RECEIVER:
-            case TAG_SERVICE: {
-                report(ISSUE, context, element,
-                        "Instant Apps are not allowed to export services, receivers, "
-                                + "and providers");
-                break;
-            }
-
-            case TAG_USES_SDK: {
-                Attr targetSdkVersionNode = element.getAttributeNodeNS(ANDROID_URI,
-                        ATTR_TARGET_SDK_VERSION);
-                if (targetSdkVersionNode != null) {
-                    String target = targetSdkVersionNode.getValue();
-                    AndroidVersion version = SdkVersionInfo.getVersion(target, null);
-                    if (version != null && version.getFeatureLevel() < 23) {
-                        report(ISSUE, context, targetSdkVersionNode,
-                                "Instant Apps must target API 23+");
-                    }
+            case TAG_SERVICE:
+                {
+                    report(
+                            ISSUE,
+                            context,
+                            element,
+                            "Instant Apps are not allowed to export services, receivers, "
+                                    + "and providers");
+                    break;
                 }
-                break;
-            }
 
-            case TAG_USES_PERMISSION: {
-                String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                switch (name) {
-                    case "android.permission.ACCESS_NETWORK_STATE":
-                    case "android.permission.ACCESS_WIFI_STATE":
-                    case "android.permission.INTERNET":
-                    case "android.permission.WAKE_LOCK":
-                    case "android.permission.VIBRATE":
-                    case "android.permission.ACCESS_COARSE_LOCATION":
-                    case "android.permission.ACCESS_FINE_LOCATION":
-                    case "android.permission.RECORD_AUDIO":
-                        // Still being considered: READ_GSERVICES, GET_ACCOUNTS
-                        return;
-
-                    default:
-                        if (!name.startsWith("android.permission.")) {
-                            if (name.endsWith(".permission.C2D_MESSAGE")) {
-                                report(ISSUE, context, element,
-                                        "Instant Apps are not allowed to use Google Cloud "
-                                                + "Messaging (GCM)");
-                            }
-                            return;
+            case TAG_USES_SDK:
+                {
+                    Attr targetSdkVersionNode =
+                            element.getAttributeNodeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION);
+                    if (targetSdkVersionNode != null) {
+                        String target = targetSdkVersionNode.getValue();
+                        AndroidVersion version = SdkVersionInfo.getVersion(target, null);
+                        if (version != null && version.getFeatureLevel() < 23) {
+                            report(
+                                    ISSUE,
+                                    context,
+                                    targetSdkVersionNode,
+                                    "Instant Apps must target API 23+");
                         }
-                        report(ISSUE, context, element,
-                                "This permission is not allowed for Instant Apps");
+                    }
+                    break;
                 }
 
-                break;
-            }
+            case TAG_USES_PERMISSION:
+                {
+                    String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                    switch (name) {
+                        case "android.permission.ACCESS_NETWORK_STATE":
+                        case "android.permission.ACCESS_WIFI_STATE":
+                        case "android.permission.INTERNET":
+                        case "android.permission.WAKE_LOCK":
+                        case "android.permission.VIBRATE":
+                        case "android.permission.ACCESS_COARSE_LOCATION":
+                        case "android.permission.ACCESS_FINE_LOCATION":
+                        case "android.permission.RECORD_AUDIO":
+                            // Still being considered: READ_GSERVICES, GET_ACCOUNTS
+                            return;
+
+                        default:
+                            if (!name.startsWith("android.permission.")) {
+                                if (name.endsWith(".permission.C2D_MESSAGE")) {
+                                    report(
+                                            ISSUE,
+                                            context,
+                                            element,
+                                            "Instant Apps are not allowed to use Google Cloud "
+                                                    + "Messaging (GCM)");
+                                }
+                                return;
+                            }
+                            report(
+                                    ISSUE,
+                                    context,
+                                    element,
+                                    "This permission is not allowed for Instant Apps");
+                    }
+
+                    break;
+                }
         }
     }
 
@@ -237,8 +243,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
         }
     }
 
-    private static void checkMultipleLauncherActivities(@NonNull Context context,
-            Element root) {
+    private static void checkMultipleLauncherActivities(@NonNull Context context, Element root) {
         Element application = XmlUtils.getFirstSubTagByName(root, TAG_APPLICATION);
         if (application == null) {
             return;
@@ -254,7 +259,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
                     // More than one found: complain
                     LintClient client = context.getClient();
 
-                    Pair<File,? extends Node> source = client.findManifestSourceNode(activity);
+                    Pair<File, ? extends Node> source = client.findManifestSourceNode(activity);
                     if (source != null) {
                         XmlParser parser = client.getXmlParser();
                         // Don't search for the category tag directly; the manifest merger
@@ -262,28 +267,31 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
                         // up always returning the first one. If we instead search for the
                         // activity, we'll get the correct unique node, and then we can simply
                         // search for the category node under the source node.
-                        Node locationNode = ManifestDetector.findLaunchableCategoryNode(
-                                (Element)source.getSecond());
+                        Node locationNode =
+                                ManifestDetector.findLaunchableCategoryNode(
+                                        (Element) source.getSecond());
                         if (locationNode == null) {
                             locationNode = activity;
                         }
-                        Location location = parser.getLocation(source.getFirst(),
-                                locationNode);
-                        Pair<File,? extends Node> original =
+                        Location location = parser.getLocation(source.getFirst(), locationNode);
+                        Pair<File, ? extends Node> original =
                                 client.findManifestSourceNode(launchableActivity);
                         if (original != null && original.getSecond() != source.getSecond()) {
-                            locationNode = ManifestDetector.findLaunchableCategoryNode(
-                                    (Element)original.getSecond());
+                            locationNode =
+                                    ManifestDetector.findLaunchableCategoryNode(
+                                            (Element) original.getSecond());
                             if (locationNode == null) {
                                 locationNode = original.getSecond();
                             }
-                            Location secondary = parser.getLocation(original.getFirst(),
-                                    locationNode);
+                            Location secondary =
+                                    parser.getLocation(original.getFirst(), locationNode);
                             secondary.setMessage("Other launchable activity here");
                             location.setSecondary(secondary);
                         }
 
-                        context.report(ISSUE, location,
+                        context.report(
+                                ISSUE,
+                                location,
                                 "Instant Apps are not allowed to have multiple "
                                         + "launchable activities");
                     }
@@ -294,27 +302,26 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
         }
     }
 
-
-    private static void checkMergedTargetSdkVersion(@NonNull Context context, Project project,
-            Element root) {
+    private static void checkMergedTargetSdkVersion(
+            @NonNull Context context, Project project, Element root) {
         // Look up targetSdkVersion from the merged manifest to make sure we also pick up
         // on any Gradle-overrides
         Element usesSdk = XmlUtils.getFirstSubTagByName(root, TAG_USES_SDK);
         if (usesSdk == null) {
             return;
         }
-        Attr targetSdkVersionNode = usesSdk.getAttributeNodeNS(ANDROID_URI,
-                ATTR_TARGET_SDK_VERSION);
+        Attr targetSdkVersionNode =
+                usesSdk.getAttributeNodeNS(ANDROID_URI, ATTR_TARGET_SDK_VERSION);
         if (targetSdkVersionNode != null) {
             String target = targetSdkVersionNode.getValue();
             AndroidVersion version = SdkVersionInfo.getVersion(target, null);
             if (version != null && version.getFeatureLevel() < 23) {
                 File dir = project.getDir();
                 File gradle = project.isGradleProject() ? new File(dir, FN_BUILD_GRADLE) : null;
-                Location location = Location.create(gradle != null && gradle.isFile() ?
-                        gradle : dir);
-                context.report(ISSUE, location,
-                        "Instant Apps must target API 23+ (was " + version + ")");
+                Location location =
+                        Location.create(gradle != null && gradle.isFile() ? gradle : dir);
+                context.report(
+                        ISSUE, location, "Instant Apps must target API 23+ (was " + version + ")");
             }
         }
     }
@@ -323,42 +330,43 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
     @Override
     public List<String> getApplicableMethodNames() {
         return Arrays.asList(
-                "notify",
-                "registerReceiver",
-                "getMacAddress",
-                "getAddress",
-                "getLong"
-        );
+                "notify", "registerReceiver", "getMacAddress", "getAddress", "getLong");
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
         switch (method.getName()) {
             case "notify":
                 if (evaluator.isMemberInClass(method, "android.app.NotificationManager")) {
-                    report(ISSUE, context, call,
+                    report(
+                            ISSUE,
+                            context,
+                            call,
                             "Instant Apps are not allowed to create notifications");
                 }
                 break;
             case "registerReceiver":
                 if (evaluator.isMemberInClass(method, "android.content.Context")) {
-                    report(ISSUE, context, call,
+                    report(
+                            ISSUE,
+                            context,
+                            call,
                             "Instant Apps are not allowed to listen to broadcasts from "
                                     + "system or other apps");
                 }
                 break;
             case "getMacAddress":
                 if (evaluator.isMemberInClass(method, "android.net.wifi.WifiInfo")) {
-                    report(ISSUE, context, call,
-                            getPlaceHolderError("Mac Addresses"));
+                    report(ISSUE, context, call, getPlaceHolderError("Mac Addresses"));
                 }
                 break;
             case "getAddress":
                 if (evaluator.isMemberInClass(method, "android.bluetooth.BluetoothAdapter")) {
-                    report(ISSUE, context, call,
-                            getPlaceHolderError("Mac Addresses"));
+                    report(ISSUE, context, call, getPlaceHolderError("Mac Addresses"));
                 }
                 break;
             case "getLong":
@@ -367,8 +375,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
                     if (arguments.size() == 3) {
                         Object key = ConstantEvaluator.evaluate(context, arguments.get(1));
                         if ("android_id".equals(key)) {
-                            report(ISSUE, context, call,
-                                    getPlaceHolderError("Android Id"));
+                            report(ISSUE, context, call, getPlaceHolderError("Android Id"));
                         }
                     }
                 }
@@ -389,8 +396,10 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
     }
 
     @Override
-    public void visitReference(@NonNull JavaContext context,
-            @NonNull UReferenceExpression reference, @NonNull PsiElement referenced) {
+    public void visitReference(
+            @NonNull JavaContext context,
+            @NonNull UReferenceExpression reference,
+            @NonNull PsiElement referenced) {
         if (!(referenced instanceof PsiField)) {
             return;
         }
@@ -410,22 +419,31 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
                 break;
             case "android.provider.Settings.Secure":
                 if ("ANDROID_ID".equals(reference.getResolvedName())) {
-                    report(ISSUE, context, reference, getPlaceHolderError(
-                            "Settings.Secure Android Id"));
+                    report(
+                            ISSUE,
+                            context,
+                            reference,
+                            getPlaceHolderError("Settings.Secure Android Id"));
                 }
                 break;
         }
     }
 
-    private static void report(@NonNull Issue issue, @NonNull XmlContext context,
-            @NonNull Node node, @NonNull String message) {
+    private static void report(
+            @NonNull Issue issue,
+            @NonNull XmlContext context,
+            @NonNull Node node,
+            @NonNull String message) {
         if (isInstantApp(context)) {
             context.report(issue, node, context.getLocation(node), message);
         }
     }
 
-    private static void report(@NonNull Issue issue, @NonNull JavaContext context,
-            @NonNull UElement element, @NonNull String message) {
+    private static void report(
+            @NonNull Issue issue,
+            @NonNull JavaContext context,
+            @NonNull UElement element,
+            @NonNull String message) {
         if (isInstantApp(context)) {
             context.report(issue, element, context.getLocation(element), message);
         }

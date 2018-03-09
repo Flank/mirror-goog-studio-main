@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TYPE;
 import static com.android.SdkConstants.TAG_ITEM;
@@ -55,59 +54,57 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * This detector identifies cases where a resource is defined multiple times in the
- * same resource folder
+ * This detector identifies cases where a resource is defined multiple times in the same resource
+ * folder
  */
 public class DuplicateResourceDetector extends ResourceXmlDetector {
 
     /** The main issue discovered by this detector */
     @SuppressWarnings("unchecked")
-    public static final Issue ISSUE = Issue.create(
-            "DuplicateDefinition",
-            "Duplicate definitions of resources",
+    public static final Issue ISSUE =
+            Issue.create(
+                    "DuplicateDefinition",
+                    "Duplicate definitions of resources",
+                    "You can define a resource multiple times in different resource folders; that's how "
+                            + "string translations are done, for example. However, defining the same resource "
+                            + "more than once in the same resource folder is likely an error, for example "
+                            + "attempting to add a new resource without realizing that the name is already used, "
+                            + "and so on.",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.ERROR,
+                    new Implementation(
+                            DuplicateResourceDetector.class,
+                            // We should be able to do this incrementally!
+                            Scope.ALL_RESOURCES_SCOPE,
+                            Scope.RESOURCE_FILE_SCOPE));
 
-            "You can define a resource multiple times in different resource folders; that's how " +
-            "string translations are done, for example. However, defining the same resource " +
-            "more than once in the same resource folder is likely an error, for example " +
-            "attempting to add a new resource without realizing that the name is already used, " +
-            "and so on.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.ERROR,
-            new Implementation(
-                    DuplicateResourceDetector.class,
-                    // We should be able to do this incrementally!
-                    Scope.ALL_RESOURCES_SCOPE,
-                    Scope.RESOURCE_FILE_SCOPE));
-
-    public static final Implementation IMPLEMENTATION_XML = new Implementation(
-            DuplicateResourceDetector.class,
-            Scope.RESOURCE_FILE_SCOPE);
+    public static final Implementation IMPLEMENTATION_XML =
+            new Implementation(DuplicateResourceDetector.class, Scope.RESOURCE_FILE_SCOPE);
 
     /** Wrong resource value type */
-    public static final Issue TYPE_MISMATCH = Issue.create(
-            "ReferenceType",
-            "Incorrect reference types",
-            "When you generate a resource alias, the resource you are pointing to must be " +
-                    "of the same type as the alias",
-            Category.CORRECTNESS,
-            8,
-            Severity.FATAL,
-            IMPLEMENTATION_XML);
+    public static final Issue TYPE_MISMATCH =
+            Issue.create(
+                    "ReferenceType",
+                    "Incorrect reference types",
+                    "When you generate a resource alias, the resource you are pointing to must be "
+                            + "of the same type as the alias",
+                    Category.CORRECTNESS,
+                    8,
+                    Severity.FATAL,
+                    IMPLEMENTATION_XML);
 
     /** Invalid XML escaping */
-    public static final Issue STRING_ESCAPING = Issue.create(
-            "StringEscaping",
-            "Invalid string escapes",
-
-            "Apostrophes (') must always be escaped (with a \\\\), unless they appear " +
-            "in a string which is itself escaped in double quotes (\").",
-
-            Category.MESSAGES,
-            9,
-            Severity.ERROR,
-            IMPLEMENTATION_XML);
+    public static final Issue STRING_ESCAPING =
+            Issue.create(
+                    "StringEscaping",
+                    "Invalid string escapes",
+                    "Apostrophes (') must always be escaped (with a \\\\), unless they appear "
+                            + "in a string which is itself escaped in double quotes (\").",
+                    Category.MESSAGES,
+                    9,
+                    Severity.ERROR,
+                    IMPLEMENTATION_XML);
 
     private static final String PRODUCT = "product";
     private Map<ResourceType, Set<String>> mTypeMap;
@@ -115,8 +112,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
     private File mParent;
 
     /** Constructs a new {@link DuplicateResourceDetector} */
-    public DuplicateResourceDetector() {
-    }
+    public DuplicateResourceDetector() {}
 
     @Override
     @Nullable
@@ -152,8 +148,8 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
         if (tag.equals(TAG_ITEM)) {
             typeString = element.getAttribute(ATTR_TYPE);
             if (typeString == null || typeString.isEmpty()) {
-                if (element.getParentNode().getNodeName().equals(
-                        ResourceType.STYLE.getName()) && isFirstElementChild(element)) {
+                if (element.getParentNode().getNodeName().equals(ResourceType.STYLE.getName())
+                        && isFirstElementChild(element)) {
                     checkUniqueNames(context, (Element) element.getParentNode());
                 }
                 return;
@@ -176,8 +172,9 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
         }
 
         if (type == ResourceType.ATTR
-                && element.getParentNode().getNodeName().equals(
-                        ResourceType.DECLARE_STYLEABLE.getName())) {
+                && element.getParentNode()
+                        .getNodeName()
+                        .equals(ResourceType.DECLARE_STYLEABLE.getName())) {
             if (isFirstElementChild(element)) {
                 checkUniqueNames(context, (Element) element.getParentNode());
             }
@@ -196,20 +193,32 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                 for (int j = 0, length = text.length(); j < length; j++) {
                     char c = text.charAt(j);
                     if (c == '@') {
-                        if (!text.regionMatches(false, j + 1, typeString, 0,
-                                typeString.length()) && context.isEnabled(TYPE_MISMATCH)) {
+                        if (!text.regionMatches(false, j + 1, typeString, 0, typeString.length())
+                                && context.isEnabled(TYPE_MISMATCH)) {
                             ResourceUrl url = ResourceUrl.parse(text.trim());
-                            if (url != null && url.type != type &&
-                                // colors and mipmaps can apparently be used as drawables
-                                !(type == ResourceType.DRAWABLE
-                                        && (url.type == ResourceType.COLOR
-                                            || url.type == ResourceType.MIPMAP))) {
-                                LintFix fix = fix().replace().pattern("(@.*/)")
-                                        .with("@" + type + "/").build();
-                                String message = "Unexpected resource reference type; "
-                                        + "expected value of type `@" + type + "/`";
-                                context.report(TYPE_MISMATCH, element, context.getLocation(child),
-                                        message, fix);
+                            if (url != null
+                                    && url.type != type
+                                    &&
+                                    // colors and mipmaps can apparently be used as drawables
+                                    !(type == ResourceType.DRAWABLE
+                                            && (url.type == ResourceType.COLOR
+                                                    || url.type == ResourceType.MIPMAP))) {
+                                LintFix fix =
+                                        fix().replace()
+                                                .pattern("(@.*/)")
+                                                .with("@" + type + "/")
+                                                .build();
+                                String message =
+                                        "Unexpected resource reference type; "
+                                                + "expected value of type `@"
+                                                + type
+                                                + "/`";
+                                context.report(
+                                        TYPE_MISMATCH,
+                                        element,
+                                        context.getLocation(child),
+                                        message,
+                                        fix);
                             }
                         }
                         break;
@@ -221,8 +230,8 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             }
         }
 
-        Set<String> names = mTypeMap.computeIfAbsent(type,
-                k -> Sets.newHashSetWithExpectedSize(40));
+        Set<String> names =
+                mTypeMap.computeIfAbsent(type, k -> Sets.newHashSetWithExpectedSize(40));
 
         String name = attribute.getValue();
         String originalName = name;
@@ -246,8 +255,8 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             context.report(ISSUE, attribute, location, message);
         } else {
             names.add(name);
-            List<Pair<String, Handle>> list = mLocations
-                    .computeIfAbsent(type, k -> Lists.newArrayList());
+            List<Pair<String, Handle>> list =
+                    mLocations.computeIfAbsent(type, k -> Lists.newArrayList());
             Location.Handle handle = context.createLocationHandle(attribute);
             list.add(Pair.of(name, handle));
         }
@@ -264,8 +273,8 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                     if (names.contains(name) && context.isEnabled(ISSUE)) {
                         Location location = context.getLocation(nameNode);
                         for (Element prevItem : items) {
-                          Attr attribute = item.getAttributeNode(ATTR_NAME);
-                          if (attribute != null && name.equals(attribute.getValue())) {
+                            Attr attribute = item.getAttributeNode(ATTR_NAME);
+                            if (attribute != null && name.equals(attribute.getValue())) {
                                 assert prevItem != item;
                                 Location prev = context.getLocation(prevItem);
                                 prev.setMessage("Previously defined here");
@@ -273,9 +282,10 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                                 break;
                             }
                         }
-                        String message = String.format(
-                                "`%1$s` has already been defined in this `<%2$s>`",
-                                name, parent.getTagName());
+                        String message =
+                                String.format(
+                                        "`%1$s` has already been defined in this `<%2$s>`",
+                                        name, parent.getTagName());
                         context.report(ISSUE, nameNode, location, message);
                     }
                     names.add(name);
@@ -297,11 +307,13 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
     }
 
     /**
-     * Check the XML for the string format. This is a port of portions of the code
-     * in frameworks/base/libs/androidfw/ResourceTypes.cpp (and in particular,
-     * the stringToValue and collectString methods)
+     * Check the XML for the string format. This is a port of portions of the code in
+     * frameworks/base/libs/androidfw/ResourceTypes.cpp (and in particular, the stringToValue and
+     * collectString methods)
      */
-    private void checkXmlEscapes(@NonNull XmlContext context, @NonNull Node textNode,
+    private void checkXmlEscapes(
+            @NonNull XmlContext context,
+            @NonNull Node textNode,
             @NonNull Element element,
             @NonNull String string) {
         int s = 0;
@@ -313,11 +325,11 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             s++;
             len--;
         }
-        while (len > 0 && Character.isWhitespace(string.charAt(s + len-1))) {
+        while (len > 0 && Character.isWhitespace(string.charAt(s + len - 1))) {
             len--;
         }
         // If the string ends with '\', then we keep the space after it.
-        if (len > 0 && string.charAt(s+len-1) == '\\' && len < string.length()) {
+        if (len > 0 && string.charAt(s + len - 1) == '\\' && len < string.length()) {
             len++;
         }
 
@@ -329,7 +341,8 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                 if (c == '\\') {
                     break;
                 }
-                if (quoted == 0 && Character.isWhitespace(c)
+                if (quoted == 0
+                        && Character.isWhitespace(c)
                         && (c != ' ' || Character.isWhitespace(string.charAt(p + 1)))) {
                     break;
                 }
@@ -346,12 +359,18 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                     // such that the error is more visually prominent/evident in
                     // the source editor.
                     Location location = context.getLocation(textNode, p, len);
-                    LintFix fix = fix()
-                            .name("Escape Apostrophe").replace().pattern("[^\\\\]?(')")
-                            .with("\\'")
-                            .build();
-                    context.report(STRING_ESCAPING, element, location,
-                            "Apostrophe not preceded by \\\\", fix);
+                    LintFix fix =
+                            fix().name("Escape Apostrophe")
+                                    .replace()
+                                    .pattern("[^\\\\]?(')")
+                                    .with("\\'")
+                                    .build();
+                    context.report(
+                            STRING_ESCAPING,
+                            element,
+                            location,
+                            "Apostrophe not preceded by \\\\",
+                            fix);
                     return;
                 }
                 p++;
@@ -385,23 +404,28 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                             case '\'':
                             case '\\':
                                 break;
-                            case 'u': {
-                                int i = 0;
-                                while (i < 4 && p + 1 < len) {
-                                    p++;
-                                    i++;
-                                    char h = string.charAt(p);
-                                    if ((h < '0' || h > '9')
-                                            && (h < 'a' || h > 'f')
-                                            && (h < 'A' || h > 'F')) {
-                                        Location location = context.getLocation(textNode, p, p + 1);
-                                        context.report(STRING_ESCAPING, element, location,
-                                                       "Bad character in \\\\u unicode escape sequence");
-                                        return;
+                            case 'u':
+                                {
+                                    int i = 0;
+                                    while (i < 4 && p + 1 < len) {
+                                        p++;
+                                        i++;
+                                        char h = string.charAt(p);
+                                        if ((h < '0' || h > '9')
+                                                && (h < 'a' || h > 'f')
+                                                && (h < 'A' || h > 'F')) {
+                                            Location location =
+                                                    context.getLocation(textNode, p, p + 1);
+                                            context.report(
+                                                    STRING_ESCAPING,
+                                                    element,
+                                                    location,
+                                                    "Bad character in \\\\u unicode escape sequence");
+                                            return;
+                                        }
                                     }
                                 }
-                            }
-                            break;
+                                break;
                             default:
                                 // ignore unknown escape chars.
                                 break;

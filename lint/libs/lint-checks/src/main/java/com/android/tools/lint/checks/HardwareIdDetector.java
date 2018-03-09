@@ -49,54 +49,45 @@ import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
-/**
- * Detect calls to get device Identifiers.
- */
+/** Detect calls to get device Identifiers. */
 public class HardwareIdDetector extends Detector implements SourceCodeScanner {
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            HardwareIdDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(HardwareIdDetector.class, Scope.JAVA_FILE_SCOPE);
 
-    /** Hardware Id Usages  */
-    public static final Issue ISSUE = Issue.create(
-            "HardwareIds",
-            "Hardware Id Usage",
-
-            "Using these device identifiers is not recommended " +
-            "other than for high value fraud prevention and advanced telephony use-cases. " +
-            "For advertising use-cases, use `AdvertisingIdClient$Info#getId` and for " +
-            "analytics, use `InstanceId#getId`.",
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION).addMoreInfo(
-            "https://developer.android.com/training/articles/user-data-ids.html");
+    /** Hardware Id Usages */
+    public static final Issue ISSUE =
+            Issue.create(
+                            "HardwareIds",
+                            "Hardware Id Usage",
+                            "Using these device identifiers is not recommended "
+                                    + "other than for high value fraud prevention and advanced telephony use-cases. "
+                                    + "For advertising use-cases, use `AdvertisingIdClient$Info#getId` and for "
+                                    + "analytics, use `InstanceId#getId`.",
+                            Category.SECURITY,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "https://developer.android.com/training/articles/user-data-ids.html");
 
     private static final String BLUETOOTH_ADAPTER_GET_ADDRESS = "getAddress";
     private static final String WIFI_INFO_GET_MAC_ADDRESS = "getMacAddress";
     private static final String TELEPHONY_MANAGER_GET_DEVICE_ID = "getDeviceId";
-    private static final String TELEPHONY_MANAGER_GET_LINE_1_NUMBER =
-            "getLine1Number";
-    private static final String TELEPHONY_MANAGER_GET_SIM_SERIAL_NUMBER =
-            "getSimSerialNumber";
-    private static final String TELEPHONY_MANAGER_GET_SUBSCRIBER_ID =
-            "getSubscriberId";
+    private static final String TELEPHONY_MANAGER_GET_LINE_1_NUMBER = "getLine1Number";
+    private static final String TELEPHONY_MANAGER_GET_SIM_SERIAL_NUMBER = "getSimSerialNumber";
+    private static final String TELEPHONY_MANAGER_GET_SUBSCRIBER_ID = "getSubscriberId";
     private static final String SETTINGS_SECURE_GET_STRING = "getString";
     private static final String PLAY_SERVICES_NOT_AVAILABLE_EXCEPTION =
             "com.google.android.gms.common.GooglePlayServicesNotAvailableException";
     private static final String MESSAGE_DEVICE_IDENTIFIERS =
-      "Using `%1$s` to get device identifiers is not recommended.";
+            "Using `%1$s` to get device identifiers is not recommended.";
     private static final String RO_SERIALNO = "ro.serialno";
     private static final String CLASS_FOR_NAME = "forName";
     private static final String CLASSLOADER_LOAD_CLASS = "loadClass";
 
-
-    /**
-     * Constructs a new {@link HardwareIdDetector}
-     */
-    public HardwareIdDetector() {
-    }
+    /** Constructs a new {@link HardwareIdDetector} */
+    public HardwareIdDetector() {}
 
     @Override
     public List<String> getApplicableMethodNames() {
@@ -109,12 +100,13 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
                 TELEPHONY_MANAGER_GET_SUBSCRIBER_ID,
                 SETTINGS_SECURE_GET_STRING,
                 CLASS_FOR_NAME,
-                CLASSLOADER_LOAD_CLASS
-        );
+                CLASSLOADER_LOAD_CLASS);
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression node,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
         String className = null;
@@ -150,21 +142,20 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
         }
 
         if (methodName.equals(SETTINGS_SECURE_GET_STRING)) {
-            if (evaluator.getParameterCount(method) != 2
-                    || node.getValueArgumentCount() != 2) {
+            if (evaluator.getParameterCount(method) != 2 || node.getValueArgumentCount() != 2) {
                 // we are explicitly looking for Secure.getString(x, ANDROID_ID) here
                 return;
             }
-            String value = ConstantEvaluator.evaluateString(
-                    context, node.getValueArguments().get(1), false);
+            String value =
+                    ConstantEvaluator.evaluateString(
+                            context, node.getValueArguments().get(1), false);
             // Check if the value matches Settings.Secure.ANDROID_ID
             if (!"android_id".equals(value)) {
                 return;
             }
             // The 2nd parameter resolved to the constant value Settings.Secure.ANDROID_ID
             // which is not recommended so continue and show an error.
-        } else if (methodName.equals(CLASS_FOR_NAME)
-                || methodName.equals(CLASSLOADER_LOAD_CLASS)) {
+        } else if (methodName.equals(CLASS_FOR_NAME) || methodName.equals(CLASSLOADER_LOAD_CLASS)) {
             // Here we are looking for usages of
             // `android.os.SystemProperties.get("ro.serialno")` using reflection.
             //
@@ -204,17 +195,15 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
 
         JavaEvaluator evaluator = context.getEvaluator();
         if (resolved instanceof PsiField
-                && evaluator.isMemberInSubClassOf((PsiField)resolved,
-                "android.os.Build", false)) {
-            String message =
-                    String.format(MESSAGE_DEVICE_IDENTIFIERS, "SERIAL");
+                && evaluator.isMemberInSubClassOf((PsiField) resolved, "android.os.Build", false)) {
+            String message = String.format(MESSAGE_DEVICE_IDENTIFIERS, "SERIAL");
             context.report(ISSUE, reference, context.getNameLocation(reference), message);
         }
     }
 
     /**
-     * Check if the given expression is within a catch block of
-     * {@code PLAY_SERVICES_NOT_AVAILABLE_EXCEPTION}
+     * Check if the given expression is within a catch block of {@code
+     * PLAY_SERVICES_NOT_AVAILABLE_EXCEPTION}
      *
      * @param expression PsiExpression that can be within a catch block
      * @return true iff the expression is within the catch block
@@ -233,8 +222,8 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
         return false;
     }
 
-    private static void findReflectionUsage(@NonNull UCallExpression expression,
-            @NonNull JavaContext context) {
+    private static void findReflectionUsage(
+            @NonNull UCallExpression expression, @NonNull JavaContext context) {
         List<UExpression> methodArgs = expression.getValueArguments();
         if (methodArgs.isEmpty()) {
             return;
@@ -243,8 +232,7 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
         if (!"android.os.SystemProperties".equals(value)) {
             return;
         }
-        UMethod surroundingMethod =
-                UastUtils.getParentOfType(expression, UMethod.class, true);
+        UMethod surroundingMethod = UastUtils.getParentOfType(expression, UMethod.class, true);
         if (surroundingMethod == null) {
             return;
         }
@@ -264,8 +252,7 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
         // the search to the current class.
         UClass surroundingClass = UastUtils.getContainingUClass(surroundingMethod);
         if (surroundingClass != null) {
-            int paramIndex = surroundingMethod.getParameterList()
-                    .getParameterIndex(argExpression);
+            int paramIndex = surroundingMethod.getParameterList().getParameterIndex(argExpression);
             if (paramIndex < 0) {
                 return;
             }
@@ -276,9 +263,9 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
     }
 
     /**
-     * Search for a sequence of reflection methods calls leading to
-     * {@link java.lang.reflect.Method#invoke(Object, Object...)} and also check the parameter(s)
-     * passed into invoke.
+     * Search for a sequence of reflection methods calls leading to {@link
+     * java.lang.reflect.Method#invoke(Object, Object...)} and also check the parameter(s) passed
+     * into invoke.
      */
     private static final class InvokeCallVisitor extends AbstractUastVisitor {
 
@@ -300,7 +287,6 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
             return mProcessingDone || super.visitElement(node);
         }
 
-
         @Override
         public boolean visitCallExpression(UCallExpression expression) {
             if (expression.equals(mLoadMethod)) {
@@ -309,8 +295,8 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
 
                 mLoadVariable = variable == null ? null : variable.getName();
             } else if (mLoadVariable != null
-                    && isDesiredMethodCall(expression, mLoadVariable,
-                    "java.lang.Class", "getMethod", 0)) {
+                    && isDesiredMethodCall(
+                            expression, mLoadVariable, "java.lang.Class", "getMethod", 0)) {
                 // clazz.getMethod("get", ..)
                 UExpression arg = methodParameterAt(expression, 0 /* param index */);
                 String value = ConstantEvaluator.evaluateString(mContext, arg, false);
@@ -319,18 +305,25 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
                     mMethodVariable = variable == null ? null : variable.getName();
                 }
             } else if (mMethodVariable != null
-                    && isDesiredMethodCall(expression, mMethodVariable,
-                    "java.lang.reflect.Method", "invoke", 1 /* param index */)) {
+                    && isDesiredMethodCall(
+                            expression,
+                            mMethodVariable,
+                            "java.lang.reflect.Method",
+                            "invoke",
+                            1 /* param index */)) {
                 // method.invoke(instance, "ro.serialno")
                 UExpression arg = methodParameterAt(expression, 1);
                 String value = ConstantEvaluator.evaluateString(mContext, arg, false);
                 if (RO_SERIALNO.equals(value)) {
-                    mContext.report(ISSUE, arg, mContext.getLocation(arg),
+                    mContext.report(
+                            ISSUE,
+                            arg,
+                            mContext.getLocation(arg),
                             String.format(MESSAGE_DEVICE_IDENTIFIERS, RO_SERIALNO));
                 } else if (arg instanceof UReferenceExpression) {
-                    PsiElement resolved = ((UReferenceExpression)arg).resolve();
+                    PsiElement resolved = ((UReferenceExpression) arg).resolve();
                     if (resolved instanceof PsiParameter) {
-                        mPsiParameter = (PsiParameter)resolved;
+                        mPsiParameter = (PsiParameter) resolved;
                     }
                 }
                 mProcessingDone = true;
@@ -344,17 +337,18 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
             return mPsiParameter;
         }
 
-        private static UExpression methodParameterAt(UCallExpression expression,
-                int index) {
+        private static UExpression methodParameterAt(UCallExpression expression, int index) {
             List<UExpression> expressions = expression.getValueArguments();
             assert expressions.size() > index;
             return expressions.get(index);
         }
 
-        private static boolean isDesiredMethodCall(@NonNull UCallExpression expression,
+        private static boolean isDesiredMethodCall(
+                @NonNull UCallExpression expression,
                 @NonNull String variableQualifier,
                 @NonNull String containingClass,
-                @NonNull String desiredMethodName, int paramIndex) {
+                @NonNull String desiredMethodName,
+                int paramIndex) {
 
             if (!desiredMethodName.equals(getMethodName(expression))) {
                 return false;
@@ -376,8 +370,8 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
     }
 
     /**
-     * Find calls to a given method and report an issue if a parameter at parametIndex
-     * evaluates to a constant 'ro.serialno'
+     * Find calls to a given method and report an issue if a parameter at parametIndex evaluates to
+     * a constant 'ro.serialno'
      */
     private static final class FindMethodCallVisitor extends AbstractUastVisitor {
 
@@ -400,8 +394,7 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
                     String value = ConstantEvaluator.evaluateString(mContext, paramExpr, false);
                     if (RO_SERIALNO.equals(value)
                             && !inCatchPlayServicesNotAvailableException(expression)) {
-                        String message =
-                                String.format(MESSAGE_DEVICE_IDENTIFIERS, RO_SERIALNO);
+                        String message = String.format(MESSAGE_DEVICE_IDENTIFIERS, RO_SERIALNO);
                         mContext.report(ISSUE, paramExpr, mContext.getLocation(paramExpr), message);
                     }
                 }

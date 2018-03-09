@@ -25,32 +25,32 @@ import com.intellij.psi.PsiModifierListOwner;
 /**
  * Dummy implementation. Some annotation lookup insists on calling into the
  * InferredAnnotationsManager; prevent that from throwing exceptions.
+ *
  * <pre>
- java.lang.IllegalStateException: @NonNull method com/intellij/openapi/components/ServiceManager$1.fun must not return null
- at com.intellij.openapi.components.ServiceManager$1.fun(ServiceManager.java:76)
- at com.intellij.openapi.components.ServiceManager$1.fun(ServiceManager.java:72)
- at com.intellij.openapi.util.NonNullLazyKey.getValue(NonNullLazyKey.java:39)
- at com.intellij.codeInsight.InferredAnnotationsManager.getInstance(InferredAnnotationsManager.java:40)
- at com.intellij.codeInsight.AnnotationUtil.getAllAnnotations(AnnotationUtil.java:463)
- at com.intellij.codeInsight.AnnotationUtil.getAllAnnotations(AnnotationUtil.java:444)
- at com.intellij.codeInsight.AnnotationUtil.getAllAnnotations(AnnotationUtil.java:487)
+ * java.lang.IllegalStateException: @NonNull method com/intellij/openapi/components/ServiceManager$1.fun must not return null
+ * at com.intellij.openapi.components.ServiceManager$1.fun(ServiceManager.java:76)
+ * at com.intellij.openapi.components.ServiceManager$1.fun(ServiceManager.java:72)
+ * at com.intellij.openapi.util.NonNullLazyKey.getValue(NonNullLazyKey.java:39)
+ * at com.intellij.codeInsight.InferredAnnotationsManager.getInstance(InferredAnnotationsManager.java:40)
+ * at com.intellij.codeInsight.AnnotationUtil.getAllAnnotations(AnnotationUtil.java:463)
+ * at com.intellij.codeInsight.AnnotationUtil.getAllAnnotations(AnnotationUtil.java:444)
+ * at com.intellij.codeInsight.AnnotationUtil.getAllAnnotations(AnnotationUtil.java:487)
  * </pre>
  */
 public class LintInferredAnnotationsManager extends InferredAnnotationsManager {
 
-    public LintInferredAnnotationsManager() {
-    }
+    public LintInferredAnnotationsManager() {}
 
     @Nullable
     @Override
-    public PsiAnnotation findInferredAnnotation(@NonNull PsiModifierListOwner psiModifierListOwner,
-            @NonNull String s) {
+    public PsiAnnotation findInferredAnnotation(
+            @NonNull PsiModifierListOwner psiModifierListOwner, @NonNull String s) {
         return null;
     }
 
     @Override
-    public boolean ignoreInference(@NonNull PsiModifierListOwner psiModifierListOwner,
-            @Nullable String s) {
+    public boolean ignoreInference(
+            @NonNull PsiModifierListOwner psiModifierListOwner, @Nullable String s) {
         return false;
     }
 

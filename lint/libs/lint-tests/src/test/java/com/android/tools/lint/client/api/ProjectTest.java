@@ -40,48 +40,57 @@ public class ProjectTest extends AbstractCheckTest {
         // Ensure that a cycle in library project dependencies doesn't cause
         // infinite directory traversal
         //noinspection all // Sample code
-        File master = getProjectDir("MasterProject",
-                // Master project
-                manifest().pkg("foo.master").minSdk(14),
-                projectProperties().property("android.library.reference.1", "../LibraryProject"),
-                java(""
-                            + "package foo.main;\n"
-                            + "\n"
-                            + "public class MainCode {\n"
-                            + "    static {\n"
-                            + "        System.out.println(R.string.string2);\n"
-                            + "    }\n"
-                            + "}\n")
-        );
+        File master =
+                getProjectDir(
+                        "MasterProject",
+                        // Master project
+                        manifest().pkg("foo.master").minSdk(14),
+                        projectProperties()
+                                .property("android.library.reference.1", "../LibraryProject"),
+                        java(
+                                ""
+                                        + "package foo.main;\n"
+                                        + "\n"
+                                        + "public class MainCode {\n"
+                                        + "    static {\n"
+                                        + "        System.out.println(R.string.string2);\n"
+                                        + "    }\n"
+                                        + "}\n"));
         //noinspection all // Sample code
-        File library = getProjectDir("LibraryProject",
-                // Library project
-                manifest().pkg("foo.library").minSdk(14),
-                projectProperties().property("android.library.reference.1", "../LibraryProject"), // RECURSIVE - points to self
-                java(""
-                            + "package foo.library;\n"
-                            + "\n"
-                            + "public class LibraryCode {\n"
-                            + "    static {\n"
-                            + "        System.out.println(R.string.string1);\n"
-                            + "    }\n"
-                            + "}\n"),
-                xml("res/values/strings.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<resources>\n"
-                            + "\n"
-                            + "    <string name=\"app_name\">LibraryProject</string>\n"
-                            + "    <string name=\"string1\">String 1</string>\n"
-                            + "    <string name=\"string2\">String 2</string>\n"
-                            + "    <string name=\"string3\">String 3</string>\n"
-                            + "\n"
-                            + "</resources>\n")
-        );
+        File library =
+                getProjectDir(
+                        "LibraryProject",
+                        // Library project
+                        manifest().pkg("foo.library").minSdk(14),
+                        projectProperties()
+                                .property("android.library.reference.1", "../LibraryProject"),
+                        // RECURSIVE - points to self
+                        java(
+                                ""
+                                        + "package foo.library;\n"
+                                        + "\n"
+                                        + "public class LibraryCode {\n"
+                                        + "    static {\n"
+                                        + "        System.out.println(R.string.string1);\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        xml(
+                                "res/values/strings.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<resources>\n"
+                                        + "\n"
+                                        + "    <string name=\"app_name\">LibraryProject</string>\n"
+                                        + "    <string name=\"string1\">String 1</string>\n"
+                                        + "    <string name=\"string2\">String 2</string>\n"
+                                        + "    <string name=\"string3\">String 3</string>\n"
+                                        + "\n"
+                                        + "</resources>\n"));
 
-        assertEquals(""
-                + "MasterProject/project.properties: Error: Circular library dependencies; check your project.properties files carefully [LintError]\n"
-                + "1 errors, 0 warnings\n",
-
+        assertEquals(
+                ""
+                        + "MasterProject/project.properties: Error: Circular library dependencies; check your project.properties files carefully [LintError]\n"
+                        + "1 errors, 0 warnings\n",
                 checkLint(Arrays.asList(master, library)));
     }
 
@@ -135,9 +144,7 @@ public class ProjectTest extends AbstractCheckTest {
         project3.setDirectLibraries(Collections.emptyList());
         List<Project> libraries = project1.getAllLibraries();
         assertNotNull(libraries);
-        assertEquals(
-                "",
-                client.getLoggedOutput());
+        assertEquals("", client.getLoggedOutput());
         assertEquals(2, libraries.size());
         assertTrue(libraries.contains(project2));
         assertTrue(libraries.contains(project3));
@@ -151,8 +158,11 @@ public class ProjectTest extends AbstractCheckTest {
         private StringBuilder mLog = new StringBuilder();
 
         @Override
-        public void log(@NonNull Severity severity, @Nullable Throwable exception,
-                @Nullable String format, @Nullable Object... args) {
+        public void log(
+                @NonNull Severity severity,
+                @Nullable Throwable exception,
+                @Nullable String format,
+                @Nullable Object... args) {
             assertNotNull(format);
             mLog.append(severity.getDescription()).append(": ");
             mLog.append(String.format(format, args));
@@ -174,11 +184,13 @@ public class ProjectTest extends AbstractCheckTest {
     }
 
     public void testDependsOn1() {
-        List<Project> projects = lint().files(
-                projectProperties(),
-                manifest().minSdk(14),
-                jar("libs/android-support-v4.jar") // just a placeholder
-        ).createProjects(true);
+        List<Project> projects =
+                lint().files(
+                                projectProperties(),
+                                manifest().minSdk(14),
+                                jar("libs/android-support-v4.jar") // just a placeholder
+                                )
+                        .createProjects(true);
 
         assertThat(projects).hasSize(1);
         Project project1 = projects.get(0);
@@ -187,12 +199,14 @@ public class ProjectTest extends AbstractCheckTest {
     }
 
     public void testDependsOn2() {
-        List<Project> projects = lint().files(
-                projectProperties(),
-                manifest().minSdk(14),
-                jar("libs/support-v4-13.0.0-f5279ca6f213451a9dfb870f714ce6e6.jar")
-                // just a placeholder
-        ).createProjects(true);
+        List<Project> projects =
+                lint().files(
+                                projectProperties(),
+                                manifest().minSdk(14),
+                                jar("libs/support-v4-13.0.0-f5279ca6f213451a9dfb870f714ce6e6.jar")
+                                // just a placeholder
+                                )
+                        .createProjects(true);
 
         assertThat(projects).hasSize(1);
         Project project = projects.get(0);

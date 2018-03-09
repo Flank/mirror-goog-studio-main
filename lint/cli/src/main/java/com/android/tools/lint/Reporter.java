@@ -99,10 +99,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-/** A reporter is an output generator for lint warnings
- * <p>
- * <b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+/**
+ * A reporter is an output generator for lint warnings
+ *
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
 @Beta
 public abstract class Reporter {
@@ -118,16 +119,15 @@ public abstract class Reporter {
     /**
      * Creates a new HTML {@link Reporter}
      *
-     * @param client       the associated client
-     * @param output       the output file
-     * @param flags        the command line flags
+     * @param client the associated client
+     * @param output the output file
+     * @param flags the command line flags
      * @throws IOException if an error occurs
      */
     @NonNull
     public static Reporter createHtmlReporter(
-            @NonNull LintCliClient client,
-            @NonNull File output,
-            @NonNull LintCliFlags flags) throws IOException {
+            @NonNull LintCliClient client, @NonNull File output, @NonNull LintCliFlags flags)
+            throws IOException {
         return new HtmlReporter(client, output, flags);
     }
 
@@ -146,22 +146,21 @@ public abstract class Reporter {
             @NonNull LintCliFlags flags,
             @Nullable File file,
             @NonNull Writer writer,
-            boolean close)  {
+            boolean close) {
         return new TextReporter(client, flags, file, writer, close);
     }
 
     /**
      * Constructs a new {@link XmlReporter}
      *
-     * @param client              the client
-     * @param output              the output file
+     * @param client the client
+     * @param output the output file
      * @param intendedForBaseline whether this XML report is used to write a baseline file
      * @throws IOException if an error occurs
      */
-    public static  Reporter createXmlReporter(
-            @NonNull LintCliClient client,
-            @NonNull File output,
-            boolean intendedForBaseline) throws IOException {
+    public static Reporter createXmlReporter(
+            @NonNull LintCliClient client, @NonNull File output, boolean intendedForBaseline)
+            throws IOException {
         XmlReporter reporter = new XmlReporter(client, output);
         reporter.setIntendedForBaseline(intendedForBaseline);
         return reporter;
@@ -169,18 +168,21 @@ public abstract class Reporter {
 
     /**
      * Write the given warnings into the report
-     * @param stats  the vital statistics for the lint report
-     * @param issues the issues to be reported  @throws IOException if an error occurs
+     *
+     * @param stats the vital statistics for the lint report
+     * @param issues the issues to be reported @throws IOException if an error occurs
      */
     public abstract void write(@NonNull Stats stats, List<Warning> issues) throws IOException;
 
     /**
      * Writes a project overview table
-     * @param stats  the vital statistics for the lint report
+     *
+     * @param stats the vital statistics for the lint report
      * @param projects the projects to write
      */
-    public void writeProjectList(@NonNull Stats stats,
-            @NonNull List<MultiProjectHtmlReporter.ProjectEntry> projects) throws IOException {
+    public void writeProjectList(
+            @NonNull Stats stats, @NonNull List<MultiProjectHtmlReporter.ProjectEntry> projects)
+            throws IOException {
         throw new UnsupportedOperationException();
     }
 
@@ -277,8 +279,10 @@ public abstract class Reporter {
 
         // TODO: Make this return null if we go all the way to the root!
 
-        basePath = !basePath.isEmpty() && basePath.charAt(basePath.length() - 1) == separatorChar
-                ? basePath : basePath + separatorChar;
+        basePath =
+                !basePath.isEmpty() && basePath.charAt(basePath.length() - 1) == separatorChar
+                        ? basePath
+                        : basePath + separatorChar;
 
         // Whether filesystem is case sensitive. Technically on OSX you could create a
         // sensitive one, but it's not the default.
@@ -286,16 +290,20 @@ public abstract class Reporter {
         Locale l = Locale.getDefault();
         String basePathToCompare = caseSensitive ? basePath : basePath.toLowerCase(l);
         String filePathToCompare = caseSensitive ? filePath : filePath.toLowerCase(l);
-        if (basePathToCompare.equals(!filePathToCompare.isEmpty()
-                && filePathToCompare.charAt(filePathToCompare.length() - 1) == separatorChar
-                ? filePathToCompare : filePathToCompare + separatorChar)) {
+        if (basePathToCompare.equals(
+                !filePathToCompare.isEmpty()
+                                && filePathToCompare.charAt(filePathToCompare.length() - 1)
+                                        == separatorChar
+                        ? filePathToCompare
+                        : filePathToCompare + separatorChar)) {
             return ".";
         }
         int len = 0;
         int lastSeparatorIndex = 0;
         // bug in inspection; see http://youtrack.jetbrains.com/issue/IDEA-118971
         //noinspection ConstantConditions
-        while (len < filePath.length() && len < basePath.length()
+        while (len < filePath.length()
+                && len < basePath.length()
                 && filePathToCompare.charAt(len) == basePathToCompare.charAt(len)) {
             if (basePath.charAt(len) == separatorChar) {
                 lastSeparatorIndex = len;
@@ -317,16 +325,12 @@ public abstract class Reporter {
         return relativePath.toString();
     }
 
-    /**
-     * Returns whether this report should display info if no issues were found
-     */
+    /** Returns whether this report should display info if no issues were found */
     public boolean isDisplayEmpty() {
         return displayEmpty;
     }
 
-    /**
-     * Sets whether this report should display info if no issues were found
-     */
+    /** Sets whether this report should display info if no issues were found */
     public void setDisplayEmpty(boolean displayEmpty) {
         this.displayEmpty = displayEmpty;
     }
@@ -337,8 +341,7 @@ public abstract class Reporter {
      * Returns true if the given issue has an automatic IDE fix.
      *
      * @param issue the issue to be checked
-     * @return true if the given tool is known to have an automatic fix for the
-     *         given issue
+     * @return true if the given tool is known to have an automatic fix for the given issue
      */
     public static boolean hasAutoFix(Issue issue) {
         // List generated by AndroidLintInspectionToolProviderTest in tools/adt/idea;
@@ -403,110 +406,110 @@ public abstract class Reporter {
         // Then run the testsuite, grep the output for HAS-FIX and pick out the
         // field names, then merge with the below list.
         if (studioFixes == null) {
-            studioFixes = Sets.newHashSet(
-                    AccessibilityDetector.ISSUE,
-                    AlwaysShowActionDetector.ISSUE,
-                    AndroidAutoDetector.INVALID_USES_TAG_ISSUE,
-                    AndroidTvDetector.MISSING_BANNER,
-                    AndroidTvDetector.MISSING_LEANBACK_SUPPORT,
-                    AndroidTvDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE,
-                    AndroidTvDetector.UNSUPPORTED_TV_HARDWARE,
-                    AnnotationDetector.FLAG_STYLE,
-                    AnnotationDetector.SWITCH_TYPE_DEF,
-                    ApiDetector.INLINED,
-                    ApiDetector.OBSOLETE_SDK,
-                    ApiDetector.OVERRIDE,
-                    ApiDetector.UNSUPPORTED,
-                    ApiDetector.UNUSED,
-                    AppCompatCallDetector.ISSUE,
-                    AppCompatCustomViewDetector.ISSUE,
-                    AppCompatResourceDetector.ISSUE,
-                    AppIndexingApiDetector.ISSUE_APP_INDEXING,
-                    AppIndexingApiDetector.ISSUE_APP_INDEXING_API,
-                    AppLinksValidDetector.VALIDATION,
-                    ByteOrderMarkDetector.BOM,
-                    CheckResultDetector.CHECK_RESULT,
-                    ChromeOsDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE,
-                    ChromeOsDetector.UNSUPPORTED_CHROME_OS_HARDWARE,
-                    CleanupDetector.APPLY_SHARED_PREF,
-                    CleanupDetector.SHARED_PREF,
-                    CommentDetector.STOP_SHIP,
-                    DetectMissingPrefix.MISSING_NAMESPACE,
-                    DuplicateResourceDetector.STRING_ESCAPING,
-                    DuplicateResourceDetector.TYPE_MISMATCH,
-                    EllipsizeMaxLinesDetector.ISSUE,
-                    FontDetector.FONT_VALIDATION_ERROR,
-                    FontDetector.FONT_VALIDATION_WARNING,
-                    GradleDetector.COMPATIBILITY,
-                    GradleDetector.DEPENDENCY,
-                    GradleDetector.DEPRECATED,
-                    GradleDetector.DUPLICATE_CLASSES,
-                    GradleDetector.MIN_SDK_TOO_LOW,
-                    GradleDetector.NOT_INTERPOLATED,
-                    GradleDetector.PLUS,
-                    GradleDetector.REMOTE_VERSION,
-                    GradleDetector.STRING_INTEGER,
-                    GridLayoutDetector.ISSUE,
-                    IconDetector.WEBP_ELIGIBLE,
-                    IconDetector.WEBP_UNSUPPORTED,
-                    IncludeDetector.ISSUE,
-                    InefficientWeightDetector.BASELINE_WEIGHTS,
-                    InefficientWeightDetector.INEFFICIENT_WEIGHT,
-                    InefficientWeightDetector.ORIENTATION,
-                    JavaPerformanceDetector.USE_VALUE_OF,
-                    KeyboardNavigationDetector.ISSUE,
-                    LabelForDetector.ISSUE,
-                    ManifestDetector.ALLOW_BACKUP,
-                    ManifestDetector.APPLICATION_ICON,
-                    ManifestDetector.MIPMAP,
-                    ManifestDetector.MOCK_LOCATION,
-                    ManifestDetector.SET_VERSION,
-                    ManifestDetector.TARGET_NEWER,
-                    MissingClassDetector.INNERCLASS,
-                    MissingIdDetector.ISSUE,
-                    NamespaceDetector.RES_AUTO,
-                    NetworkSecurityConfigDetector.ISSUE,
-                    ObjectAnimatorDetector.MISSING_KEEP,
-                    ObsoleteLayoutParamsDetector.ISSUE,
-                    ParcelDetector.ISSUE,
-                    PermissionDetector.CHECK_PERMISSION,
-                    PermissionDetector.MISSING_PERMISSION,
-                    PropertyFileDetector.ESCAPE,
-                    PropertyFileDetector.HTTP,
-                    PxUsageDetector.DP_ISSUE,
-                    PxUsageDetector.PX_ISSUE,
-                    ReadParcelableDetector.ISSUE,
-                    RtlDetector.COMPAT,
-                    RtlDetector.USE_START,
-                    ScrollViewChildDetector.ISSUE,
-                    SecurityDetector.EXPORTED_PROVIDER,
-                    SecurityDetector.EXPORTED_RECEIVER,
-                    SecurityDetector.EXPORTED_SERVICE,
-                    ServiceCastDetector.WIFI_MANAGER,
-                    ServiceCastDetector.WIFI_MANAGER_UNCERTAIN,
-                    SignatureOrSystemDetector.ISSUE,
-                    TextFieldDetector.ISSUE,
-                    TextViewDetector.SELECTABLE,
-                    TitleDetector.ISSUE,
-                    TypoDetector.ISSUE,
-                    TypographyDetector.DASHES,
-                    TypographyDetector.ELLIPSIS,
-                    TypographyDetector.FRACTIONS,
-                    TypographyDetector.OTHER,
-                    TypographyDetector.QUOTES,
-                    UnpackedNativeCodeDetector.ISSUE,
-                    UnsafeBroadcastReceiverDetector.BROADCAST_SMS,
-                    UnusedResourceDetector.ISSUE,
-                    UnusedResourceDetector.ISSUE_IDS,
-                    UselessViewDetector.USELESS_LEAF,
-                    Utf8Detector.ISSUE,
-                    VectorPathDetector.PATH_VALID,
-                    ViewTypeDetector.ADD_CAST,
-                    WakelockDetector.TIMEOUT,
-                    WearStandaloneAppDetector.WEAR_STANDALONE_APP_ISSUE,
-                    WrongCallDetector.ISSUE,
-                    WrongCaseDetector.WRONG_CASE
-            );
+            studioFixes =
+                    Sets.newHashSet(
+                            AccessibilityDetector.ISSUE,
+                            AlwaysShowActionDetector.ISSUE,
+                            AndroidAutoDetector.INVALID_USES_TAG_ISSUE,
+                            AndroidTvDetector.MISSING_BANNER,
+                            AndroidTvDetector.MISSING_LEANBACK_SUPPORT,
+                            AndroidTvDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE,
+                            AndroidTvDetector.UNSUPPORTED_TV_HARDWARE,
+                            AnnotationDetector.FLAG_STYLE,
+                            AnnotationDetector.SWITCH_TYPE_DEF,
+                            ApiDetector.INLINED,
+                            ApiDetector.OBSOLETE_SDK,
+                            ApiDetector.OVERRIDE,
+                            ApiDetector.UNSUPPORTED,
+                            ApiDetector.UNUSED,
+                            AppCompatCallDetector.ISSUE,
+                            AppCompatCustomViewDetector.ISSUE,
+                            AppCompatResourceDetector.ISSUE,
+                            AppIndexingApiDetector.ISSUE_APP_INDEXING,
+                            AppIndexingApiDetector.ISSUE_APP_INDEXING_API,
+                            AppLinksValidDetector.VALIDATION,
+                            ByteOrderMarkDetector.BOM,
+                            CheckResultDetector.CHECK_RESULT,
+                            ChromeOsDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE,
+                            ChromeOsDetector.UNSUPPORTED_CHROME_OS_HARDWARE,
+                            CleanupDetector.APPLY_SHARED_PREF,
+                            CleanupDetector.SHARED_PREF,
+                            CommentDetector.STOP_SHIP,
+                            DetectMissingPrefix.MISSING_NAMESPACE,
+                            DuplicateResourceDetector.STRING_ESCAPING,
+                            DuplicateResourceDetector.TYPE_MISMATCH,
+                            EllipsizeMaxLinesDetector.ISSUE,
+                            FontDetector.FONT_VALIDATION_ERROR,
+                            FontDetector.FONT_VALIDATION_WARNING,
+                            GradleDetector.COMPATIBILITY,
+                            GradleDetector.DEPENDENCY,
+                            GradleDetector.DEPRECATED,
+                            GradleDetector.DUPLICATE_CLASSES,
+                            GradleDetector.MIN_SDK_TOO_LOW,
+                            GradleDetector.NOT_INTERPOLATED,
+                            GradleDetector.PLUS,
+                            GradleDetector.REMOTE_VERSION,
+                            GradleDetector.STRING_INTEGER,
+                            GridLayoutDetector.ISSUE,
+                            IconDetector.WEBP_ELIGIBLE,
+                            IconDetector.WEBP_UNSUPPORTED,
+                            IncludeDetector.ISSUE,
+                            InefficientWeightDetector.BASELINE_WEIGHTS,
+                            InefficientWeightDetector.INEFFICIENT_WEIGHT,
+                            InefficientWeightDetector.ORIENTATION,
+                            JavaPerformanceDetector.USE_VALUE_OF,
+                            KeyboardNavigationDetector.ISSUE,
+                            LabelForDetector.ISSUE,
+                            ManifestDetector.ALLOW_BACKUP,
+                            ManifestDetector.APPLICATION_ICON,
+                            ManifestDetector.MIPMAP,
+                            ManifestDetector.MOCK_LOCATION,
+                            ManifestDetector.SET_VERSION,
+                            ManifestDetector.TARGET_NEWER,
+                            MissingClassDetector.INNERCLASS,
+                            MissingIdDetector.ISSUE,
+                            NamespaceDetector.RES_AUTO,
+                            NetworkSecurityConfigDetector.ISSUE,
+                            ObjectAnimatorDetector.MISSING_KEEP,
+                            ObsoleteLayoutParamsDetector.ISSUE,
+                            ParcelDetector.ISSUE,
+                            PermissionDetector.CHECK_PERMISSION,
+                            PermissionDetector.MISSING_PERMISSION,
+                            PropertyFileDetector.ESCAPE,
+                            PropertyFileDetector.HTTP,
+                            PxUsageDetector.DP_ISSUE,
+                            PxUsageDetector.PX_ISSUE,
+                            ReadParcelableDetector.ISSUE,
+                            RtlDetector.COMPAT,
+                            RtlDetector.USE_START,
+                            ScrollViewChildDetector.ISSUE,
+                            SecurityDetector.EXPORTED_PROVIDER,
+                            SecurityDetector.EXPORTED_RECEIVER,
+                            SecurityDetector.EXPORTED_SERVICE,
+                            ServiceCastDetector.WIFI_MANAGER,
+                            ServiceCastDetector.WIFI_MANAGER_UNCERTAIN,
+                            SignatureOrSystemDetector.ISSUE,
+                            TextFieldDetector.ISSUE,
+                            TextViewDetector.SELECTABLE,
+                            TitleDetector.ISSUE,
+                            TypoDetector.ISSUE,
+                            TypographyDetector.DASHES,
+                            TypographyDetector.ELLIPSIS,
+                            TypographyDetector.FRACTIONS,
+                            TypographyDetector.OTHER,
+                            TypographyDetector.QUOTES,
+                            UnpackedNativeCodeDetector.ISSUE,
+                            UnsafeBroadcastReceiverDetector.BROADCAST_SMS,
+                            UnusedResourceDetector.ISSUE,
+                            UnusedResourceDetector.ISSUE_IDS,
+                            UselessViewDetector.USELESS_LEAF,
+                            Utf8Detector.ISSUE,
+                            VectorPathDetector.PATH_VALID,
+                            ViewTypeDetector.ADD_CAST,
+                            WakelockDetector.TIMEOUT,
+                            WearStandaloneAppDetector.WEAR_STANDALONE_APP_ISSUE,
+                            WrongCallDetector.ISSUE,
+                            WrongCaseDetector.WRONG_CASE);
         }
         return studioFixes.contains(issue);
     }
@@ -514,7 +517,8 @@ public abstract class Reporter {
     private String stripPrefix;
 
     protected String stripPath(@NonNull String path) {
-        if (stripPrefix != null && path.startsWith(stripPrefix)
+        if (stripPrefix != null
+                && path.startsWith(stripPrefix)
                 && path.length() > stripPrefix.length()) {
             int index = stripPrefix.length();
             if (path.charAt(index) == File.separatorChar) {
@@ -532,8 +536,8 @@ public abstract class Reporter {
     }
 
     /**
-     * Value object passed to {@link Reporter} instances providing statistics to include in
-     * the summary
+     * Value object passed to {@link Reporter} instances providing statistics to include in the
+     * summary
      */
     public static final class Stats {
         public final int errorCount;
@@ -555,9 +559,7 @@ public abstract class Reporter {
             this.baselineFixedCount = baselineFixedCount;
         }
 
-        public Stats(
-                int errorCount,
-                int warningCount) {
+        public Stats(int errorCount, int warningCount) {
             this(errorCount, warningCount, 0, 0, 0);
         }
 

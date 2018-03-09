@@ -49,11 +49,12 @@ import org.jetbrains.uast.java.JavaUDeclarationsExpression
 </pre> *
  */
 class ResourceReference(
-        val node: UExpression,
-        // getPackage() can be empty if not a package-qualified import (e.g. android.R.id.name).
-        val `package`: String,
-        val type: ResourceType,
-        val name: String) {
+    val node: UExpression,
+    // getPackage() can be empty if not a package-qualified import (e.g. android.R.id.name).
+    val `package`: String,
+    val type: ResourceType,
+    val name: String
+) {
 
     internal val isFramework: Boolean
         get() = `package` == ANDROID_PKG
@@ -87,8 +88,7 @@ class ResourceReference(
 
             val packageName = if (packageNameFromResolved != null)
                 packageNameFromResolved
-            else
-                Joiner.on('.').join(path.subList(0, size - 3))
+            else Joiner.on('.').join(path.subList(0, size - 3))
 
             val type = path[size - 2]
             val name = path[size - 1]
@@ -133,13 +133,14 @@ class ResourceReference(
 
             val variable = declaration as PsiVariable?
             if (variable !is PsiField
-                    || (variable.type != PsiType.INT && !isIntArray(variable.type))
+                || (variable.type != PsiType.INT && !isIntArray(variable.type))
 
-                    // Note that we don't check for PsiModifier.FINAL; in library projects
-                    // the R class fields are deliberately not made final such that their
-                    // values can be substituted when all the resources are merged together
-                    // in the app module and unique id's can be assigned for all resources
-                    || !variable.hasModifierProperty(PsiModifier.STATIC)) {
+                // Note that we don't check for PsiModifier.FINAL; in library projects
+                // the R class fields are deliberately not made final such that their
+                // values can be substituted when all the resources are merged together
+                // in the app module and unique id's can be assigned for all resources
+                || !variable.hasModifierProperty(PsiModifier.STATIC)
+            ) {
                 return null
             }
 
@@ -179,6 +180,6 @@ class ResourceReference(
          * type of styleable R fields.
          */
         private fun isIntArray(type: PsiType): Boolean =
-                (type as? PsiArrayType)?.componentType == PsiType.INT
+            (type as? PsiArrayType)?.componentType == PsiType.INT
     }
 }

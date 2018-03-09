@@ -33,57 +33,51 @@ import java.util.List;
 import org.jetbrains.uast.UCallExpression;
 
 /**
- * Looks for usages of {@link Math} methods which can be replaced with
- * {@code android.util.FloatMath} methods to avoid casting.
+ * Looks for usages of {@link Math} methods which can be replaced with {@code
+ * android.util.FloatMath} methods to avoid casting.
  */
 public class MathDetector extends Detector implements SourceCodeScanner {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "FloatMath",
-            "Using `FloatMath` instead of `Math`",
-
-            "In older versions of Android, using `android.util.FloatMath` was recommended " +
-            "for performance reasons when operating on floats. However, on modern hardware " +
-            "doubles are just as fast as float (though they take more memory), and in " +
-            "recent versions of Android, `FloatMath` is actually slower than using `java.lang.Math` " +
-            "due to the way the JIT optimizes `java.lang.Math`. Therefore, you should use " +
-            "`Math` instead of `FloatMath` if you are only targeting Froyo and above.",
-
-            Category.PERFORMANCE,
-            3,
-            Severity.WARNING,
-            new Implementation(
-                    MathDetector.class,
-                    Scope.JAVA_FILE_SCOPE))
-            .addMoreInfo(
-            "http://developer.android.com/guide/practices/design/performance.html#avoidfloat");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "FloatMath",
+                            "Using `FloatMath` instead of `Math`",
+                            "In older versions of Android, using `android.util.FloatMath` was recommended "
+                                    + "for performance reasons when operating on floats. However, on modern hardware "
+                                    + "doubles are just as fast as float (though they take more memory), and in "
+                                    + "recent versions of Android, `FloatMath` is actually slower than using `java.lang.Math` "
+                                    + "due to the way the JIT optimizes `java.lang.Math`. Therefore, you should use "
+                                    + "`Math` instead of `FloatMath` if you are only targeting Froyo and above.",
+                            Category.PERFORMANCE,
+                            3,
+                            Severity.WARNING,
+                            new Implementation(MathDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .addMoreInfo(
+                            "http://developer.android.com/guide/practices/design/performance.html#avoidfloat");
 
     /** Constructs a new {@link MathDetector} check */
-    public MathDetector() {
-    }
+    public MathDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
     @Nullable
     @Override
     public List<String> getApplicableMethodNames() {
-        return Arrays.asList(
-                "sin",
-                "cos",
-                "ceil",
-                "sqrt",
-                "floor"
-        );
+        return Arrays.asList("sin", "cos", "ceil", "sqrt", "floor");
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         if (context.getEvaluator().isMemberInClass(method, "android.util.FloatMath")
-                    && context.getProject().getMinSdk() >= 8) {
-            String message = String.format(
-                    "Use `java.lang.Math#%1$s` instead of `android.util.FloatMath#%1$s()` " +
-                            "since it is faster as of API 8", method.getName());
+                && context.getProject().getMinSdk() >= 8) {
+            String message =
+                    String.format(
+                            "Use `java.lang.Math#%1$s` instead of `android.util.FloatMath#%1$s()` "
+                                    + "since it is faster as of API 8",
+                            method.getName());
             Location location = context.getCallLocation(call, true, false);
             context.report(ISSUE, call, location, message);
         }

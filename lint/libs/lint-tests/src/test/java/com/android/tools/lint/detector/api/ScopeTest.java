@@ -22,35 +22,40 @@ import junit.framework.TestCase;
 @SuppressWarnings("javadoc")
 public class ScopeTest extends TestCase {
     public void testIntersect() {
-        assertEquals(Scope.RESOURCE_FILE_SCOPE,
+        assertEquals(
+                Scope.RESOURCE_FILE_SCOPE,
                 Scope.intersect(Scope.RESOURCE_FILE_SCOPE, Scope.RESOURCE_FILE_SCOPE));
 
-        assertEquals(EnumSet.of(Scope.RESOURCE_FILE),
-                Scope.intersect(
-                        EnumSet.of(Scope.RESOURCE_FILE),
-                        EnumSet.of(Scope.RESOURCE_FILE)));
+        assertEquals(
+                EnumSet.of(Scope.RESOURCE_FILE),
+                Scope.intersect(EnumSet.of(Scope.RESOURCE_FILE), EnumSet.of(Scope.RESOURCE_FILE)));
 
-        assertEquals(EnumSet.of(Scope.RESOURCE_FILE),
+        assertEquals(
+                EnumSet.of(Scope.RESOURCE_FILE),
                 Scope.intersect(
                         EnumSet.of(Scope.RESOURCE_FILE, Scope.JAVA_FILE),
                         EnumSet.of(Scope.RESOURCE_FILE)));
 
-        assertEquals(EnumSet.of(Scope.JAVA_FILE),
+        assertEquals(
+                EnumSet.of(Scope.JAVA_FILE),
                 Scope.intersect(
                         EnumSet.of(Scope.RESOURCE_FILE, Scope.JAVA_FILE),
                         EnumSet.of(Scope.JAVA_FILE)));
 
-        assertEquals(EnumSet.of(Scope.RESOURCE_FILE),
+        assertEquals(
+                EnumSet.of(Scope.RESOURCE_FILE),
                 Scope.intersect(
                         EnumSet.of(Scope.RESOURCE_FILE),
                         EnumSet.of(Scope.RESOURCE_FILE, Scope.JAVA_FILE)));
 
-        assertEquals(EnumSet.of(Scope.JAVA_FILE),
+        assertEquals(
+                EnumSet.of(Scope.JAVA_FILE),
                 Scope.intersect(
                         EnumSet.of(Scope.JAVA_FILE),
                         EnumSet.of(Scope.RESOURCE_FILE, Scope.JAVA_FILE)));
 
-        assertTrue(Scope.intersect(
-                    EnumSet.of(Scope.JAVA_FILE), EnumSet.of(Scope.RESOURCE_FILE)).isEmpty());
+        assertTrue(
+                Scope.intersect(EnumSet.of(Scope.JAVA_FILE), EnumSet.of(Scope.RESOURCE_FILE))
+                        .isEmpty());
     }
 }

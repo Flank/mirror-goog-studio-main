@@ -42,43 +42,35 @@ import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.USuperExpression;
 import org.jetbrains.uast.UastUtils;
 
-/**
- * Checks for cases where the wrong call is being made
- */
+/** Checks for cases where the wrong call is being made */
 public class WrongCallDetector extends Detector implements SourceCodeScanner {
     /** Calling the wrong method */
-    public static final Issue ISSUE = Issue.create(
-            "WrongCall",
-            "Using wrong draw/layout method",
-
-            "Custom views typically need to call `measure()` on their children, not `onMeasure`. " +
-            "Ditto for onDraw, onLayout, etc.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.FATAL,
-            new Implementation(
-                    WrongCallDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "WrongCall",
+                    "Using wrong draw/layout method",
+                    "Custom views typically need to call `measure()` on their children, not `onMeasure`. "
+                            + "Ditto for onDraw, onLayout, etc.",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.FATAL,
+                    new Implementation(WrongCallDetector.class, Scope.JAVA_FILE_SCOPE));
 
     /** Constructs a new {@link WrongCallDetector} */
-    public WrongCallDetector() {
-    }
+    public WrongCallDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
     @Override
     @Nullable
     public List<String> getApplicableMethodNames() {
-        return Arrays.asList(
-                ON_DRAW,
-                ON_MEASURE,
-                ON_LAYOUT
-        );
+        return Arrays.asList(ON_DRAW, ON_MEASURE, ON_LAYOUT);
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression node,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
             @NonNull PsiMethod calledMethod) {
         // Call is only allowed if it is both only called on the super class (invoke special)
         // as well as within the same overriding method (e.g. you can't call super.onLayout
@@ -109,13 +101,17 @@ public class WrongCallDetector extends Detector implements SourceCodeScanner {
 
         String name = method.getName();
         String suggestion = Character.toLowerCase(name.charAt(2)) + name.substring(3);
-        String message = String.format(
-                "Suspicious method call; should probably call \"`%1$s`\" rather than \"`%2$s`\"",
-                suggestion, name);
-        LintFix fix = LintFix.create()
-                .name("Replace call with " + suggestion + "()").replace().text(name)
-                .with(suggestion)
-                .build();
+        String message =
+                String.format(
+                        "Suspicious method call; should probably call \"`%1$s`\" rather than \"`%2$s`\"",
+                        suggestion, name);
+        LintFix fix =
+                LintFix.create()
+                        .name("Replace call with " + suggestion + "()")
+                        .replace()
+                        .text(name)
+                        .with(suggestion)
+                        .build();
         context.report(ISSUE, node, context.getNameLocation(node), message, fix);
     }
 }

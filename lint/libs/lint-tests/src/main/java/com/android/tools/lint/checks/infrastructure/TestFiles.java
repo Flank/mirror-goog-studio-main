@@ -37,13 +37,12 @@ import org.intellij.lang.annotations.Language;
 /**
  * A utility class which provides unit test file descriptions
  *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
 public class TestFiles {
 
-    private TestFiles() {
-    }
+    private TestFiles() {}
 
     @NonNull
     public static LintDetectorTest.TestFile file() {
@@ -56,8 +55,8 @@ public class TestFiles {
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile java(@NonNull String to,
-            @NonNull @Language("JAVA") String source) {
+    public static LintDetectorTest.TestFile java(
+            @NonNull String to, @NonNull @Language("JAVA") String source) {
         return TestFile.JavaTestFile.create(to, source);
     }
 
@@ -72,8 +71,8 @@ public class TestFiles {
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile kt(@NonNull String to,
-            @NonNull @Language("kotlin") String source) {
+    public static LintDetectorTest.TestFile kt(
+            @NonNull String to, @NonNull @Language("kotlin") String source) {
         return kotlin(to, source);
     }
 
@@ -83,14 +82,14 @@ public class TestFiles {
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile kotlin(@NonNull String to,
-            @NonNull @Language("kotlin") String source) {
+    public static LintDetectorTest.TestFile kotlin(
+            @NonNull String to, @NonNull @Language("kotlin") String source) {
         return TestFile.KotlinTestFile.create(to, source);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile xml(@NonNull String to,
-            @NonNull @Language("XML") String source) {
+    public static LintDetectorTest.TestFile xml(
+            @NonNull String to, @NonNull @Language("XML") String source) {
         if (!to.endsWith(DOT_XML)) {
             throw new IllegalArgumentException("Expected .xml suffix for XML test file");
         }
@@ -99,20 +98,22 @@ public class TestFiles {
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile copy(@NonNull String from,
-            @NonNull TestResourceProvider resourceProvider) {
+    public static LintDetectorTest.TestFile copy(
+            @NonNull String from, @NonNull TestResourceProvider resourceProvider) {
         return file().from(from, resourceProvider).to(from);
     }
 
     @NonNull
-    public static LintDetectorTest.TestFile copy(@NonNull String from, @NonNull String to,
+    public static LintDetectorTest.TestFile copy(
+            @NonNull String from,
+            @NonNull String to,
             @NonNull TestResourceProvider resourceProvider) {
         return file().from(from, resourceProvider).to(to);
     }
 
     @NonNull
-    public static TestFile.GradleTestFile gradle(@NonNull String to,
-            @NonNull @Language("Groovy") String source) {
+    public static TestFile.GradleTestFile gradle(
+            @NonNull String to, @NonNull @Language("Groovy") String source) {
         return new TestFile.GradleTestFile(to, source);
     }
 
@@ -132,26 +133,29 @@ public class TestFiles {
     }
 
     @NonNull
-    public static TestFile.BinaryTestFile bytecode(@NonNull String to, @NonNull TestFile.BytecodeProducer producer) {
+    public static TestFile.BinaryTestFile bytecode(
+            @NonNull String to, @NonNull TestFile.BytecodeProducer producer) {
         return new TestFile.BinaryTestFile(to, producer);
     }
 
     @NonNull
     public static TestFile.BinaryTestFile bytes(@NonNull String to, @NonNull byte[] bytes) {
-        TestFile.BytecodeProducer producer = new TestFile.BytecodeProducer() {
-            @NonNull
-            @Override
-            public byte[] produce() {
-                return bytes;
-            }
-        };
+        TestFile.BytecodeProducer producer =
+                new TestFile.BytecodeProducer() {
+                    @NonNull
+                    @Override
+                    public byte[] produce() {
+                        return bytes;
+                    }
+                };
         return new TestFile.BinaryTestFile(to, producer);
     }
 
     public static String toBase64(@NonNull byte[] bytes) {
         String base64 = Base64.getEncoder().encodeToString(bytes);
         return "\"\"\n+ \""
-                + Joiner.on("\"\n+ \"").join(Splitter.fixedLength(60).split(base64)) + "\"";
+                + Joiner.on("\"\n+ \"").join(Splitter.fixedLength(60).split(base64))
+                + "\"";
     }
 
     public static String toBase64gzip(@NonNull byte[] bytes) {
@@ -167,7 +171,8 @@ public class TestFiles {
 
         String base64 = Base64.getEncoder().encodeToString(bytes);
         return "\"\" +\n\""
-                + Joiner.on("\" +\n\"").join(Splitter.fixedLength(60).split(base64)) + "\"";
+                + Joiner.on("\" +\n\"").join(Splitter.fixedLength(60).split(base64))
+                + "\"";
     }
 
     public static String toBase64(@NonNull File file) throws IOException {
@@ -181,28 +186,31 @@ public class TestFiles {
     /**
      * Creates a test file from the given base64 data. To create this data, use {@link
      * #toBase64(File)} or {@link #toBase64(byte[])}, for example via
+     *
      * <pre>{@code assertEquals("", toBase64(new File("path/to/your.class")));}</pre>
      *
-     * @param to      the file to write as
+     * @param to the file to write as
      * @param encoded the encoded data
      * @return the new test file
      */
     public static TestFile.BinaryTestFile base64(@NonNull String to, @NonNull String encoded) {
         encoded = encoded.replaceAll("\n", "");
         final byte[] bytes = Base64.getDecoder().decode(encoded);
-        return new TestFile.BinaryTestFile(to, new TestFile.BytecodeProducer() {
-            @NonNull
-            @Override
-            public byte[] produce() {
-                return bytes;
-            }
-        });
+        return new TestFile.BinaryTestFile(
+                to,
+                new TestFile.BytecodeProducer() {
+                    @NonNull
+                    @Override
+                    public byte[] produce() {
+                        return bytes;
+                    }
+                });
     }
 
     /**
-     * Decodes base64 strings into gzip data, then decodes that into a data file.
-     * To create this data, use {@link #toBase64gzip(File)} or {@link #toBase64gzip(byte[])},
-     * for example via
+     * Decodes base64 strings into gzip data, then decodes that into a data file. To create this
+     * data, use {@link #toBase64gzip(File)} or {@link #toBase64gzip(byte[])}, for example via
+     *
      * <pre>{@code assertEquals("", toBase64gzip(new File("path/to/your.class")));}</pre>
      */
     @NonNull
@@ -219,25 +227,28 @@ public class TestFiles {
         }
 
         byte[] finalBytes = bytes;
-        return new TestFile.BinaryTestFile(to, new TestFile.BytecodeProducer() {
-            @NonNull
-            @Override
-            public byte[] produce() {
-                return finalBytes;
-            }
-        });
+        return new TestFile.BinaryTestFile(
+                to,
+                new TestFile.BytecodeProducer() {
+                    @NonNull
+                    @Override
+                    public byte[] produce() {
+                        return finalBytes;
+                    }
+                });
     }
 
     public static LintDetectorTest.TestFile classpath(String... extraLibraries) {
         StringBuilder sb = new StringBuilder();
-        sb.append(""
-                + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                + "<classpath>\n"
-                + "\t<classpathentry kind=\"src\" path=\"src\"/>\n"
-                + "\t<classpathentry kind=\"src\" path=\"gen\"/>\n"
-                + "\t<classpathentry kind=\"con\" path=\"com.android.ide.eclipse.adt.ANDROID_FRAMEWORK\"/>\n"
-                + "\t<classpathentry kind=\"con\" path=\"com.android.ide.eclipse.adt.LIBRARIES\"/>\n"
-                + "\t<classpathentry kind=\"output\" path=\"bin/classes\"/>\n");
+        sb.append(
+                ""
+                        + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                        + "<classpath>\n"
+                        + "\t<classpathentry kind=\"src\" path=\"src\"/>\n"
+                        + "\t<classpathentry kind=\"src\" path=\"gen\"/>\n"
+                        + "\t<classpathentry kind=\"con\" path=\"com.android.ide.eclipse.adt.ANDROID_FRAMEWORK\"/>\n"
+                        + "\t<classpathentry kind=\"con\" path=\"com.android.ide.eclipse.adt.LIBRARIES\"/>\n"
+                        + "\t<classpathentry kind=\"output\" path=\"bin/classes\"/>\n");
         for (String path : extraLibraries) {
             sb.append("\t<classpathentry kind=\"lib\" path=\"").append(path).append("\"/>\n");
         }
@@ -251,7 +262,8 @@ public class TestFiles {
     }
 
     @NonNull
-    public static TestFile.JarTestFile jar(@NonNull String to, @NonNull LintDetectorTest.TestFile... files) {
+    public static TestFile.JarTestFile jar(
+            @NonNull String to, @NonNull LintDetectorTest.TestFile... files) {
         if (!to.endsWith(DOT_JAR)) {
             throw new IllegalArgumentException("Expected .jar suffix for jar test file");
         }

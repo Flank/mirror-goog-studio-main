@@ -56,7 +56,10 @@ protected constructor() {
      * same as [api], but if you have tested it with older version and it
      * works, you can return that level.
      */
-    open val minApi: Int get() { return api }
+    open val minApi: Int
+        get() {
+            return api
+        }
 
     /**
      * The list of issues that can be found by all known detectors (including those that may be
@@ -102,7 +105,7 @@ protected constructor() {
                     }
                 }
             }
-            scopeIssues.put(scope, list)
+            scopeIssues[scope] = list
         }
 
         return list
@@ -123,10 +126,11 @@ protected constructor() {
      * @return a list of new detector instances
      */
     internal fun createDetectors(
-            client: LintClient,
-            configuration: Configuration,
-            scope: EnumSet<Scope>,
-            scopeToDetectors: MutableMap<Scope, MutableList<Detector>>?): List<Detector> {
+        client: LintClient,
+        configuration: Configuration,
+        scope: EnumSet<Scope>,
+        scopeToDetectors: MutableMap<Scope, MutableList<Detector>>?
+    ): List<Detector> {
 
         val issues = getIssuesForScope(scope)
         if (issues.isEmpty()) {
@@ -154,11 +158,11 @@ protected constructor() {
             if (scopeToDetectors != null) {
                 val s = detectorToScope[detectorClass]
                 if (s == null) {
-                    detectorToScope.put(detectorClass, issueScope)
+                    detectorToScope[detectorClass] = issueScope
                 } else if (!s.containsAll(issueScope)) {
                     val union = EnumSet.copyOf(s)
                     union.addAll(issueScope)
-                    detectorToScope.put(detectorClass, union)
+                    detectorToScope[detectorClass] = union
                 }
             }
         }
@@ -175,16 +179,14 @@ protected constructor() {
                         var list: MutableList<Detector>? = scopeToDetectors[s]
                         if (list == null) {
                             list = ArrayList()
-                            scopeToDetectors.put(s, list)
+                            scopeToDetectors[s] = list
                         }
                         list.add(detector)
                     }
-
                 }
             } catch (t: Throwable) {
                 client.log(t, "Can't initialize detector %1\$s", clz.name)
             }
-
         }
 
         return detectors
@@ -271,36 +273,41 @@ protected constructor() {
         val issues = issues
         val map = Maps.newHashMapWithExpectedSize<String, Issue>(issues.size + 2)
         for (issue in issues) {
-            map.put(issue.id, issue)
+            map[issue.id] = issue
         }
 
-        map.put(PARSER_ERROR.id, PARSER_ERROR)
-        map.put(LINT_ERROR.id, LINT_ERROR)
-        map.put(BASELINE.id, BASELINE)
-        map.put(OBSOLETE_LINT_CHECK.id, OBSOLETE_LINT_CHECK)
+        map[PARSER_ERROR.id] = PARSER_ERROR
+        map[LINT_ERROR.id] = LINT_ERROR
+        map[BASELINE.id] = BASELINE
+        map[OBSOLETE_LINT_CHECK.id] = OBSOLETE_LINT_CHECK
         return map
     }
 
     companion object {
-        @Volatile private var categories: List<Category>? = null
-        @Volatile private var idToIssue: Map<String, Issue>? = null
+        @Volatile
+        private var categories: List<Category>? = null
+        @Volatile
+        private var idToIssue: Map<String, Issue>? = null
         private var scopeIssues: MutableMap<EnumSet<Scope>, List<Issue>> = Maps.newHashMap()
 
-        private val DUMMY_IMPLEMENTATION = Implementation(Detector::class.java,
-                EnumSet.noneOf(Scope::class.java))
+        private val DUMMY_IMPLEMENTATION = Implementation(
+            Detector::class.java,
+            EnumSet.noneOf(Scope::class.java)
+        )
         /**
          * Issue reported by lint (not a specific detector) when it cannot even
          * parse an XML file prior to analysis
          */
         @JvmField // temporarily
         val PARSER_ERROR = Issue.create(
-                "ParserError",
-                "Parser Errors",
-                "Lint will ignore any files that contain fatal parsing errors. These may contain " + "other errors, or contain code which affects issues in other files.",
-                Category.LINT,
-                10,
-                Severity.ERROR,
-                DUMMY_IMPLEMENTATION)
+            "ParserError",
+            "Parser Errors",
+            "Lint will ignore any files that contain fatal parsing errors. These may contain other errors, or contain code which affects issues in other files.",
+            Category.LINT,
+            10,
+            Severity.ERROR,
+            DUMMY_IMPLEMENTATION
+        )
 
         /**
          * Issue reported by lint for various other issues which prevents lint from
@@ -308,33 +315,35 @@ protected constructor() {
          */
         @JvmField // temporarily
         val LINT_ERROR = Issue.create(
-                "LintError",
-                "Lint Failure",
-                "This issue type represents a problem running lint itself. Examples include " +
-                "failure to find bytecode for source files (which means certain detectors " +
-                "could not be run), parsing errors in lint configuration files, etc." +
-                "\n" +
-                "These errors are not errors in your own code, but they are shown to make " +
-                "it clear that some checks were not completed.",
+            "LintError",
+            "Lint Failure",
+            "This issue type represents a problem running lint itself. Examples include " +
+                    "failure to find bytecode for source files (which means certain detectors " +
+                    "could not be run), parsing errors in lint configuration files, etc." +
+                    "\n" +
+                    "These errors are not errors in your own code, but they are shown to make " +
+                    "it clear that some checks were not completed.",
 
-                Category.LINT,
-                10,
-                Severity.ERROR,
-                DUMMY_IMPLEMENTATION)
+            Category.LINT,
+            10,
+            Severity.ERROR,
+            DUMMY_IMPLEMENTATION
+        )
 
         /**
          * Issue reported when lint is canceled
          */
         @JvmField // temporarily
         val CANCELLED = Issue.create(
-                "LintCanceled",
-                "Lint Canceled",
-                "Lint canceled by user; the issue report may not be complete.",
+            "LintCanceled",
+            "Lint Canceled",
+            "Lint canceled by user; the issue report may not be complete.",
 
-                Category.LINT,
-                0,
-                Severity.INFORMATIONAL,
-                DUMMY_IMPLEMENTATION)
+            Category.LINT,
+            0,
+            Severity.INFORMATIONAL,
+            DUMMY_IMPLEMENTATION
+        )
 
         /**
          * Issue reported by lint for various other issues which prevents lint from
@@ -342,28 +351,29 @@ protected constructor() {
          */
         @JvmField // temporarily
         val BASELINE = Issue.create(
-                "LintBaseline",
-                "Baseline Issues",
-                "Lint can be configured with a \"baseline\"; a set of current issues found in " +
-                        "a codebase, which future runs of lint will silently ignore. Only new issues " +
-                        "not found in the baseline are reported.\n" +
-                        "\n" +
-                        "Note that while opening files in the IDE, baseline issues are not filtered out; " +
-                        "the purpose of baselines is to allow you to get started using lint and break " +
-                        "the build on all newly introduced errors, without having to go back and fix the " +
-                        "entire codebase up front. However, when you open up existing files you still " +
-                        "want to be aware of and fix issues as you come across them.\n" +
-                        "\n" +
-                        "This issue type is used to emit two types of informational messages in reports: " +
-                        "first, whether any issues were filtered out so you don't have a false sense of " +
-                        "security if you forgot that you've checked in a baseline file, and second, " +
-                        "whether any issues in the baseline file appear to have been fixed such that you " +
-                        "can stop filtering them out and get warned if the issues are re-introduced.",
+            "LintBaseline",
+            "Baseline Issues",
+            "Lint can be configured with a \"baseline\"; a set of current issues found in " +
+                    "a codebase, which future runs of lint will silently ignore. Only new issues " +
+                    "not found in the baseline are reported.\n" +
+                    "\n" +
+                    "Note that while opening files in the IDE, baseline issues are not filtered out; " +
+                    "the purpose of baselines is to allow you to get started using lint and break " +
+                    "the build on all newly introduced errors, without having to go back and fix the " +
+                    "entire codebase up front. However, when you open up existing files you still " +
+                    "want to be aware of and fix issues as you come across them.\n" +
+                    "\n" +
+                    "This issue type is used to emit two types of informational messages in reports: " +
+                    "first, whether any issues were filtered out so you don't have a false sense of " +
+                    "security if you forgot that you've checked in a baseline file, and second, " +
+                    "whether any issues in the baseline file appear to have been fixed such that you " +
+                    "can stop filtering them out and get warned if the issues are re-introduced.",
 
-                Category.LINT,
-                10,
-                Severity.INFORMATIONAL,
-                DUMMY_IMPLEMENTATION)
+            Category.LINT,
+            10,
+            Severity.INFORMATIONAL,
+            DUMMY_IMPLEMENTATION
+        )
 
         /**
          * Issue reported by lint when it encounters old lint checks that haven't been
@@ -371,27 +381,28 @@ protected constructor() {
          */
         @JvmField // temporarily
         val OBSOLETE_LINT_CHECK = Issue.create(
-                "ObsoleteLintCustomCheck",
-                "Obsolete custom lint check",
+            "ObsoleteLintCustomCheck",
+            "Obsolete custom lint check",
 
-                "Lint can be extended with \"custom checks\": additional checks implemented by " +
-                "developers and libraries to for example enforce specific API usages required " +
-                "by a library or a company coding style guideline.\n" +
-                "\n" +
-                "The Lint APIs are not yet stable, so these checks may either cause a performance, " +
-                "degradation, or stop working, or provide wrong results.\n" +
-                "\n" +
-                "This warning flags custom lint checks that are found to be using obsolete APIs and " +
-                "will need to be updated to run in the current lint environment." +
-                "\n" +
-                "It may also flag issues found to be using a **newer** version of the API, " +
-                "meaning that you need to use a newer version of lint (or Android Studio " +
-                "or Gradle plugin etc) to work with these checks.",
+            "Lint can be extended with \"custom checks\": additional checks implemented by " +
+                    "developers and libraries to for example enforce specific API usages required " +
+                    "by a library or a company coding style guideline.\n" +
+                    "\n" +
+                    "The Lint APIs are not yet stable, so these checks may either cause a performance, " +
+                    "degradation, or stop working, or provide wrong results.\n" +
+                    "\n" +
+                    "This warning flags custom lint checks that are found to be using obsolete APIs and " +
+                    "will need to be updated to run in the current lint environment." +
+                    "\n" +
+                    "It may also flag issues found to be using a **newer** version of the API, " +
+                    "meaning that you need to use a newer version of lint (or Android Studio " +
+                    "or Gradle plugin etc) to work with these checks.",
 
-                Category.LINT,
-                10,
-                Severity.WARNING,
-                DUMMY_IMPLEMENTATION)
+            Category.LINT,
+            10,
+            Severity.WARNING,
+            DUMMY_IMPLEMENTATION
+        )
 
         /**
          * Reset the registry such that it recomputes its available issues.

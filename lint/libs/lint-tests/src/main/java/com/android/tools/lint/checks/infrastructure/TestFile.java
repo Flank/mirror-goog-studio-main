@@ -60,8 +60,8 @@ import org.intellij.lang.annotations.Language;
 import org.objectweb.asm.Opcodes;
 
 /**
- * Test file description, which can copy from resource directory or from
- * a specified hardcoded string literal, and copy into a target directory
+ * Test file description, which can copy from resource directory or from a specified hardcoded
+ * string literal, and copy into a target directory
  */
 public class TestFile {
     // TODO: Make this a top level class
@@ -72,8 +72,7 @@ public class TestFile {
     private TestResourceProvider resourceProvider;
     public String targetRootFolder;
 
-    public TestFile() {
-    }
+    public TestFile() {}
 
     public TestFile withSource(@NonNull String source) {
         contents = source;
@@ -178,8 +177,7 @@ public class TestFile {
     }
 
     public static class JavaTestFile extends LintDetectorTest.TestFile {
-        public JavaTestFile() {
-        }
+        public JavaTestFile() {}
 
         @NonNull
         public static LintDetectorTest.TestFile create(@NonNull @Language("JAVA") String source) {
@@ -200,8 +198,8 @@ public class TestFile {
         }
 
         @NonNull
-        public static LintDetectorTest.TestFile create(@NonNull String to,
-                @NonNull @Language("JAVA") String source) {
+        public static LintDetectorTest.TestFile create(
+                @NonNull String to, @NonNull @Language("JAVA") String source) {
             if (!to.endsWith(DOT_JAVA)) {
                 throw new IllegalArgumentException("Expected .java suffix for Java test file");
             }
@@ -210,8 +208,7 @@ public class TestFile {
     }
 
     public static class KotlinTestFile extends LintDetectorTest.TestFile {
-        public KotlinTestFile() {
-        }
+        public KotlinTestFile() {}
 
         @NonNull
         public static LintDetectorTest.TestFile create(@NonNull @Language("kotlin") String source) {
@@ -231,10 +228,11 @@ public class TestFile {
         }
 
         @NonNull
-        public static LintDetectorTest.TestFile create(@NonNull String to,
-                @NonNull @Language("kotlin") String source) {
+        public static LintDetectorTest.TestFile create(
+                @NonNull String to, @NonNull @Language("kotlin") String source) {
             if (!to.endsWith(DOT_KT) && !to.endsWith(DOT_KTS)) {
-                throw new IllegalArgumentException("Expected .kt or .kts suffix for Kotlin test file");
+                throw new IllegalArgumentException(
+                        "Expected .kt or .kts suffix for Kotlin test file");
             }
             return new KotlinTestFile().to(to).withSource(source);
         }
@@ -242,12 +240,11 @@ public class TestFile {
 
     public static class XmlTestFile extends LintDetectorTest.TestFile {
 
-        public XmlTestFile() {
-        }
+        public XmlTestFile() {}
 
         @NonNull
-        public static LintDetectorTest.TestFile create(@NonNull String to,
-                @NonNull @Language("XML") String source) {
+        public static LintDetectorTest.TestFile create(
+                @NonNull String to, @NonNull @Language("XML") String source) {
             if (!to.endsWith(DOT_XML)) {
                 throw new IllegalArgumentException("Expected .xml suffix for XML test file");
             }
@@ -263,10 +260,10 @@ public class TestFile {
             return this;
         }
 
-        /** Normally, XML processing instructions (other than {@code <?xml?>} are
-         * taken to be inlined error messages and are stripped before being passed to
-         * the XML parser. This flag allows you to tell lint to leave your processing
-         * instructions alone, if needed by your test.
+        /**
+         * Normally, XML processing instructions (other than {@code <?xml?>} are taken to be inlined
+         * error messages and are stripped before being passed to the XML parser. This flag allows
+         * you to tell lint to leave your processing instructions alone, if needed by your test.
          */
         public XmlTestFile keepProcessingInstructions() {
             withSource(rawSource);
@@ -385,8 +382,9 @@ public class TestFile {
             Manifest manifest = new Manifest();
             manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
 
-            try (JarOutputStream jarOutputStream = new JarOutputStream(
-                    new BufferedOutputStream(new FileOutputStream(tempFile)), manifest)) {
+            try (JarOutputStream jarOutputStream =
+                    new JarOutputStream(
+                            new BufferedOutputStream(new FileOutputStream(tempFile)), manifest)) {
                 for (LintDetectorTest.TestFile file : files) {
                     String path = this.path.get(file);
                     if (path == null) {
@@ -420,7 +418,8 @@ public class TestFile {
 
             if (SdkUtils.endsWithIgnoreCase(to, DOT_PNG)) {
                 mFormat = "PNG";
-            } else if (SdkUtils.endsWithIgnoreCase(to, DOT_JPG) || SdkUtils.endsWithIgnoreCase(to, DOT_JPEG)) {
+            } else if (SdkUtils.endsWithIgnoreCase(to, DOT_JPG)
+                    || SdkUtils.endsWithIgnoreCase(to, DOT_JPEG)) {
                 mFormat = "JPG";
             } else if (SdkUtils.endsWithIgnoreCase(to, DOT_GIF)) {
                 mFormat = "GIF";
@@ -466,7 +465,8 @@ public class TestFile {
             try {
                 ImageIO.write(mImage, mFormat, output);
             } catch (IOException e) {
-                TestCase.fail(e.getLocalizedMessage() + " writing " + output + " in format " + mFormat);
+                TestCase.fail(
+                        e.getLocalizedMessage() + " writing " + output + " in format " + mFormat);
             }
 
             return output.toByteArray();
@@ -524,7 +524,8 @@ public class TestFile {
             if (contents == null) {
                 StringBuilder sb = new StringBuilder();
                 sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
-                sb.append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n");
+                sb.append(
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n");
                 sb.append("    package=\"").append(pkg).append("\"\n");
                 sb.append("    android:versionCode=\"1\"\n");
                 sb.append("    android:versionName=\"1.0\" >\n");
@@ -550,14 +551,15 @@ public class TestFile {
                     sb.append("\n");
                 }
 
-                sb.append(""
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:icon=\"@drawable/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\" >\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>");
+                sb.append(
+                        ""
+                                + "\n"
+                                + "    <application\n"
+                                + "        android:icon=\"@drawable/ic_launcher\"\n"
+                                + "        android:label=\"@string/app_name\" >\n"
+                                + "    </application>\n"
+                                + "\n"
+                                + "</manifest>");
                 contents = sb.toString();
             }
 
@@ -626,12 +628,13 @@ public class TestFile {
 
     public static class BytecodeProducer extends ByteProducer implements Opcodes {
         /**
-         *  Typically generated by first getting asm output like this:
+         * Typically generated by first getting asm output like this:
+         *
          * <pre>
          *     assertEquals("", asmify(new File("/full/path/to/my/file.class")));
          * </pre>
-         * ...and when the test fails, the actual test output is the necessary assembly
          *
+         * ...and when the test fails, the actual test output is the necessary assembly
          */
         @Override
         @SuppressWarnings("MethodMayBeStatic") // intended for override
@@ -687,22 +690,28 @@ public class TestFile {
         }
 
         public PropertyTestFile library(boolean isLibrary) {
-            stringBuilder.append("android.library=").append(Boolean.toString(isLibrary))
+            stringBuilder
+                    .append("android.library=")
+                    .append(Boolean.toString(isLibrary))
                     .append('\n');
             return this;
         }
 
         public PropertyTestFile manifestMerger(boolean merger) {
-            stringBuilder.append("manifestmerger.enabled=").append(Boolean.toString(merger))
+            stringBuilder
+                    .append("manifestmerger.enabled=")
+                    .append(Boolean.toString(merger))
                     .append('\n');
             return this;
         }
 
         public PropertyTestFile dependsOn(String relative) {
             TestCase.assertTrue(relative.startsWith("../"));
-            stringBuilder.append("android.library.reference.")
+            stringBuilder
+                    .append("android.library.reference.")
                     .append(Integer.toString(nextLibraryIndex++))
-                    .append("=").append(escapePropertyValue(relative))
+                    .append("=")
+                    .append(escapePropertyValue(relative))
                     .append('\n');
             return this;
         }

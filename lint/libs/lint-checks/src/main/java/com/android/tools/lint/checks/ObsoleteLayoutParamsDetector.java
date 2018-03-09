@@ -98,35 +98,33 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
- * Looks for layout params on views that are "obsolete" - may have made sense
- * when the view was added but there is a different layout parent now which does
- * not use the given layout params.
+ * Looks for layout params on views that are "obsolete" - may have made sense when the view was
+ * added but there is a different layout parent now which does not use the given layout params.
  */
 public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     /** Usage of deprecated views or attributes */
-    public static final Issue ISSUE = Issue.create(
-            "ObsoleteLayoutParam",
-            "Obsolete layout params",
-
-            "The given layout_param is not defined for the given layout, meaning it has no " +
-            "effect. This usually happens when you change the parent layout or move view " +
-            "code around without updating the layout params. This will cause useless " +
-            "attribute processing at runtime, and is misleading for others reading the " +
-            "layout so the parameter should be removed.",
-            Category.PERFORMANCE,
-            6,
-            Severity.WARNING,
-            new Implementation(
-                    ObsoleteLayoutParamsDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "ObsoleteLayoutParam",
+                    "Obsolete layout params",
+                    "The given layout_param is not defined for the given layout, meaning it has no "
+                            + "effect. This usually happens when you change the parent layout or move view "
+                            + "code around without updating the layout params. This will cause useless "
+                            + "attribute processing at runtime, and is misleading for others reading the "
+                            + "layout so the parameter should be removed.",
+                    Category.PERFORMANCE,
+                    6,
+                    Severity.WARNING,
+                    new Implementation(
+                            ObsoleteLayoutParamsDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     /**
-     * Set of layout parameter names that are considered valid no matter what so
-     * no other checking is necessary - such as layout_width and layout_height.
+     * Set of layout parameter names that are considered valid no matter what so no other checking
+     * is necessary - such as layout_width and layout_height.
      */
     private static boolean isValid(@NonNull String attribute) {
         switch (attribute) {
-            // Available (mostly) everywhere: No check
+                // Available (mostly) everywhere: No check
             case ATTR_LAYOUT_WIDTH:
             case ATTR_LAYOUT_HEIGHT:
 
@@ -152,29 +150,27 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     }
 
     /**
-     * Mapping from a layout parameter name (local name only) to the defining
-     * ViewGroup. Note that it's possible for the same name to be defined by
-     * multiple ViewGroups - but it turns out this is extremely rare (the only
-     * examples are layout_column defined by both TableRow and GridLayout, and
-     * layout_gravity defined by many layouts) so rather than handle this with
-     * every single layout attribute pointing to a list, this is just special
-     * cased instead.
+     * Mapping from a layout parameter name (local name only) to the defining ViewGroup. Note that
+     * it's possible for the same name to be defined by multiple ViewGroups - but it turns out this
+     * is extremely rare (the only examples are layout_column defined by both TableRow and
+     * GridLayout, and layout_gravity defined by many layouts) so rather than handle this with every
+     * single layout attribute pointing to a list, this is just special cased instead.
      */
     @Nullable
     private static String getLayoutForAttribute(@NonNull String attribute) {
         switch (attribute) {
 
-            // Absolute Layout
+                // Absolute Layout
             case ATTR_LAYOUT_X:
                 return ABSOLUTE_LAYOUT;
             case ATTR_LAYOUT_Y:
                 return ABSOLUTE_LAYOUT;
 
-            // Linear Layout
+                // Linear Layout
             case ATTR_LAYOUT_WEIGHT:
                 return LINEAR_LAYOUT;
 
-            // Grid Layout
+                // Grid Layout
             case ATTR_LAYOUT_COLUMN:
                 return GRID_LAYOUT;
             case ATTR_LAYOUT_COLUMN_SPAN:
@@ -184,19 +180,19 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
             case ATTR_LAYOUT_ROW_SPAN:
                 return GRID_LAYOUT;
 
-            // Table Layout
-            // ATTR_LAYOUT_COLUMN is defined for both GridLayout and TableLayout,
-            // so we don't want to do
-            //    case ATTR_LAYOUT_COLUMN: return TABLE_ROW;
-            // here since it would wipe out the above GridLayout registration.
-            // Since this is the only case where there is a conflict (in addition to layout_gravity
-            // which is defined in many places), rather than making the map point to lists
-            // this specific case is just special cased below, look for ATTR_LAYOUT_COLUMN.
+                // Table Layout
+                // ATTR_LAYOUT_COLUMN is defined for both GridLayout and TableLayout,
+                // so we don't want to do
+                //    case ATTR_LAYOUT_COLUMN: return TABLE_ROW;
+                // here since it would wipe out the above GridLayout registration.
+                // Since this is the only case where there is a conflict (in addition to layout_gravity
+                // which is defined in many places), rather than making the map point to lists
+                // this specific case is just special cased below, look for ATTR_LAYOUT_COLUMN.
 
             case ATTR_LAYOUT_SPAN:
                 return TABLE_ROW;
 
-            // Relative Layout
+                // Relative Layout
             case ATTR_LAYOUT_ALIGN_LEFT:
                 return RELATIVE_LAYOUT;
             case ATTR_LAYOUT_ALIGN_START:
@@ -248,29 +244,24 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     }
 
     /**
-     * Map from an included layout to all the including contexts (each including
-     * context is a pair of a file containing the include to the parent tag at
-     * the included location)
+     * Map from an included layout to all the including contexts (each including context is a pair
+     * of a file containing the include to the parent tag at the included location)
      */
     private Map<String, List<Pair<File, String>>> mIncludes;
 
     /**
-     * List of pending include checks. When a layout parameter attribute is
-     * found on a root element, or on a child of a {@code merge} root tag, then
-     * we want to check across layouts whether the including context (the parent
-     * of the include tag) is valid for this attribute. We cannot check this
-     * immediately because we are processing the layouts in an arbitrary order
-     * so the included layout may be seen before the including layout and so on.
-     * Therefore, we stash these attributes to be checked after we're done. Each
-     * pair is a pair of an attribute name to be checked, and the file that
-     * attribute is referenced in.
+     * List of pending include checks. When a layout parameter attribute is found on a root element,
+     * or on a child of a {@code merge} root tag, then we want to check across layouts whether the
+     * including context (the parent of the include tag) is valid for this attribute. We cannot
+     * check this immediately because we are processing the layouts in an arbitrary order so the
+     * included layout may be seen before the including layout and so on. Therefore, we stash these
+     * attributes to be checked after we're done. Each pair is a pair of an attribute name to be
+     * checked, and the file that attribute is referenced in.
      */
-    private final List<Pair<String, Location.Handle>> mPending =
-            new ArrayList<>();
+    private final List<Pair<String, Location.Handle>> mPending = new ArrayList<>();
 
     /** Constructs a new {@link ObsoleteLayoutParamsDetector} */
-    public ObsoleteLayoutParamsDetector() {
-    }
+    public ObsoleteLayoutParamsDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
@@ -285,7 +276,8 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String name = attribute.getLocalName();
-        if (name != null && name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
+        if (name != null
+                && name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                 && ANDROID_URI.equals(attribute.getNamespaceURI())) {
             if (isValid(name)) {
                 return;
@@ -329,8 +321,12 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                             && isValidParamForParent(context, name, TABLE_ROW, parentTag)) {
                         return;
                     }
-                    context.report(ISSUE, attribute, context.getLocation(attribute),
-                            String.format("Invalid layout param in a `%1$s`: `%2$s`", parentTag, name));
+                    context.report(
+                            ISSUE,
+                            attribute,
+                            context.getLocation(attribute),
+                            String.format(
+                                    "Invalid layout param in a `%1$s`: `%2$s`", parentTag, name));
                 }
             } else {
                 // We could warn about unknown layout params but this might be brittle if
@@ -404,7 +400,8 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                 if (isValidParamForParent(context, name, parent, parentTag)) {
                     isValid = true;
                     break;
-                } else if (!isValid && name.equals(ATTR_LAYOUT_COLUMN)
+                } else if (!isValid
+                        && name.equals(ATTR_LAYOUT_COLUMN)
                         && isValidParamForParent(context, name, TABLE_ROW, parentTag)) {
                     isValid = true;
                     break;
@@ -426,12 +423,14 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                     }
                     File from = include.getFirst();
                     String parentTag = include.getSecond();
-                    sb.append(String.format("included from within a `%1$s` in `%2$s`",
-                            parentTag,
-                            LintUtils.getFileNameWithParent(context.getClient(), from)));
+                    sb.append(
+                            String.format(
+                                    "included from within a `%1$s` in `%2$s`",
+                                    parentTag,
+                                    LintUtils.getFileNameWithParent(context.getClient(), from)));
                 }
-                String message = String.format("Invalid layout param '`%1$s`' (%2$s)",
-                            name, sb.toString());
+                String message =
+                        String.format("Invalid layout param '`%1$s`' (%2$s)", name, sb.toString());
                 // TODO: Compute applicable scope node
                 context.report(ISSUE, location, message);
             }
@@ -439,11 +438,11 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     }
 
     /**
-     * Checks whether the given layout parameter name is valid for the given
-     * parent tag assuming it has the given current parent tag
+     * Checks whether the given layout parameter name is valid for the given parent tag assuming it
+     * has the given current parent tag
      */
-    private static boolean isValidParamForParent(Context context, String name, String parent,
-            String parentTag) {
+    private static boolean isValidParamForParent(
+            Context context, String name, String parent, String parentTag) {
         if (parentTag.indexOf('.') != -1 || parentTag.equals(VIEW_TAG)) {
             // Custom tag: We don't know whether it extends one of the builtin
             // types where the layout param is valid, so don't complain

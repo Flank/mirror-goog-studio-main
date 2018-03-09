@@ -123,10 +123,11 @@ class SizeConstraint extends RangeConstraint {
     }
 
     @NonNull
-    public String describe(@Nullable UExpression argument, @Nullable String unit,
-            @Nullable Long actualValue) {
+    public String describe(
+            @Nullable UExpression argument, @Nullable String unit, @Nullable Long actualValue) {
         if (unit == null) {
-            if (argument != null && argument.getExpressionType() != null
+            if (argument != null
+                    && argument.getExpressionType() != null
                     && argument.getExpressionType().getCanonicalText().equals(JAVA_LANG_STRING)) {
                 unit = "Length";
             } else {
@@ -138,8 +139,7 @@ class SizeConstraint extends RangeConstraint {
             long actual = actualValue;
             if (exact != -1) {
                 if (exact != actual) {
-                    return String.format("Expected %1$s %2$d (was %3$d)",
-                            unit, exact, actual);
+                    return String.format("Expected %1$s %2$d (was %3$d)", unit, exact, actual);
                 }
             } else if (actual < min || actual > max) {
                 StringBuilder sb = new StringBuilder(20);
@@ -154,9 +154,13 @@ class SizeConstraint extends RangeConstraint {
                 sb.append(" (was ").append(actual).append(')');
                 return sb.toString();
             } else if (actual % multiple != 0) {
-                return String.format("Expected %1$s to be a multiple of %2$d (was %3$d "
+                return String.format(
+                        "Expected %1$s to be a multiple of %2$d (was %3$d "
                                 + "and should be either %4$d or %5$d)",
-                        unit, multiple, actual, (actual / multiple) * multiple,
+                        unit,
+                        multiple,
+                        actual,
+                        (actual / multiple) * multiple,
                         (actual / multiple + 1) * multiple);
             }
         }

@@ -35,43 +35,43 @@ import org.jetbrains.uast.UExpression;
 
 public class SslCertificateSocketFactoryDetector extends Detector implements SourceCodeScanner {
 
-    private static final Implementation IMPLEMENTATION_JAVA = new Implementation(
-            SslCertificateSocketFactoryDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION_JAVA =
+            new Implementation(SslCertificateSocketFactoryDetector.class, Scope.JAVA_FILE_SCOPE);
 
-    public static final Issue CREATE_SOCKET = Issue.create(
-            "SSLCertificateSocketFactoryCreateSocket",
-            "Insecure call to `SSLCertificateSocketFactory.createSocket()`",
-            "When `SSLCertificateSocketFactory.createSocket()` is called with an `InetAddress` " +
-            "as the first parameter, TLS/SSL hostname verification is not performed, which " +
-            "could result in insecure network traffic caused by trusting arbitrary " +
-            "hostnames in TLS/SSL certificates presented by peers. In this case, developers " +
-            "must ensure that the `InetAddress` is explicitly verified against the certificate " +
-            "through other means, such as by calling " +
-            "`SSLCertificateSocketFactory.getDefaultHostnameVerifier() to get a " +
-            "`HostnameVerifier` and calling `HostnameVerifier.verify()`.",
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION_JAVA);
+    public static final Issue CREATE_SOCKET =
+            Issue.create(
+                    "SSLCertificateSocketFactoryCreateSocket",
+                    "Insecure call to `SSLCertificateSocketFactory.createSocket()`",
+                    "When `SSLCertificateSocketFactory.createSocket()` is called with an `InetAddress` "
+                            + "as the first parameter, TLS/SSL hostname verification is not performed, which "
+                            + "could result in insecure network traffic caused by trusting arbitrary "
+                            + "hostnames in TLS/SSL certificates presented by peers. In this case, developers "
+                            + "must ensure that the `InetAddress` is explicitly verified against the certificate "
+                            + "through other means, such as by calling "
+                            + "`SSLCertificateSocketFactory.getDefaultHostnameVerifier() to get a "
+                            + "`HostnameVerifier` and calling `HostnameVerifier.verify()`.",
+                    Category.SECURITY,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION_JAVA);
 
-    public static final Issue GET_INSECURE = Issue.create(
-            "SSLCertificateSocketFactoryGetInsecure",
-            "Call to `SSLCertificateSocketFactory.getInsecure()`",
-            "The `SSLCertificateSocketFactory.getInsecure()` method returns " +
-            "an SSLSocketFactory with all TLS/SSL security checks disabled, which " +
-            "could result in insecure network traffic caused by trusting arbitrary " +
-            "TLS/SSL certificates presented by peers. This method should be " +
-            "avoided unless needed for a special circumstance such as " +
-            "debugging. Instead, `SSLCertificateSocketFactory.getDefault()` " +
-            "should be used.",
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION_JAVA);
+    public static final Issue GET_INSECURE =
+            Issue.create(
+                    "SSLCertificateSocketFactoryGetInsecure",
+                    "Call to `SSLCertificateSocketFactory.getInsecure()`",
+                    "The `SSLCertificateSocketFactory.getInsecure()` method returns "
+                            + "an SSLSocketFactory with all TLS/SSL security checks disabled, which "
+                            + "could result in insecure network traffic caused by trusting arbitrary "
+                            + "TLS/SSL certificates presented by peers. This method should be "
+                            + "avoided unless needed for a special circumstance such as "
+                            + "debugging. Instead, `SSLCertificateSocketFactory.getDefault()` "
+                            + "should be used.",
+                    Category.SECURITY,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION_JAVA);
 
-    private static final String INET_ADDRESS_CLASS =
-            "java.net.InetAddress";
+    private static final String INET_ADDRESS_CLASS = "java.net.InetAddress";
 
     private static final String SSL_CERTIFICATE_SOCKET_FACTORY_CLASS =
             "android.net.SSLCertificateSocketFactory";
@@ -85,10 +85,12 @@ public class SslCertificateSocketFactoryDetector extends Detector implements Sou
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
-        if (context.getEvaluator().isMemberInSubClassOf(method,
-                SSL_CERTIFICATE_SOCKET_FACTORY_CLASS, false)) {
+        if (context.getEvaluator()
+                .isMemberInSubClassOf(method, SSL_CERTIFICATE_SOCKET_FACTORY_CLASS, false)) {
             String methodName = method.getName();
             if ("createSocket".equals(methodName)) {
                 List<UExpression> args = call.getValueArguments();
@@ -96,20 +98,29 @@ public class SslCertificateSocketFactoryDetector extends Detector implements Sou
                     PsiType type = args.get(0).getExpressionType();
                     if (type != null
                             && (INET_ADDRESS_CLASS.equals(type.getCanonicalText())
-                            || context.getEvaluator().extendsClass(((PsiClassType)type).resolve(),
-                            INET_ADDRESS_CLASS, false))) {
-                        context.report(CREATE_SOCKET, call, context.getLocation(call),
-                                "Use of `SSLCertificateSocketFactory.createSocket()` " +
-                                "with an InetAddress parameter can cause insecure " +
-                                "network traffic due to trusting arbitrary hostnames in " +
-                                "TLS/SSL certificates presented by peers");
+                                    || context.getEvaluator()
+                                            .extendsClass(
+                                                    ((PsiClassType) type).resolve(),
+                                                    INET_ADDRESS_CLASS,
+                                                    false))) {
+                        context.report(
+                                CREATE_SOCKET,
+                                call,
+                                context.getLocation(call),
+                                "Use of `SSLCertificateSocketFactory.createSocket()` "
+                                        + "with an InetAddress parameter can cause insecure "
+                                        + "network traffic due to trusting arbitrary hostnames in "
+                                        + "TLS/SSL certificates presented by peers");
                     }
                 }
             } else if ("getInsecure".equals(methodName)) {
-                context.report(GET_INSECURE, call, context.getLocation(call),
-                        "Use of `SSLCertificateSocketFactory.getInsecure()` can cause " +
-                        "insecure network traffic due to trusting arbitrary TLS/SSL " +
-                        "certificates presented by peers");
+                context.report(
+                        GET_INSECURE,
+                        call,
+                        context.getLocation(call),
+                        "Use of `SSLCertificateSocketFactory.getInsecure()` can cause "
+                                + "insecure network traffic due to trusting arbitrary TLS/SSL "
+                                + "certificates presented by peers");
             }
         }
     }

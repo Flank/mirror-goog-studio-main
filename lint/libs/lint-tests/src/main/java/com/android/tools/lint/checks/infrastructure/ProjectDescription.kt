@@ -90,7 +90,7 @@ class ProjectDescription {
      * @param dependencyGraph the graph description
      * @return this for constructor chaining
      */
-    fun withDependencyGraph(dependencyGraph: String) : ProjectDescription {
+    fun withDependencyGraph(dependencyGraph: String): ProjectDescription {
         this.dependencyGraph = dependencyGraph
         return this
     }

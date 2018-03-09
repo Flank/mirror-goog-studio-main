@@ -111,8 +111,8 @@ import org.w3c.dom.NodeList;
 /**
  * Test case for lint detectors.
  *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
 @Beta
 @SuppressWarnings("javadoc")
@@ -170,17 +170,15 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return true;
     }
 
-    /**
-     * Returns whether the test task should allow the SDK to be missing. Normally false.
-     */
+    /** Returns whether the test task should allow the SDK to be missing. Normally false. */
     @SuppressWarnings("MethodMayBeStatic")
     protected boolean allowMissingSdk() {
         return false;
     }
 
     /**
-     * Returns whether the test requires that the compileSdkVersion (specified
-     * in the project description) must be installed.
+     * Returns whether the test requires that the compileSdkVersion (specified in the project
+     * description) must be installed.
      */
     @SuppressWarnings("MethodMayBeStatic")
     protected boolean requireCompileSdk() {
@@ -214,9 +212,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return lintFiles(targetDir, files);
     }
 
-    /**
-     * @deprecated Use {@link #lintFiles(TestFile...)} instead
-     */
+    /** @deprecated Use {@link #lintFiles(TestFile...)} instead */
     @Deprecated
     protected String lintFiles(String... relativePaths) throws Exception {
         List<File> files = new ArrayList<>();
@@ -231,16 +227,17 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     private String lintFiles(File targetDir, List<File> files) throws Exception {
-        files.sort((file1, file2) -> {
-            ResourceFolderType folder1 = ResourceFolderType.getFolderType(
-                    file1.getParentFile().getName());
-            ResourceFolderType folder2 = ResourceFolderType.getFolderType(
-                    file2.getParentFile().getName());
-            if (folder1 != null && folder2 != null && folder1 != folder2) {
-                return folder1.compareTo(folder2);
-            }
-            return file1.compareTo(file2);
-        });
+        files.sort(
+                (file1, file2) -> {
+                    ResourceFolderType folder1 =
+                            ResourceFolderType.getFolderType(file1.getParentFile().getName());
+                    ResourceFolderType folder2 =
+                            ResourceFolderType.getFolderType(file2.getParentFile().getName());
+                    if (folder1 != null && folder2 != null && folder1 != folder2) {
+                        return folder1.compareTo(folder2);
+                    }
+                    return file1.compareTo(file2);
+                });
 
         addManifestFileIfNecessary(new File(targetDir, ANDROID_MANIFEST_XML));
 
@@ -253,10 +250,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     /**
-     * Normally having $ANDROID_BUILD_TOP set when running lint is a bad idea
-     * (because it enables some special support in lint for checking code in AOSP
-     * itself.) However, some lint tests (particularly custom lint checks) may not care
-     * about this.
+     * Normally having $ANDROID_BUILD_TOP set when running lint is a bad idea (because it enables
+     * some special support in lint for checking code in AOSP itself.) However, some lint tests
+     * (particularly custom lint checks) may not care about this.
      */
     protected boolean allowAndroidBuildEnvironment() {
         return true;
@@ -265,14 +261,14 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     protected String checkLint(TestLintClient lintClient, List<File> files) throws Exception {
 
         if (!allowAndroidBuildEnvironment() && System.getenv("ANDROID_BUILD_TOP") != null) {
-            fail("Don't run the lint tests with $ANDROID_BUILD_TOP set; that enables lint's "
-                    + "special support for detecting AOSP projects (looking for .class "
-                    + "files in $ANDROID_HOST_OUT etc), and this confuses lint.");
+            fail(
+                    "Don't run the lint tests with $ANDROID_BUILD_TOP set; that enables lint's "
+                            + "special support for detecting AOSP projects (looking for .class "
+                            + "files in $ANDROID_HOST_OUT etc), and this confuses lint.");
         }
 
         if (!allowMissingSdk()) {
-            com.android.tools.lint.checks.infrastructure.TestLintClient.ensureSdkExists(
-                    lintClient);
+            com.android.tools.lint.checks.infrastructure.TestLintClient.ensureSdkExists(lintClient);
         }
 
         mOutput = new StringBuilder();
@@ -292,8 +288,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             @NonNull Issue issue,
             @NonNull Severity severity,
             @NonNull Location location,
-            @NonNull String message) {
-    }
+            @NonNull String message) {}
 
     protected void checkReportedError(
             @NonNull Context context,
@@ -313,14 +308,13 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return new TestConfiguration(client, project, null);
     }
 
-    protected void configureDriver(LintDriver driver) {
-    }
+    protected void configureDriver(LintDriver driver) {}
 
     /**
      * Run lint on the given files when constructed as a separate project
      *
      * @return The output of the lint check. On Windows, this transforms all directory separators to
-     * the unix-style forward slash.
+     *     the unix-style forward slash.
      * @deprecated Use {@link #lintProject(TestFile...)} instead
      */
     @Deprecated
@@ -329,9 +323,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return checkLint(Collections.singletonList(projectDir));
     }
 
-    /**
-     * @deprecated Use {@link #lintProjectIncrementally(String, TestFile...)} instead
-     */
+    /** @deprecated Use {@link #lintProjectIncrementally(String, TestFile...)} instead */
     @Deprecated
     protected String lintProjectIncrementally(String currentFile, String... relativePaths)
             throws Exception {
@@ -370,8 +362,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
     /**
      * Run lint on the given files when constructed as a separate project
-     * @return The output of the lint check. On Windows, this transforms all directory
-     *   separators to the unix-style forward slash.
+     *
+     * @return The output of the lint check. On Windows, this transforms all directory separators to
+     *     the unix-style forward slash.
      */
     protected String lintProject(TestFile... files) throws Exception {
         File projectDir = getProjectDir(null, files);
@@ -437,8 +430,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     @NonNull
-    public static GradleTestFile gradle(@NonNull String to,
-            @NonNull @Language("Groovy") String source) {
+    public static GradleTestFile gradle(
+            @NonNull String to, @NonNull @Language("Groovy") String source) {
         return TestFiles.gradle(to, source);
     }
 
@@ -463,7 +456,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     @NonNull
-    public static com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile projectProperties() {
+    public static com.android.tools.lint.checks.infrastructure.TestFile.PropertyTestFile
+            projectProperties() {
         return TestFiles.projectProperties();
     }
 
@@ -496,9 +490,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     /**
      * Creates a test file from the given base64 data. To create this data, use {@link
      * #toBase64(File)} or {@link #toBase64(byte[])}, for example via
+     *
      * <pre>{@code assertEquals("", toBase64(new File("path/to/your.class")));}</pre>
      *
-     * @param to      the file to write as
+     * @param to the file to write as
      * @param encoded the encoded data
      * @return the new test file
      */
@@ -507,9 +502,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     /**
-     * Decodes base64 strings into gzip data, then decodes that into a data file.
-     * To create this data, use {@link #toBase64gzip(File)} or {@link #toBase64gzip(byte[])},
-     * for example via
+     * Decodes base64 strings into gzip data, then decodes that into a data file. To create this
+     * data, use {@link #toBase64gzip(File)} or {@link #toBase64gzip(byte[])}, for example via
+     *
      * <pre>{@code assertEquals("", toBase64gzip(new File("path/to/your.class")));}</pre>
      */
     @NonNull
@@ -544,8 +539,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             // Can't just look through ImageIO.getWriterFormatNames() -- it lies.
             // (For example, on some systems it will claim to support JPG but then
             // throw an exception when actually used.)
-            ImageIO.write(new BufferedImage(0, 0, BufferedImage.TYPE_INT_ARGB),
-                    format, new ByteArrayOutputStream());
+            ImageIO.write(
+                    new BufferedImage(0, 0, BufferedImage.TYPE_INT_ARGB),
+                    format,
+                    new ByteArrayOutputStream());
             return true;
         } catch (Throwable e) {
             return false;
@@ -558,8 +555,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * @deprecated Use {@link #getProjectDir(String, TestFile...)} instead
      */
     @Deprecated
-    protected File getProjectDir(String name, String ...relativePaths) throws Exception {
-        assertFalse("getTargetDir must be overridden to make a unique directory",
+    protected File getProjectDir(String name, String... relativePaths) throws Exception {
+        assertFalse(
+                "getTargetDir must be overridden to make a unique directory",
                 getTargetDir().equals(getTempDir()));
 
         List<TestFile> testFiles = Lists.newArrayList();
@@ -571,7 +569,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
     /** Creates a project directory structure from the given files */
     protected File getProjectDir(String name, TestFile... testFiles) throws Exception {
-        assertFalse("getTargetDir must be overridden to make a unique directory",
+        assertFalse(
+                "getTargetDir must be overridden to make a unique directory",
                 getTargetDir().equals(getTempDir()));
 
         File projectDir = getTargetDir();
@@ -582,8 +581,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return projectDir;
     }
 
-    public static void populateProjectDirectory(@NonNull File projectDir,
-            @NonNull TestFile... testFiles) throws IOException {
+    public static void populateProjectDirectory(
+            @NonNull File projectDir, @NonNull TestFile... testFiles) throws IOException {
         if (!projectDir.exists()) {
             assertTrue(projectDir.getPath(), projectDir.mkdirs());
         }
@@ -635,12 +634,13 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 assertTrue("Couldn't create directory " + parentFile, ok);
             }
             try (FileWriter fw = new FileWriter(manifest)) {
-                fw.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "    package=\"foo.bar2\"\n" +
-                        "    android:versionCode=\"1\"\n" +
-                        "    android:versionName=\"1.0\" >\n" +
-                        "</manifest>\n");
+                fw.write(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    package=\"foo.bar2\"\n"
+                                + "    android:versionCode=\"1\"\n"
+                                + "    android:versionName=\"1.0\" >\n"
+                                + "</manifest>\n");
             }
         }
     }
@@ -683,9 +683,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return null;
     }
 
-    /**
-     * If true, simulate symbol resolutions
-     */
+    /** If true, simulate symbol resolutions */
     protected boolean forceErrors() {
         return false;
     }
@@ -706,10 +704,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         protected File incrementalCheck;
 
         /**
-         * Normally having $ANDROID_BUILD_TOP set when running lint is a bad idea
-         * (because it enables some special support in lint for checking code in AOSP
-         * itself.) However, some lint tests (particularly custom lint checks) may not care
-         * about this.
+         * Normally having $ANDROID_BUILD_TOP set when running lint is a bad idea (because it
+         * enables some special support in lint for checking code in AOSP itself.) However, some
+         * lint tests (particularly custom lint checks) may not care about this.
          */
         @SuppressWarnings("MethodMayBeStatic")
         protected boolean allowAndroidBuildEnvironment() {
@@ -770,16 +767,17 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         protected String cleanup(String result) {
             List<File> sorted = new ArrayList<>(sCleanDirs);
             // Process dirs in order such that we match longest substrings first
-            sorted.sort((file1, file2) -> {
-                String path1 = file1.getPath();
-                String path2 = file2.getPath();
-                int delta = path2.length() - path1.length();
-                if (delta != 0) {
-                    return delta;
-                } else {
-                    return path1.compareTo(path2);
-                }
-            });
+            sorted.sort(
+                    (file1, file2) -> {
+                        String path1 = file1.getPath();
+                        String path2 = file2.getPath();
+                        int delta = path2.length() - path1.length();
+                        if (delta != 0) {
+                            return delta;
+                        } else {
+                            return path1.compareTo(path2);
+                        }
+                    });
 
             for (File dir : sorted) {
                 if (result.contains(dir.getPath())) {
@@ -799,7 +797,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         public UastParser getUastParser(@Nullable Project project) {
             return new LintCliUastParser(project) {
                 @Override
-                public boolean prepare(@NonNull List<? extends JavaContext> contexts,
+                public boolean prepare(
+                        @NonNull List<? extends JavaContext> contexts,
                         @NonNull List<? extends JavaContext> testContexts) {
                     boolean ok = super.prepare(contexts, testContexts);
                     if (forceErrors()) {
@@ -815,8 +814,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
                     if (!allowCompilationErrors()) {
                         if (file != null) {
-                            PsiErrorElement error = PsiTreeUtil
-                                    .findChildOfType(file.getPsi(), PsiErrorElement.class);
+                            PsiErrorElement error =
+                                    PsiTreeUtil.findChildOfType(
+                                            file.getPsi(), PsiErrorElement.class);
                             if (error != null) {
                                 fail("Found error element " + error);
                                 // TODO: Use ECJ parser to produce build errors with better
@@ -847,8 +847,13 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 return;
             }
 
-            checkReportedError(context, issue, severity, location,
-                    format.convertTo(message, TextFormat.TEXT), fix);
+            checkReportedError(
+                    context,
+                    issue,
+                    severity,
+                    location,
+                    format.convertTo(message, TextFormat.TEXT),
+                    fix);
 
             if (severity == Severity.FATAL) {
                 // Treat fatal errors like errors in the golden files.
@@ -907,8 +912,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         @NonNull
         @Override
-        public Configuration getConfiguration(@NonNull Project project,
-                @Nullable LintDriver driver) {
+        public Configuration getConfiguration(
+                @NonNull Project project, @Nullable LintDriver driver) {
             return LintDetectorTest.this.getConfiguration(this, project);
         }
 
@@ -944,8 +949,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             } else if (relativePath.equals(ApiLookup.XML_FILE_PATH)) {
                 File file = super.findResource(relativePath);
                 if (file == null || !file.exists()) {
-                    throw new RuntimeException("File "
-                            + (file == null ? relativePath : file.getPath()) + " not found");
+                    throw new RuntimeException(
+                            "File "
+                                    + (file == null ? relativePath : file.getPath())
+                                    + " not found");
                 }
                 return file;
             }
@@ -975,8 +982,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         @Nullable
         @Override
-        public AbstractResourceRepository getResourceRepository(Project project,
-                boolean includeDependencies, boolean includeLibraries) {
+        public AbstractResourceRepository getResourceRepository(
+                Project project, boolean includeDependencies, boolean includeLibraries) {
             if (incrementalCheck == null) {
                 return null;
             }
@@ -1018,8 +1025,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 // TODO: namespaces
                 Map<ResourceType, ListMultimap<String, ResourceItem>> items =
                         repository.getItems().row(ResourceNamespace.RES_AUTO);
-                ListMultimap<String, ResourceItem> layouts = items
-                        .get(ResourceType.LAYOUT);
+                ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
                 if (layouts != null) {
                     for (ResourceItem item : layouts.values()) {
                         ResourceFile source = item.getSource();
@@ -1067,8 +1073,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                         }
                     }
                 }
-            }
-            catch (MergingException e) {
+            } catch (MergingException e) {
                 fail(e.getMessage());
             }
 
@@ -1081,13 +1086,18 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             IAndroidTarget compileTarget = super.getCompileTarget(project);
             if (compileTarget == null) {
                 if (requireCompileSdk() && project.getBuildTargetHash() != null) {
-                    fail("Could not find SDK to compile with (" + project.getBuildTargetHash() + "). "
-                            + "Either allow the test to use any installed SDK (it defaults to the "
-                            + "highest version) via TestLintTask#requireCompileSdk(false), or make "
-                            + "sure the SDK being used is the right  one via "
-                            + "TestLintTask#sdkHome(File) or $ANDROID_HOME and that the actual SDK "
-                            + "platform (platforms/" + project.getBuildTargetHash() + " is installed "
-                            + "there");
+                    fail(
+                            "Could not find SDK to compile with ("
+                                    + project.getBuildTargetHash()
+                                    + "). "
+                                    + "Either allow the test to use any installed SDK (it defaults to the "
+                                    + "highest version) via TestLintTask#requireCompileSdk(false), or make "
+                                    + "sure the SDK being used is the right  one via "
+                                    + "TestLintTask#sdkHome(File) or $ANDROID_HOME and that the actual SDK "
+                                    + "platform (platforms/"
+                                    + project.getBuildTargetHash()
+                                    + " is installed "
+                                    + "there");
                 }
 
                 IAndroidTarget[] targets = getTargets();
@@ -1251,8 +1261,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         }
 
         @Override
-        public void ignore(@NonNull Context context, @NonNull Issue issue,
-                @Nullable Location location, @NonNull String message) {
+        public void ignore(
+                @NonNull Context context,
+                @NonNull Issue issue,
+                @Nullable Location location,
+                @NonNull String message) {
             fail("Not supported in tests.");
         }
 
@@ -1263,15 +1276,14 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     /**
-     * Test file description, which can copy from resource directory or from
-     * a specified hardcoded string literal, and copy into a target directory
-     * <p>
-     * This class is just a temporary shim to keep the API compatible; new code should
-     * reference com.android.tools.lint.checks.infrastructure.TestFile.
+     * Test file description, which can copy from resource directory or from a specified hardcoded
+     * string literal, and copy into a target directory
+     *
+     * <p>This class is just a temporary shim to keep the API compatible; new code should reference
+     * com.android.tools.lint.checks.infrastructure.TestFile.
      */
     public static class TestFile extends com.android.tools.lint.checks.infrastructure.TestFile {
-        public TestFile() {
-        }
+        public TestFile() {}
 
         // This source file is indented: dedent the contents before creating the file
         public TestFile indented() {

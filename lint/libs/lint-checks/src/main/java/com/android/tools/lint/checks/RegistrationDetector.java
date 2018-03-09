@@ -56,50 +56,46 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
- * Checks for missing manifest registrations for activities, services etc
- * and also makes sure that they are registered with the correct tag
+ * Checks for missing manifest registrations for activities, services etc and also makes sure that
+ * they are registered with the correct tag
  */
 public class RegistrationDetector extends LayoutDetector implements SourceCodeScanner {
     /** Unregistered activities and services */
-    public static final Issue ISSUE = Issue.create(
-            "Registered",
-            "Class is not registered in the manifest",
-
-            "Activities, services and content providers should be registered in the " +
-            "`AndroidManifest.xml` file using `<activity>`, `<service>` and `<provider>` tags.\n" +
-            "\n" +
-            "If your activity is simply a parent class intended to be subclassed by other " +
-            "\"real\" activities, make it an abstract class.",
-
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            new Implementation(
-                    RegistrationDetector.class,
-                    Scope.JAVA_FILE_SCOPE))
-            .addMoreInfo(
-            "http://developer.android.com/guide/topics/manifest/manifest-intro.html")
-            // Temporary workaround for https://code.google.com/p/android/issues/detail?id=227579
-            // The real solution is to have a merged manifest, which is coming
-            .setEnabledByDefault(false);
+    public static final Issue ISSUE =
+            Issue.create(
+                            "Registered",
+                            "Class is not registered in the manifest",
+                            "Activities, services and content providers should be registered in the "
+                                    + "`AndroidManifest.xml` file using `<activity>`, `<service>` and `<provider>` tags.\n"
+                                    + "\n"
+                                    + "If your activity is simply a parent class intended to be subclassed by other "
+                                    + "\"real\" activities, make it an abstract class.",
+                            Category.CORRECTNESS,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(RegistrationDetector.class, Scope.JAVA_FILE_SCOPE))
+                    .addMoreInfo(
+                            "http://developer.android.com/guide/topics/manifest/manifest-intro.html")
+                    // Temporary workaround for https://code.google.com/p/android/issues/detail?id=227579
+                    // The real solution is to have a merged manifest, which is coming
+                    .setEnabledByDefault(false);
 
     protected Map<String, String> mManifestRegistrations;
 
     /** Constructs a new {@link RegistrationDetector} */
-    public RegistrationDetector() {
-    }
+    public RegistrationDetector() {}
 
     @Nullable
     private Map<String, String> getManifestRegistrations(@NonNull Project mainProject) {
         if (mManifestRegistrations == null) {
             Document mergedManifest = mainProject.getMergedManifest();
-            if (mergedManifest == null ||
-                    mergedManifest.getDocumentElement() == null) {
+            if (mergedManifest == null || mergedManifest.getDocumentElement() == null) {
                 return null;
             }
             mManifestRegistrations = Maps.newHashMap();
-            Element application = XmlUtils.getFirstSubTagByName(
-                    mergedManifest.getDocumentElement(), TAG_APPLICATION);
+            Element application =
+                    XmlUtils.getFirstSubTagByName(
+                            mergedManifest.getDocumentElement(), TAG_APPLICATION);
             if (application != null) {
                 registerElement(application);
                 for (Element c : XmlUtils.getSubTags(application)) {
@@ -140,8 +136,7 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
                 // Common super class for Activity, ContentProvider, Service, Application
                 // (as well as some other classes not registered in the manifest, such as
                 // Fragment and VoiceInteractionSession)
-                "android.content.ComponentCallbacks2",
-                CLASS_BROADCASTRECEIVER);
+                "android.content.ComponentCallbacks2", CLASS_BROADCASTRECEIVER);
     }
 
     @Override
@@ -173,8 +168,8 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
         if (className == null) {
             return;
         }
-        Map<String, String> manifestRegistrations = getManifestRegistrations(
-                context.getMainProject());
+        Map<String, String> manifestRegistrations =
+                getManifestRegistrations(context.getMainProject());
         if (manifestRegistrations != null) {
             String framework = manifestRegistrations.get(className);
             if (framework == null) {
@@ -196,9 +191,10 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
             return;
         }
         Location location = context.getNameLocation(node);
-        String message = String.format("`%1$s` is %2$s but is registered "
-                        + "in the manifest as %3$s", className, describeTag(rightTag),
-                describeTag(wrongTag));
+        String message =
+                String.format(
+                        "`%1$s` is %2$s but is registered in the manifest as %3$s",
+                        className, describeTag(rightTag), describeTag(wrongTag));
         context.report(ISSUE, node, location, message);
     }
 
@@ -224,7 +220,8 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
                 String javaSource = context.file.getPath();
                 // Test source set?
 
-                for (SourceProviderContainer extra : model.getDefaultConfig().getExtraSourceProviders()) {
+                for (SourceProviderContainer extra :
+                        model.getDefaultConfig().getExtraSourceProviders()) {
                     String artifactName = extra.getArtifactName();
                     if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)) {
                         for (File file : extra.getSourceProvider().getJavaDirectories()) {
@@ -251,8 +248,9 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
         }
 
         Location location = context.getNameLocation(node);
-        String message = String.format("The `<%1$s> %2$s` is not registered in the manifest",
-                tag, className);
+        String message =
+                String.format(
+                        "The `<%1$s> %2$s` is not registered in the manifest", tag, className);
         context.report(ISSUE, node, location, message);
     }
 
@@ -268,24 +266,21 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
     }
 
     /** The manifest tags we care about */
-    private static final String[] sTags = new String[] {
-        TAG_ACTIVITY,
-        TAG_SERVICE,
-        TAG_RECEIVER,
-        TAG_PROVIDER,
-        TAG_APPLICATION
-        // Keep synchronized with {@link #sClasses}
-    };
+    private static final String[] sTags =
+            new String[] {TAG_ACTIVITY, TAG_SERVICE, TAG_RECEIVER, TAG_PROVIDER, TAG_APPLICATION
+                // Keep synchronized with {@link #sClasses}
+            };
 
     /** The corresponding framework classes that the tags in {@link #sTags} should extend */
-    private static final String[] sClasses = new String[] {
-            CLASS_ACTIVITY,
-            CLASS_SERVICE,
-            CLASS_BROADCASTRECEIVER,
-            CLASS_CONTENTPROVIDER,
-            CLASS_APPLICATION
-            // Keep synchronized with {@link #sTags}
-    };
+    private static final String[] sClasses =
+            new String[] {
+                CLASS_ACTIVITY,
+                CLASS_SERVICE,
+                CLASS_BROADCASTRECEIVER,
+                CLASS_CONTENTPROVIDER,
+                CLASS_APPLICATION
+                // Keep synchronized with {@link #sTags}
+            };
 
     /** Looks up the corresponding framework class a given manifest tag's class should extend */
     private static String tagToClass(String tag) {

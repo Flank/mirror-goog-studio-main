@@ -45,37 +45,37 @@ open class XmlContext
 /**
  * Construct a new [XmlContext]
  */
-(
-        /** the driver running through the checks */
-        driver: LintDriver,
+    (
+    /** the driver running through the checks */
+    driver: LintDriver,
 
-        /** the project containing the file being checked */
-        project: Project,
+    /** the project containing the file being checked */
+    project: Project,
 
-        /**
-         * The "main" project. For normal projects, this is the same as [.project],
-         * but for library projects, it's the root project that includes (possibly indirectly)
-         * the various library projects and their library projects.
-         *
-         * Note that this is a property on the [Context], not the
-         * [Project], since a library project can be included from multiple
-         * different top level projects, so there isn't **one** main project,
-         * just one per main project being analyzed with its library projects.
-         */
-        main: Project?,
-        /** the file being checked */
-        file: File,
-        /** the [ResourceFolderType] of this file, if any */
-        folderType: ResourceFolderType?,
-        /** The XML parser  */
-        val parser: XmlParser,
+    /**
+     * The "main" project. For normal projects, this is the same as [.project],
+     * but for library projects, it's the root project that includes (possibly indirectly)
+     * the various library projects and their library projects.
+     *
+     * Note that this is a property on the [Context], not the
+     * [Project], since a library project can be included from multiple
+     * different top level projects, so there isn't **one** main project,
+     * just one per main project being analyzed with its library projects.
+     */
+    main: Project?,
+    /** the file being checked */
+    file: File,
+    /** the [ResourceFolderType] of this file, if any */
+    folderType: ResourceFolderType?,
+    /** The XML parser  */
+    val parser: XmlParser,
 
-        /** The XML contents of the file */
-        contents: String,
+    /** The XML contents of the file */
+    contents: String,
 
-        /** The XML document */
-        @JvmField // backwards compatibility
-        val document: Document
+    /** The XML document */
+    @JvmField // backwards compatibility
+    val document: Document
 ) : ResourceContext(driver, project, main, file, folderType, contents) {
 
     /**
@@ -165,47 +165,52 @@ open class XmlContext
      * Reports an issue applicable to a given DOM node. The DOM node is used as the
      * scope to check for suppress lint annotations.
      *
-     * @param issue        the issue to report
+     * @param issue the issue to report
      *
-     * @param scope        the DOM node scope the error applies to. The lint infrastructure will
+     * @param scope the DOM node scope the error applies to. The lint infrastructure will
      *                     check whether there are suppress directives on this node (or its
      *                     enclosing nodes) and if so suppress the warning without involving the
      *                     client.
      *
-     * @param location     the location of the issue, or null if not known
+     * @param location the location of the issue, or null if not known
      *
-     * @param message      the message for this warning
+     * @param message the message for this warning
      *
      * @param quickfixData optional data to pass to the IDE for use by a quickfix.
      */
     @JvmOverloads
     fun report(
-            issue: Issue,
-            scope: Node?,
-            location: Location,
-            message: String,
-            quickfixData: LintFix? = null) {
+        issue: Issue,
+        scope: Node?,
+        location: Location,
+        message: String,
+        quickfixData: LintFix? = null
+    ) {
         if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return
         }
         super.doReport(issue, location, message, quickfixData)
     }
 
-    @Deprecated("Here for temporary compatibility; the new typed quickfix data parameter " +
-            "should be used instead",
-            ReplaceWith("report(issue, scope, location, message)"))
+    @Deprecated(
+        "Here for temporary compatibility; the new typed quickfix data parameter " +
+                "should be used instead",
+        ReplaceWith("report(issue, scope, location, message)")
+    )
     fun report(
-            issue: Issue,
-            scope: Node?,
-            location: Location,
-            message: String,
-            quickfixData: Any?) = report(issue, scope, location, message)
+        issue: Issue,
+        scope: Node?,
+        location: Location,
+        message: String,
+        quickfixData: Any?
+    ) = report(issue, scope, location, message)
 
     override fun report(
-            issue: Issue,
-            location: Location,
-            message: String,
-            quickfixData: LintFix?) {
+        issue: Issue,
+        location: Location,
+        message: String,
+        quickfixData: LintFix?
+    ) {
         // Warn if clients use the non-scoped form? No, there are cases where an
         //  XML detector's error isn't applicable to one particular location (or it's
         //  not feasible to compute it cheaply)
@@ -235,9 +240,9 @@ open class XmlContext
     }
 
     fun createLocationHandle(node: Node): Location.Handle =
-            parser.createLocationHandle(this, node)
+        parser.createLocationHandle(this, node)
 
     override val resourceFolder: File?
-        // Like super, but for the parent folder instead of the context file
+    // Like super, but for the parent folder instead of the context file
         get() = if (resourceFolderType != null) file.parentFile else null
 }

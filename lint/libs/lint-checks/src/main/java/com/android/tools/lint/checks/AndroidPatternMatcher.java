@@ -26,43 +26,35 @@ import java.util.Arrays;
 //  (5) Made the toString more user-readable
 
 /**
- * A simple pattern matcher, which is safe to use on untrusted data: it does
- * not provide full reg-exp support, only simple globbing that can not be
- * used maliciously.
+ * A simple pattern matcher, which is safe to use on untrusted data: it does not provide full
+ * reg-exp support, only simple globbing that can not be used maliciously.
  */
 public class AndroidPatternMatcher {
-    /**
-     * Pattern type: the given pattern must exactly match the string it is
-     * tested against.
-     */
+    /** Pattern type: the given pattern must exactly match the string it is tested against. */
     public static final int PATTERN_LITERAL = 0;
 
     /**
-     * Pattern type: the given pattern must match the
-     * beginning of the string it is tested against.
+     * Pattern type: the given pattern must match the beginning of the string it is tested against.
      */
     public static final int PATTERN_PREFIX = 1;
 
     /**
-     * Pattern type: the given pattern is interpreted with a
-     * simple glob syntax for matching against the string it is tested against.
-     * In this syntax, you can use the '*' character to match against zero or
-     * more occurrences of the character immediately before.  If the
-     * character before it is '.' it will match any character.  The character
-     * '\' can be used as an escape.  This essentially provides only the '*'
-     * wildcard part of a normal regexp.
+     * Pattern type: the given pattern is interpreted with a simple glob syntax for matching against
+     * the string it is tested against. In this syntax, you can use the '*' character to match
+     * against zero or more occurrences of the character immediately before. If the character before
+     * it is '.' it will match any character. The character '\' can be used as an escape. This
+     * essentially provides only the '*' wildcard part of a normal regexp.
      */
     public static final int PATTERN_SIMPLE_GLOB = 2;
 
     /**
-     * Pattern type: the given pattern is interpreted with a regular
-     * expression-like syntax for matching against the string it is tested
-     * against. Supported tokens include dot ({@code .}) and sets ({@code [...]})
-     * with full support for character ranges and the not ({@code ^}) modifier.
-     * Supported modifiers include star ({@code *}) for zero-or-more, plus ({@code +})
-     * for one-or-more and full range ({@code {...}}) support. This is a simple
-     * evaluation implementation in which matching is done against the pattern in
-     * real time with no backtracking support.
+     * Pattern type: the given pattern is interpreted with a regular expression-like syntax for
+     * matching against the string it is tested against. Supported tokens include dot ({@code .})
+     * and sets ({@code [...]}) with full support for character ranges and the not ({@code ^})
+     * modifier. Supported modifiers include star ({@code *}) for zero-or-more, plus ({@code +}) for
+     * one-or-more and full range ({@code {...}}) support. This is a simple evaluation
+     * implementation in which matching is done against the pattern in real time with no
+     * backtracking support.
      */
     public static final int PATTERN_ADVANCED_GLOB = 3;
 
@@ -88,7 +80,6 @@ public class AndroidPatternMatcher {
     private final String mPattern;
     private final int mType;
     private final int[] mParsedPattern;
-
 
     private static final int MAX_PATTERN_STORAGE = 2048;
     // workspace to use for building a parsed advanced pattern;
@@ -136,10 +127,13 @@ public class AndroidPatternMatcher {
     }
 
     static boolean matchPattern(String match, String pattern, int[] parsedPattern, int type) {
-        if (match == null) return false;
+        if (match == null) {
+            return false;
+        }
         if (type == PATTERN_LITERAL) {
             return pattern.equals(match);
-        } if (type == PATTERN_PREFIX) {
+        }
+        if (type == PATTERN_PREFIX) {
             return match.startsWith(pattern);
         } else if (type == PATTERN_SIMPLE_GLOB) {
             return matchGlobPattern(pattern, match);
@@ -157,7 +151,7 @@ public class AndroidPatternMatcher {
         final int NM = match.length();
         int ip = 0, im = 0;
         char nextChar = pattern.charAt(0);
-        while ((ip<NP) && (im<NM)) {
+        while ((ip < NP) && (im < NM)) {
             char c = nextChar;
             ip++;
             nextChar = ip < NP ? pattern.charAt(ip) : 0;
@@ -169,7 +163,7 @@ public class AndroidPatternMatcher {
             }
             if (nextChar == '*') {
                 if (!escaped && c == '.') {
-                    if (ip >= (NP-1)) {
+                    if (ip >= (NP - 1)) {
                         // at the end with a pattern match, so
                         // all is good without checking!
                         return true;
@@ -208,7 +202,9 @@ public class AndroidPatternMatcher {
                     nextChar = ip < NP ? pattern.charAt(ip) : 0;
                 }
             } else {
-                if (c != '.' && match.charAt(im) != c) return false;
+                if (c != '.' && match.charAt(im) != c) {
+                    return false;
+                }
                 im++;
             }
         }
@@ -222,8 +218,7 @@ public class AndroidPatternMatcher {
         // have a '.*' at the end of the pattern, which should still count
         // as a match.
         //noinspection RedundantIfStatement
-        if (ip == NP-2 && pattern.charAt(ip) == '.'
-            && pattern.charAt(ip+1) == '*') {
+        if (ip == NP - 2 && pattern.charAt(ip) == '.' && pattern.charAt(ip + 1) == '*') {
             return true;
         }
 
@@ -276,8 +271,8 @@ public class AndroidPatternMatcher {
                         addToParsedPattern = true; // treat as literal outside of set
                     } else {
                         int parsedToken = sParsedPatternScratch[it - 1];
-                        if (parsedToken == PARSED_TOKEN_CHAR_SET_START ||
-                            parsedToken == PARSED_TOKEN_CHAR_SET_INVERSE_START) {
+                        if (parsedToken == PARSED_TOKEN_CHAR_SET_START
+                                || parsedToken == PARSED_TOKEN_CHAR_SET_INVERSE_START) {
                             throw new IllegalArgumentException(
                                     "You must define characters in a set.");
                         }
@@ -374,7 +369,7 @@ public class AndroidPatternMatcher {
                     }
                     if (rangeMin > rangeMax) {
                         throw new IllegalArgumentException(
-                            "Range quantifier minimum is greater than maximum");
+                                "Range quantifier minimum is greater than maximum");
                     }
                     sParsedPatternScratch[it++] = rangeMin;
                     sParsedPatternScratch[it++] = rangeMax;
@@ -395,10 +390,10 @@ public class AndroidPatternMatcher {
     }
 
     private static boolean isParsedModifier(int parsedChar) {
-        return parsedChar == PARSED_MODIFIER_ONE_OR_MORE ||
-                parsedChar == PARSED_MODIFIER_ZERO_OR_MORE ||
-                parsedChar == PARSED_MODIFIER_RANGE_STOP ||
-                parsedChar == PARSED_MODIFIER_RANGE_START;
+        return parsedChar == PARSED_MODIFIER_ONE_OR_MORE
+                || parsedChar == PARSED_MODIFIER_ZERO_OR_MORE
+                || parsedChar == PARSED_MODIFIER_RANGE_STOP
+                || parsedChar == PARSED_MODIFIER_RANGE_START;
     }
 
     static boolean matchAdvancedPattern(int[] parsedPattern, String match) {
@@ -428,12 +423,14 @@ public class AndroidPatternMatcher {
                     break;
                 case PARSED_TOKEN_CHAR_SET_START:
                 case PARSED_TOKEN_CHAR_SET_INVERSE_START:
-                    tokenType = patternChar == PARSED_TOKEN_CHAR_SET_START
-                            ? TOKEN_TYPE_SET
-                            : TOKEN_TYPE_INVERSE_SET;
+                    tokenType =
+                            patternChar == PARSED_TOKEN_CHAR_SET_START
+                                    ? TOKEN_TYPE_SET
+                                    : TOKEN_TYPE_INVERSE_SET;
                     charSetStart = ip + 1; // start from the char after the set start
                     //noinspection StatementWithEmptyBody
-                    while (++ip < LP && parsedPattern[ip] != PARSED_TOKEN_CHAR_SET_STOP);
+                    while (++ip < LP && parsedPattern[ip] != PARSED_TOKEN_CHAR_SET_STOP) {;
+                    }
                     charSetEnd = ip - 1; // we're on the set stop, end is the previous
                     ip++; // move the pointer to the next pattern entry
                     break;
@@ -478,8 +475,17 @@ public class AndroidPatternMatcher {
             }
 
             // attempt to match as many characters as possible
-            int matched = matchChars(match, im, LM, tokenType, minRepetition, maxRepetition,
-                    parsedPattern, charSetStart, charSetEnd);
+            int matched =
+                    matchChars(
+                            match,
+                            im,
+                            LM,
+                            tokenType,
+                            minRepetition,
+                            maxRepetition,
+                            parsedPattern,
+                            charSetStart,
+                            charSetEnd);
 
             // if we found a conflict, return false immediately
             if (matched == NO_MATCH) {
@@ -492,22 +498,35 @@ public class AndroidPatternMatcher {
         return ip >= LP && im >= LM; // have parsed entire string and regex
     }
 
-    private static int matchChars(String match, int im, final int lm, int tokenType,
-            int minRepetition, int maxRepetition, int[] parsedPattern,
-            int tokenStart, int tokenEnd) {
+    private static int matchChars(
+            String match,
+            int im,
+            final int lm,
+            int tokenType,
+            int minRepetition,
+            int maxRepetition,
+            int[] parsedPattern,
+            int tokenStart,
+            int tokenEnd) {
         int matched = 0;
 
-        while(matched < maxRepetition
-                && matchChar(match, im + matched, lm, tokenType, parsedPattern, tokenStart,
-                    tokenEnd)) {
+        while (matched < maxRepetition
+                && matchChar(
+                        match, im + matched, lm, tokenType, parsedPattern, tokenStart, tokenEnd)) {
             matched++;
         }
 
         return matched < minRepetition ? NO_MATCH : matched;
     }
 
-    private static boolean matchChar(String match, int im, final int lm, int tokenType,
-            int[] parsedPattern, int tokenStart, int tokenEnd) {
+    private static boolean matchChar(
+            String match,
+            int im,
+            final int lm,
+            int tokenType,
+            int[] parsedPattern,
+            int tokenStart,
+            int tokenEnd) {
         if (im >= lm) { // we've overrun the string, no match
             return false;
         }

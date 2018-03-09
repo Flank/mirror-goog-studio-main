@@ -60,25 +60,22 @@ import java.util.List;
 import java.util.Set;
 import org.w3c.dom.Element;
 
-/**
- * Checks for typos in manifest files
- */
+/** Checks for typos in manifest files */
 public class ManifestTypoDetector extends Detector implements XmlScanner {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "ManifestTypo",
-            "Typos in manifest tags",
-
-            "This check looks through the manifest, and if it finds any tags " +
-            "that look like likely misspellings, they are flagged.",
-            Category.CORRECTNESS,
-            5,
-            Severity.FATAL,
-            new Implementation(
-                    ManifestTypoDetector.class,
-                    Scope.MANIFEST_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "ManifestTypo",
+                    "Typos in manifest tags",
+                    "This check looks through the manifest, and if it finds any tags "
+                            + "that look like likely misspellings, they are flagged.",
+                    Category.CORRECTNESS,
+                    5,
+                    Severity.FATAL,
+                    new Implementation(ManifestTypoDetector.class, Scope.MANIFEST_SCOPE));
 
     private static final Set<String> sValidTags;
+
     static {
         int expectedSize = 30;
         sValidTags = Sets.newHashSetWithExpectedSize(expectedSize);
@@ -119,8 +116,7 @@ public class ManifestTypoDetector extends Detector implements XmlScanner {
     }
 
     /** Constructs a new {@link ManifestTypoDetector} check */
-    public ManifestTypoDetector() {
-    }
+    public ManifestTypoDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
@@ -147,15 +143,16 @@ public class ManifestTypoDetector extends Detector implements XmlScanner {
                 if (suggestions.size() == 1) {
                     suggestionString = suggestions.get(0);
                 } else if (suggestions.size() == 2) {
-                    suggestionString = String.format("%1$s or %2$s",
-                            suggestions.get(0), suggestions.get(1));
+                    suggestionString =
+                            String.format("%1$s or %2$s", suggestions.get(0), suggestions.get(1));
                 } else {
                     suggestionString = LintUtils.formatList(suggestions, -1);
                 }
-                String message = String.format("Misspelled tag `<%1$s>`: Did you mean `%2$s` ?",
-                        tag, suggestionString);
-                context.report(ISSUE, element, context.getLocation(element),
-                        message);
+                String message =
+                        String.format(
+                                "Misspelled tag `<%1$s>`: Did you mean `%2$s` ?",
+                                tag, suggestionString);
+                context.report(ISSUE, element, context.getLocation(element), message);
             }
         }
     }

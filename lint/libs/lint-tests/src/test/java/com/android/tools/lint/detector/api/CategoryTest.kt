@@ -37,20 +37,22 @@ class CategoryTest : TestCase() {
 
         Collections.sort(categories)
 
-        assertEquals(""
-                + "Lint\n"
-                + "Correctness\n"
-                + "Correctness:Messages\n"
-                + "Correctness:Chrome OS\n"
-                + "Security\n"
-                + "Performance\n"
-                + "Usability:Typography\n"
-                + "Usability:Icons\n"
-                + "Usability\n"
-                + "Accessibility\n"
-                + "Internationalization\n"
-                + "Internationalization:Bidirectional Text",
-                Joiner.on("\n").join(categories))
+        assertEquals(
+            "" +
+                    "Lint\n" +
+                    "Correctness\n" +
+                    "Correctness:Messages\n" +
+                    "Correctness:Chrome OS\n" +
+                    "Security\n" +
+                    "Performance\n" +
+                    "Usability:Typography\n" +
+                    "Usability:Icons\n" +
+                    "Usability\n" +
+                    "Accessibility\n" +
+                    "Internationalization\n" +
+                    "Internationalization:Bidirectional Text",
+            Joiner.on("\n").join(categories)
+        )
     }
 
     fun testGetName() = assertEquals("Messages", Category.MESSAGES.name)

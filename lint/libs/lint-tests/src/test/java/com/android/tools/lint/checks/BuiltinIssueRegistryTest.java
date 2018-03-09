@@ -38,8 +38,8 @@ public class BuiltinIssueRegistryTest extends TestCase {
         BuiltinIssueRegistry registry = new TestIssueRegistry();
         List<Issue> issues = registry.getIssues();
         int issueCount = issues.size();
-        assertTrue(Integer.toString(issueCount),
-                BuiltinIssueRegistry.INITIAL_CAPACITY >= issueCount);
+        assertTrue(
+                Integer.toString(issueCount), BuiltinIssueRegistry.INITIAL_CAPACITY >= issueCount);
     }
 
     @SuppressWarnings("unchecked")
@@ -68,14 +68,18 @@ public class BuiltinIssueRegistryTest extends TestCase {
         }
     }
 
-    private static void checkCapacity(TestIssueRegistry registry,
-            EnumSet<Scope> scopeSet) {
+    private static void checkCapacity(TestIssueRegistry registry, EnumSet<Scope> scopeSet) {
         List<Issue> issuesForScope = registry.getIssuesForScope(scopeSet);
         int requiredSize = issuesForScope.size();
         int capacity = registry.getIssueCapacity(scopeSet);
         if (requiredSize > capacity) {
-            fail("For Scope set " + scopeSet + ": capacity " + capacity
-                    + " < actual " + requiredSize);
+            fail(
+                    "For Scope set "
+                            + scopeSet
+                            + ": capacity "
+                            + capacity
+                            + " < actual "
+                            + requiredSize);
         }
     }
 
@@ -98,58 +102,61 @@ public class BuiltinIssueRegistryTest extends TestCase {
 
         final CyclicBarrier barrier1 = new CyclicBarrier(2);
         final CyclicBarrier barrier2 = new CyclicBarrier(2);
-        final BuiltinIssueRegistry registry2 = new BuiltinIssueRegistry() {
-            @NonNull
-            @Override
-            public List<Issue> getIssues() {
-                final List<Issue> superList = super.getIssues();
-                // Special list constructed such that *iterating* through the list
-                // can be interrupted at the beginning. This lets us sequence timings
-                // in getIssue(String) such that we can pause the implementation
-                // right in the for loop in the middle (between the map construction
-                // and assigning the field. Prior to this bug fix, at this point
-                // the field would have been initialized and other threads could
-                // skip the whole locked region.
-                return new ArrayList<Issue>() {
+        final BuiltinIssueRegistry registry2 =
+                new BuiltinIssueRegistry() {
                     @NonNull
                     @Override
-                    public Iterator<Issue> iterator() {
-                        try {
-                            barrier1.await();
+                    public List<Issue> getIssues() {
+                        final List<Issue> superList = super.getIssues();
+                        // Special list constructed such that *iterating* through the list
+                        // can be interrupted at the beginning. This lets us sequence timings
+                        // in getIssue(String) such that we can pause the implementation
+                        // right in the for loop in the middle (between the map construction
+                        // and assigning the field. Prior to this bug fix, at this point
+                        // the field would have been initialized and other threads could
+                        // skip the whole locked region.
+                        return new ArrayList<Issue>() {
+                            @NonNull
+                            @Override
+                            public Iterator<Issue> iterator() {
+                                try {
+                                    barrier1.await();
 
-                            // With the bug, the second thread would immediately
-                            // see the field (pointing to the empty map) and proceed.
-                            // In that case the test fails immediately. However, when
-                            // the code is working correctly, the second registry can't
-                            // access the map while we're in the synchronized block - and
-                            // if we wait forever on this barrier, the code will deadlock.
-                            // Therefore, we only wait 3 seconds to simulate contention,
-                            // and when the await finally times out it will exit the
-                            // critical section, finish the map and let other registries
-                            // access it.
-                            barrier2.await(3, TimeUnit.SECONDS);
-                            fail("Incorrect synchronization: other thread should have "
-                                    + "blocked in synchronized block and never reached barrier "
-                                    + "until timeout");
-                        } catch (InterruptedException e) {
-                            fail(e.getMessage());
-                        } catch (BrokenBarrierException | TimeoutException ignore) {
-                            // This is expected; see above
-                        }
-                        return superList.listIterator();
+                                    // With the bug, the second thread would immediately
+                                    // see the field (pointing to the empty map) and proceed.
+                                    // In that case the test fails immediately. However, when
+                                    // the code is working correctly, the second registry can't
+                                    // access the map while we're in the synchronized block - and
+                                    // if we wait forever on this barrier, the code will deadlock.
+                                    // Therefore, we only wait 3 seconds to simulate contention,
+                                    // and when the await finally times out it will exit the
+                                    // critical section, finish the map and let other registries
+                                    // access it.
+                                    barrier2.await(3, TimeUnit.SECONDS);
+                                    fail(
+                                            "Incorrect synchronization: other thread should have "
+                                                    + "blocked in synchronized block and never reached barrier "
+                                                    + "until timeout");
+                                } catch (InterruptedException e) {
+                                    fail(e.getMessage());
+                                } catch (BrokenBarrierException | TimeoutException ignore) {
+                                    // This is expected; see above
+                                }
+                                return superList.listIterator();
+                            }
+                        };
                     }
                 };
-            }
-        };
 
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                // Trigger computation of the issue map (which will enter the
-                // synchronized section and blocking on barrier1 in getIssues()
-                registry2.getIssue(UseCompoundDrawableDetector.ISSUE.getId());
-            }
-        };
+        Thread thread =
+                new Thread() {
+                    @Override
+                    public void run() {
+                        // Trigger computation of the issue map (which will enter the
+                        // synchronized section and blocking on barrier1 in getIssues()
+                        registry2.getIssue(UseCompoundDrawableDetector.ISSUE.getId());
+                    }
+                };
         thread.start();
 
         // Sync this thread with the issue thread such that we know it's inside the

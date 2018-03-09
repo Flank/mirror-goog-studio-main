@@ -38,26 +38,24 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 
 /**
- * Checks for problems with include tags, such as providing layout parameters
- * without specifying both layout_width and layout_height
+ * Checks for problems with include tags, such as providing layout parameters without specifying
+ * both layout_width and layout_height
  */
 public class IncludeDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "IncludeLayoutParam",
-            "Ignored layout params on include",
-
-            "Layout parameters specified on an `<include>` tag will only be used if you " +
-            "also override `layout_width` and `layout_height` on the `<include>` tag; " +
-            "otherwise they will be ignored.",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.ERROR,
-            new Implementation(
-                    IncludeDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE)).addMoreInfo(
-    "http://stackoverflow.com/questions/2631614/does-android-xml-layouts-include-tag-really-work");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "IncludeLayoutParam",
+                            "Ignored layout params on include",
+                            "Layout parameters specified on an `<include>` tag will only be used if you "
+                                    + "also override `layout_width` and `layout_height` on the `<include>` tag; "
+                                    + "otherwise they will be ignored.",
+                            Category.CORRECTNESS,
+                            5,
+                            Severity.ERROR,
+                            new Implementation(IncludeDetector.class, Scope.RESOURCE_FILE_SCOPE))
+                    .addMoreInfo(
+                            "http://stackoverflow.com/questions/2631614/does-android-xml-layouts-include-tag-really-work");
 
     @Nullable
     @Override
@@ -93,17 +91,21 @@ public class IncludeDetector extends LayoutDetector {
             for (int i = 0; i < length; i++) {
                 Attr attribute = (Attr) attributes.item(i);
                 String name = attribute.getLocalName();
-                if (name != null && name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
+                if (name != null
+                        && name.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
                         && (!ATTR_LAYOUT_WIDTH.equals(name) || flagWidth)
                         && (!ATTR_LAYOUT_HEIGHT.equals(name) || flagHeight)
                         && ANDROID_URI.equals(attribute.getNamespaceURI())) {
-                    String condition = !hasWidth && !hasHeight ?
-                            "both `layout_width` and `layout_height` are also specified"
-                            : !hasWidth ? "`layout_width` is also specified"
-                                    : "`layout_height` is also specified";
-                    String message = String.format(
-                            "Layout parameter `%1$s` ignored unless %2$s on `<include>` tag",
-                            name, condition);
+                    String condition =
+                            !hasWidth && !hasHeight
+                                    ? "both `layout_width` and `layout_height` are also specified"
+                                    : !hasWidth
+                                            ? "`layout_width` is also specified"
+                                            : "`layout_height` is also specified";
+                    String message =
+                            String.format(
+                                    "Layout parameter `%1$s` ignored unless %2$s on `<include>` tag",
+                                    name, condition);
 
                     LintFix.GroupBuilder fixes = fix().group();
                     if (!hasWidth) {
@@ -112,8 +114,8 @@ public class IncludeDetector extends LayoutDetector {
                     if (!hasHeight) {
                         fixes.add(fix().set(ANDROID_URI, ATTR_LAYOUT_HEIGHT, "").build());
                     }
-                    context.report(ISSUE, element, context.getLocation(attribute),
-                            message, fixes.build());
+                    context.report(
+                            ISSUE, element, context.getLocation(attribute), message, fixes.build());
                 }
             }
         }

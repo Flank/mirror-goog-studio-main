@@ -49,7 +49,8 @@ class ProjectInitializerTest {
     fun testManualProject() {
 
         val library = project(
-                xml("AndroidManifest.xml", """
+            xml(
+                "AndroidManifest.xml", """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="foo.bar2"
     android:versionCode="1"
@@ -66,8 +67,10 @@ class ProjectInitializerTest {
         android:label="@string/app_name" >
     </application>
 
-</manifest>"""),
-                java("src/test/pkg/Loader.java", """
+</manifest>"""
+            ),
+            java(
+                "src/test/pkg/Loader.java", """
 package test.pkg;
 
 @SuppressWarnings("ClassNameDiffersFromFileName")
@@ -80,20 +83,24 @@ public abstract class Loader<P> {
         // Invoke a method that takes a generic type.
         loadInBackground(mParam);
     }
-}"""),
-                java("src/test/pkg/NotInProject.java", """
+}"""
+            ),
+            java(
+                "src/test/pkg/NotInProject.java", """
 package test.pkg;
 
 @SuppressWarnings("ClassNameDiffersFromFileName")
 public class Foo {
     private String foo = "/sdcard/foo";
 }
-""")
+"""
+            )
 
         ).type(LIBRARY).name("Library")
 
         val main = project(
-                xml("AndroidManifest.xml", """
+            xml(
+                "AndroidManifest.xml", """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="foo.bar2"
     android:versionCode="1"
@@ -111,26 +118,33 @@ public class Foo {
     </application>
 
 </manifest>
-"""),
-                xml("res/values/strings.xml", """
+"""
+            ),
+            xml(
+                "res/values/strings.xml", """
 <resources>
     <string name="string1">String 1</string>
     <string name="string1">String 2</string>
     <string name="string3">String 3</string>
     <string name="string3">String 4</string>
 </resources>
-"""),
-                xml("res/values/not_in_project.xml", """
+"""
+            ),
+            xml(
+                "res/values/not_in_project.xml", """
 <resources>
     <string name="string2">String 1</string>
     <string name="string2">String 2</string>
 </resources>
-"""),
-               java("test/Test.java", """
+"""
+            ),
+            java(
+                "test/Test.java", """
 @SuppressWarnings({"MethodMayBeStatic", "ClassNameDiffersFromFileName"})
 public class Test {
   String path = "/sdcard/file";
-}""")
+}"""
+            )
 
         ).name("App").dependsOn(library)
 
@@ -216,10 +230,11 @@ public class Test {
         var assertionsChecked = 0
         val listener: LintListener = object : LintListener {
             override fun update(
-                    driver: LintDriver,
-                    type: LintListener.EventType,
-                    project: Project?,
-                    context: Context?) {
+                driver: LintDriver,
+                type: LintListener.EventType,
+                project: Project?,
+                context: Context?
+            ) {
                 val client = driver.client
                 when (type) {
                     REGISTERED_PROJECT -> {
@@ -236,10 +251,16 @@ public class Test {
                         val manifest = client.getMergedManifest(libProject)
                         assertThat(manifest).isNotNull()
                         manifest!!
-                        val permission = getFirstSubTagByName(manifest.documentElement,
-                                "permission")!!
-                        assertThat(permission.getAttributeNS(ANDROID_URI,
-                                ATTR_NAME)).isEqualTo("foo.permission.SEND_SMS")
+                        val permission = getFirstSubTagByName(
+                            manifest.documentElement,
+                            "permission"
+                        )!!
+                        assertThat(
+                            permission.getAttributeNS(
+                                ANDROID_URI,
+                                ATTR_NAME
+                            )
+                        ).isEqualTo("foo.permission.SEND_SMS")
                         assertionsChecked++
 
                         // compileSdkVersion=android-M -> build API=23
@@ -262,7 +283,7 @@ public class Test {
         val canonicalRoot = root.canonicalPath
 
         MainTest.checkDriver(
-"""
+            """
 baseline.xml: Information: 1 error was filtered out because it is listed in the baseline file, baseline.xml
  [LintBaseline]
 project.xml:5: Error: test.jar (relative to ROOT) does not exist [LintError]
@@ -279,23 +300,25 @@ res${File.separatorChar}values${File.separatorChar}strings.xml:4: Error: string1
 3 errors, 0 warnings (1 error filtered by baseline baseline.xml)
 
 """,
-                "",
+            "",
 
-                // Expected exit code
-                ERRNO_SUCCESS,
+            // Expected exit code
+            ERRNO_SUCCESS,
 
-                // Args
-                arrayOf("--quiet",
-                        "--check",
-                        "UniquePermission,DuplicateDefinition,SdCardPath",
-                        "--text",
-                        "stdout",
-                        "--project",
-                        File(root, "project.xml").path),
+            // Args
+            arrayOf(
+                "--quiet",
+                "--check",
+                "UniquePermission,DuplicateDefinition,SdCardPath",
+                "--text",
+                "stdout",
+                "--project",
+                File(root, "project.xml").path
+            ),
 
-                { it.replace(canonicalRoot, "ROOT").replace(baseline.parentFile.path, "TESTROOT") },
-                listener)
-
+            { it.replace(canonicalRoot, "ROOT").replace(baseline.parentFile.path, "TESTROOT") },
+            listener
+        )
 
         // Make sure we hit all our checks with the listener
         assertThat(assertionsChecked).isEqualTo(5)
@@ -319,27 +342,32 @@ res${File.separatorChar}values${File.separatorChar}strings.xml:4: Error: string1
         val projectXml = File(folder, "project.xml")
         Files.asCharSink(projectXml, Charsets.UTF_8).write(descriptor)
 
-        MainTest.checkDriver("""
+        MainTest.checkDriver(
+            """
 app: Error: No .class files were found in project "Foo:App", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]
 project.xml:4: Error: Unexpected tag unknown [LintError]
   <unknown file="foo.Bar" />
   ~~~~~~~~~~~~~~~~~~~~~~~~~~
 2 errors, 0 warnings
 """,
-                "",
+            "",
 
-                ERRNO_SUCCESS,
+            ERRNO_SUCCESS,
 
-                arrayOf("--quiet",
-                        "--project",
-                        projectXml.path), null, null)
+            arrayOf(
+                "--quiet",
+                "--project",
+                projectXml.path
+            ), null, null
+        )
     }
 
     @Test
     fun testSimpleProject() {
         val root = temp.newFolder()
         val projects = lint().files(
-                java("src/test/pkg/InterfaceMethodTest.java", """
+            java(
+                "src/test/pkg/InterfaceMethodTest.java", """
                     package test.pkg;
 
                     @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
@@ -352,8 +380,10 @@ project.xml:4: Error: Unexpected tag unknown [LintError]
                             System.out.println("test");
                         }
                     }
-                    """).indented(),
-                java("C.java", """
+                    """
+            ).indented(),
+            java(
+                "C.java", """
 import android.app.Fragment;
 
 @SuppressWarnings({"MethodMayBeStatic", "ClassNameDiffersFromFileName"})
@@ -362,8 +392,10 @@ public class C {
   void test(Fragment fragment) {
     Object host = fragment.getHost(); // Requires API 23
   }
-}"""),
-                xml("AndroidManifest.xml", """
+}"""
+            ),
+            xml(
+                "AndroidManifest.xml", """
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.tools.lint.test"
     android:versionCode="1"
@@ -372,13 +404,17 @@ public class C {
         android:minSdkVersion="15"
         android:targetSdkVersion="22" />
 
-</manifest>"""),
-                xml("res/values/not_in_project.xml", """
+</manifest>"""
+            ),
+            xml(
+                "res/values/not_in_project.xml", """
 <resources>
     <string name="string2">String 1</string>
     <string name="string2">String 2</string>
 </resources>
-""")).createProjects(root)
+"""
+            )
+        ).createProjects(root)
         val projectDir = projects[0]
 
         @Language("XML")
@@ -395,7 +431,8 @@ public class C {
         val descriptorFile = File(root, "project.xml")
         Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
 
-        MainTest.checkDriver("""
+        MainTest.checkDriver(
+            """
 C.java:8: Error: Call requires API level 23 (current min is 15): android.app.Fragment#getHost [NewApi]
     Object host = fragment.getHost(); // Requires API 23
                            ~~~~~~~
@@ -407,17 +444,20 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
                 ~~~~~~~~~~~~~~
 1 errors, 2 warnings
 """,
-                "",
+            "",
 
-                // Expected exit code
-                ERRNO_SUCCESS,
+            // Expected exit code
+            ERRNO_SUCCESS,
 
-                // Args
-                arrayOf("--quiet",
-                        "--project",
-                        descriptorFile.path),
+            // Args
+            arrayOf(
+                "--quiet",
+                "--project",
+                descriptorFile.path
+            ),
 
-                null, null)
+            null, null
+        )
     }
 
     @Test
@@ -426,7 +466,8 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
         // an AAR dependency and make its way into the merged manifest.
         val root = temp.newFolder()
         val projects = lint().files(
-                xml("AndroidManifest.xml", """
+            xml(
+                "AndroidManifest.xml", """
                     <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                         package="com.android.tools.lint.test"
                         android:versionCode="1"
@@ -434,13 +475,17 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
                         <uses-sdk android:minSdkVersion="14" />
                         <application />
 
-                    </manifest>"""),
-                xml("res/values/not_in_project.xml", """
+                    </manifest>"""
+            ),
+            xml(
+                "res/values/not_in_project.xml", """
                     <resources>
                         <string name="string2">String 1</string>
                         <string name="string2">String 2</string>
                     </resources>
-                    """)).createProjects(root)
+                    """
+            )
+        ).createProjects(root)
         val projectDir = projects[0]
 
         val aarFile = temp.newFile("foo-bar.aar")
@@ -472,19 +517,23 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
         val descriptorFile = File(root, "project.xml")
         Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
 
-        MainTest.checkDriver("No issues found.", "",
+        MainTest.checkDriver(
+            "No issues found.", "",
 
-                // Expected exit code
-                ERRNO_SUCCESS,
+            // Expected exit code
+            ERRNO_SUCCESS,
 
-                // Args
-                arrayOf("--quiet",
-                        "--check",
-                        "MissingApplicationIcon",
-                        "--project",
-                        descriptorFile.path),
+            // Args
+            arrayOf(
+                "--quiet",
+                "--check",
+                "MissingApplicationIcon",
+                "--project",
+                descriptorFile.path
+            ),
 
-                null, null)
+            null, null
+        )
     }
 
     @Test
@@ -493,7 +542,8 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
         // an AAR dependency and make its way into the merged manifest.
         val root = temp.newFolder()
         val projects = lint().files(
-                java("src/test/pkg/Child.java", "" +
+            java(
+                "src/test/pkg/Child.java", "" +
                         "package test.pkg;\n" +
                         "\n" +
                         "import android.os.Parcel;\n" +
@@ -508,7 +558,9 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
                         "    public void writeToParcel(Parcel dest, int flags) {\n" +
                         "\n" +
                         "    }\n" +
-                        "}\n")).createProjects(root)
+                        "}\n"
+            )
+        ).createProjects(root)
         val projectDir = projects[0]
 
         /*
@@ -518,15 +570,18 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
             public abstract class Parent implements Parcelable {
             }
          */
-        val jarFile = jar("parent.jar",
-                base64gzip("test/pkg/Parent.class", "" +
+        val jarFile = jar(
+            "parent.jar",
+            base64gzip(
+                "test/pkg/Parent.class", "" +
                         "H4sIAAAAAAAAAF1Pu07DQBCcTRw7cQx5SHwAXaDgipQgmkhUFkRKlP5sn8IF" +
                         "cxedL/wXFRJFPoCPQuw5qdBKo53Z2R3tz+/3EcAc0xRdXCYYJRgnmBDiB220" +
                         "fyR0ZzcbQrSwlSKMcm3U8+G9UG4ti5qVaW5LWW+k04Gfxci/6oYwyb1qvNi/" +
                         "bcVSOmX8PSFd2YMr1ZMOvuFJvtvJD5mhh5gT/q0QxmEqamm24qXYqZKlK2kq" +
                         "Z3UlbBNspapDbnSNDn/B8fwScfFBxoSZaDnQu/0CfXLTQZ8xPokYMGbnPsWw" +
-                        "Xc9a18UfxkO3QyIBAAA=")).createFile(root)
-
+                        "Xc9a18UfxkO3QyIBAAA="
+            )
+        ).createFile(root)
 
         @Language("XML")
         val descriptor = """
@@ -541,26 +596,33 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
         val descriptorFile = File(root, "project.xml")
         Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
 
-        MainTest.checkDriver("" +
-                // We only find this error if we correctly include the jar dependency
-                // which provides the parent class which implements Parcelable.
-                "src/test/pkg/Child.java:5: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n".replace('/', File.separatorChar) +
-                "public class Child extends Parent {\n" +
-                "             ~~~~~\n" +
-                "1 errors, 0 warnings\n",
-                "",
+        MainTest.checkDriver(
+            "" +
+                    // We only find this error if we correctly include the jar dependency
+                    // which provides the parent class which implements Parcelable.
+                    "src/test/pkg/Child.java:5: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n".replace(
+                        '/',
+                        File.separatorChar
+                    ) +
+                    "public class Child extends Parent {\n" +
+                    "             ~~~~~\n" +
+                    "1 errors, 0 warnings\n",
+            "",
 
-                // Expected exit code
-                ERRNO_SUCCESS,
+            // Expected exit code
+            ERRNO_SUCCESS,
 
-                // Args
-                arrayOf("--quiet",
-                        "--check",
-                        "ParcelCreator",
-                        "--project",
-                        descriptorFile.path),
+            // Args
+            arrayOf(
+                "--quiet",
+                "--check",
+                "ParcelCreator",
+                "--project",
+                descriptorFile.path
+            ),
 
-                null, null)
+            null, null
+        )
     }
 
     companion object {

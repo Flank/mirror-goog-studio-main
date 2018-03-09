@@ -87,78 +87,83 @@ import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
-/**
- * Check which looks for RTL issues (right-to-left support) in layouts
- */
+/** Check which looks for RTL issues (right-to-left support) in layouts */
 public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
 
     // TODO: Use the new merged manifest model
 
     @SuppressWarnings("unchecked")
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            RtlDetector.class,
-            EnumSet.of(Scope.RESOURCE_FILE, Scope.JAVA_FILE, Scope.MANIFEST),
-            Scope.RESOURCE_FILE_SCOPE,
-            Scope.JAVA_FILE_SCOPE,
-            Scope.MANIFEST_SCOPE
-    );
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(
+                    RtlDetector.class,
+                    EnumSet.of(Scope.RESOURCE_FILE, Scope.JAVA_FILE, Scope.MANIFEST),
+                    Scope.RESOURCE_FILE_SCOPE,
+                    Scope.JAVA_FILE_SCOPE,
+                    Scope.MANIFEST_SCOPE);
 
-    public static final Issue USE_START = Issue.create(
-        "RtlHardcoded",
-        "Using left/right instead of start/end attributes",
+    public static final Issue USE_START =
+            Issue.create(
+                    "RtlHardcoded",
+                    "Using left/right instead of start/end attributes",
+                    "Using `Gravity#LEFT` and `Gravity#RIGHT` can lead to problems when a layout is "
+                            + "rendered in locales where text flows from right to left. Use `Gravity#START` "
+                            + "and `Gravity#END` instead. Similarly, in XML `gravity` and `layout_gravity` "
+                            + "attributes, use `start` rather than `left`.\n"
+                            + "\n"
+                            + "For XML attributes such as paddingLeft and `layout_marginLeft`, use `paddingStart` "
+                            + "and `layout_marginStart`. **NOTE**: If your `minSdkVersion` is less than 17, you should "
+                            + "add **both** the older left/right attributes **as well as** the new start/right "
+                            + "attributes. On older platforms, where RTL is not supported and the start/right "
+                            + "attributes are unknown and therefore ignored, you need the older left/right "
+                            + "attributes. There is a separate lint check which catches that type of error.\n"
+                            + "\n"
+                            + "(Note: For `Gravity#LEFT` and `Gravity#START`, you can use these constants even "
+                            + "when targeting older platforms, because the `start` bitmask is a superset of the "
+                            + "`left` bitmask. Therefore, you can use `gravity=\"start\"` rather than "
+                            + "`gravity=\"left|start\"`.)",
+                    Category.RTL,
+                    5,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
-        "Using `Gravity#LEFT` and `Gravity#RIGHT` can lead to problems when a layout is " +
-        "rendered in locales where text flows from right to left. Use `Gravity#START` " +
-        "and `Gravity#END` instead. Similarly, in XML `gravity` and `layout_gravity` " +
-        "attributes, use `start` rather than `left`.\n" +
-        "\n" +
-        "For XML attributes such as paddingLeft and `layout_marginLeft`, use `paddingStart` " +
-        "and `layout_marginStart`. **NOTE**: If your `minSdkVersion` is less than 17, you should " +
-        "add **both** the older left/right attributes **as well as** the new start/right " +
-        "attributes. On older platforms, where RTL is not supported and the start/right " +
-        "attributes are unknown and therefore ignored, you need the older left/right " +
-        "attributes. There is a separate lint check which catches that type of error.\n" +
-        "\n" +
-        "(Note: For `Gravity#LEFT` and `Gravity#START`, you can use these constants even " +
-        "when targeting older platforms, because the `start` bitmask is a superset of the " +
-        "`left` bitmask. Therefore, you can use `gravity=\"start\"` rather than " +
-        "`gravity=\"left|start\"`.)",
+    public static final Issue COMPAT =
+            Issue.create(
+                    "RtlCompat",
+                    "Right-to-left text compatibility issues",
+                    "API 17 adds a `textAlignment` attribute to specify text alignment. However, "
+                            + "if you are supporting older versions than API 17, you must **also** specify a "
+                            + "gravity or layout_gravity attribute, since older platforms will ignore the "
+                            + "`textAlignment` attribute.",
+                    Category.RTL,
+                    6,
+                    Severity.ERROR,
+                    IMPLEMENTATION);
 
-        Category.RTL, 5, Severity.WARNING, IMPLEMENTATION);
+    public static final Issue SYMMETRY =
+            Issue.create(
+                    "RtlSymmetry",
+                    "Padding and margin symmetry",
+                    "If you specify padding or margin on the left side of a layout, you should "
+                            + "probably also specify padding on the right side (and vice versa) for "
+                            + "right-to-left layout symmetry.",
+                    Category.RTL,
+                    6,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
-    public static final Issue COMPAT = Issue.create(
-        "RtlCompat",
-        "Right-to-left text compatibility issues",
-
-        "API 17 adds a `textAlignment` attribute to specify text alignment. However, " +
-        "if you are supporting older versions than API 17, you must **also** specify a " +
-        "gravity or layout_gravity attribute, since older platforms will ignore the " +
-        "`textAlignment` attribute.",
-
-        Category.RTL, 6, Severity.ERROR, IMPLEMENTATION);
-
-    public static final Issue SYMMETRY = Issue.create(
-        "RtlSymmetry",
-        "Padding and margin symmetry",
-
-        "If you specify padding or margin on the left side of a layout, you should " +
-        "probably also specify padding on the right side (and vice versa) for " +
-        "right-to-left layout symmetry.",
-
-        Category.RTL, 6, Severity.WARNING, IMPLEMENTATION);
-
-
-    public static final Issue ENABLED = Issue.create(
-        "RtlEnabled",
-        "Using RTL attributes without enabling RTL support",
-
-        "To enable right-to-left support, when running on API 17 and higher, you must " +
-        "set the `android:supportsRtl` attribute in the manifest `<application>` element.\n" +
-        "\n" +
-        "If you have started adding RTL attributes, but have not yet finished the " +
-        "migration, you can set the attribute to false to satisfy this lint check.",
-
-        Category.RTL, 3, Severity.WARNING, IMPLEMENTATION);
+    public static final Issue ENABLED =
+            Issue.create(
+                    "RtlEnabled",
+                    "Using RTL attributes without enabling RTL support",
+                    "To enable right-to-left support, when running on API 17 and higher, you must "
+                            + "set the `android:supportsRtl` attribute in the manifest `<application>` element.\n"
+                            + "\n"
+                            + "If you have started adding RTL attributes, but have not yet finished the "
+                            + "migration, you can set the attribute to false to satisfy this lint check.",
+                    Category.RTL,
+                    3,
+                    Severity.WARNING,
+                    IMPLEMENTATION);
 
     /* TODO:
     public static final Issue FIELD = Issue.create(
@@ -202,12 +207,11 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
     private boolean mUsesRtlAttributes;
 
     /** Constructs a new {@link RtlDetector} */
-    public RtlDetector() {
-    }
+    public RtlDetector() {}
 
     private boolean rtlApplies(@NonNull Context context) {
         Project project = context.getMainProject();
-        if  (project.getTargetSdk() < RTL_API) {
+        if (project.getTargetSdk() < RTL_API) {
             return false;
         }
 
@@ -230,9 +234,11 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             List<File> manifestFile = context.getMainProject().getManifestFiles();
             if (!manifestFile.isEmpty()) {
                 Location location = Location.create(manifestFile.get(0));
-                context.report(ENABLED, location,
-                        "The project references RTL attributes, but does not explicitly enable " +
-                        "or disable RTL support with `android:supportsRtl` in the manifest");
+                context.report(
+                        ENABLED,
+                        location,
+                        "The project references RTL attributes, but does not explicitly enable "
+                                + "or disable RTL support with `android:supportsRtl` in the manifest");
             }
         }
     }
@@ -240,25 +246,27 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
     // ---- Implements XmlDetector ----
 
     @VisibleForTesting
-    static final String[] ATTRIBUTES = new String[] {
-            // Pairs, from left/right constants to corresponding start/end constants
-            ATTR_LAYOUT_ALIGN_PARENT_LEFT,          ATTR_LAYOUT_ALIGN_PARENT_START,
-            ATTR_LAYOUT_ALIGN_PARENT_RIGHT,         ATTR_LAYOUT_ALIGN_PARENT_END,
-            ATTR_LAYOUT_MARGIN_LEFT,                ATTR_LAYOUT_MARGIN_START,
-            ATTR_LAYOUT_MARGIN_RIGHT,               ATTR_LAYOUT_MARGIN_END,
-            ATTR_PADDING_LEFT,                      ATTR_PADDING_START,
-            ATTR_PADDING_RIGHT,                     ATTR_PADDING_END,
-            ATTR_DRAWABLE_LEFT,                     ATTR_DRAWABLE_START,
-            ATTR_DRAWABLE_RIGHT,                    ATTR_DRAWABLE_END,
-            ATTR_LIST_PREFERRED_ITEM_PADDING_LEFT,  ATTR_LIST_PREFERRED_ITEM_PADDING_START,
-            ATTR_LIST_PREFERRED_ITEM_PADDING_RIGHT, ATTR_LIST_PREFERRED_ITEM_PADDING_END,
+    static final String[] ATTRIBUTES =
+            new String[] {
+                // Pairs, from left/right constants to corresponding start/end constants
+                ATTR_LAYOUT_ALIGN_PARENT_LEFT, ATTR_LAYOUT_ALIGN_PARENT_START,
+                ATTR_LAYOUT_ALIGN_PARENT_RIGHT, ATTR_LAYOUT_ALIGN_PARENT_END,
+                ATTR_LAYOUT_MARGIN_LEFT, ATTR_LAYOUT_MARGIN_START,
+                ATTR_LAYOUT_MARGIN_RIGHT, ATTR_LAYOUT_MARGIN_END,
+                ATTR_PADDING_LEFT, ATTR_PADDING_START,
+                ATTR_PADDING_RIGHT, ATTR_PADDING_END,
+                ATTR_DRAWABLE_LEFT, ATTR_DRAWABLE_START,
+                ATTR_DRAWABLE_RIGHT, ATTR_DRAWABLE_END,
+                ATTR_LIST_PREFERRED_ITEM_PADDING_LEFT, ATTR_LIST_PREFERRED_ITEM_PADDING_START,
+                ATTR_LIST_PREFERRED_ITEM_PADDING_RIGHT, ATTR_LIST_PREFERRED_ITEM_PADDING_END,
 
-            // RelativeLayout
-            ATTR_LAYOUT_TO_LEFT_OF,                 ATTR_LAYOUT_TO_START_OF,
-            ATTR_LAYOUT_TO_RIGHT_OF,                ATTR_LAYOUT_TO_END_OF,
-            ATTR_LAYOUT_ALIGN_LEFT,                 ATTR_LAYOUT_ALIGN_START,
-            ATTR_LAYOUT_ALIGN_RIGHT,                ATTR_LAYOUT_ALIGN_END,
-    };
+                // RelativeLayout
+                ATTR_LAYOUT_TO_LEFT_OF, ATTR_LAYOUT_TO_START_OF,
+                ATTR_LAYOUT_TO_RIGHT_OF, ATTR_LAYOUT_TO_END_OF,
+                ATTR_LAYOUT_ALIGN_LEFT, ATTR_LAYOUT_ALIGN_START,
+                ATTR_LAYOUT_ALIGN_RIGHT, ATTR_LAYOUT_ALIGN_END,
+            };
+
     static {
         if (LintUtils.assertionsEnabled()) {
             for (int i = 0; i < ATTRIBUTES.length; i += 2) {
@@ -367,15 +375,20 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
         if (name.equals(ATTR_SUPPORTS_RTL)) {
             mEnabledRtlSupport = Boolean.valueOf(value);
             if (!attribute.getOwnerElement().getTagName().equals(TAG_APPLICATION)) {
-                context.report(ENABLED, attribute, context.getLocation(attribute), String.format(
-                    "Wrong declaration: `%1$s` should be defined on the `<application>` element",
-                        attribute.getName()));
+                context.report(
+                        ENABLED,
+                        attribute,
+                        context.getLocation(attribute),
+                        String.format(
+                                "Wrong declaration: `%1$s` should be defined on the `<application>` element",
+                                attribute.getName()));
             }
             int targetSdk = project.getTargetSdk();
             if (mEnabledRtlSupport && targetSdk < RTL_API) {
-                String message = String.format(
-                        "You must set `android:targetSdkVersion` to at least %1$d when "
-                                + "enabling RTL support (is %2$d)",
+                String message =
+                        String.format(
+                                "You must set `android:targetSdkVersion` to at least %1$d when "
+                                        + "enabling RTL support (is %2$d)",
                                 RTL_API, project.getTargetSdk());
                 context.report(ENABLED, attribute, context.getValueLocation(attribute), message);
             }
@@ -388,7 +401,7 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
 
         if (name.equals(ATTR_TEXT_ALIGNMENT)) {
             if (context.getProject().getReportIssues()) {
-              mUsesRtlAttributes = true;
+                mUsesRtlAttributes = true;
             }
 
             Element element = attribute.getOwnerElement();
@@ -405,18 +418,24 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                 if (folderVersion < RTL_API && context.isEnabled(COMPAT)) {
                     String expectedGravity = getTextAlignmentToGravity(value);
                     if (expectedGravity != null) {
-                        String message = String.format(
-                                "To support older versions than API 17 (project specifies %1$d) "
-                                    + "you must **also** specify `gravity` or `layout_gravity=\"%2$s\"`",
-                                project.getMinSdk(), expectedGravity);
+                        String message =
+                                String.format(
+                                        "To support older versions than API 17 (project specifies %1$d) "
+                                                + "you must **also** specify `gravity` or `layout_gravity=\"%2$s\"`",
+                                        project.getMinSdk(), expectedGravity);
 
-                        LintFix fix1 = fix().set(ANDROID_URI, ATTR_GRAVITY, expectedGravity)
-                                .build();
-                        LintFix fix2 = fix().set(ANDROID_URI, ATTR_LAYOUT_GRAVITY, expectedGravity)
-                                .build();
+                        LintFix fix1 =
+                                fix().set(ANDROID_URI, ATTR_GRAVITY, expectedGravity).build();
+                        LintFix fix2 =
+                                fix().set(ANDROID_URI, ATTR_LAYOUT_GRAVITY, expectedGravity)
+                                        .build();
                         LintFix fix = fix().group(fix1, fix2);
-                        context.report(COMPAT, attribute,
-                                context.getNameLocation(attribute), message, fix);
+                        context.report(
+                                COMPAT,
+                                attribute,
+                                context.getNameLocation(attribute),
+                                message,
+                                fix);
                     }
                 }
                 return;
@@ -425,11 +444,14 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             }
 
             String expectedGravity = getTextAlignmentToGravity(value);
-            if (expectedGravity != null && !gravity.contains(expectedGravity)
+            if (expectedGravity != null
+                    && !gravity.contains(expectedGravity)
                     && context.isEnabled(COMPAT)) {
-                String message = String.format("Inconsistent alignment specification between "
-                                + "`textAlignment` and `gravity` attributes: was `%1$s`, expected `%2$s`",
-                        gravity, expectedGravity);
+                String message =
+                        String.format(
+                                "Inconsistent alignment specification between "
+                                        + "`textAlignment` and `gravity` attributes: was `%1$s`, expected `%2$s`",
+                                gravity, expectedGravity);
                 Location location = context.getValueLocation(attribute);
                 context.report(COMPAT, attribute, location, message);
                 Location secondary = context.getValueLocation(gravityNode);
@@ -449,11 +471,12 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                 }
                 return;
             }
-            String message = String.format(
-                    "Use \"`%1$s`\" instead of \"`%2$s`\" to ensure correct behavior in "
-                            + "right-to-left locales",
-                    isLeft ? GRAVITY_VALUE_START : GRAVITY_VALUE_END,
-                    isLeft ? GRAVITY_VALUE_LEFT : GRAVITY_VALUE_RIGHT);
+            String message =
+                    String.format(
+                            "Use \"`%1$s`\" instead of \"`%2$s`\" to ensure correct behavior in "
+                                    + "right-to-left locales",
+                            isLeft ? GRAVITY_VALUE_START : GRAVITY_VALUE_END,
+                            isLeft ? GRAVITY_VALUE_LEFT : GRAVITY_VALUE_RIGHT);
             if (context.isEnabled(USE_START)) {
                 context.report(USE_START, attribute, context.getValueLocation(attribute), message);
             }
@@ -477,12 +500,17 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                     return;
                 }
             } else if (isPaddingAttribute
-                    && !element.hasAttributeNS(ANDROID_URI,
-                    isOldAttribute(opposite) ? convertOldToNew(opposite)
-                            : convertNewToOld(opposite)) && context.isEnabled(SYMMETRY)) {
-                String message = String.format(
-                        "When you define `%1$s` you should probably also define `%2$s` for "
-                        + "right-to-left symmetry", name, opposite);
+                    && !element.hasAttributeNS(
+                            ANDROID_URI,
+                            isOldAttribute(opposite)
+                                    ? convertOldToNew(opposite)
+                                    : convertNewToOld(opposite))
+                    && context.isEnabled(SYMMETRY)) {
+                String message =
+                        String.format(
+                                "When you define `%1$s` you should probably also define `%2$s` for "
+                                        + "right-to-left symmetry",
+                                name, opposite);
                 context.report(SYMMETRY, attribute, context.getNameLocation(attribute), message);
             }
         }
@@ -496,40 +524,49 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
             if (element.hasAttributeNS(ANDROID_URI, rtl)) {
                 if (project.getMinSdk() >= RTL_API || context.getFolderVersion() >= RTL_API) {
                     // Warn that left/right isn't needed
-                    String message = String.format(
-                            "Redundant attribute `%1$s`; already defining `%2$s` with "
-                                    + "`targetSdkVersion` %3$s",
-                            name, rtl, targetSdk);
-                    context.report(USE_START, attribute,
-                            context.getNameLocation(attribute), message);
+                    String message =
+                            String.format(
+                                    "Redundant attribute `%1$s`; already defining `%2$s` with "
+                                            + "`targetSdkVersion` %3$s",
+                                    name, rtl, targetSdk);
+                    context.report(
+                            USE_START, attribute, context.getNameLocation(attribute), message);
                 }
             } else {
                 String message;
                 LintFix lintFix;
                 if (project.getMinSdk() >= RTL_API || context.getFolderVersion() >= RTL_API) {
-                    message = String.format(
-                            "Consider replacing `%1$s` with `%2$s:%3$s=\"%4$s\"` to better support "
-                                    + "right-to-left layouts",
-                            attribute.getName(), attribute.getPrefix(), rtl, value);
+                    message =
+                            String.format(
+                                    "Consider replacing `%1$s` with `%2$s:%3$s=\"%4$s\"` to better support "
+                                            + "right-to-left layouts",
+                                    attribute.getName(), attribute.getPrefix(), rtl, value);
 
-                    lintFix = fix().replace()
-                            .name(String.format("Replace with %1$s:%2$s=\"%3$s\"",
-                                    attribute.getPrefix(), rtl, value))
-                            .text(name).with(rtl)
-                            .build();
+                    lintFix =
+                            fix().replace()
+                                    .name(
+                                            String.format(
+                                                    "Replace with %1$s:%2$s=\"%3$s\"",
+                                                    attribute.getPrefix(), rtl, value))
+                                    .text(name)
+                                    .with(rtl)
+                                    .build();
                 } else {
-                    message = String.format(
-                            "Consider adding `%1$s:%2$s=\"%3$s\"` to better support "
-                                    + "right-to-left layouts",
-                            attribute.getPrefix(), rtl, value);
-                    lintFix = fix()
-                            .name(String.format("Add %1$s:%2$s=\"%3$s\"",
-                                    attribute.getPrefix(), rtl, value))
-                            .set(attribute.getNamespaceURI(), rtl, attribute.getValue())
-                            .build();
+                    message =
+                            String.format(
+                                    "Consider adding `%1$s:%2$s=\"%3$s\"` to better support "
+                                            + "right-to-left layouts",
+                                    attribute.getPrefix(), rtl, value);
+                    lintFix =
+                            fix().name(
+                                            String.format(
+                                                    "Add %1$s:%2$s=\"%3$s\"",
+                                                    attribute.getPrefix(), rtl, value))
+                                    .set(attribute.getNamespaceURI(), rtl, attribute.getValue())
+                                    .build();
                 }
-                context.report(USE_START, attribute,
-                        context.getNameLocation(attribute), message, lintFix);
+                context.report(
+                        USE_START, attribute, context.getNameLocation(attribute), message, lintFix);
             }
         } else {
             if (project.getMinSdk() >= RTL_API || !context.isEnabled(COMPAT)) {
@@ -546,13 +583,12 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                 return;
             }
             String oldValue = convertNewToOld(value);
-            String message = String.format(
-                    "To support older versions than API 17 (project specifies %1$d) "
-                            + "you should **also** add `%2$s:%3$s=\"%4$s\"`",
-                    project.getMinSdk(), attribute.getPrefix(), old,
-                    oldValue);
-            LintFix fix = fix().set(attribute.getNamespaceURI(), old, oldValue)
-                    .build();
+            String message =
+                    String.format(
+                            "To support older versions than API 17 (project specifies %1$d) "
+                                    + "you should **also** add `%2$s:%3$s=\"%4$s\"`",
+                            project.getMinSdk(), attribute.getPrefix(), old, oldValue);
+            LintFix fix = fix().set(attribute.getNamespaceURI(), old, oldValue).build();
             context.report(COMPAT, attribute, context.getNameLocation(attribute), message, fix);
         }
     }
@@ -594,7 +630,8 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
         }
 
         @Override
-        public void visitSimpleNameReferenceExpression(@NonNull USimpleNameReferenceExpression element) {
+        public void visitSimpleNameReferenceExpression(
+                @NonNull USimpleNameReferenceExpression element) {
             String identifier = element.getIdentifier();
             boolean isLeft = LEFT_FIELD.equals(identifier);
             boolean isRight = RIGHT_FIELD.equals(identifier);
@@ -612,11 +649,14 @@ public class RtlDetector extends LayoutDetector implements SourceCodeScanner {
                 }
             }
 
-            String message = String.format(
-                    "Use \"`Gravity.%1$s`\" instead of \"`Gravity.%2$s`\" to ensure correct "
-                            + "behavior in right-to-left locales",
-                    (isLeft ? GRAVITY_VALUE_START : GRAVITY_VALUE_END).toUpperCase(Locale.US),
-                    (isLeft ? GRAVITY_VALUE_LEFT : GRAVITY_VALUE_RIGHT).toUpperCase(Locale.US));
+            String message =
+                    String.format(
+                            "Use \"`Gravity.%1$s`\" instead of \"`Gravity.%2$s`\" to ensure correct "
+                                    + "behavior in right-to-left locales",
+                            (isLeft ? GRAVITY_VALUE_START : GRAVITY_VALUE_END)
+                                    .toUpperCase(Locale.US),
+                            (isLeft ? GRAVITY_VALUE_LEFT : GRAVITY_VALUE_RIGHT)
+                                    .toUpperCase(Locale.US));
             Location location = context.getLocation(element);
             context.report(USE_START, element, location, message);
         }

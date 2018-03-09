@@ -44,35 +44,30 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/**
- * Looks for issues with converting vector drawables to bitmaps for backward compatibility.
- */
+/** Looks for issues with converting vector drawables to bitmaps for backward compatibility. */
 public class VectorDetector extends ResourceXmlDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "VectorRaster",
-            "Vector Image Generation",
-            "Vector icons require API 21 or API 24 depending on used features, " +
-            "but when `minSdkVersion` is less than 21 or 24 and Android Gradle plugin 1.4 or " +
-            "higher is used, a vector drawable placed in the `drawable` folder is automatically " +
-            "moved to `drawable-anydpi-v21` or `drawable-anydpi-v24` and bitmap images are " +
-            "generated for different screen resolutions for backwards compatibility.\n" +
-            "\n" +
-            "However, there are some limitations to this raster image generation, and this " +
-            "lint check flags elements and attributes that are not fully supported. " +
-            "You should manually check whether the generated output is acceptable for those " +
-            "older devices.",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.WARNING,
-            new Implementation(
-                    VectorDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "VectorRaster",
+                    "Vector Image Generation",
+                    "Vector icons require API 21 or API 24 depending on used features, "
+                            + "but when `minSdkVersion` is less than 21 or 24 and Android Gradle plugin 1.4 or "
+                            + "higher is used, a vector drawable placed in the `drawable` folder is automatically "
+                            + "moved to `drawable-anydpi-v21` or `drawable-anydpi-v24` and bitmap images are "
+                            + "generated for different screen resolutions for backwards compatibility.\n"
+                            + "\n"
+                            + "However, there are some limitations to this raster image generation, and this "
+                            + "lint check flags elements and attributes that are not fully supported. "
+                            + "You should manually check whether the generated output is acceptable for those "
+                            + "older devices.",
+                    Category.CORRECTNESS,
+                    5,
+                    Severity.WARNING,
+                    new Implementation(VectorDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     /** Constructs a new {@link VectorDetector} */
-    public VectorDetector() {
-    }
+    public VectorDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -80,8 +75,8 @@ public class VectorDetector extends ResourceXmlDetector {
     }
 
     /**
-     * Returns true if the given Gradle project model supports raster image generation
-     * for vector drawables.
+     * Returns true if the given Gradle project model supports raster image generation for vector
+     * drawables.
      *
      * @param project the project to check
      * @return true if the plugin supports raster image generation
@@ -93,8 +88,8 @@ public class VectorDetector extends ResourceXmlDetector {
     }
 
     /**
-     * Returns true if the given Gradle project model supports raster image generation
-     * for vector drawables with gradients.
+     * Returns true if the given Gradle project model supports raster image generation for vector
+     * drawables with gradients.
      *
      * @param project the project to check
      * @return true if the plugin supports raster image generation
@@ -106,8 +101,8 @@ public class VectorDetector extends ResourceXmlDetector {
     }
 
     /**
-     * Returns true if the given Gradle project model supports raster image generation
-     * for vector drawables with the android:fillType attribute.
+     * Returns true if the given Gradle project model supports raster image generation for vector
+     * drawables with the android:fillType attribute.
      *
      * @param project the project to check
      * @return true if the plugin supports raster image generation
@@ -179,18 +174,17 @@ public class VectorDetector extends ResourceXmlDetector {
     }
 
     private static boolean containsGradient(@NonNull Document document) {
-        return findElement(document,
-                element -> "gradient".equals(element.getTagName())) != null;
+        return findElement(document, element -> "gradient".equals(element.getTagName())) != null;
     }
 
     private static boolean containsFillType(Document document) {
-        return findElement(document,
-                element -> element.hasAttributeNS(NS_RESOURCES, "fillType")) != null;
+        return findElement(document, element -> element.hasAttributeNS(NS_RESOURCES, "fillType"))
+                != null;
     }
 
     @Nullable
-    private static Element findElement(@NonNull Document document,
-            @NonNull Predicate<Element> predicate) {
+    private static Element findElement(
+            @NonNull Document document, @NonNull Predicate<Element> predicate) {
         Deque<Element> elements = new ArrayDeque<>();
         elements.add(document.getDocumentElement());
 
@@ -203,7 +197,7 @@ public class VectorDetector extends ResourceXmlDetector {
             for (int i = 0, n = children.getLength(); i < n; i++) {
                 Node child = children.item(i);
                 if (child.getNodeType() == Node.ELEMENT_NODE) {
-                    elements.add((Element)child);
+                    elements.add((Element) child);
                 }
             }
         }
@@ -217,52 +211,61 @@ public class VectorDetector extends ResourceXmlDetector {
         }
 
         Variant currentVariant = project.getCurrentVariant();
-        return currentVariant != null && Boolean.TRUE.equals(
-                currentVariant.getMergedFlavor().getVectorDrawables().getUseSupportLibrary());
+        return currentVariant != null
+                && Boolean.TRUE.equals(
+                        currentVariant
+                                .getMergedFlavor()
+                                .getVectorDrawables()
+                                .getUseSupportLibrary());
     }
 
     /** Recursive element check for unsupported attributes and tags */
-    private static void checkSupported(@NonNull XmlContext context, @NonNull Element element,
-            int apiThreshold) {
+    private static void checkSupported(
+            @NonNull XmlContext context, @NonNull Element element, int apiThreshold) {
         // Unsupported tags
         String tag = element.getTagName();
         if ("clip-path".equals(tag)) {
-            String message = String.format(
-                    "This tag is not supported in images generated from this vector icon for "
-                    + "API < %d; check generated icon to make sure it looks acceptable",
-                    apiThreshold);
+            String message =
+                    String.format(
+                            "This tag is not supported in images generated from this vector icon for "
+                                    + "API < %d; check generated icon to make sure it looks acceptable",
+                            apiThreshold);
             context.report(ISSUE, element, context.getLocation(element), message);
         } else if ("group".equals(tag)) {
             AndroidProject model = context.getMainProject().getGradleProjectModel();
             if (model != null && model.getModelVersion().startsWith("1.4.")) {
-                String message = "Update Gradle plugin version to 1.5+ to correctly handle "
-                        + "`<group>` tags in generated bitmaps";
+                String message =
+                        "Update Gradle plugin version to 1.5+ to correctly handle "
+                                + "`<group>` tags in generated bitmaps";
                 context.report(ISSUE, element, context.getElementLocation(element), message);
             }
         }
 
         NamedNodeMap attributes = element.getAttributes();
         for (int i = 0, n = attributes.getLength(); i < n; i++) {
-            Attr attr = (Attr)attributes.item(i);
+            Attr attr = (Attr) attributes.item(i);
             String name = attr.getLocalName();
             if (("autoMirrored".equals(name)
-                    || "trimPathStart".equals(name)
-                    || "trimPathEnd".equals(name)
-                    || "trimPathOffset".equals(name))
+                            || "trimPathStart".equals(name)
+                            || "trimPathEnd".equals(name)
+                            || "trimPathOffset".equals(name))
                     && ANDROID_URI.equals(attr.getNamespaceURI())) {
-                String message = String.format(
-                        "This attribute is not supported in images generated from this vector icon "
-                        + "for API < %d; check generated icon to make sure it looks acceptable",
-                        apiThreshold);
+                String message =
+                        String.format(
+                                "This attribute is not supported in images generated from this vector icon "
+                                        + "for API < %d; check generated icon to make sure it looks acceptable",
+                                apiThreshold);
                 context.report(ISSUE, attr, context.getNameLocation(attr), message);
             }
 
             String value = attr.getValue();
             if (ResourceUrl.parse(value) != null) {
-                String message = String.format(
-                        "Resource references will not work correctly in images generated for this "
-                        + "vector icon for API < %d; check generated icon to make sure it looks "
-                        + "acceptable", apiThreshold);
+                String message =
+                        String.format(
+                                "Resource references will not work correctly in images generated for this "
+                                        + "vector icon for API < %d; check generated icon to make sure it looks "
+                                        + "acceptable",
+                                apiThreshold);
                 context.report(ISSUE, attr, context.getValueLocation(attr), message);
             }
         }
@@ -271,7 +274,7 @@ public class VectorDetector extends ResourceXmlDetector {
         for (int i = 0, n = children.getLength(); i < n; i++) {
             Node child = children.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
-                checkSupported(context, (Element)child, apiThreshold);
+                checkSupported(context, (Element) child, apiThreshold);
             }
         }
     }

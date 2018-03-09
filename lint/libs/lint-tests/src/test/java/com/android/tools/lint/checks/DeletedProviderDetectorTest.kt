@@ -66,11 +66,13 @@ class DeletedProviderDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).run().expect("""
+        ).run().expect(
+            """
             src/test/pkg/RemovedGeneratorTest.java:24: Error: The Crypto provider has been deleted in Android P (and was deprecated in Android N), so the code will crash. [DeletedProvider]
                             SecureRandom instance2 = SecureRandom.getInstance("SHA1PRNG", "Crypto");
                                                                                           ~~~~~~~~
             1 errors, 0 warnings
-            """)
+            """
+        )
     }
 }

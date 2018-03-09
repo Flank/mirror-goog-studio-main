@@ -30,8 +30,10 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicReference
 
-class BlameFile internal constructor(private val nodes: MutableMap<String, BlameNode>,
-        private val actions: Actions?) {
+class BlameFile internal constructor(
+    private val nodes: MutableMap<String, BlameNode>,
+    private val actions: Actions?
+) {
 
     private fun findBlameNode(element: Element): BlameNode? {
         val key = getNodeKey(element)
@@ -45,7 +47,7 @@ class BlameFile internal constructor(private val nodes: MutableMap<String, Blame
                 if (actionType == Actions.ActionType.ADDED || actionType == Actions.ActionType.MERGED) {
                     if (blameNode == null) {
                         blameNode = BlameNode(key)
-                        nodes.put(key, blameNode)
+                        nodes[key] = blameNode
                     }
                     val actionLocation = record.actionLocation
                     val sourceFile = actionLocation.file.sourceFile
@@ -56,18 +58,20 @@ class BlameFile internal constructor(private val nodes: MutableMap<String, Blame
             }
             for (nodeName in actions.getRecordedAttributeNames(nodeKey)) {
                 for (record in actions
-                        .getAttributeRecords(nodeKey, nodeName)) {
+                    .getAttributeRecords(nodeKey, nodeName)) {
                     val actionType = record.actionType
                     if (actionType == Actions.ActionType.ADDED || actionType == Actions.ActionType.MERGED) {
                         if (blameNode == null) {
                             blameNode = BlameNode(key)
-                            nodes.put(key, blameNode)
+                            nodes[key] = blameNode
                         }
                         val actionLocation = record.actionLocation
                         val sourceFile = actionLocation.file.sourceFile
                         if (sourceFile != null) {
-                            blameNode.setAttributeLocations(nodeName.localName,
-                                    " from " + sourceFile.path)
+                            blameNode.setAttributeLocations(
+                                nodeName.localName,
+                                " from " + sourceFile.path
+                            )
                         }
                     }
                 }
@@ -86,13 +90,13 @@ class BlameFile internal constructor(private val nodes: MutableMap<String, Blame
     }
 
     fun findSourceElement(
-            client: LintClient,
-            element: Element): Pair<File, Node>? {
+        client: LintClient,
+        element: Element
+    ): Pair<File, Node>? {
         val source = findElementOrAttribute(client, element, null)
         return if (source != null && source.second is Element) {
             source
         } else null
-
     }
 
     fun findSourceAttribute(client: LintClient, attr: Attr): Pair<File, out Node>? {
@@ -120,9 +124,11 @@ class BlameFile internal constructor(private val nodes: MutableMap<String, Blame
         return null
     }
 
-    private fun findElementOrAttribute(client: LintClient,
-            element: Element,
-            attribute: Attr?): Pair<File, Node>? {
+    private fun findElementOrAttribute(
+        client: LintClient,
+        element: Element,
+        attribute: Attr?
+    ): Pair<File, Node>? {
         val blameNode = findBlameNode(element) ?: return null
 
         var location: String? = null
@@ -360,7 +366,7 @@ class BlameFile internal constructor(private val nodes: MutableMap<String, Blame
 
                 val key = line.trim { it <= ' ' }
                 val node = BlameNode(key)
-                nodes.put(key, node)
+                nodes[key] = node
                 attributeName = null
                 last = node
             }
@@ -378,5 +384,4 @@ class BlameFile internal constructor(private val nodes: MutableMap<String, Blame
             return line.length
         }
     }
-
 }

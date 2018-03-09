@@ -22,9 +22,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-/**
- * Parser for the simplified XML API format version 1.
- */
+/** Parser for the simplified XML API format version 1. */
 class ApiParser extends DefaultHandler {
     private static final String NODE_CLASS = "class";
     private static final String NODE_FIELD = "field";
@@ -42,13 +40,15 @@ class ApiParser extends DefaultHandler {
 
     private ApiClass mCurrentClass;
 
-    ApiParser() {
-    }
+    ApiParser() {}
 
     Map<String, ApiClass> getClasses() {
         return mClasses;
     }
-    Map<String, ApiClassOwner> getContainers() { return mContainers; }
+
+    Map<String, ApiClassOwner> getContainers() {
+        return mContainers;
+    }
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes)

@@ -79,50 +79,55 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-/**
- * Checks for invalid app links URLs
- */
+/** Checks for invalid app links URLs */
 public class AppLinksValidDetector extends Detector implements XmlScanner {
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            AppLinksValidDetector.class,
-            Scope.MANIFEST_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(AppLinksValidDetector.class, Scope.MANIFEST_SCOPE);
 
     /** The main issue discovered by this detector */
-    public static final Issue TEST_URL = Issue.create(
-            "TestAppLink",
-            "Unmatched URLs",
+    public static final Issue TEST_URL =
+            Issue.create(
+                    "TestAppLink",
+                    "Unmatched URLs",
+                    "Using one or more `tools:validation testUrl=\"some url\"/>` elements "
+                            + "in your manifest allows the link attributes in your intent filter to be "
+                            + "checked for matches.",
+                    Category.CORRECTNESS,
+                    5,
+                    Severity.FATAL,
+                    IMPLEMENTATION);
 
-            "Using one or more `tools:validation testUrl=\"some url\"/>` elements "
-                    + "in your manifest allows the link attributes in your intent filter to be "
-                    + "checked for matches.",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.FATAL,
-            IMPLEMENTATION);
-
-    public static final Issue VALIDATION = Issue.create(
-            "AppLinkUrlError",
-            "URL not supported by app for Firebase App Indexing",
-            "Ensure the URL is supported by your app, to get installs and traffic to "
-                    + "your app from Google Search.",
-            Category.USABILITY, 5, Severity.ERROR, IMPLEMENTATION)
-            .addMoreInfo("https://g.co/AppIndexing/AndroidStudio");
+    public static final Issue VALIDATION =
+            Issue.create(
+                            "AppLinkUrlError",
+                            "URL not supported by app for Firebase App Indexing",
+                            "Ensure the URL is supported by your app, to get installs and traffic to "
+                                    + "your app from Google Search.",
+                            Category.USABILITY,
+                            5,
+                            Severity.ERROR,
+                            IMPLEMENTATION)
+                    .addMoreInfo("https://g.co/AppIndexing/AndroidStudio");
 
     /**
-     * Only used for compatibility issue lookup (the driver suppression check takes
-     * an issue, not an id)
+     * Only used for compatibility issue lookup (the driver suppression check takes an issue, not an
+     * id)
      */
-    private static final Issue _OLD_ISSUE_URL = Issue.create(
-            "GoogleAppIndexingUrlError", "?","?",
-            Category.USABILITY, 5, Severity.ERROR, IMPLEMENTATION);
+    private static final Issue _OLD_ISSUE_URL =
+            Issue.create(
+                    "GoogleAppIndexingUrlError",
+                    "?",
+                    "?",
+                    Category.USABILITY,
+                    5,
+                    Severity.ERROR,
+                    IMPLEMENTATION);
 
     private static final String TAG_VALIDATION = "validation";
 
     /** Constructs a new {@link AppLinksValidDetector} check */
-    public AppLinksValidDetector() {
-    }
+    public AppLinksValidDetector() {}
 
     // ---- Implements XmlScanner ----
 
@@ -131,13 +136,20 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
         return Arrays.asList(TAG_ACTIVITY, TAG_ACTIVITY_ALIAS);
     }
 
-    private static void reportUrlError(@NonNull XmlContext context, @NonNull Node node,
-            @NonNull Location location, @NonNull String message) {
+    private static void reportUrlError(
+            @NonNull XmlContext context,
+            @NonNull Node node,
+            @NonNull Location location,
+            @NonNull String message) {
         reportUrlError(context, node, location, message, null);
     }
 
-    private static void reportUrlError(@NonNull XmlContext context, @NonNull Node node,
-            @NonNull Location location, @NonNull String message, @Nullable LintFix quickfixData) {
+    private static void reportUrlError(
+            @NonNull XmlContext context,
+            @NonNull Node node,
+            @NonNull Location location,
+            @NonNull String message,
+            @Nullable LintFix quickfixData) {
         // Validation errors were reported here before
         if (context.getDriver().isSuppressed(context, _OLD_ISSUE_URL, node)) {
             return;
@@ -146,8 +158,11 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
         context.report(VALIDATION, node, location, message, quickfixData);
     }
 
-    private static void reportTestUrlFailure(@NonNull XmlContext context, @NonNull Node node,
-            @NonNull Location location, @NonNull String message) {
+    private static void reportTestUrlFailure(
+            @NonNull XmlContext context,
+            @NonNull Node node,
+            @NonNull Location location,
+            @NonNull String message) {
         context.report(TEST_URL, node, location, message);
     }
 
@@ -168,19 +183,26 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
                         URL testUrl = new URL(testUrlString);
                         String reason = testElement(testUrl, infos);
                         if (reason != null) {
-                            reportTestUrlFailure(context, testUrlAttr,
+                            reportTestUrlFailure(
+                                    context,
+                                    testUrlAttr,
                                     context.getValueLocation(testUrlAttr),
                                     reason);
                         }
                     } catch (MalformedURLException e) {
                         String message = "Invalid test URL: " + e.getLocalizedMessage();
-                        reportTestUrlFailure(context, testUrlAttr,
+                        reportTestUrlFailure(
+                                context,
+                                testUrlAttr,
                                 context.getValueLocation(testUrlAttr),
                                 message);
                     }
                 }
             } else {
-                reportTestUrlFailure(context, current, context.getNameLocation(current),
+                reportTestUrlFailure(
+                        context,
+                        current,
+                        context.getNameLocation(current),
                         "Validation nodes should be in the `tools:` namespace to "
                                 + "ensure they are removed from the manifest at build time");
             }
@@ -189,19 +211,18 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
     }
 
     /**
-     * Given an activity (or activity alias) element, looks up the intent filters
-     * that contain URIs and creates a list of {@link UriInfo} objects for these
+     * Given an activity (or activity alias) element, looks up the intent filters that contain URIs
+     * and creates a list of {@link UriInfo} objects for these
      *
      * @param activity the activity
-     * @param context an <b>optional</b> lint context to pass in; if provided,
-     *                lint will validate the activity attributes and report link-related
-     *                problems (such as unknown scheme, wrong port number etc)
+     * @param context an <b>optional</b> lint context to pass in; if provided, lint will validate
+     *     the activity attributes and report link-related problems (such as unknown scheme, wrong
+     *     port number etc)
      * @return a list of URI infos, if any
      */
     @NonNull
     public static List<UriInfo> createUriInfos(
-            @NonNull Element activity,
-            @Nullable XmlContext context) {
+            @NonNull Element activity, @Nullable XmlContext context) {
         Element intent = getFirstSubTagByName(activity, TAG_INTENT_FILTER);
         List<AppLinksValidDetector.UriInfo> infos = Lists.newArrayList();
         while (intent != null) {
@@ -216,19 +237,16 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
     }
 
     /**
-     * Given a test URL and a list of URI infos (previously returned from
-     * {@link #createUriInfos(Element, XmlContext)}) this method checks whether
-     * the URL matches, and if so returns null, otherwise returning the reason
-     * for the mismatch.
+     * Given a test URL and a list of URI infos (previously returned from {@link
+     * #createUriInfos(Element, XmlContext)}) this method checks whether the URL matches, and if so
+     * returns null, otherwise returning the reason for the mismatch.
      *
      * @param testUrl the URL to test
-     * @param infos   the URL information
+     * @param infos the URL information
      * @return null for a match, otherwise the failure reason
      */
     @Nullable
-    public static String testElement(
-            @NonNull URL testUrl,
-            @NonNull List<UriInfo> infos) {
+    public static String testElement(@NonNull URL testUrl, @NonNull List<UriInfo> infos) {
         List<String> reasons = null;
         for (UriInfo info : infos) {
             String reason = info.match(testUrl);
@@ -257,7 +275,10 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
         private final List<String> ports;
         private final List<AndroidPatternMatcher> paths;
 
-        public UriInfo(List<String> schemes, List<String> hosts, List<String> ports,
+        public UriInfo(
+                List<String> schemes,
+                List<String> hosts,
+                List<String> ports,
                 List<AndroidPatternMatcher> paths) {
             this.schemes = schemes;
             this.hosts = hosts;
@@ -266,8 +287,8 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
         }
 
         /**
-         * Matches a URL against this info, and returns null if successful or the failure reason
-         * if not a match
+         * Matches a URL against this info, and returns null if successful or the failure reason if
+         * not a match
          *
          * @param testUrl the URL to match
          * @return null for a successful match or the failure reason
@@ -277,20 +298,27 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
 
             // Check schemes
             if (schemes != null) {
-                boolean schemeOk = schemes.stream().anyMatch(scheme ->
-                        scheme.equals(testUrl.getProtocol()) || isSubstituted(scheme));
+                boolean schemeOk =
+                        schemes.stream()
+                                .anyMatch(
+                                        scheme ->
+                                                scheme.equals(testUrl.getProtocol())
+                                                        || isSubstituted(scheme));
                 if (!schemeOk) {
-                    return String.format("did not match scheme %1$s",
-                                    Joiner.on(", ").join(schemes));
+                    return String.format(
+                            "did not match scheme %1$s", Joiner.on(", ").join(schemes));
                 }
             }
 
             if (hosts != null) {
-                boolean hostOk = hosts.stream().anyMatch(host ->
-                    matchesHost(testUrl.getHost(), host) || isSubstituted(host));
+                boolean hostOk =
+                        hosts.stream()
+                                .anyMatch(
+                                        host ->
+                                                matchesHost(testUrl.getHost(), host)
+                                                        || isSubstituted(host));
                 if (!hostOk) {
-                    return String.format("did not match host %1$s",
-                            Joiner.on(", ").join(hosts));
+                    return String.format("did not match host %1$s", Joiner.on(", ").join(hosts));
                 }
             }
 
@@ -299,8 +327,9 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
             if (testUrl.getPort() != -1) {
                 String testPort = Integer.toString(testUrl.getPort());
                 if (ports != null) {
-                    portOk = ports.stream().anyMatch(port ->
-                                    testPort.equals(port) || isSubstituted(port));
+                    portOk =
+                            ports.stream()
+                                    .anyMatch(port -> testPort.equals(port) || isSubstituted(port));
                 }
             } else if (ports == null) {
                 portOk = true;
@@ -312,12 +341,16 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
 
             if (paths != null) {
                 String testPath = testUrl.getPath();
-                boolean pathOk = paths.stream().anyMatch(matcher ->
-                        isSubstituted(matcher.getPath()) || matcher.match(testPath));
+                boolean pathOk =
+                        paths.stream()
+                                .anyMatch(
+                                        matcher ->
+                                                isSubstituted(matcher.getPath())
+                                                        || matcher.match(testPath));
                 if (!pathOk) {
                     StringBuilder sb = new StringBuilder();
-                    paths.forEach(matcher ->
-                            sb.append("path ").append(matcher.toString()).append(", "));
+                    paths.forEach(
+                            matcher -> sb.append("path ").append(matcher.toString()).append(", "));
                     if (CharSequences.endsWith(sb, ", ", true)) {
                         sb.setLength(sb.length() - 2);
                     }
@@ -336,9 +369,8 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
     }
 
     @Nullable
-    private static UriInfo checkIntent(@Nullable XmlContext context,
-            @NonNull Element intent,
-            @NonNull Element activity) {
+    private static UriInfo checkIntent(
+            @Nullable XmlContext context, @NonNull Element intent, @NonNull Element activity) {
         Element firstData = getFirstSubTagByName(intent, TAG_DATA);
         boolean actionView = hasActionView(intent);
         boolean browsable = isBrowsable(intent);
@@ -351,8 +383,8 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
             if (actionView && browsable && context != null) {
                 // If this activity is an ACTION_VIEW action with category BROWSABLE, but doesn't
                 // have data node, it's a likely mistake
-                reportUrlError(context, intent, context.getLocation(intent),
-                        "Missing data element");
+                reportUrlError(
+                        context, intent, context.getLocation(intent), "Missing data element");
             }
 
             return null;
@@ -364,15 +396,16 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
         List<AndroidPatternMatcher> paths = null;
         boolean hasMimeType = false;
 
-        for (Element data = firstData;
-                data != null;
-                data = getNextTagByName(data, TAG_DATA)) {
+        for (Element data = firstData; data != null; data = getNextTagByName(data, TAG_DATA)) {
 
             Attr mimeType = data.getAttributeNodeNS(ANDROID_URI, ATTR_MIME_TYPE);
             if (mimeType != null) {
                 hasMimeType = true;
                 if (context != null && CharSequences.containsUpperCase(mimeType.getValue())) {
-                    reportUrlError(context, mimeType, context.getValueLocation(mimeType),
+                    reportUrlError(
+                            context,
+                            mimeType,
+                            context.getValueLocation(mimeType),
                             "Mime-type matching is case sensitive and should only "
                                     + "use lower-case characters");
                 }
@@ -392,7 +425,10 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
         if (actionView && browsable && schemes == null && !hasMimeType && context != null) {
             // If this activity is an action view, is browsable, but has neither a
             // URL nor mimeType, it may be a mistake and we will report error.
-            reportUrlError(context, firstData, context.getLocation(firstData),
+            reportUrlError(
+                    context,
+                    firstData,
+                    context.getLocation(firstData),
                     "Missing URL for the intent filter");
         }
 
@@ -424,27 +460,37 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
             boolean hasScheme = schemes != null;
             if (!hasScheme && (hosts != null || paths != null || ports != null)) {
                 LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_SCHEME, "http").build();
-                reportUrlError(context, firstData, context.getLocation(firstData),
-                        "At least one `scheme` must be specified", fix);
+                reportUrlError(
+                        context,
+                        firstData,
+                        context.getLocation(firstData),
+                        "At least one `scheme` must be specified",
+                        fix);
             }
 
             if (hosts == null && (paths != null || ports != null)) {
                 LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_HOST, "").build();
-                reportUrlError(context, firstData, context.getLocation(firstData),
-                        "At least one `host` must be specified", fix);
+                reportUrlError(
+                        context,
+                        firstData,
+                        context.getLocation(firstData),
+                        "At least one `host` must be specified",
+                        fix);
             }
 
             // If this activity is an ACTION_VIEW action, has a http URL but doesn't have
             // BROWSABLE, it may be a mistake and and we will report warning.
             if (actionView && isHttp && !browsable) {
-                reportUrlError(context, intent, context.getLocation(intent),
+                reportUrlError(
+                        context,
+                        intent,
+                        context.getLocation(intent),
                         "Activity supporting ACTION_VIEW is not set as BROWSABLE");
             }
 
             if (actionView && (!hasScheme || implicitSchemes)) {
                 LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_SCHEME, "http").build();
-                reportUrlError(context, intent, context.getLocation(intent),
-                        "Missing URL", fix);
+                reportUrlError(context, intent, context.getLocation(intent), "Missing URL", fix);
             }
         }
 
@@ -452,9 +498,7 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
     }
 
     private static void ensureExported(
-            @NonNull XmlContext context,
-            @NonNull Element activity,
-            @NonNull Element intent) {
+            @NonNull XmlContext context, @NonNull Element activity, @NonNull Element intent) {
         Attr exported = activity.getAttributeNodeNS(ANDROID_URI, ATTR_EXPORTED);
         if (exported == null) {
             return;
@@ -474,7 +518,9 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
         }
 
         // Report error if the activity supporting action view is not exported.
-        reportUrlError(context, activity,
+        reportUrlError(
+                context,
+                activity,
                 context.getLocation(activity),
                 "Activity supporting ACTION_VIEW is not exported");
     }
@@ -516,8 +562,8 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
     }
 
     private static boolean containsUpperCase(@Nullable List<AndroidPatternMatcher> matchers) {
-        return matchers != null && matchers.stream()
-                .anyMatch(m -> CharSequences.containsUpperCase(m.getPath()));
+        return matchers != null
+                && matchers.stream().anyMatch(m -> CharSequences.containsUpperCase(m.getPath()));
     }
 
     @Nullable
@@ -533,8 +579,7 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
                 return current;
             }
 
-            if (value.startsWith(PREFIX_RESOURCE_REF)
-                    || value.startsWith(PREFIX_THEME_REF)) {
+            if (value.startsWith(PREFIX_RESOURCE_REF) || value.startsWith(PREFIX_THEME_REF)) {
                 value = replaceUrlWithValue(context, value);
             }
 
@@ -543,7 +588,8 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
             }
             current.add(value);
 
-            if (isSubstituted(value) || value.startsWith(PREFIX_RESOURCE_REF)
+            if (isSubstituted(value)
+                    || value.startsWith(PREFIX_RESOURCE_REF)
                     || value.startsWith(PREFIX_THEME_REF)) { // already checked but can be nested
                 return current;
             }
@@ -557,57 +603,81 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
         return current;
     }
 
-    private static void validateAttribute(@NonNull XmlContext context,
-            @NonNull String attributeName, Element data, Attr attribute, String value) {
+    private static void validateAttribute(
+            @NonNull XmlContext context,
+            @NonNull String attributeName,
+            Element data,
+            Attr attribute,
+            String value) {
         // See https://developer.android.com/guide/topics/manifest/data-element.html
         switch (attributeName) {
-            case ATTR_SCHEME: {
-                if (value.endsWith(":")) {
-                    reportUrlError(context, attribute, context.getValueLocation(attribute),
-                        "Don't include trailing colon in the `scheme` declaration");
-                } else if (CharSequences.containsUpperCase(value)) {
-                    reportUrlError(context, attribute, context.getValueLocation(attribute),
-                            "Scheme matching is case sensitive and should only "
-                                    + "use lower-case characters");
-                }
-
-                break;
-            }
-            case ATTR_HOST: {
-                if (value.lastIndexOf('*') > 0) {
-                    reportUrlError(context, attribute, context.getValueLocation(attribute),
-                            "The host wildcard (`*`) can only be the first "
-                                    + "character");
-                } else if (CharSequences.containsUpperCase(value)) {
-                    reportUrlError(context, attribute, context.getValueLocation(attribute),
-                            "Host matching is case sensitive and should only "
-                                    + "use lower-case characters");
-                }
-                break;
-            }
-
-            case ATTR_PORT: {
-                try {
-                    int port = Integer.parseInt(value); // might also throw number exc
-                    if (port < 1 || port > 65535) {
-                        throw new NumberFormatException();
+            case ATTR_SCHEME:
+                {
+                    if (value.endsWith(":")) {
+                        reportUrlError(
+                                context,
+                                attribute,
+                                context.getValueLocation(attribute),
+                                "Don't include trailing colon in the `scheme` declaration");
+                    } else if (CharSequences.containsUpperCase(value)) {
+                        reportUrlError(
+                                context,
+                                attribute,
+                                context.getValueLocation(attribute),
+                                "Scheme matching is case sensitive and should only "
+                                        + "use lower-case characters");
                     }
-                } catch (NumberFormatException e) {
-                    reportUrlError(context, attribute, context.getValueLocation(attribute),
-                            "not a valid port number");
+
+                    break;
+                }
+            case ATTR_HOST:
+                {
+                    if (value.lastIndexOf('*') > 0) {
+                        reportUrlError(
+                                context,
+                                attribute,
+                                context.getValueLocation(attribute),
+                                "The host wildcard (`*`) can only be the first character");
+                    } else if (CharSequences.containsUpperCase(value)) {
+                        reportUrlError(
+                                context,
+                                attribute,
+                                context.getValueLocation(attribute),
+                                "Host matching is case sensitive and should only "
+                                        + "use lower-case characters");
+                    }
+                    break;
                 }
 
-                // The port *only* takes effect if it's specified on the *same* XML
-                // element as the host (this isn't true for the other attributes,
-                // which can be spread out across separate <data> elements)
-                if (!data.hasAttributeNS(ANDROID_URI, ATTR_HOST)) {
-                    reportUrlError(context, attribute, context.getValueLocation(attribute),
-                            "The port must be specified in the same `<data>` "
-                                    + "element as the `host`");
-                }
+            case ATTR_PORT:
+                {
+                    try {
+                        int port = Integer.parseInt(value); // might also throw number exc
+                        if (port < 1 || port > 65535) {
+                            throw new NumberFormatException();
+                        }
+                    } catch (NumberFormatException e) {
+                        reportUrlError(
+                                context,
+                                attribute,
+                                context.getValueLocation(attribute),
+                                "not a valid port number");
+                    }
 
-                break;
-            }
+                    // The port *only* takes effect if it's specified on the *same* XML
+                    // element as the host (this isn't true for the other attributes,
+                    // which can be spread out across separate <data> elements)
+                    if (!data.hasAttributeNS(ANDROID_URI, ATTR_HOST)) {
+                        reportUrlError(
+                                context,
+                                attribute,
+                                context.getValueLocation(attribute),
+                                "The port must be specified in the same `<data>` "
+                                        + "element as the `host`");
+                    }
+
+                    break;
+                }
         }
     }
 
@@ -629,8 +699,7 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
                 current = Lists.newArrayListWithCapacity(4);
             }
 
-            if (value.startsWith(PREFIX_RESOURCE_REF)
-                    || value.startsWith(PREFIX_THEME_REF)) {
+            if (value.startsWith(PREFIX_RESOURCE_REF) || value.startsWith(PREFIX_THEME_REF)) {
                 value = replaceUrlWithValue(context, value);
             }
 
@@ -644,21 +713,33 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
                     // Only enforce / for path and prefix; for pattern it seems to
                     // work without
                     && !attributeName.equals(ATTR_PATH_PATTERN)) {
-                LintFix fix = LintFix.create().replace().text(attribute.getValue())
-                        .with("/" + value).build();
-                reportUrlError(context, attribute, context.getValueLocation(attribute),
-                        String.format("`%1$s` attribute should start with `/`, but it is `"
-                                + value + "`", attribute.getName()), fix);
+                LintFix fix =
+                        LintFix.create()
+                                .replace()
+                                .text(attribute.getValue())
+                                .with("/" + value)
+                                .build();
+                reportUrlError(
+                        context,
+                        attribute,
+                        context.getValueLocation(attribute),
+                        String.format(
+                                "`%1$s` attribute should start with `/`, but it is `" + value + "`",
+                                attribute.getName()),
+                        fix);
             }
         }
 
         return current;
     }
 
-    private static boolean requireNonEmpty(@Nullable XmlContext context,
-            @NonNull Attr attribute, @Nullable String value) {
+    private static boolean requireNonEmpty(
+            @Nullable XmlContext context, @NonNull Attr attribute, @Nullable String value) {
         if (context != null && (value == null || value.isEmpty())) {
-            reportUrlError(context, attribute, context.getLocation(attribute),
+            reportUrlError(
+                    context,
+                    attribute,
+                    context.getLocation(attribute),
                     String.format("`%1$s` cannot be empty", attribute.getName()));
             return true;
         }
@@ -666,9 +747,7 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
     }
 
     @NonNull
-    private static String replaceUrlWithValue(
-            @Nullable XmlContext context,
-            @NonNull String str) {
+    private static String replaceUrlWithValue(@Nullable XmlContext context, @NonNull String str) {
         if (context == null) {
             return str;
         }
@@ -697,12 +776,12 @@ public class AppLinksValidDetector extends Detector implements XmlScanner {
     }
 
     /**
-     * Check whether a given host matches the hostRegex. The hostRegex could be a regular host
-     * name, or it could contain only one '*', such as *.example.com, where '*' matches any
-     * string whose length is at least 1.
+     * Check whether a given host matches the hostRegex. The hostRegex could be a regular host name,
+     * or it could contain only one '*', such as *.example.com, where '*' matches any string whose
+     * length is at least 1.
      *
      * @param actualHost The actual host we want to check.
-     * @param hostPattern  The criteria host, which could contain a '*'.
+     * @param hostPattern The criteria host, which could contain a '*'.
      * @return Whether the actualHost matches the hostRegex
      */
     private static boolean matchesHost(@NonNull String actualHost, @NonNull String hostPattern) {

@@ -36,37 +36,33 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Specialized visitor for running detectors on resources: typically XML documents,
- * but also binary resources.
- * <p>
- * It operates in two phases:
+ * Specialized visitor for running detectors on resources: typically XML documents, but also binary
+ * resources.
+ *
+ * <p>It operates in two phases:
+ *
  * <ol>
- *   <li> First, it computes a set of maps where it generates a map from each
- *        significant element name, and each significant attribute name, to a list
- *        of detectors to consult for that element or attribute name.
- *        The set of element names or attribute names (or both) that a detector
- *        is interested in is provided by the detectors themselves.
- *   <li> Second, it iterates over the document a single time. For each element and
- *        attribute it looks up the list of interested detectors, and runs them.
+ *   <li>First, it computes a set of maps where it generates a map from each significant element
+ *       name, and each significant attribute name, to a list of detectors to consult for that
+ *       element or attribute name. The set of element names or attribute names (or both) that a
+ *       detector is interested in is provided by the detectors themselves.
+ *   <li>Second, it iterates over the document a single time. For each element and attribute it
+ *       looks up the list of interested detectors, and runs them.
  * </ol>
- * It also notifies all the detectors before and after the document is processed
- * such that they can do pre- and post-processing.
- * <p>
- * <b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ *
+ * It also notifies all the detectors before and after the document is processed such that they can
+ * do pre- and post-processing.
+ *
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
 @Beta
 class ResourceVisitor {
-    private final Map<String, List<XmlScanner>> elementToCheck =
-            new HashMap<>();
-    private final Map<String, List<XmlScanner>> attributeToCheck =
-            new HashMap<>();
-    private final List<XmlScanner> documentDetectors =
-            new ArrayList<>();
-    private final List<XmlScanner> allElementDetectors =
-            new ArrayList<>();
-    private final List<XmlScanner> allAttributeDetectors =
-            new ArrayList<>();
+    private final Map<String, List<XmlScanner>> elementToCheck = new HashMap<>();
+    private final Map<String, List<XmlScanner>> attributeToCheck = new HashMap<>();
+    private final List<XmlScanner> documentDetectors = new ArrayList<>();
+    private final List<XmlScanner> allElementDetectors = new ArrayList<>();
+    private final List<XmlScanner> allAttributeDetectors = new ArrayList<>();
     private final List<XmlScanner> allDetectors;
     private final List<? extends Detector> binaryDetectors;
     private final XmlParser parser;
@@ -90,7 +86,7 @@ class ResourceVisitor {
             Collection<String> attributes = xmlDetector.getApplicableAttributes();
             if (attributes == XmlScanner.ALL) {
                 allAttributeDetectors.add(xmlDetector);
-            }  else if (attributes != null) {
+            } else if (attributes != null) {
                 for (String attribute : attributes) {
                     List<XmlScanner> list = attributeToCheck.get(attribute);
                     if (list == null) {
@@ -114,10 +110,8 @@ class ResourceVisitor {
                 }
             }
 
-            if ((attributes == null || (attributes.isEmpty()
-                    && attributes != XmlScanner.ALL))
-                  && (elements == null || (elements.isEmpty()
-                  && elements != XmlScanner.ALL))) {
+            if ((attributes == null || (attributes.isEmpty() && attributes != XmlScanner.ALL))
+                    && (elements == null || (elements.isEmpty() && elements != XmlScanner.ALL))) {
                 documentDetectors.add(xmlDetector);
             }
         }
@@ -133,8 +127,10 @@ class ResourceVisitor {
                 check.visitDocument(context, context.document);
             }
 
-            if (!elementToCheck.isEmpty() || !attributeToCheck.isEmpty()
-                    || !allAttributeDetectors.isEmpty() || !allElementDetectors.isEmpty()) {
+            if (!elementToCheck.isEmpty()
+                    || !attributeToCheck.isEmpty()
+                    || !allAttributeDetectors.isEmpty()
+                    || !allElementDetectors.isEmpty()) {
                 visitElement(context, context.document.getDocumentElement());
             }
 

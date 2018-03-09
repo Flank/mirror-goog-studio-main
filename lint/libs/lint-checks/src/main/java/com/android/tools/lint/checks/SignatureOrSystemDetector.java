@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-
 import static com.android.tools.lint.checks.PermissionRequirement.ATTR_PROTECTION_LEVEL;
 
 import com.android.annotations.NonNull;
@@ -33,26 +32,22 @@ import java.util.Collection;
 import java.util.Collections;
 import org.w3c.dom.Attr;
 
-/**
- * Checks if signatureOrSystem level permissions are set.
- */
+/** Checks if signatureOrSystem level permissions are set. */
 public class SignatureOrSystemDetector extends Detector implements XmlScanner {
-    public static final Issue ISSUE = Issue.create(
-            "SignatureOrSystemPermissions",
-            "signatureOrSystem permissions declared",
-            "The `signature` protection level should probably be sufficient for most needs and "
-                    + "works regardless of where applications are installed. The "
-                    + "`signatureOrSystem` level is used for certain situations where "
-                    + "multiple vendors have applications built into a system image and "
-                    + "need to share specific features explicitly because they are being built "
-                    + "together.",
-            Category.SECURITY,
-            5,
-            Severity.WARNING,
-            new Implementation(
-                    SignatureOrSystemDetector.class,
-                    Scope.MANIFEST_SCOPE
-            ));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "SignatureOrSystemPermissions",
+                    "signatureOrSystem permissions declared",
+                    "The `signature` protection level should probably be sufficient for most needs and "
+                            + "works regardless of where applications are installed. The "
+                            + "`signatureOrSystem` level is used for certain situations where "
+                            + "multiple vendors have applications built into a system image and "
+                            + "need to share specific features explicitly because they are being built "
+                            + "together.",
+                    Category.SECURITY,
+                    5,
+                    Severity.WARNING,
+                    new Implementation(SignatureOrSystemDetector.class, Scope.MANIFEST_SCOPE));
     private static final String SIGNATURE_OR_SYSTEM = "signatureOrSystem";
 
     // ---- Implements XmlScanner ----
@@ -65,8 +60,7 @@ public class SignatureOrSystemDetector extends Detector implements XmlScanner {
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String protectionLevel = attribute.getValue();
-        if (protectionLevel != null
-            && protectionLevel.equals(SIGNATURE_OR_SYSTEM)) {
+        if (protectionLevel != null && protectionLevel.equals(SIGNATURE_OR_SYSTEM)) {
             String message = "`protectionLevel` should probably not be set to `signatureOrSystem`";
             LintFix fix = fix().replace().text("signatureOrSystem").with("signature").build();
             context.report(ISSUE, attribute, context.getLocation(attribute), message, fix);

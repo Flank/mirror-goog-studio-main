@@ -28,12 +28,12 @@ interface ClassHierarchy {
     fun directInheritorsOf(superClass: UClass): Sequence<UClass>
 
     fun allInheritorsOf(superClass: UClass): Sequence<UClass> =
-            directInheritorsOf(superClass).flatMap { allInheritorsOf(it) + it }
+        directInheritorsOf(superClass).flatMap { allInheritorsOf(it) + it }
 
     fun directOverridesOf(superMethod: UMethod): Sequence<UMethod>
 
     fun allOverridesOf(superMethod: UMethod): Sequence<UMethod> =
-            directOverridesOf(superMethod).flatMap { allOverridesOf(it) + it }
+        directOverridesOf(superMethod).flatMap { allOverridesOf(it) + it }
 }
 
 class MutableClassHierarchy : ClassHierarchy {
@@ -46,14 +46,14 @@ class MutableClassHierarchy : ClassHierarchy {
 
     fun addClass(subClass: UClass) {
         subClass.supers
-                .mapNotNull { it.navigationElement.toUElementOfType<UClass>() }
-                .forEach { directInheritors.put(it, subClass) }
+            .mapNotNull { it.navigationElement.toUElementOfType<UClass>() }
+            .forEach { directInheritors.put(it, subClass) }
     }
 
     fun addMethod(subMethod: UMethod) {
         subMethod.findSuperMethods()
-                .mapNotNull { it.navigationElement.toUElementOfType<UMethod>() }
-                .forEach { directOverrides.put(it, subMethod) }
+            .mapNotNull { it.navigationElement.toUElementOfType<UMethod>() }
+            .forEach { directOverrides.put(it, subMethod) }
     }
 }
 

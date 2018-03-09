@@ -39,35 +39,37 @@ class ExtraTextDetector : ResourceXmlDetector() {
     companion object Issues {
 
         /** The main issue discovered by this detector  */
-        @JvmField val ISSUE = Issue.create(
-                "ExtraText",
-                "Extraneous text in resource files",
+        @JvmField
+        val ISSUE = Issue.create(
+            "ExtraText",
+            "Extraneous text in resource files",
 
-                """
+            """
 Layout resource files should only contain elements and attributes. Any XML text content found \
 in the file is likely accidental (and potentially dangerous if the text resembles XML and the \
 developer believes the text to be functional)""",
-                Category.CORRECTNESS,
-                3,
-                Severity.WARNING,
-                Implementation(
-                    ExtraTextDetector::class.java,
-                    Scope.MANIFEST_AND_RESOURCE_SCOPE,
-                    Scope.RESOURCE_FILE_SCOPE,
-                    Scope.MANIFEST_SCOPE)
+            Category.CORRECTNESS,
+            3,
+            Severity.WARNING,
+            Implementation(
+                ExtraTextDetector::class.java,
+                Scope.MANIFEST_AND_RESOURCE_SCOPE,
+                Scope.RESOURCE_FILE_SCOPE,
+                Scope.MANIFEST_SCOPE
+            )
         )
     }
 
     private var foundText: Boolean = false
 
     override fun appliesTo(folderType: ResourceFolderType): Boolean =
-            folderType == ResourceFolderType.LAYOUT
-                    || folderType == ResourceFolderType.MENU
-                    || folderType == ResourceFolderType.ANIM
-                    || folderType == ResourceFolderType.ANIMATOR
-                    || folderType == ResourceFolderType.DRAWABLE
-                    || folderType == ResourceFolderType.COLOR
-                    || folderType == ResourceFolderType.NAVIGATION
+        folderType == ResourceFolderType.LAYOUT
+                || folderType == ResourceFolderType.MENU
+                || folderType == ResourceFolderType.ANIM
+                || folderType == ResourceFolderType.ANIMATOR
+                || folderType == ResourceFolderType.DRAWABLE
+                || folderType == ResourceFolderType.COLOR
+                || folderType == ResourceFolderType.NAVIGATION
 
     override fun visitDocument(context: XmlContext, document: Document) {
         foundText = false
@@ -119,8 +121,10 @@ developer believes the text to be functional)""",
                             location = Location.create(context.file, start, location.end)
                         }
                     }
-                    context.report(ISSUE, node, location,
-                            "Unexpected text found in layout file: \"$snippet\"")
+                    context.report(
+                        ISSUE, node, location,
+                        "Unexpected text found in layout file: \"$snippet\""
+                    )
                     foundText = true
                     break
                 }

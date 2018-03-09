@@ -34,20 +34,22 @@ import java.util.regex.Pattern;
 
 /** Reads a signature file in the format of the new API files in frameworks/base/api */
 public class ApiDatabase {
-    @NonNull
-    private final List<String> lines;
+    @NonNull private final List<String> lines;
     /** Map from class name to set of field names */
-    @NonNull private final  Map<String,Set<String>> fieldMap =
-            Maps.newHashMapWithExpectedSize(4000);
+    @NonNull
+    private final Map<String, Set<String>> fieldMap = Maps.newHashMapWithExpectedSize(4000);
     /** Map from class name to map of method names whose values are overloaded signatures */
-    @NonNull private final  Map<String,Map<String,List<String>>> methodMap =
+    @NonNull
+    private final Map<String, Map<String, List<String>>> methodMap =
             Maps.newHashMapWithExpectedSize(4000);
-    @NonNull private final Map<String, List<String>> inheritsFrom =
-            Maps.newHashMapWithExpectedSize(4000);
-    @NonNull private final  Map<String,Set<String>> intFieldMap =
-            Maps.newHashMapWithExpectedSize(4000);
-    @NonNull private final  Set<String> classSet =
-            Sets.newHashSetWithExpectedSize(4000);
+
+    @NonNull
+    private final Map<String, List<String>> inheritsFrom = Maps.newHashMapWithExpectedSize(4000);
+
+    @NonNull
+    private final Map<String, Set<String>> intFieldMap = Maps.newHashMapWithExpectedSize(4000);
+
+    @NonNull private final Set<String> classSet = Sets.newHashSetWithExpectedSize(4000);
     private final Set<String> packageSet = Sets.newHashSetWithExpectedSize(300);
 
     public ApiDatabase(@NonNull List<String> lines) {
@@ -134,13 +136,15 @@ public class ApiDatabase {
                 "((deprecated|public|static|private|protected|final|abstract|\\s*)\\s+)*";
         Pattern PACKAGE = Pattern.compile("package (\\S+) \\{");
         Pattern CLASS =
-                Pattern.compile(MODIFIERS
-                        + "(class|interface|enum)\\s+(\\S+)\\s+(extends\\s+(\\S+))?(implements\\s+(.+))?(.*)\\{");
-        Pattern METHOD = Pattern.compile("(method|ctor)\\s+" +
-                MODIFIERS + "(.+)??\\s+(\\S+)\\s*\\((.*)\\)(.*);");
+                Pattern.compile(
+                        MODIFIERS
+                                + "(class|interface|enum)\\s+(\\S+)\\s+(extends\\s+(\\S+))?(implements\\s+(.+))?(.*)\\{");
+        Pattern METHOD =
+                Pattern.compile(
+                        "(method|ctor)\\s+" + MODIFIERS + "(.+)??\\s+(\\S+)\\s*\\((.*)\\)(.*);");
         Pattern CTOR = Pattern.compile("(method|ctor)\\s+.*\\((.*)\\)(.*);");
-        Pattern FIELD = Pattern.compile("(enum_constant|field)\\s+" +
-                MODIFIERS + "(.+)\\s+(\\S+)\\s*;");
+        Pattern FIELD =
+                Pattern.compile("(enum_constant|field)\\s+" + MODIFIERS + "(.+)\\s+(\\S+)\\s*;");
 
         String currentPackage = null;
         String currentClass = null;
@@ -157,7 +161,7 @@ public class ApiDatabase {
                     Extractor.warning("Warning: Did not match as a member: " + line);
                 } else {
                     assert currentClass != null;
-                    Map<String,List<String>> memberMap = methodMap.get(currentClass);
+                    Map<String, List<String>> memberMap = methodMap.get(currentClass);
                     if (memberMap == null) {
                         memberMap = Maps.newHashMap();
                         methodMap.put(currentClass, memberMap);
@@ -190,7 +194,7 @@ public class ApiDatabase {
                     Extractor.warning("Warning: Did not match as a member: " + line);
                 } else {
                     assert currentClass != null;
-                    Map<String,List<String>> memberMap = methodMap.get(currentClass);
+                    Map<String, List<String>> memberMap = methodMap.get(currentClass);
                     if (memberMap == null) {
                         memberMap = Maps.newHashMap();
                         methodMap.put(currentClass, memberMap);
@@ -284,7 +288,7 @@ public class ApiDatabase {
                     if (implementsList != null) {
                         Splitter splitter = Splitter.on(' ').trimResults().omitEmptyStrings();
                         for (String from : splitter.split(implementsList)) {
-                            if (from.equals("implements")) {  // workaround for broken regexp
+                            if (from.equals("implements")) { // workaround for broken regexp
                                 continue;
                             }
                             addInheritsFrom(currentClass, from);

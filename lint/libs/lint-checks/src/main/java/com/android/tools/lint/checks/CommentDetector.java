@@ -47,56 +47,56 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/**
- * Looks for issues in Java comments
- */
+/** Looks for issues in Java comments */
 public class CommentDetector extends ResourceXmlDetector implements SourceCodeScanner {
     private static final String STOPSHIP_COMMENT = "STOPSHIP";
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            CommentDetector.class,
-            Scope.JAVA_AND_RESOURCE_FILES,
-            Scope.JAVA_FILE_SCOPE,
-            Scope.RESOURCE_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(
+                    CommentDetector.class,
+                    Scope.JAVA_AND_RESOURCE_FILES,
+                    Scope.JAVA_FILE_SCOPE,
+                    Scope.RESOURCE_FILE_SCOPE);
 
     /** Looks for hidden code */
-    public static final Issue EASTER_EGG = Issue.create(
-            "EasterEgg",
-            "Code contains easter egg",
-            "An \"easter egg\" is code deliberately hidden in the code, both from potential " +
-            "users and even from other developers. This lint check looks for code which " +
-            "looks like it may be hidden from sight.",
-            Category.SECURITY,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .setEnabledByDefault(false);
+    public static final Issue EASTER_EGG =
+            Issue.create(
+                            "EasterEgg",
+                            "Code contains easter egg",
+                            "An \"easter egg\" is code deliberately hidden in the code, both from potential "
+                                    + "users and even from other developers. This lint check looks for code which "
+                                    + "looks like it may be hidden from sight.",
+                            Category.SECURITY,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .setEnabledByDefault(false);
 
     /** Looks for special comment markers intended to stop shipping the code */
-    public static final Issue STOP_SHIP = Issue.create(
-            "StopShip",
-            "Code contains `STOPSHIP` marker",
+    public static final Issue STOP_SHIP =
+            Issue.create(
+                            "StopShip",
+                            "Code contains `STOPSHIP` marker",
+                            "Using the comment `// STOPSHIP` can be used to flag code that is incomplete but "
+                                    + "checked in. This comment marker can be used to indicate that the code should not "
+                                    + "be shipped until the issue is addressed, and lint will look for these.  In Gradle "
+                                    + "projects, this is only checked for non-debug (release) builds.",
+                            Category.CORRECTNESS,
+                            10,
+                            Severity.FATAL,
+                            IMPLEMENTATION)
+                    .setEnabledByDefault(false);
 
-            "Using the comment `// STOPSHIP` can be used to flag code that is incomplete but " +
-            "checked in. This comment marker can be used to indicate that the code should not " +
-            "be shipped until the issue is addressed, and lint will look for these.  In Gradle " +
-            "projects, this is only checked for non-debug (release) builds.",
-            Category.CORRECTNESS,
-            10,
-            Severity.FATAL,
-            IMPLEMENTATION)
-            .setEnabledByDefault(false);
-
-    /** The current AST only passes comment nodes for Javadoc so I need to do manual token scanning
-     instead */
+    /**
+     * The current AST only passes comment nodes for Javadoc so I need to do manual token scanning
+     * instead
+     */
     private static final boolean USE_AST = true;
 
     private static final String ESCAPE_STRING = "\\u002a\\u002f";
 
-
     /** Constructs a new {@linkplain CommentDetector} check */
-    public CommentDetector() {
-    }
+    public CommentDetector() {}
 
     @Nullable
     @Override
@@ -193,35 +193,42 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
             c = source.charAt(i);
             if (prev == '\\') {
                 if (c == 'u' || c == 'U') {
-                    if (regionMatches(source,true, i - 1, ESCAPE_STRING,
-                            0, ESCAPE_STRING.length())) {
+                    if (regionMatches(
+                            source, true, i - 1, ESCAPE_STRING, 0, ESCAPE_STRING.length())) {
                         String message =
-                                "Code might be hidden here; found unicode escape sequence " +
-                                "which is interpreted as comment end, compiled code follows";
+                                "Code might be hidden here; found unicode escape sequence "
+                                        + "which is interpreted as comment end, compiled code follows";
                         if (javaContext != null) {
                             Location location;
                             if (javaNode != null) {
                                 // Use node when possible, since that allows @SuppressLint,
                                 // noinspection etc to work to suppress it
-                                location = javaContext.getRangeLocation(javaNode, offset + i - 1,
-                                        ESCAPE_STRING.length());
+                                location =
+                                        javaContext.getRangeLocation(
+                                                javaNode, offset + i - 1, ESCAPE_STRING.length());
                             } else {
-                                location = Location.create(context.file, source,
-                                        offset + i - 1, offset + i - 1 + ESCAPE_STRING.length());
+                                location =
+                                        Location.create(
+                                                context.file,
+                                                source,
+                                                offset + i - 1,
+                                                offset + i - 1 + ESCAPE_STRING.length());
                             }
                             javaContext.report(EASTER_EGG, javaNode, location, message);
                         } else {
                             assert xmlNode != null;
-                            Location location = xmlContext.getLocation(xmlNode, i,
-                                    i + ESCAPE_STRING.length());
+                            Location location =
+                                    xmlContext.getLocation(xmlNode, i, i + ESCAPE_STRING.length());
                             xmlContext.report(EASTER_EGG, xmlNode, location, message);
                         }
                     }
                 } else {
                     i++;
                 }
-            } else if (prev == 'S' && c == 'T' &&
-                    regionMatches(source, i - 1, STOPSHIP_COMMENT, 0, STOPSHIP_COMMENT.length())) {
+            } else if (prev == 'S'
+                    && c == 'T'
+                    && regionMatches(
+                            source, i - 1, STOPSHIP_COMMENT, 0, STOPSHIP_COMMENT.length())) {
                 // Only flag this issue in release mode?? (but in the IDE, always
                 // flag it)
                 if (!Scope.checkSingleFile(context.getDriver().getScope())) {
@@ -232,26 +239,31 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
                 }
 
                 String message =
-                        "`STOPSHIP` comment found; points to code which must be fixed prior " +
-                        "to release";
+                        "`STOPSHIP` comment found; points to code which must be fixed prior "
+                                + "to release";
                 if (javaContext != null) {
                     Location location;
                     if (javaNode != null) {
                         // Use node when possible, since that allows @SuppressLint, //noinspection etc
                         // to work to suppress it
-                        location = javaContext.getRangeLocation(javaNode, offset + i - 1,
-                                STOPSHIP_COMMENT.length());
+                        location =
+                                javaContext.getRangeLocation(
+                                        javaNode, offset + i - 1, STOPSHIP_COMMENT.length());
                     } else {
-                        location = Location.create(context.file, source,
-                                offset + i - 1, offset + i - 1 + STOPSHIP_COMMENT.length());
+                        location =
+                                Location.create(
+                                        context.file,
+                                        source,
+                                        offset + i - 1,
+                                        offset + i - 1 + STOPSHIP_COMMENT.length());
                     }
                     LintFix fix = createRemoveStopShipFix();
                     javaContext.report(STOP_SHIP, javaNode, location, message, fix);
                 } else {
                     assert xmlNode != null;
 
-                    Location location = xmlContext.getLocation(xmlNode, i,
-                            i + STOPSHIP_COMMENT.length());
+                    Location location =
+                            xmlContext.getLocation(xmlNode, i, i + STOPSHIP_COMMENT.length());
                     LintFix fix = createRemoveStopShipFix();
                     xmlContext.report(STOP_SHIP, xmlNode, location, message, fix);
                 }
@@ -263,15 +275,16 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
     private static LintFix createRemoveStopShipFix() {
         // TODO: Remove comment if that's all that remains
         return LintFix.create()
-                .name("Remove STOPSHIP").replace().pattern("(\\s*STOPSHIP)")
+                .name("Remove STOPSHIP")
+                .replace()
+                .pattern("(\\s*STOPSHIP)")
                 .with("")
                 .build();
     }
 
     /**
-     * Returns true iff the current variant is a release build.
-     * Returns null if we don't know (e.g. it's not a Gradle project, or we could not
-     * obtain a Gradle model.)
+     * Returns true iff the current variant is a release build. Returns null if we don't know (e.g.
+     * it's not a Gradle project, or we could not obtain a Gradle model.)
      */
     @Nullable
     private static Boolean getReleaseMode(@NonNull Context context) {
@@ -301,8 +314,7 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
         public void visitFile(@NonNull UFile node) {
             for (UComment comment : node.getAllCommentsInFile()) {
                 String contents = comment.getText();
-                checkComment(mContext, null, null, comment, contents,
-                        0, 0, contents.length());
+                checkComment(mContext, null, null, comment, contents, 0, 0, contents.length());
             }
         }
     }

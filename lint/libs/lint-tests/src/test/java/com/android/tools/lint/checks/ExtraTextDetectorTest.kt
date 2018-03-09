@@ -23,7 +23,7 @@ class ExtraTextDetectorTest : AbstractCheckTest() {
 
     fun testBroken() {
         val expected =
-"""
+            """
 res/layout/broken.xml:6: Warning: Unexpected text found in layout file: "ImageButton android:id="@+id/android_logo2" android:layout_width="wrap_content" android:layout_heigh..." [ExtraText]
     <Button android:text="Button" android:id="@+id/button2" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
     ^
@@ -31,22 +31,23 @@ res/layout/broken.xml:6: Warning: Unexpected text found in layout file: "ImageBu
 """
 
         lint().files(
-                xml("res/layout/broken.xml",
-"""<?xml version="1.0" encoding="utf-8"?>
+            xml(
+                "res/layout/broken.xml",
+                """<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/newlinear" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent">
     <Button android:text="Button" android:id="@+id/button1" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
     <ImageView android:id="@+id/android_logo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
     ImageButton android:id="@+id/android_logo2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/android_button" android:focusable="false" android:clickable="false" android:layout_weight="1.0" />
     <Button android:text="Button" android:id="@+id/button2" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
     <Button android:id="@+android:id/summary" android:contentDescription="@string/label" />
-</LinearLayout>"""))
-                .run()
-                .expect(expected)
+</LinearLayout>"""
+            )
+        ).run().expect(expected)
     }
 
     fun testManifest() {
         val expected =
-                """
+            """
 AndroidManifest.xml:8: Warning: Unexpected text found in layout file: "permission android:name="com.android.vending.BILLING"
         android:label="@string/perm_billing_la..." [ExtraText]
         android:description="@string/perm_billing_desc"
@@ -55,8 +56,8 @@ AndroidManifest.xml:8: Warning: Unexpected text found in layout file: "permissio
 """
 
         lint().files(
-                manifest(
-"""<?xml version="1.0" encoding="utf-8"?>
+            manifest(
+                """<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools">
     <uses-feature android:name="android.software.leanback"/>
@@ -76,19 +77,20 @@ AndroidManifest.xml:8: Warning: Unexpected text found in layout file: "permissio
         </activity>
     </application>
 </manifest>
-"""))
-                .run()
-                .expect(expected)
+"""
+            )
+        ).run().expect(expected)
     }
 
     fun testValuesOk() {
         lint().files(
-                xml("res/values/strings.xml",
-                        """<?xml version="1.0" encoding="utf-8"?>
+            xml(
+                "res/values/strings.xml",
+                """<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="foo">Foo</string>
-</resources>"""))
-                .run()
-                .expectClean()
+</resources>"""
+            )
+        ).run().expectClean()
     }
 }

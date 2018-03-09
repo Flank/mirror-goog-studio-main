@@ -239,12 +239,20 @@ abstract class Detector {
 
     open fun checkClass(context: ClassContext, classNode: ClassNode) {}
 
-    open fun checkCall(context: ClassContext, classNode: ClassNode,
-            method: MethodNode, call: MethodInsnNode) {
+    open fun checkCall(
+        context: ClassContext,
+        classNode: ClassNode,
+        method: MethodNode,
+        call: MethodInsnNode
+    ) {
     }
 
-    open fun checkInstruction(context: ClassContext, classNode: ClassNode,
-            method: MethodNode, instruction: AbstractInsnNode) {
+    open fun checkInstruction(
+        context: ClassContext,
+        classNode: ClassNode,
+        method: MethodNode,
+        instruction: AbstractInsnNode
+    ) {
     }
 
     // ---- Dummy implementations to make implementing an GradleScanner easier: ----
@@ -265,20 +273,30 @@ abstract class Detector {
 
     open fun applicableSuperClasses(): List<String>? = null
 
-    open fun visitMethod(context: JavaContext, visitor: JavaElementVisitor?,
-            call: PsiMethodCallExpression, method: PsiMethod) {
+    open fun visitMethod(
+        context: JavaContext,
+        visitor: JavaElementVisitor?,
+        call: PsiMethodCallExpression,
+        method: PsiMethod
+    ) {
     }
 
     open fun visitConstructor(
-            context: JavaContext,
-            visitor: JavaElementVisitor?,
-            node: PsiNewExpression,
-            constructor: PsiMethod) {
+        context: JavaContext,
+        visitor: JavaElementVisitor?,
+        node: PsiNewExpression,
+        constructor: PsiMethod
+    ) {
     }
 
-    open fun visitResourceReference(context: JavaContext,
-            visitor: JavaElementVisitor?, node: PsiElement,
-            type: ResourceType, name: String, isFramework: Boolean) {
+    open fun visitResourceReference(
+        context: JavaContext,
+        visitor: JavaElementVisitor?,
+        node: PsiElement,
+        type: ResourceType,
+        name: String,
+        isFramework: Boolean
+    ) {
     }
 
     open fun checkClass(context: JavaContext, declaration: PsiClass) {}
@@ -286,10 +304,11 @@ abstract class Detector {
     open fun createPsiVisitor(context: JavaContext): JavaElementVisitor? = null
 
     open fun visitReference(
-            context: JavaContext,
-            visitor: JavaElementVisitor?,
-            reference: PsiJavaCodeReferenceElement,
-            referenced: PsiElement) {
+        context: JavaContext,
+        visitor: JavaElementVisitor?,
+        reference: PsiJavaCodeReferenceElement,
+        referenced: PsiElement
+    ) {
     }
 
     // ---- Dummy implementation to make implementing UastScanner easier: ----
@@ -299,44 +318,49 @@ abstract class Detector {
     open fun visitClass(context: JavaContext, lambda: ULambdaExpression) {}
 
     open fun visitReference(
-            context: JavaContext,
-            reference: UReferenceExpression,
-            referenced: PsiElement) {
+        context: JavaContext,
+        reference: UReferenceExpression,
+        referenced: PsiElement
+    ) {
     }
 
     open fun visitConstructor(
-            context: JavaContext,
-            node: UCallExpression,
-            constructor: PsiMethod) {
+        context: JavaContext,
+        node: UCallExpression,
+        constructor: PsiMethod
+    ) {
     }
 
     open fun visitMethod(
-            context: JavaContext,
-            node: UCallExpression,
-            method: PsiMethod) {
+        context: JavaContext,
+        node: UCallExpression,
+        method: PsiMethod
+    ) {
     }
 
     open fun createUastHandler(context: JavaContext): UElementHandler? = null
 
     open fun visitResourceReference(
-            context: JavaContext,
-            node: UElement,
-            type: ResourceType,
-            name: String,
-            isFramework: Boolean) {
+        context: JavaContext,
+        node: UElement,
+        type: ResourceType,
+        name: String,
+        isFramework: Boolean
+    ) {
     }
 
     open fun visitAnnotationUsage(
-            context: JavaContext,
-            usage: UElement,
-            type: AnnotationUsageType,
-            annotation: UAnnotation,
-            qualifiedName: String,
-            method: PsiMethod?,
-            annotations: List<UAnnotation>,
-            allMemberAnnotations: List<UAnnotation>,
-            allClassAnnotations: List<UAnnotation>,
-            allPackageAnnotations: List<UAnnotation>) {
+        context: JavaContext,
+        usage: UElement,
+        type: AnnotationUsageType,
+        annotation: UAnnotation,
+        qualifiedName: String,
+        method: PsiMethod?,
+        annotations: List<UAnnotation>,
+        allMemberAnnotations: List<UAnnotation>,
+        allClassAnnotations: List<UAnnotation>,
+        allPackageAnnotations: List<UAnnotation>
+    ) {
     }
 
     open fun applicableAnnotations(): List<String>? = null

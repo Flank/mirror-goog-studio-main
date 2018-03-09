@@ -57,7 +57,8 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
             """
 
         lint().files(
-                java("""
+            java(
+                """
                     package test.pkg;
 
                     import android.support.annotation.UiThread;
@@ -137,13 +138,15 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
                         invokeInBackground(() -> c()); // Ok.
                       }
                     }
-                    """).indented(),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .allowSystemErrors(true)
-                .allowDuplicates()
-                .run()
-                .expect(expected)
+                    """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        )
+            .allowSystemErrors(true)
+            .allowDuplicates()
+            .run()
+            .expect(expected)
     }
 
     fun testThreadingFromKotlin() {
@@ -183,7 +186,8 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
             8 errors, 0 warnings
             """
         lint().files(
-                kotlin("""
+            kotlin(
+                """
                     package test.pkg
 
                     import android.support.annotation.UiThread
@@ -259,12 +263,14 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
                         fun invokeInBackground(@WorkerThread runnable: () -> Unit) { /* place on queue to invoke on background thread */ }
                       }
                     }
-                    """).indented(),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .allowSystemErrors(true)
-                .run()
-                .expect(expected)
+                    """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        )
+            .allowSystemErrors(true)
+            .run()
+            .expect(expected)
     }
 
     override fun getDetector(): Detector {

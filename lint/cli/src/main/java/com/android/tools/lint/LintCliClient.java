@@ -120,10 +120,11 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 /**
- * Lint client for command line usage. Supports the flags in {@link LintCliFlags},
- * and offers text, HTML and XML reporting, etc.
- * <p>
- * Minimal example:
+ * Lint client for command line usage. Supports the flags in {@link LintCliFlags}, and offers text,
+ * HTML and XML reporting, etc.
+ *
+ * <p>Minimal example:
+ *
  * <pre>
  * // files is a list of java.io.Files, typically a directory containing
  * // lint projects or direct references to project root directories
@@ -132,9 +133,9 @@ import org.xml.sax.SAXException;
  * LintCliClient client = new LintCliClient(flags);
  * int exitCode = client.run(registry, files);
  * </pre>
- * <p>
- * <b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ *
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
 @Beta
 public class LintCliClient extends LintClient {
@@ -152,8 +153,8 @@ public class LintCliClient extends LintClient {
     public LintCliClient() {
         super(CLIENT_CLI);
         flags = new LintCliFlags();
-        TextReporter reporter = new TextReporter(this, flags, new PrintWriter(System.out, true),
-                false);
+        TextReporter reporter =
+                new TextReporter(this, flags, new PrintWriter(System.out, true), false);
         flags.getReporters().add(reporter);
         initialize();
     }
@@ -165,8 +166,7 @@ public class LintCliClient extends LintClient {
         initialize();
     }
 
-    @Nullable
-    protected DefaultConfiguration overrideConfiguration;
+    @Nullable protected DefaultConfiguration overrideConfiguration;
 
     // Environment variable, system property and internal system property used to tell lint to
     // override the configuration
@@ -184,15 +184,17 @@ public class LintCliClient extends LintClient {
                 overrideConfiguration = createConfigurationFromFile(file);
                 System.out.println("Overriding configuration from " + file);
             } else {
-                log(Severity.ERROR, null,
+                log(
+                        Severity.ERROR,
+                        null,
                         "Configuration override requested but does not exist: " + file);
             }
         }
     }
 
     /**
-     * Runs the static analysis command line driver. You need to add at least one error reporter
-     * to the command line flags.
+     * Runs the static analysis command line driver. You need to add at least one error reporter to
+     * the command line flags.
      */
     public int run(@NonNull IssueRegistry registry, @NonNull List<File> files) throws IOException {
         assert !flags.getReporters().isEmpty();
@@ -219,13 +221,18 @@ public class LintCliClient extends LintClient {
             fixedCount = baseline.getFixedCount();
         }
 
-        Stats stats = new Stats(errorCount, warningCount,
-                baselineErrorCount, baselineWarningCount, fixedCount);
+        Stats stats =
+                new Stats(
+                        errorCount,
+                        warningCount,
+                        baselineErrorCount,
+                        baselineWarningCount,
+                        fixedCount);
 
         boolean hasConsoleOutput = false;
         for (Reporter reporter : flags.getReporters()) {
             reporter.write(stats, warnings);
-            if (reporter instanceof TextReporter && ((TextReporter)reporter).isWriteToConsole()) {
+            if (reporter instanceof TextReporter && ((TextReporter) reporter).isWriteToConsole()) {
                 hasConsoleOutput = true;
             }
         }
@@ -238,18 +245,30 @@ public class LintCliClient extends LintClient {
                     // out, don't list this as "1 warning"
                     System.out.print("Lint found no new issues");
                 } else {
-                    System.out.print(String.format("Lint found %1$s",
-                            LintUtils.describeCounts(errorCount, Math.max(0, warningCount - 1),
-                                    true, false)));
+                    System.out.print(
+                            String.format(
+                                    "Lint found %1$s",
+                                    LintUtils.describeCounts(
+                                            errorCount,
+                                            Math.max(0, warningCount - 1),
+                                            true,
+                                            false)));
                 }
                 assert baselineFile != null;
-                System.out.print(String.format(" (%1$s filtered by baseline %2$s)",
-                        LintUtils.describeCounts(stats.baselineErrorCount,
-                                stats.baselineWarningCount, true, true),
-                        baselineFile.getName()));
+                System.out.print(
+                        String.format(
+                                " (%1$s filtered by baseline %2$s)",
+                                LintUtils.describeCounts(
+                                        stats.baselineErrorCount,
+                                        stats.baselineWarningCount,
+                                        true,
+                                        true),
+                                baselineFile.getName()));
             } else {
-                System.out.print(String.format("Lint found %1$s",
-                        LintUtils.describeCounts(errorCount, warningCount, true, false)));
+                System.out.print(
+                        String.format(
+                                "Lint found %1$s",
+                                LintUtils.describeCounts(errorCount, warningCount, true, false)));
             }
             System.out.println();
         }
@@ -265,23 +284,26 @@ public class LintCliClient extends LintClient {
             } else {
                 Reporter reporter = Reporter.createXmlReporter(this, baselineFile, true);
                 reporter.write(stats, warnings);
-                String message = ""
-                        + "Created baseline file " + baselineFile + "\n"
-                        + "\n"
-                        + "Also breaking the build in case this was not intentional. If you\n"
-                        + "deliberately created the baseline file, re-run the build and this\n"
-                        + "time it should succeed without warnings.\n"
-                        + "\n"
-                        + "If not, investigate the baseline path in the lintOptions config\n"
-                        + "or verify that the baseline file has been checked into version\n"
-                        + "control.\n";
+                String message =
+                        ""
+                                + "Created baseline file "
+                                + baselineFile
+                                + "\n"
+                                + "\n"
+                                + "Also breaking the build in case this was not intentional. If you\n"
+                                + "deliberately created the baseline file, re-run the build and this\n"
+                                + "time it should succeed without warnings.\n"
+                                + "\n"
+                                + "If not, investigate the baseline path in the lintOptions config\n"
+                                + "or verify that the baseline file has been checked into version\n"
+                                + "control.\n";
 
                 if (LintClient.Companion.isGradle()) {
-                    message += ""
-                            + "\n"
-                            + "You can set the system property lint.baselines.continue=true\n"
-                            + "if you want to create many missing baselines in one go.";
-
+                    message +=
+                            ""
+                                    + "\n"
+                                    + "You can set the system property lint.baselines.continue=true\n"
+                                    + "if you want to create many missing baselines in one go.";
                 }
 
                 System.err.println(message);
@@ -293,18 +315,19 @@ public class LintCliClient extends LintClient {
     }
 
     protected void validateIssueIds() {
-        driver.addLintListener((driver, type, project, context) -> {
-            if (type == LintListener.EventType.SCANNING_PROJECT && !validatedIds) {
-                // Make sure all the id's are valid once the driver is all set up and
-                // ready to run (such that custom rules are available in the registry etc)
-                validateIssueIds(project);
-            }
-        });
+        driver.addLintListener(
+                (driver, type, project, context) -> {
+                    if (type == LintListener.EventType.SCANNING_PROJECT && !validatedIds) {
+                        // Make sure all the id's are valid once the driver is all set up and
+                        // ready to run (such that custom rules are available in the registry etc)
+                        validateIssueIds(project);
+                    }
+                });
     }
 
     @NonNull
-    protected LintDriver createDriver(@NonNull IssueRegistry registry,
-            @NonNull LintRequest request) {
+    protected LintDriver createDriver(
+            @NonNull IssueRegistry registry, @NonNull LintRequest request) {
         driver = new LintDriver(registry, this, request);
         driver.setAbbreviating(!flags.isShowEverything());
         driver.setCheckTestSources(flags.isCheckTestSources());
@@ -508,7 +531,6 @@ public class LintCliClient extends LintClient {
         return contents.subSequence(offset, end != -1 ? end : contents.length()).toString();
     }
 
-
     /** Look up the contents of the given line */
     static int getLineOffset(CharSequence contents, int line) {
         int index = 0;
@@ -534,8 +556,8 @@ public class LintCliClient extends LintClient {
         }
 
         String path = file.getPath();
-        if ((path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT) || path.endsWith(DOT_KTS)) &&
-                CharSequences.indexOf(contents, '\r') != -1) {
+        if ((path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT) || path.endsWith(DOT_KTS))
+                && CharSequences.indexOf(contents, '\r') != -1) {
             // Offsets in these files will be relative to PSI's text offsets (which may
             // have converted line offsets); make sure we use the same offsets.
             // (Can't just do this on Windows; what matters is whether the file contains
@@ -592,9 +614,15 @@ public class LintCliClient extends LintClient {
                 libraries = classPath.getLibraries(true);
             }
 
-            info = new ClassPathInfo(sources, classes, libraries, classPath.getLibraries(false),
-                    classPath.getTestSourceFolders(), classPath.getTestLibraries(),
-                    classPath.getGeneratedFolders());
+            info =
+                    new ClassPathInfo(
+                            sources,
+                            classes,
+                            libraries,
+                            classPath.getLibraries(false),
+                            classPath.getTestSourceFolders(),
+                            classPath.getTestLibraries(),
+                            classPath.getGeneratedFolders());
             mProjectInfo.put(project, info);
         }
 
@@ -613,14 +641,14 @@ public class LintCliClient extends LintClient {
     }
 
     /**
-     * Consult the lint.xml file, but override with the --enable and --disable
-     * flags supplied on the command line
+     * Consult the lint.xml file, but override with the --enable and --disable flags supplied on the
+     * command line
      */
     protected class CliConfiguration extends DefaultConfiguration {
         private final boolean mFatalOnly;
 
-        protected CliConfiguration(@NonNull Configuration parent, @NonNull Project project,
-                boolean fatalOnly) {
+        protected CliConfiguration(
+                @NonNull Configuration parent, @NonNull Project project, boolean fatalOnly) {
             super(LintCliClient.this, project, parent);
             mFatalOnly = fatalOnly;
         }
@@ -685,8 +713,9 @@ public class LintCliClient extends LintClient {
 
             Severity manual = flags.getSeverityOverrides().get(id);
             if (manual != null) {
-                if (this.severity != null && (this.severity.containsKey(id)
-                        || this.severity.containsKey(VALUE_ALL))) {
+                if (this.severity != null
+                        && (this.severity.containsKey(id)
+                                || this.severity.containsKey(VALUE_ALL))) {
                     // Ambiguity! We have a specific severity override provided
                     // via lint options for the main app module, but a local lint.xml
                     // file in the library (not a lintOptions definition) which also
@@ -745,12 +774,11 @@ public class LintCliClient extends LintClient {
     }
 
     /**
-     * Checks that any id's specified by id refer to valid, known, issues. This
-     * typically can't be done right away (in for example the Gradle code which
-     * handles DSL references to strings, or in the command line parser for the
-     * lint command) because the full set of valid id's is not known until lint
-     * actually starts running and for example gathers custom rules from all
-     * AAR dependencies reachable from libraries, etc.
+     * Checks that any id's specified by id refer to valid, known, issues. This typically can't be
+     * done right away (in for example the Gradle code which handles DSL references to strings, or
+     * in the command line parser for the lint command) because the full set of valid id's is not
+     * known until lint actually starts running and for example gathers custom rules from all AAR
+     * dependencies reachable from libraries, etc.
      */
     private void validateIssueIds(@Nullable Project project) {
         if (driver != null) {
@@ -781,7 +809,9 @@ public class LintCliClient extends LintClient {
         }
     }
 
-    private void validateIssueIds(@Nullable Project project, @NonNull IssueRegistry registry,
+    private void validateIssueIds(
+            @Nullable Project project,
+            @NonNull IssueRegistry registry,
             @Nullable Collection<String> ids) {
         if (ids != null) {
             for (String id : ids) {
@@ -797,8 +827,14 @@ public class LintCliClient extends LintClient {
 
         if (driver != null && project != null && !isSuppressed(IssueRegistry.LINT_ERROR)) {
             Location location = LintUtils.guessGradleLocation(this, project.getDir(), id);
-            LintClient.Companion.report(this,IssueRegistry.LINT_ERROR,
-                    message, driver, project, location, LintFix.create().data(id));
+            LintClient.Companion.report(
+                    this,
+                    IssueRegistry.LINT_ERROR,
+                    message,
+                    driver,
+                    project,
+                    location,
+                    LintFix.create().data(id));
 
         } else {
             log(Severity.ERROR, null, "Lint: %1$s", message);
@@ -813,27 +849,25 @@ public class LintCliClient extends LintClient {
                 @Nullable Project project,
                 @Nullable Context context) {
             switch (type) {
-                case SCANNING_PROJECT: {
-                    String name = context != null ? context.getProject().getName() : "?";
-                    if (lint.getPhase() > 1) {
-                        System.out.print(String.format(
-                                "\nScanning %1$s (Phase %2$d): ",
-                                name,
-                                lint.getPhase()));
-                    } else {
-                        System.out.print(String.format(
-                                "\nScanning %1$s: ",
-                                name));
+                case SCANNING_PROJECT:
+                    {
+                        String name = context != null ? context.getProject().getName() : "?";
+                        if (lint.getPhase() > 1) {
+                            System.out.print(
+                                    String.format(
+                                            "\nScanning %1$s (Phase %2$d): ",
+                                            name, lint.getPhase()));
+                        } else {
+                            System.out.print(String.format("\nScanning %1$s: ", name));
+                        }
+                        break;
                     }
-                    break;
-                }
-                case SCANNING_LIBRARY_PROJECT: {
-                    String name = context != null ? context.getProject().getName() : "?";
-                    System.out.print(String.format(
-                            "\n         - %1$s: ",
-                            name));
-                    break;
-                }
+                case SCANNING_LIBRARY_PROJECT:
+                    {
+                        String name = context != null ? context.getProject().getName() : "?";
+                        System.out.print(String.format("\n         - %1$s: ", name));
+                        break;
+                    }
                 case SCANNING_FILE:
                     System.out.print('.');
                     break;
@@ -853,15 +887,16 @@ public class LintCliClient extends LintClient {
     }
 
     /**
-     * Given a file, it produces a cleaned up path from the file.
-     * This will clean up the path such that
+     * Given a file, it produces a cleaned up path from the file. This will clean up the path such
+     * that
+     *
      * <ul>
-     *   <li>  {@code foo/./bar} becomes {@code foo/bar}
-     *   <li>  {@code foo/bar/../baz} becomes {@code foo/baz}
+     *   <li>{@code foo/./bar} becomes {@code foo/bar}
+     *   <li>{@code foo/bar/../baz} becomes {@code foo/baz}
      * </ul>
      *
-     * Unlike {@link java.io.File#getCanonicalPath()} however, it will <b>not</b> attempt
-     * to make the file canonical, such as expanding symlinks and network mounts.
+     * Unlike {@link java.io.File#getCanonicalPath()} however, it will <b>not</b> attempt to make
+     * the file canonical, such as expanding symlinks and network mounts.
      *
      * @param file the file to compute a clean path for
      * @return the cleaned up path
@@ -900,7 +935,8 @@ public class LintCliClient extends LintClient {
             }
             sb.append(element);
         }
-        if (path.endsWith(File.separator) && sb.length() > 0
+        if (path.endsWith(File.separator)
+                && sb.length() > 0
                 && sb.charAt(sb.length() - 1) != File.separatorChar) {
             sb.append(File.separator);
         }
@@ -962,8 +998,11 @@ public class LintCliClient extends LintClient {
             if (configFile != null) {
                 if (!configFile.exists()) {
                     if (sAlreadyWarned == null || !sAlreadyWarned.contains(configFile)) {
-                        log(Severity.ERROR, null,
-                                "Warning: Configuration file %1$s does not exist", configFile);
+                        log(
+                                Severity.ERROR,
+                                null,
+                                "Warning: Configuration file %1$s does not exist",
+                                configFile);
                     }
                     if (sAlreadyWarned == null) {
                         sAlreadyWarned = Sets.newHashSet();
@@ -1008,8 +1047,8 @@ public class LintCliClient extends LintClient {
         Disposable parentDisposable = Disposer.newDisposable();
         projectDisposer = parentDisposable;
 
-        LintCoreProjectEnvironment projectEnvironment = LintCoreProjectEnvironment.create(
-                parentDisposable, appEnv);
+        LintCoreProjectEnvironment projectEnvironment =
+                LintCoreProjectEnvironment.create(parentDisposable, appEnv);
         this.projectEnvironment = projectEnvironment;
         MockProject mockProject = projectEnvironment.getProject();
         ideaProject = mockProject;
@@ -1060,15 +1099,16 @@ public class LintCliClient extends LintClient {
 
         com.intellij.openapi.project.Project ideaProject = getIdeaProject();
         if (ideaProject != null) {
-            LanguageLevelProjectExtension languageLevelProjectExtension = ideaProject
-                    .getComponent(LanguageLevelProjectExtension.class);
+            LanguageLevelProjectExtension languageLevelProjectExtension =
+                    ideaProject.getComponent(LanguageLevelProjectExtension.class);
             if (languageLevelProjectExtension != null) {
                 languageLevelProjectExtension.setLanguageLevel(maxLevel);
             }
         }
 
         KotlinCliJavaFileManagerImpl manager =
-                (KotlinCliJavaFileManagerImpl) ServiceManager.getService(mockProject, JavaFileManager.class);
+                (KotlinCliJavaFileManagerImpl)
+                        ServiceManager.getService(mockProject, JavaFileManager.class);
         List<JavaRoot> roots = new ArrayList<>();
         for (File file : files) {
             if (file.isDirectory()) {
@@ -1080,14 +1120,17 @@ public class LintCliClient extends LintClient {
         }
 
         JvmDependenciesIndexImpl index = new JvmDependenciesIndexImpl(roots);
-        manager.initialize(index, Collections.emptyList(),
-                new SingleJavaFileRootsIndex(Collections.emptyList()), false);
+        manager.initialize(
+                index,
+                Collections.emptyList(),
+                new SingleJavaFileRootsIndex(Collections.emptyList()),
+                false);
 
         super.initializeProjects(knownProjects);
     }
 
-    protected boolean addBootClassPath(@NonNull Collection<? extends Project> knownProjects,
-            List<File> files) {
+    protected boolean addBootClassPath(
+            @NonNull Collection<? extends Project> knownProjects, List<File> files) {
         IAndroidTarget buildTarget = null;
         for (Project project : knownProjects) {
             IAndroidTarget t = project.getBuildTarget();
@@ -1174,7 +1217,8 @@ public class LintCliClient extends LintClient {
             }
             File baselineFile = config.getBaselineFile();
             if (baselineFile != null) {
-                flags.setBaselineFile(baselineFile.getPath().equals(VALUE_NONE) ? null : baselineFile);
+                flags.setBaselineFile(
+                        baselineFile.getPath().equals(VALUE_NONE) ? null : baselineFile);
             }
         }
     }
@@ -1255,15 +1299,18 @@ public class LintCliClient extends LintClient {
                                 + "    package=\"${packageName}\">\n"
                                 + "    <uses-sdk");
                 if (minSdkVersion != null) {
-                    injectedXml.append(" android:minSdkVersion=\"")
-                            .append(minSdkVersion.getApiString()).append("\"");
+                    injectedXml
+                            .append(" android:minSdkVersion=\"")
+                            .append(minSdkVersion.getApiString())
+                            .append("\"");
                 }
                 if (targetSdkVersion != null) {
-                    injectedXml.append(" android:targetSdkVersion=\"")
-                            .append(targetSdkVersion.getApiString()).append("\"");
+                    injectedXml
+                            .append(" android:targetSdkVersion=\"")
+                            .append(targetSdkVersion.getApiString())
+                            .append("\"");
                 }
-                injectedXml.append(" />\n"
-                        + "</manifest>\n");
+                injectedXml.append(" />\n</manifest>\n");
                 manifests.add(injectedFile);
             }
         }
@@ -1271,8 +1318,9 @@ public class LintCliClient extends LintClient {
         File mainManifest = null;
 
         if (project.getGradleProjectModel() != null && project.getCurrentVariant() != null) {
-            for (SourceProvider provider : LintUtils.getSourceProviders(
-                    project.getGradleProjectModel(), project.getCurrentVariant())) {
+            for (SourceProvider provider :
+                    LintUtils.getSourceProviders(
+                            project.getGradleProjectModel(), project.getCurrentVariant())) {
                 File manifestFile = provider.getManifestFile();
                 if (manifestFile.exists()) { // model returns path whether or not it exists
                     if (mainManifest == null) {
@@ -1315,28 +1363,30 @@ public class LintCliClient extends LintClient {
         try {
             StdLogger logger = new StdLogger(StdLogger.Level.INFO);
             MergeType type = project.isLibrary() ? MergeType.LIBRARY : MergeType.APPLICATION;
-            MergingReport mergeReport = ManifestMerger2
-                    .newMerger(mainManifest, logger, type)
-                    .withFeatures(
-                            // TODO: How do we get the *opposite* of EXTRACT_FQCNS:
-                            // ensure that all names are made fully qualified?
-                            Feature.SKIP_BLAME,
-                            Feature.SKIP_XML_STRING,
-                            Feature.NO_PLACEHOLDER_REPLACEMENT)
-                    .addLibraryManifests(manifests.toArray(new File[manifests.size()]))
-                    .withFileStreamProvider(new ManifestMerger2.FileStreamProvider() {
-                        @Override
-                        protected InputStream getInputStream(@NonNull File file) throws
-                                FileNotFoundException {
-                            if (injectedFile.equals(file)) {
-                                return CharSequences.getInputStream(injectedXml.toString());
-                            }
-                            CharSequence text = readFile(file);
-                            // TODO: Avoid having to convert back and forth
-                            return CharSequences.getInputStream(text);
-                        }
-                    })
-                    .merge();
+            MergingReport mergeReport =
+                    ManifestMerger2.newMerger(mainManifest, logger, type)
+                            .withFeatures(
+                                    // TODO: How do we get the *opposite* of EXTRACT_FQCNS:
+                                    // ensure that all names are made fully qualified?
+                                    Feature.SKIP_BLAME,
+                                    Feature.SKIP_XML_STRING,
+                                    Feature.NO_PLACEHOLDER_REPLACEMENT)
+                            .addLibraryManifests(manifests.toArray(new File[manifests.size()]))
+                            .withFileStreamProvider(
+                                    new ManifestMerger2.FileStreamProvider() {
+                                        @Override
+                                        protected InputStream getInputStream(@NonNull File file)
+                                                throws FileNotFoundException {
+                                            if (injectedFile.equals(file)) {
+                                                return CharSequences.getInputStream(
+                                                        injectedXml.toString());
+                                            }
+                                            CharSequence text = readFile(file);
+                                            // TODO: Avoid having to convert back and forth
+                                            return CharSequences.getInputStream(text);
+                                        }
+                                    })
+                            .merge();
 
             XmlDocument xmlDocument = mergeReport.getMergedXmlDocument(MERGED);
             if (xmlDocument != null) {
@@ -1348,8 +1398,7 @@ public class LintCliClient extends LintClient {
             } else {
                 log(Severity.WARNING, null, mergeReport.getReportString());
             }
-        }
-        catch (ManifestMerger2.MergeFailureException e) {
+        } catch (ManifestMerger2.MergeFailureException e) {
             log(Severity.ERROR, e, "Couldn't parse merged manifest");
         }
 
@@ -1369,15 +1418,13 @@ public class LintCliClient extends LintClient {
         @NonNull
         @Override
         protected DefaultJavaEvaluator createEvaluator(
-                @Nullable Project project,
-                @NonNull com.intellij.openapi.project.Project p) {
+                @Nullable Project project, @NonNull com.intellij.openapi.project.Project p) {
             assert project != null;
             return new DefaultJavaEvaluator(p, project) {
                 @NonNull
                 @Override
                 public Map<UExpression, PsiParameter> computeArgumentMapping(
-                        @NonNull UCallExpression call,
-                        @NonNull PsiMethod method) {
+                        @NonNull UCallExpression call, @NonNull PsiMethod method) {
 
                     if (method.getParameterList().getParametersCount() == 0) {
                         return Collections.emptyMap();
@@ -1395,7 +1442,8 @@ public class LintCliClient extends LintClient {
         }
 
         @Override
-        public boolean prepare(@NonNull List<? extends JavaContext> contexts,
+        public boolean prepare(
+                @NonNull List<? extends JavaContext> contexts,
                 @NonNull List<? extends JavaContext> testContexts) {
             // If we're using Kotlin, ensure we initialize the bridge
             List<File> kotlinFiles = new ArrayList<>();
@@ -1443,8 +1491,8 @@ public class LintCliClient extends LintClient {
             // is up to date
             if (ideaProject != null) {
                 LintExternalAnnotationsManager annotationsManager =
-                    (LintExternalAnnotationsManager) ExternalAnnotationsManager.getInstance(
-                                ideaProject);
+                        (LintExternalAnnotationsManager)
+                                ExternalAnnotationsManager.getInstance(ideaProject);
                 annotationsManager.updateAnnotationRoots(LintCliClient.this);
             }
 

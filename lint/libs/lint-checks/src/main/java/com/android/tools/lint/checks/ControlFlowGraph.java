@@ -47,41 +47,40 @@ import org.objectweb.asm.tree.analysis.BasicInterpreter;
 //import org.objectweb.asm.util.Printer;
 
 /**
- * A {@linkplain ControlFlowGraph} is a graph containing a node for each
- * instruction in a method, and an edge for each possible control flow; usually
- * just "next" for the instruction following the current instruction, but in the
- * case of a branch such as an "if", multiple edges to each successive location,
- * or with a "goto", a single edge to the jumped-to instruction.
- * <p>
- * It also adds edges for abnormal control flow, such as the possibility of a
- * method call throwing a runtime exception.
+ * A {@linkplain ControlFlowGraph} is a graph containing a node for each instruction in a method,
+ * and an edge for each possible control flow; usually just "next" for the instruction following the
+ * current instruction, but in the case of a branch such as an "if", multiple edges to each
+ * successive location, or with a "goto", a single edge to the jumped-to instruction.
+ *
+ * <p>It also adds edges for abnormal control flow, such as the possibility of a method call
+ * throwing a runtime exception.
  */
 public class ControlFlowGraph {
     /** Map from instructions to nodes */
     private Map<AbstractInsnNode, Node> mNodeMap;
+
     private MethodNode mMethod;
 
     /**
-     * Creates a new {@link ControlFlowGraph} and populates it with the flow
-     * control for the given method. If the optional {@code initial} parameter is
-     * provided with an existing graph, then the graph is simply populated, not
-     * created. This allows subclassing of the graph instance, if necessary.
+     * Creates a new {@link ControlFlowGraph} and populates it with the flow control for the given
+     * method. If the optional {@code initial} parameter is provided with an existing graph, then
+     * the graph is simply populated, not created. This allows subclassing of the graph instance, if
+     * necessary.
      *
-     * @param initial usually null, but can point to an existing instance of a
-     *            {@link ControlFlowGraph} in which that graph is reused (but
-     *            populated with new edges)
+     * @param initial usually null, but can point to an existing instance of a {@link
+     *     ControlFlowGraph} in which that graph is reused (but populated with new edges)
      * @param classNode the class containing the method to be analyzed
      * @param method the method to be analyzed
-     * @return a {@link ControlFlowGraph} with nodes for the control flow in the
-     *         given method
-     * @throws AnalyzerException if the underlying bytecode library is unable to
-     *             analyze the method bytecode
+     * @return a {@link ControlFlowGraph} with nodes for the control flow in the given method
+     * @throws AnalyzerException if the underlying bytecode library is unable to analyze the method
+     *     bytecode
      */
     @NonNull
     public static ControlFlowGraph create(
             @Nullable ControlFlowGraph initial,
             @NonNull ClassNode classNode,
-            @NonNull MethodNode method) throws AnalyzerException {
+            @NonNull MethodNode method)
+            throws AnalyzerException {
         final ControlFlowGraph graph = initial != null ? initial : new ControlFlowGraph();
         final InsnList instructions = method.instructions;
         graph.mNodeMap = Maps.newHashMapWithExpectedSize(instructions.size());
@@ -90,43 +89,40 @@ public class ControlFlowGraph {
         // Create a flow control graph using ASM5's analyzer. According to the ASM 4 guide
         // (download.forge.objectweb.org/asm/asm4-guide.pdf) there are faster ways to construct
         // it, but those require a lot more code.
-        Analyzer analyzer = new Analyzer(new BasicInterpreter()) {
-            @Override
-            protected void newControlFlowEdge(int insn, int successor) {
-                // Update the information as of whether the this object has been
-                // initialized at the given instruction.
-                AbstractInsnNode from = instructions.get(insn);
-                AbstractInsnNode to = instructions.get(successor);
-                graph.add(from, to);
-            }
+        Analyzer analyzer =
+                new Analyzer(new BasicInterpreter()) {
+                    @Override
+                    protected void newControlFlowEdge(int insn, int successor) {
+                        // Update the information as of whether the this object has been
+                        // initialized at the given instruction.
+                        AbstractInsnNode from = instructions.get(insn);
+                        AbstractInsnNode to = instructions.get(successor);
+                        graph.add(from, to);
+                    }
 
-            @Override
-            protected boolean newControlFlowExceptionEdge(int insn, TryCatchBlockNode tcb) {
-                AbstractInsnNode from = instructions.get(insn);
-                graph.exception(from, tcb);
-                return super.newControlFlowExceptionEdge(insn, tcb);
-            }
+                    @Override
+                    protected boolean newControlFlowExceptionEdge(int insn, TryCatchBlockNode tcb) {
+                        AbstractInsnNode from = instructions.get(insn);
+                        graph.exception(from, tcb);
+                        return super.newControlFlowExceptionEdge(insn, tcb);
+                    }
 
-            @Override
-            protected boolean newControlFlowExceptionEdge(int insn, int successor) {
-                AbstractInsnNode from = instructions.get(insn);
-                AbstractInsnNode to = instructions.get(successor);
-                graph.exception(from, to);
-                return super.newControlFlowExceptionEdge(insn, successor);
-            }
-        };
+                    @Override
+                    protected boolean newControlFlowExceptionEdge(int insn, int successor) {
+                        AbstractInsnNode from = instructions.get(insn);
+                        AbstractInsnNode to = instructions.get(successor);
+                        graph.exception(from, to);
+                        return super.newControlFlowExceptionEdge(insn, successor);
+                    }
+                };
 
         analyzer.analyze(classNode.name, method);
         return graph;
     }
 
-    /**
-     * Checks whether there is a path from the given source node to the given
-     * destination node
-     */
+    /** Checks whether there is a path from the given source node to the given destination node */
     @SuppressWarnings("MethodMayBeStatic")
-    private boolean isConnected(@NonNull Node from,
-            @NonNull Node to, @NonNull Set<Node> seen) {
+    private boolean isConnected(@NonNull Node from, @NonNull Node to, @NonNull Set<Node> seen) {
         if (from == to) {
             return true;
         } else if (seen.contains(from)) {
@@ -155,24 +151,20 @@ public class ControlFlowGraph {
         return false;
     }
 
-    /**
-     * Checks whether there is a path from the given source node to the given
-     * destination node
-     */
+    /** Checks whether there is a path from the given source node to the given destination node */
     public boolean isConnected(@NonNull Node from, @NonNull Node to) {
         return isConnected(from, to, Sets.newIdentityHashSet());
     }
 
-    /**
-     * Checks whether there is a path from the given instruction to the given
-     * instruction node
-     */
+    /** Checks whether there is a path from the given instruction to the given instruction node */
     public boolean isConnected(@NonNull AbstractInsnNode from, @NonNull AbstractInsnNode to) {
         return isConnected(getNode(from), getNode(to));
     }
 
-    /** A {@link Node} is a node in the control flow graph for a method, pointing to
-     * the instruction and its possible successors */
+    /**
+     * A {@link Node} is a node in the control flow graph for a method, pointing to the instruction
+     * and its possible successors
+     */
     public static class Node {
         /** The instruction */
         public final AbstractInsnNode instruction;
@@ -208,8 +200,7 @@ public class ControlFlowGraph {
         /**
          * Represents this instruction as a string, for debugging purposes
          *
-         * @param includeAdjacent whether it should include a display of
-         *            adjacent nodes as well
+         * @param includeAdjacent whether it should include a display of adjacent nodes as well
          * @return a string representation
          */
         @NonNull
@@ -225,7 +216,7 @@ public class ControlFlowGraph {
                 //sb.append('L' + l.getLabel().info + ":");
                 sb.append("LABEL");
             } else if (instruction instanceof LineNumberNode) {
-                sb.append("LINENUMBER ").append(((LineNumberNode)instruction).line);
+                sb.append("LINENUMBER ").append(((LineNumberNode) instruction).line);
             } else if (instruction instanceof FrameNode) {
                 sb.append("FRAME");
             } else {
@@ -233,7 +224,7 @@ public class ControlFlowGraph {
                 String opcodeName = getOpcodeName(opcode);
                 sb.append(opcodeName);
                 if (instruction.getType() == AbstractInsnNode.METHOD_INSN) {
-                    sb.append('(').append(((MethodInsnNode)instruction).name).append(')');
+                    sb.append('(').append(((MethodInsnNode) instruction).name).append(')');
                 }
             }
 
@@ -285,7 +276,7 @@ public class ControlFlowGraph {
             // A method can throw can exception, or a throw instruction directly
             if (curr.getType() == AbstractInsnNode.METHOD_INSN
                     || (curr.getType() == AbstractInsnNode.INSN
-                    && curr.getOpcode() == Opcodes.ATHROW)) {
+                            && curr.getOpcode() == Opcodes.ATHROW)) {
                 // Method call; add exception edge to handler
                 if (tcb.type == null) {
                     // finally block: not an exception path
@@ -301,8 +292,7 @@ public class ControlFlowGraph {
      * Looks up (and if necessary) creates a graph node for the given instruction
      *
      * @param instruction the instruction
-     * @return the control flow graph node corresponding to the given
-     *         instruction
+     * @return the control flow graph node corresponding to the given instruction
      */
     @NonNull
     public Node getNode(@NonNull AbstractInsnNode instruction) {
@@ -318,8 +308,7 @@ public class ControlFlowGraph {
     /**
      * Creates a human readable version of the graph
      *
-     * @param start the starting instruction, or null if not known or to use the
-     *            first instruction
+     * @param start the starting instruction, or null if not known or to use the first instruction
      * @return a string version of the graph
      */
     @NonNull
@@ -360,6 +349,7 @@ public class ControlFlowGraph {
 
     private static Map<Object, String> sIds = null;
     private static int sNextId = 1;
+
     private static String getId(Object object) {
         if (sIds == null) {
             sIds = Maps.newHashMap();
@@ -373,27 +363,24 @@ public class ControlFlowGraph {
     }
 
     /**
-     * Generates dot output of the graph. This can be used with
-     * graphwiz to visualize the graph. For example, if you
-     * save the output as graph1.gv you can run
+     * Generates dot output of the graph. This can be used with graphwiz to visualize the graph. For
+     * example, if you save the output as graph1.gv you can run
+     *
      * <pre>
      * $ dot -Tps graph1.gv -o graph1.ps
      * </pre>
-     * to generate a postscript file, which you can then view
-     * with "gv graph1.ps".
      *
-     * (There are also some online web sites where you can
-     * paste in dot graphs and see the visualization right
-     * there in the browser.)
+     * to generate a postscript file, which you can then view with "gv graph1.ps".
      *
-     * @return a dot description of this control flow graph,
-     *    useful for debugging
+     * <p>(There are also some online web sites where you can paste in dot graphs and see the
+     * visualization right there in the browser.)
+     *
+     * @return a dot description of this control flow graph, useful for debugging
      */
     @SuppressWarnings("unused")
     public String toDot(@Nullable Set<Node> highlight) {
         StringBuilder sb = new StringBuilder();
         sb.append("digraph G {\n");
-
 
         AbstractInsnNode instruction = mMethod.instructions.getFirst();
 
@@ -409,7 +396,7 @@ public class ControlFlowGraph {
                         sb.append("  ").append(getId(node)).append(" -> ").append(getId(to));
                         if (node.instruction instanceof JumpInsnNode) {
                             sb.append(" [label=\"");
-                            if (((JumpInsnNode)node.instruction).label == to.instruction) {
+                            if (((JumpInsnNode) node.instruction).label == to.instruction) {
                                 sb.append("yes");
                             } else {
                                 sb.append("no");
@@ -430,7 +417,6 @@ public class ControlFlowGraph {
             instruction = instruction.getNext();
         }
 
-
         // Labels
         sb.append("\n");
         for (Node node : mNodeMap.values()) {
@@ -439,9 +425,9 @@ public class ControlFlowGraph {
             sb.append("[label=\"").append(dotDescribe(node)).append("\"");
             if (highlight != null && highlight.contains(node)) {
                 sb.append(",shape=box,style=filled");
-            } else if (instruction instanceof LineNumberNode ||
-              instruction instanceof LabelNode ||
-              instruction instanceof FrameNode) {
+            } else if (instruction instanceof LineNumberNode
+                    || instruction instanceof LabelNode
+                    || instruction instanceof FrameNode) {
                 sb.append(",shape=oval,style=dotted");
             } else {
                 sb.append(",shape=box");
@@ -458,22 +444,22 @@ public class ControlFlowGraph {
         if (instruction instanceof LabelNode) {
             return "Label";
         } else if (instruction instanceof LineNumberNode) {
-            LineNumberNode lineNode = (LineNumberNode)instruction;
+            LineNumberNode lineNode = (LineNumberNode) instruction;
             return "Line " + lineNode.line;
         } else if (instruction instanceof FrameNode) {
             return "Stack Frame";
         } else if (instruction instanceof MethodInsnNode) {
-            MethodInsnNode method = (MethodInsnNode)instruction;
+            MethodInsnNode method = (MethodInsnNode) instruction;
             String cls = method.owner.substring(method.owner.lastIndexOf('/') + 1);
-            cls = cls.replace('$','.');
+            cls = cls.replace('$', '.');
             return "Call " + cls + "#" + method.name;
         } else if (instruction instanceof FieldInsnNode) {
             FieldInsnNode field = (FieldInsnNode) instruction;
             String cls = field.owner.substring(field.owner.lastIndexOf('/') + 1);
-            cls = cls.replace('$','.');
+            cls = cls.replace('$', '.');
             return "Field " + cls + "#" + field.name;
         } else if (instruction instanceof TypeInsnNode && instruction.getOpcode() == Opcodes.NEW) {
-            return "New " + ((TypeInsnNode)instruction).desc;
+            return "New " + ((TypeInsnNode) instruction).desc;
         }
         StringBuilder sb = new StringBuilder();
         String opcodeName = getOpcodeName(instruction.getOpcode());
@@ -504,16 +490,18 @@ public class ControlFlowGraph {
                 for (Field field : fields) {
                     if (field.getType() == int.class) {
                         String name = field.getName();
-                        if (name.startsWith("ASM") || name.startsWith("V1_") ||
-                            name.startsWith("ACC_") || name.startsWith("T_") ||
-                            name.startsWith("H_") || name.startsWith("F_")) {
+                        if (name.startsWith("ASM")
+                                || name.startsWith("V1_")
+                                || name.startsWith("ACC_")
+                                || name.startsWith("T_")
+                                || name.startsWith("H_")
+                                || name.startsWith("F_")) {
                             continue;
                         }
                         int val = field.getInt(null);
                         if (val >= 0 && val < sOpcodeNames.length) {
                             sOpcodeNames[val] = field.getName();
                         }
-
                     }
                 }
             } catch (Exception e) {
@@ -532,4 +520,3 @@ public class ControlFlowGraph {
 
     private static String[] sOpcodeNames;
 }
-

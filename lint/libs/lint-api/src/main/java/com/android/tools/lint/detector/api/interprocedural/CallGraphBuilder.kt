@@ -52,9 +52,10 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
  * trades precision for soundness.
  */
 class CallGraphVisitor(
-        private val receiverEval: DispatchReceiverEvaluator,
-        private val classHierarchy: ClassHierarchy,
-        private val conservative: Boolean = false) : AbstractUastVisitor() {
+    private val receiverEval: DispatchReceiverEvaluator,
+    private val classHierarchy: ClassHierarchy,
+    private val conservative: Boolean = false
+) : AbstractUastVisitor() {
     private val mutableCallGraph: MutableCallGraph = MutableCallGraph()
     val callGraph: CallGraph get() = mutableCallGraph
 
@@ -78,10 +79,10 @@ class CallGraphVisitor(
                 !explicitSuperFinder.foundExplicitCall
             }
             val callers: Collection<UElement> =
-                    if (constructors.isNotEmpty()) thoseWithoutExplicitSuper
-                    else listOf(node)
+                if (constructors.isNotEmpty()) thoseWithoutExplicitSuper
+                else listOf(node)
             val callee: UElement = superClass.constructors()
-                    .find { it.uastParameters.isEmpty() }
+                .find { it.uastParameters.isEmpty() }
                     ?: superClass
             with(mutableCallGraph) {
                 val calleeNode = getNode(callee)
@@ -96,11 +97,12 @@ class CallGraphVisitor(
 
         // Find surrounding context.
         val parent = node.getParentOfType(
-                /*strict*/ true,
-                UMethod::class.java,
-                ULambdaExpression::class.java,
-                UClassInitializer::class.java,
-                UField::class.java)
+            /*strict*/ true,
+            UMethod::class.java,
+            ULambdaExpression::class.java,
+            UClassInitializer::class.java,
+            UField::class.java
+        )
 
         // Find the caller(s) based on surrounding context.
         val callers: Collection<UElement> = when (parent) {
@@ -138,7 +140,7 @@ class CallGraphVisitor(
             if (node.isConstructorCall()) {
                 // Found a call to a default constructor; create an edge to the instantiated class.
                 val constructedClass = node.classReference
-                        ?.resolve()?.navigationElement.toUElement() as? UClass
+                    ?.resolve()?.navigationElement.toUElement() as? UClass
                         ?: return super.visitCallExpression(node) // Unable to resolve class.
                 addEdge(constructedClass, DIRECT)
             } else if (node.methodName == "invoke") {
@@ -155,7 +157,7 @@ class CallGraphVisitor(
         val staticallyDispatched = baseCallee.isStaticallyDispatched()
         val throughSuper = node.receiver is USuperExpression
         val isFunctionalCall =
-                baseCallee.psi == LambdaUtil.getFunctionalInterfaceMethod(node.receiverType)
+            baseCallee.psi == LambdaUtil.getFunctionalInterfaceMethod(node.receiverType)
         val uniqueImpl = (overrides + baseCallee).singleOrNull { it.isCallable() }
         when {
             staticallyDispatched || throughSuper -> addEdge(baseCallee, DIRECT)
@@ -173,8 +175,8 @@ class CallGraphVisitor(
                     addEdge(baseCallee, BASE)
                 if (conservative) {
                     overrides
-                            .filter { it !in evidencedTargets && it.isCallable() }
-                            .forEach { addEdge(it, NON_UNIQUE_OVERRIDE) }
+                        .filter { it !in evidencedTargets && it.isCallable() }
+                        .forEach { addEdge(it, NON_UNIQUE_OVERRIDE) }
                 }
             }
         }

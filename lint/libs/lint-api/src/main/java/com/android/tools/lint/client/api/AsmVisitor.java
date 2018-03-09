@@ -34,37 +34,36 @@ import org.objectweb.asm.tree.MethodNode;
 
 /**
  * Specialized visitor for running detectors on a class object model.
- * <p>
- * It operates in two phases:
+ *
+ * <p>It operates in two phases:
+ *
  * <ol>
- *   <li> First, it computes a set of maps where it generates a map from each
- *        significant method name to a list of detectors to consult for that method
- *        name. The set of method names that a detector is interested in is provided
- *        by the detectors themselves.
- *   <li> Second, it iterates over the DOM a single time. For each method call it finds,
- *        it dispatches to any check that has registered interest in that method name.
- *   <li> Finally, it runs a full check on those class scanners that do not register
- *        specific method names to be checked. This is intended for those detectors
- *        that do custom work, not related specifically to method calls.
+ *   <li>First, it computes a set of maps where it generates a map from each significant method name
+ *       to a list of detectors to consult for that method name. The set of method names that a
+ *       detector is interested in is provided by the detectors themselves.
+ *   <li>Second, it iterates over the DOM a single time. For each method call it finds, it
+ *       dispatches to any check that has registered interest in that method name.
+ *   <li>Finally, it runs a full check on those class scanners that do not register specific method
+ *       names to be checked. This is intended for those detectors that do custom work, not related
+ *       specifically to method calls.
  * </ol>
- * It also notifies all the detectors before and after the document is processed
- * such that they can do pre- and post-processing.
- * <p>
- * <b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ *
+ * It also notifies all the detectors before and after the document is processed such that they can
+ * do pre- and post-processing.
+ *
+ * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
+ * code for the next tools release.</b>
  */
 @Beta
 class AsmVisitor {
     /**
-     * Number of distinct node types specified in {@link AbstractInsnNode}. Sadly
-     * there isn't a max-constant there, so update this along with ASM library
-     * updates.
+     * Number of distinct node types specified in {@link AbstractInsnNode}. Sadly there isn't a
+     * max-constant there, so update this along with ASM library updates.
      */
     private static final int TYPE_COUNT = AbstractInsnNode.LINE + 1;
-    private final Map<String, List<ClassScanner>> methodNameToChecks =
-            new HashMap<>();
-    private final Map<String, List<ClassScanner>> methodOwnerToChecks =
-            new HashMap<>();
+
+    private final Map<String, List<ClassScanner>> methodNameToChecks = new HashMap<>();
+    private final Map<String, List<ClassScanner>> methodOwnerToChecks = new HashMap<>();
     private final List<Detector> fullClassChecks = new ArrayList<>();
 
     private final List<? extends Detector> allDetectors;
@@ -116,8 +115,11 @@ class AsmVisitor {
                 for (int type : types) {
                     if (type < 0 || type >= TYPE_COUNT) {
                         // Can't support this node type: looks like ASM wasn't updated correctly.
-                        client.log(null, "Out of range node type %1$d from detector %2$s",
-                                type, scanner);
+                        client.log(
+                                null,
+                                "Out of range node type %1$d from detector %2$s",
+                                type,
+                                scanner);
                         continue;
                     }
                     if (nodeTypeDetectors == null) {
@@ -138,7 +140,8 @@ class AsmVisitor {
         }
     }
 
-    @SuppressWarnings("rawtypes") // ASM API uses raw types
+    @SuppressWarnings("rawtypes")
+    // ASM API uses raw types
     void runClassDetectors(ClassContext context) {
         ClassNode classNode = context.getClassNode();
 
@@ -152,8 +155,9 @@ class AsmVisitor {
             detector.afterCheckFile(context);
         }
 
-        if (!methodNameToChecks.isEmpty() || !methodOwnerToChecks.isEmpty() ||
-            nodeTypeDetectors != null && nodeTypeDetectors.length > 0) {
+        if (!methodNameToChecks.isEmpty()
+                || !methodOwnerToChecks.isEmpty()
+                || nodeTypeDetectors != null && nodeTypeDetectors.length > 0) {
             List methodList = classNode.methods;
             for (Object m : methodList) {
                 MethodNode method = (MethodNode) m;

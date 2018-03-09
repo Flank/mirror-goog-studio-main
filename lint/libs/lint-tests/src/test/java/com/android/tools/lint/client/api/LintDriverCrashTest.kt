@@ -37,36 +37,42 @@ class LintDriverCrashTest : AbstractCheckTest() {
     fun testLintDriverError() {
         // Regression test for 34248502
         lint().files(
-                xml("res/layout/foo.xml", "<LinearLayout/>"),
-                java("""
+            xml("res/layout/foo.xml", "<LinearLayout/>"),
+            java(
+                """
                     package test.pkg;
                     @SuppressWarnings("ALL") class Foo {
                     }
-                    """))
-                .allowSystemErrors(true)
-                .issues(CrashingDetector.CRASHING_ISSUE)
-                .run()
-                // Checking for manual substrings instead of doing an actual equals check
-                // since the stacktrace contains a number of specific line numbers from
-                // the lint implementation, including this test, which keeps shifting every
-                // time there is an edit
-                .check {
-                    assertThat(it).contains("Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)")
-                    assertThat(it).contains("You can set environment variable LINT_PRINT_STACKTRACE=true to dump a full stacktrace to stdout. [LintError]")
-                    assertThat(it).contains("ArithmeticException:LintDriverCrashTest\$CrashingDetector\$createUastHandler$1.visitFile(LintDriverCrashTest.kt:")
-                    assertThat(it).contains("1 errors, 0 warnings")
-                }
+                    """
+            )
+        )
+            .allowSystemErrors(true)
+            .issues(CrashingDetector.CRASHING_ISSUE)
+            .run()
+            // Checking for manual substrings instead of doing an actual equals check
+            // since the stacktrace contains a number of specific line numbers from
+            // the lint implementation, including this test, which keeps shifting every
+            // time there is an edit
+            .check {
+                assertThat(it).contains("Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)")
+                assertThat(it).contains("You can set environment variable LINT_PRINT_STACKTRACE=true to dump a full stacktrace to stdout. [LintError]")
+                assertThat(it).contains("ArithmeticException:LintDriverCrashTest\$CrashingDetector\$createUastHandler$1.visitFile(LintDriverCrashTest.kt:")
+                assertThat(it).contains("1 errors, 0 warnings")
+            }
         LintDriver.clearCrashCount()
     }
 
     fun testLinkageError() {
         // Regression test for 34248502
         lint().files(
-            java("""
+            java(
+                """
                     package test.pkg;
                     @SuppressWarnings("ALL") class Foo {
                     }
-                    """))
+                    """
+            )
+        )
             .allowSystemErrors(true)
             .issues(LinkageErrorDetector.LINKAGE_ERROR)
             .run()
@@ -89,29 +95,33 @@ class LintDriverCrashTest : AbstractCheckTest() {
         LintDriver.clearCrashCount()
     }
 
-    override fun getIssues(): List<Issue> = listOf(CrashingDetector.CRASHING_ISSUE,
-            DisposedThrowingDetector.DISPOSED_ISSUE, LinkageErrorDetector.LINKAGE_ERROR)
+    override fun getIssues(): List<Issue> = listOf(
+        CrashingDetector.CRASHING_ISSUE,
+        DisposedThrowingDetector.DISPOSED_ISSUE, LinkageErrorDetector.LINKAGE_ERROR
+    )
 
     override fun getDetector(): Detector = CrashingDetector()
 
     class CrashingDetector : Detector(), SourceCodeScanner {
 
         override fun getApplicableUastTypes(): List<Class<out UElement>>? =
-                listOf<Class<out UElement>>(UFile::class.java)
+            listOf<Class<out UElement>>(UFile::class.java)
 
         override fun createUastHandler(context: JavaContext): UElementHandler? =
-                object : UElementHandler() {
-                    override fun visitFile(node: UFile) {
-                        @Suppress("DIVISION_BY_ZERO", "UNUSED_VARIABLE") // Intentional crash
-                        val x = 1 / 0
-                        super.visitFile(node)
-                    }
+            object : UElementHandler() {
+                override fun visitFile(node: UFile) {
+                    @Suppress("DIVISION_BY_ZERO", "UNUSED_VARIABLE") // Intentional crash
+                    val x = 1 / 0
+                    super.visitFile(node)
                 }
+            }
 
         companion object {
             val CRASHING_ISSUE = Issue
-                    .create("_TestCrash", "test", "test", Category.LINT, 10, Severity.FATAL,
-                            Implementation(CrashingDetector::class.java, Scope.JAVA_FILE_SCOPE))
+                .create(
+                    "_TestCrash", "test", "test", Category.LINT, 10, Severity.FATAL,
+                    Implementation(CrashingDetector::class.java, Scope.JAVA_FILE_SCOPE)
+                )
         }
     }
 
@@ -126,10 +136,14 @@ class LintDriverCrashTest : AbstractCheckTest() {
         }
 
         companion object {
-            val DISPOSED_ISSUE = Issue.create("_TestDisposed", "test", "test", Category.LINT,
-                    10, Severity.FATAL,
-                    Implementation(DisposedThrowingDetector::class.java,
-                            Scope.RESOURCE_FILE_SCOPE))
+            val DISPOSED_ISSUE = Issue.create(
+                "_TestDisposed", "test", "test", Category.LINT,
+                10, Severity.FATAL,
+                Implementation(
+                    DisposedThrowingDetector::class.java,
+                    Scope.RESOURCE_FILE_SCOPE
+                )
+            )
         }
     }
 
@@ -141,22 +155,26 @@ class LintDriverCrashTest : AbstractCheckTest() {
         override fun createUastHandler(context: JavaContext): UElementHandler? =
             object : UElementHandler() {
                 override fun visitFile(node: UFile) {
-                    throw LinkageError("loader constraint violation: when resolving field " +
-                            "\"QUALIFIER_SPLITTER\" the class loader (instance of " +
-                            "com/android/tools/lint/gradle/api/DelegatingClassLoader) of the " +
-                            "referring class, " +
-                            "com/android/ide/common/resources/configuration/FolderConfiguration, " +
-                            "and the class loader (instance of " +
-                            "org/gradle/internal/classloader/VisitableURLClassLoader) for the " +
-                            "field's resolved type, com/google/common/base/Splitter, have " +
-                            "different Class objects for that type")
+                    throw LinkageError(
+                        "loader constraint violation: when resolving field " +
+                                "\"QUALIFIER_SPLITTER\" the class loader (instance of " +
+                                "com/android/tools/lint/gradle/api/DelegatingClassLoader) of the " +
+                                "referring class, " +
+                                "com/android/ide/common/resources/configuration/FolderConfiguration, " +
+                                "and the class loader (instance of " +
+                                "org/gradle/internal/classloader/VisitableURLClassLoader) for the " +
+                                "field's resolved type, com/google/common/base/Splitter, have " +
+                                "different Class objects for that type"
+                    )
                 }
             }
 
         companion object {
             val LINKAGE_ERROR = Issue
-                .create("_LinkageCrash", "test", "test", Category.LINT, 10, Severity.FATAL,
-                    Implementation(LinkageErrorDetector::class.java, Scope.JAVA_FILE_SCOPE))
+                .create(
+                    "_LinkageCrash", "test", "test", Category.LINT, 10, Severity.FATAL,
+                    Implementation(LinkageErrorDetector::class.java, Scope.JAVA_FILE_SCOPE)
+                )
         }
     }
 }

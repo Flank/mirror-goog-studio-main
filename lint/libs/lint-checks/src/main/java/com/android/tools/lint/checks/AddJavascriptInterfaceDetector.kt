@@ -34,21 +34,24 @@ import org.jetbrains.uast.UCallExpression
  */
 class AddJavascriptInterfaceDetector : Detector(), SourceCodeScanner {
     companion object {
-        @JvmField val ISSUE = Issue.create(
-                "AddJavascriptInterface",
-                "addJavascriptInterface Called",
-"""
+        @JvmField
+        val ISSUE = Issue.create(
+            "AddJavascriptInterface",
+            "addJavascriptInterface Called",
+            """
 For applications built for API levels below 17, `WebView#addJavascriptInterface` presents a \
 security hazard as JavaScript on the target web page has the ability to use reflection to access \
 the injected object's public fields and thus manipulate the host application in unintended ways.
 """,
-"https://labs.mwrinfosecurity.com/blog/2013/09/24/webview-addjavascriptinterface-remote-code-execution/",
-                Category.SECURITY,
-                9,
-                Severity.WARNING,
-                Implementation(
-                        AddJavascriptInterfaceDetector::class.java,
-                        Scope.JAVA_FILE_SCOPE))
+            "https://labs.mwrinfosecurity.com/blog/2013/09/24/webview-addjavascriptinterface-remote-code-execution/",
+            Category.SECURITY,
+            9,
+            Severity.WARNING,
+            Implementation(
+                AddJavascriptInterfaceDetector::class.java,
+                Scope.JAVA_FILE_SCOPE
+            )
+        )
 
         const val WEB_VIEW = "android.webkit.WebView"
         const val ADD_JAVASCRIPT_INTERFACE = "addJavascriptInterface"
@@ -58,8 +61,11 @@ the injected object's public fields and thus manipulate the host application in 
 
     override fun getApplicableMethodNames(): List<String>? = listOf(ADD_JAVASCRIPT_INTERFACE)
 
-    override fun visitMethod(context: JavaContext, node: UCallExpression,
-                             method: PsiMethod) {
+    override fun visitMethod(
+        context: JavaContext,
+        node: UCallExpression,
+        method: PsiMethod
+    ) {
         // Ignore the issue if we never build for any API less than 17.
         if (context.mainProject.minSdk >= 17) {
             return

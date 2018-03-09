@@ -92,58 +92,62 @@ import org.w3c.dom.Attr;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-/** Detector for finding inconsistent usage of views and casts
- * <p>
- * TODO: Check findFragmentById
+/**
+ * Detector for finding inconsistent usage of views and casts
+ *
+ * <p>TODO: Check findFragmentById
+ *
  * <pre>
  * ((ItemListFragment) getSupportFragmentManager()
  *   .findFragmentById(R.id.item_list))
  *   .setActivateOnItemClick(true);
  * </pre>
- * Here we should check the {@code <fragment>} tag pointed to by the id, and
- * check its name or class attributes to make sure the cast is compatible with
- * the named fragment class!
+ *
+ * Here we should check the {@code <fragment>} tag pointed to by the id, and check its name or class
+ * attributes to make sure the cast is compatible with the named fragment class!
  */
 public class ViewTypeDetector extends ResourceXmlDetector implements SourceCodeScanner {
     /** Mismatched view types */
     @SuppressWarnings("unchecked")
-    public static final Issue WRONG_VIEW_CAST = Issue.create(
-            "WrongViewCast",
-            "Mismatched view type",
-            "Keeps track of the view types associated with ids and if it finds a usage of " +
-            "the id in the Java code it ensures that it is treated as the same type.",
-            Category.CORRECTNESS,
-            9,
-            Severity.FATAL,
-            new Implementation(
-                    ViewTypeDetector.class,
-                    EnumSet.of(Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES),
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue WRONG_VIEW_CAST =
+            Issue.create(
+                    "WrongViewCast",
+                    "Mismatched view type",
+                    "Keeps track of the view types associated with ids and if it finds a usage of "
+                            + "the id in the Java code it ensures that it is treated as the same type.",
+                    Category.CORRECTNESS,
+                    9,
+                    Severity.FATAL,
+                    new Implementation(
+                            ViewTypeDetector.class,
+                            EnumSet.of(Scope.ALL_RESOURCE_FILES, Scope.ALL_JAVA_FILES),
+                            Scope.JAVA_FILE_SCOPE));
 
     /** Mismatched view types */
     @SuppressWarnings("unchecked")
-    public static final Issue ADD_CAST = Issue.create(
-            "FindViewByIdCast",
-            "Add Explicit Cast",
-            "In Android O, the `findViewById` signature switched to using generics, which means " +
-            "that most of the time you can leave out explicit casts and just assign the result " +
-            "of the `findViewById` call to variables of specific view classes.\n" +
-            "\n" +
-            "However, due to language changes between Java 7 and 8, this change may cause code " +
-            "to not compile without explicit casts. This lint check looks for these scenarios " +
-            "and suggests casts to be added now such that the code will continue to compile " +
-            "if the language level is updated to 1.8.",
-            Category.CORRECTNESS,
-            9,
-            Severity.WARNING,
-            new Implementation(
-                    ViewTypeDetector.class,
-                    Scope.JAVA_FILE_SCOPE));
+    public static final Issue ADD_CAST =
+            Issue.create(
+                    "FindViewByIdCast",
+                    "Add Explicit Cast",
+                    "In Android O, the `findViewById` signature switched to using generics, which means "
+                            + "that most of the time you can leave out explicit casts and just assign the result "
+                            + "of the `findViewById` call to variables of specific view classes.\n"
+                            + "\n"
+                            + "However, due to language changes between Java 7 and 8, this change may cause code "
+                            + "to not compile without explicit casts. This lint check looks for these scenarios "
+                            + "and suggests casts to be added now such that the code will continue to compile "
+                            + "if the language level is updated to 1.8.",
+                    Category.CORRECTNESS,
+                    9,
+                    Severity.WARNING,
+                    new Implementation(ViewTypeDetector.class, Scope.JAVA_FILE_SCOPE));
 
     public static final String FIND_VIEW_BY_ID = "findViewById";
 
-    /** Flag used to do no work if we're running in incremental mode in a .java file without
-     * a client supporting project resources */
+    /**
+     * Flag used to do no work if we're running in incremental mode in a .java file without a client
+     * supporting project resources
+     */
     private Boolean ignore = null;
 
     private final Map<String, Object> idToViewTag = new HashMap<>(50);
@@ -204,14 +208,17 @@ public class ViewTypeDetector extends ResourceXmlDetector implements SourceCodeS
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         LintClient client = context.getClient();
         if (ignore == Boolean.TRUE) {
             return;
         } else if (ignore == null) {
-            ignore = !context.getScope().contains(Scope.ALL_RESOURCE_FILES) &&
-                    !client.supportsProjectResources();
+            ignore =
+                    !context.getScope().contains(Scope.ALL_RESOURCE_FILES)
+                            && !client.supportsProjectResources();
             if (ignore) {
                 return;
             }
@@ -274,47 +281,66 @@ public class ViewTypeDetector extends ResourceXmlDetector implements SourceCodeS
         List<UExpression> args = call.getValueArguments();
         if (args.size() == 1) {
             UExpression first = args.get(0);
-            ResourceUrl resourceUrl = ResourceEvaluator.getResource(context.getEvaluator(),
-                    first);
+            ResourceUrl resourceUrl = ResourceEvaluator.getResource(context.getEvaluator(), first);
             if (resourceUrl != null
                     && resourceUrl.type == ResourceType.ID
                     && !resourceUrl.isFramework()) {
                 String id = resourceUrl.name;
 
                 if (client.supportsProjectResources()) {
-                    AbstractResourceRepository resources = client
-                            .getResourceRepository(context.getMainProject(), true, false);
+                    AbstractResourceRepository resources =
+                            client.getResourceRepository(context.getMainProject(), true, false);
                     if (resources == null) {
                         return;
                     }
 
-                    List<ResourceItem> items = resources.getResourceItem(ResourceType.ID,
-                            id);
+                    List<ResourceItem> items = resources.getResourceItem(ResourceType.ID, id);
                     if (items != null && !items.isEmpty()) {
                         Set<String> compatible = Sets.newHashSet();
                         for (ResourceItem item : items) {
                             Collection<String> tags = getViewTags(context, item);
                             if (tags != null) {
-                               compatible.addAll(tags);
+                                compatible.addAll(tags);
                             }
                         }
                         if (!compatible.isEmpty()) {
                             ArrayList<String> layoutTypes = Lists.newArrayList(compatible);
-                            checkCompatible(context, castType, castTypeClass, null,
-                                    layoutTypes, errorNode, first, items);
+                            checkCompatible(
+                                    context,
+                                    castType,
+                                    castTypeClass,
+                                    null,
+                                    layoutTypes,
+                                    errorNode,
+                                    first,
+                                    items);
                         }
                     }
                 } else {
                     Object types = idToViewTag.get(id);
                     if (types instanceof String) {
                         String layoutType = (String) types;
-                        checkCompatible(context, castType, castTypeClass, layoutType, null,
-                                errorNode, first, null);
+                        checkCompatible(
+                                context,
+                                castType,
+                                castTypeClass,
+                                layoutType,
+                                null,
+                                errorNode,
+                                first,
+                                null);
                     } else if (types instanceof List<?>) {
                         @SuppressWarnings("unchecked")
                         List<String> layoutTypes = (List<String>) types;
-                        checkCompatible(context, castType, castTypeClass, null, layoutTypes,
-                                errorNode, first, null);
+                        checkCompatible(
+                                context,
+                                castType,
+                                castTypeClass,
+                                null,
+                                layoutTypes,
+                                errorNode,
+                                first,
+                                null);
                     }
                 }
             }
@@ -322,9 +348,9 @@ public class ViewTypeDetector extends ResourceXmlDetector implements SourceCodeS
     }
 
     private static void checkMissingCast(
-          @NonNull JavaContext context,
-          @NonNull UCallExpression findViewByIdCall,
-          @NonNull UCallExpression surroundingCall) {
+            @NonNull JavaContext context,
+            @NonNull UCallExpression findViewByIdCall,
+            @NonNull UCallExpression surroundingCall) {
         // This issue only applies in Java, not Kotlin etc - and for language level 1.8
         LanguageLevel languageLevel = LintUtils.getLanguageLevel(surroundingCall, JDK_1_7);
         if (languageLevel.isLessThan(JDK_1_8)) {
@@ -362,7 +388,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements SourceCodeS
             return;
         }
 
-        PsiClass parameterTypeClass = ((PsiClassType)parameterType).resolve();
+        PsiClass parameterTypeClass = ((PsiClassType) parameterType).resolve();
         if (!(parameterTypeClass instanceof PsiTypeParameter)) {
             return;
         }
@@ -372,29 +398,33 @@ public class ViewTypeDetector extends ResourceXmlDetector implements SourceCodeS
             return;
         }
 
-        LintFix fix = LintFix.create().replace()
-          .name("Add cast")
-          .text(FIND_VIEW_BY_ID)
-          .shortenNames()
-          .reformat(true)
-          .with("(android.view.View)" + FIND_VIEW_BY_ID).build();
+        LintFix fix =
+                LintFix.create()
+                        .replace()
+                        .name("Add cast")
+                        .text(FIND_VIEW_BY_ID)
+                        .shortenNames()
+                        .reformat(true)
+                        .with("(android.view.View)" + FIND_VIEW_BY_ID)
+                        .build();
 
-        context.report(ADD_CAST, context.getLocation(findViewByIdCall),
+        context.report(
+                ADD_CAST,
+                context.getLocation(findViewByIdCall),
                 "Add explicit cast here; won't compile with Java language level 1.8 "
-                        + "without it", fix);
+                        + "without it",
+                fix);
     }
 
     @Nullable
-    protected Collection<String> getViewTags(
-            @NonNull Context context,
-            @NonNull ResourceItem item) {
+    protected Collection<String> getViewTags(@NonNull Context context, @NonNull ResourceItem item) {
         // Check view tag in this file. Can I do it cheaply? Try with
         // an XML pull parser. Or DOM if we have multiple resources looked
         // up?
         ResourceFile source = item.getSource();
         if (source != null) {
             File file = source.getFile();
-            Multimap<String,String> map = getIdToTagsIn(context, file);
+            Multimap<String, String> map = getIdToTagsIn(context, file);
             if (map != null) {
                 return map.get(item.getName());
             }
@@ -465,11 +495,9 @@ public class ViewTypeDetector extends ResourceXmlDetector implements SourceCodeS
         assert tag == null || tags == null : tag + tags; // Should only specify one or the other
 
         // Common case: they match: quickly check for this and fail if not
-        if (castTypeClass.equals(tag) ||
-                tags != null && tags.contains(castTypeClass)) {
+        if (castTypeClass.equals(tag) || tags != null && tags.contains(castTypeClass)) {
             return;
         }
-
 
         PsiClass castClass = castType.resolve();
 
@@ -522,8 +550,8 @@ public class ViewTypeDetector extends ResourceXmlDetector implements SourceCodeS
                             if (source.getFolderConfiguration().isDefault()) {
                                 sampleLayout = file.getName();
                             } else {
-                                sampleLayout = file.getParentFile().getName()
-                                        + "/" + file.getName();
+                                sampleLayout =
+                                        file.getParentFile().getName() + "/" + file.getName();
                             }
                             break;
                         }
@@ -531,66 +559,70 @@ public class ViewTypeDetector extends ResourceXmlDetector implements SourceCodeS
                 }
             }
 
-            String incompatibleTag = castTypeClass.substring(
-                    castTypeClass.lastIndexOf('.') + 1);
+            String incompatibleTag = castTypeClass.substring(castTypeClass.lastIndexOf('.') + 1);
 
             String message;
             Location location;
             if (!(node instanceof UBinaryExpressionWithType)) {
-                if (node instanceof UVariable && ((UVariable)node).getTypeReference() != null) {
+                if (node instanceof UVariable && ((UVariable) node).getTypeReference() != null) {
                     //noinspection ConstantConditions
-                    location = context.getLocation(((UVariable)node).getTypeReference());
-                    location.setSecondary(createSecondary(context, tag, resourceReference,
-                            sampleLayout));
+                    location = context.getLocation(((UVariable) node).getTypeReference());
+                    location.setSecondary(
+                            createSecondary(context, tag, resourceReference, sampleLayout));
                 } else {
                     location = context.getLocation(node);
                 }
-                message = String.format(
-                        "Unexpected implicit cast to `%1$s`: layout tag was `%2$s`",
-                        incompatibleTag, tag);
+                message =
+                        String.format(
+                                "Unexpected implicit cast to `%1$s`: layout tag was `%2$s`",
+                                incompatibleTag, tag);
 
             } else {
                 location = context.getLocation(node);
                 if (sampleLayout != null) {
-                    location.setSecondary(createSecondary(context, tag, resourceReference,
-                            sampleLayout));
+                    location.setSecondary(
+                            createSecondary(context, tag, resourceReference, sampleLayout));
                 }
-                message = String.format(
-                        "Unexpected cast to `%1$s`: layout tag was `%2$s`",
-                        incompatibleTag, tag);
-
+                message =
+                        String.format(
+                                "Unexpected cast to `%1$s`: layout tag was `%2$s`",
+                                incompatibleTag, tag);
             }
             context.report(WRONG_VIEW_CAST, node, location, message);
         }
     }
 
     @NonNull
-    private static Location createSecondary(@NonNull JavaContext context, @NonNull String tag,
-            @NonNull UExpression resourceReference, @Nullable String sampleLayout) {
+    private static Location createSecondary(
+            @NonNull JavaContext context,
+            @NonNull String tag,
+            @NonNull UExpression resourceReference,
+            @Nullable String sampleLayout) {
         Location secondary = context.getLocation(resourceReference);
         if (sampleLayout != null) {
-            String article = tag.indexOf('.') == -1
-                    && tag.indexOf('|') == -1
-                    // We don't have widgets right now which start with a silent consonant
-                    && StringUtil.isVowel(Character.toLowerCase(tag.charAt(0))) ? "an" : "a";
-            secondary.setMessage(String.format("Id bound to %1$s `%2$s` in `%3$s`",
-                    article, tag, sampleLayout));
+            String article =
+                    tag.indexOf('.') == -1
+                                    && tag.indexOf('|') == -1
+                                    // We don't have widgets right now which start with a silent consonant
+                                    && StringUtil.isVowel(Character.toLowerCase(tag.charAt(0)))
+                            ? "an"
+                            : "a";
+            secondary.setMessage(
+                    String.format("Id bound to %1$s `%2$s` in `%3$s`", article, tag, sampleLayout));
         }
         return secondary;
     }
 
     private static boolean isCompatible(
-            @NonNull JavaContext context,
-            @NonNull PsiClass castClass,
-            @NonNull String tag) {
+            @NonNull JavaContext context, @NonNull PsiClass castClass, @NonNull String tag) {
         PsiClass cls = null;
         if (tag.indexOf('.') == -1) {
-            for (String prefix : new String[]{
-                    // See framework's PhoneLayoutInflater: these are the prefixes
-                    // that don't need fully qualified names in layouts
-                    ANDROID_WIDGET_PREFIX,
-                    ANDROID_VIEW_PKG,
-                    ANDROID_WEBKIT_PKG}) {
+            for (String prefix :
+                    new String[] {
+                        // See framework's PhoneLayoutInflater: these are the prefixes
+                        // that don't need fully qualified names in layouts
+                        ANDROID_WIDGET_PREFIX, ANDROID_VIEW_PKG, ANDROID_WEBKIT_PKG
+                    }) {
                 cls = context.getEvaluator().findClass(prefix + tag);
                 //noinspection VariableNotUsedInsideIf
                 if (cls != null) {

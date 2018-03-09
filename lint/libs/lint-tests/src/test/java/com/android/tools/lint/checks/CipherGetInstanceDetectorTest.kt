@@ -34,7 +34,7 @@ class CipherGetInstanceDetectorTest : AbstractCheckTest() {
 
         lint().files(
             java(
-            """
+                """
                 package test.pkg;
 
                 import javax.crypto.Cipher;
@@ -178,7 +178,7 @@ class CipherGetInstanceDetectorTest : AbstractCheckTest() {
 
     fun testDeprecatedProvider() {
         val expected =
-                """
+            """
                 src/test/pkg/BCProviderTest.java:16: Warning: The BC provider is deprecated and when targetSdkVersion is moved to P this method will throw a NoSuchAlgorithmException. To fix this you should stop specifying a provider and use the default implementation [GetInstance]
                         Cipher.getInstance("AES/CBC/PKCS7PADDING", "BC"); // Error
                                                                    ~~~~

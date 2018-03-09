@@ -41,32 +41,39 @@ public class ResourceEvaluatorTest extends TestCase {
     @Language("JAVA")
     private static String getString(String statementsSource) {
         @Language("JAVA")
-        String s = ""
-                + "package test.pkg;\n"
-                + "public class Test {\n"
-                + "    public void test() {\n"
-                + "        " + statementsSource + "\n"
-                + "    }\n"
-                + "    public static final int RED = R.color.red;\n"
-                + "    public static final int MY_COLOR = RED;\n"
-                + "    public void someMethod(@android.support.annotation.DrawableRes @android.support.annotation.StringRes int param) { }\n"
-                + "\n"
-                + "    private static class R {\n"
-                + "        private static class color {\n"
-                + "            public static final int foo=0x7f050000;\n"
-                + "        }\n"
-                + "        private static class color {\n"
-                + "            public static final int red=0x7f060000;\n"
-                + "            public static final int green=0x7f060001;\n"
-                + "            public static final int blue=0x7f060002;\n"
-                + "        }\n"
-                + "    }"
-                + "}\n";
+        String s =
+                ""
+                        + "package test.pkg;\n"
+                        + "public class Test {\n"
+                        + "    public void test() {\n"
+                        + "        "
+                        + statementsSource
+                        + "\n"
+                        + "    }\n"
+                        + "    public static final int RED = R.color.red;\n"
+                        + "    public static final int MY_COLOR = RED;\n"
+                        + "    public void someMethod(@android.support.annotation.DrawableRes @android.support.annotation.StringRes int param) { }\n"
+                        + "\n"
+                        + "    private static class R {\n"
+                        + "        private static class color {\n"
+                        + "            public static final int foo=0x7f050000;\n"
+                        + "        }\n"
+                        + "        private static class color {\n"
+                        + "            public static final int red=0x7f060000;\n"
+                        + "            public static final int green=0x7f060001;\n"
+                        + "            public static final int blue=0x7f060002;\n"
+                        + "        }\n"
+                        + "    }"
+                        + "}\n";
         return s;
     }
 
-    private static void checkUast(String expected, String statementsSource,
-            final String targetVariable, boolean getSpecificType, boolean allowDereference) {
+    private static void checkUast(
+            String expected,
+            String statementsSource,
+            final String targetVariable,
+            boolean getSpecificType,
+            boolean allowDereference) {
         @Language("JAVA")
         String source = getString(statementsSource);
         Pair<JavaContext, Disposable> pair =
@@ -79,28 +86,30 @@ public class ResourceEvaluatorTest extends TestCase {
 
         // Find the expression
         final AtomicReference<UExpression> reference = new AtomicReference<>();
-        uFile.accept(new AbstractUastVisitor() {
-            @Override
-            public boolean visitVariable(UVariable variable) {
-                String name = variable.getName();
-                if (name != null && name.equals(targetVariable)) {
-                    reference.set(variable.getUastInitializer());
-                }
+        uFile.accept(
+                new AbstractUastVisitor() {
+                    @Override
+                    public boolean visitVariable(UVariable variable) {
+                        String name = variable.getName();
+                        if (name != null && name.equals(targetVariable)) {
+                            reference.set(variable.getUastInitializer());
+                        }
 
-                return super.visitVariable(variable);
-            }
-        });
+                        return super.visitVariable(variable);
+                    }
+                });
 
         UExpression expression = reference.get();
-        ResourceEvaluator evaluator = new ResourceEvaluator(context.getEvaluator())
-                .allowDereference(allowDereference);
+        ResourceEvaluator evaluator =
+                new ResourceEvaluator(context.getEvaluator()).allowDereference(allowDereference);
 
         if (getSpecificType) {
             ResourceUrl actual = evaluator.getResource(expression);
             if (expected == null) {
                 assertNull(actual);
             } else {
-                assertNotNull("Couldn't compute resource for " + source + ", expected " + expected,
+                assertNotNull(
+                        "Couldn't compute resource for " + source + ", expected " + expected,
                         actual);
 
                 assertEquals(expected, actual.toString());
@@ -110,8 +119,9 @@ public class ResourceEvaluatorTest extends TestCase {
             if (expected == null) {
                 assertNull(types);
             } else {
-                assertNotNull("Couldn't compute resource types for " + source
-                        + ", expected " + expected, types);
+                assertNotNull(
+                        "Couldn't compute resource types for " + source + ", expected " + expected,
+                        types);
 
                 assertEquals(expected, types.toString());
             }
@@ -119,8 +129,12 @@ public class ResourceEvaluatorTest extends TestCase {
         Disposer.dispose(disposable);
     }
 
-    private static void check(String expected, String statementsSource,
-            final String targetVariable, boolean getSpecificType, boolean allowDereference) {
+    private static void check(
+            String expected,
+            String statementsSource,
+            final String targetVariable,
+            boolean getSpecificType,
+            boolean allowDereference) {
         checkUast(expected, statementsSource, targetVariable, getSpecificType, allowDereference);
 
         @Language("JAVA")
@@ -135,26 +149,28 @@ public class ResourceEvaluatorTest extends TestCase {
 
         // Find the expression
         final AtomicReference<PsiExpression> reference = new AtomicReference<>();
-        javaFile.accept(new JavaRecursiveElementVisitor() {
-            @Override
-            public void visitLocalVariable(PsiLocalVariable variable) {
-                super.visitLocalVariable(variable);
-                String name = variable.getName();
-                if (name != null && name.equals(targetVariable)) {
-                    reference.set(variable.getInitializer());
-                }
-            }
-        });
+        javaFile.accept(
+                new JavaRecursiveElementVisitor() {
+                    @Override
+                    public void visitLocalVariable(PsiLocalVariable variable) {
+                        super.visitLocalVariable(variable);
+                        String name = variable.getName();
+                        if (name != null && name.equals(targetVariable)) {
+                            reference.set(variable.getInitializer());
+                        }
+                    }
+                });
         PsiExpression expression = reference.get();
-        ResourceEvaluator evaluator = new ResourceEvaluator(context.getEvaluator())
-                .allowDereference(allowDereference);
+        ResourceEvaluator evaluator =
+                new ResourceEvaluator(context.getEvaluator()).allowDereference(allowDereference);
 
         if (getSpecificType) {
             ResourceUrl actual = evaluator.getResource(expression);
             if (expected == null) {
                 assertNull(actual);
             } else {
-                assertNotNull("Couldn't compute resource for " + source + ", expected " + expected,
+                assertNotNull(
+                        "Couldn't compute resource for " + source + ", expected " + expected,
                         actual);
 
                 assertEquals(expected, actual.toString());
@@ -164,8 +180,9 @@ public class ResourceEvaluatorTest extends TestCase {
             if (expected == null) {
                 assertNull(types);
             } else {
-                assertNotNull("Couldn't compute resource types for " + source
-                        + ", expected " + expected, types);
+                assertNotNull(
+                        "Couldn't compute resource types for " + source + ", expected " + expected,
+                        types);
 
                 assertEquals(expected, types.toString());
             }
@@ -173,18 +190,21 @@ public class ResourceEvaluatorTest extends TestCase {
         Disposer.dispose(disposable);
     }
 
-    private static void checkType(String expected, String statementsSource,
-            final String targetVariable) {
+    private static void checkType(
+            String expected, String statementsSource, final String targetVariable) {
         check(expected, statementsSource, targetVariable, true, true);
     }
 
-    private static void checkTypes(String expected, String statementsSource,
-            final String targetVariable) {
+    private static void checkTypes(
+            String expected, String statementsSource, final String targetVariable) {
         check(expected, statementsSource, targetVariable, false, true);
     }
 
-    private static void checkTypes(String expected, String statementsSource,
-            final String targetVariable, boolean allowDereference) {
+    private static void checkTypes(
+            String expected,
+            String statementsSource,
+            final String targetVariable,
+            boolean allowDereference) {
         check(expected, statementsSource, targetVariable, false, allowDereference);
     }
 
@@ -193,28 +213,33 @@ public class ResourceEvaluatorTest extends TestCase {
     }
 
     public void testIndirectFieldReference() {
-        checkType("@color/red", ""
-                + "int z = RED;\n"
-                + "int w = true ? z : 0",
-                "w");
+        checkType("@color/red", "int z = RED;\nint w = true ? z : 0", "w");
     }
 
     public void testMethodCall() {
-        checkType("@color/green", ""
+        checkType(
+                "@color/green",
+                ""
                         + "android.app.Activity context = null;"
                         + "int w = context.getResources().getColor(R.color.green);",
                 "w");
     }
 
     public void testMethodCallNoDereference() {
-        check(null, ""
+        check(
+                null,
+                ""
                         + "android.app.Activity context = null;"
                         + "int w = context.getResources().getColor(R.color.green);",
-                "w", true, false);
+                "w",
+                true,
+                false);
     }
 
     public void testReassignment() {
-        checkType("@string/foo", ""
+        checkType(
+                "@string/foo",
+                ""
                         + "int x = R.string.foo;\n"
                         + "int y = x;\n"
                         + "int w;\n"
@@ -226,7 +251,9 @@ public class ResourceEvaluatorTest extends TestCase {
     // Resource Types
 
     public void testReassignmentType() {
-        checkTypes("[string]", ""
+        checkTypes(
+                "[string]",
+                ""
                         + "int x = R.string.foo;\n"
                         + "int y = x;\n"
                         + "int w;\n"
@@ -237,7 +264,9 @@ public class ResourceEvaluatorTest extends TestCase {
 
     public void testMethodCallTypes() {
         // public=color int marker
-        checkTypes("[public]", ""
+        checkTypes(
+                "[public]",
+                ""
                         + "android.app.Activity context = null;"
                         + "int w = context.getResources().getColor(R.color.green);",
                 "w");
@@ -245,17 +274,14 @@ public class ResourceEvaluatorTest extends TestCase {
 
     public void testConditionalTypes() {
         // Constant expression: we know exactly which branch to take
-        checkTypes("[color]", ""
-                        + "int z = RED;\n"
-                        + "int w = true ? z : R.string.foo",
-                "w");
+        checkTypes("[color]", "int z = RED;\nint w = true ? z : R.string.foo", "w");
     }
 
     public void testConditionalTypesUnknownCondition() {
         // Constant expression: we know exactly which branch to take
-        checkTypes("[color, string]", ""
-                        + "int z = RED;\n"
-                        + "int w = toString().indexOf('x') > 2 ? z : R.string.foo",
+        checkTypes(
+                "[color, string]",
+                "int z = RED;\nint w = toString().indexOf('x') > 2 ? z : R.string.foo",
                 "w");
     }
 

@@ -58,7 +58,8 @@ that `<navigation>`
         )
     }
 
-    override fun appliesTo(folderType: ResourceFolderType): Boolean = folderType == ResourceFolderType.NAVIGATION
+    override fun appliesTo(folderType: ResourceFolderType): Boolean =
+        folderType == ResourceFolderType.NAVIGATION
 
     override fun getApplicableElements() = listOf(TAG_NAVIGATION)
 
@@ -68,20 +69,21 @@ that `<navigation>`
         // smart cast to non-null doesn't seem to work with isNullOrBlank?
         if (destinationAttrValue == null || destinationAttrValue.isBlank()) {
             context.report(
-                    ISSUE,
-                    navigation,
-                    context.getNameLocation(navigation),
-                    "No start destination specified"
+                ISSUE,
+                navigation,
+                context.getNameLocation(navigation),
+                "No start destination specified"
             )
         } else {
             // TODO(namespaces): Support namespaces in ids
             val url = ResourceUrl.parse(destinationAttrValue)
             if (url == null || url.type != ResourceType.ID) {
                 context.report(
-                        ISSUE,
-                        navigation,
-                        context.getNameLocation(navigation),
-                        "startDestination must be an id")
+                    ISSUE,
+                    navigation,
+                    context.getNameLocation(navigation),
+                    "startDestination must be an id"
+                )
                 return
             }
             val children = navigation.childNodes
@@ -94,10 +96,10 @@ that `<navigation>`
                 }
             }
             context.report(
-                    ISSUE,
-                    navigation,
-                    context.getValueLocation(destinationAttr),
-                    "Invalid start destination $destinationAttrValue"
+                ISSUE,
+                navigation,
+                context.getValueLocation(destinationAttr),
+                "Invalid start destination $destinationAttrValue"
             )
         }
     }

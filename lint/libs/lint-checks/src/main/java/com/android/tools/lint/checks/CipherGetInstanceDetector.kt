@@ -43,7 +43,8 @@ class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
     }
 
     override fun visitMethod(
-        context: JavaContext, node: UCallExpression,
+        context: JavaContext,
+        node: UCallExpression,
         method: PsiMethod
     ) {
         if (!context.evaluator.isMemberInSubClassOf(method, JAVAX_CRYPTO_CIPHER, false)) {
@@ -98,7 +99,8 @@ class CipherGetInstanceDetector : Detector(), SourceCodeScanner {
             context.report(ISSUE, call, context.getLocation(node), message)
         } else if ((transformation.contains("/ECB/") ||
                     transformation.endsWith("/ECB")) &&
-            !transformation.startsWith("RSA/")) {
+            !transformation.startsWith("RSA/")
+        ) {
             var message = "ECB encryption mode should not be used"
             if (includeValue) {
                 message += " (was \"$transformation\")"

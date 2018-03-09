@@ -51,35 +51,34 @@ import org.jetbrains.uast.UClass;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-/**
- * Ensures that PreferenceActivity and its subclasses are never exported.
- */
-public class PreferenceActivityDetector extends Detector
-        implements XmlScanner, SourceCodeScanner {
+/** Ensures that PreferenceActivity and its subclasses are never exported. */
+public class PreferenceActivityDetector extends Detector implements XmlScanner, SourceCodeScanner {
 
     @SuppressWarnings("unchecked")
-    public static final Implementation IMPLEMENTATION = new Implementation(
-            PreferenceActivityDetector.class,
-            EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE),
-            Scope.MANIFEST_SCOPE,
-            Scope.JAVA_FILE_SCOPE);
+    public static final Implementation IMPLEMENTATION =
+            new Implementation(
+                    PreferenceActivityDetector.class,
+                    EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE),
+                    Scope.MANIFEST_SCOPE,
+                    Scope.JAVA_FILE_SCOPE);
 
-    public static final Issue ISSUE = Issue.create(
-            "ExportedPreferenceActivity",
-            "PreferenceActivity should not be exported",
-            "Fragment injection gives anyone who can send your PreferenceActivity an intent the "
-                    + "ability to load any fragment, with any arguments, in your process.",
-            Category.SECURITY,
-            8,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .addMoreInfo("http://securityintelligence.com/"
-                    + "new-vulnerability-android-framework-fragment-injection");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "ExportedPreferenceActivity",
+                            "PreferenceActivity should not be exported",
+                            "Fragment injection gives anyone who can send your PreferenceActivity an intent the "
+                                    + "ability to load any fragment, with any arguments, in your process.",
+                            Category.SECURITY,
+                            8,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "http://securityintelligence.com/"
+                                    + "new-vulnerability-android-framework-fragment-injection");
     private static final String PREFERENCE_ACTIVITY = "android.preference.PreferenceActivity";
     private static final String IS_VALID_FRAGMENT = "isValidFragment";
 
-    private final Map<String, Location.Handle> mExportedActivities =
-            new HashMap<>();
+    private final Map<String, Location.Handle> mExportedActivities = new HashMap<>();
 
     // ---- Implements XmlScanner ----
 
@@ -92,8 +91,8 @@ public class PreferenceActivityDetector extends Detector
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (SecurityDetector.getExported(element)) {
             String fqcn = LintUtils.resolveManifestName(element);
-            if (fqcn.equals(PREFERENCE_ACTIVITY) &&
-                    !context.getDriver().isSuppressed(context, ISSUE, element)) {
+            if (fqcn.equals(PREFERENCE_ACTIVITY)
+                    && !context.getDriver().isSuppressed(context, ISSUE, element)) {
                 String message = "`PreferenceActivity` should not be exported";
                 context.report(ISSUE, element, context.getLocation(element), message);
             }
@@ -126,9 +125,10 @@ public class PreferenceActivityDetector extends Detector
                 return;
             }
 
-            String message = String.format(
-                    "`PreferenceActivity` subclass `%1$s` should not be exported",
-                    className);
+            String message =
+                    String.format(
+                            "`PreferenceActivity` subclass `%1$s` should not be exported",
+                            className);
             Location location;
             if (context.getScope().contains(Scope.MANIFEST)) {
                 location = mExportedActivities.get(className).resolve();
@@ -155,12 +155,11 @@ public class PreferenceActivityDetector extends Detector
         Project mainProject = context.getMainProject();
 
         Document mergedManifest = mainProject.getMergedManifest();
-        if (mergedManifest == null ||
-                mergedManifest.getDocumentElement() == null) {
+        if (mergedManifest == null || mergedManifest.getDocumentElement() == null) {
             return false;
         }
-        Element application = XmlUtils.getFirstSubTagByName(
-                mergedManifest.getDocumentElement(), TAG_APPLICATION);
+        Element application =
+                XmlUtils.getFirstSubTagByName(mergedManifest.getDocumentElement(), TAG_APPLICATION);
         if (application != null) {
             for (Element element : XmlUtils.getSubTags(application)) {
                 if (TAG_ACTIVITY.equals(element.getTagName())) {
@@ -179,8 +178,7 @@ public class PreferenceActivityDetector extends Detector
     }
 
     private static boolean overridesIsValidFragment(
-            @NonNull JavaEvaluator evaluator,
-            @NonNull PsiClass resolvedClass) {
+            @NonNull JavaEvaluator evaluator, @NonNull PsiClass resolvedClass) {
         for (PsiMethod method : resolvedClass.findMethodsByName(IS_VALID_FRAGMENT, false)) {
             if (evaluator.parametersMatch(method, TYPE_STRING)) {
                 return true;

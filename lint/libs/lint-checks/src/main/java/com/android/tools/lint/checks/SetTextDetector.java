@@ -39,36 +39,32 @@ import org.jetbrains.uast.UPolyadicExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UastBinaryOperator;
 
-/**
- * Checks for errors related to TextView#setText and internationalization
- */
+/** Checks for errors related to TextView#setText and internationalization */
 public class SetTextDetector extends Detector implements SourceCodeScanner {
 
-    private static final Implementation IMPLEMENTATION = new Implementation(
-            SetTextDetector.class,
-            Scope.JAVA_FILE_SCOPE);
+    private static final Implementation IMPLEMENTATION =
+            new Implementation(SetTextDetector.class, Scope.JAVA_FILE_SCOPE);
 
     /** Constructing SimpleDateFormat without an explicit locale */
-    public static final Issue SET_TEXT_I18N = Issue.create(
-            "SetTextI18n",
-            "TextView Internationalization",
-
-            "When calling `TextView#setText`\n"  +
-            "* Never call `Number#toString()` to format numbers; it will not handle fraction " +
-            "separators and locale-specific digits properly. Consider using `String#format` " +
-            "with proper format specifications (`%d` or `%f`) instead.\n" +
-            "* Do not pass a string literal (e.g. \"Hello\") to display text. Hardcoded " +
-            "text can not be properly translated to other languages. Consider using Android " +
-            "resource strings instead.\n" +
-            "* Do not build messages by concatenating text chunks. Such messages can not be " +
-            "properly translated.",
-
-            Category.I18N,
-            6,
-            Severity.WARNING,
-            IMPLEMENTATION)
-            .addMoreInfo("http://developer.android.com/guide/topics/resources/localization.html");
-
+    public static final Issue SET_TEXT_I18N =
+            Issue.create(
+                            "SetTextI18n",
+                            "TextView Internationalization",
+                            "When calling `TextView#setText`\n"
+                                    + "* Never call `Number#toString()` to format numbers; it will not handle fraction "
+                                    + "separators and locale-specific digits properly. Consider using `String#format` "
+                                    + "with proper format specifications (`%d` or `%f`) instead.\n"
+                                    + "* Do not pass a string literal (e.g. \"Hello\") to display text. Hardcoded "
+                                    + "text can not be properly translated to other languages. Consider using Android "
+                                    + "resource strings instead.\n"
+                                    + "* Do not build messages by concatenating text chunks. Such messages can not be "
+                                    + "properly translated.",
+                            Category.I18N,
+                            6,
+                            Severity.WARNING,
+                            IMPLEMENTATION)
+                    .addMoreInfo(
+                            "http://developer.android.com/guide/topics/resources/localization.html");
 
     private static final String METHOD_NAME = "setText";
     private static final String TO_STRING_NAME = "toString";
@@ -81,8 +77,7 @@ public class SetTextDetector extends Detector implements SourceCodeScanner {
     private static final String WORD_PATTERN = ".*\\w{2,}.*";
 
     /** Constructs a new {@link SetTextDetector} */
-    public SetTextDetector() {
-    }
+    public SetTextDetector() {}
 
     // ---- implements SourceCodeScanner ----
 
@@ -93,23 +88,28 @@ public class SetTextDetector extends Detector implements SourceCodeScanner {
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
         if (!evaluator.isMemberInSubClassOf(method, TEXT_VIEW_CLS, false)) {
             return;
         }
-        if (method.getParameterList().getParametersCount() > 0 &&
-                evaluator.parameterHasType(method, 0, CHAR_SEQUENCE_CLS)) {
+        if (method.getParameterList().getParametersCount() > 0
+                && evaluator.parameterHasType(method, 0, CHAR_SEQUENCE_CLS)) {
             checkNode(context, call.getValueArguments().get(0));
         }
     }
 
     private static void checkNode(@NonNull JavaContext context, @Nullable UElement node) {
         if (node instanceof ULiteralExpression) {
-            Object value = ((ULiteralExpression)node).getValue();
+            Object value = ((ULiteralExpression) node).getValue();
             if (value instanceof String && value.toString().matches(WORD_PATTERN)) {
-                context.report(SET_TEXT_I18N, node, context.getLocation(node),
+                context.report(
+                        SET_TEXT_I18N,
+                        node,
+                        context.getLocation(node),
                         "String literal in `setText` can not be translated. Use Android "
                                 + "resources instead.");
             }
@@ -122,9 +122,12 @@ public class SetTextDetector extends Detector implements SourceCodeScanner {
                 }
                 PsiClass superClass = containingClass.getSuperClass();
                 if (superClass != null && NUMBER_CLS.equals(superClass.getQualifiedName())) {
-                    context.report(SET_TEXT_I18N, node, context.getLocation(node),
-                            "Number formatting does not take into account locale settings. " +
-                                    "Consider using `String.format` instead.");
+                    context.report(
+                            SET_TEXT_I18N,
+                            node,
+                            context.getLocation(node),
+                            "Number formatting does not take into account locale settings. "
+                                    + "Consider using `String.format` instead.");
                 }
             }
         } else if (node instanceof UQualifiedReferenceExpression) {
@@ -134,7 +137,10 @@ public class SetTextDetector extends Detector implements SourceCodeScanner {
         } else if (node instanceof UPolyadicExpression) {
             UPolyadicExpression expression = (UPolyadicExpression) node;
             if (expression.getOperator() == UastBinaryOperator.PLUS) {
-                context.report(SET_TEXT_I18N, node, context.getLocation(node),
+                context.report(
+                        SET_TEXT_I18N,
+                        node,
+                        context.getLocation(node),
                         "Do not concatenate text displayed with `setText`. "
                                 + "Use resource string with placeholders.");
             }

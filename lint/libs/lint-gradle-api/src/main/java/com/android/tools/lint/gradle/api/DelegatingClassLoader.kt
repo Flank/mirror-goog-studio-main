@@ -20,8 +20,8 @@ import java.net.URL
 import java.net.URLClassLoader
 import java.util.Enumeration
 
-class DelegatingClassLoader(urls: Array<URL>)
-    : URLClassLoader(urls, null /* no parent class loader!*/) {
+class DelegatingClassLoader(urls: Array<URL>) :
+    URLClassLoader(urls, null /* no parent class loader!*/) {
     private val delegate = this.javaClass.classLoader
 
     @Throws(ClassNotFoundException::class)

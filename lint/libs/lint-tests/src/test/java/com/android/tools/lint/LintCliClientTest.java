@@ -25,23 +25,25 @@ import com.intellij.openapi.extensions.Extensions;
 public class LintCliClientTest extends AbstractCheckTest {
     public void testUnknownId() {
         lint().files(
-                gradle(""
-                        + "\n"
-                        + "android {\n"
-                        + "    lintOptions {\n"
-                        + "        // Let's disable UnknownLintId\n"
-                        + "        /* Let's disable UnknownLintId */\n"
-                        + "        check 'HardcodedText', 'UnknownLintId'\n"
-                        + "    }\n"
-                        + "}\n"))
+                        gradle(
+                                ""
+                                        + "\n"
+                                        + "android {\n"
+                                        + "    lintOptions {\n"
+                                        + "        // Let's disable UnknownLintId\n"
+                                        + "        /* Let's disable UnknownLintId */\n"
+                                        + "        check 'HardcodedText', 'UnknownLintId'\n"
+                                        + "    }\n"
+                                        + "}\n"))
                 .issues(HardcodedValuesDetector.ISSUE)
                 .allowSystemErrors(true)
                 .run()
-                .expect(""
-                        + "build.gradle:6: Error: Unknown issue id \"UnknownLintId\" [LintError]\n"
-                        + "        check 'HardcodedText', 'UnknownLintId'\n"
-                        + "                                ~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n");
+                .expect(
+                        ""
+                                + "build.gradle:6: Error: Unknown issue id \"UnknownLintId\" [LintError]\n"
+                                + "        check 'HardcodedText', 'UnknownLintId'\n"
+                                + "                                ~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings\n");
     }
 
     public void testMissingExtensionPoints() {

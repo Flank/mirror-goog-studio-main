@@ -112,15 +112,21 @@ import java.util.HashMap
  * It also notifies all the detectors before and after the document is processed
  * such that they can do pre- and post-processing.
  */
-internal class UElementVisitor constructor(private val parser: UastParser,
-        detectors: List<Detector>) {
+internal class UElementVisitor constructor(
+    private val parser: UastParser,
+    detectors: List<Detector>
+) {
 
-    private val methodDetectors = Maps.newHashMapWithExpectedSize<String, MutableList<VisitingDetector>>(90)
-    private val constructorDetectors = Maps.newHashMapWithExpectedSize<String, MutableList<VisitingDetector>>(12)
-    private val referenceDetectors = Maps.newHashMapWithExpectedSize<String, MutableList<VisitingDetector>>(10)
+    private val methodDetectors =
+        Maps.newHashMapWithExpectedSize<String, MutableList<VisitingDetector>>(90)
+    private val constructorDetectors =
+        Maps.newHashMapWithExpectedSize<String, MutableList<VisitingDetector>>(12)
+    private val referenceDetectors =
+        Maps.newHashMapWithExpectedSize<String, MutableList<VisitingDetector>>(10)
     private val resourceFieldDetectors = ArrayList<VisitingDetector>()
     private val allDetectors: MutableList<VisitingDetector>
-    private val nodePsiTypeDetectors = Maps.newHashMapWithExpectedSize<Class<out UElement>, MutableList<VisitingDetector>>(25)
+    private val nodePsiTypeDetectors =
+        Maps.newHashMapWithExpectedSize<Class<out UElement>, MutableList<VisitingDetector>>(25)
     private val superClassDetectors = HashMap<String, MutableList<VisitingDetector>>()
     private val annotationHandler: AnnotationHandler?
     private val callGraphDetectors = ArrayList<SourceCodeScanner>()
@@ -150,7 +156,8 @@ internal class UElementVisitor constructor(private val parser: UastParser,
             val applicableSuperClasses = detector.applicableSuperClasses()
             if (applicableSuperClasses != null) {
                 for (fqn in applicableSuperClasses) {
-                    val list = superClassDetectors.computeIfAbsent(fqn) { ArrayList(SAME_TYPE_COUNT) }
+                    val list =
+                        superClassDetectors.computeIfAbsent(fqn) { ArrayList(SAME_TYPE_COUNT) }
                     list.add(v)
                 }
             }
@@ -158,7 +165,8 @@ internal class UElementVisitor constructor(private val parser: UastParser,
             val nodePsiTypes = detector.getApplicableUastTypes()
             if (nodePsiTypes != null) {
                 for (type in nodePsiTypes) {
-                    val list = nodePsiTypeDetectors.computeIfAbsent(type) { ArrayList(SAME_TYPE_COUNT) }
+                    val list =
+                        nodePsiTypeDetectors.computeIfAbsent(type) { ArrayList(SAME_TYPE_COUNT) }
                     list.add(v)
                 }
             }
@@ -172,7 +180,7 @@ internal class UElementVisitor constructor(private val parser: UastParser,
                     var list: MutableList<VisitingDetector>? = constructorDetectors[type]
                     if (list == null) {
                         list = ArrayList(SAME_TYPE_COUNT)
-                        constructorDetectors.put(type, list)
+                        constructorDetectors[type] = list
                     }
                     list.add(v)
                 }
@@ -185,7 +193,8 @@ internal class UElementVisitor constructor(private val parser: UastParser,
                 assert(referenceNames !== XmlScannerConstants.ALL)
 
                 for (name in referenceNames) {
-                    val list = referenceDetectors.computeIfAbsent(name) { ArrayList(SAME_TYPE_COUNT) }
+                    val list =
+                        referenceDetectors.computeIfAbsent(name) { ArrayList(SAME_TYPE_COUNT) }
                     list.add(v)
                 }
             }
@@ -224,10 +233,11 @@ internal class UElementVisitor constructor(private val parser: UastParser,
         try {
             val uastParser = context.uastParser
 
-            val uFile = uastParser.parse(context) ?: // No need to log this; the parser should be reporting
-                    // a full warning (such as IssueRegistry#PARSER_ERROR)
-                    // with details, location, etc.
-                    return
+            val uFile =
+                uastParser.parse(context) ?: // No need to log this; the parser should be reporting
+                // a full warning (such as IssueRegistry#PARSER_ERROR)
+                // with details, location, etc.
+                return
 
             val client = context.client
             try {
@@ -249,10 +259,11 @@ internal class UElementVisitor constructor(private val parser: UastParser,
                 }
 
                 if (!methodDetectors.isEmpty()
-                        || !resourceFieldDetectors.isEmpty()
-                        || !constructorDetectors.isEmpty()
-                        || !referenceDetectors.isEmpty()
-                        || annotationHandler != null) {
+                    || !resourceFieldDetectors.isEmpty()
+                    || !constructorDetectors.isEmpty()
+                    || !referenceDetectors.isEmpty()
+                    || annotationHandler != null
+                ) {
                     client.runReadAction(Runnable {
                         // TODO: Do we need to break this one up into finer grain locking units
                         val visitor = DelegatingPsiVisitor(context)
@@ -288,17 +299,18 @@ internal class UElementVisitor constructor(private val parser: UastParser,
             // lint error instead!
             LintDriver.handleDetectorError(context, context.driver, e)
         }
-
     }
 
     fun prepare(contexts: List<JavaContext>, testContexts: List<JavaContext>): Boolean =
-            parser.prepare(contexts, testContexts)
+        parser.prepare(contexts, testContexts)
 
     fun visitGroups(
-            projectContext: Context,
-            allContexts: List<JavaContext>) {
-        if (!allContexts.isEmpty() && allDetectors.stream().
-                anyMatch { it.uastScanner.isCallGraphRequired() }) {
+        projectContext: Context,
+        allContexts: List<JavaContext>
+    ) {
+        if (!allContexts.isEmpty() && allDetectors.stream()
+                .anyMatch { it.uastScanner.isCallGraphRequired() }
+        ) {
             val callGraph = projectContext.client.runReadAction(Computable {
                 generateCallGraph(projectContext, parser, allContexts)
             })
@@ -314,19 +326,22 @@ internal class UElementVisitor constructor(private val parser: UastParser,
     }
 
     private fun generateCallGraph(
-            projectContext: Context,
-            parser: UastParser,
-            contexts: List<JavaContext>): CallGraphResult? {
+        projectContext: Context,
+        parser: UastParser,
+        contexts: List<JavaContext>
+    ): CallGraphResult? {
         if (contexts.isEmpty()) {
             return null
         }
 
         try {
             val chaVisitor = ClassHierarchyVisitor()
-            val receiverEvalVisitor = IntraproceduralDispatchReceiverVisitor(chaVisitor.classHierarchy)
+            val receiverEvalVisitor =
+                IntraproceduralDispatchReceiverVisitor(chaVisitor.classHierarchy)
             val callGraphVisitor = CallGraphVisitor(
-                    receiverEvalVisitor.receiverEval,
-                    chaVisitor.classHierarchy, false)
+                receiverEvalVisitor.receiverEval,
+                chaVisitor.classHierarchy, false
+            )
 
             for (context in contexts) {
                 val uFile = parser.parse(context)
@@ -357,11 +372,12 @@ internal class UElementVisitor constructor(private val parser: UastParser,
                 message += " For example, to set the Gradle daemon to use 4 GB, edit " +
                         "`gradle.properties` to contains `org.gradle.jvmargs=-Xmx4g`"
             }
-            projectContext.report(IssueRegistry.LINT_ERROR,
-                    Location.create(projectContext.project.dir), message)
+            projectContext.report(
+                IssueRegistry.LINT_ERROR,
+                Location.create(projectContext.project.dir), message
+            )
             return null
         }
-
     }
 
     fun dispose() {
@@ -392,7 +408,8 @@ internal class UElementVisitor constructor(private val parser: UastParser,
         }
     }
 
-    private inner class SuperclassPsiVisitor(private val context: JavaContext) : AbstractUastVisitor() {
+    private inner class SuperclassPsiVisitor(private val context: JavaContext) :
+        AbstractUastVisitor() {
 
         override fun visitLambdaExpression(node: ULambdaExpression): Boolean {
             // Have to go to PSI here; not available on ULambdaExpression yet
@@ -418,9 +435,11 @@ internal class UElementVisitor constructor(private val parser: UastParser,
             return result
         }
 
-        private fun checkClass(lambda: ULambdaExpression?,
-                uClass: UClass?,
-                node: PsiClass) {
+        private fun checkClass(
+            lambda: ULambdaExpression?,
+            uClass: UClass?,
+            node: PsiClass
+        ) {
             ProgressManager.checkCanceled()
 
             if (node is PsiTypeParameter) {
@@ -960,7 +979,8 @@ internal class UElementVisitor constructor(private val parser: UastParser,
 
     /** Performs common AST searches for method calls and R-type-field references.
      * Note that this is a specialized form of the [DispatchPsiVisitor].  */
-    private inner class DelegatingPsiVisitor constructor(private val mContext: JavaContext) : DispatchPsiVisitor() {
+    private inner class DelegatingPsiVisitor constructor(private val mContext: JavaContext) :
+        DispatchPsiVisitor() {
         private val mVisitResources: Boolean = !resourceFieldDetectors.isEmpty()
         private val mVisitMethods: Boolean = !methodDetectors.isEmpty()
         private val mVisitConstructors: Boolean = !constructorDetectors.isEmpty()
@@ -989,11 +1009,13 @@ internal class UElementVisitor constructor(private val parser: UastParser,
                 if (reference != null) {
                     for (v in resourceFieldDetectors) {
                         val uastScanner = v.uastScanner
-                        uastScanner.visitResourceReference(mContext,
-                                reference.node,
-                                reference.type,
-                                reference.name,
-                                reference.`package` == ANDROID_PKG)
+                        uastScanner.visitResourceReference(
+                            mContext,
+                            reference.node,
+                            reference.type,
+                            reference.name,
+                            reference.`package` == ANDROID_PKG
+                        )
                     }
                 }
             }
@@ -1087,11 +1109,12 @@ internal class UElementVisitor constructor(private val parser: UastParser,
 
     companion object {
         /** Default size of lists holding detectors of the same type for a given node type  */
-        private val SAME_TYPE_COUNT = 8
+        private const val SAME_TYPE_COUNT = 8
 
         private fun getInterfaceNames(
-                addTo: MutableSet<String>?,
-                cls: PsiClass): Set<String>? {
+            addTo: MutableSet<String>?,
+            cls: PsiClass
+        ): Set<String>? {
             var target = addTo
             for (resolvedInterface in cls.interfaces) {
                 val name = resolvedInterface.qualifiedName ?: continue

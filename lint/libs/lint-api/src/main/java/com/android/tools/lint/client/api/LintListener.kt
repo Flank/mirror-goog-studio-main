@@ -71,8 +71,9 @@ interface LintListener {
      * @param context the context providing additional information
      */
     fun update(
-            driver: LintDriver,
-            type: EventType,
-            project: Project? = null,
-            context: Context? = null)
+        driver: LintDriver,
+        type: EventType,
+        project: Project? = null,
+        context: Context? = null
+    )
 }

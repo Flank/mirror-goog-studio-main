@@ -164,8 +164,12 @@ class ResourceCycleDetector : ResourceXmlDetector() {
         return newMap
     }
 
-    private fun recordLocation(context: XmlContext, node: Node,
-            type: ResourceType, from: String) {
+    private fun recordLocation(
+        context: XmlContext,
+        node: Node,
+        type: ResourceType,
+        from: String
+    ) {
         // Cycles were already found; we're now in phase 2 looking up specific
         // locations
         val map = getLocationMap(type) ?: return
@@ -221,8 +225,10 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                                         if (mReferences != null) {
                                             val name = nameNode.value
                                             if (mLocations != null) {
-                                                recordLocation(context, child, type,
-                                                        name)
+                                                recordLocation(
+                                                    context, child, type,
+                                                    name
+                                                )
                                             } else {
                                                 recordReference(type, name, to)
                                             }
@@ -241,21 +247,25 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                 val color = element.getAttributeNS(ANDROID_URI, ATTR_COLOR)
                 if (color != null && color.startsWith(COLOR_RESOURCE_PREFIX)) {
                     val currentColor = LintUtils.getBaseName(context.file.name)
-                    handleReference(context,
-                            element,
-                            ResourceType.COLOR,
-                            currentColor,
-                            color.substring(COLOR_RESOURCE_PREFIX.length))
+                    handleReference(
+                        context,
+                        element,
+                        ResourceType.COLOR,
+                        currentColor,
+                        color.substring(COLOR_RESOURCE_PREFIX.length)
+                    )
                 }
             } else if (folderType == ResourceFolderType.DRAWABLE) {
                 val drawable = element.getAttributeNS(ANDROID_URI, ATTR_DRAWABLE)
                 if (drawable != null && drawable.startsWith(DRAWABLE_PREFIX)) {
                     val currentColor = LintUtils.getBaseName(context.file.name)
-                    handleReference(context,
-                            element,
-                            ResourceType.DRAWABLE,
-                            currentColor,
-                            drawable.substring(DRAWABLE_PREFIX.length))
+                    handleReference(
+                        context,
+                        element,
+                        ResourceType.DRAWABLE,
+                        currentColor,
+                        drawable.substring(DRAWABLE_PREFIX.length)
+                    )
                 }
             }
         } else if (tagName == TAG_STYLE) {
@@ -266,13 +276,16 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                 val name = nameNode.value
                 val parent = parentNode.value
                 if (parent.startsWith(STYLE_RESOURCE_PREFIX)
-                        && parent.startsWith(name, STYLE_RESOURCE_PREFIX.length)
-                        && parent.startsWith(".", STYLE_RESOURCE_PREFIX.length + name.length)) {
+                    && parent.startsWith(name, STYLE_RESOURCE_PREFIX.length)
+                    && parent.startsWith(".", STYLE_RESOURCE_PREFIX.length + name.length)
+                ) {
                     if (context.isEnabled(CYCLE) && context.driver.phase == 1) {
-                        context.report(CYCLE, parentNode, context.getLocation(parentNode),
-                                "Potential cycle: `$name` is the implied parent of `${
-                                        parent.substring(STYLE_RESOURCE_PREFIX.length)}` and " +
-                                        "this defines the opposite")
+                        context.report(
+                            CYCLE, parentNode, context.getLocation(parentNode),
+                            "Potential cycle: `$name` is the implied parent of `${
+                            parent.substring(STYLE_RESOURCE_PREFIX.length)}` and " +
+                                    "this defines the opposite"
+                        )
                     }
                     // Don't record this reference; we don't want to double report this
                     // as a chain, since this error is more helpful
@@ -311,11 +324,13 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                 val layout = layoutNode.value
                 if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) {
                     val currentLayout = LintUtils.getBaseName(context.file.name)
-                    handleReference(context,
-                            layoutNode,
-                            ResourceType.LAYOUT,
-                            currentLayout,
-                            layout)
+                    handleReference(
+                        context,
+                        layoutNode,
+                        ResourceType.LAYOUT,
+                        currentLayout,
+                        layout
+                    )
                 }
             }
         } else if (tagName == TAG_COLOR || tagName == TAG_STRING || tagName == TAG_DIMEN) {
@@ -410,8 +425,10 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                         }
                     }
 
-                    val message = String.format("%1\$s Resource definition cycle: %2\$s",
-                            type.displayName, Joiner.on(" => ").join(chain))
+                    val message = String.format(
+                        "%1\$s Resource definition cycle: %2\$s",
+                        type.displayName, Joiner.on(" => ").join(chain)
+                    )
 
                     context.report(CYCLE, location, message)
                 }
@@ -430,9 +447,10 @@ class ResourceCycleDetector : ResourceXmlDetector() {
 
         val value = attribute.value
         if (value.isEmpty() ||
-                !value.startsWith(PREFIX_RESOURCE_REF) ||
-                value.startsWith(NEW_ID_PREFIX) || // id's can't have cycles
-                value.startsWith(ID_PREFIX)) {
+            !value.startsWith(PREFIX_RESOURCE_REF) ||
+            value.startsWith(NEW_ID_PREFIX) || // id's can't have cycles
+            value.startsWith(ID_PREFIX)
+        ) {
             return
         }
 
@@ -467,24 +485,29 @@ class ResourceCycleDetector : ResourceXmlDetector() {
         handleReference(context, attribute, url.type, from, url.name)
     }
 
-    private fun handleReference(context: XmlContext,
-            node: Node,
-            type: ResourceType,
-            from: String,
-            to: String) {
+    private fun handleReference(
+        context: XmlContext,
+        node: Node,
+        type: ResourceType,
+        from: String,
+        to: String
+    ) {
         if (from == to) {
             // Report immediately; don't record
             if (context.isEnabled(CYCLE)
-                    && context.driver.phase == 1) {
+                && context.driver.phase == 1
+            ) {
 
-                context.report(CYCLE, node, context.getLocation(node),
-                        "${type.displayName} `$to` should not ${
-                        when (type) {
-                            ResourceType.LAYOUT -> "include"
-                            ResourceType.STYLE -> "extend"
-                            else -> "reference"
-                        }
-                        } itself")
+                context.report(
+                    CYCLE, node, context.getLocation(node),
+                    "${type.displayName} `$to` should not ${
+                    when (type) {
+                        ResourceType.LAYOUT -> "include"
+                        ResourceType.STYLE -> "extend"
+                        else -> "reference"
+                    }
+                    } itself"
+                )
             }
         } else if (mReferences != null) {
             if (mLocations != null) {
@@ -496,9 +519,10 @@ class ResourceCycleDetector : ResourceXmlDetector() {
     }
 
     private fun findCycles(
-            context: Context,
-            type: ResourceType,
-            map: Multimap<String, String>) {
+        context: Context,
+        type: ResourceType,
+        map: Multimap<String, String>
+    ) {
         val visiting = Sets.newHashSet<String>()
         val visited = Sets.newHashSetWithExpectedSize<String>(map.size())
         val seen = Sets.newHashSetWithExpectedSize<String>(map.size())
@@ -511,14 +535,14 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                 seen.addAll(chain)
                 chain.reverse()
                 val chains: MutableMap<ResourceType, MutableList<MutableList<String>>> =
-                        mChains ?: run {
-                            val newMap = Maps.newEnumMap<ResourceType,
-                                    MutableList<MutableList<String>>>(ResourceType::class.java)
-                            mChains = newMap
-                            mLocations = Maps.newEnumMap(ResourceType::class.java)
-                            context.driver.requestRepeat(this, Scope.RESOURCE_FILE_SCOPE)
-                            newMap
-                        }
+                    mChains ?: run {
+                        val newMap = Maps.newEnumMap<ResourceType,
+                                MutableList<MutableList<String>>>(ResourceType::class.java)
+                        mChains = newMap
+                        mLocations = Maps.newEnumMap(ResourceType::class.java)
+                        context.driver.requestRepeat(this, Scope.RESOURCE_FILE_SCOPE)
+                        newMap
+                    }
 
                 val list = chains[type]
                 if (list == null) {
@@ -547,12 +571,14 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                         Character.isWhitespace(c) -> return
                         text.startsWith(NEW_ID_PREFIX, k) -> {
                             val name = text.trim { it <= ' ' }.substring(NEW_ID_PREFIX.length)
-                            val message = ("This construct can potentially crash `aapt` during a "
-                                    + "build. Change `@+id/" + name + "` to `@id/" + name + "` and define "
-                                    + "the id explicitly using "
-                                    + "`<item type=\"id\" name=\"" + name + "\"/>` instead.")
-                            context.report(CRASH, item, context.getLocation(item),
-                                    message)
+                            val message = ("This construct can potentially crash `aapt` during a " +
+                                    "build. Change `@+id/" + name + "` to `@id/" + name + "` and define " +
+                                    "the id explicitly using " +
+                                    "`<item type=\"id\" name=\"" + name + "\"/>` instead.")
+                            context.report(
+                                CRASH, item, context.getLocation(item),
+                                message
+                            )
                         }
                         else -> return
                     }
@@ -566,9 +592,11 @@ class ResourceCycleDetector : ResourceXmlDetector() {
     // ----- Cycle detection -----
 
     private fun dfs(
-            map: Multimap<String, String>,
-            from: String,
-            visiting: MutableSet<String>, visited: MutableSet<String>): MutableList<String>? {
+        map: Multimap<String, String>,
+        from: String,
+        visiting: MutableSet<String>,
+        visited: MutableSet<String>
+    ): MutableList<String>? {
         visiting.add(from)
         visited.add(from)
 
@@ -598,33 +626,35 @@ class ResourceCycleDetector : ResourceXmlDetector() {
 
     companion object {
         private val IMPLEMENTATION = Implementation(
-                ResourceCycleDetector::class.java,
-                Scope.RESOURCE_FILE_SCOPE)
+            ResourceCycleDetector::class.java,
+            Scope.RESOURCE_FILE_SCOPE
+        )
 
         /** Style parent cycles, resource alias cycles, layout include cycles, etc  */
         @JvmField
         val CYCLE = Issue.create(
-                "ResourceCycle",
-                "Cycle in resource definitions",
-                "There should be no cycles in resource definitions as this can lead to runtime " +
-                "exceptions.",
-                Category.CORRECTNESS,
-                8,
-                Severity.FATAL,
-                IMPLEMENTATION
+            "ResourceCycle",
+            "Cycle in resource definitions",
+            "There should be no cycles in resource definitions as this can lead to runtime " +
+                    "exceptions.",
+            Category.CORRECTNESS,
+            8,
+            Severity.FATAL,
+            IMPLEMENTATION
         )
 
         /** Parent cycles  */
         @JvmField
         val CRASH = Issue.create(
-                "AaptCrash",
-                "Potential AAPT crash",
-                "Defining a style which sets `android:id` to a dynamically generated id can cause " +
-                "many versions of `aapt`, the resource packaging tool, to crash. To work around " +
-                "this, declare the id explicitly with `<item type=\"id\" name=\"...\" />` instead.",
-                Category.CORRECTNESS,
-                8,
-                Severity.FATAL,
-                IMPLEMENTATION)
+            "AaptCrash",
+            "Potential AAPT crash",
+            "Defining a style which sets `android:id` to a dynamically generated id can cause " +
+                    "many versions of `aapt`, the resource packaging tool, to crash. To work around " +
+                    "this, declare the id explicitly with `<item type=\"id\" name=\"...\" />` instead.",
+            Category.CORRECTNESS,
+            8,
+            Severity.FATAL,
+            IMPLEMENTATION
+        )
     }
 }

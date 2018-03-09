@@ -54,34 +54,34 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
- * Checks for extractNativeLibs flag in <code>AndroidManifest.xml</code> when Native code is present.
- * <p/>
- * <b>NOTE: This is not a final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ * Checks for extractNativeLibs flag in <code>AndroidManifest.xml</code> when Native code is
+ * present.
+ *
+ * <p><b>NOTE: This is not a final API; if you rely on this be prepared to adjust your code for the
+ * next tools release.</b>
  */
-public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements XmlScanner,
-        SourceCodeScanner, ClassScanner {
+public class UnpackedNativeCodeDetector extends ResourceXmlDetector
+        implements XmlScanner, SourceCodeScanner, ClassScanner {
 
-    public static final Issue ISSUE = Issue.create(
-            "UnpackedNativeCode",
-
-            "Missing `android:extractNativeLibs=false`",
-
-            "This app loads native libraries using `System.loadLibrary()`.\n\n" +
-                    "Consider adding `android:extractNativeLibs=\"false\"` " +
-                    "to the `<application>` tag in AndroidManifest.xml. " +
-                    "Starting with Android 6.0, this will make installation faster, " +
-                    "the app will take up less space on the device " +
-                    "and updates will have smaller download sizes.",
-            Category.PERFORMANCE,
-            6,
-            Severity.WARNING,
-            new Implementation(
-                    UnpackedNativeCodeDetector.class,
-                    EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE, Scope.JAVA_LIBRARIES),
-                    EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE)
-            )
-    ).setEnabledByDefault(false); // b.android.com/232158
+    public static final Issue ISSUE =
+            Issue.create(
+                            "UnpackedNativeCode",
+                            "Missing `android:extractNativeLibs=false`",
+                            "This app loads native libraries using `System.loadLibrary()`.\n\n"
+                                    + "Consider adding `android:extractNativeLibs=\"false\"` "
+                                    + "to the `<application>` tag in AndroidManifest.xml. "
+                                    + "Starting with Android 6.0, this will make installation faster, "
+                                    + "the app will take up less space on the device "
+                                    + "and updates will have smaller download sizes.",
+                            Category.PERFORMANCE,
+                            6,
+                            Severity.WARNING,
+                            new Implementation(
+                                    UnpackedNativeCodeDetector.class,
+                                    EnumSet.of(
+                                            Scope.MANIFEST, Scope.JAVA_FILE, Scope.JAVA_LIBRARIES),
+                                    EnumSet.of(Scope.MANIFEST, Scope.JAVA_FILE)))
+                    .setEnabledByDefault(false); // b.android.com/232158
 
     private static final String SYSTEM_CLASS = "java.lang.System";
     private static final String RUNTIME_CLASS = "java.lang.Runtime";
@@ -91,33 +91,20 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements X
 
     private static final String LOAD_LIBRARY = "loadLibrary";
 
-    /**
-     * Android Gradle plugin 2.2.0+ supports uncompressed native libs in the APK
-     */
+    /** Android Gradle plugin 2.2.0+ supports uncompressed native libs in the APK */
     private static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.parse("2.2.0");
 
-
-    /**
-     * This will be <code>true</code> if the project or dependencies use native libraries
-     */
+    /** This will be <code>true</code> if the project or dependencies use native libraries */
     private boolean mHasNativeLibs;
 
-    /**
-     * The <application> manifest tag location for the main project,
-     */
+    /** The <application> manifest tag location for the main project, */
     private Location.Handle mApplicationTagHandle;
 
-    /**
-     * If the issue should be suppressed.
-     */
+    /** If the issue should be suppressed. */
     private boolean mSuppress;
 
-
-    /**
-     * No-args constructor used by the lint framework to instantiate the detector.
-     */
-    public UnpackedNativeCodeDetector() {
-    }
+    /** No-args constructor used by the lint framework to instantiate the detector. */
+    public UnpackedNativeCodeDetector() {}
 
     // ---- Implements ClassScanner----
 
@@ -131,14 +118,16 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements X
     }
 
     @Override
-    public void checkCall(@NonNull ClassContext context, @NonNull ClassNode classNode,
-            @NonNull MethodNode method, @NonNull MethodInsnNode call) {
+    public void checkCall(
+            @NonNull ClassContext context,
+            @NonNull ClassNode classNode,
+            @NonNull MethodNode method,
+            @NonNull MethodInsnNode call) {
         String owner = call.owner;
         String name = call.name;
 
         if (name.equals(LOAD_LIBRARY)
-                && (owner.equals(SYSTEM_CLASS_ALT)
-                || owner.equals(RUNTIME_CLASS_ALT))) {
+                && (owner.equals(SYSTEM_CLASS_ALT) || owner.equals(RUNTIME_CLASS_ALT))) {
             mHasNativeLibs = true;
         }
     }
@@ -155,13 +144,15 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements X
     }
 
     @Override
-    public void visitMethod(@NonNull JavaContext context, @NonNull UCallExpression call,
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression call,
             @NonNull PsiMethod method) {
         // Identify calls to Runtime.loadLibrary() and System.loadLibrary()
         if (LOAD_LIBRARY.equals(method.getName())) {
             JavaEvaluator evaluator = context.getEvaluator();
-            if (evaluator.isMemberInSubClassOf(method, RUNTIME_CLASS, false) ||
-                    evaluator.isMemberInSubClassOf(method, SYSTEM_CLASS, false)) {
+            if (evaluator.isMemberInSubClassOf(method, RUNTIME_CLASS, false)
+                    || evaluator.isMemberInSubClassOf(method, SYSTEM_CLASS, false)) {
                 mHasNativeLibs = true;
             }
         }
@@ -204,11 +195,14 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements X
                 && !context.getMainProject().isLibrary()
                 && mApplicationTagHandle != null) {
             if (!mSuppress && mHasNativeLibs) {
-                LintFix fix = fix().set(ANDROID_URI, ATTRIBUTE_EXTRACT_NATIVE_LIBS, VALUE_FALSE)
-                        .build();
-                context.report(ISSUE, mApplicationTagHandle.resolve(),
-                        "Missing attribute android:extractNativeLibs=\"false\"" +
-                                " on the `<application>` tag.", fix);
+                LintFix fix =
+                        fix().set(ANDROID_URI, ATTRIBUTE_EXTRACT_NATIVE_LIBS, VALUE_FALSE).build();
+                context.report(
+                        ISSUE,
+                        mApplicationTagHandle.resolve(),
+                        "Missing attribute android:extractNativeLibs=\"false\""
+                                + " on the `<application>` tag.",
+                        fix);
             }
         }
     }
@@ -227,8 +221,9 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements X
         }
 
         if (TAG_APPLICATION.equals(element.getNodeName())) {
-            Node extractAttr = element.getAttributeNodeNS(ANDROID_URI,
-                    AndroidManifest.ATTRIBUTE_EXTRACT_NATIVE_LIBS);
+            Node extractAttr =
+                    element.getAttributeNodeNS(
+                            ANDROID_URI, AndroidManifest.ATTRIBUTE_EXTRACT_NATIVE_LIBS);
             //noinspection VariableNotUsedInsideIf
             if (extractAttr != null) {
                 mSuppress = true;

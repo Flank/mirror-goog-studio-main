@@ -26,45 +26,47 @@ public class ItemDecoratorDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        assertEquals(""
-                + "src/com/example/android/supportv7/widget/decorator/DividerItemDecoration.java:11: Warning: Replace with android.support.v7.widget.DividerItemDecoration? [DuplicateDivider]\n"
-                + "public abstract class DividerItemDecoration extends RecyclerView.ItemDecoration {\n"
-                + "                      ~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
-            lintProject(
-                    java(""
-                            + "package com.example.android.supportv7.widget.decorator;\n"
-                            + "\n"
-                            + "import android.content.Context;\n"
-                            + "import android.content.res.TypedArray;\n"
-                            + "import android.graphics.Canvas;\n"
-                            + "import android.graphics.Rect;\n"
-                            + "import android.graphics.drawable.Drawable;\n"
-                            + "import android.support.v7.widget.RecyclerView;\n"
-                            + "import android.view.View;\n"
-                            + "\n"
-                            + "public abstract class DividerItemDecoration extends RecyclerView.ItemDecoration {\n"
-                            + "\n"
-                            + "    private static final int[] ATTRS = new int[]{\n"
-                            + "            android.R.attr.listDivider\n"
-                            + "    };\n"
-                            + "\n"
-                            + "    public static int HORIZONTAL_LIST;\n"
-                            + "\n"
-                            + "    public static int VERTICAL_LIST;\n"
-                            + "\n"
-                            + "    private Drawable mDivider;\n"
-                            + "\n"
-                            + "    private int mOrientation;\n"
-                            + "}"
-                            + "\n"),
-                    java(""
-                            + "package android.support.v7.widget;\n"
-                            + "public class RecyclerView {\n"
-                            + "    public abstract static class ItemDecoration {\n"
-                            + "    }\n"
-                            + "\n"
-                            + "}")
-            ));
+        assertEquals(
+                ""
+                        + "src/com/example/android/supportv7/widget/decorator/DividerItemDecoration.java:11: Warning: Replace with android.support.v7.widget.DividerItemDecoration? [DuplicateDivider]\n"
+                        + "public abstract class DividerItemDecoration extends RecyclerView.ItemDecoration {\n"
+                        + "                      ~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n",
+                lintProject(
+                        java(
+                                ""
+                                        + "package com.example.android.supportv7.widget.decorator;\n"
+                                        + "\n"
+                                        + "import android.content.Context;\n"
+                                        + "import android.content.res.TypedArray;\n"
+                                        + "import android.graphics.Canvas;\n"
+                                        + "import android.graphics.Rect;\n"
+                                        + "import android.graphics.drawable.Drawable;\n"
+                                        + "import android.support.v7.widget.RecyclerView;\n"
+                                        + "import android.view.View;\n"
+                                        + "\n"
+                                        + "public abstract class DividerItemDecoration extends RecyclerView.ItemDecoration {\n"
+                                        + "\n"
+                                        + "    private static final int[] ATTRS = new int[]{\n"
+                                        + "            android.R.attr.listDivider\n"
+                                        + "    };\n"
+                                        + "\n"
+                                        + "    public static int HORIZONTAL_LIST;\n"
+                                        + "\n"
+                                        + "    public static int VERTICAL_LIST;\n"
+                                        + "\n"
+                                        + "    private Drawable mDivider;\n"
+                                        + "\n"
+                                        + "    private int mOrientation;\n"
+                                        + "}"
+                                        + "\n"),
+                        java(
+                                ""
+                                        + "package android.support.v7.widget;\n"
+                                        + "public class RecyclerView {\n"
+                                        + "    public abstract static class ItemDecoration {\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "}")));
     }
 }

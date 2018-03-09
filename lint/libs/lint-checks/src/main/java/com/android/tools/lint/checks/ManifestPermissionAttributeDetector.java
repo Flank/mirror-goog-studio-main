@@ -44,21 +44,18 @@ import org.w3c.dom.Attr;
  */
 public class ManifestPermissionAttributeDetector extends Detector implements XmlScanner {
 
-    public static final Issue ISSUE = Issue.create(
-            "InvalidPermission",
-            "Invalid Permission Attribute",
-
-            "Not all elements support the permission attribute. If a permission is set on an " +
-            "invalid element, it is a no-op and ignored. Ensure that this permission attribute " +
-            "was set on the correct element to protect the correct component.",
-
-            Category.SECURITY,
-            5,
-            Severity.ERROR,
-            new Implementation(
-                    ManifestPermissionAttributeDetector.class,
-                    Scope.MANIFEST_SCOPE
-            ));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "InvalidPermission",
+                    "Invalid Permission Attribute",
+                    "Not all elements support the permission attribute. If a permission is set on an "
+                            + "invalid element, it is a no-op and ignored. Ensure that this permission attribute "
+                            + "was set on the correct element to protect the correct component.",
+                    Category.SECURITY,
+                    5,
+                    Severity.ERROR,
+                    new Implementation(
+                            ManifestPermissionAttributeDetector.class, Scope.MANIFEST_SCOPE));
 
     // ---- Implements XmlScanner ----
 
@@ -72,7 +69,7 @@ public class ManifestPermissionAttributeDetector extends Detector implements Xml
         String parent = attribute.getOwnerElement().getTagName();
 
         switch (parent) {
-            // Allowed tags:
+                // Allowed tags:
             case NODE_ACTIVITY:
             case NODE_APPLICATION:
             case NODE_PROVIDER:
@@ -83,8 +80,8 @@ public class ManifestPermissionAttributeDetector extends Detector implements Xml
                 return;
         }
         String message =
-                "Protecting an unsupported element with a permission is a no-op and " +
-                "potentially dangerous.";
+                "Protecting an unsupported element with a permission is a no-op and "
+                        + "potentially dangerous.";
         context.report(ISSUE, attribute, context.getLocation(attribute), message);
     }
 }

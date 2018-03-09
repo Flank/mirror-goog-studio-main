@@ -34,40 +34,34 @@ import java.util.Collection;
 import java.util.Collections;
 import org.w3c.dom.Element;
 
-/**
- * Check which looks for missing id's in views where they are probably needed
- */
+/** Check which looks for missing id's in views where they are probably needed */
 public class MissingIdDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "MissingId",
-            "Fragments should specify an `id` or `tag`",
-
-            "If you do not specify an android:id or an android:tag attribute on a " +
-            "<fragment> element, then if the activity is restarted (for example for " +
-            "an orientation rotation) you may lose state. From the fragment " +
-            "documentation:\n" +
-            "\n" +
-            "\"Each fragment requires a unique identifier that the system can use " +
-            "to restore the fragment if the activity is restarted (and which you can " +
-            "use to capture the fragment to perform transactions, such as remove it).\n" +
-            "\n" +
-            "* Supply the android:id attribute with a unique ID.\n" +
-            "* Supply the android:tag attribute with a unique string.\n" +
-            "If you provide neither of the previous two, the system uses the ID of the " +
-            "container view.",
-
-            Category.CORRECTNESS,
-            5,
-            Severity.WARNING,
-            new Implementation(
-                    MissingIdDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE))
-            .addMoreInfo("http://developer.android.com/guide/components/fragments.html");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "MissingId",
+                            "Fragments should specify an `id` or `tag`",
+                            "If you do not specify an android:id or an android:tag attribute on a "
+                                    + "<fragment> element, then if the activity is restarted (for example for "
+                                    + "an orientation rotation) you may lose state. From the fragment "
+                                    + "documentation:\n"
+                                    + "\n"
+                                    + "\"Each fragment requires a unique identifier that the system can use "
+                                    + "to restore the fragment if the activity is restarted (and which you can "
+                                    + "use to capture the fragment to perform transactions, such as remove it).\n"
+                                    + "\n"
+                                    + "* Supply the android:id attribute with a unique ID.\n"
+                                    + "* Supply the android:tag attribute with a unique string.\n"
+                                    + "If you provide neither of the previous two, the system uses the ID of the "
+                                    + "container view.",
+                            Category.CORRECTNESS,
+                            5,
+                            Severity.WARNING,
+                            new Implementation(MissingIdDetector.class, Scope.RESOURCE_FILE_SCOPE))
+                    .addMoreInfo("http://developer.android.com/guide/components/fragments.html");
 
     /** Constructs a new {@link MissingIdDetector} */
-    public MissingIdDetector() {
-    }
+    public MissingIdDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
@@ -76,14 +70,16 @@ public class MissingIdDetector extends LayoutDetector {
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        if (!element.hasAttributeNS(ANDROID_URI, ATTR_ID) &&
-                !element.hasAttributeNS(ANDROID_URI, ATTR_TAG)) {
-            LintFix fix = fix()
-                    .set().todo(ANDROID_URI, ATTR_ID, "@+id/", null)
-                    .build();
-            context.report(ISSUE, element, context.getNameLocation(element),
-                "This `<fragment>` tag should specify an id or a tag to preserve state " +
-                "across activity restarts", fix);
+        if (!element.hasAttributeNS(ANDROID_URI, ATTR_ID)
+                && !element.hasAttributeNS(ANDROID_URI, ATTR_TAG)) {
+            LintFix fix = fix().set().todo(ANDROID_URI, ATTR_ID, "@+id/", null).build();
+            context.report(
+                    ISSUE,
+                    element,
+                    context.getNameLocation(element),
+                    "This `<fragment>` tag should specify an id or a tag to preserve state "
+                            + "across activity restarts",
+                    fix);
         }
     }
 }

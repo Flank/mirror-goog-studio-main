@@ -30,8 +30,13 @@ public class LintSyntaxHighlighterTest extends TestCase {
     private static final boolean DEBUG = false;
 
     @NonNull
-    private static String highlight(String source, int beginOffset, int endOffset, boolean error,
-            String fileName, boolean dedent) {
+    private static String highlight(
+            String source,
+            int beginOffset,
+            int endOffset,
+            boolean error,
+            String fileName,
+            boolean dedent) {
         LintSyntaxHighlighter highlighter = new LintSyntaxHighlighter(fileName, source);
         highlighter.setPadCaretLine(false);
         highlighter.setDedent(dedent);
@@ -41,14 +46,17 @@ public class LintSyntaxHighlighterTest extends TestCase {
         if (DEBUG) { // For debugging only: Show snippet in browser
             try {
                 String path = "/tmp/syntax.html";
-                Files.write((""
-                                + "<html><head>\n"
-                                + "<style>\n"
-                                + HtmlReporter.CSS_STYLES
-                                + "</style>\n"
-                                + "</head>\n<body>\n") + builder.getHtml()
+                Files.write(
+                        (""
+                                        + "<html><head>\n"
+                                        + "<style>\n"
+                                        + HtmlReporter.CSS_STYLES
+                                        + "</style>\n"
+                                        + "</head>\n<body>\n")
+                                + builder.getHtml()
                                 + "</body></html>\n",
-                        new File(path), Charsets.UTF_8);
+                        new File(path),
+                        Charsets.UTF_8);
                 Runtime.getRuntime().exec("/usr/bin/open " + path);
             } catch (IOException ignore) {
             }
@@ -59,30 +67,32 @@ public class LintSyntaxHighlighterTest extends TestCase {
 
     public void testXml() {
         //noinspection all // Sample code
-        @Language("XML") String source = ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "    package=\"pkg.my.myapplication\">\n"
-                + "\n"
-                + "    <!-- This is my comment! -->\n"
-                + "    <string name=\"app_name\">_Test-Basic</string>\n"
-                + "    <application\n"
-                + "        android:allowBackup=\"true\"\n"
-                + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                + "        android:label=\"@string/app_name\"\n"
-                + "        android:roundIcon=\"@mipmap/ic_launcher_round\"\n"
-                + "        android:supportsRtl=\"true\"\n"
-                + "        android:theme=\"@style/AppTheme\">\n"
-                + "        <activity android:name=\".MainActivity\">\n"
-                + "            <intent-filter>\n"
-                + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                + "\n"
-                + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                + "            </intent-filter>\n"
-                + "        </activity>\n"
-                + "    </application>\n"
-                + "\n"
-                + "</manifest>";
+        @Language("XML")
+        String source =
+                ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"pkg.my.myapplication\">\n"
+                        + "\n"
+                        + "    <!-- This is my comment! -->\n"
+                        + "    <string name=\"app_name\">_Test-Basic</string>\n"
+                        + "    <application\n"
+                        + "        android:allowBackup=\"true\"\n"
+                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                        + "        android:label=\"@string/app_name\"\n"
+                        + "        android:roundIcon=\"@mipmap/ic_launcher_round\"\n"
+                        + "        android:supportsRtl=\"true\"\n"
+                        + "        android:theme=\"@style/AppTheme\">\n"
+                        + "        <activity android:name=\".MainActivity\">\n"
+                        + "            <intent-filter>\n"
+                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                        + "\n"
+                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                        + "            </intent-filter>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>";
         int beginOffset = source.indexOf("@style");
         int endOffset = source.indexOf('\"', beginOffset);
         boolean error = true;
@@ -92,7 +102,8 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "foo.xml", false);
 
-        Assert.assertEquals(""
+        Assert.assertEquals(
+                ""
                         + "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\"> 10 </span>        <span class=\"prefix\">android:</span><span class=\"attribute\">label</span>=<span class=\"value\">\"@string/app_name\"</span>\n"
                         + "<span class=\"lineno\"> 11 </span>        <span class=\"prefix\">android:</span><span class=\"attribute\">roundIcon</span>=<span class=\"value\">\"@mipmap/ic_launcher_round\"</span>\n"
@@ -107,30 +118,32 @@ public class LintSyntaxHighlighterTest extends TestCase {
 
     public void testPlaintext() {
         //noinspection all // Sample code
-        @Language("XML") String source = ""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "    package=\"pkg.my.myapplication\">\n"
-                + "\n"
-                + "    <!-- This is my comment! -->\n"
-                + "    <string name=\"app_name\">_Test-Basic</string>\n"
-                + "    <application\n"
-                + "        android:allowBackup=\"true\"\n"
-                + "        android:icon=\"@mipmap/ic_launcher\"\n"
-                + "        android:label=\"@string/app_name\"\n"
-                + "        android:roundIcon=\"@mipmap/ic_launcher_round\"\n"
-                + "        android:supportsRtl=\"true\"\n"
-                + "        android:theme=\"@style/AppTheme\">\n"
-                + "        <activity android:name=\".MainActivity\">\n"
-                + "            <intent-filter>\n"
-                + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                + "\n"
-                + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                + "            </intent-filter>\n"
-                + "        </activity>\n"
-                + "    </application>\n"
-                + "\n"
-                + "</manifest>";
+        @Language("XML")
+        String source =
+                ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"pkg.my.myapplication\">\n"
+                        + "\n"
+                        + "    <!-- This is my comment! -->\n"
+                        + "    <string name=\"app_name\">_Test-Basic</string>\n"
+                        + "    <application\n"
+                        + "        android:allowBackup=\"true\"\n"
+                        + "        android:icon=\"@mipmap/ic_launcher\"\n"
+                        + "        android:label=\"@string/app_name\"\n"
+                        + "        android:roundIcon=\"@mipmap/ic_launcher_round\"\n"
+                        + "        android:supportsRtl=\"true\"\n"
+                        + "        android:theme=\"@style/AppTheme\">\n"
+                        + "        <activity android:name=\".MainActivity\">\n"
+                        + "            <intent-filter>\n"
+                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                        + "\n"
+                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                        + "            </intent-filter>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>";
         int beginOffset = source.indexOf("@style");
         int endOffset = source.indexOf('\"', beginOffset);
         boolean error = true;
@@ -140,7 +153,8 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "foo.txt", false);
 
-        Assert.assertEquals(""
+        Assert.assertEquals(
+                ""
                         + "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\"> 10 </span>        android:label=\"@string/app_name\"\n"
                         + "<span class=\"lineno\"> 11 </span>        android:roundIcon=\"@mipmap/ic_launcher_round\"\n"
@@ -155,19 +169,21 @@ public class LintSyntaxHighlighterTest extends TestCase {
 
     public void testJava1() {
         //noinspection all // Sample code
-        @Language("Java") String source = ""
-                + "import static java.util.regex.Matcher.quoteReplacement;\n"
-                + "import static java.util.regex.Pattern.DOTALL;\n"
-                + "\n"
-                + "/**\n"
-                + " * Comprehensive language test to verify ECJ PSI bridge\n"
-                + " */\n"
-                + "@SuppressWarnings(\"all\")\n"
-                + "public abstract class LanguageTest<K> extends ArrayList<K> implements Comparable<K>, Cloneable {\n"
-                + "    public LanguageTest(@SuppressWarnings(\"unused\") int x) {\n"
-                + "        super(x);\n"
-                + "    }\n"
-                + "}\n";
+        @Language("Java")
+        String source =
+                ""
+                        + "import static java.util.regex.Matcher.quoteReplacement;\n"
+                        + "import static java.util.regex.Pattern.DOTALL;\n"
+                        + "\n"
+                        + "/**\n"
+                        + " * Comprehensive language test to verify ECJ PSI bridge\n"
+                        + " */\n"
+                        + "@SuppressWarnings(\"all\")\n"
+                        + "public abstract class LanguageTest<K> extends ArrayList<K> implements Comparable<K>, Cloneable {\n"
+                        + "    public LanguageTest(@SuppressWarnings(\"unused\") int x) {\n"
+                        + "        super(x);\n"
+                        + "    }\n"
+                        + "}\n";
         int beginOffset = source.indexOf("@SuppressWarnings(\"all\")");
         int endOffset = source.indexOf('{', beginOffset);
         boolean error = true;
@@ -177,7 +193,8 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "Foo.java", false);
 
-        Assert.assertEquals(""
+        Assert.assertEquals(
+                ""
                         + "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\">  4 </span><span class=\"javadoc\">/**\n"
                         + "</span><span class=\"lineno\">  5 </span><span class=\"javadoc\"> * Comprehensive language test to verify ECJ PSI bridge\n"
@@ -192,31 +209,33 @@ public class LintSyntaxHighlighterTest extends TestCase {
 
     public void testJava2() {
         //noinspection all // Sample code
-        @Language("Java") String source = ""
-                + "import static java.util.regex.Matcher.quoteReplacement;\n"
-                + "import static java.util.regex.Pattern.DOTALL;\n"
-                + "\n"
-                + "/**\n"
-                + " * Comprehensive language test to verify ECJ PSI bridge\n"
-                + " */\n"
-                + "@SuppressWarnings(\"all\")\n"
-                + "public abstract class LanguageTest<K> extends ArrayList<K> implements Comparable<K>, Cloneable {\n"
-                + "    public void literals() {\n"
-                + "        char x = 'x';\n"
-                + "        char y = '\\u1234';\n"
-                + "        Object n = null;\n"
-                + "        Boolean b1 = true;\n"
-                + "        int digits = 100_000_000;\n"
-                + "        int hex = 0xAB;\n"
-                + "        String s = \"myString\";\n"
-                + "        int value1 = 42;\n"
-                + "        long value2 = 42L;\n"
-                + "        float value3 = 42f;\n"
-                + "        float value4 = 42.0F;\n"
-                + "        int[] array1 = new int[5];\n"
-                + "        int[] array2 = new int[] { 1, 2, 3, 4 };\n"
-                + "    }\n"
-                + "}\n";
+        @Language("Java")
+        String source =
+                ""
+                        + "import static java.util.regex.Matcher.quoteReplacement;\n"
+                        + "import static java.util.regex.Pattern.DOTALL;\n"
+                        + "\n"
+                        + "/**\n"
+                        + " * Comprehensive language test to verify ECJ PSI bridge\n"
+                        + " */\n"
+                        + "@SuppressWarnings(\"all\")\n"
+                        + "public abstract class LanguageTest<K> extends ArrayList<K> implements Comparable<K>, Cloneable {\n"
+                        + "    public void literals() {\n"
+                        + "        char x = 'x';\n"
+                        + "        char y = '\\u1234';\n"
+                        + "        Object n = null;\n"
+                        + "        Boolean b1 = true;\n"
+                        + "        int digits = 100_000_000;\n"
+                        + "        int hex = 0xAB;\n"
+                        + "        String s = \"myString\";\n"
+                        + "        int value1 = 42;\n"
+                        + "        long value2 = 42L;\n"
+                        + "        float value3 = 42f;\n"
+                        + "        float value4 = 42.0F;\n"
+                        + "        int[] array1 = new int[5];\n"
+                        + "        int[] array2 = new int[] { 1, 2, 3, 4 };\n"
+                        + "    }\n"
+                        + "}\n";
         int beginOffset = source.indexOf("int digits");
         int endOffset = source.indexOf(';', beginOffset);
         boolean error = true;
@@ -226,7 +245,8 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "Foo.java", false);
 
-        Assert.assertEquals(""
+        Assert.assertEquals(
+                ""
                         + "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\"> 11 </span>        <span class=\"keyword\">char</span> y = <span class=\"string\">'\\u1234'</span>;\n"
                         + "<span class=\"lineno\"> 12 </span>        Object n = <span class=\"keyword\">null</span>;\n"
@@ -241,21 +261,23 @@ public class LintSyntaxHighlighterTest extends TestCase {
 
     public void testDedent() {
         //noinspection all // Sample code
-        @Language("Java") String source = ""
-                + "@SuppressWarnings(\"all\")\n"
-                + "public abstract class LanguageTest<K> extends ArrayList<K> implements Comparable<K>, Cloneable {\n"
-                + "    public void literals() {\n"
-                + "        char x = 'x';\n"
-                + "        char y = '\\u1234';\n"
-                + "        Object n = null;\n"
-                + "        Boolean b1 = true;\n"
-                + "        int digits = 100_000_000; // This line needs to be long to push the dedent algorithm to not leave it in place. This line needs to be long to push the dedent algorithm to not leave it in place.\n"
-                + "\n"
-                + "        int hex = 0xAB;\n"
-                + "        String s = \"myString\";\n"
-                + "        int value1 = 42;\n"
-                + "    }\n"
-                + "}\n";
+        @Language("Java")
+        String source =
+                ""
+                        + "@SuppressWarnings(\"all\")\n"
+                        + "public abstract class LanguageTest<K> extends ArrayList<K> implements Comparable<K>, Cloneable {\n"
+                        + "    public void literals() {\n"
+                        + "        char x = 'x';\n"
+                        + "        char y = '\\u1234';\n"
+                        + "        Object n = null;\n"
+                        + "        Boolean b1 = true;\n"
+                        + "        int digits = 100_000_000; // This line needs to be long to push the dedent algorithm to not leave it in place. This line needs to be long to push the dedent algorithm to not leave it in place.\n"
+                        + "\n"
+                        + "        int hex = 0xAB;\n"
+                        + "        String s = \"myString\";\n"
+                        + "        int value1 = 42;\n"
+                        + "    }\n"
+                        + "}\n";
         int beginOffset = source.indexOf("int digits");
         int endOffset = source.indexOf(';', beginOffset);
         boolean error = true;
@@ -265,7 +287,8 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "Foo.java", true);
 
-        Assert.assertEquals(""
+        Assert.assertEquals(
+                ""
                         + "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\">  5 </span>  <span class=\"keyword\">char</span> y = <span class=\"string\">'\\u1234'</span>;\n"
                         + "<span class=\"lineno\">  6 </span>  Object n = <span class=\"keyword\">null</span>;\n"
@@ -280,16 +303,18 @@ public class LintSyntaxHighlighterTest extends TestCase {
 
     public void testJavaAnnotations() {
         //noinspection all // Sample code
-        @Language("Java") String source = ""
-                + "/**\n"
-                + " * Comprehensive language test to verify ECJ PSI bridge\n"
-                + " */\n"
-                + "@SuppressWarnings(\"all\")\n"
-                + "public abstract class LanguageTest<K> extends ArrayList<K> implements Comparable<K>, Cloneable {\n"
-                + "    public LanguageTest(@SuppressWarnings(\"unused\") int x) {\n"
-                + "        super(x);\n"
-                + "    }\n"
-                + "}\n";
+        @Language("Java")
+        String source =
+                ""
+                        + "/**\n"
+                        + " * Comprehensive language test to verify ECJ PSI bridge\n"
+                        + " */\n"
+                        + "@SuppressWarnings(\"all\")\n"
+                        + "public abstract class LanguageTest<K> extends ArrayList<K> implements Comparable<K>, Cloneable {\n"
+                        + "    public LanguageTest(@SuppressWarnings(\"unused\") int x) {\n"
+                        + "        super(x);\n"
+                        + "    }\n"
+                        + "}\n";
         int beginOffset = source.indexOf("LanguageTest(");
         int endOffset = source.indexOf('(', beginOffset);
         boolean error = true;
@@ -299,7 +324,8 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "Foo.java", false);
 
-        Assert.assertEquals("<pre class=\"errorlines\">\n"
+        Assert.assertEquals(
+                "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\">  3 </span><span class=\"javadoc\"> */</span>\n"
                         + "<span class=\"lineno\">  4 </span><span class=\"annotation\">@SuppressWarnings</span>(<span class=\"string\">\"all\"</span>)\n"
                         + "<span class=\"lineno\">  5 </span><span class=\"keyword\">public</span> <span class=\"keyword\">abstract</span> <span class=\"keyword\">class</span> LanguageTest&lt;K> <span class=\"keyword\">extends</span> ArrayList&lt;K> <span class=\"keyword\">implements</span> Comparable&lt;K>, Cloneable {\n"
@@ -313,13 +339,15 @@ public class LintSyntaxHighlighterTest extends TestCase {
 
     public void testGroovy() {
         //noinspection all // Sample code
-        @Language("Groovy") String source = ""
-                + "map.'single quote'\n"
-                + "map.\"double quote\"\n"
-                + "map.'''triple single quote'''\n"
-                + "map.\"\"\"triple double quote\"\"\"\n"
-                + "map./slashy string/\n"
-                + "map.$/dollar slashy string/$    \n";
+        @Language("Groovy")
+        String source =
+                ""
+                        + "map.'single quote'\n"
+                        + "map.\"double quote\"\n"
+                        + "map.'''triple single quote'''\n"
+                        + "map.\"\"\"triple double quote\"\"\"\n"
+                        + "map./slashy string/\n"
+                        + "map.$/dollar slashy string/$    \n";
         int beginOffset = source.indexOf("triple double");
         int endOffset = source.indexOf('\"', beginOffset);
         boolean error = true;
@@ -329,7 +357,8 @@ public class LintSyntaxHighlighterTest extends TestCase {
         @Language("HTML")
         String html = highlight(source, beginOffset, endOffset, error, "Foo.java", false);
 
-        Assert.assertEquals(""
+        Assert.assertEquals(
+                ""
                         + "<pre class=\"errorlines\">\n"
                         + "<span class=\"lineno\"> 1 </span>map.<span class=\"string\">'single quote'</span>\n"
                         + "<span class=\"lineno\"> 2 </span>map.<span class=\"string\">\"double quote\"</span>\n"

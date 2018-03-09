@@ -23,7 +23,8 @@ class RangeDetectorTest : AbstractCheckTest() {
 
     fun testRange() {
         lint().files(
-                java("""
+            java(
+                """
                 package test.pkg;
 
                 import android.support.annotation.FloatRange;
@@ -184,11 +185,12 @@ class RangeDetectorTest : AbstractCheckTest() {
                         printIndirectSize("1234567"); // ERROR
                     }
                 }
-                """).indented(),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expect("""
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
 src/test/pkg/RangeTest.java:32: Error: Expected length 5 (was 4) [Range]
         printExact("1234"); // ERROR
                    ~~~~~~
@@ -313,7 +315,8 @@ src/test/pkg/RangeTest.java:158: Error: Expected length 5 (was 7) [Range]
         printIndirectSize("1234567"); // ERROR
                           ~~~~~~~~~
 41 errors, 0 warnings
-""")
+"""
+        )
     }
 
     /**
@@ -321,7 +324,8 @@ src/test/pkg/RangeTest.java:158: Error: Expected length 5 (was 7) [Range]
      */
     fun testRangesMultiple() {
         lint().files(
-                java("src/test/pkg/RangesMultiple.java", """
+            java(
+                "src/test/pkg/RangesMultiple.java", """
                 package test.pkg;
                 import android.support.annotation.FloatRange;
                 import android.support.annotation.IntRange;
@@ -373,11 +377,12 @@ src/test/pkg/RangeTest.java:158: Error: Expected length 5 (was 7) [Range]
                     }
                 }
 
-                """).indented(),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expect("""
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
 src/test/pkg/RangesMultiple.java:20: Error: Value must be ≥ 10.0 (was 5) [Range]
         a[0] = /*Value must be ≥ 10.0 and ≤ 15.0 (was 5f)*/5f/**/; // ERROR
                                                            ~~
@@ -403,14 +408,16 @@ src/test/pkg/RangesMultiple.java:36: Error: Value must be ≥ 10 (was 0) [Range]
         restrictedIntArray(/*Value must be ≥ 10 and ≤ 500*/new int[]{0, 500}/**/); // ERROR
                                                            ~~~~~~~~~~~~~~~~~
 8 errors, 0 warnings
-        """)
+        """
+        )
     }
 
     fun testNegativeFloatRange() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=219246
         // Make sure we correctly handle negative ranges for floats
         lint().files(
-                java("src/test/pkg/FloatRangeTest.java", """
+            java(
+                "src/test/pkg/FloatRangeTest.java", """
                 package test.pkg;
 
                 import android.support.annotation.FloatRange;
@@ -426,11 +433,12 @@ src/test/pkg/RangesMultiple.java:36: Error: Value must be ≥ 10 (was 0) [Range]
                     private void call(@FloatRange(from=-90.0, to=-5.0) double arg) {
                     }
                 }
-                """).indented(),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expect("""
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
 src/test/pkg/FloatRangeTest.java:8: Error: Value must be ≥ -90.0 (was -150.0) [Range]
         call(-150.0); // ERROR
              ~~~~~~
@@ -438,169 +446,179 @@ src/test/pkg/FloatRangeTest.java:10: Error: Value must be ≤ -5.0 (was -3.0) [R
         call(-3.0); // ERROR
              ~~~~
 2 errors, 0 warnings
-""")
+"""
+        )
     }
 
     // TODO: http://b.android.com/220686
     fun ignore_testSnackbarDuration() {
         lint().files(
-                java("src/test/pkg/SnackbarTest.java", ""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.support.design.widget.Snackbar;\n"
-                        + "\n"
-                        + "public class SnackbarTest {\n"
-                        + "    public Snackbar makeSnackbar(@Snackbar.Duration int duration) {\n"
-                        + "        return null;\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public void test() {\n"
-                        + "        makeSnackbar(Snackbar.LENGTH_LONG); // OK\n"
-                        + "        makeSnackbar(100); // OK\n"
-                        + "        makeSnackbar(-100); // ERROR\n"
-                        + "    }\n"
-                        + "}\n"),
-                java("src/android/support/design/widget/Snackbar.java", ""
-                        + "package android.support.design.widget;\n"
-                        + "\n"
-                        + "import android.support.annotation.IntDef;\n"
-                        + "import android.support.annotation.IntRange;\n"
-                        + "\n"
-                        + "import java.lang.annotation.Retention;\n"
-                        + "import java.lang.annotation.RetentionPolicy;\n"
-                        + "\n"
-                        + "public class Snackbar {\n"
+            java(
+                "src/test/pkg/SnackbarTest.java", "" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.support.design.widget.Snackbar;\n" +
+                        "\n" +
+                        "public class SnackbarTest {\n" +
+                        "    public Snackbar makeSnackbar(@Snackbar.Duration int duration) {\n" +
+                        "        return null;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void test() {\n" +
+                        "        makeSnackbar(Snackbar.LENGTH_LONG); // OK\n" +
+                        "        makeSnackbar(100); // OK\n" +
+                        "        makeSnackbar(-100); // ERROR\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            java(
+                "src/android/support/design/widget/Snackbar.java", "" +
+                        "package android.support.design.widget;\n" +
+                        "\n" +
+                        "import android.support.annotation.IntDef;\n" +
+                        "import android.support.annotation.IntRange;\n" +
+                        "\n" +
+                        "import java.lang.annotation.Retention;\n" +
+                        "import java.lang.annotation.RetentionPolicy;\n" +
+                        "\n" +
+                        "public class Snackbar {\n" +
                         // In the real class definition, this annotation is there,
                         // but in the compiled design library, since it has source
                         // retention, the @IntDef is missing and only the @IntRange
                         // remains. Therefore, it's been extracted into the external
                         // database. We don't want to count it twice so don't repeat
                         // it here:
-                        //+ "    @IntDef({LENGTH_INDEFINITE, LENGTH_SHORT, LENGTH_LONG})\n"
-                        + "    @IntRange(from = 1)\n"
-                        + "    @Retention(RetentionPolicy.SOURCE)\n"
-                        + "    public @interface Duration {}\n"
-                        + "\n"
-                        + "    public static final int LENGTH_INDEFINITE = -2;\n"
-                        + "    public static final int LENGTH_SHORT = -1;\n"
-                        + "    public static final int LENGTH_LONG = 0;\n"
-                        + "}\n"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .issues(RangeDetector.RANGE, TypedefDetector.TYPE_DEF)
-                .run()
-                .expect("""
+                        // "    @IntDef({LENGTH_INDEFINITE, LENGTH_SHORT, LENGTH_LONG})\n" +
+                        "    @IntRange(from = 1)\n" +
+                        "    @Retention(RetentionPolicy.SOURCE)\n" +
+                        "    public @interface Duration {}\n" +
+                        "\n" +
+                        "    public static final int LENGTH_INDEFINITE = -2;\n" +
+                        "    public static final int LENGTH_SHORT = -1;\n" +
+                        "    public static final int LENGTH_LONG = 0;\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        )
+            .issues(RangeDetector.RANGE, TypedefDetector.TYPE_DEF)
+            .run()
+            .expect(
+                """
 src/test/pkg/SnackbarTest.java:13: Error: Must be one of: Snackbar.LENGTH_INDEFINITE, Snackbar.LENGTH_SHORT, Snackbar.LENGTH_LONG or value must be ≥ 1 (was -100) [WrongConstant]
         makeSnackbar(-100); // ERROR
                      ~~~~
 1 errors, 0 warnings
-        """)
+        """
+            )
     }
 
     fun testSizeAnnotations() {
         lint().files(
-                java(""
-                        + "package pkg.my.myapplication;\n"
-                        + "\n"
-                        + "import android.support.annotation.NonNull;\n"
-                        + "import android.support.annotation.Size;\n"
-                        + "\n"
-                        + "public class SizeTest2 {\n"
-                        + "    @Size(3)\n"
-                        + "    public float[] toLinear(float r, float g, float b) {\n"
-                        + "        return toLinear(new float[] { r, g, b });\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @NonNull\n"
-                        + "    public float[] toLinear(@NonNull @Size(min = 3) float[] v) {\n"
-                        + "        return v;\n"
-                        + "    }\n"
-                        + "}\n"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectClean()
+            java(
+                "" +
+                        "package pkg.my.myapplication;\n" +
+                        "\n" +
+                        "import android.support.annotation.NonNull;\n" +
+                        "import android.support.annotation.Size;\n" +
+                        "\n" +
+                        "public class SizeTest2 {\n" +
+                        "    @Size(3)\n" +
+                        "    public float[] toLinear(float r, float g, float b) {\n" +
+                        "        return toLinear(new float[] { r, g, b });\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @NonNull\n" +
+                        "    public float[] toLinear(@NonNull @Size(min = 3) float[] v) {\n" +
+                        "        return v;\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 
     fun testOverlappingRanges() {
 
         lint().files(
-                java(""
-                        + "\n"
-                        + "package pkg.my.myapplication;\n"
-                        + "\n"
-                        + "import android.support.annotation.IntRange;\n"
-                        + "import android.support.annotation.Size;\n"
-                        + "\n"
-                        + "@SuppressWarnings({\"WeakerAccess\", \"ConstantConditions\", \"UnusedParameters\", \"unused\"})\n"
-                        + "public class X {\n"
-                        + "    public void testSize(\n"
-                        + "            @Size(4) int exactly4,\n"
-                        + "            @Size(2) int exactly2,\n"
-                        + "            @Size(min = 5) int atLeast5,\n"
-                        + "            @Size(max = 5) int atMost5,\n"
-                        + "            @Size(min = 2, max = 5) int between2and5,\n"
-                        + "            @Size(multiple = 3) int triple,\n"
-                        + "            @Size(min = 4, multiple = 3) int tripleFrom4,\n"
-                        + "            @Size(min = 4, multiple = 4) int quadrupleFrom4) {\n"
-                        + "        sizeMin3(/*Size must be at least 3*/exactly2/**/); // ERROR\n"
-                        + "        sizeMin3(exactly4); // OK\n"
-                        + "        sizeMin3(atLeast5); // OK\n"
-                        + "        sizeMin3(/*Size must be at least 3*/atMost5/**/); // ERROR: delta\n"
-                        + "        sizeMin3(/*Size must be at least 3*/between2and5/**/); // ERROR: 2 is not included\n"
-                        + "        sizeMin3(/*Size must be at least 3*/triple/**/); // ERROR\n"
-                        + "        sizeMin3(tripleFrom4); // OK\n"
-                        + "\n"
-                        + "        sizeMin3multiple2(/*Size must be at least 3 and a multiple of 2*/tripleFrom4/**/); // ERROR\n"
-                        + "        sizeMin3multiple2(quadrupleFrom4); // OK\n"
-                        + "\n"
-                        + "        sizeMax10(exactly2);\n"
-                        + "        sizeMax10(exactly4);\n"
-                        + "        sizeMax10(/*Size must be at most 10*/atLeast5/**/); // ERROR: allows numbers outside the max\n"
-                        + "        sizeMax10(between2and5); // OK\n"
-                        + "        sizeMax10(/*Size must be at most 10*/triple/**/); // ERROR: allows numbers outside the max\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public void testIntRange(\n"
-                        + "            @IntRange(from = 5) int atLeast5,\n"
-                        + "            @IntRange(to = 5) int atMost5,\n"
-                        + "            @IntRange(from = 2, to = 5) int between2and5,\n"
-                        + "            @IntRange(from = 4, to = 6) int between4and6) {\n"
-                        + "        rangeMin3(atLeast5); // OK\n"
-                        + "        rangeMin3(/*Value must be ≥ 3*/atMost5/**/); // ERROR: delta\n"
-                        + "        rangeMin3(/*Value must be ≥ 3*/between2and5/**/); // ERROR: 2 is not included\n"
-                        + "\n"
-                        + "        range3to6(/*Value must be ≥ 3 and ≤ 6*/atLeast5/**/); // ERROR\n"
-                        + "        range3to6(/*Value must be ≥ 3 and ≤ 6*/atMost5/**/); // ERROR\n"
-                        + "        range3to6(/*Value must be ≥ 3 and ≤ 6*/between2and5/**/); // ERROR not overlapping\n"
-                        + "        range3to6(between4and6); // OK\n"
-                        + "\n"
-                        + "        rangeMax10(/*Value must be ≤ 10*/atLeast5/**/); // ERROR: allows numbers outside the max\n"
-                        + "        rangeMax10(between2and5); // OK\n"
-                        + "        rangeMax10(atMost5); // OK\n"
-                        + "    }\n"
-                        + "    public void sizeMin3(@Size(min = 3) int size) {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public void sizeMin3multiple2(@Size(min = 3, multiple = 2) int size) {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public void sizeMax10(@Size(max = 10) int size) {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public void rangeMin3(@IntRange(from = 3) int range) {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public void range3to6(@IntRange(from = 3, to = 6) int range) {\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public void rangeMax10(@IntRange(to = 10) int range) {\n"
-                        + "    }\n"
-                        + "}\n"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectInlinedMessages()
+            java(
+                "" +
+                        "\n" +
+                        "package pkg.my.myapplication;\n" +
+                        "\n" +
+                        "import android.support.annotation.IntRange;\n" +
+                        "import android.support.annotation.Size;\n" +
+                        "\n" +
+                        "@SuppressWarnings({\"WeakerAccess\", \"ConstantConditions\", \"UnusedParameters\", \"unused\"})\n" +
+                        "public class X {\n" +
+                        "    public void testSize(\n" +
+                        "            @Size(4) int exactly4,\n" +
+                        "            @Size(2) int exactly2,\n" +
+                        "            @Size(min = 5) int atLeast5,\n" +
+                        "            @Size(max = 5) int atMost5,\n" +
+                        "            @Size(min = 2, max = 5) int between2and5,\n" +
+                        "            @Size(multiple = 3) int triple,\n" +
+                        "            @Size(min = 4, multiple = 3) int tripleFrom4,\n" +
+                        "            @Size(min = 4, multiple = 4) int quadrupleFrom4) {\n" +
+                        "        sizeMin3(/*Size must be at least 3*/exactly2/**/); // ERROR\n" +
+                        "        sizeMin3(exactly4); // OK\n" +
+                        "        sizeMin3(atLeast5); // OK\n" +
+                        "        sizeMin3(/*Size must be at least 3*/atMost5/**/); // ERROR: delta\n" +
+                        "        sizeMin3(/*Size must be at least 3*/between2and5/**/); // ERROR: 2 is not included\n" +
+                        "        sizeMin3(/*Size must be at least 3*/triple/**/); // ERROR\n" +
+                        "        sizeMin3(tripleFrom4); // OK\n" +
+                        "\n" +
+                        "        sizeMin3multiple2(/*Size must be at least 3 and a multiple of 2*/tripleFrom4/**/); // ERROR\n" +
+                        "        sizeMin3multiple2(quadrupleFrom4); // OK\n" +
+                        "\n" +
+                        "        sizeMax10(exactly2);\n" +
+                        "        sizeMax10(exactly4);\n" +
+                        "        sizeMax10(/*Size must be at most 10*/atLeast5/**/); // ERROR: allows numbers outside the max\n" +
+                        "        sizeMax10(between2and5); // OK\n" +
+                        "        sizeMax10(/*Size must be at most 10*/triple/**/); // ERROR: allows numbers outside the max\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void testIntRange(\n" +
+                        "            @IntRange(from = 5) int atLeast5,\n" +
+                        "            @IntRange(to = 5) int atMost5,\n" +
+                        "            @IntRange(from = 2, to = 5) int between2and5,\n" +
+                        "            @IntRange(from = 4, to = 6) int between4and6) {\n" +
+                        "        rangeMin3(atLeast5); // OK\n" +
+                        "        rangeMin3(/*Value must be ≥ 3*/atMost5/**/); // ERROR: delta\n" +
+                        "        rangeMin3(/*Value must be ≥ 3*/between2and5/**/); // ERROR: 2 is not included\n" +
+                        "\n" +
+                        "        range3to6(/*Value must be ≥ 3 and ≤ 6*/atLeast5/**/); // ERROR\n" +
+                        "        range3to6(/*Value must be ≥ 3 and ≤ 6*/atMost5/**/); // ERROR\n" +
+                        "        range3to6(/*Value must be ≥ 3 and ≤ 6*/between2and5/**/); // ERROR not overlapping\n" +
+                        "        range3to6(between4and6); // OK\n" +
+                        "\n" +
+                        "        rangeMax10(/*Value must be ≤ 10*/atLeast5/**/); // ERROR: allows numbers outside the max\n" +
+                        "        rangeMax10(between2and5); // OK\n" +
+                        "        rangeMax10(atMost5); // OK\n" +
+                        "    }\n" +
+                        "    public void sizeMin3(@Size(min = 3) int size) {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void sizeMin3multiple2(@Size(min = 3, multiple = 2) int size) {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void sizeMax10(@Size(max = 10) int size) {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void rangeMin3(@IntRange(from = 3) int range) {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void range3to6(@IntRange(from = 3, to = 6) int range) {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void rangeMax10(@IntRange(to = 10) int range) {\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectInlinedMessages()
     }
 
     fun testConstructor() {
@@ -611,7 +629,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
 1 errors, 0 warnings
 """
         lint().files(
-                java("src/test/pkg/ConstructorTest.java", """
+            java(
+                "src/test/pkg/ConstructorTest.java", """
                 package test.pkg;
                 import android.support.annotation.DrawableRes;
                 import android.support.annotation.IntRange;
@@ -633,122 +652,126 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                         new ConstructorTest(res, range);
                     }
                 }
-                """).indented(),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expect(expected)
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(expected)
     }
 
     fun testConstrainedIntRanges() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=188351
 
         lint().files(
-                java(""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.support.annotation.IntRange;\n"
-                        + "\n"
-                        + "public class X {\n"
-                        + "    public int forcedMeasureHeight = -1;\n"
-                        + "\n"
-                        + "    public void testVariable() {\n"
-                        + "        int parameter = -1;\n"
-                        + "        if (parameter >= 0) {\n"
-                        + "            method(parameter); // OK\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public void testOk1(boolean ok) {\n"
-                        + "        if (forcedMeasureHeight >= 0) {\n"
-                        + "            method(forcedMeasureHeight); // OK\n"
-                        + "        }\n"
-                        + "        if (ok && forcedMeasureHeight >= 0) {\n"
-                        + "            method(forcedMeasureHeight); // OK\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public void testError(boolean ok, int unrelated) {\n"
+            java(
+                "" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.support.annotation.IntRange;\n" +
+                        "\n" +
+                        "public class X {\n" +
+                        "    public int forcedMeasureHeight = -1;\n" +
+                        "\n" +
+                        "    public void testVariable() {\n" +
+                        "        int parameter = -1;\n" +
+                        "        if (parameter >= 0) {\n" +
+                        "            method(parameter); // OK\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void testOk1(boolean ok) {\n" +
+                        "        if (forcedMeasureHeight >= 0) {\n" +
+                        "            method(forcedMeasureHeight); // OK\n" +
+                        "        }\n" +
+                        "        if (ok && forcedMeasureHeight >= 0) {\n" +
+                        "            method(forcedMeasureHeight); // OK\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void testError(boolean ok, int unrelated) {\n" +
                         // Disabled for now -- we're not passing allowFieldInitializers()
                         // into the ConstantEvaluator since it's risky to be complaining
                         // about invalid values for a non-final field which could easily
                         // have been reassigned anywhere to something compatible.
-                        //+ "        method(/*Value must be ≥ 0 (was -1)*/forcedMeasureHeight/**/); // ERROR\n"
-                        //+ "        if (ok && unrelated >= 0) {\n"
-                        //+ "            method(/*Value must be ≥ 0 (was -1)*/forcedMeasureHeight/**/); // ERROR\n"
-                        //+ "        }\n"
-                        + "        method(forcedMeasureHeight); // ERROR\n"
-                        + "        if (ok && unrelated >= 0) {\n"
-                        + "            method(forcedMeasureHeight); // ERROR\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public void method(@IntRange(from=0) int parameter) {\n"
-                        + "    }\n"
-                        + "}\n"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectInlinedMessages()
+                        // "        method(/*Value must be ≥ 0 (was -1)*/forcedMeasureHeight/**/); // ERROR\n" +
+                        // "        if (ok && unrelated >= 0) {\n" +
+                        // "            method(/*Value must be ≥ 0 (was -1)*/forcedMeasureHeight/**/); // ERROR\n" +
+                        // "        }\n" +
+                        "        method(forcedMeasureHeight); // ERROR\n" +
+                        "        if (ok && unrelated >= 0) {\n" +
+                        "            method(forcedMeasureHeight); // ERROR\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void method(@IntRange(from=0) int parameter) {\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        )
+            .run().expectInlinedMessages()
     }
 
     fun testIntRangeOnTernaryOperators() {
 
         lint().files(
-                java(""
-                        + "package test.pkg;\n"
-                        + "\n"
-                        + "import android.support.annotation.IntRange;\n"
-                        + "\n"
-                        + "import java.util.ArrayList;\n"
-                        + "import java.util.List;\n"
-                        + "\n"
-                        + "public class X {\n"
-                        + "    @SuppressWarnings(\"MismatchedQueryAndUpdateOfCollection\")\n"
-                        + "    private List<String> mItems = new ArrayList<>();\n"
-                        + "\n"
-                        + "    @IntRange(from = 0)\n"
-                        + "    public int test1() {\n"
-                        + "        return mItems == null ? 0 : mItems.size(); // OK\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @IntRange(from = 0)\n"
-                        + "    public int test2() {\n"
-                        + "        return 0; // OK\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @IntRange(from = 0)\n"
-                        + "    public int test3() {\n"
-                        + "        return mItems.size(); // OK\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @IntRange(from = 0)\n"
-                        + "    public int test4() {\n"
-                        + "        if (mItems == null) {\n"
-                        + "            return 0;\n"
-                        + "        } else {\n"
-                        + "            return mItems.size();\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    @IntRange(from = 0)\n"
-                        + "    public int testError() {\n"
-                        + "        return mItems == null ? /*Value must be ≥ 0 (was -1)*/-1/**/ : mItems.size(); // ERROR\n"
-                        + "\n"
-                        + "    }\n"
-                        + "}\n"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectInlinedMessages()
+            java(
+                "" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.support.annotation.IntRange;\n" +
+                        "\n" +
+                        "import java.util.ArrayList;\n" +
+                        "import java.util.List;\n" +
+                        "\n" +
+                        "public class X {\n" +
+                        "    @SuppressWarnings(\"MismatchedQueryAndUpdateOfCollection\")\n" +
+                        "    private List<String> mItems = new ArrayList<>();\n" +
+                        "\n" +
+                        "    @IntRange(from = 0)\n" +
+                        "    public int test1() {\n" +
+                        "        return mItems == null ? 0 : mItems.size(); // OK\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @IntRange(from = 0)\n" +
+                        "    public int test2() {\n" +
+                        "        return 0; // OK\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @IntRange(from = 0)\n" +
+                        "    public int test3() {\n" +
+                        "        return mItems.size(); // OK\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @IntRange(from = 0)\n" +
+                        "    public int test4() {\n" +
+                        "        if (mItems == null) {\n" +
+                        "            return 0;\n" +
+                        "        } else {\n" +
+                        "            return mItems.size();\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @IntRange(from = 0)\n" +
+                        "    public int testError() {\n" +
+                        "        return mItems == null ? /*Value must be ≥ 0 (was -1)*/-1/**/ : mItems.size(); // ERROR\n" +
+                        "\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectInlinedMessages()
     }
 
     fun testRangeInKotlin() {
         // Regression test for https://issuetracker.google.com/66892728
 
         lint().files(
-                // TODO: Test @IntRange to make sure UAST doesn't replace it with @kotlin.IntRange
-                kotlin("" +
+            // TODO: Test @IntRange to make sure UAST doesn't replace it with @kotlin.IntRange
+            kotlin(
+                "" +
                         "package test.pkg\n" +
                         "\n" +
                         "import android.support.annotation.FloatRange\n" +
@@ -760,16 +783,17 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                         "\n" +
                         "fun bar(@FloatRange(from = 0.0, to = 25.0) radius: Float) {\n" +
                         "    Log.d(\"AppLog\", \"Radius:\" + radius)\n" +
-                        "}"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectClean()
+                        "}"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 
     fun testRangesFromKotlin() {
         lint().files(
-                kotlin("" +
+            kotlin(
+                "" +
                         "package test.pkg\n" +
                         "\n" +
                         "import android.support.annotation.FloatRange\n" +
@@ -786,17 +810,20 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                         "    check(10.0f) // OK\n" +
                         "    check(100) // ERROR\n" +
                         "    check(100.0f) // ERROR\n" +
-                        "}"),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expect("src/test/pkg/test.kt:15: Error: Value must be ≤ 25 (was 100) [Range]\n" +
-                        "    check(100) // ERROR\n" +
-                        "          ~~~\n" +
-                        "src/test/pkg/test.kt:16: Error: Value must be ≤ 25.0 (was 100.0) [Range]\n" +
-                        "    check(100.0f) // ERROR\n" +
-                        "          ~~~~~~\n" +
-                        "2 errors, 0 warnings")
+                        "}"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            "" +
+                    "src/test/pkg/test.kt:15: Error: Value must be ≤ 25 (was 100) [Range]\n" +
+                    "    check(100) // ERROR\n" +
+                    "          ~~~\n" +
+                    "src/test/pkg/test.kt:16: Error: Value must be ≤ 25.0 (was 100.0) [Range]\n" +
+                    "    check(100.0f) // ERROR\n" +
+                    "          ~~~~~~\n" +
+                    "2 errors, 0 warnings"
+        )
     }
 
     fun test69366129() {
@@ -804,7 +831,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
         // 69366129: Range bug after upgrading Android Studio - Value must be ≤ 1.0 (was 100) less
 
         lint().files(
-                java("""
+            java(
+                """
                     package test.pkg;
                     import android.support.annotation.FloatRange;
                     import java.util.Random;
@@ -820,11 +848,10 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                             return new Random(seed).nextDouble();
                         }
                     }
-                    """).indented(),
-                SUPPORT_ANNOTATIONS_CLASS_PATH,
-                SUPPORT_ANNOTATIONS_JAR)
-                .run()
-                .expectClean()
+                    """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
-
 }

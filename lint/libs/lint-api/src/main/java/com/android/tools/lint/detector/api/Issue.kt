@@ -35,58 +35,59 @@ import java.util.ArrayList
  */
 @Beta
 class Issue private constructor(
-        /**
-         * Returns the unique id of this issue. These should not change over time
-         * since they are used to persist the names of issues suppressed by the user
-         * etc. It is typically a single camel-cased word.
-         *
-         * @return the associated fixed id, never null and always unique
-         */
-        val id: String,
+    /**
+     * Returns the unique id of this issue. These should not change over time
+     * since they are used to persist the names of issues suppressed by the user
+     * etc. It is typically a single camel-cased word.
+     *
+     * @return the associated fixed id, never null and always unique
+     */
+    val id: String,
 
-        private val briefDescription: String,
+    private val briefDescription: String,
 
-        private val explanation: String,
+    private val explanation: String,
 
-        /**
-         * The primary category of the issue
-         *
-         * @return the primary category of the issue, never null
-         */
-        val category: Category,
+    /**
+     * The primary category of the issue
+     *
+     * @return the primary category of the issue, never null
+     */
+    val category: Category,
 
-        /**
-         * Returns a priority, in the range 1-10, with 10 being the most severe and
-         * 1 the least
-         *
-         * @return a priority from 1 to 10
-         */
-        val priority: Int,
+    /**
+     * Returns a priority, in the range 1-10, with 10 being the most severe and
+     * 1 the least
+     *
+     * @return a priority from 1 to 10
+     */
+    val priority: Int,
 
-        /**
-         * Returns the default severity of the issues found by this detector (some
-         * tools may allow the user to specify custom severities for detectors).
-         *
-         *
-         * Note that even though the normal way for an issue to be disabled is for
-         * the [Configuration] to return [Severity.IGNORE], there is a
-         * [.isEnabledByDefault] method which can be used to turn off issues
-         * by default. This is done rather than just having the severity as the only
-         * attribute on the issue such that an issue can be configured with an
-         * appropriate severity (such as [Severity.ERROR]) even when issues
-         * are disabled by default for example because they are experimental or not
-         * yet stable.
-         *
-         * @return the severity of the issues found by this detector
-         */
-        val defaultSeverity: Severity,
+    /**
+     * Returns the default severity of the issues found by this detector (some
+     * tools may allow the user to specify custom severities for detectors).
+     *
+     *
+     * Note that even though the normal way for an issue to be disabled is for
+     * the [Configuration] to return [Severity.IGNORE], there is a
+     * [.isEnabledByDefault] method which can be used to turn off issues
+     * by default. This is done rather than just having the severity as the only
+     * attribute on the issue such that an issue can be configured with an
+     * appropriate severity (such as [Severity.ERROR]) even when issues
+     * are disabled by default for example because they are experimental or not
+     * yet stable.
+     *
+     * @return the severity of the issues found by this detector
+     */
+    val defaultSeverity: Severity,
 
-        /**
-         * The implementation for the given issue. This is typically done by
-         * IDEs that can offer a replacement for a given issue which performs better
-         * or in some other way works better within the IDE.
-         */
-        var implementation: Implementation) : Comparable<Issue> {
+    /**
+     * The implementation for the given issue. This is typically done by
+     * IDEs that can offer a replacement for a given issue which performs better
+     * or in some other way works better within the IDE.
+     */
+    var implementation: Implementation
+) : Comparable<Issue> {
     private var moreInfoUrls: Any? = null
     private var enabledByDefault = true
 
@@ -236,15 +237,18 @@ class Issue private constructor(
          */
         @JvmStatic
         fun create(
-                id: String,
-                briefDescription: String,
-                explanation: String,
-                category: Category,
-                priority: Int,
-                severity: Severity,
-                implementation: Implementation): Issue {
-            return Issue(id, briefDescription, explanation, category, priority,
-                    severity, implementation)
+            id: String,
+            briefDescription: String,
+            explanation: String,
+            category: Category,
+            priority: Int,
+            severity: Severity,
+            implementation: Implementation
+        ): Issue {
+            return Issue(
+                id, briefDescription, explanation, category, priority,
+                severity, implementation
+            )
         }
 
         /**

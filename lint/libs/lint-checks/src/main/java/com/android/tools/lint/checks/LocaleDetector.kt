@@ -77,9 +77,9 @@ class LocaleDetector : Detector(), SourceCodeScanner {
             } else if (method.parameterList.parametersCount == 0) {
                 val location = context.getNameLocation(node)
                 val message = String.format(
-                    "Implicitly using the default locale is a common source of bugs: "
-                            + "Use `%1\$s(Locale)` instead. For strings meant to be internal "
-                            + "use `Locale.ROOT`, otherwise `Locale.getDefault()`.",
+                    "Implicitly using the default locale is a common source of bugs: " +
+                            "Use `%1\$s(Locale)` instead. For strings meant to be internal " +
+                            "use `Locale.ROOT`, otherwise `Locale.getDefault()`.",
                     method.name
                 )
                 context.report(STRING_LOCALE, node, location, message)
@@ -97,7 +97,8 @@ class LocaleDetector : Detector(), SourceCodeScanner {
                 method,
                 0,
                 TYPE_STRING
-            )) {
+            )
+        ) {
             return
         }
 
@@ -156,7 +157,8 @@ class LocaleDetector : Detector(), SourceCodeScanner {
 
     /** Returns true if the given node is a parameter to a Logging call  */
     private fun isLoggingParameter(
-        context: JavaContext, node: UCallExpression
+        context: JavaContext,
+        node: UCallExpression
     ): Boolean {
         val parentCall =
             node.getParentOfType<UCallExpression>(UCallExpression::class.java, true)
@@ -183,16 +185,16 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         val STRING_LOCALE = Issue.create(
             "DefaultLocale",
             "Implied default locale in case conversion",
-            "Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an "
-                    + "explicit locale** is a common source of bugs. The reason for that is that those "
-                    + "methods will use the current locale on the user's device, and even though the "
-                    + "code appears to work correctly when you are developing the app, it will fail "
-                    + "in some locales. For example, in the Turkish locale, the uppercase replacement "
-                    + "for `i` is **not** `I`.\n"
-                    + "\n"
-                    + "If you want the methods to just perform ASCII replacement, for example to convert "
-                    + "an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to "
-                    + "use the current locale, call `String#toUpperCase(Locale.getDefault())` instead.",
+            "Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an " +
+                    "explicit locale** is a common source of bugs. The reason for that is that those " +
+                    "methods will use the current locale on the user's device, and even though the " +
+                    "code appears to work correctly when you are developing the app, it will fail " +
+                    "in some locales. For example, in the Turkish locale, the uppercase replacement " +
+                    "for `i` is **not** `I`.\n" +
+                    "\n" +
+                    "If you want the methods to just perform ASCII replacement, for example to convert " +
+                    "an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to " +
+                    "use the current locale, call `String#toUpperCase(Locale.getDefault())` instead.",
             "http://developer.android.com/reference/java/util/Locale.html#default_locale",
             Category.CORRECTNESS,
             6,

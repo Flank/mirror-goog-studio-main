@@ -26,44 +26,49 @@ public class AllCapsDetectorTest extends AbstractCheckTest {
     }
 
     public void testAllCaps() throws Exception {
-        assertEquals(""
-                + "res/layout/constraint.xml:12: Warning: Using textAllCaps with a string (has_markup) that contains markup; the markup will be dropped by the caps conversion [AllCaps]\n"
-                + "        android:textAllCaps=\"true\"\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
+        assertEquals(
+                ""
+                        + "res/layout/constraint.xml:12: Warning: Using textAllCaps with a string (has_markup) that contains markup; the markup will be dropped by the caps conversion [AllCaps]\n"
+                        + "        android:textAllCaps=\"true\"\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n",
                 lintProjectIncrementally(
                         "res/layout/constraint.xml",
-                        xml("res/layout/constraint.xml", ""
-                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<merge xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                                + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n"
-                                + "    <Button\n"
-                                + "        android:text=\"@string/plain\"\n"
-                                + "        android:textAllCaps=\"true\"\n"
-                                + "        android:layout_width=\"wrap_content\"\n"
-                                + "        android:layout_height=\"wrap_content\" />\n"
-                                + "    <Button\n"
-                                + "        android:text=\"@string/has_markup\"\n"
-                                + "        android:textAllCaps=\"true\"\n"
-                                + "        android:layout_width=\"wrap_content\"\n"
-                                + "        android:layout_height=\"wrap_content\" />\n"
-                                + "    <Button\n"
-                                + "        android:text=\"@string/has_markup\"\n"
-                                + "        android:textAllCaps=\"false\"\n"
-                                + "        android:layout_width=\"wrap_content\"\n"
-                                + "        android:layout_height=\"wrap_content\" />\n"
-                                + "    <Button\n"
-                                + "        android:text=\"@string/has_markup\"\n"
-                                + "        android:textAllCaps=\"true\"\n"
-                                + "        tools:ignore=\"AllCaps\"\n"
-                                + "        android:layout_width=\"wrap_content\"\n"
-                                + "        android:layout_height=\"wrap_content\" />\n"
-                                + "</merge>"),
-                        xml("res/values/strings.xml", ""
-                                + "<resources>\n"
-                                + "    <string name=\"plain\">Home Sample</string>\n"
-                                + "    <string name=\"has_markup\">This is <b>bold</b></string>\n"
-                                + "</resources>")));
+                        xml(
+                                "res/layout/constraint.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<merge xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                        + "    xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n"
+                                        + "    <Button\n"
+                                        + "        android:text=\"@string/plain\"\n"
+                                        + "        android:textAllCaps=\"true\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\" />\n"
+                                        + "    <Button\n"
+                                        + "        android:text=\"@string/has_markup\"\n"
+                                        + "        android:textAllCaps=\"true\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\" />\n"
+                                        + "    <Button\n"
+                                        + "        android:text=\"@string/has_markup\"\n"
+                                        + "        android:textAllCaps=\"false\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\" />\n"
+                                        + "    <Button\n"
+                                        + "        android:text=\"@string/has_markup\"\n"
+                                        + "        android:textAllCaps=\"true\"\n"
+                                        + "        tools:ignore=\"AllCaps\"\n"
+                                        + "        android:layout_width=\"wrap_content\"\n"
+                                        + "        android:layout_height=\"wrap_content\" />\n"
+                                        + "</merge>"),
+                        xml(
+                                "res/values/strings.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <string name=\"plain\">Home Sample</string>\n"
+                                        + "    <string name=\"has_markup\">This is <b>bold</b></string>\n"
+                                        + "</resources>")));
     }
 }

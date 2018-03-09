@@ -22,9 +22,10 @@ import com.android.tools.lint.detector.api.Detector;
 public class KeyboardNavigationDetectorTest extends AbstractCheckTest {
 
     private static final String DUMMY_FILE_NAME = "res/layout/mywidget.xml";
-    private static final String EXPECTED_WARNING_PREFIX = "res/layout/mywidget.xml:2: Warning: "
-        + KeyboardNavigationDetector.MESSAGE
-        + " [KeyboardInaccessibleWidget]\n";
+    private static final String EXPECTED_WARNING_PREFIX =
+            "res/layout/mywidget.xml:2: Warning: "
+                    + KeyboardNavigationDetector.MESSAGE
+                    + " [KeyboardInaccessibleWidget]\n";
 
     @Override
     protected Detector getDetector() {
@@ -32,50 +33,65 @@ public class KeyboardNavigationDetectorTest extends AbstractCheckTest {
     }
 
     public void testFocusableElement_noIssue() {
-        lint().files(xml(DUMMY_FILE_NAME, ""
-            + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-            + "    android:clickable=\"true\"\n"
-            + "    android:focusable=\"true\" />"))
-            .run()
-            .expectClean();
+        lint().files(
+                        xml(
+                                DUMMY_FILE_NAME,
+                                ""
+                                        + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:clickable=\"true\"\n"
+                                        + "    android:focusable=\"true\" />"))
+                .run()
+                .expectClean();
     }
 
     public void testNonClickableElement_noIssue() {
-        lint().files(xml(DUMMY_FILE_NAME, ""
-             + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-             + "    android:clickable=\"false\"\n"
-             + "    android:focusable=\"false\" />"))
-            .run()
-            .expectClean();
+        lint().files(
+                        xml(
+                                DUMMY_FILE_NAME,
+                                ""
+                                        + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:clickable=\"false\"\n"
+                                        + "    android:focusable=\"false\" />"))
+                .run()
+                .expectClean();
     }
 
     public void testUnspecifiedFocusableElement_triggersIssue() {
-        lint().files(xml(DUMMY_FILE_NAME, ""
-            + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-            + "    android:clickable=\"true\" />"))
-            .run()
-            .expect(EXPECTED_WARNING_PREFIX
-            + "    android:clickable=\"true\" />\n"
-            + "    ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "0 errors, 1 warnings\n")
-            .expectFixDiffs(""
-            + "Fix for res/layout/mywidget.xml line 1: Set focusable=\"true\":\n"
-            + "@@ -3 +3\n"
-            + "-     android:clickable=\"true\" />\n"
-            + "@@ -4 +3\n"
-            + "+     android:clickable=\"true\"\n"
-            + "+     android:focusable=\"true\" />\n");
+        lint().files(
+                        xml(
+                                DUMMY_FILE_NAME,
+                                ""
+                                        + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:clickable=\"true\" />"))
+                .run()
+                .expect(
+                        EXPECTED_WARNING_PREFIX
+                                + "    android:clickable=\"true\" />\n"
+                                + "    ~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 1 warnings\n")
+                .expectFixDiffs(
+                        ""
+                                + "Fix for res/layout/mywidget.xml line 1: Set focusable=\"true\":\n"
+                                + "@@ -3 +3\n"
+                                + "-     android:clickable=\"true\" />\n"
+                                + "@@ -4 +3\n"
+                                + "+     android:clickable=\"true\"\n"
+                                + "+     android:focusable=\"true\" />\n");
     }
 
     public void testUnfocusableElement_triggersIssue() {
-        lint().files(xml(DUMMY_FILE_NAME, ""
-            + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-            + "    android:clickable=\"true\"\n"
-            + "    android:focusable=\"false\" />"))
-            .run()
-            .expect(EXPECTED_WARNING_PREFIX
-            + "    android:clickable=\"true\"\n"
-            + "    ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            + "0 errors, 1 warnings\n");
+        lint().files(
+                        xml(
+                                DUMMY_FILE_NAME,
+                                ""
+                                        + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    android:clickable=\"true\"\n"
+                                        + "    android:focusable=\"false\" />"))
+                .run()
+                .expect(
+                        EXPECTED_WARNING_PREFIX
+                                + "    android:clickable=\"true\"\n"
+                                + "    ~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 1 warnings\n");
     }
 }

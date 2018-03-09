@@ -42,48 +42,41 @@ import org.w3c.dom.Element;
 
 /**
  * Check which looks for accessibility problems like missing content descriptions
- * <p>
- * TODO: Resolve styles and don't warn where styles are defining the content description
- * (though this seems unusual; content descriptions are not typically generic enough to
- * put in styles)
+ *
+ * <p>TODO: Resolve styles and don't warn where styles are defining the content description (though
+ * this seems unusual; content descriptions are not typically generic enough to put in styles)
  */
 public class AccessibilityDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "ContentDescription",
-            "Image without `contentDescription`",
-            "Non-textual widgets like ImageViews and ImageButtons should use the " +
-            "`contentDescription` attribute to specify a textual description of " +
-            "the widget such that screen readers and other accessibility tools " +
-            "can adequately describe the user interface.\n" +
-            "\n" +
-            "Note that elements in application screens that are purely decorative " +
-            "and do not provide any content or enable a user action should not " +
-            "have accessibility content descriptions. In this case, just suppress the " +
-            "lint warning with a tools:ignore=\"ContentDescription\" attribute.\n" +
-            "\n" +
-            "Note that for text fields, you should not set both the `hint` and the " +
-            "`contentDescription` attributes since the hint will never be shown. Just " +
-            "set the `hint`. See " +
-            "http://developer.android.com/guide/topics/ui/accessibility/checklist.html#special-cases.",
-
-            Category.A11Y,
-            3,
-            Severity.WARNING,
-            new Implementation(
-                    AccessibilityDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "ContentDescription",
+                    "Image without `contentDescription`",
+                    "Non-textual widgets like ImageViews and ImageButtons should use the "
+                            + "`contentDescription` attribute to specify a textual description of "
+                            + "the widget such that screen readers and other accessibility tools "
+                            + "can adequately describe the user interface.\n"
+                            + "\n"
+                            + "Note that elements in application screens that are purely decorative "
+                            + "and do not provide any content or enable a user action should not "
+                            + "have accessibility content descriptions. In this case, just suppress the "
+                            + "lint warning with a tools:ignore=\"ContentDescription\" attribute.\n"
+                            + "\n"
+                            + "Note that for text fields, you should not set both the `hint` and the "
+                            + "`contentDescription` attributes since the hint will never be shown. Just "
+                            + "set the `hint`. See "
+                            + "http://developer.android.com/guide/topics/ui/accessibility/checklist.html#special-cases.",
+                    Category.A11Y,
+                    3,
+                    Severity.WARNING,
+                    new Implementation(AccessibilityDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     /** Constructs a new {@link AccessibilityDetector} */
-    public AccessibilityDetector() {
-    }
+    public AccessibilityDetector() {}
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(
-                IMAGE_BUTTON,
-                IMAGE_VIEW
-        );
+        return Arrays.asList(IMAGE_BUTTON, IMAGE_VIEW);
     }
 
     @Override
@@ -96,9 +89,12 @@ public class AccessibilityDetector extends LayoutDetector {
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         Element element = attribute.getOwnerElement();
         if (element.hasAttributeNS(ANDROID_URI, ATTR_HINT)) {
-            context.report(ISSUE, element, context.getLocation(attribute),
-                    "Do not set both `contentDescription` and `hint`: the `contentDescription` " +
-                    "will mask the `hint`");
+            context.report(
+                    ISSUE,
+                    element,
+                    context.getLocation(attribute),
+                    "Do not set both `contentDescription` and `hint`: the `contentDescription` "
+                            + "will mask the `hint`");
         }
     }
 
@@ -106,12 +102,15 @@ public class AccessibilityDetector extends LayoutDetector {
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION)) {
             // Ignore views that are explicitly not important for accessibility
-            if (VALUE_NO.equals(element.getAttributeNS(ANDROID_URI,
-                    ATTR_IMPORTANT_FOR_ACCESSIBILITY))) {
+            if (VALUE_NO.equals(
+                    element.getAttributeNS(ANDROID_URI, ATTR_IMPORTANT_FOR_ACCESSIBILITY))) {
                 return;
             }
             LintFix fix = fix().set().todo(ANDROID_URI, ATTR_CONTENT_DESCRIPTION).build();
-            context.report(ISSUE, element, context.getNameLocation(element),
+            context.report(
+                    ISSUE,
+                    element,
+                    context.getNameLocation(element),
                     "Missing `contentDescription` attribute on image",
                     fix);
         } else {
@@ -119,7 +118,10 @@ public class AccessibilityDetector extends LayoutDetector {
             String attribute = attributeNode.getValue();
             if (attribute.isEmpty() || attribute.equals("TODO")) {
                 LintFix fix = fix().set().todo(ANDROID_URI, ATTR_CONTENT_DESCRIPTION).build();
-                context.report(ISSUE, attributeNode, context.getLocation(attributeNode),
+                context.report(
+                        ISSUE,
+                        attributeNode,
+                        context.getLocation(attributeNode),
                         "Empty `contentDescription` attribute on image",
                         fix);
             }

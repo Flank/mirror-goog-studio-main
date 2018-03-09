@@ -58,22 +58,21 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/**
- * Checks for consistency in layouts across different resource folders
- */
+/** Checks for consistency in layouts across different resource folders */
 public class LayoutConsistencyDetector extends LayoutDetector implements SourceCodeScanner {
 
-    /** Map from layout resource names to a list of files defining that resource,
-     * and within each file the value is a map from string ids to the widget type
-     * used by that id in this file */
+    /**
+     * Map from layout resource names to a list of files defining that resource, and within each
+     * file the value is a map from string ids to the widget type used by that id in this file
+     */
     private final Map<String, List<Pair<File, Map<String, String>>>> mMap =
             Maps.newHashMapWithExpectedSize(64);
 
-    /** Ids referenced from .java files. Only ids referenced from code are considered
-     * vital to be consistent among the layout variations (others could just have ids
-     * assigned to them in the layout either automatically by the layout editor or there
-     * in order to support RelativeLayout constraints etc, but not be problematic
-     * in findViewById calls.)
+    /**
+     * Ids referenced from .java files. Only ids referenced from code are considered vital to be
+     * consistent among the layout variations (others could just have ids assigned to them in the
+     * layout either automatically by the layout editor or there in order to support RelativeLayout
+     * constraints etc, but not be problematic in findViewById calls.)
      */
     private final Set<String> mRelevantIds = Sets.newLinkedHashSetWithExpectedSize(64);
 
@@ -84,35 +83,33 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
     private Map<String, Map<String, String>> mErrorMessages;
 
     /** Inconsistent widget types */
-    public static final Issue INCONSISTENT_IDS = Issue.create(
-            "InconsistentLayout",
-            "Inconsistent Layouts",
-
-            "This check ensures that a layout resource which is defined in multiple "
-            + "resource folders, specifies the same set of widgets.\n"
-            + "\n"
-            + "This finds cases where you have accidentally forgotten to add "
-            + "a widget to all variations of the layout, which could result "
-            + "in a runtime crash for some resource configurations when a "
-            + "`findViewById()` fails.\n"
-            + "\n"
-            + "There **are** cases where this is intentional. For example, you "
-            + "may have a dedicated large tablet layout which adds some extra "
-            + "widgets that are not present in the phone version of the layout. "
-            + "As long as the code accessing the layout resource is careful to "
-            + "handle this properly, it is valid. In that case, you can suppress "
-            + "this lint check for the given extra or missing views, or the whole "
-            + "layout",
-            Category.CORRECTNESS,
-            6,
-            Severity.WARNING,
-            new Implementation(
-                    LayoutConsistencyDetector.class,
-                    Scope.JAVA_AND_RESOURCE_FILES));
+    public static final Issue INCONSISTENT_IDS =
+            Issue.create(
+                    "InconsistentLayout",
+                    "Inconsistent Layouts",
+                    "This check ensures that a layout resource which is defined in multiple "
+                            + "resource folders, specifies the same set of widgets.\n"
+                            + "\n"
+                            + "This finds cases where you have accidentally forgotten to add "
+                            + "a widget to all variations of the layout, which could result "
+                            + "in a runtime crash for some resource configurations when a "
+                            + "`findViewById()` fails.\n"
+                            + "\n"
+                            + "There **are** cases where this is intentional. For example, you "
+                            + "may have a dedicated large tablet layout which adds some extra "
+                            + "widgets that are not present in the phone version of the layout. "
+                            + "As long as the code accessing the layout resource is careful to "
+                            + "handle this properly, it is valid. In that case, you can suppress "
+                            + "this lint check for the given extra or missing views, or the whole "
+                            + "layout",
+                    Category.CORRECTNESS,
+                    6,
+                    Severity.WARNING,
+                    new Implementation(
+                            LayoutConsistencyDetector.class, Scope.JAVA_AND_RESOURCE_FILES));
 
     /** Constructs a consistency check */
-    public LayoutConsistencyDetector() {
-    }
+    public LayoutConsistencyDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -129,7 +126,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
         if (root != null) {
             if (context.getPhase() == 1) {
                 // Map from ids to types
-                Map<String,String> fileMap = Maps.newHashMapWithExpectedSize(10);
+                Map<String, String> fileMap = Maps.newHashMapWithExpectedSize(10);
                 addIds(root, fileMap);
 
                 getFileMapList(context).add(Pair.of(context.file, fileMap));
@@ -144,8 +141,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
     }
 
     @NonNull
-    private List<Pair<File, Map<String, String>>> getFileMapList(
-            @NonNull XmlContext context) {
+    private List<Pair<File, Map<String, String>>> getFileMapList(@NonNull XmlContext context) {
         String name = LintUtils.getLayoutName(context.file);
         List<Pair<File, Map<String, String>>> list = mMap.get(name);
         if (list == null) {
@@ -164,7 +160,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
         return null;
     }
 
-    private static void addIds(Element element, Map<String,String> map) {
+    private static void addIds(Element element, Map<String, String> map) {
         String id = getId(element);
         if (id != null) {
             String s = stripIdPrefix(id);
@@ -222,7 +218,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
             // First phase: gather all the ids and look for consistency issues.
             // If any are found, request location computation in phase 2 by
             // writing the ids needed for each layout in the {@link #mLocations} map.
-            for (Map.Entry<String,List<Pair<File,Map<String,String>>>> entry : mMap.entrySet()) {
+            for (Map.Entry<String, List<Pair<File, Map<String, String>>>> entry : mMap.entrySet()) {
                 String layout = entry.getKey();
                 List<Pair<File, Map<String, String>>> files = entry.getValue();
                 if (files.size() < 2) {
@@ -256,8 +252,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
     }
 
     private void checkConsistentIds(
-            @NonNull String layout,
-            @NonNull List<Pair<File, Map<String, String>>> files) {
+            @NonNull String layout, @NonNull List<Pair<File, Map<String, String>>> files) {
         int layoutCount = files.size();
         assert layoutCount >= 2;
 
@@ -314,18 +309,23 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
             Collections.sort(missing);
 
             if (layouts.size() < layoutCount / 2) {
-                message = String.format(
-                        "The id \"%1$s\" in layout \"%2$s\" is only present in the following "
-                                + "layout configurations: %3$s (missing from %4$s)",
-                        id, layout,
-                        LintUtils.formatList(layouts, Integer.MAX_VALUE),
-                        LintUtils.formatList(missing, Integer.MAX_VALUE));
+                message =
+                        String.format(
+                                "The id \"%1$s\" in layout \"%2$s\" is only present in the following "
+                                        + "layout configurations: %3$s (missing from %4$s)",
+                                id,
+                                layout,
+                                LintUtils.formatList(layouts, Integer.MAX_VALUE),
+                                LintUtils.formatList(missing, Integer.MAX_VALUE));
             } else {
-                message = String.format(
-                        "The id \"%1$s\" in layout \"%2$s\" is missing from the following layout "
-                                + "configurations: %3$s (present in %4$s)",
-                        id, layout, LintUtils.formatList(missing, Integer.MAX_VALUE),
-                        LintUtils.formatList(layouts, Integer.MAX_VALUE));
+                message =
+                        String.format(
+                                "The id \"%1$s\" in layout \"%2$s\" is missing from the following layout "
+                                        + "configurations: %3$s (present in %4$s)",
+                                id,
+                                layout,
+                                LintUtils.formatList(missing, Integer.MAX_VALUE),
+                                LintUtils.formatList(layouts, Integer.MAX_VALUE));
             }
             messages.put(id, message);
         }
@@ -355,8 +355,8 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
         return union;
     }
 
-    private Map<File, Set<String>> getIdMap(List<Pair<File, Map<String, String>>> files,
-            int layoutCount) {
+    private Map<File, Set<String>> getIdMap(
+            List<Pair<File, Map<String, String>>> files, int layoutCount) {
         Map<File, Set<String>> idMap = new HashMap<>(layoutCount);
         for (Pair<File, Map<String, String>> pair : files) {
             File file = pair.getFirst();
@@ -397,13 +397,14 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
 
         // Sort locations by the file parent folders
         if (locations.size() > 1) {
-            locations.sort((location1, location2) -> {
-                File file1 = location1.getFile();
-                File file2 = location2.getFile();
-                String folder1 = file1.getParentFile().getName();
-                String folder2 = file2.getParentFile().getName();
-                return folder1.compareTo(folder2);
-            });
+            locations.sort(
+                    (location1, location2) -> {
+                        File file1 = location1.getFile();
+                        File file2 = location2.getFile();
+                        String folder1 = file1.getParentFile().getName();
+                        String folder2 = file2.getParentFile().getName();
+                        return folder1.compareTo(folder2);
+                    });
             // Chain locations together
             Iterator<Location> iterator = locations.iterator();
             assert iterator.hasNext();
@@ -426,8 +427,12 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
     }
 
     @Override
-    public void visitResourceReference(@NonNull JavaContext context, @NonNull UElement node,
-            @NonNull ResourceType type, @NonNull String name, boolean isFramework) {
+    public void visitResourceReference(
+            @NonNull JavaContext context,
+            @NonNull UElement node,
+            @NonNull ResourceType type,
+            @NonNull String name,
+            boolean isFramework) {
         if (!isFramework && type == ResourceType.ID) {
             mRelevantIds.add(name);
         }

@@ -61,38 +61,42 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-
-/**
- * Check if the usage of App Indexing is correct.
- */
+/** Check if the usage of App Indexing is correct. */
 public class AppIndexingApiDetector extends Detector implements XmlScanner, SourceCodeScanner {
 
-    private static final Implementation URL_IMPLEMENTATION = new Implementation(
-            AppIndexingApiDetector.class, Scope.MANIFEST_SCOPE);
+    private static final Implementation URL_IMPLEMENTATION =
+            new Implementation(AppIndexingApiDetector.class, Scope.MANIFEST_SCOPE);
 
     @SuppressWarnings("unchecked")
     private static final Implementation APP_INDEXING_API_IMPLEMENTATION =
             new Implementation(
                     AppIndexingApiDetector.class,
                     EnumSet.of(Scope.JAVA_FILE, Scope.MANIFEST),
-                    Scope.JAVA_FILE_SCOPE, Scope.MANIFEST_SCOPE);
+                    Scope.JAVA_FILE_SCOPE,
+                    Scope.MANIFEST_SCOPE);
 
     public static final Issue ISSUE_APP_INDEXING =
             Issue.create(
-                    "GoogleAppIndexingWarning",
-                    "Missing support for Firebase App Indexing",
-                    "Adds URLs to get your app into the Google index, to get installs"
-                            + " and traffic to your app from Google Search.",
-                    Category.USABILITY, 5, Severity.WARNING, URL_IMPLEMENTATION)
+                            "GoogleAppIndexingWarning",
+                            "Missing support for Firebase App Indexing",
+                            "Adds URLs to get your app into the Google index, to get installs"
+                                    + " and traffic to your app from Google Search.",
+                            Category.USABILITY,
+                            5,
+                            Severity.WARNING,
+                            URL_IMPLEMENTATION)
                     .addMoreInfo("https://g.co/AppIndexing/AndroidStudio");
 
     public static final Issue ISSUE_APP_INDEXING_API =
             Issue.create(
-                    "GoogleAppIndexingApiWarning",
-                    "Missing support for Firebase App Indexing Api",
-                    "Adds URLs to get your app into the Google index, to get installs"
-                            + " and traffic to your app from Google Search.",
-                    Category.USABILITY, 5, Severity.WARNING, APP_INDEXING_API_IMPLEMENTATION)
+                            "GoogleAppIndexingApiWarning",
+                            "Missing support for Firebase App Indexing Api",
+                            "Adds URLs to get your app into the Google index, to get installs"
+                                    + " and traffic to your app from Google Search.",
+                            Category.USABILITY,
+                            5,
+                            Severity.WARNING,
+                            APP_INDEXING_API_IMPLEMENTATION)
                     .addMoreInfo("https://g.co/AppIndexing/AndroidStudio")
                     .setEnabledByDefault(false);
 
@@ -104,12 +108,12 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
     private static final String CLIENT_DISCONNECT = "disconnect";
     private static final String ADD_API = "addApi";
 
-    private static final String APP_INDEXING_API_CLASS
-            = "com.google.android.gms.appindexing.AppIndexApi";
-    private static final String GOOGLE_API_CLIENT_CLASS
-            = "com.google.android.gms.common.api.GoogleApiClient";
-    private static final String GOOGLE_API_CLIENT_BUILDER_CLASS
-            = "com.google.android.gms.common.api.GoogleApiClient.Builder";
+    private static final String APP_INDEXING_API_CLASS =
+            "com.google.android.gms.appindexing.AppIndexApi";
+    private static final String GOOGLE_API_CLIENT_CLASS =
+            "com.google.android.gms.common.api.GoogleApiClient";
+    private static final String GOOGLE_API_CLIENT_BUILDER_CLASS =
+            "com.google.android.gms.common.api.GoogleApiClient.Builder";
     private static final String API_CLASS = "com.google.android.gms.appindexing.AppIndex";
 
     // ---- Implements XmlScanner ----
@@ -132,12 +136,15 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
         }
         if (!applicationHasActionView && !context.getProject().isLibrary()) {
             // Report warning if there is no activity that supports action view.
-            context.report(ISSUE_APP_INDEXING, application, context.getLocation(application),
-                           // This error message is more verbose than the other app indexing lint warnings, because it
-                           // shows up on a blank project, and we want to make it obvious by just looking at the error
-                           // message what this is
-                           "App is not indexable by Google Search; consider adding at least one Activity with an ACTION-VIEW " +
-                           "intent filter. See issue explanation for more details.");
+            context.report(
+                    ISSUE_APP_INDEXING,
+                    application,
+                    context.getLocation(application),
+                    // This error message is more verbose than the other app indexing lint warnings, because it
+                    // shows up on a blank project, and we want to make it obvious by just looking at the error
+                    // message what this is
+                    "App is not indexable by Google Search; consider adding at least one Activity with an ACTION-VIEW "
+                            + "intent filter. See issue explanation for more details.");
         }
     }
 
@@ -243,15 +250,16 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
                     }
                     break;
                 case ADD_API:
-                    if (evaluator.isMemberInClass(node.resolve(),
-                            GOOGLE_API_CLIENT_BUILDER_CLASS)) {
-                        if (evaluator
-                                .isMemberInClass(node.resolve(), GOOGLE_API_CLIENT_BUILDER_CLASS)) {
+                    if (evaluator.isMemberInClass(
+                            node.resolve(), GOOGLE_API_CLIENT_BUILDER_CLASS)) {
+                        if (evaluator.isMemberInClass(
+                                node.resolve(), GOOGLE_API_CLIENT_BUILDER_CLASS)) {
                             List<UExpression> args = node.getValueArguments();
                             if (!args.isEmpty()) {
                                 PsiElement resolved = UastUtils.tryResolve(args.get(0));
-                                if (resolved instanceof PsiField &&
-                                        evaluator.isMemberInClass((PsiField) resolved, API_CLASS)) {
+                                if (resolved instanceof PsiField
+                                        && evaluator.isMemberInClass(
+                                                (PsiField) resolved, API_CLASS)) {
                                     mHasAddAppIndexApi = true;
                                 }
                             }
@@ -269,12 +277,16 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
             boolean hasIntent = activitiesToCheck.contains(mCls.getQualifiedName());
             if (!hasIntent) {
                 for (UCallExpression call : mStartMethods) {
-                    mContext.report(ISSUE_APP_INDEXING_API, call,
+                    mContext.report(
+                            ISSUE_APP_INDEXING_API,
+                            call,
                             mContext.getNameLocation(call),
                             "Missing support for Firebase App Indexing in the manifest");
                 }
                 for (UCallExpression call : mEndMethods) {
-                    mContext.report(ISSUE_APP_INDEXING_API, call,
+                    mContext.report(
+                            ISSUE_APP_INDEXING_API,
+                            call,
                             mContext.getNameLocation(call),
                             "Missing support for Firebase App Indexing in the manifest");
                 }
@@ -283,7 +295,9 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
 
             // `AppIndex.AppIndexApi.start / end / view / viewEnd` should exist
             if (mStartMethods.isEmpty() && mEndMethods.isEmpty()) {
-                mContext.report(ISSUE_APP_INDEXING_API, mCls,
+                mContext.report(
+                        ISSUE_APP_INDEXING_API,
+                        mCls,
                         mContext.getNameLocation(mCls),
                         "Missing support for Firebase App Indexing API");
                 return;
@@ -298,24 +312,35 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
 
                 // GoogleApiClient should `addApi(AppIndex.APP_INDEX_API)`
                 if (!mHasAddAppIndexApi) {
-                    String message = String.format(
-                            "GoogleApiClient `%1$s` has not added support for App Indexing API",
-                            startClient.asSourceString());
-                    mContext.report(ISSUE_APP_INDEXING_API, startClient,
-                            mContext.getLocation(startClient), message);
+                    String message =
+                            String.format(
+                                    "GoogleApiClient `%1$s` has not added support for App Indexing API",
+                                    startClient.asSourceString());
+                    mContext.report(
+                            ISSUE_APP_INDEXING_API,
+                            startClient,
+                            mContext.getLocation(startClient),
+                            message);
                 }
 
                 // GoogleApiClient `connect` should exist
                 if (!hasOperand(startClient, mConnectMethods)) {
-                    String message = String.format("GoogleApiClient `%1$s` is not connected",
+                    String message =
+                            String.format(
+                                    "GoogleApiClient `%1$s` is not connected",
                                     startClient.asSourceString());
-                    mContext.report(ISSUE_APP_INDEXING_API, startClient,
-                            mContext.getLocation(startClient), message);
+                    mContext.report(
+                            ISSUE_APP_INDEXING_API,
+                            startClient,
+                            mContext.getLocation(startClient),
+                            message);
                 }
 
                 // `AppIndex.AppIndexApi.end` should pair with `AppIndex.AppIndexApi.start`
                 if (!hasFirstArgument(startClient, mEndMethods)) {
-                    mContext.report(ISSUE_APP_INDEXING_API, startNode,
+                    mContext.report(
+                            ISSUE_APP_INDEXING_API,
+                            startNode,
                             mContext.getNameLocation(startNode),
                             "Missing corresponding `AppIndex.AppIndexApi.end` method");
                 }
@@ -330,24 +355,35 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
 
                 // GoogleApiClient should `addApi(AppIndex.APP_INDEX_API)`
                 if (!mHasAddAppIndexApi) {
-                    String message = String.format(
-                            "GoogleApiClient `%1$s` has not added support for App Indexing API",
-                            endClient.asSourceString());
-                    mContext.report(ISSUE_APP_INDEXING_API, endClient,
-                            mContext.getLocation(endClient), message);
+                    String message =
+                            String.format(
+                                    "GoogleApiClient `%1$s` has not added support for App Indexing API",
+                                    endClient.asSourceString());
+                    mContext.report(
+                            ISSUE_APP_INDEXING_API,
+                            endClient,
+                            mContext.getLocation(endClient),
+                            message);
                 }
 
                 // GoogleApiClient `disconnect` should exist
                 if (!hasOperand(endClient, mDisconnectMethods)) {
-                    String message = String.format("GoogleApiClient `%1$s`"
-                            + " is not disconnected", endClient.asSourceString());
-                    mContext.report(ISSUE_APP_INDEXING_API, endClient,
-                            mContext.getLocation(endClient), message);
+                    String message =
+                            String.format(
+                                    "GoogleApiClient `%1$s` is not disconnected",
+                                    endClient.asSourceString());
+                    mContext.report(
+                            ISSUE_APP_INDEXING_API,
+                            endClient,
+                            mContext.getLocation(endClient),
+                            message);
                 }
 
                 // `AppIndex.AppIndexApi.start` should pair with `AppIndex.AppIndexApi.end`
                 if (!hasFirstArgument(endClient, mStartMethods)) {
-                    mContext.report(ISSUE_APP_INDEXING_API, endNode,
+                    mContext.report(
+                            ISSUE_APP_INDEXING_API,
+                            endNode,
                             mContext.getNameLocation(endNode),
                             "Missing corresponding `AppIndex.AppIndexApi.start` method");
                 }
@@ -356,8 +392,8 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
     }
 
     /**
-     * Gets names of activities which needs app indexing. i.e. the activities have data tag in
-     * their intent filters.
+     * Gets names of activities which needs app indexing. i.e. the activities have data tag in their
+     * intent filters.
      *
      * @param context The context to check in.
      */
@@ -390,7 +426,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
      * If a method with a certain argument exists in the list of methods.
      *
      * @param argument The first argument of the method.
-     * @param list     The methods list.
+     * @param list The methods list.
      * @return If such a method exists in the list.
      */
     private static boolean hasFirstArgument(UExpression argument, List<UCallExpression> list) {
@@ -410,7 +446,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Sour
      * If a method with a certain operand exists in the list of methods.
      *
      * @param operand The operand of the method.
-     * @param list    The methods list.
+     * @param list The methods list.
      * @return If such a method exists in the list.
      */
     private static boolean hasOperand(UExpression operand, List<UCallExpression> list) {

@@ -41,7 +41,8 @@ class DeletedProviderDetector : Detector(), SourceCodeScanner {
     }
 
     override fun visitMethod(
-        context: JavaContext, node: UCallExpression,
+        context: JavaContext,
+        node: UCallExpression,
         method: PsiMethod
     ) {
         val qualifiedName = method.containingClass?.qualifiedName ?: return
@@ -69,9 +70,11 @@ class DeletedProviderDetector : Detector(), SourceCodeScanner {
         }
         val value = ConstantEvaluator.evaluate(context, expression)
         if (value == "Crypto") {
-            context.report(ISSUE, expression, context.getLocation(expression),
+            context.report(
+                ISSUE, expression, context.getLocation(expression),
                 "The Crypto provider has been deleted " +
-                    "in Android P (and was deprecated in Android N), so the code will crash.")
+                        "in Android P (and was deprecated in Android N), so the code will crash."
+            )
         }
     }
 

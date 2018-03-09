@@ -41,9 +41,7 @@ public interface PermissionHolder {
     @NonNull
     AndroidVersion getTargetSdkVersion();
 
-    /**
-     * A convenience implementation of {@link PermissionHolder} backed by a set
-     */
+    /** A convenience implementation of {@link PermissionHolder} backed by a set */
     class SetPermissionLookup implements PermissionHolder {
         private final Set<String> mGrantedPermissions;
         private final Set<String> mRevocablePermissions;
@@ -62,9 +60,13 @@ public interface PermissionHolder {
         }
 
         @VisibleForTesting
-        public SetPermissionLookup(@NonNull Set<String> grantedPermissions,
+        public SetPermissionLookup(
+                @NonNull Set<String> grantedPermissions,
                 @NonNull Set<String> revocablePermissions) {
-            this(grantedPermissions, revocablePermissions, AndroidVersion.DEFAULT,
+            this(
+                    grantedPermissions,
+                    revocablePermissions,
+                    AndroidVersion.DEFAULT,
                     AndroidVersion.DEFAULT);
         }
 
@@ -96,32 +98,33 @@ public interface PermissionHolder {
         }
 
         /**
-         * Creates a {@linkplain PermissionHolder} which combines the permissions
-         * held by the given holder, with the permissions implied by the given
-         * {@link PermissionRequirement}
+         * Creates a {@linkplain PermissionHolder} which combines the permissions held by the given
+         * holder, with the permissions implied by the given {@link PermissionRequirement}
          */
         @NonNull
-        public static PermissionHolder join(@NonNull PermissionHolder lookup,
-                                            @NonNull PermissionRequirement requirement) {
-            SetPermissionLookup empty = new SetPermissionLookup(Collections.emptySet(),
-                    Collections.emptySet(), lookup.getMinSdkVersion(),
-                    lookup.getTargetSdkVersion());
+        public static PermissionHolder join(
+                @NonNull PermissionHolder lookup, @NonNull PermissionRequirement requirement) {
+            SetPermissionLookup empty =
+                    new SetPermissionLookup(
+                            Collections.emptySet(),
+                            Collections.emptySet(),
+                            lookup.getMinSdkVersion(),
+                            lookup.getTargetSdkVersion());
             return join(lookup, requirement.getMissingPermissions(empty));
         }
 
         /**
-         * Creates a {@linkplain PermissionHolder} which combines the permissions
-         * held by the given holder, along with a set of additional permission names
+         * Creates a {@linkplain PermissionHolder} which combines the permissions held by the given
+         * holder, along with a set of additional permission names
          */
         @NonNull
-        public static PermissionHolder join(@NonNull final PermissionHolder lookup,
-                @Nullable final Set<String> permissions) {
+        public static PermissionHolder join(
+                @NonNull final PermissionHolder lookup, @Nullable final Set<String> permissions) {
             if (permissions != null && !permissions.isEmpty()) {
                 return new PermissionHolder() {
                     @Override
                     public boolean hasPermission(@NonNull String permission) {
-                        return lookup.hasPermission(permission)
-                                || permissions.contains(permission);
+                        return lookup.hasPermission(permission) || permissions.contains(permission);
                     }
 
                     @Override

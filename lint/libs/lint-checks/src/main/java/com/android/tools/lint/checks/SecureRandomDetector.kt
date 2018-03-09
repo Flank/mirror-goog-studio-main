@@ -54,7 +54,8 @@ class SecureRandomDetector : Detector(), SourceCodeScanner {
         val evaluator = context.evaluator
         if (evaluator.isMemberInClass(method, JAVA_SECURITY_SECURE_RANDOM) ||
             evaluator.isMemberInSubClassOf(method, JAVA_UTIL_RANDOM, false) &&
-            isSecureRandomReceiver(node)) {
+            isSecureRandomReceiver(node)
+        ) {
             // Called with a fixed seed?
             val seed = ConstantEvaluator.evaluate(context, seedArgument)
             if (seed != null) {

@@ -62,30 +62,33 @@ import org.w3c.dom.Element;
  *
  * <p>This detector looks for common mistakes related to AppCompat support for vector drawables,
  * that is:
+ *
  * <ul>
- *     <li>Using app:srcCompat without useSupportLibrary in build.gradle
- *     <li>Using android:src with useSupportLibrary in build.gradle
+ *   <li>Using app:srcCompat without useSupportLibrary in build.gradle
+ *   <li>Using android:src with useSupportLibrary in build.gradle
  * </ul>
  */
 public class VectorDrawableCompatDetector extends ResourceXmlDetector {
 
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "VectorDrawableCompat",
-            "Using VectorDrawableCompat",
-            "To use VectorDrawableCompat, you need to make two modifications to your project. "
-                    + "First, set `android.defaultConfig.vectorDrawables.useSupportLibrary = true` "
-                    + "in your `build.gradle` file, "
-                    + "and second, use `app:srcCompat` instead of `android:src` to refer to vector "
-                    + "drawables.",
-            Category.CORRECTNESS,
-            5,
-            Severity.ERROR,
-            new Implementation(
-                    VectorDrawableCompatDetector.class,
-                    Scope.ALL_RESOURCES_SCOPE,
-                    Scope.RESOURCE_FILE_SCOPE))
-            .addMoreInfo("http://chris.banes.me/2016/02/25/appcompat-vector/#enabling-the-flag");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "VectorDrawableCompat",
+                            "Using VectorDrawableCompat",
+                            "To use VectorDrawableCompat, you need to make two modifications to your project. "
+                                    + "First, set `android.defaultConfig.vectorDrawables.useSupportLibrary = true` "
+                                    + "in your `build.gradle` file, "
+                                    + "and second, use `app:srcCompat` instead of `android:src` to refer to vector "
+                                    + "drawables.",
+                            Category.CORRECTNESS,
+                            5,
+                            Severity.ERROR,
+                            new Implementation(
+                                    VectorDrawableCompatDetector.class,
+                                    Scope.ALL_RESOURCES_SCOPE,
+                                    Scope.RESOURCE_FILE_SCOPE))
+                    .addMoreInfo(
+                            "http://chris.banes.me/2016/02/25/appcompat-vector/#enabling-the-flag");
 
     /** Whether to skip the checks altogether. */
     private boolean mSkipChecks;
@@ -141,8 +144,8 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
 
     /**
      * Saves names of all vector resources encountered. Because "drawable" is before "layout" in
-     * alphabetical order, Lint will first call this on every vector, before calling
-     * {@link #visitAttribute(XmlContext, Attr)} on every attribute.
+     * alphabetical order, Lint will first call this on every vector, before calling {@link
+     * #visitAttribute(XmlContext, Attr)} on every attribute.
      */
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
@@ -184,8 +187,8 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
             isVector = mVectors::contains;
         } else {
             LintClient client = context.getClient();
-            AbstractResourceRepository resources = client.getResourceRepository(
-                    context.getMainProject(), true, false);
+            AbstractResourceRepository resources =
+                    client.getResourceRepository(context.getMainProject(), true, false);
             if (resources == null) {
                 // We only run on a single layout file, but have no access to the resources
                 // database, there's no way we can perform the check.

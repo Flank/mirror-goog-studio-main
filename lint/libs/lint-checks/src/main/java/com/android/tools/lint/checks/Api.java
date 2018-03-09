@@ -33,11 +33,12 @@ import org.xml.sax.SAXException;
 /**
  * Main entry point for API description.
  *
- * To create the {@code Api}, use {@link #parseApi(File)}.
+ * <p>To create the {@code Api}, use {@link #parseApi(File)}.
  */
 class Api {
     /**
      * Parses simplified API file.
+     *
      * @param apiFile the file to read
      * @return a new ApiInfo
      * @throws RuntimeException in case of an error
@@ -83,30 +84,31 @@ class Api {
     private static class MyHashMap<V> extends THashMap<String, V> {
         private static final TObjectHashingStrategy<String> myHashingStrategy =
                 new TObjectHashingStrategy<String>() {
-            @Override
-            public int computeHashCode(String str) {
-                int h = 0;
-                for (int i = 0; i < str.length(); i++) {
-                    char c = str.charAt(i);
-                    c = normalizeSeparator(c);
-                    h = 31 * h + c;
-                }
-                return h;
-            }
-
-            @Override
-            public boolean equals(String s1, String s2) {
-                if (s1.length() != s2.length()) {
-                    return false;
-                }
-                for (int i = 0; i < s1.length(); i++) {
-                    if (normalizeSeparator(s1.charAt(i)) != normalizeSeparator(s2.charAt(i))) {
-                        return false;
+                    @Override
+                    public int computeHashCode(String str) {
+                        int h = 0;
+                        for (int i = 0; i < str.length(); i++) {
+                            char c = str.charAt(i);
+                            c = normalizeSeparator(c);
+                            h = 31 * h + c;
+                        }
+                        return h;
                     }
-                }
-                return true;
-            }
-        };
+
+                    @Override
+                    public boolean equals(String s1, String s2) {
+                        if (s1.length() != s2.length()) {
+                            return false;
+                        }
+                        for (int i = 0; i < s1.length(); i++) {
+                            if (normalizeSeparator(s1.charAt(i))
+                                    != normalizeSeparator(s2.charAt(i))) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                };
 
         private static char normalizeSeparator(char c) {
             if (c == '/' || c == '$') {

@@ -37,40 +37,34 @@ import java.util.Collection;
 import java.util.Collections;
 import org.w3c.dom.Element;
 
-/**
- * Check which makes sure menu items specify a title
- */
+/** Check which makes sure menu items specify a title */
 public class TitleDetector extends ResourceXmlDetector {
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "MenuTitle",
-            "Missing menu title",
-
-            "From the action bar documentation:\n" +
-            // u2014: em dash
-            "\"It's important that you always define android:title for each menu item \u2014 " +
-            "even if you don't declare that the title appear with the action item \u2014 for " +
-            "three reasons:\n" +
-            "\n" +
-            "* If there's not enough room in the action bar for the action item, the menu " +
-            "item appears in the overflow menu and only the title appears.\n" +
-            "* Screen readers for sight-impaired users read the menu item's title.\n" +
-            "* If the action item appears with only the icon, a user can long-press the item " +
-            "to reveal a tool-tip that displays the action item's title.\n" +
-            "The android:icon is always optional, but recommended.",
-
-            Category.USABILITY,
-            5,
-            Severity.ERROR,
-            new Implementation(
-                    TitleDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE))
-            .addMoreInfo(
-            "http://developer.android.com/guide/topics/ui/actionbar.html");
+    public static final Issue ISSUE =
+            Issue.create(
+                            "MenuTitle",
+                            "Missing menu title",
+                            "From the action bar documentation:\n"
+                                    +
+                                    // u2014: em dash
+                                    "\"It's important that you always define android:title for each menu item \u2014 "
+                                    + "even if you don't declare that the title appear with the action item \u2014 for "
+                                    + "three reasons:\n"
+                                    + "\n"
+                                    + "* If there's not enough room in the action bar for the action item, the menu "
+                                    + "item appears in the overflow menu and only the title appears.\n"
+                                    + "* Screen readers for sight-impaired users read the menu item's title.\n"
+                                    + "* If the action item appears with only the icon, a user can long-press the item "
+                                    + "to reveal a tool-tip that displays the action item's title.\n"
+                                    + "The android:icon is always optional, but recommended.",
+                            Category.USABILITY,
+                            5,
+                            Severity.ERROR,
+                            new Implementation(TitleDetector.class, Scope.RESOURCE_FILE_SCOPE))
+                    .addMoreInfo("http://developer.android.com/guide/topics/ui/actionbar.html");
 
     /** Constructs a new {@link TitleDetector} */
-    public TitleDetector() {
-    }
+    public TitleDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {

@@ -27,21 +27,23 @@ import org.jetbrains.uast.UElement
 
 abstract class AbstractAnnotationDetector : Detector(), SourceCodeScanner {
     protected fun report(
-            context: JavaContext,
-            issue: Issue,
-            scope: UElement?,
-            location: Location,
-            message: String) {
+        context: JavaContext,
+        issue: Issue,
+        scope: UElement?,
+        location: Location,
+        message: String
+    ) {
         report(context, issue, scope, location, message, null)
     }
 
     protected fun report(
-            context: JavaContext,
-            issue: Issue,
-            scope: UElement?,
-            location: Location,
-            message: String,
-            quickfixData: LintFix?) {
+        context: JavaContext,
+        issue: Issue,
+        scope: UElement?,
+        location: Location,
+        message: String,
+        quickfixData: LintFix?
+    ) {
         // In the IDE historically (until 2.0) many checks were covered by the
         // ResourceTypeInspection, and when suppressed, these would all be suppressed with the
         // id "ResourceType".

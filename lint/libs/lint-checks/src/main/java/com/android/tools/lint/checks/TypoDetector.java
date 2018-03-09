@@ -50,34 +50,32 @@ import org.w3c.dom.NodeList;
 
 /**
  * Check which looks for likely typos in Strings.
- * <p>
- * TODO:
+ *
+ * <p>TODO:
+ *
  * <ul>
- * <li> Add check of Java String literals too!
- * <li> Add support for <b>additional</b> languages. The typo detector is now
- *      multilingual and looks for typos-*locale*.txt files to use. However,
- *      we need to seed it with additional typo databases. I did some searching
- *      and came up with some alternatives. Here's the strategy I used:
- *      Used Google Translate to translate "Wikipedia Common Misspellings", and
- *      then I went to google.no, google.fr etc searching with that translation, and
- *      came up with what looks like wikipedia language local lists of typos.
- *      This is how I found the Norwegian one for example:
- *      <br>
- *         http://no.wikipedia.org/wiki/Wikipedia:Liste_over_alminnelige_stavefeil/Maskinform
- *      <br>
- *     Here are some additional possibilities not yet processed:
- *      <ul>
- *        <li> French: http://fr.wikipedia.org/wiki/Wikip%C3%A9dia:Liste_de_fautes_d'orthographe_courantes
- *            (couldn't find a machine-readable version there?)
- *         <li> Swedish:
- *              http://sv.wikipedia.org/wiki/Wikipedia:Lista_%C3%B6ver_vanliga_spr%C3%A5kfel
- *              (couldn't find a machine-readable version there?)
- *        <li> German
- *              http://de.wikipedia.org/wiki/Wikipedia:Liste_von_Tippfehlern/F%C3%BCr_Maschinen
+ *   <li>Add check of Java String literals too!
+ *   <li>Add support for <b>additional</b> languages. The typo detector is now multilingual and
+ *       looks for typos-*locale*.txt files to use. However, we need to seed it with additional typo
+ *       databases. I did some searching and came up with some alternatives. Here's the strategy I
+ *       used: Used Google Translate to translate "Wikipedia Common Misspellings", and then I went
+ *       to google.no, google.fr etc searching with that translation, and came up with what looks
+ *       like wikipedia language local lists of typos. This is how I found the Norwegian one for
+ *       example: <br>
+ *       http://no.wikipedia.org/wiki/Wikipedia:Liste_over_alminnelige_stavefeil/Maskinform <br>
+ *       Here are some additional possibilities not yet processed:
+ *       <ul>
+ *         <li>French:
+ *             http://fr.wikipedia.org/wiki/Wikip%C3%A9dia:Liste_de_fautes_d'orthographe_courantes
+ *             (couldn't find a machine-readable version there?)
+ *         <li>Swedish: http://sv.wikipedia.org/wiki/Wikipedia:Lista_%C3%B6ver_vanliga_spr%C3%A5kfel
+ *             (couldn't find a machine-readable version there?)
+ *         <li>German
+ *             http://de.wikipedia.org/wiki/Wikipedia:Liste_von_Tippfehlern/F%C3%BCr_Maschinen
  *       </ul>
- * <li> Consider also digesting files like
- *       http://sv.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/Typos
- *       See http://en.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/User_manual.
+ *   <li>Consider also digesting files like
+ *       http://sv.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/Typos See
+ *       http://en.wikipedia.org/wiki/Wikipedia:AutoWikiBrowser/User_manual.
  * </ul>
  */
 public class TypoDetector extends ResourceXmlDetector {
@@ -88,30 +86,29 @@ public class TypoDetector extends ResourceXmlDetector {
     @Nullable private String mRegion;
 
     /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
-            "Typos",
-            "Spelling error",
-
-            "This check looks through the string definitions, and if it finds any words " +
-            "that look like likely misspellings, they are flagged.",
-            Category.MESSAGES,
-            7,
-            Severity.WARNING,
-            new Implementation(
-                    TypoDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+    public static final Issue ISSUE =
+            Issue.create(
+                    "Typos",
+                    "Spelling error",
+                    "This check looks through the string definitions, and if it finds any words "
+                            + "that look like likely misspellings, they are flagged.",
+                    Category.MESSAGES,
+                    7,
+                    Severity.WARNING,
+                    new Implementation(TypoDetector.class, Scope.RESOURCE_FILE_SCOPE));
 
     /** Constructs a new detector */
-    public TypoDetector() {
-    }
+    public TypoDetector() {}
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.VALUES;
     }
 
-    /** Look up the locale and region from the given parent folder name and store it
-     * in {@link #mLanguage} and {@link #mRegion} */
+    /**
+     * Look up the locale and region from the given parent folder name and store it in {@link
+     * #mLanguage} and {@link #mRegion}
+     */
     private void initLocale(@NonNull XmlContext context) {
         mLanguage = null;
         mRegion = null;
@@ -139,11 +136,7 @@ public class TypoDetector extends ResourceXmlDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(
-                TAG_STRING,
-                TAG_STRING_ARRAY,
-                TAG_PLURALS
-        );
+        return Arrays.asList(TAG_STRING, TAG_STRING_ARRAY, TAG_PLURALS);
     }
 
     @Override
@@ -232,8 +225,8 @@ public class TypoDetector extends ResourceXmlDetector {
                 reportTypo(context, node, text, begin, replacements);
             }
 
-            checkRepeatedWords(context, element, node, text, lastWordBegin, lastWordEnd, begin,
-                    end);
+            checkRepeatedWords(
+                    context, element, node, text, lastWordBegin, lastWordEnd, begin, end);
 
             lastWordBegin = begin;
             lastWordEnd = end;
@@ -241,10 +234,16 @@ public class TypoDetector extends ResourceXmlDetector {
         }
     }
 
-    private void checkRepeatedWords(XmlContext context, Element element, Node node,
-            String text, int lastWordBegin, int lastWordEnd, int begin, int end) {
-        if (lastWordBegin != -1 && end - begin == lastWordEnd - lastWordBegin
-                && end - begin > 1) {
+    private void checkRepeatedWords(
+            XmlContext context,
+            Element element,
+            Node node,
+            String text,
+            int lastWordBegin,
+            int lastWordEnd,
+            int begin,
+            int end) {
+        if (lastWordBegin != -1 && end - begin == lastWordEnd - lastWordBegin && end - begin > 1) {
             // See whether we have a repeated word
             boolean different = false;
             for (int i = lastWordBegin, j = begin; i < lastWordEnd; i++, j++) {
@@ -269,8 +268,15 @@ public class TypoDetector extends ResourceXmlDetector {
         return true;
     }
 
-    private void check(XmlContext context, Element element, Node node, byte[] utf8Text,
-            int byteStart, int byteEnd, String text, int charStart) {
+    private void check(
+            XmlContext context,
+            Element element,
+            Node node,
+            byte[] utf8Text,
+            int byteStart,
+            int byteEnd,
+            String text,
+            int charStart) {
         int lastWordBegin = -1;
         int lastWordEnd = -1;
         int index = byteStart;
@@ -330,8 +336,8 @@ public class TypoDetector extends ResourceXmlDetector {
                 reportTypo(context, node, text, charStart, replacements);
             }
 
-            checkRepeatedWords(context, element, node, text, lastWordBegin, lastWordEnd, charStart,
-                    charEnd);
+            checkRepeatedWords(
+                    context, element, node, text, lastWordBegin, lastWordEnd, charStart, charEnd);
 
             lastWordBegin = charStart;
             lastWordEnd = charEnd;
@@ -345,8 +351,8 @@ public class TypoDetector extends ResourceXmlDetector {
     }
 
     /** Report the typo found at the given offset and suggest the given replacements */
-    private void reportTypo(XmlContext context, Node node, String text, int begin,
-            List<String> replacements) {
+    private void reportTypo(
+            XmlContext context, Node node, String text, int begin, List<String> replacements) {
         if (replacements.size() < 2) {
             return;
         }
@@ -374,10 +380,12 @@ public class TypoDetector extends ResourceXmlDetector {
                 replacement = StringHelper.capitalize(replacement);
             }
             sb.append(replacement);
-            fixBuilder.add(fix().name("Replace with \"" + replacement + "\"")
-                    .replace().text(word)
-                    .with(replacement)
-                    .build());
+            fixBuilder.add(
+                    fix().name("Replace with \"" + replacement + "\"")
+                            .replace()
+                            .text(word)
+                            .with(replacement)
+                            .build());
             sb.append('"');
         }
         LintFix fix = fixBuilder.build();
@@ -386,13 +394,12 @@ public class TypoDetector extends ResourceXmlDetector {
             if (first.equals(word)) {
                 return;
             }
-            message = String.format(
-                    "\"%1$s\" is usually capitalized as \"%2$s\"",
-                    word, first);
+            message = String.format("\"%1$s\" is usually capitalized as \"%2$s\"", word, first);
         } else {
-            message = String.format(
-                    "\"%1$s\" is a common misspelling; did you mean %2$s ?",
-                    word, sb.toString());
+            message =
+                    String.format(
+                            "\"%1$s\" is a common misspelling; did you mean %2$s ?",
+                            word, sb.toString());
         }
 
         int end = begin + word.length();
@@ -400,18 +407,15 @@ public class TypoDetector extends ResourceXmlDetector {
     }
 
     /** Reports a repeated word */
-    private void reportRepeatedWord(XmlContext context, Node node, String text,
-            int lastWordBegin,
-            int begin, int end) {
+    private void reportRepeatedWord(
+            XmlContext context, Node node, String text, int lastWordBegin, int begin, int end) {
         String word = text.substring(begin, end);
 
         if (isAllowed(word)) {
             return;
         }
 
-        String message = String.format(
-                "Repeated word \"%1$s\" in message: possible typo",
-                word);
+        String message = String.format("Repeated word \"%1$s\" in message: possible typo", word);
 
         String replace;
         if (lastWordBegin > 1 && text.charAt(lastWordBegin - 1) == ' ') {

@@ -81,8 +81,8 @@ class FloatRangeConstraint extends RangeConstraint {
     }
 
     public boolean isValid(double value) {
-        return (fromInclusive && value >= from || !fromInclusive && value > from) &&
-                (toInclusive && value <= to || !toInclusive && value < to);
+        return (fromInclusive && value >= from || !fromInclusive && value > from)
+                && (toInclusive && value <= to || !toInclusive && value < to);
     }
 
     @NonNull
@@ -214,13 +214,14 @@ class FloatRangeConstraint extends RangeConstraint {
     public Boolean contains(@NonNull RangeConstraint other) {
         if (other instanceof FloatRangeConstraint) {
             FloatRangeConstraint otherRange = (FloatRangeConstraint) other;
-            return !(otherRange.from < from || otherRange.to > to) && !(!fromInclusive
-                    && otherRange.fromInclusive && otherRange.from == from) && !(!toInclusive
-                    && otherRange.toInclusive && otherRange.to == to);
+            return !(otherRange.from < from || otherRange.to > to)
+                    && !(!fromInclusive && otherRange.fromInclusive && otherRange.from == from)
+                    && !(!toInclusive && otherRange.toInclusive && otherRange.to == to);
         } else if (other instanceof IntRangeConstraint) {
             IntRangeConstraint otherRange = (IntRangeConstraint) other;
-            return !(otherRange.from < from || otherRange.to > to) && !(!fromInclusive
-                    && otherRange.from == from) && !(!toInclusive && otherRange.to == to);
+            return !(otherRange.from < from || otherRange.to > to)
+                    && !(!fromInclusive && otherRange.from == from)
+                    && !(!toInclusive && otherRange.to == to);
         }
         return null;
     }
