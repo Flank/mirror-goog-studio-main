@@ -44,7 +44,8 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
                                        const std::string &abi_arch,
                                        int sampling_interval_us,
                                        std::string *trace_path,
-                                       std::string *error) {
+                                       std::string *error,
+                                       bool is_startup_profiling) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU: StartProfiling simplerperf");
   Log::D("Profiler:Received query to profile %s", app_name.c_str());
@@ -55,21 +56,23 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
     return true;
   }
 
-  ProcessManager process_manager;
-  int pid = process_manager.GetPidForBinary(app_name);
-  if (pid < 0) {
-    error->append("\n");
-    error->append("Unable to get process id to profile.");
-    return false;
+  int pid = kStartupProfilingPid;
+  if (!is_startup_profiling) {
+    ProcessManager process_manager;
+    pid = process_manager.GetPidForBinary(app_name);
+    if (pid < 0) {
+      error->append("\n");
+      error->append("Unable to get process id to profile.");
+      return false;
+    }
+    Log::D("%s app has pid:%d", app_name.c_str(), pid);
   }
-  Log::D("%s app has pid:%d", app_name.c_str(), pid);
 
   if (!simpleperf_.EnableProfiling()) {
     error->append("\n");
     error->append("Unable to setprop to enable profiling.");
     return false;
   }
-
   // Build entry to keep track of what is being profiled.
   OnGoingProfiling entry;
   entry.pid = pid;
@@ -153,8 +156,10 @@ bool SimpleperfManager::StopProfiling(const std::string &app_name,
       success = false;
     }
 
-    // Make sure pid is what is expected
-    if (current_pid != ongoing_recording.pid) {
+    // Make sure pid is what is expected. A startup profiling didn't have pid
+    // available when it started, so it is an exception.
+    if (ongoing_recording.pid != kStartupProfilingPid &&
+        ongoing_recording.pid != current_pid) {
       // Looks like the app was restarted. Simpleperf died as a result.
       string msg = "Recorded pid and current app pid do not match: Aborting";
       error->append("\n");

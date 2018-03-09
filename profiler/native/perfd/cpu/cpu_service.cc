@@ -17,8 +17,8 @@
 
 #include <stdio.h>
 
-#include "perfd/cpu/simpleperf_manager.h"
 #include "perfd/cpu/profiling_app.h"
+#include "perfd/cpu/simpleperf_manager.h"
 #include "proto/common.pb.h"
 #include "utils/activity_manager.h"
 #include "utils/file_reader.h"
@@ -301,9 +301,15 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
     manager->StartProfiling(mode, app.app_pkg_name,
                             app.configuration.sampling_interval_us(),
                             &app.trace_path, &error, true);
+    response->set_file_path(app.trace_path);
+  } else if (profiler_type == CpuProfilerType::SIMPLEPERF) {
+    simpleperf_manager_.StartProfiling(app.app_pkg_name,
+                                       request->abi_cpu_arch(),
+                                       app.configuration.sampling_interval_us(),
+                                       &app.trace_path, &error, true);
   }
+
   cache_.AddStartupProfilingStart(app.app_pkg_name, app);
-  response->set_file_path(app.trace_path);
   return Status::OK;
 }
 

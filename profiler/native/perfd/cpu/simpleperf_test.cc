@@ -129,6 +129,17 @@ TEST(SimpleperfTest, RecordCommandParams) {
   EXPECT_THAT(record_command, HasArgument("--exit-with-parent"));
 }
 
+TEST(SimpleperfTest, StartupProfilingPid) {
+  FakeSimpleperfGetFeatures simpleperf{false};
+
+  string record_command = simpleperf.GetRecordCommand(
+      kStartupProfilingPid, "my.package", "arm", kFakeTracePath, 100);
+  // PID, Startup profiling should not use pid
+  EXPECT_THAT(record_command, Not(HasArgument("-p")));
+  // package name
+  EXPECT_THAT(record_command, HasArgument("--app my.package"));
+}
+
 TEST(SimpleperfTest, SimpleperfBinaryName) {
   FakeSimpleperfGetFeatures simpleperf{false};
   int pid = 42;

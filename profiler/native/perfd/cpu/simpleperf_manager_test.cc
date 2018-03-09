@@ -81,6 +81,21 @@ TEST(SimpleperfManagerTest, StartProfiling) {
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 }
 
+TEST(SimpleperfManagerTest, StartStartupProfiling) {
+  FakeClock fake_clock(0);
+  FakeSimpleperf simpleperf;
+  SimpleperfManager simpleperf_manager(fake_clock, simpleperf);
+  string error;
+  string fake_trace_path = "/tmp/fake-trace";
+  string app_name = "some_app_name";
+  string abi = "arm";
+
+  EXPECT_FALSE(simpleperf_manager.IsProfiling(app_name));
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+                                    &error, true);
+  EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
+}
+
 TEST(SimpleperfManagerTest, StartProfilingWithoutProfilingEnabled) {
   FakeClock fake_clock(0);
   FakeSimpleperf simpleperf;

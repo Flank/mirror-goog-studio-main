@@ -168,6 +168,7 @@ message StartupProfilingRequest {
   string app_package = 1;
   int64 device_id = 2;
   CpuProfilerConfiguration configuration = 3;
+  string abi_cpu_arch = 4;
 }
 
 message StartupProfilingResponse {
