@@ -48,9 +48,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MOCKABLE_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PLATFORM_R_TXT;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_DEX;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_JAVA_RES;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.PUBLISHED_NATIVE_LIBS;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -88,7 +85,6 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
-import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -114,7 +110,6 @@ import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
-import com.android.build.gradle.internal.tasks.PipelineToPublicationTask;
 import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
@@ -2255,7 +2250,6 @@ public abstract class TaskManager {
         CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTransform(variantScope);
         maybeCreateResourcesShrinkerTransform(variantScope);
         if (shrinker == CodeShrinker.R8) {
-            publishTransformOutputs(variantScope, transformManager);
             return;
         }
 
@@ -2344,44 +2338,6 @@ public abstract class TaskManager {
                 task.dependsOn(preColdSwapTask);
             }
         }
-
-        publishTransformOutputs(variantScope, transformManager);
-    }
-
-    /** Creates tasks to publish the pipeline output as needed. */
-    private void publishTransformOutputs(
-            @NonNull VariantScope variantScope, @NonNull TransformManager transformManager) {
-        final File intermediatesDir = variantScope.getGlobalScope().getIntermediatesDir();
-        createPipelineToPublishTask(
-                variantScope,
-                transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX),
-                FileUtils.join(intermediatesDir, "bundling", "dex"),
-                PUBLISHED_DEX);
-
-        createPipelineToPublishTask(
-                variantScope,
-                transformManager.getPipelineOutputAsFileCollection(StreamFilter.RESOURCES),
-                FileUtils.join(intermediatesDir, "bundling", "java-res"),
-                PUBLISHED_JAVA_RES);
-
-        createPipelineToPublishTask(
-                variantScope,
-                transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS),
-                FileUtils.join(intermediatesDir, "bundling", "native-libs"),
-                PUBLISHED_NATIVE_LIBS);
-    }
-
-    private void createPipelineToPublishTask(
-            @NonNull VariantScope variantScope,
-            @NonNull FileCollection fileCollection,
-            @NonNull File outputFile,
-            @NonNull InternalArtifactType outputType) {
-        PipelineToPublicationTask task =
-                taskFactory.create(
-                        new PipelineToPublicationTask.ConfigAction(
-                                variantScope, fileCollection, outputFile, outputType));
-
-        variantScope.addTaskOutput(outputType, outputFile, task.getName());
     }
 
     private void maybeCreateDesugarTask(

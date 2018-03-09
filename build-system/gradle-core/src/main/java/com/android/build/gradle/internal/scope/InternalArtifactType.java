@@ -84,13 +84,6 @@ public enum InternalArtifactType implements ArtifactType {
     // linked res for the unified bundle
     LINKED_RES_FOR_BUNDLE,
 
-    // Published folders for bundling. This has extra cost as we need to copy
-    // the content of the pipeline. Use TransformManager.getPipelineOutputAsFileCollection
-    // whenever possible. See PipelineToPublicationTask
-    PUBLISHED_DEX,
-    PUBLISHED_JAVA_RES,
-    PUBLISHED_NATIVE_LIBS,
-
     // --- Namespaced android res ---
     // Compiled resources (directory of .flat files) for the local library
     RES_COMPILED_FLAT_FILES,
@@ -177,6 +170,11 @@ public enum InternalArtifactType implements ArtifactType {
     SPLIT_LIST,
     APK_LIST,
 
+    // an intermediate bundle that contains only the current module
+    MODULE_BUNDLE,
+    // the full bundle, including feature module. This is only valid for the base module.
+    BUNDLE(Kind.OUTPUTS),
+
     FEATURE_IDS_DECLARATION,
     FEATURE_APPLICATION_ID_DECLARATION,
     FEATURE_RESOURCE_PKG,
@@ -202,10 +200,11 @@ public enum InternalArtifactType implements ArtifactType {
      */
     enum Kind {
         /* Generated files that are meant to be visible to users from the IDE */
-        GENERATED
+        GENERATED,
         /* Intermediates files produced by tasks. */
-        ,
-        INTERMEDIATES;
+        INTERMEDIATES,
+        /* output files going into the outputs folder. This is the result of the build. */
+        OUTPUTS;
 
         /**
          * Return the file location for this kind of artifact type.

@@ -54,8 +54,6 @@ com.android.build.api.dsl.extension.BuildProperties.setResourcePrefix: void (jav
 com.android.build.api.dsl.extension.BuildProperties.sourceSets: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.api.sourcesets.AndroidSourceSet>>)
 com.android.build.api.dsl.extension.BuildProperties.useLibrary: void (java.lang.String)
 com.android.build.api.dsl.extension.BuildProperties.useLibrary: void (java.lang.String, boolean)
-com.android.build.api.dsl.extension.BundleExtension
-com.android.build.api.dsl.extension.BundleExtension.bundle: void (java.lang.String, java.lang.String, java.lang.String)
 com.android.build.api.dsl.extension.EmbeddedTestProperties
 com.android.build.api.dsl.extension.EmbeddedTestProperties.getTestBuildType: java.lang.String ()
 com.android.build.api.dsl.extension.EmbeddedTestProperties.getTestOptions: com.android.builder.model.TestOptions ()

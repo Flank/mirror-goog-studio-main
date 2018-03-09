@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.BundleTask;
+import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
@@ -604,8 +605,12 @@ public class ApplicationTaskManager extends TaskManager {
             return;
         }
 
-        if (scope.getType().isBaseModule() && !scope.getType().isHybrid()) {
-            taskFactory.create(new BundleTask.ConfigAction(scope));
+        if (!scope.getType().isHybrid()) {
+            taskFactory.create(new PerModuleBundleTask.ConfigAction(scope));
+
+            if (scope.getType().isBaseModule()) {
+                taskFactory.create(new BundleTask.ConfigAction(scope));
+            }
         }
     }
 }

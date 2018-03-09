@@ -16,17 +16,14 @@
 
 package com.android.build.gradle.integration.bundle
 
-import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.AndroidProject
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.FileSubject
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
-import org.junit.Assume
 import org.junit.ClassRule
 import org.junit.Test
-import java.io.File
 import java.io.IOException
 
 class DynamicAppTest {
@@ -58,28 +55,6 @@ class DynamicAppTest {
     }
 
     @Test
-    fun testBundle() {
-        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
-        project.execute("bundle:bundle")
-
-        val bundleFile = File(project.getSubproject("bundle").buildDir, "bundle.aab")
-        FileSubject.assertThat(bundleFile).exists()
-
-        val zipFile = Zip(bundleFile)
-        Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(
-            "/BundleManifest.pb",
-            "/base/dex/classes.dex",
-            "/base/manifest/AndroidManifest.xml",
-            "/base/res/layout/base_layout.xml",
-            "/base/resources.pb",
-            "/feature1/dex/classes.dex",
-            "/feature1/manifest/AndroidManifest.xml",
-            "/feature1/res/layout/feature_layout.xml",
-            "/feature1/resources.pb")
-    }
-
-
-    @Test
     fun testBundleFromApp() {
         project.execute("app:bundleDebug")
 
@@ -88,6 +63,7 @@ class DynamicAppTest {
             "outputs",
             "bundle",
             "debug",
+            "bundleDebug", // FIXME with proper BuildableArtifact based output file path
             "bundle.aab")
         FileSubject.assertThat(bundleFile).exists()
 

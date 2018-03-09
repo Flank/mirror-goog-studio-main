@@ -1,6 +1,0 @@
-apply plugin: 'com.android.bundle'
-
-android {
-    bundle('base', ':app', 'debug')
-    bundle('feature1', ':feature1', 'debug')
-}
