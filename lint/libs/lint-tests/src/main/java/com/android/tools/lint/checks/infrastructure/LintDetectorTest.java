@@ -389,6 +389,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     @NonNull
+    public static TestFile propertyFile(@NonNull String to,
+            @NonNull @Language("Properties") String source) {
+        return TestFiles.source(to, source);
+    }
+
+    @NonNull
     public static TestFile java(@NonNull String to, @NonNull @Language("JAVA") String source) {
         return TestFiles.java(to, source);
     }

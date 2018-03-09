@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 325;
+    static final int INITIAL_CAPACITY = 327;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -253,6 +253,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ProguardDetector.WRONG_KEEP);
         issues.add(PropertyFileDetector.ESCAPE);
         issues.add(PropertyFileDetector.HTTP);
+        issues.add(PropertyFileDetector.PROXY_PASSWORD);
         issues.add(PxUsageDetector.DP_ISSUE);
         issues.add(PxUsageDetector.IN_MM_ISSUE);
         issues.add(PxUsageDetector.PX_ISSUE);
@@ -319,6 +320,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TranslationDetector.MISSING);
         issues.add(TranslationDetector.MISSING_BASE);
         issues.add(TranslationDetector.TRANSLATED_UNTRANSLATABLE);
+        issues.add(TranslucentViewDetector.ISSUE);
         issues.add(TrustAllX509TrustManagerDetector.ISSUE);
         issues.add(TypedefDetector.TYPE_DEF);
         issues.add(TypoDetector.ISSUE);
