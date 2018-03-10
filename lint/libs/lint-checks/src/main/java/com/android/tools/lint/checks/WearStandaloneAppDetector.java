@@ -129,7 +129,7 @@ public class WearStandaloneAppDetector extends Detector implements XmlScanner {
 
             if (valueAttr == null) {
                 LintFix fix = fix().set(ANDROID_URI, ATTR_VALUE, VALUE_TRUE).build();
-                context.report(WEAR_STANDALONE_APP_ISSUE, element, context.getLocation(element),
+                context.report(WEAR_STANDALONE_APP_ISSUE, element, context.getNameLocation(element),
                         "Missing `android:value` attribute", fix);
             } else {
                 String value = valueAttr.getValue();
@@ -162,7 +162,7 @@ public class WearStandaloneAppDetector extends Detector implements XmlScanner {
             Element application = XmlUtils.getFirstSubTagByName(root, NODE_APPLICATION);
             if (application != null) {
                 xmlContext.report(WEAR_STANDALONE_APP_ISSUE, application,
-                        xmlContext.getLocation(application),
+                        xmlContext.getNameLocation(application),
                         "Missing `<meta-data android:name="
                                 + "\"com.google.android.wearable.standalone\" ../>` element",
                         fix().data(QFX_EXTRA_MISSING_META_DATA));

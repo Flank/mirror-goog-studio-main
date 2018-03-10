@@ -131,7 +131,7 @@ public class LabelForDetector extends LayoutDetector {
 
                 XmlContext xmlContext = (XmlContext) context;
                 String message = "";
-                Location location = xmlContext.getLocation(element);
+                Location location = xmlContext.getElementLocation(element);
                 int minSdk = context.getMainProject().getMinSdk();
 
                 if (hintProvided && labelForProvided) {
@@ -191,7 +191,7 @@ public class LabelForDetector extends LayoutDetector {
             context.report(
                     ISSUE,
                     element,
-                    context.getLocation(element),
+                    context.getElementLocation(element, null, ANDROID_URI, ATTR_LABEL_FOR),
                     messageWithPrefix(
                             "when using `android:labelFor`, you must also define an "
                                     + "`android:text` or an `android:contentDescription`"),

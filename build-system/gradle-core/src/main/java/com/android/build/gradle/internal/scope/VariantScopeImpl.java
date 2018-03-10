@@ -243,7 +243,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 new BuildArtifactsHolder(
                         getProject(),
                         getFullVariantName(),
-                        new File(globalScope.getIntermediatesDir(), "artifact_transform"),
+                        globalScope.getBuildDir(),
                         getVariantConfiguration().getDirName(),
                         globalScope.getDslScope());
 
@@ -318,6 +318,19 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return fileCollection;
     }
 
+    /**
+     * Temporary override to handle artifacts still published in the old TaskOutputHolder and those
+     * published in the new BuildableArtifactHolder.
+     */
+    @Override
+    public boolean hasOutput(@NonNull com.android.build.api.artifact.ArtifactType outputType) {
+        return super.hasOutput(outputType) || buildArtifactsHolder.hasArtifact(outputType);
+    }
+
+    /**
+     * Temporary override to handle artifacts still published in the old TaskOutputHolder and those
+     * published in the new BuildableArtifactHolder.
+     */
     @NonNull
     @Override
     public FileCollection getOutput(@NonNull com.android.build.api.artifact.ArtifactType outputType)
@@ -325,6 +338,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         try {
             return super.getOutput(outputType);
         } catch (MissingTaskOutputException e) {
+            if (getBuildArtifactsHolder().hasArtifact(outputType)) {
+                return getBuildArtifactsHolder().getFinalArtifactFiles(outputType).get();
+            }
             throw new RuntimeException(
                     String.format(
                             "Variant '%1$s' in project '%2$s' has no output with type '%3$s'",
@@ -351,7 +367,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // Create Provider so that the BuildableArtifact is not resolved until needed.
         Provider<File> provider =
                 getProject().provider(() -> Iterables.getOnlyElement(artifact.getFiles()));
-        publishIntermediateArtifact((Object) provider, artifact, artifactType, configTypes);
+        publishIntermediateArtifact(provider, artifact, artifactType, configTypes);
     }
 
     /**
@@ -917,22 +933,26 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                                         .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             }
         } else {
-            if (hasOutput(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
-                FileCollection rJar =
-                        getOutput(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
-                mainCollection = mainCollection.plus(rJar);
+            if (buildArtifactsHolder.hasArtifact(
+                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+                BuildableArtifact rJar =
+                        buildArtifactsHolder.getFinalArtifactFiles(
+                                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                mainCollection = mainCollection.plus(rJar.get());
             }
             BaseVariantData tested = getTestedVariantData();
             if (tested != null
                     && tested.getScope()
-                            .hasOutput(
+                            .getBuildArtifactsHolder()
+                            .hasArtifact(
                                     InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
-                FileCollection rJar =
+                BuildableArtifact rJar =
                         tested.getScope()
-                                .getOutput(
+                                .getBuildArtifactsHolder()
+                                .getFinalArtifactFiles(
                                         InternalArtifactType
                                                 .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
-                mainCollection = mainCollection.plus(rJar);
+                mainCollection = mainCollection.plus(rJar.get());
             }
         }
 
@@ -1287,12 +1307,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 + "/manifest_keep.txt");
     }
 
-    @NonNull
-    @Override
-    public File getConsumerProguardFile() {
-        return intermediate("publish-proguard", SdkConstants.FN_PROGUARD_TXT);
-    }
-
     @Override
     @NonNull
     public File getMainDexListFile() {
@@ -1428,13 +1442,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getRClassSourceOutputDir() {
-        return new File(globalScope.getGeneratedDir(),
-                "source/r/" + getVariantConfiguration().getDirName());
-    }
-
-    @Override
-    @NonNull
     public File getAidlSourceOutputDir() {
         return new File(globalScope.getGeneratedDir(),
                 "source/aidl/" + getVariantConfiguration().getDirName());
@@ -1459,26 +1466,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public File getAarLibsDirectory() {
         return intermediate("packaged-classes", SdkConstants.LIBS_FOLDER);
-    }
-
-    @NonNull
-    @Override
-    public File getAnnotationZipFile() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "annotations",
-                getVariantConfiguration().getDirName(),
-                SdkConstants.FN_ANNOTATIONS_ZIP);
-    }
-
-    @NonNull
-    @Override
-    public File getTypedefFile() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "extractedTypedefs",
-                getVariantConfiguration().getDirName(),
-                "typedefs.txt");
     }
 
     @NonNull
@@ -1579,26 +1566,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getAaptFriendlyManifestOutputDirectory() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "manifests",
-                "aapt",
-                getVariantConfiguration().getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getInstantRunManifestOutputDirectory() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "manifests",
-                "instant-run",
-                getVariantConfiguration().getDirName());
-    }
-
-    @NonNull
-    @Override
     public File getInstantRunResourceApkFolder() {
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
@@ -1631,16 +1598,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope.getGeneratedDir(),
                 "res",
                 "microapk",
-                getVariantConfiguration().getDirName());
-    }
-
-    @Override
-    @NonNull
-    public File getCompatibleScreensManifestDirectory() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "manifests",
-                "density",
                 getVariantConfiguration().getDirName());
     }
 

@@ -21,14 +21,6 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.artifacts.ModuleVersionIdentifier
-import org.gradle.api.artifacts.component.ComponentIdentifier
-import org.gradle.api.artifacts.component.ComponentSelector
-import org.gradle.api.artifacts.result.ComponentSelectionReason
-import org.gradle.api.artifacts.result.DependencyResult
-import org.gradle.api.artifacts.result.ResolvedComponentResult
-import org.gradle.api.artifacts.result.ResolvedDependencyResult
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -40,11 +32,7 @@ class DependenciesGraphTest {
 
     @Test
     fun emptyGraph() {
-        val result = DependenciesGraph.create(
-                ImmutableSet.of(),
-                HashMap(),
-                ImmutableMap.of()
-        )
+        val result = DependenciesGraph.create(ImmutableSet.of())
 
         assertThat(result.rootNodes).isEmpty()
         assertThat(result.allNodes).isEmpty()
@@ -65,11 +53,7 @@ class DependenciesGraphTest {
         val b = createDependency("b", ImmutableSet.of(d, e))
         val a = createDependency("a", ImmutableSet.of(c, d))
 
-        val result = DependenciesGraph.create(
-                ImmutableSet.of(a, b),
-                HashMap(),
-                ImmutableMap.of()
-        )
+        val result = DependenciesGraph.create(ImmutableSet.of(a, b))
 
         assertThat(result.rootNodes).hasSize(2)
         assertThat(result.allNodes).hasSize(7)
@@ -98,8 +82,7 @@ class DependenciesGraphTest {
 
         val result = DependenciesGraph.create(
                 ImmutableSet.of(a),
-                HashMap(),
-                ImmutableMap.of(AndroidArtifacts.ArtifactType.CLASSES, artifacts)
+                artifacts = ImmutableMap.of(AndroidArtifacts.ArtifactType.CLASSES, artifacts)
         )
 
         assertThat(result.rootNodes).hasSize(1)
@@ -120,38 +103,5 @@ class DependenciesGraphTest {
             visit(child, names)
         }
         names.add(node.id.displayName)
-    }
-
-    private fun createDependency(
-        id: String,
-        children: MutableSet<DependencyResult> = ImmutableSet.of()
-    ): MockResolvedDependencyResult = MockResolvedDependencyResult(
-            MockResolvedComponentResult(
-                    MockComponentIdentifier(id),
-                    children
-            )
-    )
-
-    private class MockResolvedDependencyResult(
-        private val selected: ResolvedComponentResult
-    ) : ResolvedDependencyResult {
-        override fun getSelected(): ResolvedComponentResult = selected
-        override fun getFrom(): ResolvedComponentResult = TODO("not implemented")
-        override fun getRequested(): ComponentSelector = TODO("not implemented")
-    }
-
-    private class MockResolvedComponentResult(
-        private val id: ComponentIdentifier,
-        private val dependencies: MutableSet<DependencyResult>
-    ) : ResolvedComponentResult {
-        override fun getId(): ComponentIdentifier = id
-        override fun getDependencies(): MutableSet<DependencyResult> = dependencies
-        override fun getDependents(): MutableSet<ResolvedDependencyResult> = TODO("not implemented")
-        override fun getSelectionReason(): ComponentSelectionReason = TODO("not implemented")
-        override fun getModuleVersion(): ModuleVersionIdentifier? = TODO("not implemented")
-    }
-
-    private class MockComponentIdentifier(val name: String) : ComponentIdentifier {
-        override fun getDisplayName(): String = name
     }
 }

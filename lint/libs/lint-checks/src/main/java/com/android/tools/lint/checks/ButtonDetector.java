@@ -319,7 +319,7 @@ public class ButtonDetector extends ResourceXmlDetector {
                             || context.getFolderVersion() >= 11)
                         && context.isEnabled(STYLE)
                         && !parentDefinesSelectableItem(element)) {
-                    context.report(STYLE, element, context.getLocation(element),
+                    context.report(STYLE, element, context.getElementLocation(element),
                             "Buttons in button bars should be borderless; use " +
                             "`style=\"?android:attr/buttonBarButtonStyle\"` (and " +
                             "`?android:attr/buttonBarStyle` on the parent)");
@@ -344,8 +344,8 @@ public class ButtonDetector extends ResourceXmlDetector {
                             reportOkPosition(context, element);
                         }
                     } else if (BACK_LABEL.equalsIgnoreCase(label)) {
-                        Location location = context.getLocation(element);
                         if (context.isEnabled(BACK_BUTTON)) {
+                            Location location = context.getElementLocation(element);
                             context.report(BACK_BUTTON, element, location,
                                 "Back buttons are not standard on Android; see design guide's " +
                                 "navigation section");
@@ -532,7 +532,7 @@ public class ButtonDetector extends ResourceXmlDetector {
             message += String.format(" (was \"%1$s\", should be \"%2$s\")", wrong, right);
         }
 
-        Location location = context.getLocation(element);
+        Location location = context.getElementLocation(element);
         context.report(ORDER, element, location, message);
     }
 

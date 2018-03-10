@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
+import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
@@ -52,6 +53,7 @@ open class CompileSourceSetResources
     @get:Input var isPngCrunching: Boolean = false; private set
     @get:Input var isPseudoLocalize: Boolean = false; private set
     @get:OutputDirectory lateinit var outputDirectory: File private set
+    @get:OutputDirectory lateinit var partialRDirectory: File private set
     @get:OutputDirectory lateinit var aaptIntermediateDirectory: File private set
 
     override fun isIncremental() = true
@@ -127,7 +129,11 @@ open class CompileSourceSetResources
                     outputDirectory = outputDirectory,
                     inputDirectoryName = inputDirectoryName,
                     isPseudoLocalize = isPseudoLocalize,
-                    isPngCrunching = isPngCrunching)
+                    isPngCrunching = isPngCrunching,
+                    partialRFile = getPartialR(file))
+
+    private fun getPartialR(file: File) =
+        File(partialRDirectory, "${Aapt2RenamingConventions.compilationRename(file)}-R.txt")
 
     private fun submit(requests: List<CompileResourceRequest>) {
         if (requests.isEmpty()) {
@@ -155,6 +161,7 @@ open class CompileSourceSetResources
             private val name: String,
             private val inputDirectories: BuildableArtifact,
             private val outputDirectory: File,
+            private val partialRDirectory: File,
             private val variantScope: VariantScope,
             private val aaptIntermediateDirectory: File)
             : TaskConfigAction<CompileSourceSetResources> {
@@ -166,6 +173,7 @@ open class CompileSourceSetResources
                     (inputDirectories as BuildableArtifactImpl).fileCollection
                             ?: variantScope.globalScope.project.files()
             task.outputDirectory = outputDirectory
+            task.partialRDirectory = partialRDirectory
             task.variantName = variantScope.fullVariantName
             task.isPngCrunching = variantScope.isCrunchPngs
             task.isPseudoLocalize = variantScope.variantData.variantConfiguration.buildType.isPseudoLocalesEnabled

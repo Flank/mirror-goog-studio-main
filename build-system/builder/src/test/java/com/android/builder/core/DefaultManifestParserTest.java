@@ -25,16 +25,13 @@ import java.util.function.BooleanSupplier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 public class DefaultManifestParserTest {
     @Rule public MockitoRule rule = MockitoJUnit.rule();
 
-    @Mock File manifestFile;
-
-    @Mock BooleanSupplier canParseManifest = () -> true;
+    private BooleanSupplier canParseManifest = () -> true;
 
     private DefaultManifestParser defaultManifestParser;
 

@@ -46,10 +46,12 @@ public class JarJarTest {
 
     @Test
     public void checkRepackagedForNativeMultidex() throws Exception {
-        TestFileUtils.appendToFile(project.getBuildFile(),
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
                 "\n"
                         + "android.defaultConfig {\n"
                         + "    minSdkVersion 21\n"
+                        + "    targetSdkVersion 21\n"
                         + "    multiDexEnabled true\n"
                         + "}\n");
 

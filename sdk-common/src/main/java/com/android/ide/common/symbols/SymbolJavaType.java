@@ -21,8 +21,8 @@ import com.android.annotations.Nullable;
 import com.google.common.collect.ImmutableMap;
 
 public enum SymbolJavaType {
-    INT("int"),
-    INT_LIST("int[]"),
+    INT("int", "I"),
+    INT_LIST("int[]", "[I"),
     ;
 
     private static final ImmutableMap<String, SymbolJavaType> types;
@@ -36,14 +36,21 @@ public enum SymbolJavaType {
     }
 
     @NonNull private final String typeName;
+    @NonNull private final String desc;
 
-    SymbolJavaType(@NonNull String typeName) {
+    SymbolJavaType(@NonNull String typeName, @NonNull String desc) {
         this.typeName = typeName;
+        this.desc = desc;
     }
 
     @NonNull
     public final String getTypeName() {
         return typeName;
+    }
+
+    @NonNull
+    public String getDesc() {
+        return desc;
     }
 
     @Nullable

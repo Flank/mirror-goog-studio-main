@@ -18,9 +18,6 @@ package com.android.ide.common.symbols
 
 import com.android.resources.ResourceAccessibility
 import com.android.resources.ResourceType
-import com.android.testutils.truth.MoreTruth.assertThat
-import com.android.utils.FileUtils
-import com.google.common.collect.ImmutableList.of as list
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.fail
 import org.junit.Rule
@@ -28,6 +25,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.nio.file.Files
+import com.google.common.collect.ImmutableList.of as list
 
 /*
  * Tests for [SymbolTable.mergePartialTables]
@@ -65,27 +63,25 @@ class SymbolTablePartialRMergeTest {
 
         assertThat(result.symbols.values()).hasSize(3)
         assertThat(result.symbols.values()).containsExactly(
-                Symbol.createSymbol(
-                        ResourceAccessibility.DEFAULT,
-                        ResourceType.STRING,
-                        "s1",
-                        SymbolJavaType.INT,
-                        "0",
-                        Symbol.NO_CHILDREN),
-                Symbol.createSymbol(
-                        ResourceAccessibility.PRIVATE,
-                        ResourceType.STRING,
-                        "s2",
-                        SymbolJavaType.INT,
-                        "0",
-                        Symbol.NO_CHILDREN),
-                Symbol.createSymbol(
-                        ResourceAccessibility.PUBLIC,
-                        ResourceType.STRING,
-                        "s3",
-                        SymbolJavaType.INT,
-                        "0",
-                        Symbol.NO_CHILDREN))
+            Symbol.NormalSymbol(
+                ResourceType.STRING,
+                "s1",
+                0,
+                ResourceAccessibility.DEFAULT
+            ),
+            Symbol.NormalSymbol(
+                ResourceType.STRING,
+                "s2",
+                0,
+                ResourceAccessibility.PRIVATE
+            ),
+            Symbol.NormalSymbol(
+                ResourceType.STRING,
+                "s3",
+                0,
+                ResourceAccessibility.PUBLIC
+            )
+        )
     }
 
     @Test
@@ -131,38 +127,33 @@ class SymbolTablePartialRMergeTest {
         var result = SymbolTable.mergePartialTables(list(layoutA, layoutB), null)
         assertThat(result.symbols.values()).hasSize(2)
         assertThat(result.symbols.values()).containsExactly(
-                Symbol.createSymbol(
-                        ResourceAccessibility.DEFAULT,
+                Symbol.NormalSymbol(
                         ResourceType.ID,
                         "idB",
-                        SymbolJavaType.INT,
-                        "0",
-                        Symbol.NO_CHILDREN),
-                Symbol.createSymbol(
-                        ResourceAccessibility.DEFAULT,
+                        0,
+                    ResourceAccessibility.DEFAULT),
+            Symbol.NormalSymbol(
                         ResourceType.LAYOUT,
                         "layout",
-                        SymbolJavaType.INT,
-                        "0",
-                        Symbol.NO_CHILDREN))
+                        0,
+                    ResourceAccessibility.DEFAULT))
 
         result = SymbolTable.mergePartialTables(list(layoutB, layoutA), null)
         assertThat(result.symbols.values()).hasSize(2)
         assertThat(result.symbols.values()).containsExactly(
-                Symbol.createSymbol(
-                        ResourceAccessibility.DEFAULT,
-                        ResourceType.ID,
-                        "idA",
-                        SymbolJavaType.INT,
-                        "0",
-                        Symbol.NO_CHILDREN),
-                Symbol.createSymbol(
-                        ResourceAccessibility.DEFAULT,
-                        ResourceType.LAYOUT,
-                        "layout",
-                        SymbolJavaType.INT,
-                        "0",
-                        Symbol.NO_CHILDREN))
+            Symbol.NormalSymbol(
+                ResourceType.ID,
+                "idA",
+                0,
+                ResourceAccessibility.DEFAULT
+            ),
+            Symbol.NormalSymbol(
+                ResourceType.LAYOUT,
+                "layout",
+                0,
+                ResourceAccessibility.DEFAULT
+            )
+        )
     }
 
     @Test

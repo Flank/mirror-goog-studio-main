@@ -28,6 +28,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.FilterData;
+import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
@@ -120,6 +121,7 @@ public class GradleModelMocker {
     private final Map<String, Dep> graphs = Maps.newHashMap();
     private boolean useBuildCache;
     private VectorDrawablesOptions vectorDrawablesOptions;
+    private AaptOptions aaptOptions;
     private boolean allowUnrecognizedConstructs;
     private boolean fullDependencies;
     private JavaCompileOptions compileOptions;
@@ -281,6 +283,7 @@ public class GradleModelMocker {
         when(variant.getMergedFlavor()).thenReturn(defaultFlavor);
         mergedFlavor = defaultFlavor; // shortcut for now
         getVectorDrawableOptions(); // ensure initialized
+        getAaptOptions(); // ensure initialized
 
         scan(gradle, "");
 
@@ -970,6 +973,12 @@ public class GradleModelMocker {
             } else if (line.startsWith("exclude ")) {
                 warn("Warning: Split exclude not supported for mocked builder model yet");
             }
+        } else if (key.startsWith("android.aaptOptions.namespaced ")) {
+            String value = getUnquotedValue(key);
+            if (VALUE_TRUE.equals(value)) {
+                AaptOptions options = getAaptOptions();
+                when(options.getNamespacing()).thenReturn(AaptOptions.Namespacing.REQUIRED);
+            }
         } else if (key.startsWith("android.lintOptions.")) {
             key = key.substring("android.lintOptions.".length());
             int argIndex = key.indexOf(' ');
@@ -1154,6 +1163,15 @@ public class GradleModelMocker {
             when(mergedFlavor.getVectorDrawables()).thenReturn(vectorDrawablesOptions);
         }
         return vectorDrawablesOptions;
+    }
+
+    private AaptOptions getAaptOptions() {
+        if (aaptOptions == null) {
+            aaptOptions = mock(AaptOptions.class);
+            when(project.getAaptOptions()).thenReturn(aaptOptions);
+            when(aaptOptions.getNamespacing()).thenReturn(AaptOptions.Namespacing.DISABLED);
+        }
+        return aaptOptions;
     }
 
     @Contract("_,true -> !null")

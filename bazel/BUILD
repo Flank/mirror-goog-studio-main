@@ -250,7 +250,7 @@ java_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api",
+        "//tools/base/build-system:gradle-tooling-api",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
     ],
@@ -315,7 +315,10 @@ java_test(
     name = "iml_to_build_tests",
     srcs = ["testSrc/com/android/tools/binaries/ImlToBazelTest.java"],
     data = ["//tools/base/bazel/test:iml_to_bazel"],
-    tags = ["no_test_windows"],
+    tags = [
+        "no_test_foundry",
+        "no_test_windows",
+    ],
     test_class = "com.android.tools.binaries.ImlToBazelTest",
     deps = [
         ":bazel_generator",

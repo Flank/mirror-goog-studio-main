@@ -271,7 +271,8 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
         synchronized (lock) {
             if (!canParseManifest.getAsBoolean()) {
                 // TODO: enable manifest parsing only in execution phase after tasks have been
-                // moved over. For now, print a warning
+                // moved over. There are still a few legitimate  use cases where we need to grab the
+                // min so we can't throw an exception yet. For now, print a warning.
                 LOGGER.warning("Warning: manifest is being parsed during configuration phase.");
             }
             if (!initialized && manifestFile.isFile()) {

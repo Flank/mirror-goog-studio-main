@@ -565,7 +565,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                         context.report(
                                 BROADCAST_SMS,
                                 element,
-                                context.getLocation(element),
+                                context.getNameLocation(element),
                                 "BroadcastReceivers that declare an intent-filter for " +
                                 "SMS_DELIVER or SMS_RECEIVED must ensure that the " +
                                 "caller has the BROADCAST_SMS permission, otherwise it " +

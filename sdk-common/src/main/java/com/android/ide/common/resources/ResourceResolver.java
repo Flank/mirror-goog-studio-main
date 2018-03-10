@@ -23,7 +23,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.ide.common.rendering.api.*;
+import com.android.ide.common.rendering.api.ArrayResourceValue;
+import com.android.ide.common.rendering.api.ItemResourceValue;
+import com.android.ide.common.rendering.api.LayoutLog;
+import com.android.ide.common.rendering.api.RenderResources;
+import com.android.ide.common.rendering.api.ResourceNamespace;
+import com.android.ide.common.rendering.api.ResourceReference;
+import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.ide.common.rendering.api.SampleDataResourceValue;
+import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.resources.sampledata.SampleDataManager;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
@@ -31,7 +39,17 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,8 +80,7 @@ public class ResourceResolver extends RenderResources {
     /** The resources should be searched in all the themes in the list in order. */
     @NonNull private final List<StyleResourceValue> mThemes;
 
-    @NonNull private ResourceIdProvider mFrameworkIdProvider = new FrameworkResourceIdProvider();
-    @NonNull private ResourceIdProvider mLibrariesIdProvider = new ResourceIdProvider();
+    @NonNull private Predicate<ResourceReference> mProjectIdChecker = res -> false;
     private LayoutLog mLogger;
 
     /** Contains the default parent for DeviceDefault styles (e.g. for API 18, "Holo") */
@@ -132,8 +149,7 @@ public class ResourceResolver extends RenderResources {
 
         ResourceResolver resolver =
                 new ResourceResolver(original.mResources, original.mDefaultTheme);
-        resolver.mFrameworkIdProvider = original.mFrameworkIdProvider;
-        resolver.mLibrariesIdProvider = original.mLibrariesIdProvider;
+        resolver.mProjectIdChecker = original.mProjectIdChecker;
         resolver.mLogger = original.mLogger;
         resolver.mStyleInheritanceMap.putAll(original.mStyleInheritanceMap);
         resolver.mReverseStyleInheritanceMap.putAll(original.mReverseStyleInheritanceMap);
@@ -267,22 +283,18 @@ public class ResourceResolver extends RenderResources {
         return mResources.get(ResourceNamespace.ANDROID);
     }
 
-    public void setLibrariesIdProvider(@NonNull ResourceIdProvider provider) {
-        mLibrariesIdProvider = provider;
+    /**
+     * Provides a mechanism to check if a given resource of type {@link ResourceType#ID} is defined
+     * in the project.
+     *
+     * <p>TODO(namespaces): stop relying on R.txt and remove this.
+     */
+    public void setProjectIdChecker(@NonNull Predicate<ResourceReference> predicate) {
+        mProjectIdChecker = predicate;
     }
 
     // ---- RenderResources Methods
 
-    @Override
-    public void setFrameworkResourceIdProvider(@NonNull ResourceIdProvider provider) {
-        mFrameworkIdProvider = provider;
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public void setFrameworkResourceIdProvider(@NonNull FrameworkResourceIdProvider provider) {
-        setFrameworkResourceIdProvider((ResourceIdProvider) provider);
-    }
 
     @Override
     public void setLogger(LayoutLog logger) {
@@ -467,12 +479,13 @@ public class ResourceResolver extends RenderResources {
                 // generated dynamically (by the '@+' syntax) when compiling the framework
                 // resources or in a library, in which case it was not in the repositories.
                 // See FileResourceRepository#myAarDeclaredIds.
-                boolean idExists =
-                        reference.isFramework()
-                                ? mFrameworkIdProvider.getId(ResourceType.ID, reference.getName())
-                                        != null
-                                : mLibrariesIdProvider.getId(ResourceType.ID, reference.getName())
-                                        != null;
+                //
+                // TODO(namespaces): In the past we asked Bridge for the numeric id of the resource
+                // in question, which always returned a non-null ID (potentially generating a new
+                // one). In effect we assumed {@link ResourceType#ID} resources in the framework
+                // namespace always exist. The repo for framework resources needs to know which ids
+                // exist and which don't, so we can get rid of this.
+                boolean idExists = reference.isFramework() || mProjectIdChecker.test(reference);
 
                 if (idExists) {
                     // TODO(namespaces): Cache these?
@@ -735,7 +748,6 @@ public class ResourceResolver extends RenderResources {
     public ResourceResolver createRecorder(List<ResourceValue> lookupChain) {
         ResourceResolver resolver =
                 new RecordingResourceResolver(lookupChain, mResources, mDefaultTheme);
-        resolver.mFrameworkIdProvider = mFrameworkIdProvider;
         resolver.mLogger = mLogger;
         resolver.mStyleInheritanceMap.putAll(mStyleInheritanceMap);
         resolver.mThemes.addAll(mThemes);

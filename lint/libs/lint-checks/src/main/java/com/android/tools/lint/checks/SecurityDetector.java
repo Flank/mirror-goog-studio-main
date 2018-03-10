@@ -319,7 +319,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
                 !isStandardReceiver(element)) {
             // No declared permission for this exported receiver: complain
             LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_PERMISSION, "").build();
-            context.report(EXPORTED_RECEIVER, element, context.getLocation(element),
+            context.report(EXPORTED_RECEIVER, element, context.getNameLocation(element),
                            "Exported receiver does not require permission", fix);
         }
     }
@@ -329,7 +329,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
                 && !isWearableListenerServiceAction(element)) {
             // No declared permission for this exported service: complain
             LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_PERMISSION, "").build();
-            context.report(EXPORTED_SERVICE, element, context.getLocation(element),
+            context.report(EXPORTED_SERVICE, element, context.getNameLocation(element),
                            "Exported service does not require permission", fix);
         }
     }
@@ -387,7 +387,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
                             LintFix fix = LintFix.create()
                                     .set(ANDROID_URI, ATTR_EXPORTED, VALUE_FALSE).build();
                             context.report(EXPORTED_PROVIDER, element,
-                                    context.getLocation(element),
+                                    context.getNameLocation(element),
                                     "Exported content providers can provide access to " +
                                             "potentially sensitive data", fix);
                         }

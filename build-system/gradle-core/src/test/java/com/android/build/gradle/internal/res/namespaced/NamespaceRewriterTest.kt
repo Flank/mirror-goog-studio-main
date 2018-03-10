@@ -16,11 +16,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.gradle.internal.fixtures.FakeLogger
-import com.android.ide.common.symbols.Symbol
-import com.android.ide.common.symbols.SymbolJavaType
 import com.android.ide.common.symbols.SymbolTable
-import com.android.resources.ResourceType
 import com.android.testutils.TestResources
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.tools.build.apkzlib.zip.ZFile
@@ -33,8 +29,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.net.URLClassLoader
-import javax.tools.JavaFileObject
-import javax.tools.ToolProvider
 import kotlin.test.assertFailsWith
 
 class NamespaceRewriterTest {
@@ -54,24 +48,15 @@ class NamespaceRewriterTest {
     fun setUp() {
         javacOutput = temporaryFolder.newFolder("out")
 
-        val javac = ToolProvider.getSystemJavaCompiler()
-        val manager = javac.getStandardFileManager(null, null, null)
-
-        val sources = ImmutableList.of(
-                getFile("R.java"),
-                getFile("Test.java"),
-                getFile("Test2.java"),
-                getFile("dependency/R.java")
+        compileSources(
+                ImmutableList.of(
+                        getFile("R.java"),
+                        getFile("Test.java"),
+                        getFile("Test2.java"),
+                        getFile("dependency/R.java")
+                ),
+                javacOutput
         )
-
-        val source = manager.getJavaFileObjectsFromFiles(sources) as Iterable<JavaFileObject>
-        javac.getTask(
-                null,
-                manager, null,
-                ImmutableList.of("-d", javacOutput.absolutePath), null,
-                source
-        )
-            .call()
 
         testClass = FileUtils.join(javacOutput, "com", "example", "mymodule", "Test.class")
         assertThat(testClass).exists()
@@ -162,11 +147,13 @@ class NamespaceRewriterTest {
         assertThat(logger.messages[0]).contains(
                 "In package com.example.mymodule multiple options found in its dependencies for " +
                         "resource string s1. Using com.example.mymodule, other available: " +
-                        "com.example.libB")
+                        "com.example.libB"
+        )
         assertThat(logger.messages[1]).contains(
                 "In package com.example.mymodule multiple options found in its dependencies for " +
                         "resource string s2. Using com.example.dependency, other available: " +
-                        "com.example.libA, com.example.libB")
+                        "com.example.libA, com.example.libB"
+        )
 
         val urls = arrayOf(javacOutput.toURI().toURL())
         URLClassLoader(urls, null).use { classLoader ->
@@ -188,7 +175,8 @@ class NamespaceRewriterTest {
             )
         }
         assertThat(e.message).contains(
-                "In package my.example.lib found unknown symbol of type string and name s1.")
+                "In package my.example.lib found unknown symbol of type string and name s1."
+        )
     }
 
     @Test
@@ -233,25 +221,6 @@ class NamespaceRewriterTest {
             method = testC.getMethod("test2")
             result = method.invoke(null) as Int
             assertThat(result).isEqualTo(2 * 11 * 13 + 2 + 11 + 13)
-        }
-    }
-
-    private fun symbol(type: String, name: String): Symbol {
-        val resType = ResourceType.getEnum(type)!!
-        var javaType = SymbolJavaType.INT
-        var value = "0"
-        if (resType == ResourceType.DECLARE_STYLEABLE) {
-            javaType = SymbolJavaType.INT_LIST
-            value = "{}"
-        }
-        return Symbol.createSymbol(resType, name, javaType, value)
-    }
-
-    private class MockLogger : FakeLogger() {
-        val messages = ArrayList<String>()
-
-        override fun warn(p0: String?) {
-            messages.add(p0!!)
         }
     }
 }

@@ -25,9 +25,11 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.VariantType
 import java.io.File
 import java.io.IOException
+import java.util.function.Supplier
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -42,9 +44,8 @@ import org.gradle.api.tasks.TaskAction
  */
 open class ApplicationIdWriterTask : AndroidVariantTask() {
 
-    @get:Input
-    lateinit var applicationId: String
-        private set
+    @get:Internal lateinit var applicationIdSupplier: Supplier<String?> private set
+    @get:Input val applicationId get() = applicationIdSupplier.get()
 
     @get:InputFiles
     @get:Optional
@@ -61,7 +62,7 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
         val packageId = if (appIdFromBaseFeature != null && !appIdFromBaseFeature!!.isEmpty) {
             ApplicationId.load(appIdFromBaseFeature!!.singleFile).applicationId
         } else {
-            applicationId
+            applicationId as String
         }
         val declaration = ApplicationId(packageId)
         declaration.save(outputFile)
@@ -83,7 +84,9 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
 
             // default value of the app ID to publish. This may get overwritten by something
             // coming from an application module.
-            task.applicationId = variantScope.variantConfiguration.applicationId
+            task.applicationIdSupplier = TaskInputHelper.memoize {
+                variantScope.variantConfiguration.applicationId
+            }
 
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
             task.outputFile = variantScope.buildArtifactsHolder.appendArtifact(

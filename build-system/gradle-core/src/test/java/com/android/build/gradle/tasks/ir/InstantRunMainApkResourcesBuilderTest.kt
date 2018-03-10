@@ -16,8 +16,12 @@
 
 package com.android.build.gradle.tasks.ir
 
+import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
+import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -27,11 +31,11 @@ import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
+import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.utils.FileCache
 import com.android.ide.common.build.ApkInfo
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableMap
-import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 import com.google.common.truth.Truth.assertThat
 import org.apache.commons.io.FileUtils
@@ -62,14 +66,18 @@ open class InstantRunMainApkResourcesBuilderTest {
     var manifestFileFolder = TemporaryFolder()
 
     @Mock private lateinit var resources: FileCollection
-    private lateinit var manifestFiles: FileCollection
-    @Mock lateinit internal var fileTree: FileTree
+    private lateinit var manifestFiles: BuildableArtifact
+    @Mock internal lateinit var fileTree: FileTree
     @Mock internal var buildContext: InstantRunBuildContext? = null
     @Mock internal var logger: ILogger? = null
     @Mock private lateinit var variantConfiguration: GradleVariantConfiguration
+    @Mock private lateinit var buildArtifactsHolder: BuildArtifactsHolder
     @Mock private lateinit var variantScope: VariantScope
     @Mock private lateinit var globalScope: GlobalScope
     @Mock private lateinit var fileCache: FileCache
+    @Mock private lateinit var dslScope: DslScope
+    @Mock private lateinit var issueReporter: EvalIssueReporter
+    private val projectOptions = ProjectOptions(ImmutableMap.of())
     private val outputScope = OutputScope()
 
     internal lateinit var project: Project
@@ -94,11 +102,10 @@ open class InstantRunMainApkResourcesBuilderTest {
         `when`(variantScope.getTaskName(any(String::class.java))).thenReturn("taskFoo")
         `when`(variantScope.globalScope).thenReturn(globalScope)
         `when`(variantScope.outputScope).thenReturn(outputScope)
+        `when`(variantScope.buildArtifactsHolder).thenReturn(buildArtifactsHolder)
         `when`(variantScope.getOutput(InternalArtifactType.MERGED_RES))
                 .thenReturn(resources)
-        manifestFiles = project.files(manifestFileFolder.root)
-        `when`(variantScope.getOutput(InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS))
-                .thenReturn(manifestFiles)
+        `when`(dslScope.issueReporter).thenReturn(issueReporter)
         `when`(resources.asFileTree).thenReturn(fileTree)
     }
 
@@ -110,6 +117,9 @@ open class InstantRunMainApkResourcesBuilderTest {
                 InternalArtifactType.MERGED_RES)
 
         val outDir = temporaryFolder.newFolder()
+        manifestFiles = BuildableArtifactImpl(project.files(), dslScope)
+        `when`(buildArtifactsHolder.getFinalArtifactFiles(
+            InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS)).thenReturn(manifestFiles)
         `when`(variantScope.instantRunMainApkResourcesDir).thenReturn(outDir)
 
         configAction.execute(task)
@@ -122,8 +132,8 @@ open class InstantRunMainApkResourcesBuilderTest {
     // should be tested elsewhere.
     open class InstantRunMainApkResourcesBuilderForTest: InstantRunMainApkResourcesBuilder() {
         @Throws(IOException::class)
-        override fun processSplit(apkInfo: ApkInfo, manifestFile: File?): File? {
-            return File(outputDirectory, apkInfo.baseName)
+        override fun processSplit(apkData: ApkInfo, manifestFile: File?): File? {
+            return File(outputDirectory, apkData.baseName)
         }
     }
 
@@ -152,8 +162,11 @@ open class InstantRunMainApkResourcesBuilderTest {
                 manifestFile)
                 .save(manifestFileFolder.root)
 
-        `when`(fileTree.files).thenReturn(
-                ImmutableSet.copyOf(manifestFileFolder.root.listFiles()))
+        manifestFiles = BuildableArtifactImpl(
+            project.files(manifestFileFolder.root.listFiles()), dslScope)
+        `when`(buildArtifactsHolder.getFinalArtifactFiles(
+            InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS)).thenReturn(manifestFiles)
+
         configAction.execute(task)
 
         task.doFullTaskAction()

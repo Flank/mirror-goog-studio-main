@@ -6,7 +6,10 @@ iml_module(
     name = "studio.devicelib",
     srcs = ["src/main/java"],
     iml_files = ["devicelib.iml"],
-    tags = ["managed"],
+    tags = [
+        "managed",
+        "no_test_foundry",
+    ],
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -51,6 +54,7 @@ kotlin_test(
     data = ["//prebuilts/studio/sdk:platform-tools"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),
+    tags = ["no_test_foundry"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.devicelib",

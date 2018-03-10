@@ -24,9 +24,10 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -256,13 +257,7 @@ public final class ResourceValuesXmlParser {
             case STYLE:
             case TRANSITION:
             case XML:
-                builder.add(
-                        Symbol.createAndValidateSymbol(
-                                resourceType,
-                                name,
-                                SymbolJavaType.INT,
-                                idProvider.next(resourceType),
-                                Symbol.NO_CHILDREN));
+                builder.add(Symbol.createAndValidateSymbol(resourceType, name, idProvider));
                 break;
             case DECLARE_STYLEABLE:
                 // We also need to find all the attributes declared under declare styleable.
@@ -302,7 +297,7 @@ public final class ResourceValuesXmlParser {
             @NonNull SymbolTable.Builder builder,
             @NonNull List<Symbol> enumSymbols,
             @Nullable SymbolTable platformAttrSymbols) {
-        List<String> attrValues = new ArrayList<>();
+        ImmutableList.Builder<Integer> attrValues = ImmutableList.builder();
         List<String> attrNames = new ArrayList<>();
 
         Node attrNode = declareStyleable.getFirstChild();
@@ -339,7 +334,7 @@ public final class ResourceValuesXmlParser {
                     // If platform attr symbols are not provided, we don't need the actual values.
                     // Use a fake ID to signal this is the case.
                     attrName = SymbolUtils.canonicalizeValueResourceName(attrName);
-                    attrValues.add("-1");
+                    attrValues.add(-1);
                 } else {
                     // this is an android attr.
                     String realAttrName = attrName.substring(ANDROID_NS_NAME_PREFIX_LEN);
@@ -348,7 +343,7 @@ public final class ResourceValuesXmlParser {
                             platformAttrSymbols.getSymbols().get(ResourceType.ATTR, realAttrName);
 
                     if (attrSymbol != null) {
-                        attrValues.add(attrSymbol.getValue());
+                        attrValues.add(((Symbol.NormalSymbol) attrSymbol).getIntValue());
                     } else {
                         throw new ResourceValuesXmlParseException(
                                 String.format("Unknown android attribute '%s'", name));
@@ -363,13 +358,7 @@ public final class ResourceValuesXmlParser {
 
             attrNode = attrNode.getNextSibling();
         }
-        builder.add(
-                Symbol.createAndValidateSymbol(
-                        ResourceType.STYLEABLE,
-                        name,
-                        SymbolJavaType.INT_LIST,
-                        "{ " + Joiner.on(", ").join(attrValues) + " }",
-                        attrNames));
+        builder.add(Symbol.createAndValidateStyleableSymbol(name, attrValues.build(), attrNames));
     }
 
     /**
@@ -383,7 +372,7 @@ public final class ResourceValuesXmlParser {
      * @return the symbol value of the parsed attribute
      * @throws ResourceValuesXmlParseException if there is an illegal type under attr
      */
-    private static String parseAttr(
+    private static int parseAttr(
             @NonNull Element attr,
             @NonNull IdProvider idProvider,
             @NonNull String name,
@@ -413,26 +402,21 @@ public final class ResourceValuesXmlParser {
                             ResourceType.ID,
                             SymbolUtils.canonicalizeValueResourceName(
                                     getMandatoryAttr(enumElement, "name")),
-                            SymbolJavaType.INT,
-                            idProvider.next(ResourceType.ID),
-                            Symbol.NO_CHILDREN);
+                            idProvider);
 
             enumSymbols.add(newEnum);
             enumNode = enumNode.getNextSibling();
         }
 
-        final String value = idProvider.next(ResourceType.ATTR);
-        Symbol newAttr =
-                Symbol.createAndValidateSymbol(
-                        ResourceType.ATTR, name, SymbolJavaType.INT, value, Symbol.NO_CHILDREN);
+        Symbol.NormalSymbol newAttr =
+                Symbol.createAndValidateSymbol(ResourceType.ATTR, name, idProvider);
 
         if (!builder.contains(newAttr)) {
             builder.add(newAttr);
-            return value;
+            return newAttr.getIntValue();
         }
 
-        //noinspection ConstantConditions
-        return builder.get(newAttr).getValue();
+        return Objects.requireNonNull((Symbol.NormalSymbol) builder.get(newAttr)).getIntValue();
     }
 
     /**

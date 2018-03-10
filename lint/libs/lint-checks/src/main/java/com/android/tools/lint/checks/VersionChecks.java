@@ -201,8 +201,7 @@ public class VersionChecks {
                 true, UMethod.class, UClass.class);
 
         while (currentExpression != null) {
-            VersionCheckWithExitFinder visitor = new VersionCheckWithExitFinder(
-                    currentExpression, element, api);
+            VersionCheckWithExitFinder visitor = new VersionCheckWithExitFinder(element, api);
             currentExpression.accept(visitor);
 
             if (visitor.found()) {
@@ -220,17 +219,13 @@ public class VersionChecks {
 
     private static class VersionCheckWithExitFinder extends AbstractUastVisitor {
 
-        private final UExpression expression;
         private final UElement endElement;
         private final int api;
 
         private boolean found = false;
         private boolean done = false;
 
-        public VersionCheckWithExitFinder(UExpression expression, UElement endElement,
-                int api) {
-            this.expression = expression;
-
+        public VersionCheckWithExitFinder(UElement endElement, int api) {
             this.endElement = endElement;
             this.api = api;
         }

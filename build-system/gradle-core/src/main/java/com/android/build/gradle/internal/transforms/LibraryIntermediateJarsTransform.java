@@ -21,6 +21,7 @@ import static com.android.build.api.transform.QualifiedContent.DefaultContentTyp
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
@@ -33,13 +34,13 @@ import com.android.builder.packaging.ZipEntryFilter;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
-import org.gradle.api.file.FileCollection;
 
 /**
  * A Transforms that takes the project/project local streams for CLASSES and RESOURCES,
@@ -65,7 +66,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     public LibraryIntermediateJarsTransform(
             @NonNull File mainClassLocation,
             @NonNull File resJarLocation,
-            @Nullable FileCollection typedefRecipe,
+            @Nullable BuildableArtifact typedefRecipe,
             @NonNull String packageName,
             boolean packageBuildConfig) {
         super(mainClassLocation, null, typedefRecipe, packageName, packageBuildConfig);
@@ -93,7 +94,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws TransformException, InterruptedException, IOException {
-        if (typedefRecipe != null && !typedefRecipe.getSingleFile().exists()) {
+        if (typedefRecipe != null && !Iterables.getOnlyElement(typedefRecipe).exists()) {
             throw new IllegalStateException("Type def recipe not found: " + typedefRecipe);
         }
         final boolean incrementalDisabled = !invocation.isIncremental();
@@ -176,7 +177,8 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
                                 && checkEntry(excludePatterns, archivePath);
         TypedefRemover typedefRemover =
                 typedefRecipe != null
-                        ? new TypedefRemover().setTypedefFile(typedefRecipe.getSingleFile())
+                        ? new TypedefRemover()
+                                .setTypedefFile(Iterables.getOnlyElement(typedefRecipe))
                         : null;
 
         handleJarOutput(mainClassInputs, mainClassLocation, filter, typedefRemover);

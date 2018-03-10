@@ -22,6 +22,7 @@ import com.android.build.api.artifact.OutputFileProvider
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.google.common.base.Joiner
 import com.google.common.collect.HashMultimap
+import com.google.common.collect.Iterables
 import com.google.common.collect.Multimap
 import java.io.File
 import org.gradle.api.Task
@@ -52,7 +53,12 @@ class OutputFileProviderImpl(
             }
         }
 
-        val newFile = artifactsHolder.createFile(task, filename)
+        val newFile = if (artifactsTypesForFile.size == 1) {
+            artifactsHolder.createFile(task, Iterables.getOnlyElement(artifactsTypesForFile), filename)
+        } else {
+            artifactsHolder.createFile(task, filename)
+        }
+
         // associate new File with all relevant artifacts types it applies to.
         artifactsTypesForFile.forEach {
             filesMap.put(it, newFile)

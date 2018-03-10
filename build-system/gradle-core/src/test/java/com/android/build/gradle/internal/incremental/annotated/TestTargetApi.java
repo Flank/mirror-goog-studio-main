@@ -27,6 +27,8 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.CONSTRUCTOR})
 @Retention(RetentionPolicy.CLASS)
 public @interface TestTargetApi {
-    int value();
+    int value() default -1;
+
+    int api() default -1;
 }
 

@@ -87,13 +87,13 @@ ListAdapter.""",
         if (tagName == SCROLL_VIEW || tagName == HORIZONTAL_SCROLL_VIEW) {
             if (childCount > 1 && getAccurateChildCount(element) > 1) {
                 context.report(SCROLLVIEW_ISSUE, element,
-                        context.getLocation(element), "A scroll view can have only one child")
+                        context.getNameLocation(element), "A scroll view can have only one child")
             }
         } else {
             // Adapter view
             if (childCount > 0 && getAccurateChildCount(element) > 0) {
                 context.report(ADAPTER_VIEW_ISSUE, element,
-                        context.getLocation(element),
+                        context.getNameLocation(element),
                         "A list/grid should have no children declared in XML")
             }
         }

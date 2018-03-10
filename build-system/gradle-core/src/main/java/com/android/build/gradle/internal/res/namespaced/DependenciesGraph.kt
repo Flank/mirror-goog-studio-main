@@ -51,16 +51,16 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
         ): DependenciesGraph {
             return create(
                     dependencies.resolutionResult.root.dependencies,
-                    HashMap(),
-                    artifacts
+                    artifacts,
+                    HashMap()
             )
         }
 
         @VisibleForTesting
         fun create(
             roots: Iterable<DependencyResult>,
-            foundNodes: HashMap<String, Node>,
-            artifacts: ArtifactFiles
+            artifacts: ArtifactFiles = ImmutableMap.of(),
+            foundNodes: HashMap<String, Node> = HashMap()
         ): DependenciesGraph {
             val rootNodes = mutableSetOf<Node>()
             // We can have multiple roots. Collect nodes starting from each of them.
@@ -111,17 +111,16 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
         init {
             val builder = ImmutableMap.builder<ArtifactType, File>()
             for (type in artifactFiles.keys) {
-                val file = artifactFiles[type]!![id.displayName] ?:
-                        error("Missing artifact for ID ${id.displayName} and type ${type.type}.")
-                builder.put(type, file)
+                val file = artifactFiles[type]!![id.displayName]
+                if (file != null) {
+                    builder.put(type, file)
+                }
             }
             artifacts = builder.build()
         }
 
-        fun getFile(type: ArtifactType): File {
-            return artifacts[type] ?:
-                    error("Node with ID ${id.displayName} does not contain an artifact of type" +
-                            " ${type.type}")
+        fun getFile(type: ArtifactType): File? {
+            return artifacts[type]
         }
 
         fun getTransitiveFiles(type: ArtifactType): ImmutableList<File> {
@@ -129,8 +128,11 @@ class DependenciesGraph(val rootNodes: ImmutableSet<Node>, val allNodes: Immutab
                 return transitiveArtifactCache[type]!!
             }
             val builder = ArrayList<File>()
-            // Add ourselves first.
-            builder.add(getFile(type))
+            // Add ourselves first, if we contain the file.
+            val file = getFile(type)
+            if (file != null) {
+                builder.add(file)
+            }
             // We have only the immediate children, go through them in alphabetical order to make it
             // more deterministic.
             val children = dependencies.asList()

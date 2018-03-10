@@ -38,8 +38,10 @@ com.android.build.api.transform.SecondaryFile.<init>: com.android.build.api.tran
 com.android.build.api.transform.SecondaryFile.getFile: java.io.File ()
 com.android.build.api.transform.SecondaryFile.getFileCollection: org.gradle.api.file.FileCollection (org.gradle.api.Project)
 com.android.build.api.transform.SecondaryFile.incremental: com.android.build.api.transform.SecondaryFile (java.io.File)
+com.android.build.api.transform.SecondaryFile.incremental: com.android.build.api.transform.SecondaryFile (java.util.function.Supplier<org.gradle.api.file.FileCollection>)
 com.android.build.api.transform.SecondaryFile.incremental: com.android.build.api.transform.SecondaryFile (org.gradle.api.file.FileCollection)
 com.android.build.api.transform.SecondaryFile.nonIncremental: com.android.build.api.transform.SecondaryFile (java.io.File)
+com.android.build.api.transform.SecondaryFile.nonIncremental: com.android.build.api.transform.SecondaryFile (java.util.function.Supplier<org.gradle.api.file.FileCollection>)
 com.android.build.api.transform.SecondaryFile.nonIncremental: com.android.build.api.transform.SecondaryFile (org.gradle.api.file.FileCollection)
 com.android.build.api.transform.SecondaryFile.supportsIncrementalBuild: boolean ()
 com.android.build.api.transform.SecondaryInput

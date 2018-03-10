@@ -32,7 +32,7 @@ import org.junit.Test;
  *
  * <pre>
  *     $ cd tools
- *     $ ./gradlew :base:integration-test:test -D:base:integration-test:test.single=PrivateResourceTest
+ *     $ ./gradlew :base:build-system:integration-test:application:test -D:base:build-system:integration-test:application:test.single=PrivateResourceTest
  * </pre>
  */
 public class PrivateResourceTest {

@@ -15,6 +15,7 @@
  */
 package android.app;
 
+import android.app.job.JobScheduler;
 import android.mock.MockWindowManager;
 import android.os.PowerManager;
 import android.view.Window;
@@ -47,5 +48,9 @@ public class Activity {
 
     public AlarmManager getAlarmManager() {
         return new AlarmManager();
+    }
+
+    public JobScheduler getJobSchedler() {
+        return new JobSchedulerImpl();
     }
 }

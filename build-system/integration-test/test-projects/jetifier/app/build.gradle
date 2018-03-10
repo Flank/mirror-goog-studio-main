@@ -1,0 +1,21 @@
+apply plugin: 'com.android.application'
+
+repositories {
+    maven {
+        url 'libs'
+    }
+}
+
+android {
+    compileSdkVersion rootProject.latestCompileSdk
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion rootProject.latestCompileSdk
+    }
+}
+
+dependencies {
+    implementation "com.android.support:appcompat-v7:${rootProject.supportLibVersion}"
+    implementation files('libs/libraryToRefactor/libraryToRefactor-1.0.jar')
+    implementation 'supportLib:supportLibStub:1.0'
+}

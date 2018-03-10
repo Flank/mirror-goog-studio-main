@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -46,7 +47,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-import org.gradle.api.file.FileCollection;
 
 public abstract class LibraryBaseTransform extends Transform {
 
@@ -65,7 +65,7 @@ public abstract class LibraryBaseTransform extends Transform {
     @NonNull
     protected final String packagePath;
     protected final boolean packageBuildConfig;
-    @Nullable protected final FileCollection typedefRecipe;
+    @Nullable protected final BuildableArtifact typedefRecipe;
 
     @Nullable
     protected List<ExcludeListProvider> excludeListProviders;
@@ -73,7 +73,7 @@ public abstract class LibraryBaseTransform extends Transform {
     public LibraryBaseTransform(
             @NonNull File mainClassLocation,
             @Nullable File localJarsLocation,
-            @Nullable FileCollection typedefRecipe,
+            @Nullable BuildableArtifact typedefRecipe,
             @NonNull String packageName,
             boolean packageBuildConfig) {
         this.mainClassLocation = mainClassLocation;

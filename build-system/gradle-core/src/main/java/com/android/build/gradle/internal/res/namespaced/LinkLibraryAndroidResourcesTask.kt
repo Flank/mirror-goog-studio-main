@@ -67,8 +67,6 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
     lateinit var aapt2FromMaven: FileCollection private set
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
-    @get:Optional var rClassSource: File? = null; private set
-    @get:OutputFile lateinit var rDotTxt: File private set
     @get:OutputFile lateinit var staticLibApk: File private set
 
     @TaskAction
@@ -95,12 +93,9 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
                 resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.asIterable()),
                 staticLibrary = true,
                 imports = imports.build(),
-                // TODO: Remove generating R.java once b/69956357 is fixed.
-                sourceOutputDir = rClassSource,
                 resourceOutputApk = staticLibApk,
                 variantType = VariantTypeImpl.LIBRARY,
                 customPackageForR = getPackageForR(),
-                symbolOutputDir = rDotTxt.parentFile,
                 intermediateDir = aaptIntermediateDir)
 
         val aapt2ServiceKey = registerAaptService(
@@ -115,9 +110,8 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
 
     class ConfigAction(
             private val scope: VariantScope,
-            private val rClassSource: File?,
-            private val staticLibApk: File,
-            private val rDotTxt: File) : TaskConfigAction<LinkLibraryAndroidResourcesTask> {
+            private val staticLibApk: File
+    ) : TaskConfigAction<LinkLibraryAndroidResourcesTask> {
 
         override fun getName() = scope.getTaskName("link", "Resources")
 
@@ -154,11 +148,9 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
             task.aaptIntermediateDir =
                     FileUtils.join(
                             scope.globalScope.intermediatesDir, "res-link-intermediate", scope.variantConfiguration.dirName)
-            task.rClassSource = rClassSource
             task.staticLibApk = staticLibApk
             task.setAndroidBuilder(scope.globalScope.androidBuilder)
             task.packageForRSupplier = Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
-            task.rDotTxt = rDotTxt
             task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
         }
     }

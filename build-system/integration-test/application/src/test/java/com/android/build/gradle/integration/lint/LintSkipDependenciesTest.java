@@ -27,8 +27,8 @@ import org.junit.Test;
 /**
  * Assemble tests for lintLibraryModel.
  *
- * <p>To run just this test: ./gradlew :base:integration-test:test
- * -D:base:integration-test:test.single=LintSkipDependenciesTest
+ * <p>To run just this test: ./gradlew :base:build-system:integration-test:application:test
+ * -D:base:build-system:integration-test:application:test.single=LintSkipDependenciesTest
  */
 public class LintSkipDependenciesTest {
     @Rule

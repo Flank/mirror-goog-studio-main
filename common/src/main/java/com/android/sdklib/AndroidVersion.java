@@ -309,15 +309,12 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
 
     public int compareTo(int apiLevel, @Nullable String codename) {
         if (mCodename == null) {
-            if (codename == null) {
-                return mApiLevel - apiLevel;
-            } else {
+            if (codename != null) {
                 if (mApiLevel == apiLevel) {
                     return -1; // same api level but argument is a preview for next version
                 }
-
-                return mApiLevel - apiLevel;
             }
+            return mApiLevel - apiLevel;
         } else {
             // 'this' is a preview
             if (mApiLevel == apiLevel) {

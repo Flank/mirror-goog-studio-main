@@ -124,7 +124,7 @@ public class DeprecationDetector extends LayoutDetector {
         if (TAG_USES_PERMISSION_SDK_M.equals(tagName)) {
             message += ": Use `" + TAG_USES_PERMISSION_SDK_23 + " instead";
         }
-        context.report(ISSUE, element, context.getLocation(element),
+        context.report(ISSUE, element, context.getNameLocation(element),
                 message);
     }
 

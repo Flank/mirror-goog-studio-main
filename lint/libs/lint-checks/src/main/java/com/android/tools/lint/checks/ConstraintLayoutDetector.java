@@ -199,7 +199,7 @@ public class ConstraintLayoutDetector extends LayoutDetector {
                     message = "This view is not constrained. It only has designtime positions, "
                             + "so it will jump to (0,0) at runtime unless you add the constraints";
                 }
-                context.report(ISSUE, element, context.getLocation(element), message);
+                context.report(ISSUE, element, context.getNameLocation(element), message);
             }
         }
     }

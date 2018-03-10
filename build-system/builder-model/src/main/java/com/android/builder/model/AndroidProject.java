@@ -23,7 +23,8 @@ import java.util.Collection;
 
 /**
  * Entry point for the model of the Android Projects. This models a single module, whether the
- * module is an app project, a library project, a feature project or an instantApp project.
+ * module is an app project, a library project, a Instant App feature project, an instantApp bundle
+ * project, or a dynamic feature split project.
  */
 public interface AndroidProject {
     //  Injectable properties to use with -P
@@ -140,8 +141,9 @@ public interface AndroidProject {
     int PROJECT_TYPE_LIBRARY = 1;
     int PROJECT_TYPE_TEST = 2;
     @Deprecated int PROJECT_TYPE_ATOM = 3;
-    int PROJECT_TYPE_INSTANTAPP = 4;
-    int PROJECT_TYPE_FEATURE = 5;
+    int PROJECT_TYPE_INSTANTAPP = 4; // Instant App Bundle
+    int PROJECT_TYPE_FEATURE = 5; // com.android.feature module
+    int PROJECT_TYPE_DYNAMIC_FEATURE = 6; //com.android.dynamic-feature module
 
     /**
      * Returns the model version. This is a string in the format X.Y.Z

@@ -105,6 +105,18 @@ public final class LogCatHeader {
         return mTag;
     }
 
+    public boolean isBefore(@NonNull LogCatHeader header) {
+        if (mTimestampInstant == null) {
+            assert mTimestamp != null;
+            assert header.mTimestamp != null;
+
+            return mTimestamp.isBefore(header.mTimestamp);
+        }
+
+        assert header.mTimestampInstant != null;
+        return mTimestampInstant.isBefore(header.mTimestampInstant);
+    }
+
     @NonNull
     public Instant getTimestampInstant() {
         if (mTimestampInstant == null) {

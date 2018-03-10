@@ -18,6 +18,7 @@
 #include <stdio.h>
 
 #include "perfd/cpu/simpleperf_manager.h"
+#include "perfd/cpu/profiling_app.h"
 #include "proto/common.pb.h"
 #include "utils/activity_manager.h"
 #include "utils/file_reader.h"
@@ -192,7 +193,7 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     profiling_app.trace_path = trace_path;
     profiling_app.start_timestamp = clock_.GetCurrentTime();
     profiling_app.configuration = configuration;
-    profiling_apps_[pid] = profiling_app;
+    cache_.AddProfilingStart(pid, profiling_app);
   } else {
     response->set_status(CpuProfilingAppStartResponse::FAILURE);
     response->set_error_message(error);
@@ -209,7 +210,7 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
 
 void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
                                         CpuProfilingAppStopResponse* response) {
-  ProfilingApp* app = GetProfilingApp(pid);
+  ProfilingApp* app = cache_.GetProfilingApp(pid);
   if (app == nullptr) {
     return;
   }
@@ -247,26 +248,8 @@ void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
 
   remove(app->trace_path.c_str());  // No more use of this file. Delete it.
   app->trace_path.clear();
-  profiling_apps_.erase(pid);
-  startup_profiling_apps_.erase(app->app_pkg_name);
-}
-
-ProfilingApp* CpuServiceImpl::GetProfilingApp(int32_t pid) {
-  const auto& app_iterator = profiling_apps_.find(pid);
-  if (app_iterator != profiling_apps_.end()) {
-    return &app_iterator->second;
-  }
-  // Try to find in |startup_profiling_apps_|
-  string app_pkg_name = ProcessManager::GetCmdlineForPid(pid);
-  if (app_pkg_name.empty()) {
-    return nullptr;
-  }
-  const auto& startup_app_iterator = startup_profiling_apps_.find(app_pkg_name);
-  if (startup_app_iterator != startup_profiling_apps_.end()) {
-    return &startup_app_iterator->second;
-  }
-
-  return nullptr;
+  cache_.AddProfilingStop(pid);
+  cache_.AddStartupProfilingStop(app->app_pkg_name);
 }
 
 grpc::Status CpuServiceImpl::CheckAppProfilingState(
@@ -276,7 +259,7 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
   ProcessManager process_manager;
   string app_pkg_name = process_manager.GetCmdlineForPid(pid);
 
-  ProfilingApp* app = GetProfilingApp(pid);
+  ProfilingApp* app = cache_.GetProfilingApp(pid);
   // Whether the app is being profiled (there is a stored start profiling
   // request corresponding to the app)
   response->set_check_timestamp(clock_.GetCurrentTime());
@@ -319,7 +302,7 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
                             app.configuration.sampling_interval_us(),
                             &app.trace_path, &error, true);
   }
-  startup_profiling_apps_[app.app_pkg_name] = app;
+  cache_.AddStartupProfilingStart(app.app_pkg_name, app);
   response->set_file_path(app.trace_path);
   return Status::OK;
 }

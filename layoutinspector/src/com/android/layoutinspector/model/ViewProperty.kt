@@ -18,25 +18,8 @@ package com.android.layoutinspector.model
 import com.google.common.collect.ComparisonChain
 import com.google.common.collect.Ordering
 
-class ViewProperty internal constructor(val fullName: String) : Comparable<ViewProperty> {
-
-    val name: String
-    val category: String?
-
-    var value: String? = null
-
-    init {
-
-        val colonIndex = fullName.indexOf(':')
-        if (colonIndex != -1) {
-            category = fullName.substring(0, colonIndex)
-            name = fullName.substring(colonIndex + 1)
-        } else {
-            category = null
-            name = fullName
-        }
-    }
-
+data class ViewProperty(val fullName: String, val name: String, val category: String?, val value: String) :
+    Comparable<ViewProperty> {
     override fun toString(): String {
         return fullName + '=' + value
     }
@@ -66,7 +49,7 @@ class ViewProperty internal constructor(val fullName: String) : Comparable<ViewP
     }
 
     companion object {
-
-        private val CATEGORY_COMPARATOR = Ordering.natural<Comparable<in String>>().nullsFirst<String>()
+        private val CATEGORY_COMPARATOR =
+            Ordering.natural<Comparable<in String>>().nullsFirst<String>()
     }
 }

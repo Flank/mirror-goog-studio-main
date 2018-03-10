@@ -4,23 +4,41 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 iml_module(
     name = "studio.testutils",
-    srcs = ["src/main/java"],
     iml_files = ["testutils.iml"],
+    tags = ["managed"],
+    test_srcs = ["src/main/java"],
+    test_tags = ["manual"],  # src/main/java is TEST scoped but contains no runnable tests
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/common:studio.common[module, test]",
+        "//tools/idea/.idea/libraries:JUnit4[test]",
+        "//tools/idea/.idea/libraries:mockito[test]",
+        "//tools/idea/.idea/libraries:truth[test]",
+        "//tools/idea/.idea/libraries:dexlib2[test]",
+        "//tools/idea/.idea/libraries:jimfs[test]",
+        "//tools/idea/.idea/libraries:asm-tools[test]",
+    ],
+)
+
+iml_module(
+    name = "studio.testutils-tests",
+    iml_files = ["testutils-tests.iml"],
     tags = ["managed"],
     test_data = ["//prebuilts/studio/sdk:platforms/latest"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/common:studio.common[module]",
-        "//tools/idea/.idea/libraries:JUnit4",
-        "//tools/idea/.idea/libraries:easymock-tools",
-        "//tools/idea/.idea/libraries:mockito",
-        "//tools/idea/.idea/libraries:truth",
-        "//tools/idea/.idea/libraries:dexlib2",
-        "//tools/idea/.idea/libraries:jimfs",
-        "//tools/idea/.idea/libraries:asm-tools",
-        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+        "//tools/base/testutils:studio.testutils[module, test]",
+        "//tools/base/annotations:studio.android-annotations[module, test]",
+        "//tools/base/common:studio.common[module, test]",
+        "//tools/idea/.idea/libraries:JUnit4[test]",
+        "//tools/idea/.idea/libraries:Guava[test]",
+        "//tools/idea/.idea/libraries:truth[test]",
+        "//tools/idea/.idea/libraries:dexlib2[test]",
+        "//tools/idea/.idea/libraries:jimfs[test]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime[test]",
     ],
 )
 

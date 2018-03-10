@@ -141,6 +141,7 @@ public class PluralsDetector extends ResourceXmlDetector {
             return;
         }
         String language = locale.getLanguage();
+        assert language != null; // checked hasLanguage().
 
         PluralsDatabase plurals = PluralsDatabase.get();
 

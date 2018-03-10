@@ -686,9 +686,7 @@ public final class GradleCoordinate {
                     return delta;
                 }
             }
-            if (sizeA == sizeB) {
-                return 0;
-            } else {
+            if (sizeA != sizeB) {
                 // Treat X.0 and X.0.0 as equal
                 List<RevisionComponent> revisionList;
                 int returnValueIfNonZero;
@@ -715,8 +713,8 @@ public final class GradleCoordinate {
                         return returnValueIfNonZero;
                     }
                 }
-                return 0;
             }
+            return 0;
         }
     }
 }

@@ -26,15 +26,14 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
     }
 
     public void testField() {
-        String expected =
-                        "res/layout/note_edit.xml:43: Warning: This text field does not specify an inputType [TextFields]\n"
-                        + "        <EditText\n"
-                        + "        ^\n"
-                        +
-                        "res/layout/note_edit.xml:50: Warning: This text field does not specify an inputType [TextFields]\n"
-                        + "        <EditText\n"
-                        + "        ^\n"
-                        + "0 errors, 2 warnings";
+        String expected = "" +
+                "res/layout/note_edit.xml:43: Warning: This text field does not specify an inputType [TextFields]\n" +
+                "        <EditText\n" +
+                "         ~~~~~~~~\n" +
+                "res/layout/note_edit.xml:50: Warning: This text field does not specify an inputType [TextFields]\n" +
+                "        <EditText\n" +
+                "         ~~~~~~~~\n" +
+                "0 errors, 2 warnings";
         //noinspection all // Sample code
         lint().files(
                 xml(
@@ -154,43 +153,35 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
     }
 
     public void testTypeFromName() {
-        String expected =
-                ""
-                        +
-                        "res/layout/edit_type.xml:14: Warning: The view name (@+id/mypassword) suggests this is a password, but it does not include 'textPassword' in the inputType [TextFields]\n"
-                        + "        android:inputType=\"text\" >\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "    res/layout/edit_type.xml:10: id defined here\n"
-                        +
-                        "res/layout/edit_type.xml:45: Warning: The view name (@+id/password_length) suggests this is a number, but it does not include a numeric inputType (such as 'numberSigned') [TextFields]\n"
-                        + "        android:inputType=\"text\" />\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "    res/layout/edit_type.xml:41: id defined here\n"
-                        +
-                        "res/layout/edit_type.xml:54: Warning: The view name (@+id/welcome_url) suggests this is a URI, but it does not include 'textUri' in the inputType [TextFields]\n"
-                        + "        android:inputType=\"text\" />\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "    res/layout/edit_type.xml:50: id defined here\n"
-                        +
-                        "res/layout/edit_type.xml:63: Warning: The view name (@+id/start_date) suggests this is a date, but it does not include 'date' or 'datetime' in the inputType [TextFields]\n"
-                        + "        android:inputType=\"text\" />\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "    res/layout/edit_type.xml:59: id defined here\n"
-                        +
-                        "res/layout/edit_type.xml:72: Warning: The view name (@+id/email_address) suggests this is an e-mail address, but it does not include 'textEmail' in the inputType [TextFields]\n"
-                        + "        android:inputType=\"text\" />\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "    res/layout/edit_type.xml:68: id defined here\n"
-                        +
-                        "res/layout/edit_type.xml:81: Warning: The view name (@+id/login_pin) suggests this is a password, but it does not include 'numberPassword' in the inputType [TextFields]\n"
-                        + "        android:inputType=\"textPassword\" />\n"
-                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "    res/layout/edit_type.xml:77: id defined here\n"
-                        +
-                        "res/layout/edit_type.xml:83: Warning: This text field does not specify an inputType [TextFields]\n"
-                        + "    <EditText\n"
-                        + "    ^\n"
-                        + "0 errors, 7 warnings\n";
+        String expected = "" +
+                "res/layout/edit_type.xml:14: Warning: The view name (@+id/mypassword) suggests this is a password, but it does not include 'textPassword' in the inputType [TextFields]\n" +
+                "        android:inputType=\"text\" >\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "    res/layout/edit_type.xml:10: id defined here\n" +
+                "res/layout/edit_type.xml:45: Warning: The view name (@+id/password_length) suggests this is a number, but it does not include a numeric inputType (such as 'numberSigned') [TextFields]\n" +
+                "        android:inputType=\"text\" />\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "    res/layout/edit_type.xml:41: id defined here\n" +
+                "res/layout/edit_type.xml:54: Warning: The view name (@+id/welcome_url) suggests this is a URI, but it does not include 'textUri' in the inputType [TextFields]\n" +
+                "        android:inputType=\"text\" />\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "    res/layout/edit_type.xml:50: id defined here\n" +
+                "res/layout/edit_type.xml:63: Warning: The view name (@+id/start_date) suggests this is a date, but it does not include 'date' or 'datetime' in the inputType [TextFields]\n" +
+                "        android:inputType=\"text\" />\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "    res/layout/edit_type.xml:59: id defined here\n" +
+                "res/layout/edit_type.xml:72: Warning: The view name (@+id/email_address) suggests this is an e-mail address, but it does not include 'textEmail' in the inputType [TextFields]\n" +
+                "        android:inputType=\"text\" />\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "    res/layout/edit_type.xml:68: id defined here\n" +
+                "res/layout/edit_type.xml:81: Warning: The view name (@+id/login_pin) suggests this is a password, but it does not include 'numberPassword' in the inputType [TextFields]\n" +
+                "        android:inputType=\"textPassword\" />\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "    res/layout/edit_type.xml:77: id defined here\n" +
+                "res/layout/edit_type.xml:83: Warning: This text field does not specify an inputType [TextFields]\n" +
+                "    <EditText\n" +
+                "     ~~~~~~~~\n" +
+                "0 errors, 7 warnings";
         //noinspection all // Sample code
         lint().files(
                 xml("res/layout/edit_type.xml", ""
@@ -349,17 +340,14 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
     }
 
     public void testIncremental1() {
-        String expected =
-                ""
-                        +
-                        "res/layout/note_edit2.xml:7: Warning: This text field does not specify an inputType [TextFields]\n"
-                        + "    <EditText\n"
-                        + "    ^\n"
-                        +
-                        "res/layout/note_edit2.xml:12: Warning: This text field does not specify an inputType [TextFields]\n"
-                        + "    <EditText\n"
-                        + "    ^\n"
-                        + "0 errors, 2 warnings\n";
+        String expected = "" +
+                "res/layout/note_edit2.xml:7: Warning: This text field does not specify an inputType [TextFields]\n" +
+                "    <EditText\n" +
+                "     ~~~~~~~~\n" +
+                "res/layout/note_edit2.xml:12: Warning: This text field does not specify an inputType [TextFields]\n" +
+                "    <EditText\n" +
+                "     ~~~~~~~~\n" +
+                "0 errors, 2 warnings";
         lint().files(mNote_edit2)
                 .incremental("res/layout/note_edit2.xml")
                 .run()
@@ -368,15 +356,14 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
 
     public void testIncremental2() {
 
-        String expected =
-                "res/layout/note_edit2.xml:7: Warning: This text field does not specify an inputType [TextFields]\n"
-                        + "    <EditText\n"
-                        + "    ^\n"
-                        +
-                        "res/layout/note_edit2.xml:12: Warning: This text field does not specify an inputType [TextFields]\n"
-                        + "    <EditText\n"
-                        + "    ^\n"
-                        + "0 errors, 2 warnings\n";
+        String expected = "" +
+                "res/layout/note_edit2.xml:7: Warning: This text field does not specify an inputType [TextFields]\n" +
+                "    <EditText\n" +
+                "     ~~~~~~~~\n" +
+                "res/layout/note_edit2.xml:12: Warning: This text field does not specify an inputType [TextFields]\n" +
+                "    <EditText\n" +
+                "     ~~~~~~~~\n" +
+                "0 errors, 2 warnings";
 
         //noinspection all // Sample code
         lint().files(

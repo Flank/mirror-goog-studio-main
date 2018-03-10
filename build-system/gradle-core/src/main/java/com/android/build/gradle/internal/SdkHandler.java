@@ -349,7 +349,11 @@ public class SdkHandler {
 
         String envVar = System.getenv("ANDROID_HOME");
         if (envVar != null) {
-            return Pair.of(new File(envVar), true);
+            File sdk = new File(envVar);
+            if (!sdk.isAbsolute()) {
+                sdk = new File(rootDir, envVar);
+            }
+            return Pair.of(sdk, true);
         }
 
         String property = System.getProperty("android.home");

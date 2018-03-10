@@ -30,6 +30,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Represents the configuration for Resource Folders. All the properties have a default value which
@@ -506,6 +508,30 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     @Nullable
     public ResourceQualifier getQualifier(int index) {
         return mQualifiers[index];
+    }
+
+    /** Performs the given action on each non-default qualifier */
+    public void forEach(@NonNull Consumer<? super ResourceQualifier> action) {
+        for (int i = 0; i < INDEX_COUNT; i++) {
+            ResourceQualifier qualifier = mQualifiers[i];
+            if (qualifier != null && qualifier != NULL_QUALIFIERS[i]) {
+                action.accept(qualifier);
+            }
+        }
+    }
+
+    /** Returns true if the given predicate matches any non-default qualifier */
+    public boolean any(Predicate<? super ResourceQualifier> predicate) {
+        for (int i = 0; i < INDEX_COUNT; i++) {
+            ResourceQualifier qualifier = mQualifiers[i];
+            if (qualifier != null && qualifier != NULL_QUALIFIERS[i]) {
+                if (predicate.test(qualifier)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     public void setCountryCodeQualifier(CountryCodeQualifier qualifier) {

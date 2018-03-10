@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
@@ -28,6 +29,7 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.Iterables
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
@@ -55,7 +57,7 @@ import javax.inject.Inject
 open class ProcessAndroidAppResourcesTask
 @Inject constructor(private val workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
 
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var thisSubProjectStaticLibrary: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
@@ -75,7 +77,7 @@ open class ProcessAndroidAppResourcesTask
         staticLibraries.add(thisSubProjectStaticLibrary.singleFile)
         val config = AaptPackageConfig(
                 androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
-                manifestFile = (File(manifestFileDirectory.singleFile,
+                manifestFile = (File(Iterables.getOnlyElement(manifestFileDirectory),
                         SdkConstants.ANDROID_MANIFEST_XML)),
                 options = AaptOptions(null, false, null),
                 staticLibraryDependencies = staticLibraries.build(),
@@ -113,11 +115,12 @@ open class ProcessAndroidAppResourcesTask
 
         override fun execute(task: ProcessAndroidAppResourcesTask) {
             task.variantName = scope.fullVariantName
+            val buildArtifactsHolder = scope.buildArtifactsHolder
             task.manifestFileDirectory =
-                    if (scope.hasOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
-                        scope.getOutput(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+                    if (buildArtifactsHolder.hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
+                        buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
                     } else {
-                        scope.getOutput(InternalArtifactType.MERGED_MANIFESTS)
+                        buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS)
                     }
             task.thisSubProjectStaticLibrary = scope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY)
             task.libraryDependencies =

@@ -36,28 +36,18 @@ public class RestoreFlagRuleTest {
             Flag.create(myFlagGroup, "flag.int", "dummy", "dummy", 42);
     private static final Flag<String> myStrFlag =
             Flag.create(myFlagGroup, "flag.str", "dummy", "dummy", "Hello");
-    private static final Flag<Boolean> myOverriddenBoolFlag =
-            Flag.create(myFlagGroup, "flag.bool.override", "dummy", "dummy", false);
-
-    static {
-        myOverriddenBoolFlag.override(true);
-    }
 
     @Rule public RestoreFlagRule<Boolean> myRestoreBoolFlagRule = new RestoreFlagRule<>(myBoolFlag);
     @Rule public RestoreFlagRule<Integer> myRestoreIntFlagRule = new RestoreFlagRule<>(myIntFlag);
     @Rule public RestoreFlagRule<String> myRestoreStringFlagRule = new RestoreFlagRule<>(myStrFlag);
 
-    @Rule
-    public RestoreFlagRule<Boolean> myRestoreOverriddenBoolFlagRule =
-            new RestoreFlagRule<>(myOverriddenBoolFlag);
-
     @BeforeClass
-    public static void setUpClass() throws Exception {
+    public static void setUpClass() {
         assertExpectedDefaults();
     }
 
     @AfterClass
-    public static void tearDownClass() throws Exception {
+    public static void tearDownClass() {
         assertExpectedDefaults();
     }
 
@@ -65,12 +55,10 @@ public class RestoreFlagRuleTest {
         assertThat(myBoolFlag.get()).isTrue();
         assertThat(myIntFlag.get()).isEqualTo(42);
         assertThat(myStrFlag.get()).isEqualTo("Hello");
-        assertThat(myOverriddenBoolFlag.get()).isTrue();
 
         assertThat(myBoolFlag.isOverridden()).isFalse();
         assertThat(myIntFlag.isOverridden()).isFalse();
         assertThat(myStrFlag.isOverridden()).isFalse();
-        assertThat(myOverriddenBoolFlag.isOverridden()).isTrue();
     }
 
     @Before
@@ -79,22 +67,17 @@ public class RestoreFlagRuleTest {
     }
 
     @Test
-    public void overrideBoolFlag() throws Exception {
+    public void overrideBoolFlag() {
         myBoolFlag.override(false);
     }
 
     @Test
-    public void overrideIntFlag() throws Exception {
+    public void overrideIntFlag() {
         myIntFlag.override(9001);
     }
 
     @Test
-    public void overrideStringFlag() throws Exception {
+    public void overrideStringFlag() {
         myStrFlag.override("Goodbye");
-    }
-
-    @Test
-    public void overrideOverriddenBoolFlag() throws Exception {
-        myOverriddenBoolFlag.override(false);
     }
 }

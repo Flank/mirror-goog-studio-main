@@ -79,8 +79,13 @@ abstract class Aapt2Daemon(
         checkStarted()
         try {
             doCompile(request, logger)
+        } catch (e: Aapt2Exception) {
+            // Propagate errors in the users sources directly.
+            throw e
         } catch (e: TimeoutException) {
             handleError("Compile '${request.inputFile}' timed out", e)
+        } catch (e: Exception) {
+            handleError("Unexpected error during compile '${request.inputFile}'", e)
         }
     }
 
@@ -89,15 +94,20 @@ abstract class Aapt2Daemon(
      *
      * This will only be called after [startProcess] is called and before [stopProcess] is called
      */
-    @Throws(TimeoutException::class)
+    @Throws(TimeoutException::class, Aapt2InternalException::class, Aapt2Exception::class)
     protected abstract fun doCompile(request: CompileResourceRequest, logger: ILogger)
 
     override fun link(request: AaptPackageConfig, logger: ILogger) {
         checkStarted()
         try {
             doLink(request, logger)
+        } catch (e: Aapt2Exception) {
+            // Propagate errors in the users sources directly.
+            throw e
         } catch (e: TimeoutException) {
             handleError("Link timed out", e)
+        } catch (e: Exception) {
+            handleError("Unexpected error during link", e)
         }
     }
 
@@ -106,7 +116,7 @@ abstract class Aapt2Daemon(
      *
      * This will only be called after [startProcess] is called and before [stopProcess] is called.
      */
-    @Throws(TimeoutException::class)
+    @Throws(TimeoutException::class, Aapt2InternalException::class, Aapt2Exception::class)
     protected abstract fun doLink(request: AaptPackageConfig, logger: ILogger)
 
     fun shutDown() {
@@ -137,7 +147,7 @@ abstract class Aapt2Daemon(
     private fun handleError(action: String, exception: Exception): Nothing {
         throw Aapt2InternalException(
                     "$displayName: $action" +
-                            if (state == State.RUNNING) ", attempting to stop daemon.\n" else "\n" +
+                            (if (state == State.RUNNING) ", attempting to stop daemon.\n" else "\n") +
                             "This should not happen under normal circumstances, " +
                             "please file an issue if it does.",
                     exception).apply {

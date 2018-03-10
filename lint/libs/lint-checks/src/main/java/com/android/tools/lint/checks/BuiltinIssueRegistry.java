@@ -31,7 +31,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 317;
+    static final int INITIAL_CAPACITY = 322;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -73,6 +73,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(AppLinksValidDetector.VALIDATION);
         issues.add(ArraySizeDetector.INCONSISTENT);
         issues.add(AssertDetector.ISSUE);
+        issues.add(AutofillDetector.ISSUE);
         issues.add(BadHostnameVerifierDetector.ISSUE);
         issues.add(BatteryDetector.ISSUE);
         issues.add(ButtonDetector.BACK_BUTTON);
@@ -178,6 +179,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(LayoutConsistencyDetector.INCONSISTENT_IDS);
         issues.add(LayoutInflationDetector.ISSUE);
         issues.add(LeakDetector.ISSUE);
+        issues.add(LocaleDetector.FINAL_LOCALE);
         issues.add(LocaleDetector.STRING_LOCALE);
         issues.add(LocaleFolderDetector.DEPRECATED_CODE);
         issues.add(LocaleFolderDetector.GET_LOCALES);
@@ -260,6 +262,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(RegistrationDetector.ISSUE);
         issues.add(RelativeOverlapDetector.ISSUE);
         issues.add(RequiredAttributeDetector.ISSUE);
+        issues.add(RequiresFeatureDetector.REQUIRES_FEATURE);
         issues.add(ResourceCycleDetector.CRASH);
         issues.add(ResourceCycleDetector.CYCLE);
         issues.add(ResourcePrefixDetector.ISSUE);
@@ -311,6 +314,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(TooManyViewsDetector.TOO_MANY);
         issues.add(TranslationDetector.EXTRA);
         issues.add(TranslationDetector.MISSING);
+        issues.add(TranslationDetector.MISSING_BASE);
+        issues.add(TranslationDetector.TRANSLATED_UNTRANSLATABLE);
         issues.add(TrustAllX509TrustManagerDetector.ISSUE);
         issues.add(TypedefDetector.TYPE_DEF);
         issues.add(TypoDetector.ISSUE);
@@ -376,13 +381,13 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         } else {
             int initialSize = 12;
             if (scope.contains(Scope.RESOURCE_FILE)) {
-                initialSize += 101;
+                initialSize += 102;
             } else if (scope.contains(Scope.ALL_RESOURCE_FILES)) {
                 initialSize += 12;
             }
 
             if (scope.contains(Scope.JAVA_FILE)) {
-                initialSize += 101;
+                initialSize += 105;
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 16;
             } else if (scope.contains(Scope.MANIFEST)) {

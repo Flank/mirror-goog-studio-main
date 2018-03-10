@@ -65,8 +65,10 @@ open class DefaultUastParser(
         }
     }
 
-    open protected fun createEvaluator(project: Project?,
-                                  p: com.intellij.openapi.project.Project): DefaultJavaEvaluator =
+    protected open fun createEvaluator(
+        project: Project?,
+        p: com.intellij.openapi.project.Project
+    ): DefaultJavaEvaluator =
             DefaultJavaEvaluator(p, project!!)
 
     /**

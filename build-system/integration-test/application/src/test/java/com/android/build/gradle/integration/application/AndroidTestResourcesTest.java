@@ -1,9 +1,11 @@
 package com.android.build.gradle.integration.application;
 
+import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtilKt;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import java.io.File;
@@ -118,13 +120,12 @@ public class AndroidTestResourcesTest {
             GradleTestProject fixture, final int layout, final int textView) throws IOException {
         File rFile =
                 FileUtils.join(
-                        fixture.getTestDir(),
-                        "build",
-                        AndroidProject.FD_GENERATED,
-                        "source",
-                        "r",
-                        "androidTest",
-                        "debug",
+                        ArtifactTypeUtilKt.getOutputDir(
+                                InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                                new File(fixture.getTestDir(), "build")),
+                        "debugAndroidTest",
+                        "processDebugAndroidTestResources",
+                        SdkConstants.FD_RES_CLASS,
                         "com",
                         "example",
                         "helloworld",

@@ -28,11 +28,11 @@ public class WebViewDetectorTest extends AbstractCheckTest {
     public void testMatchParentWidth() throws Exception {
         //noinspection all // Sample code
         assertEquals(""
-                + "res/layout/webview.xml:19: Error: Placing a <WebView> in a parent element that uses a wrap_content layout_height can lead to subtle bugs; use match_parent instead [WebViewLayout]\n"
-                + "        <WebView\n"
-                + "        ^\n"
-                + "    res/layout/webview.xml:16: wrap_content here may not work well with WebView below\n"
-                + "1 errors, 0 warnings\n",
+                        + "res/layout/webview.xml:19: Error: Placing a <WebView> in a parent element that uses a wrap_content layout_height can lead to subtle bugs; use match_parent instead [WebViewLayout]\n"
+                        + "        <WebView\n"
+                        + "         ~~~~~~~\n"
+                        + "    res/layout/webview.xml:16: wrap_content here may not work well with WebView below\n"
+                        + "1 errors, 0 warnings\n",
 
                 lintFiles(xml("res/layout/webview.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -70,11 +70,11 @@ public class WebViewDetectorTest extends AbstractCheckTest {
     public void testMatchParentHeight() throws Exception {
         //noinspection all // Sample code
         assertEquals(""
-                + "res/layout/webview2.xml:20: Error: Placing a <WebView> in a parent element that uses a wrap_content layout_width can lead to subtle bugs; use match_parent instead [WebViewLayout]\n"
-                + "        <WebView\n"
-                + "        ^\n"
-                + "    res/layout/webview2.xml:16: wrap_content here may not work well with WebView below\n"
-                + "1 errors, 0 warnings\n",
+                        + "res/layout/webview2.xml:20: Error: Placing a <WebView> in a parent element that uses a wrap_content layout_width can lead to subtle bugs; use match_parent instead [WebViewLayout]\n"
+                        + "        <WebView\n"
+                        + "         ~~~~~~~\n"
+                        + "    res/layout/webview2.xml:16: wrap_content here may not work well with WebView below\n"
+                        + "1 errors, 0 warnings\n",
 
                 lintFiles(xml("res/layout/webview2.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.base.Joiner
+import org.gradle.api.file.FileCollection
 
 /**
  * Implementation for InputProvider
@@ -42,6 +43,7 @@ class InputArtifactProviderImpl(
         private var artifactsHolder: BuildArtifactsHolder,
         private var referencedInputTypes: Collection<ArtifactType>,
         private var transformedInputTypes: Collection<ArtifactType>,
+        private var defaultValue : FileCollection,
         private val dslScope: DslScope) : InputArtifactProvider {
 
     private fun mapOfInputs() : Map<ArtifactType, BuildableArtifact> {
@@ -66,7 +68,7 @@ class InputArtifactProviderImpl(
                         EvalIssueReporter.Type.GENERIC,
                         EvalIssueException("No artifacts was defined for input.")
                     )
-                    BuildableArtifactImpl(null, dslScope)
+                    BuildableArtifactImpl(defaultValue, dslScope)
                 }
                 size > 1 -> {
                     dslScope.issueReporter.reportError(
@@ -75,7 +77,8 @@ class InputArtifactProviderImpl(
                                 "method to disambiguate : " +
                                 Joiner.on(",").join(mapOfInputs().keys))
                     )
-                    BuildableArtifactImpl(null, dslScope)
+                    // when doing sync, return empty file collection.
+                    BuildableArtifactImpl(defaultValue, dslScope)
                 }
                 else -> mapOfInputs().values.single()
             }
@@ -88,7 +91,7 @@ class InputArtifactProviderImpl(
                 EvalIssueReporter.Type.GENERIC,
                 EvalIssueException("Artifact was not defined for input of type: $type.")
             )
-            return BuildableArtifactImpl(null, dslScope)
+            return BuildableArtifactImpl(defaultValue, dslScope)
         }
         return buildableArtifact
     }

@@ -5,7 +5,7 @@ This page describes how to build the Android Gradle plugin, and to test it.
 
 # Get the Source Code
 
-Follow the instructions [here](../building.md) to checkout the source code.
+Follow the instructions [here](../source.md) to checkout the source code.
 
 Once you have checked out the source code, the Gradle Plugin code can be found under `tools/base`
 

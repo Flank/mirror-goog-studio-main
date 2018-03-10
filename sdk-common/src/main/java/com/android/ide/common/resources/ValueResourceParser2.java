@@ -15,13 +15,7 @@
  */
 package com.android.ide.common.resources;
 
-import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
-import static com.android.SdkConstants.ATTR_FORMAT;
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_TYPE;
-import static com.android.SdkConstants.TAG_EAT_COMMENT;
-import static com.android.SdkConstants.TAG_ITEM;
-import static com.android.SdkConstants.TAG_SKIP;
+import static com.android.SdkConstants.*;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -63,7 +57,6 @@ class ValueResourceParser2 {
     @NonNull private final ResourceNamespace mNamespace;
     private boolean mTrackSourcePositions = true;
     private boolean mCheckDuplicates = true;
-    private boolean mAllowUnspecifiedAttrFormat;
 
     /**
      * Creates the parser for a given file.
@@ -91,13 +84,6 @@ class ValueResourceParser2 {
      */
     void setCheckDuplicates(boolean value) {
         mCheckDuplicates = value;
-    }
-
-    /**
-     * Tells the parser whether to allow "attr" items without a "format" attribute or children.
-     */
-    void setAllowUnspecifiedAttrFormat(boolean value) {
-        mAllowUnspecifiedAttrFormat = value;
     }
 
     /**
@@ -140,14 +126,7 @@ class ValueResourceParser2 {
 
                 if (resource.getType() == ResourceType.DECLARE_STYLEABLE) {
                     // Need to also create ATTR items for its children
-                    addStyleableItems(
-                            node,
-                            resources,
-                            map,
-                            mFile,
-                            mNamespace,
-                            mLibraryName,
-                            mAllowUnspecifiedAttrFormat);
+                    addStyleableItems(node, resources, map, mFile, mNamespace, mLibraryName);
                 }
             }
         }
@@ -264,8 +243,6 @@ class ValueResourceParser2 {
      * @param styleableNode the declare styleable node
      * @param list the list to add items into
      * @param map map of existing items to detect dups.
-     * @param allowUnspecifiedFormat whether to allow "attr" items without a "format" attribute or
-     *     children.
      */
     static void addStyleableItems(
             @NonNull Node styleableNode,
@@ -273,8 +250,7 @@ class ValueResourceParser2 {
             @Nullable Map<ResourceType, Set<String>> map,
             @Nullable File from,
             @NonNull ResourceNamespace namespace,
-            @Nullable String libraryName,
-            boolean allowUnspecifiedFormat)
+            @Nullable String libraryName)
             throws MergingException {
         assert styleableNode.getNodeName().equals(ResourceType.DECLARE_STYLEABLE.getName());
         NodeList nodes = styleableNode.getChildNodes();
@@ -292,9 +268,7 @@ class ValueResourceParser2 {
 
                 // is the attribute in the android namespace?
                 if (!resource.getName().startsWith(ANDROID_NS_NAME_PREFIX)) {
-                    if (allowUnspecifiedFormat
-                            || hasFormatAttribute(node)
-                            || XmlUtils.hasElementChildren(node)) {
+                    if (hasFormatAttribute(node) || XmlUtils.hasElementChildren(node)) {
                         checkDuplicate(resource, map, from);
                         resource.setIgnoredFromDiskMerge(true);
                         list.add(resource);

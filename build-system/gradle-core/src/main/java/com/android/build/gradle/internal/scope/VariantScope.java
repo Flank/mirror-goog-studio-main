@@ -192,9 +192,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getManifestKeepListProguardFile();
 
     @NonNull
-    File getConsumerProguardFile();
-
-    @NonNull
     File getMainDexListFile();
 
     @NonNull
@@ -242,9 +239,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getSourceFoldersJavaResDestinationDir();
 
     @NonNull
-    File getRClassSourceOutputDir();
-
-    @NonNull
     File getAidlSourceOutputDir();
 
     @NonNull
@@ -252,17 +246,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getAarLibsDirectory();
-
-    @NonNull
-    File getAnnotationZipFile();
-
-    /**
-     * Returns the path to an optional recipe file (only used for libraries) which describes
-     * typedefs defined in the library, and how to process them (typically which typedefs
-     * to omit during packaging).
-     */
-    @NonNull
-    File getTypedefFile();
 
     /**
      * Returns a place to store incremental build data. The {@code name} argument has to be unique
@@ -308,12 +291,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getSplitSupportDirectory();
 
     @NonNull
-    File getAaptFriendlyManifestOutputDirectory();
-
-    @NonNull
-    File getInstantRunManifestOutputDirectory();
-
-    @NonNull
     File getMicroApkManifestFile();
 
     @NonNull
@@ -324,9 +301,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getAnnotationProcessorOutputDir();
-
-    @NonNull
-    File getCompatibleScreensManifestDirectory();
 
     @NonNull
     File getManifestOutputDirectory();

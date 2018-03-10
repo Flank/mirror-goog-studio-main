@@ -662,4 +662,60 @@ class ThreadDetectorTest : AbstractCheckTest() {
                 .expectInlinedMessages()
     }
 
+    fun testMismatchedAnnotationPackages() {
+        // Make sure we treat the old and new package annotations
+        // as synonymous
+        // Regression test for 74351531.
+        lint().files(
+            java(
+                """
+                    package test.pkg;
+
+                    import android.support.annotation.WorkerThread;
+
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    public class X {
+                        @WorkerThread
+                        static class MyWorkerThreadCode {
+                            static void method() {
+                                MyOtherWorkerThreadCode.method();
+                            }
+                        }
+
+                        @androidx.annotation.WorkerThread
+                        public static class MyOtherWorkerThreadCode {
+                            static void method() { }
+                        }
+                    }
+                """
+            ).indented(),
+            java(
+                """
+                    package androidx.annotation;
+                    import static java.lang.annotation.ElementType.*;
+                    import static java.lang.annotation.RetentionPolicy.CLASS;
+                    import java.lang.annotation.*;
+                    @SuppressWarnings("ALL")
+                    @Documented
+                    @Retention(CLASS)
+                    @Target({METHOD,CONSTRUCTOR,TYPE,PARAMETER})
+                    public @interface WorkerThread {
+                    }
+                """
+            ),
+            java(
+                """
+                    package android.support.annotation;
+                    import static java.lang.annotation.ElementType.*;
+                    import static java.lang.annotation.RetentionPolicy.CLASS;
+                    import java.lang.annotation.*;
+                    @SuppressWarnings("ALL")
+                    @Documented
+                    @Retention(CLASS)
+                    @Target({METHOD,CONSTRUCTOR,TYPE,PARAMETER})
+                    public @interface WorkerThread {
+                    }
+                """
+            )).run().expectClean()
+    }
 }

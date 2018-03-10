@@ -16,5 +16,19 @@
 
 package android.os;
 
-/** Empty class to act as a test mock */
-public class Bundle {}
+public class Bundle {
+    private final String mStr;
+
+    public Bundle() {
+        this("");
+    }
+
+    public Bundle(String str) {
+        mStr = str;
+    }
+
+    @Override
+    public String toString() {
+        return mStr;
+    }
+}

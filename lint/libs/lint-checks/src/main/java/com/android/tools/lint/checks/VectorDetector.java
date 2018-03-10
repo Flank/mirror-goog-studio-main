@@ -237,7 +237,7 @@ public class VectorDetector extends ResourceXmlDetector {
             if (model != null && model.getModelVersion().startsWith("1.4.")) {
                 String message = "Update Gradle plugin version to 1.5+ to correctly handle "
                         + "`<group>` tags in generated bitmaps";
-                context.report(ISSUE, element, context.getLocation(element), message);
+                context.report(ISSUE, element, context.getElementLocation(element), message);
             }
         }
 

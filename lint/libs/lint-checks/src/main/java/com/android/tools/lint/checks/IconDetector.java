@@ -2088,23 +2088,28 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
         }
     }
 
+    @Nullable
     public static Dimension getSize(@NonNull File file) {
         try {
             ImageInputStream input = ImageIO.createImageInputStream(file);
             if (input != null) {
-                try {
-                    Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
-                    if (readers.hasNext()) {
-                        ImageReader reader = readers.next();
-                        try {
-                            reader.setInput(input);
-                            return new Dimension(reader.getWidth(0), reader.getHeight(0));
-                        } finally {
-                            reader.dispose();
+                // Apparently there are concurrency issues inside this class, so
+                // don't try to access it in parallel
+                synchronized (ImageIO.class) {
+                    try {
+                        Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
+                        if (readers.hasNext()) {
+                            ImageReader reader = readers.next();
+                            try {
+                                reader.setInput(input);
+                                return new Dimension(reader.getWidth(0), reader.getHeight(0));
+                            } finally {
+                                reader.dispose();
+                            }
                         }
+                    } finally {
+                        input.close();
                     }
-                } finally {
-                    input.close();
                 }
             }
 

@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.res
 
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -22,6 +23,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.variant.TaskContainer
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
@@ -36,6 +38,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -43,6 +46,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import java.io.File
 import java.io.IOException
+import java.util.function.Supplier
 
 @CacheableTask
 open class GenerateLibraryRFileTask : ProcessAndroidResources() {
@@ -74,15 +78,15 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
     @get:PathSensitive(PathSensitivity.NONE) lateinit var dependencies: FileCollection
         private set
 
-    @get:Input lateinit var packageForR: String
-        private set
+    @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
+    @get:Input val packageForR get() = packageForRSupplier.get()
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY) lateinit var platformAttrRTxt: FileCollection
         private set
 
-    @get:Input lateinit var applicationId: String
-        private set
+    @get:Internal lateinit var applicationIdSupplier: Supplier<String> private set
+    @get:Input val applicationId get() = applicationIdSupplier.get()
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -147,26 +151,22 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                     .globalScope
                     .getOutput(InternalArtifactType.PLATFORM_R_TXT)
 
-            task.applicationId = variantScope.variantData.variantConfiguration.applicationId
+            task.applicationIdSupplier = TaskInputHelper.memoize {
+                variantScope.variantData.variantConfiguration.applicationId
+            }
 
             task.dependencies = variantScope.getArtifactFileCollection(
                     RUNTIME_CLASSPATH,
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
             if (variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
-                val rJar = File(variantScope.getIntermediateDir(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR), "R.jar")
-                task.rClassOutputJar = rJar
-                variantScope.addTaskOutput(
-                        InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
-                        rJar,
-                        task.name)
+                task.rClassOutputJar = variantScope.buildArtifactsHolder
+                    .appendArtifact(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
+                        task,
+                        "R.jar")
             } else {
-                val sourceOutputDirectory = variantScope.rClassSourceOutputDir
-                task.sourceOutputDirectory = sourceOutputDirectory
-                variantScope.addTaskOutput(
-                        InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                        sourceOutputDirectory,
-                        task.name)
+                task.sourceOutputDirectory = variantScope.buildArtifactsHolder
+                    .appendArtifact(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES, task)
             }
             task.textSymbolOutputFile = symbolFile
             task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile
@@ -175,9 +175,12 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 task.proguardOutputFile = variantScope.processAndroidResourcesProguardOutputFile
             }
 
-            task.packageForR = Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
+            task.packageForRSupplier = TaskInputHelper.memoize {
+                Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
+            }
 
-            task.manifestFiles = variantScope.getOutput(InternalArtifactType.MERGED_MANIFESTS)
+            task.manifestFiles = variantScope.buildArtifactsHolder.getFinalArtifactFiles(
+                InternalArtifactType.MERGED_MANIFESTS)
 
             task.inputResourcesDir = variantScope.getOutput(InternalArtifactType.PACKAGED_RES)
 

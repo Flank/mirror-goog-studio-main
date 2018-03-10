@@ -286,9 +286,7 @@ public class AddonTarget implements IAndroidTarget {
 
         // The receiver is an add-on. There are 2 big use cases: The add-on has libraries
         // or the add-on doesn't (in which case we consider it a platform).
-        if (getAdditionalLibraries().isEmpty()) {
-            return mBasePlatform.canRunOn(target);
-        } else {
+        if (!getAdditionalLibraries().isEmpty()) {
             // the only targets that can run the receiver are the same add-on in the same or later
             // versions.
             // first check: vendor/name
@@ -299,8 +297,8 @@ public class AddonTarget implements IAndroidTarget {
             // now check the version. At this point since we checked the add-on part,
             // we can revert to the basic check on version/codename which are done by the
             // base platform already.
-            return mBasePlatform.canRunOn(target);
         }
+        return mBasePlatform.canRunOn(target);
     }
 
     @Override

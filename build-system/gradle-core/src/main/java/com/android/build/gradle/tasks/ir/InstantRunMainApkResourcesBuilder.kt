@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks.ir
 
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.res.namespaced.getAapt2FromMavenIfEnabled
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -68,7 +69,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
     lateinit var outputDirectory: File private set
 
     @get:InputFiles
-    lateinit var manifestFiles: FileCollection private set
+    lateinit var manifestFiles: BuildableArtifact private set
 
     @get:InputFiles
     @get:Optional
@@ -135,7 +136,8 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
             task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
 
             task.resourceFiles = variantScope.getOutput(taskInputType)
-            task.manifestFiles = variantScope.getOutput(INSTANT_RUN_MERGED_MANIFESTS)
+            task.manifestFiles = variantScope.buildArtifactsHolder
+                .getFinalArtifactFiles(INSTANT_RUN_MERGED_MANIFESTS)
             task.outputDirectory = variantScope.instantRunMainApkResourcesDir
             task.aaptGeneration = AaptGeneration.fromProjectOptions(
                     variantScope.globalScope.projectOptions)

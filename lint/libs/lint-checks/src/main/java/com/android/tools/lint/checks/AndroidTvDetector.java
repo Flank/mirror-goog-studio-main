@@ -38,6 +38,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -263,10 +264,10 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
             if (!mHasLeanbackLauncherActivity
                     && xmlContext.isEnabled(MISSING_LEANBACK_LAUNCHER)) {
                 // No launch activity
-                Node manifestNode = xmlContext.document.getDocumentElement();
+                Element manifestNode = xmlContext.document.getDocumentElement();
                 if (manifestNode != null) {
                     xmlContext.report(MISSING_LEANBACK_LAUNCHER, manifestNode,
-                            xmlContext.getLocation(manifestNode),
+                            xmlContext.getNameLocation(manifestNode),
                             "Expecting an activity to have `" + CATEGORY_LEANBACK_LAUNCHER +
                                     "` intent filter.");
                 }
@@ -275,10 +276,10 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
             // Report an issue if there is no leanback <uses-feature> tag.
             if (!mHasLeanbackSupport
                     && xmlContext.isEnabled(MISSING_LEANBACK_SUPPORT)) {
-                Node manifestNode = xmlContext.document.getDocumentElement();
+                Element manifestNode = xmlContext.document.getDocumentElement();
                 if (manifestNode != null) {
                     xmlContext.report(MISSING_LEANBACK_SUPPORT, manifestNode,
-                            xmlContext.getLocation(manifestNode),
+                            xmlContext.getNameLocation(manifestNode),
                             "Expecting <uses-feature android:name=\"android.software.leanback\" " +
                                     "android:required=\"false\" /> tag.");
                 }
@@ -292,7 +293,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                 if (applicationElement != null) {
                     LintFix fix = fix().set().todo(ANDROID_URI, "banner").build();
                     xmlContext.report(MISSING_BANNER, applicationElement,
-                            xmlContext.getLocation(applicationElement),
+                            xmlContext.getNameLocation(applicationElement),
                             "Expecting `android:banner` with the `<application>` tag or each "
                                     + "Leanback launcher activity.", fix);
                 }
@@ -307,10 +308,11 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                         findUsesFeatureElements(mUnsupportedTvUsesFeatures, xmlContext.document);
                 for (Element element : usesFeatureElements) {
                     Attr attrRequired = element.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_REQUIRED);
-                    Node location = attrRequired == null ? element : attrRequired;
+                    Location location = attrRequired == null
+                            ? xmlContext.getNameLocation(element)
+                            : xmlContext.getLocation(attrRequired);
                     LintFix fix = fix().set(ANDROID_URI, ATTRIBUTE_REQUIRED, VALUE_FALSE).build();
-                    xmlContext.report(UNSUPPORTED_TV_HARDWARE, location,
-                            xmlContext.getLocation(location),
+                    xmlContext.report(UNSUPPORTED_TV_HARDWARE, element, location,
                             "Expecting `android:required=\"false\"` for this hardware "
                                     + "feature that may not be supported by all Android TVs.", fix);
                 }
@@ -322,7 +324,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                     && xmlContext.isEnabled(IMPLIED_TOUCHSCREEN_HARDWARE)) {
                 Element manifestElement = xmlContext.document.getDocumentElement();
                 xmlContext.report(IMPLIED_TOUCHSCREEN_HARDWARE, manifestElement,
-                        xmlContext.getLocation(manifestElement),
+                        xmlContext.getNameLocation(manifestElement),
                         "Hardware feature `android.hardware.touchscreen` not explicitly marked "
                                 + "as optional ");
             }
@@ -357,7 +359,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
                         LintFix fix = fix().data(unsupportedHardwareName);
                         xmlContext.report(PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE,
                                 permissionElement,
-                                xmlContext.getLocation(permissionElement), message, fix);
+                                xmlContext.getNameLocation(permissionElement), message, fix);
                     }
                 }
             }

@@ -250,6 +250,11 @@ protected constructor(
         return this
     }
 
+    /** Returns true if this location fits on a single line */
+    fun isSingleLine(): Boolean {
+        return start == null || end == null || start.sameLine(end)
+    }
+
     override fun toString(): String =
             "Location [file=$file, start=$start, end=$end, message=$message]"
 

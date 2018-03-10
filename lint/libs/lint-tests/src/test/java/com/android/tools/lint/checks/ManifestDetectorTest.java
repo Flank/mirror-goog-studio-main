@@ -69,11 +69,11 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     public void testBrokenOrder() throws Exception {
         mEnabled = Collections.singleton(ManifestDetector.ORDER);
         //noinspection all // Sample code
-        assertEquals(""
-                + "AndroidManifest.xml:16: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]\n"
-                + "   <uses-sdk android:minSdkVersion=\"Froyo\" />\n"
-                + "   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
+        assertEquals("" +
+                        "AndroidManifest.xml:16: Warning: <uses-sdk> tag appears after <application> tag [ManifestOrder]\n" +
+                        "   <uses-sdk android:minSdkVersion=\"Froyo\" />\n" +
+                        "    ~~~~~~~~\n" +
+                        "0 errors, 1 warnings\n",
 
             lintProject(
                     xml("AndroidManifest.xml", ""
@@ -119,11 +119,11 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     public void testMissingMinSdk() throws Exception {
         mEnabled = Collections.singleton(ManifestDetector.USES_SDK);
         //noinspection all // Sample code
-        assertEquals(""
-                + "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a minimum API level with android:minSdkVersion=\"?\" [UsesMinSdkAttributes]\n"
-                + "    <uses-sdk android:targetSdkVersion=\"10\" />\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
+        assertEquals("" +
+                        "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a minimum API level with android:minSdkVersion=\"?\" [UsesMinSdkAttributes]\n" +
+                        "    <uses-sdk android:targetSdkVersion=\"10\" />\n" +
+                        "     ~~~~~~~~\n" +
+                        "0 errors, 1 warnings\n",
             lintProject(
                     xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -155,11 +155,11 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     public void testMissingTargetSdk() throws Exception {
         mEnabled = Collections.singleton(ManifestDetector.USES_SDK);
         //noinspection all // Sample code
-        assertEquals(""
-                + "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\" [UsesMinSdkAttributes]\n"
-                + "    <uses-sdk android:minSdkVersion=\"10\" />\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
+        assertEquals("" +
+                        "AndroidManifest.xml:7: Warning: <uses-sdk> tag should specify a target API level (the highest verified version; when running on later versions, compatibility behaviors may be enabled) with android:targetSdkVersion=\"?\" [UsesMinSdkAttributes]\n" +
+                        "    <uses-sdk android:minSdkVersion=\"10\" />\n" +
+                        "     ~~~~~~~~\n" +
+                        "0 errors, 1 warnings\n",
             lintProject(
                     xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -236,13 +236,13 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     public void testMultipleSdk() throws Exception {
         mEnabled = Collections.singleton(ManifestDetector.MULTIPLE_USES_SDK);
         //noinspection all // Sample code
-        assertEquals(""
-                + "AndroidManifest.xml:8: Error: There should only be a single <uses-sdk> element in the manifest: merge these together [MultipleUsesSdk]\n"
-                + "    <uses-sdk android:targetSdkVersion=\"14\" />\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "    AndroidManifest.xml:7: Also appears here\n"
-                + "    AndroidManifest.xml:9: Also appears here\n"
-                + "1 errors, 0 warnings\n",
+        assertEquals("" +
+                        "AndroidManifest.xml:8: Error: There should only be a single <uses-sdk> element in the manifest: merge these together [MultipleUsesSdk]\n" +
+                        "    <uses-sdk android:targetSdkVersion=\"14\" />\n" +
+                        "     ~~~~~~~~\n" +
+                        "    AndroidManifest.xml:7: Also appears here\n" +
+                        "    AndroidManifest.xml:9: Also appears here\n" +
+                        "1 errors, 0 warnings\n",
 
             lintProject(
                     xml("AndroidManifest.xml", ""
@@ -277,47 +277,47 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     public void testWrongLocation() throws Exception {
         mEnabled = Collections.singleton(ManifestDetector.WRONG_PARENT);
         //noinspection all // Sample code
-        assertEquals(""
-                + "AndroidManifest.xml:8: Error: The <uses-sdk> element must be a direct child of the <manifest> root element [WrongManifestParent]\n"
-                + "       <uses-sdk android:minSdkVersion=\"Froyo\" />\n"
-                + "       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:9: Error: The <uses-permission> element must be a direct child of the <manifest> root element [WrongManifestParent]\n"
-                + "       <uses-permission />\n"
-                + "       ~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:10: Error: The <permission> element must be a direct child of the <manifest> root element [WrongManifestParent]\n"
-                + "       <permission />\n"
-                + "       ~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:11: Error: The <permission-tree> element must be a direct child of the <manifest> root element [WrongManifestParent]\n"
-                + "       <permission-tree />\n"
-                + "       ~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:12: Error: The <permission-group> element must be a direct child of the <manifest> root element [WrongManifestParent]\n"
-                + "       <permission-group />\n"
-                + "       ~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:14: Error: The <uses-sdk> element must be a direct child of the <manifest> root element [WrongManifestParent]\n"
-                + "       <uses-sdk />\n"
-                + "       ~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:15: Error: The <uses-configuration> element must be a direct child of the <manifest> root element [WrongManifestParent]\n"
-                + "       <uses-configuration />\n"
-                + "       ~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:16: Error: The <uses-feature> element must be a direct child of the <manifest> root element [WrongManifestParent]\n"
-                + "       <uses-feature />\n"
-                + "       ~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:17: Error: The <supports-screens> element must be a direct child of the <manifest> root element [WrongManifestParent]\n"
-                + "       <supports-screens />\n"
-                + "       ~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:18: Error: The <compatible-screens> element must be a direct child of the <manifest> root element [WrongManifestParent]\n"
-                + "       <compatible-screens />\n"
-                + "       ~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:19: Error: The <supports-gl-texture> element must be a direct child of the <manifest> root element [WrongManifestParent]\n"
-                + "       <supports-gl-texture />\n"
-                + "       ~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:24: Error: The <uses-library> element must be a direct child of the <application> element [WrongManifestParent]\n"
-                + "   <uses-library />\n"
-                + "   ~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:25: Error: The <activity> element must be a direct child of the <application> element [WrongManifestParent]\n"
-                + "   <activity android:name=\".HelloWorld\"\n"
-                + "   ^\n"
-                + "13 errors, 0 warnings\n",
+        assertEquals("" +
+                        "AndroidManifest.xml:8: Error: The <uses-sdk> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+                        "       <uses-sdk android:minSdkVersion=\"Froyo\" />\n" +
+                        "        ~~~~~~~~\n" +
+                        "AndroidManifest.xml:9: Error: The <uses-permission> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+                        "       <uses-permission />\n" +
+                        "        ~~~~~~~~~~~~~~~\n" +
+                        "AndroidManifest.xml:10: Error: The <permission> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+                        "       <permission />\n" +
+                        "        ~~~~~~~~~~\n" +
+                        "AndroidManifest.xml:11: Error: The <permission-tree> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+                        "       <permission-tree />\n" +
+                        "        ~~~~~~~~~~~~~~~\n" +
+                        "AndroidManifest.xml:12: Error: The <permission-group> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+                        "       <permission-group />\n" +
+                        "        ~~~~~~~~~~~~~~~~\n" +
+                        "AndroidManifest.xml:14: Error: The <uses-sdk> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+                        "       <uses-sdk />\n" +
+                        "        ~~~~~~~~\n" +
+                        "AndroidManifest.xml:15: Error: The <uses-configuration> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+                        "       <uses-configuration />\n" +
+                        "        ~~~~~~~~~~~~~~~~~~\n" +
+                        "AndroidManifest.xml:16: Error: The <uses-feature> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+                        "       <uses-feature />\n" +
+                        "        ~~~~~~~~~~~~\n" +
+                        "AndroidManifest.xml:17: Error: The <supports-screens> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+                        "       <supports-screens />\n" +
+                        "        ~~~~~~~~~~~~~~~~\n" +
+                        "AndroidManifest.xml:18: Error: The <compatible-screens> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+                        "       <compatible-screens />\n" +
+                        "        ~~~~~~~~~~~~~~~~~~\n" +
+                        "AndroidManifest.xml:19: Error: The <supports-gl-texture> element must be a direct child of the <manifest> root element [WrongManifestParent]\n" +
+                        "       <supports-gl-texture />\n" +
+                        "        ~~~~~~~~~~~~~~~~~~~\n" +
+                        "AndroidManifest.xml:24: Error: The <uses-library> element must be a direct child of the <application> element [WrongManifestParent]\n" +
+                        "   <uses-library />\n" +
+                        "    ~~~~~~~~~~~~\n" +
+                        "AndroidManifest.xml:25: Error: The <activity> element must be a direct child of the <application> element [WrongManifestParent]\n" +
+                        "   <activity android:name=\".HelloWorld\"\n" +
+                        "    ~~~~~~~~\n" +
+                        "13 errors, 0 warnings\n",
 
             lintProject(xml("AndroidManifest.xml", ""
                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -442,11 +442,11 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     public void testAllowBackup() throws Exception {
         mEnabled = Collections.singleton(ManifestDetector.ALLOW_BACKUP);
         //noinspection all // Sample code
-        assertEquals(""
-                + "AndroidManifest.xml:9: Warning: Should explicitly set android:allowBackup to true or false (it's true by default, and that can have some security implications for the application's data) [AllowBackup]\n"
-                + "    <application\n"
-                + "    ^\n"
-                + "0 errors, 1 warnings\n",
+        assertEquals("" +
+                        "AndroidManifest.xml:9: Warning: Should explicitly set android:allowBackup to true or false (it's true by default, and that can have some security implications for the application's data) [AllowBackup]\n" +
+                        "    <application\n" +
+                        "     ~~~~~~~~~~~\n" +
+                        "0 errors, 1 warnings\n",
                 lintProject(
                         manifest().minSdk(14),
                         xml("AndroidManifest.xml", ""
@@ -715,14 +715,14 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     public void testMissingVersion() {
-        String expected = ""
-                + "AndroidManifest.xml:2: Warning: Should set android:versionCode to specify the application version [MissingVersion]\n"
-                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "^\n"
-                + "AndroidManifest.xml:2: Warning: Should set android:versionName to specify the application version [MissingVersion]\n"
-                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "^\n"
-                + "0 errors, 2 warnings\n";
+        String expected = "" +
+                "AndroidManifest.xml:2: Warning: Should set android:versionCode to specify the application version [MissingVersion]\n" +
+                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                " ~~~~~~~~\n" +
+                "AndroidManifest.xml:2: Warning: Should set android:versionName to specify the application version [MissingVersion]\n" +
+                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                " ~~~~~~~~\n" +
+                "0 errors, 2 warnings";
         lint().files(
                 mNo_version)
                 .issues(ManifestDetector.SET_VERSION)
@@ -853,11 +853,11 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     public void testMissingApplicationIcon() {
-        String expected = ""
-                + "AndroidManifest.xml:9: Warning: Should explicitly set android:icon, there is no default [MissingApplicationIcon]\n"
-                + "    <application\n"
-                + "    ^\n"
-                + "0 errors, 1 warnings\n";
+        String expected = "" +
+                "AndroidManifest.xml:9: Warning: Should explicitly set android:icon, there is no default [MissingApplicationIcon]\n" +
+                "    <application\n" +
+                "     ~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings";
         lint().files(
                 mMissing_application_icon,
                 mStrings)
@@ -1341,11 +1341,11 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     public void testMissingBackupInTarget23() {
-        String expected = ""
-                + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html [AllowBackup]\n"
-                + "    <application\n"
-                + "    ^\n"
-                + "0 errors, 1 warnings\n";
+        String expected = "" +
+                "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html [AllowBackup]\n" +
+                "    <application\n" +
+                "     ~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings";
 
         //noinspection all // Sample code
         lint().files(
@@ -1410,11 +1410,11 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     public void testMissingBackupWithoutGcmPostTarget23() {
-        String expected = ""
-                + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html [AllowBackup]\n"
-                + "    <application\n"
-                + "    ^\n"
-                + "0 errors, 1 warnings\n";
+        String expected = "" +
+                "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html [AllowBackup]\n" +
+                "    <application\n" +
+                "     ~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings";
 
         //noinspection all // Sample code
         lint().files(
@@ -1465,11 +1465,11 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     public void testMissingBackupWithGcmPostTarget23() {
-        String expected = ""
-                + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up, and restored on app install. Your GCM regid will not work across restores, so you must ensure that it is excluded from the back-up set. Use the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html [AllowBackup]\n"
-                + "    <application\n"
-                + "    ^\n"
-                + "0 errors, 1 warnings\n";
+        String expected = "" +
+                "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up, and restored on app install. Your GCM regid will not work across restores, so you must ensure that it is excluded from the back-up set. Use the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html [AllowBackup]\n" +
+                "    <application\n" +
+                "     ~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings";
         //noinspection all // Sample code
         lint().files(
                 manifest(""

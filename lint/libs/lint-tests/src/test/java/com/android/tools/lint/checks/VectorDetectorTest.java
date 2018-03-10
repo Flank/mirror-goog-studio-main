@@ -123,7 +123,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "res/drawable/foo.xml:11: Warning: Update Gradle plugin version to 1.5+ to correctly handle <group> tags in generated bitmaps [VectorRaster]\n"
                 + "    <group\n"
-                + "    ^\n"
+                + "     ~~~~~\n"
                 + "res/drawable/foo.xml:19: Warning: Resource references will not work correctly in images generated for this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                 + "            android:strokeColor=\"@color/white\"\n"
                 + "                                 ~~~~~~~~~~~~\n"
@@ -136,7 +136,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 + "res/drawable/foo.xml:25: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                 + "            android:trimPathStart=\"0\" />\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 8 warnings\n";
+                + "0 errors, 8 warnings";
 
         //noinspection all // Sample code
         lint().files(

@@ -81,7 +81,7 @@ public class MissingIdDetector extends LayoutDetector {
             LintFix fix = fix()
                     .set().todo(ANDROID_URI, ATTR_ID, "@+id/", null)
                     .build();
-            context.report(ISSUE, element, context.getLocation(element),
+            context.report(ISSUE, element, context.getNameLocation(element),
                 "This `<fragment>` tag should specify an id or a tag to preserve state " +
                 "across activity restarts", fix);
         }

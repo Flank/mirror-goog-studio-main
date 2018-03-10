@@ -841,6 +841,10 @@ public final class GradleTestProject implements TestRule {
         assertThat(buildFile).exists();
     }
 
+    public File getBuildDir() {
+        return FileUtils.join(getTestDir(), "build");
+    }
+
     /** Return the output directory from Android plugins. */
     public File getOutputDir() {
         return FileUtils.join(getTestDir(), "build", AndroidProject.FD_OUTPUTS);

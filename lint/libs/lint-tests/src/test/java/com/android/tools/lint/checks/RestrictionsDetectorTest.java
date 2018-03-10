@@ -204,13 +204,13 @@ public class RestrictionsDetectorTest  extends AbstractCheckTest {
 
     public void testMissingRequiredAttributesForChoice() throws Exception {
         assertEquals(""
-                + "res/xml/app_restrictions.xml:2: Error: Missing required attribute android:entries [ValidRestrictions]\n"
-                + "    <restriction\n"
-                + "    ^\n"
-                + "res/xml/app_restrictions.xml:2: Error: Missing required attribute android:entryValues [ValidRestrictions]\n"
-                + "    <restriction\n"
-                + "    ^\n"
-                + "2 errors, 0 warnings\n",
+                        + "res/xml/app_restrictions.xml:2: Error: Missing required attribute android:entries [ValidRestrictions]\n"
+                        + "    <restriction\n"
+                        + "     ~~~~~~~~~~~\n"
+                        + "res/xml/app_restrictions.xml:2: Error: Missing required attribute android:entryValues [ValidRestrictions]\n"
+                        + "    <restriction\n"
+                        + "     ~~~~~~~~~~~\n"
+                        + "2 errors, 0 warnings\n",
                 lintProject(
                         xml("res/xml/app_restrictions.xml", ""
                                 + "<restrictions xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
@@ -225,10 +225,10 @@ public class RestrictionsDetectorTest  extends AbstractCheckTest {
 
     public void testMissingRequiredAttributesForHidden() throws Exception {
         assertEquals(""
-                + "res/xml/app_restrictions.xml:2: Error: Missing required attribute android:defaultValue [ValidRestrictions]\n"
-                + "    <restriction\n"
-                + "    ^\n"
-                + "1 errors, 0 warnings\n",
+                        + "res/xml/app_restrictions.xml:2: Error: Missing required attribute android:defaultValue [ValidRestrictions]\n"
+                        + "    <restriction\n"
+                        + "     ~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
                 lintProject(
                         xml("res/xml/app_restrictions.xml", ""
                                 + "<restrictions xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
@@ -372,10 +372,10 @@ public class RestrictionsDetectorTest  extends AbstractCheckTest {
 
     public void testNoChildrenForBundle() throws Exception {
         assertEquals(""
-                + "res/xml/app_restrictions.xml:2: Error: Restriction type bundle should have at least one nested restriction [ValidRestrictions]\n"
-                + "    <restriction\n"
-                + "    ^\n"
-                + "1 errors, 0 warnings\n",
+                        + "res/xml/app_restrictions.xml:2: Error: Restriction type bundle should have at least one nested restriction [ValidRestrictions]\n"
+                        + "    <restriction\n"
+                        + "     ~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
                 lintProject(
                         xml("res/xml/app_restrictions.xml", ""
                                 + "<restrictions xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
@@ -391,10 +391,10 @@ public class RestrictionsDetectorTest  extends AbstractCheckTest {
 
     public void testNoChildrenForBundleArray() throws Exception {
         assertEquals(""
-                + "res/xml/app_restrictions.xml:2: Error: Expected exactly one child for restriction of type bundle_array [ValidRestrictions]\n"
-                + "    <restriction\n"
-                + "    ^\n"
-                + "1 errors, 0 warnings\n",
+                        + "res/xml/app_restrictions.xml:2: Error: Expected exactly one child for restriction of type bundle_array [ValidRestrictions]\n"
+                        + "    <restriction\n"
+                        + "     ~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
                 lintProject(
                         xml("res/xml/app_restrictions.xml", ""
                                 + "<restrictions xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
@@ -424,10 +424,10 @@ public class RestrictionsDetectorTest  extends AbstractCheckTest {
         }
 
         assertEquals(""
-                + "res/xml/app_restrictions.xml:1: Error: Invalid nested restriction: too many nested restrictions (was 1002, max 1000) [ValidRestrictions]\n"
-                + "<restrictions xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                + "^\n"
-                + "1 errors, 0 warnings\n",
+                        + "res/xml/app_restrictions.xml:1: Error: Invalid nested restriction: too many nested restrictions (was 1002, max 1000) [ValidRestrictions]\n"
+                        + "<restrictions xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + " ~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
                 lintProject(
                         xml("res/xml/app_restrictions.xml", ""
                                 + "<restrictions xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
@@ -463,10 +463,10 @@ public class RestrictionsDetectorTest  extends AbstractCheckTest {
         }
 
         assertEquals(""
-                + "res/xml/app_restrictions.xml:122: Error: Invalid nested restriction: nesting depth 21 too large (max 20 [ValidRestrictions]\n"
-                + "    <restriction\n"
-                + "    ^\n"
-                + "1 errors, 0 warnings\n",
+                        + "res/xml/app_restrictions.xml:122: Error: Invalid nested restriction: nesting depth 21 too large (max 20 [ValidRestrictions]\n"
+                        + "    <restriction\n"
+                        + "     ~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
                 lintProject(
                         xml("res/xml/app_restrictions.xml", ""
                                 + "<restrictions xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"

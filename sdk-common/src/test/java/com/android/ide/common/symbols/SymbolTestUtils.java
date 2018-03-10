@@ -19,6 +19,7 @@ package com.android.ide.common.symbols;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 
 public final class SymbolTestUtils {
@@ -44,18 +45,29 @@ public final class SymbolTestUtils {
             @NonNull String javaType,
             @NonNull String value,
             @NonNull List<String> styleableChildren) {
-        return Symbol.createAndValidateSymbol(
+        ResourceType type =
                 Preconditions.checkNotNull(
                         ResourceType.getEnum(resourceType),
                         "Invalid resource type %s",
-                        resourceType),
-                name,
-                Preconditions.checkNotNull(
-                        SymbolJavaType.getEnum(javaType),
-                        "Invalid resource java type %s",
-                        javaType),
-                value,
-                styleableChildren);
+                        resourceType);
+        if (javaType.equals("int[]")) {
+            Preconditions.checkState(
+                    type == ResourceType.STYLEABLE, "Only styleables may have type int[]");
+            return Symbol.createAndValidateStyleableSymbol(
+                    name,
+                    SymbolUtils.parseArrayLiteral(styleableChildren.size(), value),
+                    ImmutableList.copyOf(styleableChildren));
+        }
+        Preconditions.checkState(type != ResourceType.STYLEABLE, "Styleables must have type int[]");
+
+        int intValue;
+        try {
+            intValue = SymbolUtils.valueStringToInt(value);
+        } catch (NumberFormatException e) {
+            intValue = -1;
+        }
+
+        return Symbol.createAndValidateSymbol(type, name, intValue);
     }
 
     /** @see #createSymbol(String, String, String, String, List) */

@@ -1602,9 +1602,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
     @NonNull
     public DexingType getDexingType() {
-        AndroidVersion minSdkVersion = getMinSdkVersion();
         if (isMultiDexEnabled()) {
-            return minSdkVersion.getFeatureLevel() < 21
+            return getMinSdkVersion().getFeatureLevel() < 21
                     ? DexingType.LEGACY_MULTIDEX
                     : DexingType.NATIVE_MULTIDEX;
         } else {

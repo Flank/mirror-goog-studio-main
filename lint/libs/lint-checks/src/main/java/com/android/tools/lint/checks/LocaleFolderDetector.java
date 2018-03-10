@@ -200,6 +200,7 @@ public class LocaleFolderDetector extends Detector implements ResourceFolderScan
                 context.getFolderConfiguration().getLocaleQualifier() : null;
         if (locale != null && locale.hasLanguage()) {
             final String language = locale.getLanguage();
+            assert language != null; // hasLanguage() above.
             String replace = null;
             switch (language) {
                 case "he":
@@ -386,6 +387,7 @@ public class LocaleFolderDetector extends Detector implements ResourceFolderScan
                 assert locale != null : folderName;
                 configToFile.put(config, mBcp47Folders.get(folderName));
                 String key = locale.getLanguage();
+                assert key != null; // we checked before adding to mBcp47Folders
                 if (locale.hasRegion()) {
                     key = key + '_' + locale.getRegion();
                 }

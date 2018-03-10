@@ -79,36 +79,36 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
     }
 
     public void testBroken2() {
-        String expected = ""
-                + "AndroidManifest.xml:12: Warning: BroadcastReceivers that declare an intent-filter for SMS_DELIVER or SMS_RECEIVED must ensure that the caller has the BROADCAST_SMS permission, otherwise it is possible for malicious actors to spoof intents. [UnprotectedSMSBroadcastReceiver]\n"
-                + "        <receiver\n"
-                + "        ^\n"
-                + "0 errors, 1 warnings\n";
+        String expected = "" +
+                "AndroidManifest.xml:12: Warning: BroadcastReceivers that declare an intent-filter for SMS_DELIVER or SMS_RECEIVED must ensure that the caller has the BROADCAST_SMS permission, otherwise it is possible for malicious actors to spoof intents. [UnprotectedSMSBroadcastReceiver]\n" +
+                "        <receiver\n" +
+                "         ~~~~~~~~\n" +
+                "0 errors, 1 warnings";
         //noinspection all // Sample code
         lint().files(
-                xml("AndroidManifest.xml", ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"test.pkg\"\n"
-                        + "    android:versionCode=\"1\"\n"
-                        + "    android:versionName=\"1.0\" >\n"
-                        + "\n"
-                        + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:icon=\"@drawable/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\" >\n"
-                        + "        <receiver\n"
-                        + "            android:label=\"@string/app_name\"\n"
-                        + "            android:name=\".TestReceiver\" >\n"
-                        + "                <intent-filter>\n"
-                        + "                    <action android:name=\"android.provider.Telephony.SMS_RECEIVED\"/>\n"
-                        + "                </intent-filter>\n"
-                        + "        </receiver>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n"
-                        + "\n"))
+                xml("AndroidManifest.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"test.pkg\"\n" +
+                        "    android:versionCode=\"1\"\n" +
+                        "    android:versionName=\"1.0\" >\n" +
+                        "\n" +
+                        "    <uses-sdk android:minSdkVersion=\"14\" />\n" +
+                        "\n" +
+                        "    <application\n" +
+                        "        android:icon=\"@drawable/ic_launcher\"\n" +
+                        "        android:label=\"@string/app_name\" >\n" +
+                        "        <receiver\n" +
+                        "            android:label=\"@string/app_name\"\n" +
+                        "            android:name=\".TestReceiver\" >\n" +
+                        "                <intent-filter>\n" +
+                        "                    <action android:name=\"android.provider.Telephony.SMS_RECEIVED\"/>\n" +
+                        "                </intent-filter>\n" +
+                        "        </receiver>\n" +
+                        "    </application>\n" +
+                        "\n" +
+                        "</manifest>\n" +
+                        "\n"))
                 .run()
                 .expect(expected)
                 .verifyFixes().window(1).expectFixDiffs(""

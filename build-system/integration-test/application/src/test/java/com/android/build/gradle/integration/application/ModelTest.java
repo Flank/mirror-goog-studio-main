@@ -91,7 +91,8 @@ public class ModelTest {
                         project.file("build/generated/source/aidl/debug"),
                         project.file("build/generated/source/apt/debug"),
                         project.file("build/generated/source/buildConfig/debug"),
-                        project.file("build/generated/source/r/debug"),
+                        project.file(
+                                "build/generated/not_namespaced_r_class_sources/debug/processDebugResources/r"),
                         project.file("build/generated/source/rs/debug"));
 
         assertThat(debugArtifact.getGeneratedResourceFolders())
@@ -106,7 +107,8 @@ public class ModelTest {
                         project.file("build/generated/source/aidl/androidTest/debug"),
                         project.file("build/generated/source/apt/androidTest/debug"),
                         project.file("build/generated/source/buildConfig/androidTest/debug"),
-                        project.file("build/generated/source/r/androidTest/debug"),
+                        project.file(
+                                "build/generated/not_namespaced_r_class_sources/debugAndroidTest/processDebugAndroidTestResources/r"),
                         project.file("build/generated/source/rs/androidTest/debug"));
 
         assertThat(androidTestArtifact.getGeneratedResourceFolders())

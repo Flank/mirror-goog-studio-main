@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
-
 import java.util.Iterator;
 import java.util.Locale;
 
@@ -50,7 +49,7 @@ public final class LocaleQualifier extends ResourceQualifier {
     private static final String CAR_DOCK_MODE = "car";
 
     @NonNull private String mFull;
-    @NonNull private String mLanguage;
+    @Nullable private String mLanguage;
     @Nullable private String mRegion;
     @Nullable private String mScript;
 
@@ -102,7 +101,7 @@ public final class LocaleQualifier extends ResourceQualifier {
      * @return is it valid?
      */
     private static boolean isValidAlpha2Code(@NonNull String str) {
-        return str.length() == 2 && CharMatcher.JAVA_LETTER.matchesAllOf(str);
+        return str.length() == 2 && CharMatcher.javaLetter().matchesAllOf(str);
     }
 
     /**
@@ -111,7 +110,7 @@ public final class LocaleQualifier extends ResourceQualifier {
      * @return is it valid?
      */
     private static boolean isValidAlpha3Code(@NonNull String str) {
-        return str.length() == 3 && CharMatcher.JAVA_LETTER.matchesAllOf(str);
+        return str.length() == 3 && CharMatcher.javaLetter().matchesAllOf(str);
     }
 
     /**
@@ -406,7 +405,7 @@ public final class LocaleQualifier extends ResourceQualifier {
     }
 
     public boolean hasLanguage() {
-        return !FAKE_VALUE.equals(mLanguage);
+        return mLanguage != null && !FAKE_VALUE.equals(mLanguage);
     }
 
     public boolean hasRegion() {
@@ -560,7 +559,7 @@ public final class LocaleQualifier extends ResourceQualifier {
         return null;
     }
 
-    @NonNull
+    @Nullable
     public String getLanguage() {
         return mLanguage;
     }
@@ -584,7 +583,10 @@ public final class LocaleQualifier extends ResourceQualifier {
     public boolean isMatchFor(ResourceQualifier qualifier) {
         if (qualifier instanceof LocaleQualifier) {
             LocaleQualifier other = (LocaleQualifier)qualifier;
-            if (!mLanguage.equals(other.mLanguage)) {
+
+            if (mLanguage != null
+                    && other.mLanguage != null
+                    && !mLanguage.equals(other.mLanguage)) {
                 return false;
             }
 

@@ -143,7 +143,7 @@ public class TextViewDetector extends LayoutDetector {
                     && context.getMainProject().getTargetSdk() >= 11
                     && context.isEnabled(SELECTABLE)) {
                 LintFix fix = fix().set(ANDROID_URI, ATTR_TEXT_IS_SELECTABLE, VALUE_TRUE).build();
-                context.report(SELECTABLE, element, context.getLocation(element),
+                context.report(SELECTABLE, element, context.getNameLocation(element),
                         "Consider making the text value selectable by specifying " +
                         "`android:textIsSelectable=\"true\"`", fix);
             }

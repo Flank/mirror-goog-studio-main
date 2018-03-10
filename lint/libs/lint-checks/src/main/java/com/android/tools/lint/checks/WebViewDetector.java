@@ -82,7 +82,7 @@ public class WebViewDetector extends LayoutDetector {
                 String message = String.format("Placing a `<WebView>` in a parent element that "
                         + "uses a `wrap_content %1$s` can lead to subtle bugs; use `match_parent` "
                         + "instead", attr.getLocalName());
-                Location location = context.getLocation(element);
+                Location location = context.getElementLocation(element);
                 Location secondary = context.getLocation(attr);
                 secondary.setMessage("`wrap_content` here may not work well with WebView below");
                 location.setSecondary(secondary);

@@ -29,7 +29,9 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOut
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.dsl.LintOptions;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -38,11 +40,10 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.Version;
-import com.android.builder.utils.FileCache;
 import com.android.sdklib.BuildToolInfo;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import java.io.File;
 import java.util.List;
@@ -139,22 +140,11 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
         }
     }
 
-    @Nullable
-    protected static FileCache getUserIntermediatesCache(GlobalScope globalScope) {
-        if (globalScope
-                .getProjectOptions()
-                .get(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE)) {
-            return globalScope.getBuildCache();
-        } else {
-            return null;
-        }
-    }
-
     public static class VariantInputs implements com.android.tools.lint.gradle.api.VariantInputs {
         @NonNull private final String name;
         @NonNull private final FileCollection localLintJarCollection;
         @NonNull private final FileCollection dependencyLintJarCollection;
-        @NonNull private final FileCollection mergedManifest;
+        @NonNull private final BuildableArtifact mergedManifest;
         @Nullable private final FileCollection mergedManifestReport;
         private List<File> lintRuleJars;
 
@@ -170,10 +160,11 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
                     dependencyLintJarCollection =
                             variantScope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, LINT));
 
-            if (variantScope.hasOutput(MERGED_MANIFESTS)) {
-                mergedManifest = variantScope.getOutput(MERGED_MANIFESTS);
-            } else if (variantScope.hasOutput(LIBRARY_MANIFEST)) {
-                mergedManifest = variantScope.getOutput(LIBRARY_MANIFEST);
+            BuildArtifactsHolder buildArtifactsHolder = variantScope.getBuildArtifactsHolder();
+            if (buildArtifactsHolder.hasArtifact(MERGED_MANIFESTS)) {
+                mergedManifest = buildArtifactsHolder.getFinalArtifactFiles(MERGED_MANIFESTS);
+            } else if (buildArtifactsHolder.hasArtifact(LIBRARY_MANIFEST)) {
+                mergedManifest = buildArtifactsHolder.getFinalArtifactFiles(LIBRARY_MANIFEST);
             } else {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest on: "
@@ -226,7 +217,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
         @Override
         @NonNull
         public File getMergedManifest() {
-            File file = mergedManifest.getSingleFile();
+            File file = Iterables.getOnlyElement(mergedManifest.getFiles());
             if (file.isFile()) {
                 return file;
             }

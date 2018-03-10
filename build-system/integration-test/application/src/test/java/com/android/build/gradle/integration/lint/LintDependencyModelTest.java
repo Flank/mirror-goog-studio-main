@@ -26,14 +26,14 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * Integration test for running lint from gradle on a model with java (including indirect
- * java) dependencies, as well as dependencies that are not the hardcoded string "compile".
+ * Integration test for running lint from gradle on a model with java (including indirect java)
+ * dependencies, as well as dependencies that are not the hardcoded string "compile".
  *
  * <p>Tip: To execute just this test run:
  *
  * <pre>
  *     $ cd tools
- *     $ ./gradlew :base:integration-test:test -D:base:integration-test:test.single=LintDependencyModelTest
+ *     $ ./gradlew :base:build-system:integration-test:application:test -D:base:build-system:integration-test:application:test.single=LintDependencyModelTest
  * </pre>
  */
 public class LintDependencyModelTest {

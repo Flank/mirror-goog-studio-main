@@ -31,5 +31,6 @@ class CompileResourceRequest @JvmOverloads constructor(
         /** The map of where values came from, so errors are reported correctly. */
         val blameMap: Map<SourcePosition, SourceFilePosition> = mapOf(),
         /** The original source file. For data binding, so errors are reported correctly */
-        val originalInputFile: File = inputFile
+        val originalInputFile: File = inputFile,
+        val partialRFile: File? = null
 ) : Serializable

@@ -21,6 +21,7 @@
 #include <mutex>
 #include <vector>
 
+#include "perfd/cpu/profiling_app.h"
 #include "perfd/cpu/threads_sample.h"
 #include "proto/cpu.grpc.pb.h"
 #include "proto/cpu.pb.h"
@@ -63,6 +64,21 @@ class CpuCache {
   // (|from|, |to|].
   ThreadSampleResponse GetThreads(int32_t pid, int64_t from, int64_t to);
 
+  // Adds start event for non-startup profiling.
+  void AddProfilingStart(int32_t pid, const ProfilingApp& record);
+  // Adds stop event for non-startup profiling.
+  // TODO(b/74149988): keep the record in a cache for retrieving later.
+  void AddProfilingStop(int32_t pid);
+  // Adds start event for startup profiling.
+  void AddStartupProfilingStart(const std::string& apk_pkg_name,
+                                const ProfilingApp& record);
+  // Adds stop event for startup profiling.
+  // TODO(b/74149988): keep the record in a cache for retrieving later.
+  void AddStartupProfilingStop(const std::string& apk_pkg_name);
+
+  // Returns the |ProfilingApp| of the app with the given |pid|.
+  ProfilingApp* GetProfilingApp(int32_t pid);
+
  private:
   // Each app's cache held by CPU component in the on-device daemon.
   struct AppCpuCache {
@@ -82,6 +98,11 @@ class CpuCache {
   std::vector<std::unique_ptr<AppCpuCache>> app_caches_;
   // The capacity of every kind of cache.
   int32_t capacity_;
+
+  // Map from pid to the corresponding data of ongoing profiling (capturing).
+  std::map<int32_t, ProfilingApp> profiling_apps_;
+  // Map from app package name to the corresponding data of startup profiling.
+  std::map<std::string, ProfilingApp> startup_profiling_apps_;
 };
 
 }  // namespace profiler

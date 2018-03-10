@@ -45,11 +45,11 @@ import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API;
 import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
 import static java.io.File.separator;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.VariantOutput;
+import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
@@ -57,6 +57,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.Variant;
+import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
 import com.android.resources.Density;
@@ -379,6 +380,35 @@ public class Project {
             }
 
         }
+    }
+
+    /** Gets the namespacing mode used for this project */
+    @NonNull
+    private AaptOptions.Namespacing getNamespacingMode() {
+        AndroidProject model = getGradleProjectModel();
+        if (model != null) {
+            return model.getAaptOptions().getNamespacing();
+        } else {
+            return AaptOptions.Namespacing.DISABLED;
+        }
+
+    }
+
+    private ResourceNamespace namespace;
+
+    /** Returns the namespace for resources in this module/project */
+    @NonNull
+    public ResourceNamespace getResourceNamespace() {
+        if (namespace == null) {
+            String packageName = getPackage();
+            if (packageName == null || getNamespacingMode() == AaptOptions.Namespacing.DISABLED) {
+                namespace = ResourceNamespace.RES_AUTO;
+            } else {
+                namespace = ResourceNamespace.fromPackageName(packageName);
+            }
+        }
+
+        return namespace;
     }
 
     @Override

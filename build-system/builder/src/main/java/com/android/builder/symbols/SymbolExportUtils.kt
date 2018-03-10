@@ -20,7 +20,11 @@ package com.android.builder.symbols
 import com.android.ide.common.symbols.RGeneration
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
-import com.android.ide.common.symbols.SymbolUtils
+import com.android.ide.common.symbols.generateMinifyKeepRules
+import com.android.ide.common.symbols.getPackageNameFromManifest
+import com.android.ide.common.symbols.loadDependenciesSymbolTables
+import com.android.ide.common.symbols.mergeAndRenumberSymbols
+import com.android.ide.common.symbols.parseManifest
 import com.android.utils.FileUtils
 import java.io.File
 import java.io.IOException
@@ -57,20 +61,20 @@ fun processLibraryMainSymbolTable(
 
     // Parse the manifest only when necessary.
     val finalPackageName = if (mainPackageName == null || proguardOut != null) {
-        val manifestData = SymbolUtils.parseManifest(manifestFile)
+        val manifestData = parseManifest(manifestFile)
         // Generate aapt_rules.txt containing keep rules if minify is enabled.
         if (proguardOut != null) {
             Files.write(
                     proguardOut.toPath(),
-                    SymbolUtils.generateMinifyKeepRules(manifestData, mergedResources))
+                    generateMinifyKeepRules(manifestData, mergedResources))
         }
-        mainPackageName ?: SymbolUtils.getPackageNameFromManifest(manifestData)
+        mainPackageName ?: getPackageNameFromManifest(manifestData)
     } else {
         mainPackageName
     }
 
     // Get symbol tables of the libraries we depend on.
-    val depSymbolTables = SymbolUtils.loadDependenciesSymbolTables(libraries)
+    val depSymbolTables = loadDependenciesSymbolTables(libraries)
 
     val mainSymbolTable: SymbolTable
     mainSymbolTable = if (disableMergeInLib) {
@@ -78,7 +82,7 @@ fun processLibraryMainSymbolTable(
         // We have to rewrite the IDs because some published R.txt inside AARs are using the
         // wrong value for some types, and we need to ensure there is no collision in the
         // file we are creating.
-        SymbolUtils.mergeAndRenumberSymbols(
+        mergeAndRenumberSymbols(
                 finalPackageName, librarySymbols, depSymbolTables, platformSymbols)
     } else {
         librarySymbols.rename(finalPackageName)

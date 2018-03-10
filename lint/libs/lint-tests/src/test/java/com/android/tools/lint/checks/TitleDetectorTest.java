@@ -25,36 +25,36 @@ public class TitleDetectorTest extends AbstractCheckTest {
         return new TitleDetector();
     }
 
-    public void test() {
-        String expected = ""
-                + "res/menu/titles.xml:3: Error: Menu items should specify a title [MenuTitle]\n"
-                + "    <item android:id=\"@+id/action_bar_progress_spinner\"\n"
-                + "    ^\n"
-                + "res/menu/titles.xml:12: Error: Menu items should specify a title [MenuTitle]\n"
-                + "    <item android:id=\"@+id/menu_plus_one\"\n"
-                + "    ^\n"
-                + "2 errors, 0 warnings\n";
+    public void testBasic() {
+        String expected = "" +
+                "res/menu/titles.xml:3: Error: Menu items should specify a title [MenuTitle]\n" +
+                "    <item android:id=\"@+id/action_bar_progress_spinner\"\n" +
+                "     ~~~~\n" +
+                "res/menu/titles.xml:12: Error: Menu items should specify a title [MenuTitle]\n" +
+                "    <item android:id=\"@+id/menu_plus_one\"\n" +
+                "     ~~~~\n" +
+                "2 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                     manifest().minSdk(14),
                     mTitles)
                 .run()
                 .expect(expected)
-                .verifyFixes().window(1).expectFixDiffs(""
-                + "Fix for res/menu/titles.xml line 2: Set title:\n"
-                + "@@ -9 +9\n"
-                + "          android:selectableItemBackground=\"@null\"\n"
-                + "-         android:showAsAction=\"always\"/>\n"
-                + "+         android:showAsAction=\"always\"\n"
-                + "+         android:title=\"|\"/>\n"
-                + "      <item\n"
-                + "Fix for res/menu/titles.xml line 11: Set title:\n"
-                + "@@ -18 +18\n"
-                + "          android:icon=\"@drawable/ic_menu_plus1\"\n"
-                + "-         android:showAsAction=\"always\"/>\n"
-                + "+         android:showAsAction=\"always\"\n"
-                + "+         android:title=\"|\"/>\n"
-                + "  \n");
+                .verifyFixes().window(1).expectFixDiffs("" +
+                "Fix for res/menu/titles.xml line 2: Set title:\n" +
+                "@@ -9 +9\n" +
+                "          android:selectableItemBackground=\"@null\"\n" +
+                "-         android:showAsAction=\"always\"/>\n" +
+                "+         android:showAsAction=\"always\"\n" +
+                "+         android:title=\"|\"/>\n" +
+                "      <item\n" +
+                "Fix for res/menu/titles.xml line 11: Set title:\n" +
+                "@@ -18 +18\n" +
+                "          android:icon=\"@drawable/ic_menu_plus1\"\n" +
+                "-         android:showAsAction=\"always\"/>\n" +
+                "+         android:showAsAction=\"always\"\n" +
+                "+         android:title=\"|\"/>\n" +
+                "  \n");
     }
 
     public void testOk() throws Exception {
@@ -72,86 +72,86 @@ public class TitleDetectorTest extends AbstractCheckTest {
         assertEquals(
             "No warnings.",
 
-            lintProject(xml("res/menu-land/actions.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                            + "\n"
-                            + "    <item\n"
-                            + "        android:id=\"@+id/menu_search\"\n"
-                            + "        android:showAsAction=\"always|collapseActionView\"\n"
-                            + "        android:actionViewClass=\"android.widget.SearchView\" />\n"
-                            + "\n"
-                            + "    <group android:id=\"@+id/reader_items\">\n"
-                            + "\n"
-                            + "        <item\n"
-                            + "            android:id=\"@+id/menu_table_of_contents\"\n"
-                            + "            android:showAsAction=\"always\"\n"
-                            + "            android:actionLayout=\"@layout/action_table_of_contents\" />\n"
-                            + "\n"
-                            + "        <item\n"
-                            + "            android:id=\"@+id/menu_settings\"\n"
-                            + "            android:showAsAction=\"always\" />\n"
-                            + "\n"
-                            + "        <item android:id=\"@+id/menu_mode\"\n"
-                            + "            android:showAsAction=\"never\" />\n"
-                            + "\n"
-                            + "        <item\n"
-                            + "            android:id=\"@+id/menu_buy\"\n"
-                            + "            android:showAsAction=\"never\" />\n"
-                            + "\n"
-                            + "        <item\n"
-                            + "            android:id=\"@+id/menu_about\"\n"
-                            + "            android:showAsAction=\"never\" />\n"
-                            + "\n"
-                            + "        <item\n"
-                            + "            android:id=\"@+id/menu_share\"\n"
-                            + "            android:showAsAction=\"never\" />\n"
-                            + "\n"
-                            + "        <item\n"
-                            + "            android:id=\"@+id/menu_keep\"\n"
-                            + "            android:checkable=\"true\"\n"
-                            + "            android:showAsAction=\"never\" />\n"
-                            + "\n"
-                            + "        <item\n"
-                            + "            android:id=\"@+id/menu_d\"\n"
-                            + "            android:showAsAction=\"never\" />\n"
-                            + "\n"
-                            + "        <item\n"
-                            + "            android:id=\"@+id/menu_help\"\n"
-                            + "            android:showAsAction=\"never\" />\n"
-                            + "\n"
-                            + "    </group>\n"
-                            + "\n"
-                            + "    <group android:id=\"@+id/search_items\">\n"
-                            + "\n"
-                            + "        <item\n"
-                            + "            android:id=\"@+id/menu_table_of_contents\"\n"
-                            + "            android:showAsAction=\"always\"\n"
-                            + "            android:actionLayout=\"@layout/action_table_of_contents\" />\n"
-                            + "\n"
-                            + "        <item android:id=\"@+id/menu_search_exit\"\n"
-                            + "              android:showAsAction=\"never\" />\n"
-                            + "\n"
-                            + "    </group>\n"
-                            + "\n"
-                            + "</menu>\n")));
+            lintProject(xml("res/menu-land/actions.xml", "" +
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                    "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
+                    "\n" +
+                    "    <item\n" +
+                    "        android:id=\"@+id/menu_search\"\n" +
+                    "        android:showAsAction=\"always|collapseActionView\"\n" +
+                    "        android:actionViewClass=\"android.widget.SearchView\" />\n" +
+                    "\n" +
+                    "    <group android:id=\"@+id/reader_items\">\n" +
+                    "\n" +
+                    "        <item\n" +
+                    "            android:id=\"@+id/menu_table_of_contents\"\n" +
+                    "            android:showAsAction=\"always\"\n" +
+                    "            android:actionLayout=\"@layout/action_table_of_contents\" />\n" +
+                    "\n" +
+                    "        <item\n" +
+                    "            android:id=\"@+id/menu_settings\"\n" +
+                    "            android:showAsAction=\"always\" />\n" +
+                    "\n" +
+                    "        <item android:id=\"@+id/menu_mode\"\n" +
+                    "            android:showAsAction=\"never\" />\n" +
+                    "\n" +
+                    "        <item\n" +
+                    "            android:id=\"@+id/menu_buy\"\n" +
+                    "            android:showAsAction=\"never\" />\n" +
+                    "\n" +
+                    "        <item\n" +
+                    "            android:id=\"@+id/menu_about\"\n" +
+                    "            android:showAsAction=\"never\" />\n" +
+                    "\n" +
+                    "        <item\n" +
+                    "            android:id=\"@+id/menu_share\"\n" +
+                    "            android:showAsAction=\"never\" />\n" +
+                    "\n" +
+                    "        <item\n" +
+                    "            android:id=\"@+id/menu_keep\"\n" +
+                    "            android:checkable=\"true\"\n" +
+                    "            android:showAsAction=\"never\" />\n" +
+                    "\n" +
+                    "        <item\n" +
+                    "            android:id=\"@+id/menu_d\"\n" +
+                    "            android:showAsAction=\"never\" />\n" +
+                    "\n" +
+                    "        <item\n" +
+                    "            android:id=\"@+id/menu_help\"\n" +
+                    "            android:showAsAction=\"never\" />\n" +
+                    "\n" +
+                    "    </group>\n" +
+                    "\n" +
+                    "    <group android:id=\"@+id/search_items\">\n" +
+                    "\n" +
+                    "        <item\n" +
+                    "            android:id=\"@+id/menu_table_of_contents\"\n" +
+                    "            android:showAsAction=\"always\"\n" +
+                    "            android:actionLayout=\"@layout/action_table_of_contents\" />\n" +
+                    "\n" +
+                    "        <item android:id=\"@+id/menu_search_exit\"\n" +
+                    "              android:showAsAction=\"never\" />\n" +
+                    "\n" +
+                    "    </group>\n" +
+                    "\n" +
+                    "</menu>\n")));
     }
 
     @SuppressWarnings("all") // Sample code
-    private TestFile mTitles = xml("res/menu/titles.xml", ""
-            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-            + "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-            + "    <item android:id=\"@+id/action_bar_progress_spinner\"\n"
-            + "        android:showAsAction=\"always\"\n"
-            + "        android:background=\"@null\"\n"
-            + "        android:selectableItemBackground=\"@null\"\n"
-            + "        android:actionLayout=\"@layout/action_bar_progress_spinner_layout\"/>\n"
-            + "    <item android:id=\"@+id/refresh\"\n"
-            + "        android:title=\"@string/menu_refresh\"\n"
-            + "        android:showAsAction=\"always\"\n"
-            + "        android:icon=\"@drawable/ic_menu_refresh\"/>\n"
-            + "    <item android:id=\"@+id/menu_plus_one\"\n"
-            + "        android:showAsAction=\"always\"\n"
-            + "        android:icon=\"@drawable/ic_menu_plus1\"/>\n"
-            + "</menu>\n");
+    private TestFile mTitles = xml("res/menu/titles.xml", "" +
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+            "<menu xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
+            "    <item android:id=\"@+id/action_bar_progress_spinner\"\n" +
+            "        android:showAsAction=\"always\"\n" +
+            "        android:background=\"@null\"\n" +
+            "        android:selectableItemBackground=\"@null\"\n" +
+            "        android:actionLayout=\"@layout/action_bar_progress_spinner_layout\"/>\n" +
+            "    <item android:id=\"@+id/refresh\"\n" +
+            "        android:title=\"@string/menu_refresh\"\n" +
+            "        android:showAsAction=\"always\"\n" +
+            "        android:icon=\"@drawable/ic_menu_refresh\"/>\n" +
+            "    <item android:id=\"@+id/menu_plus_one\"\n" +
+            "        android:showAsAction=\"always\"\n" +
+            "        android:icon=\"@drawable/ic_menu_plus1\"/>\n" +
+            "</menu>\n");
 }

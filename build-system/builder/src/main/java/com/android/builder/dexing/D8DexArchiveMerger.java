@@ -32,6 +32,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.concurrent.ForkJoinPool;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -105,7 +106,7 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
                     .setOutput(outputDir, OutputMode.DexIndexed)
                     .setDisableDesugaring(true)
                     .setIntermediate(false);
-            D8.run(builder.build());
+            D8.run(builder.build(), ForkJoinPool.commonPool());
         } catch (CompilationFailedException e) {
             throw getExceptionToRethrow(e, inputs, d8DiagnosticsHandler);
         }

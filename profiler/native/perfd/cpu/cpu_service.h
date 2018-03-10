@@ -23,7 +23,6 @@
 #include "perfd/cpu/atrace_manager.h"
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_usage_sampler.h"
-#include "perfd/cpu/profiling_app.h"
 #include "perfd/cpu/simpleperf.h"
 #include "perfd/cpu/simpleperf_manager.h"
 #include "perfd/cpu/thread_monitor.h"
@@ -93,11 +92,6 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   void DoStopProfilingApp(
       int32_t pid, profiler::proto::CpuProfilingAppStopResponse* response);
 
-  // Returns application's |ProfilingApp| with the given |pid|.
-  // Looks from |profiling_apps_|, if not found then from
-  // |startup_profiling_apps_|, otherwise returns null.
-  ProfilingApp* GetProfilingApp(int32_t pid);
-
   // Data cache that will be queried to serve requests.
   CpuCache& cache_;
   // Clock that timestamps start profiling requests.
@@ -110,9 +104,6 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
                                DeviceInfo::is_emulator()};
   SimpleperfManager simpleperf_manager_;
   AtraceManager atrace_manager_;
-  // Map from pid to its corresponding data.
-  std::map<int32_t, ProfilingApp> profiling_apps_;
-  std::map<std::string, ProfilingApp> startup_profiling_apps_;
 };
 
 }  // namespace profiler

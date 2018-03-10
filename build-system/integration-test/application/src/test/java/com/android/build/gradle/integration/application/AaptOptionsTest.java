@@ -3,9 +3,12 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.ApkSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
 
+import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtilKt;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -83,11 +86,12 @@ public class AaptOptionsTest {
         File extraR =
                 new File(
                         joiner.join(
-                                project.getOutputDir().getParentFile(),
-                                "generated",
-                                "source",
-                                "r",
+                                ArtifactTypeUtilKt.getOutputDir(
+                                        InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                                        project.getOutputDir().getParentFile()),
                                 "debug",
+                                "processDebugResources",
+                                SdkConstants.FD_RES_CLASS,
                                 "com",
                                 "boop",
                                 "beep",

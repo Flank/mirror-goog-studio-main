@@ -3,7 +3,7 @@
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$/../build-system/instant-run-instrumentation/src/instrumenter">
-      <sourceFolder url="file://$MODULE_DIR$/../build-system/instant-run-instrumentation/src/instrumenter/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../build-system/instant-run-instrumentation/src/instrumenter/java" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

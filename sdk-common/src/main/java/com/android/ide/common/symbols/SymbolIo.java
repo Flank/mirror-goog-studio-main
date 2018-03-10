@@ -27,7 +27,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -39,10 +38,11 @@ import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
@@ -64,7 +64,7 @@ public final class SymbolIo {
     @NonNull
     public static SymbolTable read(@NonNull File file, @Nullable String tablePackage)
             throws IOException {
-        return read(file, tablePackage, InOrderHandler::new, SymbolIo::readLine);
+        return read(file, tablePackage, ReadConfiguration.AAR);
     }
 
     /**
@@ -78,7 +78,7 @@ public final class SymbolIo {
     @NonNull
     public static SymbolTable readFromAapt(@NonNull File file, @Nullable String tablePackage)
             throws IOException {
-        return read(file, tablePackage, AaptHandler::new, SymbolIo::readLine);
+        return read(file, tablePackage, ReadConfiguration.AAPT);
     }
 
     /**
@@ -92,20 +92,21 @@ public final class SymbolIo {
     @NonNull
     public static SymbolTable readFromPartialRFile(
             @NonNull File file, @Nullable String tablePackage) throws IOException {
-        return read(file, tablePackage, InOrderHandler::new, SymbolIo::readPartialRLine);
+        return read(file, tablePackage, ReadConfiguration.PARTIAL_FILE);
     }
 
     @NonNull
     private static SymbolTable read(
             @NonNull File file,
             @Nullable String tablePackage,
-            @NonNull Function<String, StyleableIndexHandler> handlerFunction,
-            @NonNull LineReader lineReader)
+            @NonNull ReadConfiguration readConfiguration)
             throws IOException {
-        List<String> lines = Files.readAllLines(file.toPath(), Charsets.UTF_8);
-
-        SymbolTable.Builder table = readLines(lines, 1, file.toPath(), handlerFunction, lineReader);
-
+        SymbolTable.Builder table;
+        try (Stream<String> lines = Files.lines(file.toPath(), Charsets.UTF_8)) {
+            table =
+                    new SymbolLineReader(readConfiguration, lines.iterator(), file.toPath(), 1)
+                            .readLines();
+        }
         if (tablePackage != null) {
             table.tablePackage(tablePackage);
         }
@@ -129,98 +130,183 @@ public final class SymbolIo {
 
     @NonNull
     public static SymbolTable readTableWithPackage(@NonNull Path file) throws IOException {
-
-        List<String> lines = Files.readAllLines(file, Charsets.UTF_8);
-
-        if (lines.isEmpty()) {
-            throw new IOException(
-                    "Internal error: Symbol file with package cannot be empty. File located at: "
-                            + file);
+        String tablePackage;
+        SymbolTable.Builder table;
+        try (Stream<String> lines = Files.lines(file, Charsets.UTF_8)) {
+            Iterator<String> linesIterator = lines.iterator();
+            if (!linesIterator.hasNext()) {
+                throw new IOException(
+                        "Internal error: Symbol file with package cannot be empty. File located at: "
+                                + file);
+            }
+            tablePackage = linesIterator.next().trim();
+            table = new SymbolLineReader(ReadConfiguration.AAR, linesIterator, file, 2).readLines();
         }
 
-        SymbolTable.Builder table =
-                readLines(lines, 2, file, InOrderHandler::new, SymbolIo::readLine);
-        table.tablePackage(lines.get(0).trim());
-
+        table.tablePackage(tablePackage);
         return table.build();
     }
 
-    @NonNull
-    private static SymbolTable.Builder readLines(
-            @NonNull List<String> lines,
-            int startLine,
-            @NonNull Path file,
-            @NonNull Function<String, StyleableIndexHandler> handlerFunction,
-            @NonNull LineReader lineReader)
-            throws IOException {
-        SymbolTable.Builder table = SymbolTable.builder();
+    private static class SymbolLineReader {
+        @NonNull private final SymbolTable.Builder table = SymbolTable.builder();
 
-        int lineIndex = startLine;
-        String line = null;
-        try {
-            final SymbolFilter symbolFilter =
-                    (resType, javaType) ->
-                            resType.equals(ResourceType.STYLEABLE.getName())
-                                    && javaType.equals(SymbolJavaType.INT.getTypeName());
+        @NonNull private final Iterator<String> lines;
+        @NonNull private final Path file;
+        @NonNull private final ReadConfiguration readConfiguration;
 
-            final int count = lines.size();
-            for (; lineIndex <= count; lineIndex++) {
-                line = lines.get(lineIndex - 1);
+        // Current line number and content
+        private int currentLineNumber;
+        @Nullable private String currentLineContent;
 
-                SymbolData data = lineReader.readLine(line, null);
-                // because there are some misordered file out there we want to make sure
-                // both the resType is Styleable and the javaType is array.
-                // We skip the non arrays that are out of sort
-                // data cannot be null, since the filter is null
-                // noinspection ConstantConditions
-                if (data.resourceType == ResourceType.STYLEABLE) {
-                    if (data.javaType == SymbolJavaType.INT_LIST) {
-                        final String data_name = data.name + "_";
-                        StyleableIndexHandler indexHandler = handlerFunction.apply(data_name);
-                        SymbolData subData;
-                        // read the next line
-                        while (lineIndex < count
-                                && (subData =
-                                                lineReader.readLine(
-                                                        lines.get(lineIndex), symbolFilter))
-                                        != null) {
-                            // line is value, inc the index
-                            lineIndex++;
+        // Reuse lists to avoid allocations.
+        private final List<String> styleableChildrenCache = new ArrayList<>(10);
+        private final List<SymbolData> aaptStyleableChildrenCache = new ArrayList<>(10);
 
-                            // noinspection ConstantConditions
-                            indexHandler.handle(subData);
-                        }
-
-                        table.add(
-                                Symbol.createSymbol(
-                                        data.accessibility,
-                                        data.resourceType,
-                                        data.name,
-                                        data.javaType,
-                                        data.value,
-                                        indexHandler.getChildrenNames()));
-                    }
-
-                } else {
-                    table.add(
-                            Symbol.createSymbol(
-                                    data.accessibility,
-                                    data.resourceType,
-                                    data.name,
-                                    data.javaType,
-                                    data.value,
-                                    ImmutableList.of()));
-                }
-            }
-        } catch (IndexOutOfBoundsException | IOException e) {
-            throw new IOException(
-                    String.format(
-                            "File format error reading %s line %d: '%s'",
-                            file.toString(), lineIndex, line),
-                    e);
+        SymbolLineReader(
+                @NonNull ReadConfiguration readConfiguration,
+                @NonNull Iterator<String> lines,
+                @NonNull Path file,
+                int startLine) {
+            this.readConfiguration = readConfiguration;
+            this.lines = lines;
+            this.file = file;
+            currentLineNumber = startLine - 1;
         }
 
-        return table;
+        private void readNextLine() {
+            if (!lines.hasNext()) {
+                currentLineContent = null;
+            } else {
+                currentLineContent = lines.next();
+                currentLineNumber++;
+            }
+        }
+
+        @NonNull
+        SymbolTable.Builder readLines() throws IOException {
+            if (!lines.hasNext()) {
+                return table;
+            }
+            readNextLine();
+            try {
+                while (currentLineContent != null) {
+                    SymbolData data = readConfiguration.parseLine(currentLineContent, null);
+                    if (data.resourceType == ResourceType.STYLEABLE) {
+                        switch (data.javaType) {
+                            case INT:
+                                // because there are some misordered file out there we want to make sure
+                                // both the resType is Styleable and the javaType is array.
+                                // We skip the non arrays that are out of sort
+                                if (!readConfiguration.bestEffortMisorderedFile) {
+                                    throw new IOException(
+                                            "Unexpected stylable child " + currentLineContent);
+                                }
+                                readNextLine();
+                                break;
+                            case INT_LIST:
+                                readNextLine();
+                                handleStyleable(table, data);
+                                // Already at the next line, as handleStyleable has to read forward
+                                // to find its children.
+                                break;
+                        }
+                    } else {
+                        int value = 0;
+                        if (readConfiguration.readValues) {
+                            value = SymbolUtils.valueStringToInt(data.value);
+                        }
+                        table.add(
+                                new Symbol.NormalSymbol(
+                                        data.resourceType, data.name, value, data.accessibility));
+                        readNextLine();
+                    }
+                }
+            } catch (IndexOutOfBoundsException | IOException e) {
+                throw new IOException(
+                        String.format(
+                                "File format error reading %1$s line %2$d: '%3$s'",
+                                file.toString(), currentLineNumber, currentLineContent),
+                        e);
+            }
+
+            return table;
+        }
+
+        private void handleStyleable(@NonNull SymbolTable.Builder table, @NonNull SymbolData data)
+                throws IOException {
+            // Keep the current location to report if there is an error
+            String styleableLineContent = currentLineContent;
+            int styleableLineIndex = currentLineNumber;
+            final String data_name = data.name + "_";
+            styleableChildrenCache.clear();
+            aaptStyleableChildrenCache.clear();
+            SymbolData subData;
+            while (currentLineContent != null
+                    && (subData =
+                                    readConfiguration.parseLine(
+                                            currentLineContent, ONLY_STYLEABLE_CHILDREN))
+                            != null) {
+                if (readConfiguration.numericallySortedStyleableChildren) {
+                    if (subData.name.startsWith(data_name)) {
+                        styleableChildrenCache.add(computeItemName(data_name, subData.name));
+                    } else if (!readConfiguration.bestEffortMisorderedFile) {
+                        throw new IOException("Unexpected styleable child " + subData.name);
+                    }
+                } else {
+                    aaptStyleableChildrenCache.add(subData);
+                }
+                readNextLine();
+            }
+
+            ImmutableList<String> childNames;
+            if (readConfiguration.numericallySortedStyleableChildren) {
+                childNames = ImmutableList.copyOf(styleableChildrenCache);
+            } else {
+                try {
+                    aaptStyleableChildrenCache.sort(SYMBOL_DATA_VALUE_COMPARATOR);
+                } catch (NumberFormatException e) {
+                    // Report error from styleable parent.
+                    currentLineContent = styleableLineContent;
+                    currentLineNumber = styleableLineIndex;
+                    throw new IOException(e);
+                }
+                ImmutableList.Builder<String> builder = ImmutableList.builder();
+                for (SymbolData aaptStyleableChild : aaptStyleableChildrenCache) {
+                    builder.add(computeItemName(data_name, aaptStyleableChild.name));
+                }
+                childNames = builder.build();
+            }
+
+            ImmutableList<Integer> values;
+            if (readConfiguration.readValues) {
+                try {
+                    if (readConfiguration.bestEffortMisorderedFile) {
+                        values = SymbolUtils.parseArrayLiteralLenient(data.value);
+                    } else {
+                        values = SymbolUtils.parseArrayLiteral(childNames.size(), data.value);
+                    }
+                } catch (NumberFormatException e) {
+                    // Report error from styleable parent.
+                    currentLineContent = styleableLineContent;
+                    currentLineNumber = styleableLineIndex;
+                    throw new IOException(
+                            "Unable to parse array literal " + data.name + " = " + data.value, e);
+                }
+            } else {
+                values = ImmutableList.of();
+            }
+
+            table.add(
+                    new Symbol.StyleableSymbol(data.name, values, childNames, data.accessibility));
+        }
+
+        private static final SymbolFilter ONLY_STYLEABLE_CHILDREN =
+                (resType, javaType) ->
+                        resType.equals(ResourceType.STYLEABLE.getName())
+                                && javaType.equals(SymbolJavaType.INT.getTypeName());
+
+        private static final Comparator<SymbolData> SYMBOL_DATA_VALUE_COMPARATOR =
+                Comparator.comparingInt(o -> Integer.parseInt(o.value));
     }
 
     private static class SymbolData {
@@ -261,11 +347,6 @@ public final class SymbolIo {
         boolean validate(@NonNull String resourceType, @NonNull String javaType);
     }
 
-    @FunctionalInterface
-    private interface LineReader {
-        SymbolData readLine(@NonNull String line, @Nullable SymbolFilter filter) throws IOException;
-    }
-
     @Nullable
     private static SymbolData readLine(@NonNull String line, @Nullable SymbolFilter filter)
             throws IOException {
@@ -290,7 +371,7 @@ public final class SymbolIo {
 
         int pos3 = line.indexOf(' ', pos2 + 1);
         String name = line.substring(pos2 + 1, pos3);
-        String value = line.substring(pos3 + 1);
+        String value = line.substring(pos3 + 1).trim();
 
         return new SymbolData(resourceType, name, type, value);
     }
@@ -326,105 +407,72 @@ public final class SymbolIo {
 
         String name = line.substring(pos3 + 1);
 
-        String value = type == SymbolJavaType.INT ? "0" : "{ }";
+        String value = type == SymbolJavaType.INT ? "0x000000" : "{ }";
 
         return new SymbolData(accessibility, resourceType, name, type, value);
     }
 
-    /** Handler for the styleable indices read from a R.txt file. */
-    private interface StyleableIndexHandler {
-        void handle(@NonNull SymbolData data);
-
-        @NonNull
-        List<String> getChildrenNames() throws IOException;
-    }
-
-    private abstract static class BaseHandler implements StyleableIndexHandler {
-        @NonNull protected final String prefix;
-
-        BaseHandler(@NonNull String prefix) {
-            this.prefix = prefix;
+    private static String computeItemName(@NonNull String prefix, @NonNull String name) {
+        // tweak the name to remove the styleable prefix
+        String indexName = name.substring(prefix.length());
+        // check if it's a namespace, in which case replace android_name
+        // with android:name
+        if (indexName.startsWith(ANDROID_ATTR_PREFIX)) {
+            indexName =
+                    SdkConstants.ANDROID_NS_NAME_PREFIX
+                            + indexName.substring(ANDROID_ATTR_PREFIX.length());
         }
 
-        protected String computeItemName(@NonNull String name) {
-            // tweak the name to remove the styleable prefix
-            String indexName = name.substring(prefix.length());
-            // check if it's a namespace, in which case replace android_name
-            // with android:name
-            if (indexName.startsWith(ANDROID_ATTR_PREFIX)) {
-                indexName =
-                        SdkConstants.ANDROID_NS_NAME_PREFIX
-                                + indexName.substring(ANDROID_ATTR_PREFIX.length());
+        return indexName;
+    }
+
+    private enum ReadConfiguration {
+        AAR(true, true, true) {
+            @Override
+            public SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
+                    throws IOException {
+                return SymbolIo.readLine(line, filter);
             }
-
-            return indexName;
-        }
-    }
-
-    /** Handler that just create the children name in the order the items are read */
-    private static class InOrderHandler extends BaseHandler {
-
-        @NonNull private final List<String> childrenNames = Lists.newArrayList();
-
-        InOrderHandler(@NonNull String prefix) {
-            super(prefix);
-        }
-
-        @Override
-        public void handle(@NonNull SymbolData subData) {
-            // check if the sub item actually belongs to this declare-styleable,
-            // because of broken R.txt files.
-            // We could have a int/styleable that follows a int[]/styleable but
-            // is an index for a different declare-styleable.
-            if (subData.name.startsWith(prefix)) {
-                childrenNames.add(computeItemName(subData.name));
+        },
+        AAPT(true, false, false) {
+            @Override
+            public SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
+                    throws IOException {
+                return SymbolIo.readLine(line, filter);
             }
-        }
-
-        @NonNull
-        @Override
-        public List<String> getChildrenNames() {
-            return ImmutableList.copyOf(childrenNames);
-        }
-    }
-
-    /**
-     * Handler sorting the items based on their values rather than the order they are read.
-     *
-     * <p>This is compatible with R.txt files generated by aapt.
-     */
-    private static class AaptHandler extends BaseHandler {
-        @NonNull private final List<SymbolData> allDatas = Lists.newArrayList();
-
-        public AaptHandler(@NonNull String prefix) {
-            super(prefix);
-        }
-
-        @Override
-        public void handle(@NonNull SymbolData data) {
-            allDatas.add(data);
-        }
-
-        @NonNull
-        @Override
-        public List<String> getChildrenNames() throws IOException {
-            // sort the data by their values.
-            try {
-                allDatas.sort(Comparator.comparingInt(o -> Integer.parseInt(o.value)));
-            } catch (NumberFormatException e) {
-                throw new IOException(e);
+        },
+        LOCAL(true, false, false) {
+            @Override
+            public SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
+                    throws IOException {
+                return SymbolIo.readLine(line, filter);
             }
+        },
+        PARTIAL_FILE(false, true, false) {
+            @Override
+            public SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
+                    throws IOException {
+                return readPartialRLine(line, filter);
+            }
+        },
+        ;
 
-            // now extract the names only, and remove the prefix
-            return allDatas.stream().map(this::computeName).collect(Collectors.toList());
+        ReadConfiguration(
+                boolean readValues,
+                boolean numericallySortedStyleableChildren,
+                boolean bestEffortMisorderedFile) {
+            this.readValues = readValues;
+            this.numericallySortedStyleableChildren = numericallySortedStyleableChildren;
+            this.bestEffortMisorderedFile = bestEffortMisorderedFile;
         }
 
-        @NonNull
-        private String computeName(@NonNull SymbolData data) {
-            return computeItemName(data.name);
-        }
+        final boolean readValues;
+        final boolean numericallySortedStyleableChildren;
+        final boolean bestEffortMisorderedFile;
+
+        abstract SymbolData parseLine(@NonNull String line, @Nullable SymbolFilter filter)
+                throws IOException;
     }
-
     /**
      * Writes a symbol table to a symbol file.
      *
@@ -462,18 +510,20 @@ public final class SymbolIo {
                     pw.print(' ');
                     pw.print(s.getName());
                     pw.print(' ');
-                    pw.print(s.getValue());
-                    pw.print('\n');
+                    if (s.getResourceType() != ResourceType.STYLEABLE) {
+                        Symbol.NormalSymbol symbol = (Symbol.NormalSymbol) s;
+                        pw.print("0x");
+                        pw.print(Integer.toHexString(symbol.getIntValue()));
+                        pw.print('\n');
+                    } else {
 
-                    // Declare styleables have the attributes that were defined under their node
-                    // listed in
-                    // the children list.
-                    if (s.getJavaType() == SymbolJavaType.INT_LIST) {
-                        Preconditions.checkArgument(
-                                s.getResourceType() == ResourceType.STYLEABLE,
-                                "Only resource type 'styleable' is allowed to have java type 'int[]'");
-
-                        List<String> children = s.getChildren();
+                        Symbol.StyleableSymbol styleable = (Symbol.StyleableSymbol) s;
+                        writeStyleableValue(styleable, pw);
+                        pw.print('\n');
+                        // Declare styleables have the attributes that were defined under their node
+                        // listed in
+                        // the children list.
+                        List<String> children = styleable.getChildren();
                         for (int i = 0; i < children.size(); ++i) {
                             pw.print(SymbolJavaType.INT.getTypeName());
                             pw.print(' ');
@@ -492,6 +542,19 @@ public final class SymbolIo {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    private static void writeStyleableValue(Symbol.StyleableSymbol s, PrintWriter pw) {
+        pw.print("{ ");
+        ImmutableList<Integer> values = s.getValues();
+        for (int i = 0; i < values.size(); i++) {
+            if (i > 0) {
+                pw.print(", ");
+            }
+            pw.print("0x");
+            pw.print(Integer.toHexString(values.get(i)));
+        }
+        pw.print(" }");
     }
 
     public static void writePartialR(@NonNull SymbolTable table, @NonNull Path file) {
@@ -519,13 +582,9 @@ public final class SymbolIo {
                     // Declare styleables have the attributes that were defined under their node
                     // listed in
                     // the children list.
-                    if (s.getJavaType() == SymbolJavaType.INT_LIST) {
-                        Preconditions.checkArgument(
-                                s.getResourceType() == ResourceType.STYLEABLE,
-                                "Only resource type 'styleable' is allowed to have java type 'int[]'");
-
-                        List<String> children = s.getChildren();
-                        for (int i = 0; i < children.size(); ++i) {
+                    if (s.getResourceType() == ResourceType.STYLEABLE) {
+                        List<String> children = ((Symbol.StyleableSymbol) s).getChildren();
+                        for (String child : children) {
                             pw.print(s.getResourceAccessibility().getName());
                             pw.print(' ');
                             pw.print(SymbolJavaType.INT.getTypeName());
@@ -534,7 +593,7 @@ public final class SymbolIo {
                             pw.print(' ');
                             pw.print(s.getName());
                             pw.print('_');
-                            pw.print(SymbolUtils.canonicalizeValueResourceName(children.get(i)));
+                            pw.print(SymbolUtils.canonicalizeValueResourceName(child));
                             pw.print('\n');
                         }
                     }
@@ -679,19 +738,22 @@ public final class SymbolIo {
                     pw.print(' ');
                     pw.print(name);
                     pw.print(" = ");
-                    pw.print(s.getValue());
-                    pw.print(';');
-                    pw.println();
 
-                    // Declare styleables have the attributes that were defined under their
-                    // node
-                    // listed in the children list.
-                    if (s.getJavaType() == SymbolJavaType.INT_LIST) {
-                        Preconditions.checkArgument(
-                                s.getResourceType() == ResourceType.STYLEABLE,
-                                "Only resource type 'styleable'"
-                                        + " is allowed to have java type 'int[]'");
-                        List<String> children = s.getChildren();
+                    if (s.getResourceType() != ResourceType.STYLEABLE) {
+                        Symbol.NormalSymbol symbol = (Symbol.NormalSymbol) s;
+                        pw.print("0x");
+                        pw.print(Integer.toHexString(symbol.getIntValue()));
+                        pw.print(';');
+                        pw.println();
+                    } else {
+                        Symbol.StyleableSymbol styleable = (Symbol.StyleableSymbol) s;
+                        writeStyleableValue(styleable, pw);
+                        pw.print(';');
+                        pw.println();
+                        // Declare styleables have the attributes that were defined under their
+                        // node
+                        // listed in the children list.
+                        List<String> children = styleable.getChildren();
                         for (int i = 0; i < children.size(); ++i) {
                             pw.print("        ");
                             pw.print(idModifiers);

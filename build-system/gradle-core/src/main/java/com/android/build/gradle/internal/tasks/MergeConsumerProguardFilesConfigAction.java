@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.internal.tasks;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.ProguardFiles;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.errors.EvalIssueException;
@@ -31,17 +33,10 @@ import org.gradle.api.Project;
 /** Configuration action for a merge-Proguard-files task. */
 public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<MergeFileTask> {
 
-    @NonNull private final Project project;
     @NonNull private final VariantScope variantScope;
-    @NonNull private final File outputFile;
 
-    public MergeConsumerProguardFilesConfigAction(
-            @NonNull Project project,
-            @NonNull VariantScope variantScope,
-            @NonNull File outputFile) {
-        this.project = project;
+    public MergeConsumerProguardFilesConfigAction(@NonNull VariantScope variantScope) {
         this.variantScope = variantScope;
-        this.outputFile = outputFile;
     }
 
     @NonNull
@@ -58,8 +53,15 @@ public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<
 
     @Override
     public void execute(@NonNull MergeFileTask mergeProguardFiles) {
+        Project project = variantScope.getGlobalScope().getProject();
         mergeProguardFiles.setVariantName(variantScope.getVariantConfiguration().getFullName());
-        mergeProguardFiles.setOutputFile(outputFile);
+        mergeProguardFiles.setOutputFile(
+                variantScope
+                        .getBuildArtifactsHolder()
+                        .appendArtifact(
+                                InternalArtifactType.CONSUMER_PROGUARD_FILE,
+                                mergeProguardFiles,
+                                SdkConstants.FN_PROGUARD_TXT));
         mergeProguardFiles.setInputFiles(
                 project.files(variantScope.getConsumerProguardFiles()).getFiles());
 

@@ -33,14 +33,14 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
         lint().files(mSize).run().expect(""
                 + "res/layout/size.xml:13: Error: The required layout_height attribute is missing [RequiredSize]\n"
                 + "    <RadioButton\n"
-                + "    ^\n"
+                + "     ~~~~~~~~~~~\n"
                 + "res/layout/size.xml:18: Error: The required layout_width attribute is missing [RequiredSize]\n"
                 + "    <EditText\n"
-                + "    ^\n"
+                + "     ~~~~~~~~\n"
                 + "res/layout/size.xml:23: Error: The required layout_width and layout_height attributes are missing [RequiredSize]\n"
                 + "    <EditText\n"
-                + "    ^\n"
-                + "3 errors, 0 warnings\n");
+                + "     ~~~~~~~~\n"
+                + "3 errors, 0 warnings");
     }
 
     public void test2() {
@@ -48,11 +48,11 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
         String expected = ""
                 + "res/layout/size2.xml:9: Error: The required layout_width and layout_height attributes are missing [RequiredSize]\n"
                 + "    <Button\n"
-                + "    ^\n"
+                + "     ~~~~~~\n"
                 + "res/layout/size2.xml:18: Error: The required layout_height attribute is missing [RequiredSize]\n"
                 + "    <Button\n"
-                + "    ^\n"
-                + "2 errors, 0 warnings\n";
+                + "     ~~~~~~\n"
+                + "2 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                 xml("res/layout/size2.xml", ""
@@ -131,11 +131,11 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                 + "        ~~~~~~~~\n"
                 + "res/layout/test.xml:30: Error: The required layout_width or layout_widthPercent attribute is missing [RequiredSize]\n"
                 + "        <View\n"
-                + "        ^\n"
+                + "         ~~~~\n"
                 + "res/layout/test.xml:34: Error: The required layout_height or layout_heightPercent attribute is missing [RequiredSize]\n"
                 + "        <View\n"
-                + "        ^\n"
-                + "3 errors, 0 warnings\n";
+                + "         ~~~~\n"
+                + "3 errors, 0 warnings";
 
         //noinspection all // Sample code
         lint().files(
@@ -191,7 +191,7 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
         String expected = ""
                 + "res/layout/size5.xml:2: Error: The required layout_width and layout_height attributes are missing [RequiredSize]\n"
                 + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                + "^\n"
+                + " ~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
 
         //noinspection all // Sample code

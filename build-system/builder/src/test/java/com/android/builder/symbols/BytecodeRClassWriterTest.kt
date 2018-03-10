@@ -19,8 +19,9 @@ package com.android.builder.symbols
 import com.android.SdkConstants
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolIo
-import com.android.ide.common.symbols.SymbolJavaType
 import com.android.ide.common.symbols.SymbolTable
+import com.android.ide.common.symbols.parseArrayLiteral
+import com.android.ide.common.symbols.valueStringToInt
 import com.android.resources.ResourceType
 import com.android.testutils.apk.Zip
 import com.android.utils.PathUtils
@@ -49,35 +50,29 @@ class BytecodeRClassWriterTest {
 
         val symbols = SymbolTable.builder()
                 .tablePackage("com.example.foo")
-                .add(Symbol.createSymbol(ResourceType.ID,
+                .add(Symbol.NormalSymbol(ResourceType.ID,
                         "foo",
-                        SymbolJavaType.INT,
-                        "0x0"))
+                       0x0))
                 .add(
-                        Symbol.createSymbol(
+                    Symbol.NormalSymbol(
                                 ResourceType.DRAWABLE,
                                 "bar",
-                                SymbolJavaType.INT,
-                                "0x1"))
+                                0x1))
                 .add(
-                        Symbol.createSymbol(
+                    Symbol.NormalSymbol(
                                 ResourceType.ATTR,
                                 "beep",
-                                SymbolJavaType.INT,
-                                "0x3"))
+                                0x3))
                 .add(
-                        Symbol.createSymbol(
+                    Symbol.NormalSymbol(
                                 ResourceType.ATTR,
                                 "boop",
-                                SymbolJavaType.INT,
-                                "0x5"))
+                                0x5))
                 .add(
-                        Symbol.createSymbol(
-                                ResourceType.STYLEABLE,
+                    Symbol.StyleableSymbol(
                                 "styles",
-                                SymbolJavaType.INT_LIST,
-                                "{ 0x2, 0x4 }",
-                                listOf("style1", "style2")))
+                                ImmutableList.of(0x2, 0x4),
+                                ImmutableList.of("style1", "style2")))
                 .build()
 
         exportToCompiledJava(listOf(symbols), rJar.toPath())
@@ -103,37 +98,31 @@ class BytecodeRClassWriterTest {
         val appSymbols = SymbolTable.builder()
                 .tablePackage("com.example.foo.app")
                 .add(
-                        Symbol.createSymbol(
+                    Symbol.NormalSymbol(
                                 ResourceType.ATTR,
                                 "beep",
-                                SymbolJavaType.INT,
-                                "0x1"))
+                                0x1))
                 .add(
-                        Symbol.createSymbol(
+                    Symbol.NormalSymbol(
                                 ResourceType.ATTR,
                                 "boop",
-                                SymbolJavaType.INT,
-                                "0x3"))
+                                0x3))
                 .add(
-                        Symbol.createSymbol(
-                                ResourceType.STYLEABLE,
+                    Symbol.StyleableSymbol(
                                 "styles",
-                                SymbolJavaType.INT_LIST,
-                                "{ 0x1004, 0x1002 }",
-                                listOf("styles_boop", "styles_beep")))
+                        ImmutableList.of(0x1004, 0x1002),
+                                ImmutableList.of("styles_boop", "styles_beep")))
                 .add(
-                        Symbol.createSymbol(
-                                ResourceType.STYLEABLE,
+                    Symbol.StyleableSymbol(
                                 "other_style",
-                                SymbolJavaType.INT_LIST,
-                                "{ 0x1004, 0x1002 }",
-                                listOf("foo", "bar.two")))
-                .add(Symbol.createSymbol(ResourceType.STRING, "libstring", SymbolJavaType.INT, "0x4"))
+                        ImmutableList.of(0x1004, 0x1002),
+                                ImmutableList.of("foo", "bar.two")))
+                .add(Symbol.NormalSymbol(ResourceType.STRING, "libstring", 0x4))
                 .build()
 
         val librarySymbols = SymbolTable.builder()
                 .tablePackage("com.example.foo.lib")
-                .add(Symbol.createSymbol(ResourceType.STRING, "libstring", SymbolJavaType.INT, "0x4"))
+                .add(Symbol.NormalSymbol(ResourceType.STRING, "libstring",0x4))
                 .build()
 
         // The existing path: Symbol table --com.android.builder.symbols.exportToJava--> R.java --javac--> R classes

@@ -111,7 +111,7 @@ public class AccessibilityDetector extends LayoutDetector {
                 return;
             }
             LintFix fix = fix().set().todo(ANDROID_URI, ATTR_CONTENT_DESCRIPTION).build();
-            context.report(ISSUE, element, context.getLocation(element),
+            context.report(ISSUE, element, context.getNameLocation(element),
                     "Missing `contentDescription` attribute on image",
                     fix);
         } else {

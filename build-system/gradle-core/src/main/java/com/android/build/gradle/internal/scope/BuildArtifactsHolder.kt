@@ -86,6 +86,7 @@ class BuildArtifactsHolder(
                 override fun isEmpty(): Boolean = last.isEmpty()
                 override fun iterator(): Iterator<File> = last.iterator()
                 override fun getBuildDependencies(): TaskDependency = last.buildDependencies
+                override fun get(): FileCollection = last.get()
             }
         }
     }
@@ -122,6 +123,27 @@ class BuildArtifactsHolder(
      */
     fun getFinalArtifactFiles(artifactType: ArtifactType) : BuildableArtifact {
         return getArtifactRecord(artifactType).final()
+    }
+
+    /**
+     * Returns the final [BuildableArtifact] associated with the artifactType or an empty
+     * BuildableArtifact if no [BuildableArtifact] has been registered for this artifact type.
+     *
+     * Irrespective of the timing of this method call, it will always return the final version of
+     * the [BuildableArtifact] for the passed artifact type or an empty one.
+     *
+     * This should not be used to transform further the artifact type.
+     *
+     * @param artifactType the requested [BuildableArtifact] artifact type.
+     * @return the possibly empty final [BuildableArtifact] for this artifact type.
+     */
+
+    fun getOptionalFinalArtifactFiles(artifactType: ArtifactType): BuildableArtifact {
+        return if (hasArtifact(artifactType)) {
+            getFinalArtifactFiles(artifactType)
+        } else {
+            BuildableArtifactImpl(project.files(), dslScope)
+        }
     }
 
     /**
@@ -218,7 +240,7 @@ class BuildArtifactsHolder(
         artifactType: ArtifactType,
         task : Task,
         fileName: String = "out") : File {
-        val output = createFile(task, fileName)
+        val output = createFile(task, artifactType, fileName)
         appendArtifact(artifactType, listOf(output), task)
         return output
     }
@@ -253,16 +275,32 @@ class BuildArtifactsHolder(
             }
 
     /**
-     * Creates a File for a task.
+     * Create a File for a task and artifact type.
+     * @param task the task the file should be created for.
+     * @param artifactType artifact type that will be associated with the file.
+     * @param filename desired file name.
+     */
+    internal fun createFile(task: Task, artifactType: ArtifactType, filename: String) =
+            FileUtils.join(artifactType.getOutputDir(rootOutputDir),
+                variantName,
+                task.name,
+                filename)
+
+
+    /**
+     * Creates a File for a task. Prefer [createFile] when artifact type is known and unique for
+     * the output file. This will stuff all the tasks directly under "multi-types" leading to
+     * potentially confusing directory structure.
      *
      * @param task the task creating the output file.
      * @param filename name of the file.
      */
     internal fun createFile(task: Task, filename : String) =
             FileUtils.join(
-                    rootOutputDir,
-                    task.name,
-                    filename)
+                InternalArtifactType.Kind.INTERMEDIATES.getOutputDir(rootOutputDir),
+                MULTI_TYPES,
+                task.name,
+                filename)
 
     internal fun getArtifactFilename(artifactType: ArtifactType) : String {
         val record = getArtifactRecord(artifactType)
@@ -291,6 +329,8 @@ class BuildArtifactsHolder(
                 artifact.buildDependencies.getDependencies(null).map(Task::getPath))
 
     companion object {
+        val MULTI_TYPES = "multi-types"
+
         fun parseReport(file : File) : Report {
             val result = mutableMapOf<ArtifactType, List<BuildableArtifactData>>()
             val parser = JsonParser()

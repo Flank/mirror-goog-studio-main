@@ -71,7 +71,7 @@ public class WrongCaseDetector extends LayoutDetector {
         String tag = element.getTagName();
         String correct = Character.toLowerCase(tag.charAt(0)) + tag.substring(1);
         LintFix fix = fix().data(Arrays.asList(tag, correct));
-        context.report(WRONG_CASE, element, context.getLocation(element),
+        context.report(WRONG_CASE, element, context.getNameLocation(element),
             String.format("Invalid tag `<%1$s>`; should be `<%2$s>`", tag, correct),
             fix);
     }

@@ -29,6 +29,7 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.resources.ResourceType;
 import com.android.utils.Pair;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
@@ -90,12 +91,20 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
     @Override
     protected ResourceSet createFromXml(Node node) throws MergingException {
         String generated = NodeUtils.getAttribute(node, GeneratedResourceSet.ATTR_GENERATED);
+
+        ResourceNamespace aaptNamespace = null;
+        String namespaceUri =
+                NodeUtils.getAttribute(node, GeneratedResourceSet.ATTR_AAPT_NAMESPACE);
+        if (namespaceUri != null) {
+            aaptNamespace = ResourceNamespace.fromNamespaceUri(namespaceUri);
+        }
+        aaptNamespace = MoreObjects.firstNonNull(aaptNamespace, ResourceNamespace.RES_AUTO);
+
         ResourceSet set;
         if (SdkConstants.VALUE_TRUE.equals(generated)) {
-            set = new GeneratedResourceSet("", ResourceNamespace.TODO, null);
+            set = new GeneratedResourceSet("", aaptNamespace, null);
         } else {
-            // TODO: namespaces
-            set = new ResourceSet("", ResourceNamespace.TODO, null, true);
+            set = new ResourceSet("", aaptNamespace, null, true);
         }
         ResourceSet newResourceSet = (ResourceSet) set.createFromXml(node);
 

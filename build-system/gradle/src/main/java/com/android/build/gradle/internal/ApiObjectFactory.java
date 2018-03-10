@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.TestVariantImpl;
 import com.android.build.gradle.internal.api.TestedVariant;
 import com.android.build.gradle.internal.api.UnitTestVariantImpl;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -143,15 +144,14 @@ public class ApiObjectFactory {
                         extension,
                         variantApi,
                         variantData);
+        GradleVariantConfiguration config = variantData.getVariantConfiguration();
         variantData
                 .getOutputScope()
                 .getApkDatas()
                 .forEach(
                         apkData -> {
-                            apkData.setVersionCode(
-                                    variantData.getVariantConfiguration().getVersionCode());
-                            apkData.setVersionName(
-                                    variantData.getVariantConfiguration().getVersionName());
+                            apkData.setVersionCode(config.getVersionCode());
+                            apkData.setVersionName(config.getVersionName());
                             variantData.variantOutputFactory.create(apkData);
                         });
     }
