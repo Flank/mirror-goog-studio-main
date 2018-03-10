@@ -30,11 +30,11 @@ import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.ProgramResource;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -141,7 +141,7 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                 builder.setDisableDesugaring(true);
             }
 
-            D8.run(builder.build(), MoreExecutors.newDirectExecutorService());
+            D8.run(builder.build(), ForkJoinPool.commonPool());
         } catch (Throwable e) {
             throw getExceptionToRethrow(e, d8DiagnosticsHandler);
         }

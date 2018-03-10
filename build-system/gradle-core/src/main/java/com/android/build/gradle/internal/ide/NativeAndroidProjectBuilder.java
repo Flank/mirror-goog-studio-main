@@ -110,7 +110,7 @@ class NativeAndroidProjectBuilder {
     /**
      * Json streaming parser that converts a series of JSon files to {@link NativeAndroidProject}
      */
-    private static class JsonStreamingVisitor extends AndroidBuildGradleJsonStreamingVisitor {
+    static class JsonStreamingVisitor extends AndroidBuildGradleJsonStreamingVisitor {
         @NonNull private final NativeAndroidProjectBuilder builder;
         @NonNull private final String variantName;
         @Nullable private String currentToolchain = null;
@@ -269,13 +269,20 @@ class NativeAndroidProjectBuilder {
         @Override
         public void endLibraryFile() {
             checkNotNull(currentLibrarySourceFiles);
-            checkNotNull(currentLibraryFileSettingsName);
             checkNotNull(currentLibraryFilePath);
-            this.currentLibrarySourceFiles.add(
-                    new NativeFileImpl(
-                            new File(currentLibraryFilePath),
-                            currentLibraryFileSettingsName,
-                            newFileOrNull(currentLibraryFileWorkingDirectory)));
+
+            if (currentLibraryFileSettingsName != null) {
+                // See https://issuetracker.google.com/73122455
+                // In the case where there is no flags field we don't generate a settings key
+                // Just skip this library source file. Since we don't have flags we can't tell
+                // if it is even an Android-targeting build.
+                this.currentLibrarySourceFiles.add(
+                        new NativeFileImpl(
+                                new File(currentLibraryFilePath),
+                                currentLibraryFileSettingsName,
+                                newFileOrNull(currentLibraryFileWorkingDirectory)));
+            }
+
             this.currentLibraryFilePath = null;
             this.currentLibraryFileSettingsName = null;
             this.currentLibraryFileWorkingDirectory = null;
