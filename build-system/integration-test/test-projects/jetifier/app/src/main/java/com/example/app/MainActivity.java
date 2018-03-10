@@ -1,9 +1,9 @@
-package com.google.test.jetifier.support.android.testjetifierapp;
+package com.example.app;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
-import libToRefactor.Hello;
+import com.example.androidlib.Greetings;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -12,8 +12,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        TextView text = (TextView) findViewById(R.id.helloText);
-        String hello = new Hello().getHello();
-        text.setText(hello);
+        TextView textView = (TextView) findViewById(R.id.helloText);
+        String text = new Greetings().getGreetings(getApplicationContext());
+        textView.setText(text);
     }
 }

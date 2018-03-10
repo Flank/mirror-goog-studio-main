@@ -25,6 +25,7 @@ import org.junit.Test
  * Integration test for the Jetifier feature.
  */
 class JetifierTest {
+
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestProject("jetifier")
@@ -37,17 +38,13 @@ class JetifierTest {
         val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
         val dex = apk.mainDexFile.get()
 
-        // 1. Check that the old support library is not yet replaced with JetPack
-        val classInSupportLib =
-            MoreTruth.assertThat(dex).containsClass("Landroid/support/v7/preferences/Preference;")
-        classInSupportLib.that().hasSuperclass("Ljava/lang/Object;")
-        classInSupportLib.that().hasMethods("<init>", "getHello", "sayHello")
-        MoreTruth.assertThat(dex).doesNotContainClasses("Landroid/jetpack/prefs/main/Preference;")
+        // 1. Check that the old support library is not yet replaced with a new one
+        MoreTruth.assertThat(dex).containsClass("Landroid/support/v7/preference/Preference;")
+        MoreTruth.assertThat(dex).doesNotContainClasses("Landroidx/preference/Preference;")
 
         // 2. Check that the library to refactor is not yet refactored
         val classToRefactor =
-            MoreTruth.assertThat(dex).containsClass("LlibToRefactor/MyPreference;")
-        classToRefactor.that().hasSuperclass("Landroid/support/v7/preferences/Preference;")
-        classToRefactor.that().hasMethods("<init>", "test")
+            MoreTruth.assertThat(dex).containsClass("Lcom/example/androidlib/MyPreference;")
+        classToRefactor.that().hasSuperclass("Landroid/support/v7/preference/Preference;")
     }
 }
