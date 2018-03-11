@@ -191,7 +191,7 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     ProfilingApp profiling_app;
     profiling_app.app_pkg_name = app_pkg_name;
     profiling_app.trace_path = trace_path;
-    profiling_app.start_timestamp = clock_.GetCurrentTime();
+    profiling_app.start_timestamp = clock_->GetCurrentTime();
     profiling_app.configuration = configuration;
     cache_.AddProfilingStart(pid, profiling_app);
   } else {
@@ -262,7 +262,7 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
   ProfilingApp* app = cache_.GetProfilingApp(pid);
   // Whether the app is being profiled (there is a stored start profiling
   // request corresponding to the app)
-  response->set_check_timestamp(clock_.GetCurrentTime());
+  response->set_check_timestamp(clock_->GetCurrentTime());
   bool is_being_profiled = app != nullptr;
   response->set_being_profiled(is_being_profiled);
 
@@ -283,7 +283,7 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
     profiler::proto::StartupProfilingResponse* response) {
   ProfilingApp app;
   app.app_pkg_name = request->app_package();
-  app.start_timestamp = clock_.GetCurrentTime();
+  app.start_timestamp = clock_->GetCurrentTime();
   app.configuration = request->configuration();
   app.is_startup_profiling = true;
 

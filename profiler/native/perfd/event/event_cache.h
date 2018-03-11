@@ -30,8 +30,8 @@ namespace profiler {
 
 class EventCache {
  public:
-  explicit EventCache(const Daemon::Utilities& utilities)
-      : clock_(utilities.clock()) {}
+  explicit EventCache(Daemon::Utilities* utilities)
+      : clock_(utilities->clock()) {}
   // Adds data to the event cache, the data is copied.
   void AddActivityData(const proto::ActivityData& data);
   void AddSystemData(const proto::SystemData& data);
@@ -63,7 +63,7 @@ class EventCache {
   // App's Id to CacheMaps map.
   std::unordered_map<int32_t, CacheMaps> cache_;
 
-  const Clock& clock_;
+  Clock* clock_;
 };
 
 }  // end of namespace profiler

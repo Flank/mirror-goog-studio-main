@@ -69,7 +69,7 @@ class FakeSimpleperf final : public Simpleperf {
 TEST(SimpleperfManagerTest, StartProfiling) {
   FakeClock fake_clock(0);
   FakeSimpleperf simpleperf;
-  SimpleperfManager simpleperf_manager(fake_clock, simpleperf);
+  SimpleperfManager simpleperf_manager(&fake_clock, simpleperf);
   string error;
   string fake_trace_path = "/tmp/fake-trace";
   string app_name = "some_app_name";
@@ -84,7 +84,7 @@ TEST(SimpleperfManagerTest, StartProfiling) {
 TEST(SimpleperfManagerTest, StartStartupProfiling) {
   FakeClock fake_clock(0);
   FakeSimpleperf simpleperf;
-  SimpleperfManager simpleperf_manager(fake_clock, simpleperf);
+  SimpleperfManager simpleperf_manager(&fake_clock, simpleperf);
   string error;
   string fake_trace_path = "/tmp/fake-trace";
   string app_name = "some_app_name";
@@ -102,7 +102,7 @@ TEST(SimpleperfManagerTest, StartProfilingWithoutProfilingEnabled) {
   // Simulate a failure when trying to enable profiling on the device.
   // That should cause |StartProfiling| to fail.
   simpleperf.SetEnableProfilingSuccess(false);
-  SimpleperfManager simpleperf_manager(fake_clock, simpleperf);
+  SimpleperfManager simpleperf_manager(&fake_clock, simpleperf);
 
   string error;
   string fake_trace_path = "/tmp/fake-trace";
@@ -118,7 +118,7 @@ TEST(SimpleperfManagerTest, StartProfilingWithoutProfilingEnabled) {
 TEST(SimpleperfManagerTest, StopProfilingProfiledApp) {
   FakeClock fake_clock(0);
   FakeSimpleperf simpleperf;
-  SimpleperfManager simpleperf_manager(fake_clock, simpleperf);
+  SimpleperfManager simpleperf_manager(&fake_clock, simpleperf);
   string error;
   string fake_trace_path = "/tmp/trace_path";
   string app_name = "some_app_name";
@@ -136,7 +136,7 @@ TEST(SimpleperfManagerTest, StopProfilingProfiledApp) {
 TEST(SimpleperfManagerTest, StopProfilingNotProfiledApp) {
   FakeClock fake_clock(0);
   FakeSimpleperf simpleperf;
-  SimpleperfManager simpleperf_manager(fake_clock, simpleperf);
+  SimpleperfManager simpleperf_manager(&fake_clock, simpleperf);
   string error;
   string app_name = "app";  // App that is not currently being profiled
 
@@ -151,7 +151,7 @@ TEST(SimpleperfManagerTest, StopProfilingFailToKillSimpleperf) {
   // Simulate a failure when trying to kill simpleperf.
   // That should cause |StopProfiling| to fail.
   simpleperf.SetKillSimpleperfSuccess(false);
-  SimpleperfManager simpleperf_manager(fake_clock, simpleperf);
+  SimpleperfManager simpleperf_manager(&fake_clock, simpleperf);
 
   string error;
   string fake_trace_path = "/tmp/trace_path";
@@ -177,7 +177,7 @@ TEST(SimpleperfManagerTest, StopProfilingFailToConvertProto) {
   // protobuf format, which happens inside |ConvertRawToProto|. That should
   // cause |StopProfiling| to fail.
   simpleperf.SetReportSampleSuccess(false);
-  SimpleperfManager simpleperf_manager(fake_clock, simpleperf);
+  SimpleperfManager simpleperf_manager(&fake_clock, simpleperf);
 
   string error;
   string fake_trace_path = "/tmp/trace_path";
@@ -197,7 +197,7 @@ TEST(SimpleperfManagerTest, StopProfilingFailToConvertProto) {
 TEST(SimpleperfManagerTest, StopSimpleperfProfiledApp) {
   FakeClock fake_clock(0);
   FakeSimpleperf simpleperf;
-  SimpleperfManager simpleperf_manager(fake_clock, simpleperf);
+  SimpleperfManager simpleperf_manager(&fake_clock, simpleperf);
   string error;
   string fake_trace_path = "/tmp/trace_path";
   string app_name = "some_app_name";
@@ -220,7 +220,7 @@ TEST(SimpleperfManagerTest, StopSimpleperfFailToKillSimpleperf) {
   // Simulate a failure when trying to kill simpleperf.
   // That should cause |StopSimpleperf| to fail.
   simpleperf.SetKillSimpleperfSuccess(false);
-  SimpleperfManager simpleperf_manager(fake_clock, simpleperf);
+  SimpleperfManager simpleperf_manager(&fake_clock, simpleperf);
 
   string error;
   string fake_trace_path = "/tmp/trace_path";

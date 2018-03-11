@@ -117,7 +117,7 @@ class MemoryServiceImpl final
   MemoryCollector* GetCollector(const proto::Session& session);
 
   InternalMemoryServiceImpl* private_service_;
-  const Clock& clock_;
+  Clock* clock_;
   FileCache* file_cache_;
   // Maps pid to MemoryCollector
   std::unordered_map<int32_t, MemoryCollector>& collectors_;

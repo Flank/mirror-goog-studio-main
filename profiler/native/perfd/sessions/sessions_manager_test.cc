@@ -29,7 +29,7 @@ using profiler::proto::Session;
 
 TEST(SessionsManager, CanBeginAndEndASession) {
   FakeClock clock(1234);
-  SessionsManager sessions(clock);
+  SessionsManager sessions(&clock);
 
   Session session;
   bool result = sessions.BeginSession(-1, 1, &session);
@@ -52,7 +52,7 @@ TEST(SessionsManager, CanBeginAndEndASession) {
 
 TEST(SessionsManager, CanBeginMultipleSessions_AllRemainActiveUntilEnded) {
   FakeClock clock(1234);
-  SessionsManager sessions(clock);
+  SessionsManager sessions(&clock);
   Session session1;
   Session session2;
   Session session3;
@@ -109,7 +109,7 @@ TEST(SessionsManager, CanBeginMultipleSessions_AllRemainActiveUntilEnded) {
 
 TEST(SessionsManager, CanDeleteSessions) {
   FakeClock clock(1234);
-  SessionsManager sessions(clock);
+  SessionsManager sessions(&clock);
   Session session1;
   Session session2;
   Session session3;
@@ -139,7 +139,7 @@ TEST(SessionsManager, CanDeleteSessions) {
 
 TEST(SessionsManager, GetSessionWorks) {
   FakeClock clock(1000);
-  SessionsManager sessions(clock);
+  SessionsManager sessions(&clock);
 
   Session session;
   sessions.BeginSession(-1, 1, &session);
@@ -157,7 +157,7 @@ TEST(SessionsManager, GetSessionWorks) {
 
 TEST(SessionsManager, GetActiveSessionByPid) {
   FakeClock clock(1000);
-  SessionsManager sessions(clock);
+  SessionsManager sessions(&clock);
 
   Session session;
   sessions.BeginSession(-1, 1, &session);
@@ -177,7 +177,7 @@ TEST(SessionsManager, GetActiveSessionByPid) {
 
 TEST(SessionsManager, GetSessionsByTimeRangeWorks) {
   FakeClock clock(1000);
-  SessionsManager sessions(clock);
+  SessionsManager sessions(&clock);
   Session session;
 
   // Session from 1000 to 1500.
@@ -273,7 +273,7 @@ TEST(SessionsManager, GetSessionsByTimeRangeWorks) {
 
 TEST(SessionsManager, CallingBeginSessionOnActiveSessionSortsItToFront) {
   FakeClock clock(1000);
-  SessionsManager sessions(clock);
+  SessionsManager sessions(&clock);
   Session session1;
   Session session2;
   Session session3;
@@ -325,7 +325,7 @@ TEST(SessionsManager, CallingBeginSessionOnActiveSessionSortsItToFront) {
 TEST(SessionsManager,
      CallingBeginEndBeginWithSameParametersWillCreateNewSession) {
   FakeClock clock(1000);
-  SessionsManager sessions(clock);
+  SessionsManager sessions(&clock);
   Session session;
 
   EXPECT_EQ(0, sessions.GetSessions().size());
@@ -349,7 +349,7 @@ TEST(SessionsManager,
 
 TEST(SessionsManager, UniqueSessionIds) {
   FakeClock clock(1234);
-  SessionsManager sessions(clock);
+  SessionsManager sessions(&clock);
 
   std::unordered_set<int64_t> session_ids;
   for (int32_t device_id = 0; device_id < 100; device_id++) {

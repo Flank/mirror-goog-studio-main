@@ -71,25 +71,25 @@ int main(int argc, char** argv) {
   profiler::Daemon daemon(config_path, is_testing_profiler
                                            ? getenv("TEST_TMPDIR")
                                            : profiler::CurrentProcess::dir());
-  auto agent_config = daemon.utilities().config().GetAgentConfig();
+  auto agent_config = daemon.utilities()->config()->GetAgentConfig();
 
-  profiler::GenericComponent generic_component{&daemon.utilities(),
-                                               &daemon.sessions()};
+  profiler::GenericComponent generic_component(&daemon, daemon.utilities(),
+                                               daemon.sessions());
   daemon.RegisterComponent(&generic_component);
 
-  profiler::CpuProfilerComponent cpu_component{&daemon.utilities()};
+  profiler::CpuProfilerComponent cpu_component(daemon.utilities());
   daemon.RegisterComponent(&cpu_component);
 
-  profiler::MemoryProfilerComponent memory_component{&daemon.utilities()};
+  profiler::MemoryProfilerComponent memory_component(daemon.utilities());
   daemon.RegisterComponent(&memory_component);
 
-  profiler::EventProfilerComponent event_component{daemon.utilities()};
+  profiler::EventProfilerComponent event_component(daemon.utilities());
   daemon.RegisterComponent(&event_component);
   generic_component.AddAgentStatusChangedCallback(std::bind(
       &profiler::EventProfilerComponent::AgentStatusChangedCallback,
       &event_component, std::placeholders::_1, std::placeholders::_2));
 
-  profiler::NetworkProfilerComponent network_component{&daemon.utilities()};
+  profiler::NetworkProfilerComponent network_component(daemon.utilities());
   daemon.RegisterComponent(&network_component);
 
   profiler::IoProfilerComponent io_component;
@@ -97,12 +97,12 @@ int main(int argc, char** argv) {
     daemon.RegisterComponent(&io_component);
   }
 
-  profiler::EnergyProfilerComponent energy_component{&daemon.utilities()};
+  profiler::EnergyProfilerComponent energy_component(daemon.utilities());
   if (agent_config.energy_profiler_enabled()) {
     daemon.RegisterComponent(&energy_component);
   }
 
-  profiler::GraphicsProfilerComponent graphics_component{&daemon.utilities()};
+  profiler::GraphicsProfilerComponent graphics_component(daemon.utilities());
   daemon.RegisterComponent(&graphics_component);
 
   if (profiler::DeviceInfo::feature_level() >= 26 &&

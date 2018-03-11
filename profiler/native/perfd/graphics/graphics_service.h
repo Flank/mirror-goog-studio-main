@@ -56,7 +56,7 @@ class GraphicsServiceImpl final
   // name.
   GraphicsCollector *GetCollector(const std::string &app_and_activity_name);
 
-  const Clock &clock_;
+  Clock* clock_;
   // Mapping "app/activity"->GraphicsCollector.
   std::map<std::string, GraphicsCollector> &collectors_;
 };

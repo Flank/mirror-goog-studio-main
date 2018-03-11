@@ -33,7 +33,7 @@ namespace profiler {
 // Note: This class is thread safe
 class SessionsManager final {
  public:
-  SessionsManager(const Clock &clock) : clock_(clock) {}
+  SessionsManager(Clock* clock) : clock_(clock) {}
 
   // Return true if a new session has been created, otherwise returns false
   // (session already exists). Note that in both cases, |session| is always
@@ -78,7 +78,7 @@ class SessionsManager final {
   // that the mutex is already locked.
   void DoEndSession(proto::Session *session);
 
-  const Clock &clock_;
+  Clock* clock_;
 
   mutable std::mutex sessions_mutex_;
   // Sessions are sorted from most recent to least recent.

@@ -121,7 +121,7 @@ class ThreadMonitor {
   std::unordered_set<int32_t> pids_{};
   std::mutex pids_mutex_;
   // Clock that timestamps thread activities.
-  const Clock& clock_;
+  Clock* clock_;
   // Cache where collected data will be saved.
   CpuCache& cache_;
   // Last known thread states of all process being monitored.

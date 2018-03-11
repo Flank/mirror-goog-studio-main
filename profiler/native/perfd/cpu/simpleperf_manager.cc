@@ -116,7 +116,7 @@ string SimpleperfManager::GetFileBaseName(const string &app_name) const {
   trace_filebase << "simpleperf-";
   trace_filebase << app_name;
   trace_filebase << "-";
-  trace_filebase << clock_.GetCurrentTime();
+  trace_filebase << clock_->GetCurrentTime();
   return trace_filebase.str();
 }
 

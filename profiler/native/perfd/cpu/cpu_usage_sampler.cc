@@ -258,7 +258,7 @@ bool CpuUsageSampler::SampleAProcess(int32_t pid) {
           usage_files_->GetSystemCpuFrequencyPath(data_core->core()),
           data_core);
     }
-    data.set_end_timestamp(clock_.GetCurrentTime());
+    data.set_end_timestamp(clock_->GetCurrentTime());
     cache_.Add(pid, data);
     return true;
   }

@@ -42,8 +42,7 @@ class GraphicsCollector {
   // every |kSleepNs| nanoseconds.
   // |app_and_activity_name| should be formatted as app name + "/" + activity
   // name.
-  GraphicsCollector(const std::string &app_and_activity_name,
-                    const Clock &clock)
+  GraphicsCollector(const std::string &app_and_activity_name, Clock* clock)
       : graphics_cache_(clock, kSamplesCount),
         app_and_activity_name_(app_and_activity_name) {}
 

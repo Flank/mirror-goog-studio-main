@@ -129,7 +129,7 @@ void EventCache::MarkActivitiesAsTerminated(int32_t pid) {
     return;
   }
   auto& activity_cache = result->second.activity_cache;
-  int64_t current_time = clock_.GetCurrentTime();
+  int64_t current_time = clock_->GetCurrentTime();
   for (auto activity : activity_cache) {
     ActivityData& data = activity.second;
     assert(data.pid() == pid);

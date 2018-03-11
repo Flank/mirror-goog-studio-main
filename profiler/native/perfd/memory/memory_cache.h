@@ -35,7 +35,7 @@ class MemoryCache {
   static const int64_t kUnfinishedTimestamp = LLONG_MAX;
 
   // TODO consider configuring cache sizes independently.
-  explicit MemoryCache(const Clock& clock, FileCache* file_cache,
+  explicit MemoryCache(Clock* clock, FileCache* file_cache,
                        int32_t samples_capacity);
 
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
@@ -70,7 +70,7 @@ class MemoryCache {
   // Gets the next index into |*_samples_| for the corresponding |id|.
   int32_t GetNextSampleIndex(int32_t id);
 
-  const Clock& clock_;
+  Clock* clock_;
   FileCache* file_cache_;
 
   CircularBuffer<proto::MemoryData::MemorySample> memory_samples_;

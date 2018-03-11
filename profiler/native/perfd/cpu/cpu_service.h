@@ -35,7 +35,7 @@ namespace profiler {
 // CPU profiler specific service for desktop clients (e.g., Android Studio).
 class CpuServiceImpl final : public profiler::proto::CpuService::Service {
  public:
-  CpuServiceImpl(const Clock& clock, CpuCache* cpu_cache,
+  CpuServiceImpl(Clock* clock, CpuCache* cpu_cache,
                  CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor)
       : cache_(*cpu_cache),
         clock_(clock),
@@ -95,7 +95,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   // Data cache that will be queried to serve requests.
   CpuCache& cache_;
   // Clock that timestamps start profiling requests.
-  const Clock& clock_;
+  Clock* clock_;
   // The monitor that samples CPU usage data.
   CpuUsageSampler& usage_sampler_;
   // The monitor that detects thread activities (i.e., state changes).

@@ -67,7 +67,7 @@ class CpuUsageSampler {
   std::unordered_set<int32_t> pids_{};
   std::mutex pids_mutex_;
   // Clock that timestamps sample data.
-  const Clock& clock_;
+  Clock* clock_;
   // Cache where collected data will be saved.
   CpuCache& cache_;
   // Files that are used to sample CPU usage. Configurable for testing.

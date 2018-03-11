@@ -44,7 +44,7 @@ class Daemon {
 
     // Returns a const reference to the daemon's clock, which is used to produce
     // all timestamps in the deamon.
-    const Clock& clock() const { return clock_; }
+    Clock* clock() { return &clock_; }
 
     // Shared cache available to all profiler services. Useful for storing data
     // which is
@@ -55,7 +55,7 @@ class Daemon {
 
     // Returns a const reference to the config object to access all
     // configuration parameters.
-    const Config& config() { return config_; }
+    const Config* config() { return &config_; }
 
    private:
     // Clock that timestamps profiling data.
@@ -88,10 +88,10 @@ class Daemon {
   void RunServer(const std::string& server_address);
 
   // Return daemon utilities that should be shared across all profilers.
-  Utilities& utilities() { return utilities_; }
+  Utilities* utilities() { return &utilities_; }
 
   // Return SessionsManager shared across all profilers.
-  SessionsManager& sessions() { return sessions_; }
+  SessionsManager* sessions() { return &sessions_; }
 
  private:
   // Builder of the gRPC server.

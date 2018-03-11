@@ -36,7 +36,7 @@ struct AtraceProfilingMetadata {
 
 class AtraceManager {
  public:
-  explicit AtraceManager(const Clock &clock, int dump_data_interval_ms);
+  explicit AtraceManager(Clock* clock, int dump_data_interval_ms);
   ~AtraceManager();
 
   // Returns true if profiling of app |app_name| was started successfully.
@@ -54,7 +54,7 @@ class AtraceManager {
   int GetDumpCount() { return dumps_created_; }
 
  private:
-  const Clock &clock_;
+  Clock* clock_;
   static const char *kAtraceExecutable;
   static const char *kArguments;
   AtraceProfilingMetadata profiled_app_;

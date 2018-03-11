@@ -48,7 +48,7 @@ struct OnGoingProfiling {
 
 class SimpleperfManager {
  public:
-  explicit SimpleperfManager(const Clock &clock, const Simpleperf &simpleperf)
+  explicit SimpleperfManager(Clock* clock, const Simpleperf &simpleperf)
       : clock_(clock), simpleperf_(simpleperf) {}
   ~SimpleperfManager();
 
@@ -72,7 +72,7 @@ class SimpleperfManager {
   bool IsProfiling(const std::string &app_name);
 
  private:
-  const Clock &clock_;
+  Clock* clock_;
   std::map<std::string, OnGoingProfiling> profiled_;
   std::mutex start_stop_mutex_;  // Protects simpleperf start/stop
   const Simpleperf &simpleperf_;

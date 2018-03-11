@@ -39,7 +39,7 @@ namespace profiler {
 // TODO: revisit whether this is too large.
 constexpr int64_t kAllocSampleCapcity = 500;
 
-MemoryCache::MemoryCache(const Clock& clock, FileCache* file_cache,
+MemoryCache::MemoryCache(Clock* clock, FileCache* file_cache,
                          int32_t samples_capacity)
     : clock_(clock),
       file_cache_(file_cache),
@@ -55,7 +55,7 @@ MemoryCache::MemoryCache(const Clock& clock, FileCache* file_cache,
 
 void MemoryCache::SaveMemorySample(const MemoryData::MemorySample& sample) {
   std::lock_guard<std::mutex> lock(memory_samples_mutex_);
-  memory_samples_.Add(sample)->set_timestamp(clock_.GetCurrentTime());
+  memory_samples_.Add(sample)->set_timestamp(clock_->GetCurrentTime());
 }
 
 void MemoryCache::SaveAllocStatsSample(
@@ -72,13 +72,13 @@ void MemoryCache::SaveGcStatsSample(const MemoryData::GcStatsSample& sample) {
 void MemoryCache::SaveAllocationEvents(const BatchAllocationSample* request) {
   std::lock_guard<std::mutex> lock(allocations_samples_mutex_);
   BatchAllocationSample* cache_sample = allocations_samples_.Add(*request);
-  cache_sample->set_timestamp(clock_.GetCurrentTime());
+  cache_sample->set_timestamp(clock_->GetCurrentTime());
 }
 
 void MemoryCache::SaveJNIRefEvents(const BatchJNIGlobalRefEvent* request) {
   std::lock_guard<std::mutex> lock(jni_ref_batches_mutex_);
   BatchJNIGlobalRefEvent* cache_batch = jni_refs_event_batches_.Add(*request);
-  cache_batch->set_timestamp(clock_.GetCurrentTime());
+  cache_batch->set_timestamp(clock_->GetCurrentTime());
 }
 
 bool MemoryCache::StartHeapDump(const std::string& dump_file_name,

@@ -32,12 +32,9 @@ class ProfilerServiceImpl final
     : public profiler::proto::ProfilerService::Service {
  public:
   explicit ProfilerServiceImpl(
-      Daemon::Utilities* utilities, SessionsManager* sessions,
+      Daemon* daemon,
       std::unordered_map<int32_t, int64_t>* heartbeat_timestamp_map)
-      : clock_(utilities->clock()),
-        config_(utilities->config()),
-        file_cache_(*utilities->file_cache()),
-        sessions_(sessions),
+      : daemon_(daemon),
         heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
 
   grpc::Status GetCurrentTime(grpc::ServerContext* context,
@@ -108,11 +105,9 @@ class ProfilerServiceImpl final
   // False otherwise.
   bool CheckAppHeartBeat(int32_t app_pid);
 
-  // Clock knows about timestamps.
-  const Clock& clock_;
-  const Config& config_;
-  FileCache& file_cache_;
-  SessionsManager* sessions_;
+  // The daemon this service talks to.
+  Daemon* daemon_;
+
   std::unordered_map<int32_t, int64_t>& heartbeat_timestamp_map_;
 };
 

@@ -22,12 +22,12 @@ using profiler::proto::GraphicsData;
 
 namespace profiler {
 
-GraphicsCache::GraphicsCache(const Clock &clock, int32_t samples_capacity)
+GraphicsCache::GraphicsCache(Clock* clock, int32_t samples_capacity)
     : clock_(clock), graphics_samples_(samples_capacity) {}
 
 void GraphicsCache::SaveGraphicsDataVector(
     const std::vector<GraphicsData> data_vector) {
-  int64_t current_time(clock_.GetCurrentTime());
+  int64_t current_time(clock_->GetCurrentTime());
   std::lock_guard<std::mutex> graphics_lock(graphics_samples_mutex_);
   for (auto &data : data_vector) {
     GraphicsData *new_sample = graphics_samples_.Add(data);
