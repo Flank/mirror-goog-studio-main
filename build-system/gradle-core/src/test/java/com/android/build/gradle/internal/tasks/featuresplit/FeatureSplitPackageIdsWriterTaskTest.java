@@ -54,7 +54,7 @@ public class FeatureSplitPackageIdsWriterTaskTest {
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
 
         task = project.getTasks().create("test", FeatureSplitPackageIdsWriterTask.class);
-        task.outputDirectory = outputDirectory;
+        task.outputFile = new File(outputDirectory, FeatureSplitPackageIds.OUTPUT_FILE_NAME);
         task.input = fileCollection;
 
         when(fileCollection.getAsFileTree()).thenReturn(fileTree);

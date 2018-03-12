@@ -45,9 +45,7 @@ import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIdsWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask;
 import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBuilder;
@@ -226,15 +224,22 @@ public class ApplicationTaskManager extends TaskManager {
         // Add feature related tasks if necessary
         if (variantScope.getType().isBaseModule()) {
             // Base feature specific tasks.
-            createFeatureIdsWriterTask(variantScope);
+            taskFactory.create(new FeatureSplitPackageIdsWriterTask.ConfigAction(variantScope));
             if (extension.getDataBinding().isEnabled()) {
-                createDataBindingExportFeaturePackagesTask(variantScope);
+                // Create a task that will package the manifest ids(the R file packages) of all features into a
+                // file. This file's path is passed into the Data Binding annotation processor which uses it to
+                // known about all available features.
+                //
+                // <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
+                taskFactory.create(
+                        new DataBindingExportFeatureApplicationIdsTask.ConfigAction(variantScope));
+
             }
         } else {
             // Non-base feature specific task.
-            createFeatureDeclarationTasks(variantScope);
+            taskFactory.create(new FeatureSplitDeclarationWriterTask.ConfigAction(variantScope));
             if (extension.getDataBinding().isEnabled()) {
-                createDataBindingExportFeatureInfoTask(variantScope);
+                taskFactory.create(new DataBindingExportFeatureInfoTask.ConfigAction(variantScope));
             }
         }
 
@@ -493,90 +498,6 @@ public class ApplicationTaskManager extends TaskManager {
 
     private static File getIncrementalFolder(VariantScope variantScope, String taskName) {
         return new File(variantScope.getIncrementalDir(taskName), variantScope.getDirName());
-    }
-
-    /**
-     * Creates feature declaration task. Task will produce artifacts consumed by the base feature.
-     */
-    private void createFeatureDeclarationTasks(@NonNull VariantScope variantScope) {
-
-        File featureSplitDeclarationOutputDirectory =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "feature-split",
-                        "declaration",
-                        variantScope.getVariantConfiguration().getDirName());
-
-        FeatureSplitDeclarationWriterTask featureSplitWriterTaskAndroidTask =
-                taskFactory.create(
-                        new FeatureSplitDeclarationWriterTask.ConfigAction(
-                                variantScope, featureSplitDeclarationOutputDirectory));
-
-        variantScope.addTaskOutput(
-                InternalArtifactType.METADATA_FEATURE_DECLARATION,
-                FeatureSplitDeclaration.getOutputFile(featureSplitDeclarationOutputDirectory),
-                featureSplitWriterTaskAndroidTask.getName());
-    }
-
-    /**
-     * Create a task that will package necessary information about the feature into a file. This
-     * file's path is passed into the Data Binding annotation processor.
-     *
-     * <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
-     */
-    private void createDataBindingExportFeatureInfoTask(@NonNull VariantScope variantScope) {
-        File outFolder =
-                variantScope.getIntermediateDir(
-                        InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO);
-
-        DataBindingExportFeatureInfoTask exportPackagesTask =
-                taskFactory.create(
-                        new DataBindingExportFeatureInfoTask.ConfigAction(variantScope, outFolder));
-        variantScope.addTaskOutput(
-                InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO,
-                outFolder,
-                exportPackagesTask.getName());
-    }
-
-    private void createFeatureIdsWriterTask(@NonNull VariantScope variantScope) {
-        File featureIdsOutputDirectory =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "feature-split",
-                        "ids",
-                        variantScope.getVariantConfiguration().getDirName());
-
-        FeatureSplitPackageIdsWriterTask writeTask =
-                taskFactory.create(
-                        new FeatureSplitPackageIdsWriterTask.ConfigAction(
-                                variantScope, featureIdsOutputDirectory));
-
-        variantScope.addTaskOutput(
-                InternalArtifactType.FEATURE_IDS_DECLARATION,
-                FeatureSplitPackageIds.getOutputFile(featureIdsOutputDirectory),
-                writeTask.getName());
-    }
-
-    /**
-     * Create a task that will package the manifest ids(the R file packages) of all features into a
-     * file. This file's path is passed into the Data Binding annotation processor which uses it to
-     * known about all available features.
-     *
-     * <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
-     */
-    private void createDataBindingExportFeaturePackagesTask(@NonNull VariantScope variantScope) {
-        File featurePackagesOutputDirectory =
-                variantScope.getIntermediateDir(
-                        InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO);
-
-        DataBindingExportFeatureApplicationIdsTask exportPackagesTask =
-                taskFactory.create(
-                        new DataBindingExportFeatureApplicationIdsTask.ConfigAction(
-                                variantScope, featurePackagesOutputDirectory));
-        variantScope.addTaskOutput(
-                InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO,
-                featurePackagesOutputDirectory,
-                exportPackagesTask.getName());
     }
 
     private void createTransitiveDepsTask(@NonNull VariantScope scope) {

@@ -397,7 +397,10 @@ class NamespacedFeaturesTest {
         val idsList =
                 project.getSubproject(":baseFeature")
                         .getIntermediateFile(
-                                "feature-split", "ids", "feature", "debug", "package_ids.json")
+                            "feature_ids_declaration",
+                            "debugFeature",
+                            "generateDebugFeatureFeaturePackageIds",
+                            "package_ids.json")
         FileSubject.assertThat(idsList).exists()
         val packageIds = FeatureSplitPackageIds.load(idsList)
         assertThat(packageIds).isNotNull()

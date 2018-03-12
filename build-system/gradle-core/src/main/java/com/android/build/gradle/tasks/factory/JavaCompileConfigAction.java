@@ -17,7 +17,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.VariantType;
 import com.android.sdklib.BuildToolInfo;
@@ -55,11 +54,12 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
 
     @Override
     public void execute(@NonNull final AndroidJavaCompile javacTask) {
-        BaseVariantData variantData = scope.getVariantData();
         scope.getVariantData().javacTask = javacTask;
         scope.getVariantData().javaCompilerTask = javacTask;
         final GlobalScope globalScope = scope.getGlobalScope();
         final Project project = globalScope.getProject();
+        boolean isDataBindingEnabled = globalScope.getExtension().getDataBinding().isEnabled();
+
         javacTask.compileSdkVersion = globalScope.getExtension().getCompileSdkVersion();
         javacTask.mInstantRunBuildContext = scope.getInstantRunBuildContext();
 
@@ -175,7 +175,8 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                         scope.getAnnotationProcessorOutputDir());
         javacTask.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
 
-        if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
+        if (isDataBindingEnabled) {
+
             if (scope.hasOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
                 // if data binding is enabled and this variant has merged dependency artifacts, then
                 // make the javac task depend on them. (test variants don't do the merge so they
@@ -195,22 +196,27 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                     InternalArtifactType.DATA_BINDING_ARTIFACT,
                     javacTask.dataBindingArtifactOutputDirectory,
                     javacTask.getName());
+
             VariantType variantType = scope.getType();
             if (variantType.isApk() && !variantType.isForTesting()) {
                 if (variantType.isBaseModule()) {
                     javacTask
                             .getInputs()
                             .file(
-                                    scope.getOutput(
-                                            InternalArtifactType
-                                                    .FEATURE_DATA_BINDING_BASE_FEATURE_INFO));
+                                    scope.getBuildArtifactsHolder()
+                                            .getFinalArtifactFiles(
+                                                    InternalArtifactType
+                                                            .FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
+                                            .get());
                 } else {
                     javacTask
                             .getInputs()
                             .file(
-                                    scope.getOutput(
-                                            InternalArtifactType
-                                                    .FEATURE_DATA_BINDING_FEATURE_INFO));
+                                    scope.getBuildArtifactsHolder()
+                                            .getFinalArtifactFiles(
+                                                    InternalArtifactType
+                                                            .FEATURE_DATA_BINDING_FEATURE_INFO)
+                                            .get());
                 }
             }
         }

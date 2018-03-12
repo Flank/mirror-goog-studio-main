@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks.featuresplit;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
@@ -26,7 +27,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildException;
 
@@ -34,16 +35,16 @@ import org.gradle.tooling.BuildException;
 public class FeatureSplitPackageIdsWriterTask extends AndroidVariantTask {
 
     FileCollection input;
-    File outputDirectory;
+    File outputFile;
 
     @InputFiles
     FileCollection getInput() {
         return input;
     }
 
-    @OutputDirectory
-    File getOutputDirectory() {
-        return outputDirectory;
+    @OutputFile
+    File getOutputFile() {
+        return outputFile;
     }
 
     @TaskAction
@@ -58,19 +59,16 @@ public class FeatureSplitPackageIdsWriterTask extends AndroidVariantTask {
                 throw new BuildException("Cannot read features split declaration file", e);
             }
         }
-
         // save the list.
-        featureSplitPackageIds.save(outputDirectory);
+        featureSplitPackageIds.save(outputFile);
     }
 
     public static class ConfigAction implements TaskConfigAction<FeatureSplitPackageIdsWriterTask> {
 
         @NonNull private final VariantScope variantScope;
-        @NonNull private final File outputDirectory;
 
-        public ConfigAction(@NonNull VariantScope variantScope, @NonNull File outputDirectory) {
+        public ConfigAction(@NonNull VariantScope variantScope) {
             this.variantScope = variantScope;
-            this.outputDirectory = outputDirectory;
         }
 
         @NonNull
@@ -88,7 +86,13 @@ public class FeatureSplitPackageIdsWriterTask extends AndroidVariantTask {
         @Override
         public void execute(@NonNull FeatureSplitPackageIdsWriterTask task) {
             task.setVariantName(variantScope.getFullVariantName());
-            task.outputDirectory = outputDirectory;
+            task.outputFile =
+                    variantScope
+                            .getBuildArtifactsHolder()
+                            .appendArtifact(
+                                    InternalArtifactType.FEATURE_IDS_DECLARATION,
+                                    task,
+                                    FeatureSplitPackageIds.OUTPUT_FILE_NAME);
             task.input =
                     variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,

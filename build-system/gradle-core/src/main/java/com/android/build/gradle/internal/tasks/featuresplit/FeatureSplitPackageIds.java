@@ -65,10 +65,9 @@ public class FeatureSplitPackageIds {
         return splitPacakgeId.isPresent() ? splitPacakgeId.get().id : null;
     }
 
-    public void save(@NonNull File outputDirectory) throws IOException {
+    public void save(@NonNull File outputFile) throws IOException {
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gson = gsonBuilder.create();
-        File outputFile = getOutputFile(outputDirectory);
         Files.write(gson.toJson(featureSplits), outputFile, Charsets.UTF_8);
     }
 

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks.databinding
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.FeaturePackageInfo
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds
@@ -84,8 +85,7 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(
     }
 
     class ConfigAction(
-        private val variantScope: VariantScope,
-        private var outFolder: File
+        private val variantScope: VariantScope
     ) : TaskConfigAction<DataBindingExportFeatureInfoTask> {
         override fun getName() =
             variantScope.getTaskName("dataBindingExportFeatureInfo")
@@ -93,7 +93,9 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(
         override fun getType() = DataBindingExportFeatureInfoTask::class.java
 
         override fun execute(task: DataBindingExportFeatureInfoTask) {
-            task.outFolder = outFolder
+            task.outFolder = variantScope.buildArtifactsHolder
+                .appendArtifact(InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO,
+                    task)
             task.directDependencies = variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,

@@ -47,7 +47,8 @@ public class FeatureSplitPackageIdsTest {
         featureSplitPackageIds.addFeatureSplit("one");
         featureSplitPackageIds.addFeatureSplit("two");
         featureSplitPackageIds.addFeatureSplit("three");
-        featureSplitPackageIds.save(temporaryFolder.getRoot());
+        featureSplitPackageIds.save(
+                new File(temporaryFolder.getRoot(), FeatureSplitPackageIds.OUTPUT_FILE_NAME));
         File[] files = temporaryFolder.getRoot().listFiles();
         assertThat(files).isNotNull();
         assertThat(files.length).isEqualTo(1);

@@ -85,7 +85,11 @@ public class FeatureTest {
         GradleTestProject featureProject = sProject.getSubproject(":feature");
         File featureSplit =
                 featureProject.getIntermediateFile(
-                        "feature-split", "declaration", "feature", "release", "feature-split.json");
+                        "metadata_feature_declaration",
+                        "releaseFeature",
+                        "featureReleaseFeatureWriter",
+                        "out",
+                        "feature-split.json");
         assertThat(featureSplit).exists();
         FeatureSplitDeclaration featureSplitDeclaration =
                 FeatureSplitDeclaration.load(featureSplit);
@@ -152,7 +156,10 @@ public class FeatureTest {
         GradleTestProject baseProject = sProject.getSubproject(":baseFeature");
         File idsList =
                 baseProject.getIntermediateFile(
-                        "feature-split", "ids", "feature", "debug", "package_ids.json");
+                        "feature_ids_declaration",
+                        "debugFeature",
+                        "generateDebugFeatureFeaturePackageIds",
+                        "package_ids.json");
         assertThat(idsList).exists();
         FeatureSplitPackageIds packageIds = FeatureSplitPackageIds.load(idsList);
         assertThat(packageIds).isNotNull();

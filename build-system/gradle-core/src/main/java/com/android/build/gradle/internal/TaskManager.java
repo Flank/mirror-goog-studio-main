@@ -93,6 +93,7 @@ import com.android.build.gradle.internal.res.GenerateLibraryRFileTask;
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -219,6 +220,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.ArrayList;
@@ -2898,16 +2900,27 @@ public abstract class TaskManager {
                     scope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
                             .getSingleFile();
             File baseFeatureInfoFolder = null;
-            if (scope.hasOutput(InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO)) {
+            BuildArtifactsHolder buildArtifactsHolder = scope.getBuildArtifactsHolder();
+            if (buildArtifactsHolder.hasArtifact(
+                    InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO)) {
                 baseFeatureInfoFolder =
-                        scope.getIntermediateDir(
-                                InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO);
+                        Iterables.getOnlyElement(
+                                buildArtifactsHolder
+                                        .getFinalArtifactFiles(
+                                                InternalArtifactType
+                                                        .FEATURE_DATA_BINDING_BASE_FEATURE_INFO)
+                                        .get());
             }
             File featureInfoFile = null;
-            if (scope.hasOutput(InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO)) {
+            if (buildArtifactsHolder.hasArtifact(
+                    InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO)) {
                 featureInfoFile =
-                        scope.getIntermediateDir(
-                                InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO);
+                        Iterables.getOnlyElement(
+                                buildArtifactsHolder
+                                        .getFinalArtifactFiles(
+                                                InternalArtifactType
+                                                        .FEATURE_DATA_BINDING_FEATURE_INFO)
+                                        .get());
             }
             // FIXME: Use the new Gradle 4.5 annotation processor inputs API when we integrate.
             DataBindingCompilerArgs args =
@@ -3754,14 +3767,17 @@ public abstract class TaskManager {
             if (variantType.isBaseModule()) {
                 kaptTask.getInputs()
                         .file(
-                                scope.getOutput(
-                                        InternalArtifactType
-                                                .FEATURE_DATA_BINDING_BASE_FEATURE_INFO));
+                                scope.getBuildArtifactsHolder()
+                                        .getFinalArtifactFiles(
+                                                InternalArtifactType
+                                                        .FEATURE_DATA_BINDING_BASE_FEATURE_INFO));
             } else {
                 kaptTask.getInputs()
                         .file(
-                                scope.getOutput(
-                                        InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO));
+                                scope.getBuildArtifactsHolder()
+                                        .getFinalArtifactFiles(
+                                                InternalArtifactType
+                                                        .FEATURE_DATA_BINDING_FEATURE_INFO));
             }
         }
     }
