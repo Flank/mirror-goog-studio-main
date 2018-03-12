@@ -28,9 +28,9 @@
 #include "utils/config.h"
 #include "utils/log.h"
 
-#include "instrumentation.h"
-#include "reader.h"
-#include "writer.h"
+#include "slicer/instrumentation.h"
+#include "slicer/reader.h"
+#include "slicer/writer.h"
 
 using profiler::Agent;
 using profiler::Log;
