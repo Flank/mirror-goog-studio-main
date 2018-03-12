@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.TaskFactory
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
@@ -25,8 +26,13 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
+import com.google.common.collect.ImmutableMap
+import com.google.common.collect.Lists
 import org.gradle.api.Task
+import org.gradle.internal.resolve.result.BuildableArtifactResolveResult
 import java.io.File
+import java.util.LinkedList
+import java.util.Stack
 
 /**
  * Responsible for the creation of tasks to build namespaced resources.
@@ -101,7 +107,8 @@ class NamespacedResourcesTaskManager(
         val task = taskFactory.create(
                 GenerateNamespacedLibraryRFilesTask.ConfigAction(
                         variantScope,
-                        variantScope.getOutput(InternalArtifactType.PARTIAL_R_FILES),
+                        variantScope.buildArtifactsHolder.getFinalArtifactFiles(
+                            InternalArtifactType.PARTIAL_R_FILES),
                         rClassJarFile,
                         resIdsFile))
 
@@ -190,52 +197,23 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createCompileResourcesTask() {
-        val compiledDirectory =
-                FileUtils.join(
-                        variantScope.globalScope.intermediatesDir,
-                        SdkConstants.FD_RES,
-                        SdkConstants.FD_COMPILED,
-                        variantScope.variantConfiguration.dirName)
-        val partialRDirectory =
-                FileUtils.join(
-                        variantScope.globalScope.intermediatesDir,
-                        SdkConstants.FD_RES,
-                        SdkConstants.FD_PARTIAL_R,
-                        variantScope.variantConfiguration.dirName)
 
-        val tasks = mutableListOf<Task>()
-        // Preserving the source-set order in overlays is important.
-        val directories = mutableListOf<File>()
-        val partialRDirectories = mutableListOf<File>()
+        // reverse the list as it comes in natural order of importance but BuildableArtifact will
+        // chain them in reverse order (append means the new folder is before the existing one).
+        val reversedResources : LinkedList<Map.Entry<String, BuildableArtifact>> = LinkedList()
+        variantScope.variantData.androidResources.forEach { reversedResources.addFirst(it) }
 
-        for((sourceSetName, artifacts) in variantScope.variantData.androidResources){
-            val outputDir = File(compiledDirectory, sourceSetName)
-            val rOutputDir = File(partialRDirectory, sourceSetName)
+        for((sourceSetName, artifacts) in reversedResources) {
             val name = "compile${sourceSetName.capitalize()}" +
                     "ResourcesFor${variantScope.fullVariantName.capitalize()}"
-            tasks.add(taskFactory.create(CompileSourceSetResources.ConfigAction(
+            // TODO : figure out when we need explicit task dependency and potentially remove it.
+            taskFactory.create(CompileSourceSetResources.ConfigAction(
                     name = name,
                     inputDirectories = artifacts,
-                    outputDirectory = outputDir,
-                    partialRDirectory = rOutputDir,
                     variantScope = variantScope,
-                    aaptIntermediateDirectory = variantScope.getIncrementalDir(name))))
-            directories.add(outputDir)
-            partialRDirectories.add(rOutputDir)
+                    aaptIntermediateDirectory = variantScope.getIncrementalDir(name)))
+                .dependsOn(variantScope.resourceGenTask)
         }
-        val compiled = variantScope.globalScope.project.files(directories)
-        val partialR = variantScope.globalScope.project.files(partialRDirectories)
-
-        tasks.forEach {
-            it.dependsOn(variantScope.resourceGenTask)
-            compiled.builtBy(it)
-            partialR.builtBy(it)
-        }
-
-        variantScope.addTaskOutput(
-                InternalArtifactType.RES_COMPILED_FLAT_FILES, compiled, null)
-        variantScope.addTaskOutput(
-                InternalArtifactType.PARTIAL_R_FILES, partialR, null)
     }
 
     private fun createLinkResourcesTask() {

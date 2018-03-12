@@ -227,9 +227,9 @@ public class ApplicationTaskManager extends TaskManager {
             taskFactory.create(new FeatureSetMetadataWriterTask.ConfigAction(variantScope));
 
             if (extension.getDataBinding().isEnabled()) {
-                // Create a task that will package the manifest ids(the R file packages) of all features into a
-                // file. This file's path is passed into the Data Binding annotation processor which uses it to
-                // known about all available features.
+                // Create a task that will package the manifest ids(the R file packages) of all
+                // features into a file. This file's path is passed into the Data Binding annotation
+                // processor which uses it to known about all available features.
                 //
                 // <p>see: {@link TaskManager#setDataBindingAnnotationProcessorParams(VariantScope)}
                 taskFactory.create(
@@ -238,8 +238,11 @@ public class ApplicationTaskManager extends TaskManager {
             }
         } else {
             // Non-base feature specific task.
+            // Task will produce artifacts consumed by the base feature
             taskFactory.create(new FeatureSplitDeclarationWriterTask.ConfigAction(variantScope));
             if (extension.getDataBinding().isEnabled()) {
+                // Create a task that will package necessary information about the feature into a
+                // file which is passed into the Data Binding annotation processor.
                 taskFactory.create(new DataBindingExportFeatureInfoTask.ConfigAction(variantScope));
             }
         }

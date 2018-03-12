@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.symbols.exportToCompiledJava
@@ -45,7 +46,7 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var partialRFilesCollection: FileCollection private set
+    lateinit var partialRFiles: BuildableArtifact private set
 
     @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
     @get:Input val packageForR get() = packageForRSupplier.get()
@@ -57,7 +58,7 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
     fun taskAction() {
         // Keeping the order is important.
         val partialRFiles = ImmutableList.builder<File>()
-        partialRFilesCollection.forEach { directory ->
+        this.partialRFiles.forEach { directory ->
            partialRFiles.addAll(directory.listFiles{ f -> f.isFile }.asIterable())
         }
 
@@ -76,7 +77,7 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
 
     class ConfigAction(
             private val scope: VariantScope,
-            private val partialRFiles: FileCollection,
+            private val partialRFiles: BuildableArtifact,
             private val rJarFile: File,
             private val resIdsFile: File) : TaskConfigAction<GenerateNamespacedLibraryRFilesTask> {
 
@@ -86,7 +87,7 @@ open class GenerateNamespacedLibraryRFilesTask : DefaultTask() {
 
         override fun execute(task: GenerateNamespacedLibraryRFilesTask) {
 
-            task.partialRFilesCollection = partialRFiles
+            task.partialRFiles = partialRFiles
             task.packageForRSupplier =
                     Suppliers.memoize(scope.variantConfiguration::getOriginalApplicationId)
             task.rJarFile = rJarFile

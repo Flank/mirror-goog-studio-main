@@ -649,7 +649,7 @@ public abstract class BaseVariantData implements TaskContainer {
         return sourceSets.build();
     }
 
-    public Map<String, BuildableArtifact> getAndroidResources() {
+    public LinkedHashMap<String, BuildableArtifact> getAndroidResources() {
         return getVariantConfiguration()
                 .getSortedSourceProviders()
                 .stream()

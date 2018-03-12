@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -54,7 +55,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
         AndroidBuilderTask() {
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFile: FileCollection private set
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDirectories: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDirectories: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional var tested: FileCollection? = null; private set
@@ -111,7 +112,8 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
         override fun execute(task: LinkLibraryAndroidResourcesTask) {
             task.variantName = scope.fullVariantName
             task.manifestFile = scope.getOutput(InternalArtifactType.STATIC_LIBRARY_MANIFEST)
-            task.inputResourcesDirectories = scope.getOutput(InternalArtifactType.RES_COMPILED_FLAT_FILES)
+            task.inputResourcesDirectories = scope.buildArtifactsHolder
+                .getFinalArtifactFiles(InternalArtifactType.RES_COMPILED_FLAT_FILES)
             task.libraryDependencies =
                     scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
