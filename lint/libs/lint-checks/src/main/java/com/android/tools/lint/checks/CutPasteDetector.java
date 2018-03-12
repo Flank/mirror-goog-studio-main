@@ -17,6 +17,8 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.RESOURCE_CLZ_ID;
+import static com.android.tools.lint.checks.ViewTypeDetector.FIND_VIEW_BY_ID;
+import static com.android.tools.lint.checks.ViewTypeDetector.REQUIRE_VIEW_BY_ID;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -32,7 +34,7 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.google.common.collect.Maps;
 import com.intellij.psi.PsiMethod;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.jetbrains.uast.UArrayAccessExpression;
@@ -90,7 +92,7 @@ public class CutPasteDetector extends Detector implements SourceCodeScanner {
 
     @Override
     public List<String> getApplicableMethodNames() {
-        return Collections.singletonList(ViewTypeDetector.FIND_VIEW_BY_ID);
+        return Arrays.asList(FIND_VIEW_BY_ID, REQUIRE_VIEW_BY_ID);
     }
 
     @Override

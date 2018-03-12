@@ -59,7 +59,11 @@ public class CutPasteDetectorTest extends AbstractCheckTest {
                         + "                    view2 = findViewById(R.id.duplicated);\n"
                         + "                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    src/test/pkg/PasteError.java:168: First usage here\n"
-                        + "0 errors, 8 warnings\n";
+                        + "src/test/pkg/PasteError.java:182: Warning: The id R.id.duplicated has already been looked up in this method; possible cut & paste error? [CutPasteId]\n"
+                        + "            view2 = requireViewById(R.id.duplicated);\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    src/test/pkg/PasteError.java:179: First usage here\n"
+                        + "0 errors, 9 warnings";
 
         //noinspection all // Sample code
         lint().files(
@@ -240,6 +244,19 @@ public class CutPasteDetectorTest extends AbstractCheckTest {
                                         + "                }\n"
                                         + "            }\n"
                                         + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    protected void require_by_id_error_branch_1() {\n"
+                                        + "        if (true) {\n"
+                                        + "            view1 = requireViewById(R.id.duplicated);\n"
+                                        + "        }\n"
+                                        + "        if (true) {\n"
+                                        + "            view2 = requireViewById(R.id.duplicated);\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    public final <T extends View> T requireViewById(int id) {\n"
+                                        + "        throw new RuntimeException(\"Stub!\");\n"
                                         + "    }\n"
                                         + "\n"
                                         + "    private View view1;\n"
