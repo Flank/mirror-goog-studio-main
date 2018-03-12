@@ -185,6 +185,7 @@ class PublishingSpecs {
                 // this is only for non-base modules.
                 metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)
                 metadata(METADATA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
+                metadata(APP_CLASSES, ArtifactType.METADATA_CLASSES)
 
                 // ----
 
@@ -262,6 +263,7 @@ class PublishingSpecs {
             variantSpec(VariantTypeImpl.FEATURE) {
                 metadata(METADATA_FEATURE_DECLARATION, ArtifactType.METADATA_FEATURE_DECLARATION)
                 metadata(METADATA_FEATURE_MANIFEST, ArtifactType.METADATA_FEATURE_MANIFEST)
+                metadata(FEATURE_CLASSES, ArtifactType.METADATA_CLASSES)
 
                 api(FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG)
                 api(FEATURE_CLASSES, ArtifactType.CLASSES)
