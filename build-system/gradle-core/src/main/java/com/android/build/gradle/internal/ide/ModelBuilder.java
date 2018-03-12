@@ -57,6 +57,8 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.DefaultManifestParser;
+import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueReporter;
@@ -457,6 +459,13 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
         AndroidArtifact mainArtifact = createAndroidArtifact(ARTIFACT_MAIN, variantData);
 
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
+        File manifest = variantConfiguration.getMainManifest();
+        if (manifest != null) {
+            ManifestAttributeSupplier attributeSupplier =
+                    new DefaultManifestParser(manifest, () -> true);
+            validateMinSdkVersion(attributeSupplier);
+            validateTargetSdkVersion(attributeSupplier);
+        }
 
         String variantName = variantConfiguration.getFullName();
 
@@ -805,6 +814,34 @@ public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuild
                 manifestsProxy,
                 testOptions,
                 scope.getConnectedTask() == null ? null : scope.getConnectedTask().getName());
+    }
+
+    private void validateMinSdkVersion(@NonNull ManifestAttributeSupplier supplier) {
+        if (supplier.getMinSdkVersion() != null) {
+            // report an error since min sdk version should not be in the manifest.
+            syncIssues.add(
+                    new SyncIssueImpl(
+                            EvalIssueReporter.Type.MIN_SDK_VERSION_IN_MANIFEST,
+                            EvalIssueReporter.Severity.ERROR,
+                            null,
+                            "The minSdk version should not be declared in the android"
+                                    + " manifest file. You can move the version from the manifest"
+                                    + " to the defaultConfig in the build.gradle file."));
+        }
+    }
+
+    private void validateTargetSdkVersion(@NonNull ManifestAttributeSupplier supplier) {
+        if (supplier.getTargetSdkVersion() != null) {
+            // report a warning since target sdk version should not be in the manifest.
+            syncIssues.add(
+                    new SyncIssueImpl(
+                            EvalIssueReporter.Type.TARGET_SDK_VERSION_IN_MANIFEST,
+                            EvalIssueReporter.Severity.WARNING,
+                            null,
+                            "The targetSdk version should not be declared in the android"
+                                    + " manifest file. You can move the version from the manifest"
+                                    + " to the defaultConfig in the build.gradle file."));
+        }
     }
 
     private static BuildOutputSupplier<Collection<EarlySyncBuildOutput>> getBuildOutputSupplier(

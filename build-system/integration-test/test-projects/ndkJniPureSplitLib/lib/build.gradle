@@ -5,6 +5,7 @@ android {
     buildToolsVersion = rootProject.buildToolsVersion
 
     defaultConfig {
+        minSdkVersion 3
         ndk {
             moduleName "hello-jni"
         }

@@ -3,4 +3,5 @@ apply plugin: 'com.android.library'
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
+    defaultConfig.minSdkVersion = 17
 }

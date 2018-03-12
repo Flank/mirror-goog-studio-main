@@ -15,8 +15,11 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
-    // This actual the app version code. Giving ourselves 100,000 values [0, 99999]
-    defaultConfig.versionCode = 123
+    defaultConfig {
+        // This actual the app version code. Giving ourselves 100,000 values [0, 99999]
+        versionCode 123
+        minSdkVersion 3
+    }
 
     flavorDimensions 'version'
     productFlavors {

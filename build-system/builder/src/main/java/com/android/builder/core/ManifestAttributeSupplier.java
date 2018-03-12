@@ -40,10 +40,10 @@ public interface ManifestAttributeSupplier {
     String getSplit();
 
     /**
-     * Returns the minSdkVersion from the manifest file.
-     * The returned value can be an Integer or a String
+     * Returns the minSdkVersion from the manifest file. The returned value can be an Integer or a
+     * String
      *
-     * @return the minSdkVersion or 1 if value is not set.
+     * @return the minSdkVersion or null if value is not set.
      */
     Object getMinSdkVersion();
 

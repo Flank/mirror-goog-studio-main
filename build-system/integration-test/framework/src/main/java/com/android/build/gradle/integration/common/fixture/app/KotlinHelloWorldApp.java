@@ -81,6 +81,7 @@ public class KotlinHelloWorldApp extends HelloWorldApp {
                                 + "android {\n"
                                 + "    compileSdkVersion rootProject.latestCompileSdk\n"
                                 + "    buildToolsVersion = rootProject.buildToolsVersion\n"
+                                + "    defaultConfig.minSdkVersion 3\n"
                                 + "    sourceSets {\n"
                                 + "        main.java.srcDirs += 'src/main/kotlin'\n"
                                 + "    }\n"

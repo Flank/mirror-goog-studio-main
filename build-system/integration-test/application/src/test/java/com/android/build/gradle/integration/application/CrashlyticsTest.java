@@ -32,14 +32,15 @@ public class CrashlyticsTest {
     @ClassRule
     public static GradleTestProject project =
             GradleTestProject.builder()
-                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                    .fromTestApp(
+                            HelloWorldApp.forPluginWithMinSdkVersion("com.android.application", 16))
                     .create();
 
     @BeforeClass
     public static void setUp() throws IOException {
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
-                "android \\{",
+                "android \\{\n",
                 "buildscript {\n"
                         + "    dependencies {\n"
                         + "        classpath 'io.fabric.tools:gradle:1.22.1'\n"
@@ -53,7 +54,6 @@ public class CrashlyticsTest {
                         + "}\n"
                         + ""
                         + "android {\n"
-                        + "    defaultConfig.minSdkVersion 16\n"
                         + "    buildTypes.debug {\n"
                         + "        // Enable crashlytics for test variants\n"
                         + "        ext.enableCrashlytics = true\n"

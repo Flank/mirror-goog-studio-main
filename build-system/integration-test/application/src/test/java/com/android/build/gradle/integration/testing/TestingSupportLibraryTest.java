@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.testing;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -26,7 +25,6 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Test project to cover the Android Gradle plugin's interaction with the testing support library.
@@ -90,7 +88,6 @@ public class TestingSupportLibraryTest {
                                 + "      android:versionCode=\"1\"\n"
                                 + "      android:versionName=\"1.0\">\n"
                                 + "\n"
-                                + "    <uses-sdk android:minSdkVersion=\"18\" />\n"
                                 + "    <application android:label=\"@string/app_name\">\n"
                                 + "        <activity android:name=\".HelloWorld\"\n"
                                 + "                  android:label=\"@string/app_name\">\n"
@@ -120,6 +117,7 @@ public class TestingSupportLibraryTest {
                         + "'\n"
                         + "    defaultConfig {\n"
                         + "        testInstrumentationRunner \"android.support.test.runner.AndroidJUnitRunner\"\n"
+                        + "        minSdkVersion 18\n"
                         + "    }\n"
                         + "    dependencies {\n"
                         + "        androidTestCompile 'com.android.support:support-annotations:"

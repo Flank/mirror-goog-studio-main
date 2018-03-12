@@ -994,8 +994,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         ApiVersion minSdkVersion = mMergedFlavor.getMinSdkVersion();
         if (minSdkVersion == null) {
             // read it from the main manifest
+            Object minSdkValue = getManifestAttributeSupplier().getMinSdkVersion();
             minSdkVersion =
-                    DefaultApiVersion.create(getManifestAttributeSupplier().getMinSdkVersion());
+                    DefaultApiVersion.create(
+                            minSdkVersion != null ? minSdkVersion : new Integer(1));
         }
 
         return new AndroidVersion(minSdkVersion.getApiLevel(), minSdkVersion.getCodename());
@@ -1022,8 +1024,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         ApiVersion targetSdkVersion = mMergedFlavor.getTargetSdkVersion();
         if (targetSdkVersion == null) {
             // read it from the main manifest
-            targetSdkVersion = DefaultApiVersion.create(
-                    getManifestAttributeSupplier().getTargetSdkVersion());
+            Object targetSdkValue = getManifestAttributeSupplier().getTargetSdkVersion();
+            targetSdkVersion =
+                    DefaultApiVersion.create(
+                            targetSdkValue != null ? targetSdkValue : new Integer(-1));
         }
 
         return targetSdkVersion;

@@ -57,7 +57,6 @@ public class InstantRunShrinkerTest {
                 + "        android:versionCode=\"1\"\n"
                 + "        android:versionName=\"1.0\">\n"
                 + "\n"
-                + "    <uses-sdk android:minSdkVersion=\"3\"/>\n"
                 + "    <application android:label=\"@string/app_name\""
                 + "            android:name=\".MyApplication\">\n"
                 + "        <activity android:name=\".HelloWorld\"\n"
