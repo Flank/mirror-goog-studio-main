@@ -203,6 +203,9 @@ class FileSystem {
   // Return the free space available on the disk which contains the target path.
   // The path must exist, or this will return 0.
   virtual int64_t GetFreeSpace(const std::string &path) const = 0;
+
+  // Return an absolute path to the current working directory.
+  virtual std::string GetWorkingDir() const = 0;
 };
 
 }  // namespace profiler

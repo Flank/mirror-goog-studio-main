@@ -42,7 +42,28 @@ class Path {
   // Append two paths together into one, e.g. /a/b/c and d/e -> /a/b/c/d/e
   static std::string Append(const std::string &root,
                             const std::string &rel_path) {
+    if (rel_path == "") {
+      return root;
+    }
     return root + "/" + rel_path;
+  }
+
+  // Append two paths together ONLY IF the second path is a relative path;
+  // otherwise, return the absolute path directly.
+  // This helper method is useful as you might not always know whether a path
+  // is relative or not. A useful way to use this is:
+  //
+  //   string path = external_system.GetPath(); // Relative? Absolute?
+  //   path = Path::AppendIfRelative(fs.GetWorkingDir(), path);
+  static std::string AppendIfRelative(const std::string &root,
+                                      const std::string &rel_or_abs_path) {
+    if (rel_or_abs_path.length() >= 1 && rel_or_abs_path[0] == '/') {
+      // If here, second parameter is an absolute path
+      return rel_or_abs_path;
+    }
+
+    // If here, second parameter is a relative path
+    return Append(root, rel_or_abs_path);
   }
 
   virtual ~Path() = default;

@@ -21,10 +21,14 @@
 #include <sys/statvfs.h>
 #include <unistd.h>
 #include <utime.h>
+#include <cstdlib>
+#include <iostream>
 #include <memory>
 
 namespace profiler {
 
+using std::cerr;
+using std::endl;
 using std::function;
 using std::string;
 using std::unique_ptr;
@@ -213,6 +217,18 @@ int64_t DiskFileSystem::GetFreeSpace(const string &path) const {
     return free_space;
   } else {
     return 0;
+  }
+}
+
+string DiskFileSystem::GetWorkingDir() const {
+  const int CWD_BUFFER_SIZE = 1024;
+  char cwd_raw[CWD_BUFFER_SIZE];
+  if (getcwd(cwd_raw, CWD_BUFFER_SIZE) != nullptr) {
+    string cwd(cwd_raw);
+    return Path::Standardize(cwd);
+  } else {
+    cerr << "Call to getcwd failed" << endl;
+    exit(EXIT_FAILURE);
   }
 }
 

@@ -43,6 +43,12 @@ TEST(Path, StripLastChecks) {
   EXPECT_EQ(Path::StripLast("/"), "/");
 }
 
+TEST(Path, AppendIfRleativeChecks) {
+  EXPECT_EQ(Path::AppendIfRelative("/a/b", "c/d"), "/a/b/c/d");
+  EXPECT_EQ(Path::AppendIfRelative("/a/b", "/c/d"), "/c/d");
+  EXPECT_EQ(Path::AppendIfRelative("/a/b", ""), "/a/b");
+}
+
 TEST(FileSystem, CanGetAndCreateDir) {
   MemoryFileSystem fs;
   auto root = fs.GetDir("/mock/root");
@@ -311,12 +317,13 @@ TEST(FileSystem, WalkDirectoriesWithMaxDepthWorks) {
 
   {
     set<string> files;
-    root->Walk([&files](const PathStat &pstat) {
-                 if (pstat.type() == PathStat::Type::FILE) {
-                   files.insert(pstat.rel_path());
-                 }
-               },
-               3);
+    root->Walk(
+        [&files](const PathStat &pstat) {
+          if (pstat.type() == PathStat::Type::FILE) {
+            files.insert(pstat.rel_path());
+          }
+        },
+        3);
 
     EXPECT_TRUE(files.find("file01") != files.end());
     EXPECT_TRUE(files.find("dir1/file11") != files.end());
@@ -329,12 +336,13 @@ TEST(FileSystem, WalkDirectoriesWithMaxDepthWorks) {
 
   {
     set<string> files;
-    root->Walk([&files](const PathStat &pstat) {
-                 if (pstat.type() == PathStat::Type::FILE) {
-                   files.insert(pstat.rel_path());
-                 }
-               },
-               1);
+    root->Walk(
+        [&files](const PathStat &pstat) {
+          if (pstat.type() == PathStat::Type::FILE) {
+            files.insert(pstat.rel_path());
+          }
+        },
+        1);
 
     EXPECT_TRUE(files.find("file01") != files.end());
     EXPECT_EQ(files.size(), 1u);
@@ -342,12 +350,13 @@ TEST(FileSystem, WalkDirectoriesWithMaxDepthWorks) {
 
   {
     set<string> files;
-    root->Walk([&files](const PathStat &pstat) {
-                 if (pstat.type() == PathStat::Type::FILE) {
-                   files.insert(pstat.rel_path());
-                 }
-               },
-               0);
+    root->Walk(
+        [&files](const PathStat &pstat) {
+          if (pstat.type() == PathStat::Type::FILE) {
+            files.insert(pstat.rel_path());
+          }
+        },
+        0);
 
     EXPECT_EQ(files.size(), 0u);
   }

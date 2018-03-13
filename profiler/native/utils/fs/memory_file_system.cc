@@ -173,4 +173,6 @@ int64_t MemoryFileSystem::GetFreeSpace(const std::string &path) const {
   return LONG_MAX;
 }
 
+string MemoryFileSystem::GetWorkingDir() const { return "/"; }
+
 }  // namespace profiler
