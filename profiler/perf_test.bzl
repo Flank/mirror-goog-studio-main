@@ -80,5 +80,5 @@ def perf_test(name, srcs, test_app, deps = [], tags = None):
         "//tools/base/bazel:darwin": ["//tools/base/bazel/test:NoOpTest.java"],
         "//tools/base/bazel:windows": ["//tools/base/bazel/test:NoOpTest.java"],
         "//conditions:default": srcs}),
-      tags = list(set(tags + ["no_windows", "no_mac"])),
+      tags = list(depset(tags + ["no_windows", "no_mac"])),
     )
