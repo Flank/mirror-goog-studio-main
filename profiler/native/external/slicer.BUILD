@@ -22,7 +22,11 @@ cc_library(
         "slicer/*.h",
     ]),
     includes = ["export"],
-    tags = ["no_windows"],
+    tags = [
+        "no_foundry",  # b/73948555
+        "no_test_foundry",  # b/73948555
+        "no_windows"
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "@zlib_repo//:zlib",
