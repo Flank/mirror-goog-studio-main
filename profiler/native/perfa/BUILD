@@ -19,7 +19,10 @@ cc_binary(
     ],
     linkopts = ANDROID_LINKOPTS,
     linkshared = 1,
-    tags = ["no_windows"],
+    tags = [
+        "no_foundry",  # b/73948555
+        "no_windows",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//external:slicer",
@@ -42,6 +45,9 @@ android_cc_binary(
         "//conditions:default": ":libperfa.so.stripped",
     }),
     filename = "libperfa.so",
-    tags = ["no_windows"],
+    tags = [
+        "no_foundry",  # b/73948555
+        "no_windows",
+    ],
     visibility = ["//visibility:public"],
 )
