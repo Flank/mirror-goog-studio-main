@@ -615,7 +615,7 @@ _iml_project = rule(
         "win": "%{name}.win.zip",
         "win32": "%{name}.win32.zip",
         "mac": "%{name}.mac.zip",
-        "linux": "%{name}.linux.zip",
+        "linux": "%{name}.tar.gz",
         "output": "%{name}.log",
     },
     implementation = _iml_project_impl,
