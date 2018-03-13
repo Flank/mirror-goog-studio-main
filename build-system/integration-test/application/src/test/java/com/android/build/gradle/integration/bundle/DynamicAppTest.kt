@@ -79,5 +79,16 @@ class DynamicAppTest {
             "/feature1/res/layout/feature_layout.xml",
             "/feature1/resources.pb")
 
+
+        // also test that the feature manifest contains the feature name.
+        val manifestFile = FileUtils.join(project.getSubproject("feature1").buildDir,
+            "intermediates",
+            "merged_manifests",
+            "debug",
+            "processDebugManifest",
+            "merged",
+            "AndroidManifest.xml")
+        FileSubject.assertThat(manifestFile).isFile()
+        FileSubject.assertThat(manifestFile).contains("android:splitName=\"feature1\"")
     }
 }

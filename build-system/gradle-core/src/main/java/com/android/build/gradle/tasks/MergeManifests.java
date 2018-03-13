@@ -616,10 +616,12 @@ public class MergeManifests extends ManifestProcessorTask {
         VariantType variantType = variantScope.getType();
         if (variantType.isHybrid()) {
             features.add(Feature.TARGET_SANDBOX_VERSION);
-            if (!variantType.isBaseModule()) {
-                features.add(Feature.ADD_FEATURE_SPLIT_INFO);
-            }
         }
+
+        if (variantType.isFeatureSplit()) {
+            features.add(Feature.ADD_FEATURE_SPLIT_INFO);
+        }
+
         if (variantScope.isTestOnly()) {
             features.add(Feature.TEST_ONLY);
         }
