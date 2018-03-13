@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_pom")
 
@@ -9,6 +10,7 @@ iml_module(
         "src/main/java/com/android/SdkConstants.java",
     ],
     iml_files = ["common.iml"],
+    resources = ["src/main/resources"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
@@ -24,11 +26,20 @@ iml_module(
     ],
 )
 
+fileset(
+    name = "tools.common.resources",
+    srcs = glob(["src/main/resources/**"]),
+    mappings = {
+        "src/main/resources/": "",
+    },
+)
+
 kotlin_library(
     name = "tools.common",
     srcs = ["src/main/java"],
     pom = ":pom",
     resource_strip_prefix = "tools/base/common",
+    resources = [":tools.common.resources"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

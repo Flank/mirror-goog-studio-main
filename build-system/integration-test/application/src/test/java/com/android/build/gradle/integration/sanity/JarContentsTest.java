@@ -901,6 +901,8 @@ public class JarContentsTest {
                 "com/android/utils/",
                 "com/android/utils/concurrency/",
                 "com/android/xml/",
+                "migrateToAndroidx/",
+                "migrateToAndroidx/migration.xml",
                 "NOTICE",
                 "META-INF/MANIFEST.MF",
                 "META-INF/");

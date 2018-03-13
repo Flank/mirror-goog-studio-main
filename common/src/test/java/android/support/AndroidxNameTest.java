@@ -26,55 +26,50 @@ public class AndroidxNameTest {
         AndroidxName pkgName =
                 AndroidxName.of("android.support.design.widget.", "FloatingActionButton");
         assertEquals("android.support.design.widget.FloatingActionButton", pkgName.oldName());
-        assertEquals("androidx.widget.FloatingActionButton", pkgName.newName());
+        assertEquals("com.google.android.material.widget.FloatingActionButton", pkgName.newName());
 
         // Test a non-existent class name
-        pkgName = AndroidxName.of("android.support.design.test.", "TestClassName");
-        assertEquals("android.support.design.test.TestClassName", pkgName.oldName());
-        assertEquals("androidx.test.TestClassName", pkgName.newName());
+        pkgName = AndroidxName.of("android.support.wear.", "TestClassName");
+        assertEquals("android.support.wear.TestClassName", pkgName.oldName());
+        assertEquals("androidx.wear.TestClassName", pkgName.newName());
 
         // Test a non-existent class name with a subpackage
-        pkgName = AndroidxName.of("android.support.design.test.subpackage.", "TestClassName");
-        assertEquals("android.support.design.test.subpackage.TestClassName", pkgName.oldName());
-        assertEquals("androidx.test.subpackage.TestClassName", pkgName.newName());
+        pkgName = AndroidxName.of("android.support.wear.subpackage.", "TestClassName");
+        assertEquals("android.support.wear.subpackage.TestClassName", pkgName.oldName());
+        assertEquals("androidx.wear.subpackage.TestClassName", pkgName.newName());
 
         pkgName = AndroidxName.of("android.support.v4.widget.", "TestClassName");
         assertEquals("android.support.v4.widget.TestClassName", pkgName.oldName());
-        assertEquals("androidx.widget.TestClassName", pkgName.newName());
+        assertEquals("androidx.core.widget.TestClassName", pkgName.newName());
 
-        pkgName = AndroidxName.of("android.support.widget.", "TestClassName");
-        assertEquals("android.support.widget.TestClassName", pkgName.oldName());
-        assertEquals("androidx.widget.TestClassName", pkgName.newName());
+        pkgName = AndroidxName.of("android.support.v4.widget.", "TestClassName");
+        assertEquals("android.support.v4.widget.TestClassName", pkgName.oldName());
+        assertEquals("androidx.core.widget.TestClassName", pkgName.newName());
     }
 
     @Test
     public void specificClass() {
         AndroidxName className = AndroidxName.of("android.support.v4.view.", "PagerTabStrip");
         assertEquals("android.support.v4.view.PagerTabStrip", className.oldName());
-        assertEquals("androidx.widget.PagerTabStrip", className.newName());
+        assertEquals("androidx.viewpager.widget.PagerTabStrip", className.newName());
     }
 
     @Test
     public void pkgName() {
-        AndroidxName pkgName = AndroidxName.of("android.support.design.widget.");
-        assertEquals("android.support.design.widget.", pkgName.oldName());
-        assertEquals("androidx.widget.", pkgName.newName());
+        AndroidxName pkgName = AndroidxName.of("android.support.v4.app.");
+        assertEquals("android.support.v4.app.", pkgName.oldName());
+        assertEquals("androidx.core.app.", pkgName.newName());
 
         // Test a non-existent name
-        pkgName = AndroidxName.of("android.support.design.test.");
-        assertEquals("android.support.design.test.", pkgName.oldName());
-        assertEquals("androidx.test.", pkgName.newName());
-
-        // Test a non-existent name with a subpackage
-        pkgName = AndroidxName.of("android.support.design.test.subpackage.");
-        assertEquals("android.support.design.test.subpackage.", pkgName.oldName());
-        assertEquals("androidx.test.subpackage.", pkgName.newName());
+        pkgName = AndroidxName.of("android.support.wear.test.");
+        assertEquals("android.support.wear.test.", pkgName.oldName());
+        assertEquals("androidx.wear.test.", pkgName.newName());
     }
 
     @Test
     public void getNewName() {
         assertEquals(
-                "androidx.widget.FloatingActionButton",
+                "com.google.android.material.widget.FloatingActionButton",
                 AndroidxNameUtils.getNewName("android.support.design.widget.FloatingActionButton"));
         assertEquals(
                 "unknown.package.FloatingActionButton",

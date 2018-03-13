@@ -1011,6 +1011,7 @@ public final class SdkConstants {
     public static final String ANDROID_PKG = "android"; //$NON-NLS-1$
     public static final String ANDROID_SUPPORT_PKG = "android.support";
     public static final String ANDROIDX_PKG = "androidx";
+    public static final String MATERIAL2_PKG = "com.google.android.material";
 
     public static final String SHERPA_PREFIX = "app"; //$NON-NLS-1$
     public static final String SHERPA_URI = "http://schemas.android.com/apk/res-auto"; //$NON-NLS-1$

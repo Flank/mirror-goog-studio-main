@@ -42,7 +42,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.XmlUtils;
-import java.util.Arrays;
+import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -72,7 +72,7 @@ public class GridLayoutDetector extends LayoutDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(
+        return ImmutableSet.of(
                 GRID_LAYOUT, FQCN_GRID_LAYOUT_V7.oldName(), FQCN_GRID_LAYOUT_V7.newName());
     }
 
