@@ -79,6 +79,10 @@ static bool IsRetransformClassSignature(const char* sig_mutf8) {
            strcmp(sig_mutf8, "Landroid/app/job/JobService;") == 0 ||
            strcmp(sig_mutf8, "Landroid/app/job/JobServiceEngine$JobHandler;") ==
                0 ||
+           strcmp(sig_mutf8, "Landroid/location/LocationManager;") == 0 ||
+           strcmp(sig_mutf8,
+                  "Landroid/location/LocationManager$ListenerTransport;") ==
+               0 ||
            strcmp(sig_mutf8, "Landroid/os/PowerManager;") == 0 ||
            strcmp(sig_mutf8, "Landroid/os/PowerManager$WakeLock;") == 0));
 }
@@ -309,6 +313,118 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
             ir::MethodId(desc.c_str(), "ackStopMessage",
                          "(Landroid/app/job/JobParameters;Z)V"))) {
       Log::E("Error instrumenting JobHandler.ackStopMessage");
+    }
+  } else if (strcmp(name, "android/location/LocationManager") == 0) {
+    // Instrument all versions of requestLocationUpdates.
+    slicer::MethodInstrumenter mi_req(dex_ir);
+    mi_req.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/LocationManagerWrapper;",
+        "wrapRequestLocationUpdates"));
+    if (!mi_req.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "requestLocationUpdates",
+                         "(Ljava/lang/String;JFLandroid/location/"
+                         "LocationListener;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestLocationUpdates(String, "
+          "long, float, LocationListener)");
+    }
+    if (!mi_req.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "requestLocationUpdates",
+                         "(JFLandroid/location/Criteria;Landroid/location/"
+                         "LocationListener;Landroid/os/Looper;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestLocationUpdates(long, "
+          "float, Criteria, LocationListener, Looper)");
+    }
+    if (!mi_req.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "requestLocationUpdates",
+                         "(Ljava/lang/String;JFLandroid/location/"
+                         "LocationListener;Landroid/os/Looper;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestLocationUpdates(String, "
+          "long, float, LocationListener, Looper)");
+    }
+    if (!mi_req.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "requestLocationUpdates",
+            "(JFLandroid/location/Criteria;Landroid/app/PendingIntent;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestLocationUpdates(long, "
+          "float, Criteria, PendingIntent)");
+    }
+    if (!mi_req.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "requestLocationUpdates",
+            "(Ljava/lang/String;JFLandroid/app/PendingIntent;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestLocationUpdates(String, "
+          "long, float, PendingIntent)");
+    }
+
+    // Instrument all versions of requestSingleUpdate.
+    slicer::MethodInstrumenter mi_req_s(dex_ir);
+    mi_req_s.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/LocationManagerWrapper;",
+        "wrapRequestSingleUpdate"));
+    if (!mi_req_s.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "requestSingleUpdate",
+                         "(Ljava/lang/String;Landroid/app/PendingIntent;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestSingleUpdate(String, "
+          "PendingIntent)");
+    }
+    if (!mi_req_s.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "requestSingleUpdate",
+            "(Landroid/location/Criteria;Landroid/app/PendingIntent;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestSingleUpdate(Criteria, "
+          "PendingIntent)");
+    }
+    if (!mi_req_s.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "requestSingleUpdate",
+                         "(Ljava/lang/String;Landroid/location/"
+                         "LocationListener;Landroid/os/Looper;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestSingleUpdate(String, "
+          "LocationListener, Looper)");
+    }
+    if (!mi_req_s.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "requestSingleUpdate",
+                         "(Landroid/location/Criteria;Landroid/location/"
+                         "LocationListener;Landroid/os/Looper;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.requestSingleUpdate(Criteria, "
+          "LocationListener, Looper)");
+    }
+
+    // Instrument all versions of removeUpdates
+    slicer::MethodInstrumenter mi_remove(dex_ir);
+    mi_remove.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/energy/LocationManagerWrapper;",
+        "wrapRemoveUpdates"));
+    if (!mi_remove.InstrumentMethod(
+            ir::MethodId(desc.c_str(), "removeUpdates",
+                         "(Landroid/location/LocationListener;)V"))) {
+      Log::E(
+          "Error instrumenting "
+          "LocationManager.removeUpdates(LocationListener)");
+    }
+    if (!mi_remove.InstrumentMethod(ir::MethodId(
+            desc.c_str(), "removeUpdates", "(Landroid/app/PendingIntent;)V"))) {
+      Log::E(
+          "Error instrumenting LocationManager.removeUpdates(PendingIntent)");
+    }
+  } else if (strcmp(name,
+                    "android/location/LocationManager$ListenerTransport") ==
+             0) {
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::DetourInterfaceInvoke>(
+        ir::MethodId("Landroid/location/LocationListener;", "onLocationChanged",
+                     "(Landroid/location/Location;)V"),
+        ir::MethodId("Lcom/android/tools/profiler/support/energy/"
+                     "LocationManagerWrapper;",
+                     "wrapOnLocationChanged"));
+    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "_handleMessage",
+                                          "(Landroid/os/Message;)V"))) {
+      Log::E("Error instrumenting LocationListener.onLocationChanged");
     }
   } else {
     Log::V("No transformation applied for class: %s", name);
