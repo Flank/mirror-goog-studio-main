@@ -28,8 +28,10 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
@@ -636,6 +638,18 @@ public abstract class TaskManager {
                                 variantScope.getArtifactCollection(
                                         RUNTIME_CLASSPATH, MODULE, CLASSES))
                         .build());
+
+        // if base module, add stream of classes from features or dynamic-features for Proguard/R8
+        if (variantScope.getVariantData().getType().isBaseModule()) {
+            transformManager.addStream(
+                    OriginalStream.builder(project, "feature-classes")
+                            .addContentTypes(TransformManager.CONTENT_JARS)
+                            .addScope(InternalScope.FEATURES)
+                            .setArtifactCollection(
+                                    variantScope.getArtifactCollection(
+                                            METADATA_VALUES, MODULE, METADATA_CLASSES))
+                            .build());
+        }
 
         // same for the resources which can be java-res or jni
         transformManager.addStream(
