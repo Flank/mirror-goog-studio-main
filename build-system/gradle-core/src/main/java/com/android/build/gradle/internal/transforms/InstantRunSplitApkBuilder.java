@@ -80,7 +80,6 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     @NonNull
     private final AaptOptions aaptOptions;
     @NonNull protected final File supportDirectory;
-    @NonNull protected final File aaptIntermediateDirectory;
     // there is no need to make the resources a dependency of this transform
     // as we only use it to successfully compile the split manifest file. Any change to the
     // manifest that should force regenerating our split manifest is captured by the resource
@@ -107,7 +106,6 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
-            @NonNull File aaptIntermediateDirectory,
             @NonNull FileCollection resources,
             @NonNull FileCollection resourcesWithMainManifest,
             @NonNull FileCollection apkList,
@@ -123,7 +121,6 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         this.aaptOptions = aaptOptions;
         this.outputDirectory = outputDirectory;
         this.supportDirectory = supportDirectory;
-        this.aaptIntermediateDirectory = aaptIntermediateDirectory;
         this.resources = resources;
         this.resourcesWithMainManifest = resourcesWithMainManifest;
         this.apkList = apkList;
@@ -211,8 +208,8 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
 
     @NonNull
     protected File generateSplitApk(@NonNull ApkInfo apkData, @NonNull DexFiles dexFiles)
-            throws IOException, KeytoolException, PackagerException, InterruptedException,
-                    ProcessException, TransformException {
+            throws IOException, KeytoolException, PackagerException, ProcessException,
+                    TransformException {
 
         String uniqueName = dexFiles.encodeName();
         final File alignedOutput = new File(outputDirectory, uniqueName + ".apk");
@@ -317,7 +314,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull AndroidBuilder androidBuilder,
             @NonNull String uniqueName,
             @NonNull FileCollection imports)
-            throws IOException, ProcessException, InterruptedException {
+            throws IOException, ProcessException {
 
         File apkSupportDir = new File(supportDirectory, uniqueName);
         if (!apkSupportDir.exists() && !apkSupportDir.mkdirs()) {
@@ -357,7 +354,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCollection imports,
             @NonNull String uniqueName)
-            throws IOException, ProcessException, InterruptedException {
+            throws IOException, ProcessException {
 
         File apkSupportDir = new File(supportDirectory, uniqueName);
         if (!apkSupportDir.exists() && !apkSupportDir.mkdirs()) {
@@ -390,15 +387,14 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     }
 
     protected CloseableBlockingResourceLinker getLinker() {
-        return getLinker(aapt2FromMaven, aaptGeneration, androidBuilder, aaptIntermediateDirectory);
+        return getLinker(aapt2FromMaven, aaptGeneration, androidBuilder);
     }
 
     @NonNull
     public static CloseableBlockingResourceLinker getLinker(
             @Nullable FileCollection aapt2FromMaven,
             @NonNull AaptGeneration aaptGeneration,
-            @NonNull AndroidBuilder androidBuilder,
-            @NonNull File intermediateFolder) {
+            @NonNull AndroidBuilder androidBuilder) {
         if (aaptGeneration == AaptGeneration.AAPT_V2_DAEMON_SHARED_POOL) {
             Aapt2ServiceKey aapt2ServiceKey =
                     Aapt2DaemonManagerService.registerAaptService(

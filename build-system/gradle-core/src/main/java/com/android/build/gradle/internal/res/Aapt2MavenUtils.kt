@@ -25,7 +25,9 @@ import com.android.SdkConstants
 import com.android.annotations.VisibleForTesting
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.StringOption
 import com.android.builder.model.Version
+import com.google.common.base.Strings
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Sets
 import com.google.common.io.ByteStreams
@@ -74,7 +76,7 @@ fun getAapt2FromMavenIfEnabled(globalScope: GlobalScope): FileCollection? {
     if (!globalScope.projectOptions[BooleanOption.USE_AAPT2_FROM_MAVEN]) {
         return null
     }
-    return getAapt2FromMaven(globalScope.project)
+    return getAapt2FromMaven(globalScope)
 }
 
 /**
@@ -87,6 +89,14 @@ fun getAapt2FromMavenIfEnabled(globalScope: GlobalScope): FileCollection? {
  * Idempotent.
  */
 fun getAapt2FromMaven(globalScope: GlobalScope): FileCollection {
+    // Use custom AAPT2 if it was overridden.
+    val customAapt2 = globalScope.projectOptions[StringOption.AAPT2_FROM_MAVEN_OVERRIDE]
+    if (!Strings.isNullOrEmpty(customAapt2)) {
+        if (!customAapt2!!.endsWith(SdkConstants.FN_AAPT2)) {
+            error("Custom AAPT2 location does not point to an AAPT2 executable: $customAapt2")
+        }
+        return globalScope.project.files(File(customAapt2).parentFile)
+    }
     return getAapt2FromMaven(globalScope.project)
 }
 
@@ -131,7 +141,6 @@ fun getAapt2FromMaven(project: Project): FileCollection {
     }
 
     return getArtifactCollection(config)
-
 }
 
 private fun getArtifactCollection(configuration: Configuration): FileCollection =

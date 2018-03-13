@@ -55,7 +55,6 @@ open class CompileSourceSetResources
     @get:Input var isPseudoLocalize: Boolean = false; private set
     @get:OutputDirectory lateinit var outputDirectory: File private set
     @get:OutputDirectory lateinit var partialRDirectory: File private set
-    @get:OutputDirectory lateinit var aaptIntermediateDirectory: File private set
 
     override fun isIncremental() = true
 
@@ -161,8 +160,8 @@ open class CompileSourceSetResources
     class ConfigAction(
             private val name: String,
             private val inputDirectories: BuildableArtifact,
-            private val variantScope: VariantScope,
-            private val aaptIntermediateDirectory: File)
+            private val variantScope: VariantScope)
+
             : TaskConfigAction<CompileSourceSetResources> {
         override fun getName() = name
         override fun getType() = CompileSourceSetResources::class.java
@@ -174,11 +173,9 @@ open class CompileSourceSetResources
                 .appendArtifact(InternalArtifactType.PARTIAL_R_FILES, task)
             task.variantName = variantScope.fullVariantName
             task.isPngCrunching = variantScope.isCrunchPngs
-            task.isPseudoLocalize = variantScope.variantData.variantConfiguration.buildType.isPseudoLocalesEnabled
-            task.aaptIntermediateDirectory = aaptIntermediateDirectory
+            task.isPseudoLocalize =
+                    variantScope.variantData.variantConfiguration.buildType.isPseudoLocalesEnabled
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
         }
     }
-
-
 }

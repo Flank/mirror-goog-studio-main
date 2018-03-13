@@ -114,7 +114,6 @@ public class InstantRunDependenciesApkBuilderTest {
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         supportDirectory.newFolder("instant-run"),
-                        supportDirectory.newFolder("aapt-temp"),
                         mainResources,
                         mainResources,
                         apkList,

@@ -31,6 +31,7 @@ import com.android.utils.ILogger
 import org.gradle.api.file.FileCollection
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.Executors
@@ -74,7 +75,8 @@ fun <T: Any>useAaptDaemon(
 @JvmOverloads
 fun getAaptDaemon(
     aapt2ServiceKey: Aapt2ServiceKey,
-    serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE) : Aapt2DaemonManager.LeasedAaptDaemon =
+    serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE)
+        : Aapt2DaemonManager.LeasedAaptDaemon =
     serviceRegistry.getService(aapt2ServiceKey).service.leaseDaemon()
 
 @JvmOverloads
@@ -96,7 +98,12 @@ fun registerAaptService(
             key = Aapt2SdkServiceKey(buildToolInfo.revision)
             aaptExecutablePath = Paths.get(buildToolInfo.getPath(BuildToolInfo.PathId.AAPT2))
         }
-        else -> throw IllegalArgumentException("Must supply one of aapt2 from maven or build tool info.")
+        else -> throw IllegalArgumentException(
+                "Must supply one of aapt2 from maven, build tool info or custom location.")
+    }
+
+    if (!Files.exists(aaptExecutablePath)) {
+        error("Specified AAPT2 executable does not exist: $aaptExecutablePath")
     }
 
     serviceRegistry.registerService(key, {

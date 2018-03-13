@@ -178,7 +178,6 @@ public class MergeResources extends IncrementalTask {
             @Nullable WorkerExecutor workerExecutor,
             boolean crunchPng,
             @NonNull VariantScope scope,
-            @NonNull File intermediateDir,
             @Nullable MergingLog blameLog,
             ImmutableSet<Flag> flags,
             boolean processResources) {
@@ -198,6 +197,7 @@ public class MergeResources extends IncrementalTask {
             Aapt2ServiceKey aapt2ServiceKey =
                     Aapt2DaemonManagerService.registerAaptService(
                             aapt2FromMaven, builder.getBuildToolInfo(), builder.getLogger());
+
             return new WorkerExecutorResourceCompilationService(
                     Objects.requireNonNull(workerExecutor), aapt2ServiceKey);
         }
@@ -291,7 +291,6 @@ public class MergeResources extends IncrementalTask {
                         workerExecutor,
                         crunchPng,
                         variantScope,
-                        getAaptTempDir(),
                         mergingLog,
                         flags,
                         processResources)) {
@@ -394,7 +393,6 @@ public class MergeResources extends IncrementalTask {
                             workerExecutor,
                             crunchPng,
                             variantScope,
-                            getAaptTempDir(),
                             mergingLog,
                             flags,
                             processResources)) {
@@ -785,16 +783,6 @@ public class MergeResources extends IncrementalTask {
         mainResourceSet.addSources(generatedResFolders);
 
         return resourceSetList;
-    }
-
-    /**
-     * Obtains the temporary directory for {@code aapt} to use.
-     *
-     * @return the temporary directory
-     */
-    @NonNull
-    private File getAaptTempDir() {
-        return FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp"));
     }
 
     public static class ConfigAction implements TaskConfigAction<MergeResources> {

@@ -55,7 +55,6 @@ import java.io.IOException
 open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
 
     private lateinit var fileCache: FileCache
-    private lateinit var aaptIntermediateFolder: File
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -97,7 +96,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
 
         return try {
             InstantRunSplitApkBuilder.getLinker(
-                aapt2FromMaven, aaptGeneration, builder, aaptIntermediateFolder
+                aapt2FromMaven, aaptGeneration, builder
             ).use { aapt ->
                 processSplit(manifestFile, aapt)
             }
@@ -142,8 +141,8 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
             task.aaptGeneration = AaptGeneration.fromProjectOptions(
                     variantScope.globalScope.projectOptions)
             task.fileCache = variantScope.globalScope.buildCache!!
-            task.aaptIntermediateFolder = File(variantScope.getIncrementalDir(name), "aapt-temp")
             task.aapt2FromMaven = getAapt2FromMavenIfEnabled(variantScope.globalScope)
+
             variantScope.addTaskOutput(INSTANT_RUN_MAIN_APK_RESOURCES, task.outputDirectory, name)
         }
 

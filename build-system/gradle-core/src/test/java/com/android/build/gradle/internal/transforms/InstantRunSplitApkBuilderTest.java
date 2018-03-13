@@ -118,7 +118,6 @@ public class InstantRunSplitApkBuilderTest {
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         instantRunFolder,
-                        aaptTempFolder, /* runAapt2Serially */
                         false,
                         mainResources,
                         mainResources,
@@ -248,7 +247,6 @@ public class InstantRunSplitApkBuilderTest {
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         instantRunFolder,
-                        aaptTempFolder, /* runAapt2Serially */
                         false,
                         mainResources,
                         mainResources,

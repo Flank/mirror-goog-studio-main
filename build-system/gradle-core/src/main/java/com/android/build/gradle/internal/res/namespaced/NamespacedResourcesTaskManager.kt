@@ -210,8 +210,7 @@ class NamespacedResourcesTaskManager(
             taskFactory.create(CompileSourceSetResources.ConfigAction(
                     name = name,
                     inputDirectories = artifacts,
-                    variantScope = variantScope,
-                    aaptIntermediateDirectory = variantScope.getIncrementalDir(name)))
+                    variantScope = variantScope))
                 .dependsOn(variantScope.resourceGenTask)
         }
     }
