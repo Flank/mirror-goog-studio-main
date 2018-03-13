@@ -70,7 +70,7 @@ class ViewNodeV2Parser {
         }
         val node = ViewNode(parent, getStringProperty(propMap, NAME_KEY), hash)
         loadProperties(node, propMap)
-        node.setup()
+        node.displayInfo = DisplayInfoFactory.createDisplayInfoFromNode(node)
         return node
     }
 

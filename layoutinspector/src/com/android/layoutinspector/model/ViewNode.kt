@@ -49,19 +49,14 @@ data class ViewNode internal constructor(private val parent: ViewNode?, val name
     // default in case properties are not available
     var index: Int = 0
     var id: String? = null
-
-    lateinit var displayInfo: DisplayInfo // set in setup method
+    // TODO(kelvinhanma) get rid of lateinit by refactoring creation of DisplayInfo
+    lateinit var displayInfo: DisplayInfo
 
     var isParentVisible: Boolean = false
         private set
     var isDrawn: Boolean = false
         private set
     var forcedState: ForcedState = ForcedState.NONE
-
-    // TODO(kelvinhanma) change displayInfo to not take a ViewNode so we can remove this method
-    internal fun setup() {
-        displayInfo = DisplayInfo(this)
-    }
 
     fun addPropertyToGroup(property: ViewProperty) {
         val key = getKey(property)

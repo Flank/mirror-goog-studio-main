@@ -106,7 +106,7 @@ object ViewNodeParser {
             loadProperties(node, data.substring(delimIndex + 1).trim { it <= ' ' })
             node.id = node.getProperty("mID", "id")!!.value
         }
-        node.setup()
+        node.displayInfo = DisplayInfoFactory.createDisplayInfoFromNode(node)
         parent?.let {
             it.children.add(node)
         }
