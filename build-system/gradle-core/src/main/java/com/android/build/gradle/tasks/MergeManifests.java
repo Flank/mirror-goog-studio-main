@@ -24,7 +24,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -439,16 +438,13 @@ public class MergeManifests extends ManifestProcessorTask {
 
         protected final VariantScope variantScope;
         protected final boolean isAdvancedProfilingOn;
-        @Nullable private final File reportFile;
 
         public ConfigAction(
                 @NonNull VariantScope scope,
                 // TODO : remove this variable and find ways to access it from scope.
-                boolean isAdvancedProfilingOn,
-                @Nullable File reportFile) {
+                boolean isAdvancedProfilingOn) {
             this.variantScope = scope;
             this.isAdvancedProfilingOn = isAdvancedProfilingOn;
-            this.reportFile = reportFile;
         }
 
         @NonNull
@@ -525,6 +521,14 @@ public class MergeManifests extends ManifestProcessorTask {
                             processManifestTask,
                             "instant-run"));
 
+            File reportFile =
+                    FileUtils.join(
+                            variantScope.getGlobalScope().getOutputsDir(),
+                            "logs",
+                            "manifest-merger-"
+                                    + variantScope.getVariantConfiguration().getBaseName()
+                                    + "-report.txt");
+
             processManifestTask.setReportFile(reportFile);
             processManifestTask.optionalFeatures =
                     TaskInputHelper.memoize(
@@ -553,9 +557,12 @@ public class MergeManifests extends ManifestProcessorTask {
             }
 
             // set outputs.
-            if (reportFile != null) {
-                variantScope.addTaskOutput(MANIFEST_MERGE_REPORT, reportFile, getName());
-            }
+            variantScope
+                    .getBuildArtifactsHolder()
+                    .appendArtifact(
+                            InternalArtifactType.MANIFEST_MERGE_REPORT,
+                            ImmutableList.of(reportFile),
+                            processManifestTask);
 
             // when dealing with a non-base feature, output is under a different type.
             if (variantType.isFeatureSplit()) {

@@ -82,9 +82,7 @@ class ProcessManifestTest {
         `when`(mainSplit.fullName).thenReturn("fooRelease")
 
         val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
-        val configAction =
-                ProcessManifest.ConfigAction(
-                        variantScope, temporaryFolder.newFile())
+        val configAction = ProcessManifest.ConfigAction(variantScope)
         task = project!!.tasks.create(configAction.name, configAction.type, configAction)
     }
 

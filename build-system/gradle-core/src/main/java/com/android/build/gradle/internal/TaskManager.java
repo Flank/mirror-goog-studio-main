@@ -43,7 +43,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTA
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINKED_RES_FOR_BUNDLE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MOCKABLE_JAR;
@@ -775,37 +774,18 @@ public abstract class TaskManager {
         return Splitter.on(',').splitToList(string);
     }
 
-    @NonNull
-    private static File computeManifestReportFile(@NonNull VariantScope variantScope) {
-        return FileUtils.join(
-                variantScope.getGlobalScope().getOutputsDir(),
-                "logs",
-                "manifest-merger-"
-                        + variantScope.getVariantConfiguration().getBaseName()
-                        + "-report.txt");
-    }
-
     /** Creates the merge manifests task. */
     @NonNull
     protected ManifestProcessorTask createMergeManifestTask(@NonNull VariantScope variantScope) {
-
-        final File reportFile = computeManifestReportFile(variantScope);
         return taskFactory.create(
                 new MergeManifests.ConfigAction(
-                        variantScope,
-                        !getAdvancedProfilingTransforms(projectOptions).isEmpty(),
-                        reportFile));
+                        variantScope, !getAdvancedProfilingTransforms(projectOptions).isEmpty()));
     }
 
     public ProcessManifest createMergeLibManifestsTask(@NonNull VariantScope scope) {
 
-        final File reportFile = computeManifestReportFile(scope);
         ProcessManifest processManifest =
-                taskFactory.create(new ProcessManifest.ConfigAction(scope, reportFile));
-
-        final String taskName = processManifest.getName();
-
-        scope.addTaskOutput(MANIFEST_MERGE_REPORT, reportFile, taskName);
+                taskFactory.create(new ProcessManifest.ConfigAction(scope));
 
         processManifest.dependsOn(scope.getCheckManifestTask());
 

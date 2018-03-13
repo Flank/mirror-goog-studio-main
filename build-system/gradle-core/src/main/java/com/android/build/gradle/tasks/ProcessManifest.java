@@ -37,6 +37,7 @@ import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
@@ -217,18 +218,15 @@ public class ProcessManifest extends ManifestProcessorTask {
 
     public static class ConfigAction implements TaskConfigAction<ProcessManifest> {
 
-        private final VariantScope scope;
-        private final File reportFile;
+        @NonNull private final VariantScope scope;
 
         /**
          * {@code TaskConfigAction} for the library process manifest task.
          *
          * @param scope The library variant scope.
-         * @param reportFile TODO : to be removed ?
          */
-        public ConfigAction(VariantScope scope, File reportFile) {
+        public ConfigAction(@NonNull VariantScope scope) {
             this.scope = scope;
-            this.reportFile = reportFile;
         }
 
         @NonNull
@@ -304,7 +302,20 @@ public class ProcessManifest extends ManifestProcessorTask {
 
             processManifest.outputScope = scope.getOutputScope();
 
+            File reportFile =
+                    FileUtils.join(
+                            scope.getGlobalScope().getOutputsDir(),
+                            "logs",
+                            "manifest-merger-"
+                                    + scope.getVariantConfiguration().getBaseName()
+                                    + "-report.txt");
+
             processManifest.setReportFile(reportFile);
+            scope.getBuildArtifactsHolder()
+                    .appendArtifact(
+                            InternalArtifactType.MANIFEST_MERGE_REPORT,
+                            ImmutableList.of(reportFile),
+                            processManifest);
 
             scope.getVariantData()
                     .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processManifest);

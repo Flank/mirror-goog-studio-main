@@ -58,7 +58,6 @@ import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
-import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.Optional;
@@ -294,7 +293,7 @@ public class ApplicationTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> createLintTasks(variantScope));
 
-        createTransitiveDepsTask(variantScope);
+        taskFactory.create(new FeatureSplitTransitiveDepsWriterTask.ConfigAction(variantScope));
 
         createDynamicBundleTask(variantScope);
     }
@@ -494,23 +493,6 @@ public class ApplicationTaskManager extends TaskManager {
 
     private static File getIncrementalFolder(VariantScope variantScope, String taskName) {
         return new File(variantScope.getIncrementalDir(taskName), variantScope.getDirName());
-    }
-
-    private void createTransitiveDepsTask(@NonNull VariantScope scope) {
-        File textFile =
-                new File(
-                        FileUtils.join(
-                                globalScope.getIntermediatesDir(),
-                                "feature-split",
-                                "transitive-deps",
-                                scope.getVariantConfiguration().getDirName()),
-                        "deps.txt");
-
-        FeatureSplitTransitiveDepsWriterTask task =
-                taskFactory.create(
-                        new FeatureSplitTransitiveDepsWriterTask.ConfigAction(scope, textFile));
-
-        scope.addTaskOutput(InternalArtifactType.FEATURE_TRANSITIVE_DEPS, textFile, task.getName());
     }
 
     private void createDynamicBundleTask(@NonNull VariantScope scope) {

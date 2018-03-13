@@ -145,7 +145,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
         @NonNull private final FileCollection localLintJarCollection;
         @NonNull private final FileCollection dependencyLintJarCollection;
         @NonNull private final BuildableArtifact mergedManifest;
-        @Nullable private final FileCollection mergedManifestReport;
+        @Nullable private final BuildableArtifact mergedManifestReport;
         private List<File> lintRuleJars;
 
         private final ConfigurableFileCollection allInputs;
@@ -172,9 +172,10 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
             }
             allInputs.from(mergedManifest);
 
-            if (variantScope.hasOutput(MANIFEST_MERGE_REPORT)) {
+            if (buildArtifactsHolder.hasArtifact(MANIFEST_MERGE_REPORT)) {
                 allInputs.from(
-                        mergedManifestReport = variantScope.getOutput(MANIFEST_MERGE_REPORT));
+                        mergedManifestReport =
+                                buildArtifactsHolder.getFinalArtifactFiles(MANIFEST_MERGE_REPORT));
             } else {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest report on: "
@@ -262,7 +263,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
                 return null;
             }
 
-            return mergedManifestReport.getSingleFile();
+            return Iterables.getOnlyElement(mergedManifestReport);
         }
     }
 
