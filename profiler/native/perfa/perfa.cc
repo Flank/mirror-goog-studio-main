@@ -467,16 +467,6 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
 
   // TODO: Removed these once the auto-JNI-binding feature becomes
   // available in all published O system images.
-  if (agent_config->profiler_io_enabled()) {
-    BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
-                  "trackIoCall", "(JIJZ)V");
-    BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
-                  "trackNewFileSession", "(JLjava/lang/String;)V");
-    BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
-                  "trackTerminatingFileSession", "(J)V");
-    BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
-                  "nextId", "()J");
-  }
   if (agent_config->energy_profiler_enabled()) {
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/WakeLockWrapper",
