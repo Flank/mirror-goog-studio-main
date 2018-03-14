@@ -51,10 +51,11 @@ class Path {
   // Append two paths together ONLY IF the second path is a relative path;
   // otherwise, return the absolute path directly.
   // This helper method is useful as you might not always know whether a path
-  // is relative or not. A useful way to use this is:
+  // is relative or not.
   //
-  //   string path = external_system.GetPath(); // Relative? Absolute?
-  //   path = Path::AppendIfRelative(fs.GetWorkingDir(), path);
+  // Examples:
+  //   Path::AppendIfRelative("/a/b", "c/d")  -> "/a/b/c/d"
+  //   Path::AppendIfRelative("/a/b", "/c/d") -> "/c/d"
   static std::string AppendIfRelative(const std::string &root,
                                       const std::string &rel_or_abs_path) {
     if (rel_or_abs_path.length() >= 1 && rel_or_abs_path[0] == '/') {
