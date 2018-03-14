@@ -21,6 +21,7 @@ import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.net.Uri;
+import com.android.tools.profiler.support.util.StackTrace;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,7 +88,8 @@ public final class JobWrapper {
                 jobInfo.isRequireStorageNotLow(),
                 jobInfo.getExtras().toString(),
                 jobInfo.getTransientExtras().toString(),
-                scheduleResult);
+                scheduleResult,
+                StackTrace.getStackTrace());
         return scheduleResult;
     }
 
@@ -155,7 +157,8 @@ public final class JobWrapper {
                 params.isOverrideDeadlineExpired(),
                 params.getExtras().toString(),
                 params.getTransientExtras().toString(),
-                wantsReschedule);
+                wantsReschedule,
+                StackTrace.getStackTrace());
     }
 
     private static String[] triggerContentUrisToStrings(JobInfo.TriggerContentUri[] uris) {
@@ -203,7 +206,8 @@ public final class JobWrapper {
             boolean isRequireStorageNotLow,
             String extras,
             String transientExtras,
-            int scheduleResult);
+            int scheduleResult,
+            String stack);
 
     private static native void sendJobStarted(
             int eventId,
@@ -233,5 +237,6 @@ public final class JobWrapper {
             boolean isOverrideDeadlineExpired,
             String extras,
             String transientExtras,
-            boolean needsReschedule);
+            boolean needsReschedule,
+            String stack);
 }

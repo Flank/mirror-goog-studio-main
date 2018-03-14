@@ -486,23 +486,23 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
                   "sendWakeLockReleased", "(IIZLjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendIntentAlarmScheduled", "(IIJJJLjava/lang/String;I)V");
+        "sendIntentAlarmScheduled", "(IIJJJLjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendListenerAlarmScheduled", "(IIJJJLjava/lang/String;)V");
+        "sendListenerAlarmScheduled", "(IIJJJLjava/lang/String;Ljava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendIntentAlarmCancelled", "(ILjava/lang/String;I)V");
+        "sendIntentAlarmCancelled", "(ILjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
-        "sendListenerAlarmCancelled", "(ILjava/lang/String;)V");
+        "sendListenerAlarmCancelled", "(ILjava/lang/String;Ljava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/AlarmManagerWrapper",
         "sendListenerAlarmFired", "(ILjava/lang/String;)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobScheduled",
                   "(IILjava/lang/String;IJZJJJJI[Ljava/lang/String;JJZZZZZ"
-                  "Ljava/lang/String;Ljava/lang/String;I)V");
+                  "Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobStarted",
                   "(II[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
@@ -514,7 +514,7 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
     BindJNIMethod(jni, "com/android/tools/profiler/support/energy/JobWrapper",
                   "sendJobFinished",
                   "(II[Ljava/lang/String;[Ljava/lang/String;ZLjava/lang/String;"
-                  "Ljava/lang/String;Z)V");
+                  "Ljava/lang/String;ZLjava/lang/String;)V");
   }
 
   if (agent_config->cpu_api_tracing_enabled()) {

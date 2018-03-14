@@ -18,6 +18,7 @@ package com.android.tools.profiler.support.energy;
 
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import com.android.tools.profiler.support.util.StackTrace;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -129,7 +130,7 @@ public final class WakeLockWrapper {
                     creationParams.myLevelAndFlags,
                     creationParams.myTag,
                     timeout,
-                    getStackTrace());
+                    StackTrace.getStackTrace());
         }
     }
 
@@ -156,28 +157,8 @@ public final class WakeLockWrapper {
                     eventIdMap.get(releaseParams.myWakeLock),
                     releaseParams.myFlags,
                     releaseParams.myWakeLock.isHeld(),
-                    getStackTrace());
+                    StackTrace.getStackTrace());
         }
-    }
-
-    /**
-     * Returns a stacktrace for wake lock method call, where profiler wrapper methods and framework
-     * method are filter out and user code will be the first one.
-     */
-    private static String getStackTrace() {
-        StackTraceElement[] stackTraceElements = new Throwable().getStackTrace();
-        int firstNonProfilerTraceIndex = 0;
-        for (int i = 0; i < stackTraceElements.length; i++) {
-            if (!stackTraceElements[i].getClassName().startsWith("com.android.tools.profiler")) {
-                firstNonProfilerTraceIndex = i;
-                break;
-            }
-        }
-        StringBuilder s = new StringBuilder();
-        for (int i = firstNonProfilerTraceIndex; i < stackTraceElements.length; i++) {
-            s.append(stackTraceElements[i]).append('\n');
-        }
-        return s.toString();
     }
 
     // Native functions to send wake lock events to perfd.
