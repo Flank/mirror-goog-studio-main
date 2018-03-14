@@ -16,6 +16,7 @@
 package com.android.layoutinspector
 
 import com.android.layoutinspector.model.ClientWindow
+import com.android.layoutinspector.model.ViewNode
 import com.android.layoutinspector.parser.ViewNodeParser
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -36,10 +37,21 @@ object LayoutInspectorBridge {
                 "Unexpected error: empty view hierarchy"
             )
 
-        val root = ViewNodeParser.parse(hierarchy, options.version) ?: return LayoutInspectorResult(
-            null,
-            "Unable to parse view hierarchy"
-        )
+        var root: ViewNode?
+        try {
+            root = ViewNodeParser.parse(hierarchy, options.version)
+        } catch (e: StringIndexOutOfBoundsException) {
+            return LayoutInspectorResult(null, "Unexpected error: $e")
+        } catch (e: IOException) {
+            return LayoutInspectorResult(null, "Unexpected error: $e")
+        }
+
+        if (root == null) {
+            return LayoutInspectorResult(
+                null,
+                "Unable to parse view hierarchy"
+            )
+        }
 
         //  Get the preview of the root node
         val preview = window.loadViewImage(
@@ -66,7 +78,7 @@ object LayoutInspectorBridge {
         } catch (e: IOException) {
             return LayoutInspectorResult(
                 null,
-                "Unexpected error while saving hierarchy snapshot: " + e
+                "Unexpected error while saving hierarchy snapshot: $e"
             )
         } finally {
             try {
@@ -75,8 +87,8 @@ object LayoutInspectorBridge {
                 }
             } catch (e: IOException) {
                 return LayoutInspectorResult(
-                        null,
-                        "Unexpected error while closing hierarchy snapshot: " + e
+                    null,
+                    "Unexpected error while closing hierarchy snapshot: $e"
                 )
             }
 
