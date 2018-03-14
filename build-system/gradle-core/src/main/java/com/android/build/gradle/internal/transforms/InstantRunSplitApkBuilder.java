@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -259,8 +260,9 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         }
 
         File androidManifest = new File(apkSupportDir, SdkConstants.ANDROID_MANIFEST_XML);
-        try (OutputStreamWriter fileWriter =
-                     new OutputStreamWriter(new FileOutputStream(androidManifest), "UTF-8")) {
+        try (BufferedWriter fileWriter =
+                new BufferedWriter(
+                        new OutputStreamWriter(new FileOutputStream(androidManifest), "UTF-8"))) {
             fileWriter
                     .append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
                     .append(
