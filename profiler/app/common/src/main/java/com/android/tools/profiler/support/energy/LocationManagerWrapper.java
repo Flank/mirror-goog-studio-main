@@ -22,9 +22,16 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Looper;
-import com.android.tools.profiler.support.util.StudioLog;
+import java.util.HashMap;
+import java.util.Map;
 
+@SuppressWarnings("unused") // Used by native instrumentation code.
 public final class LocationManagerWrapper {
+
+    private static final Map<LocationListener, Integer> listenerIdMap =
+            new HashMap<LocationListener, Integer>();
+    private static final Map<PendingIntent, Integer> intentIdMap =
+            new HashMap<PendingIntent, Integer>();
 
     /**
      * Wraps {@link LocationManager#requestLocationUpdates(String, long, float, LocationListener)}.
@@ -41,7 +48,7 @@ public final class LocationManagerWrapper {
             long minTime,
             float minDistance,
             LocationListener listener) {
-        StudioLog.v("requestLocationUpdates");
+        sendLocationUpdateRequestedInternal(provider, minTime, minDistance, 0, 0, listener, null);
     }
 
     public static void wrapRequestLocationUpdates(
@@ -51,7 +58,14 @@ public final class LocationManagerWrapper {
             Criteria criteria,
             LocationListener listener,
             Looper looper) {
-        StudioLog.v("requestLocationUpdates");
+        sendLocationUpdateRequestedInternal(
+                "",
+                minTime,
+                minDistance,
+                criteria.getAccuracy(),
+                criteria.getPowerRequirement(),
+                listener,
+                null);
     }
 
     public static void wrapRequestLocationUpdates(
@@ -61,7 +75,7 @@ public final class LocationManagerWrapper {
             float minDistance,
             LocationListener listener,
             Looper looper) {
-        StudioLog.v("requestLocationUpdates");
+        sendLocationUpdateRequestedInternal(provider, minTime, minDistance, 0, 0, listener, null);
     }
 
     public static void wrapRequestLocationUpdates(
@@ -70,7 +84,14 @@ public final class LocationManagerWrapper {
             float minDistance,
             Criteria criteria,
             PendingIntent intent) {
-        StudioLog.v("requestLocationUpdates");
+        sendLocationUpdateRequestedInternal(
+                "",
+                minTime,
+                minDistance,
+                criteria.getAccuracy(),
+                criteria.getPowerRequirement(),
+                null,
+                intent);
     }
 
     public static void wrapRequestLocationUpdates(
@@ -79,7 +100,42 @@ public final class LocationManagerWrapper {
             long minTime,
             float minDistance,
             PendingIntent intent) {
-        StudioLog.v("requestLocationUpdates");
+        sendLocationUpdateRequestedInternal(provider, minTime, minDistance, 0, 0, null, intent);
+    }
+
+    private static void sendLocationUpdateRequestedInternal(
+            String provider,
+            long minTime,
+            float minDistance,
+            int accuracy,
+            int powerReq,
+            LocationListener listener,
+            PendingIntent intent) {
+        if (listener != null) {
+            if (!listenerIdMap.containsKey(listener)) {
+                listenerIdMap.put(listener, EventIdGenerator.nextId());
+            }
+            sendListenerLocationUpdateRequested(
+                    listenerIdMap.get(listener),
+                    provider,
+                    minTime,
+                    minDistance,
+                    accuracy,
+                    powerReq);
+        } else if (intent != null) {
+            if (!intentIdMap.containsKey(intent)) {
+                intentIdMap.put(intent, EventIdGenerator.nextId());
+            }
+            sendIntentLocationUpdateRequested(
+                    intentIdMap.get(intent),
+                    provider,
+                    minTime,
+                    minDistance,
+                    accuracy,
+                    powerReq,
+                    intent.getCreatorPackage(),
+                    intent.getCreatorUid());
+        }
     }
 
     /**
@@ -91,12 +147,12 @@ public final class LocationManagerWrapper {
      */
     public static void wrapRequestSingleUpdate(
             LocationManager locationManager, String provider, PendingIntent intent) {
-        StudioLog.v("requestSingleUpdate");
+        sendLocationUpdateRequestedInternal(provider, 0, 0, 0, 0, null, intent);
     }
 
     public static void wrapRequestSingleUpdate(
             LocationManager locationManager, Criteria criteria, PendingIntent intent) {
-        StudioLog.v("requestSingleUpdate");
+        sendLocationUpdateRequestedInternal("", 0, 0, criteria.getAccuracy(), 0, null, intent);
     }
 
     public static void wrapRequestSingleUpdate(
@@ -104,7 +160,7 @@ public final class LocationManagerWrapper {
             String provider,
             LocationListener listener,
             Looper looper) {
-        StudioLog.v("requestSingleUpdate");
+        sendLocationUpdateRequestedInternal(provider, 0, 0, 0, 0, listener, null);
     }
 
     public static void wrapRequestSingleUpdate(
@@ -112,7 +168,7 @@ public final class LocationManagerWrapper {
             Criteria criteria,
             LocationListener listener,
             Looper looper) {
-        StudioLog.v("requestSingleUpdate");
+        sendLocationUpdateRequestedInternal("", 0, 0, criteria.getAccuracy(), 0, listener, null);
     }
 
     /**
@@ -123,11 +179,16 @@ public final class LocationManagerWrapper {
      */
     public static void wrapRemoveUpdates(
             LocationManager locationManager, LocationListener listener) {
-        StudioLog.v("removeLocationUpdates");
+        if (listenerIdMap.containsKey(listener)) {
+            sendListenerLocationUpdateRemoved(listenerIdMap.get(listener));
+        }
     }
 
     public static void wrapRemoveUpdates(LocationManager locationManager, PendingIntent intent) {
-        StudioLog.v("removeLocationUpdates");
+        if (intentIdMap.containsKey(intent)) {
+            sendIntentLocationUpdateRemoved(
+                    intentIdMap.get(intent), intent.getCreatorPackage(), intent.getCreatorUid());
+        }
     }
 
     /**
@@ -137,7 +198,35 @@ public final class LocationManagerWrapper {
      * @param location the location parameter passed to the original method.
      */
     public static void wrapOnLocationChanged(LocationListener listener, Location location) {
-        StudioLog.v("onLocationChanged");
         listener.onLocationChanged(location);
+        if (listenerIdMap.containsKey(listener)) {
+            sendListenerLocationChanged(listenerIdMap.get(listener));
+        }
     }
+
+    // Native functions to send location events to perfd.
+    private static native void sendListenerLocationUpdateRequested(
+            int eventId,
+            String provider,
+            long minTime,
+            float minDistance,
+            int accuracy,
+            int powerReq);
+
+    private static native void sendIntentLocationUpdateRequested(
+            int eventId,
+            String provider,
+            long minTime,
+            float minDistance,
+            int accuracy,
+            int powerReq,
+            String creatorPackage,
+            int creatorUid);
+
+    private static native void sendListenerLocationUpdateRemoved(int eventId);
+
+    private static native void sendIntentLocationUpdateRemoved(
+            int eventId, String creatorPackage, int creatorUid);
+
+    private static native void sendListenerLocationChanged(int eventId);
 }

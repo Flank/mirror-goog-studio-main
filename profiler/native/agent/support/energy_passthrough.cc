@@ -31,6 +31,7 @@ using profiler::proto::InternalEnergyService;
 using profiler::proto::JobInfo;
 using profiler::proto::JobParameters;
 using profiler::proto::JobScheduled;
+using profiler::proto::LocationRequest;
 using profiler::proto::WakeLockAcquired;
 using profiler::proto::WakeLockReleased;
 
@@ -80,6 +81,20 @@ constexpr int NETWORK_TYPE_ANY = 0x00000001;
 constexpr int NETWORK_TYPE_UNMETERED = 0x00000002;
 constexpr int NETWORK_TYPE_NOT_ROAMING = 0x00000003;
 constexpr int NETWORK_TYPE_METERED = 0x00000004;
+
+// Location accuracy
+constexpr int ACCURACY_FINE = 0x00000001;
+constexpr int ACCURACY_COARSE = 0x00000002;
+
+// Location power requirement
+constexpr int POWER_LOW = 0x00000001;
+constexpr int POWER_HIGH = 0x00000003;
+
+// Location provider
+constexpr char GPS_PROVIDER[] = "gps";
+constexpr char NETWORK_PROVIDER[] = "network";
+constexpr char PASSIVE_PROVIDER[] = "passive";
+constexpr char FUSED_PROVIDER[] = "fused";
 
 const SteadyClock& GetClock() {
   static SteadyClock clock;
@@ -154,6 +169,33 @@ void PopulateJobParams(JNIEnv* env, JobParameters* params, jint job_id,
   params->set_is_override_deadline_expired(is_override_deadline_expired);
   params->set_extras(extras_str.get());
   params->set_transient_extras(transient_extras_str.get());
+}
+
+LocationRequest::Priority GetPriority(jint accuracy, jint power_req,
+                                      const std::string& provider) {
+  switch (accuracy) {
+    case ACCURACY_FINE:
+      return LocationRequest::HIGH_ACCURACY;
+    case ACCURACY_COARSE:
+      return LocationRequest::BALANCED;
+    default: {
+      switch (power_req) {
+        case POWER_LOW:
+          return LocationRequest::LOW_POWER;
+        case POWER_HIGH:
+          return LocationRequest::HIGH_ACCURACY;
+        default: {
+          if (strcmp(provider.c_str(), GPS_PROVIDER) == 0) {
+            return LocationRequest::HIGH_ACCURACY;
+          }
+          if (strcmp(provider.c_str(), PASSIVE_PROVIDER) == 0) {
+            return LocationRequest::NO_POWER;
+          }
+          return LocationRequest::LOW_POWER;
+        }
+      }
+    }
+  }
 }
 }  // namespace
 
@@ -278,7 +320,8 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendIntentAla
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerAlarmCancelled(
-    JNIEnv* env, jclass clazz, jint event_id, jstring listener_tag, jstring stack) {
+    JNIEnv* env, jclass clazz, jint event_id, jstring listener_tag,
+    jstring stack) {
   JStringWrapper listener_tag_str(env, listener_tag);
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
@@ -314,7 +357,8 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobScheduled(
     jlong trigger_content_update_delay, jboolean is_persisted,
     jboolean is_require_battery_not_low, jboolean is_require_charging,
     jboolean is_require_device_idle, jboolean is_require_storage_not_low,
-    jstring extras, jstring transient_extras, jint schedule_result, jstring stack) {
+    jstring extras, jstring transient_extras, jint schedule_result,
+    jstring stack) {
   JStringWrapper service_name_str(env, service_name);
   JStringWrapper extras_str(env, extras);
   JStringWrapper transient_extras_str(env, transient_extras);
@@ -442,7 +486,8 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobFinished(
     JNIEnv* env, jclass clazz, jint event_id, jint job_id,
     jobjectArray triggered_content_authorities,
     jobjectArray triggered_content_uris, jboolean is_override_deadline_expired,
-    jstring extras, jstring transient_extras, jboolean needs_reschedule, jstring stack) {
+    jstring extras, jstring transient_extras, jboolean needs_reschedule,
+    jstring stack) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
@@ -454,5 +499,85 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobFinished(
   energy_event.set_is_terminal(true);
   JStringWrapper stack_string(env, stack);
   SubmitEnergyEvent(energy_event, stack_string.get());
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListenerLocationUpdateRequested(
+    JNIEnv* env, jclass clazz, jint event_id, jstring provider, jlong interval,
+    jfloat min_distance, jint accuracy, jint power_req) {
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
+  energy_event.mutable_location_update_requested()->mutable_listener();
+  auto request =
+      energy_event.mutable_location_update_requested()->mutable_request();
+  JStringWrapper provider_str(env, provider);
+  request->set_provider(provider_str.get());
+  request->set_interval_ms(interval);
+  request->set_fastest_interval_ms(interval);
+  request->set_smallest_displacement_meters(min_distance);
+  request->set_priority(GetPriority(accuracy, power_req, provider_str.get()));
+  SubmitEnergyEvent(energy_event);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntentLocationUpdateRequested(
+    JNIEnv* env, jclass clazz, jint event_id, jstring provider, jlong interval,
+    jfloat min_distance, jint accuracy, jint power_req, jstring creator_package,
+    jint creator_uid) {
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
+  auto intent =
+      energy_event.mutable_location_update_requested()->mutable_intent();
+  JStringWrapper creator_package_str(env, creator_package);
+  intent->set_creator_package(creator_package_str.get());
+  intent->set_creator_uid(creator_uid);
+  auto request =
+      energy_event.mutable_location_update_requested()->mutable_request();
+  JStringWrapper provider_str(env, provider);
+  request->set_provider(provider_str.get());
+  request->set_interval_ms(interval);
+  request->set_fastest_interval_ms(interval);
+  request->set_smallest_displacement_meters(min_distance);
+  request->set_priority(GetPriority(accuracy, power_req, provider_str.get()));
+  SubmitEnergyEvent(energy_event);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListenerLocationUpdateRemoved(
+    JNIEnv* env, jclass clazz, jint event_id) {
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
+  energy_event.set_is_terminal(true);
+  energy_event.mutable_location_update_removed()->mutable_listener();
+  SubmitEnergyEvent(energy_event);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntentLocationUpdateRemoved(
+    JNIEnv* env, jclass clazz, jint event_id, jstring creator_package,
+    jint creator_uid) {
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
+  energy_event.set_is_terminal(true);
+  auto intent =
+      energy_event.mutable_location_update_removed()->mutable_intent();
+  JStringWrapper creator_package_str(env, creator_package);
+  intent->set_creator_package(creator_package_str.get());
+  intent->set_creator_uid(creator_uid);
+  SubmitEnergyEvent(energy_event);
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListenerLocationChanged(
+    JNIEnv* env, jclass clazz, jint event_id) {
+  EnergyEvent energy_event;
+  energy_event.set_pid(getpid());
+  energy_event.set_event_id(event_id);
+  energy_event.mutable_location_changed()->mutable_listener();
+  SubmitEnergyEvent(energy_event);
 }
 };

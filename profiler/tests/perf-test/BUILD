@@ -142,6 +142,7 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/energy/AlarmTest.java",
         "testSrcs/com/android/tools/profiler/energy/JobTest.java",
+        "testSrcs/com/android/tools/profiler/energy/LocationTest.java",
         "testSrcs/com/android/tools/profiler/energy/WakeLockTest.java",
     ],
     tags = ["no_foundry"],  # b/73948555

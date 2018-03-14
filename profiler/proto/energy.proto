@@ -431,9 +431,17 @@ message LocationRequest {
   // priority in FusedLocationProviderClient).
   enum Priority {
     UNDEFINED_PRIORITY = 0;
+    // Requests the best accuracy possible with zero additional power
+    // consumption, a.k.a. passive mode. Location update is only sent when
+    // another application also request it.
     NO_POWER = 1;
+    // Requests "city" level accuracy. Has low power impact.
     LOW_POWER = 2;
+    // Requests "block" level accuracy, a.k.a. coarse location. A balance
+    // between power consumption and accuracy.
     BALANCED = 3;
+    // Requests the most accurate locations available, a.k.a fine location.
+    // Has high power impact.
     HIGH_ACCURACY = 4;
   }
   // Name of the location provider.
