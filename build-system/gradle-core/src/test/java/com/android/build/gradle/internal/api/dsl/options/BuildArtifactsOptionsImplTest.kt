@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.fixtures.TestClass
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
+import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.DefaultTask
@@ -70,11 +71,10 @@ class BuildArtifactsOptionsImplTest {
         project = ProjectBuilder().build()!!
         BuildableArtifactImpl.disableResolution()
         taskHolder =
-                BuildArtifactsHolder(
+                VariantBuildArtifactsHolder(
                     project,
                     "debug",
                     project.file("root"),
-                    "debug",
                     dslScope)
         options = BuildArtifactsOptionsImpl(project, taskHolder, buildArtifactsActions, dslScope)
         task0 = project.tasks.create("task0")

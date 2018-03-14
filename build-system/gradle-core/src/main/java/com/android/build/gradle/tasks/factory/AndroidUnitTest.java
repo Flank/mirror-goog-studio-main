@@ -215,7 +215,10 @@ public class AndroidUnitTest extends Test {
 
             // Mockable JAR is last, to make sure you can shadow the classes with
             // dependencies.
-            collection.from(scope.getGlobalScope().getOutput(InternalArtifactType.MOCKABLE_JAR));
+            collection.from(
+                    scope.getGlobalScope()
+                            .getArtifacts()
+                            .getFinalArtifactFiles(InternalArtifactType.MOCKABLE_JAR));
             return collection;
         }
     }

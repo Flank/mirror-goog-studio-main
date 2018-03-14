@@ -33,6 +33,7 @@ import com.google.gson.annotations.SerializedName
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskDependency
 import java.io.FileReader
+import java.util.concurrent.ConcurrentHashMap
 
 typealias Report = Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifactData>>
 
@@ -45,28 +46,26 @@ typealias Report = Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifact
  * allow users to create transform task.
  *
  * @param project the Gradle [Project]
- * @param variantName name of the Variant
- * @param rootOutputDir the intermediate directories to place output files.
- * @param variantDirName the subdirectory where outputs should be placed for the variant
+ * @param rootOutputDir a supplier for the intermediate directories to place output files.
+ * @parma dslScope the scope for dsl parsing issue raising.
  */
-class BuildArtifactsHolder(
+abstract class BuildArtifactsHolder(
     private val project: Project,
-    private val variantName: String,
-    private val rootOutputDir: File,
-    private val variantDirName: String,
+    private val rootOutputDir: () -> File,
     private val dslScope: DslScope) {
 
-    private val artifactRecordMap = mutableMapOf<ArtifactType, ArtifactRecord>()
+    private val artifactRecordMap = ConcurrentHashMap<ArtifactType, ArtifactRecord>()
+    private val finalArtifactsMap = ConcurrentHashMap<ArtifactType, BuildableArtifact>()
 
     /**
      * Internal private class for storing [BuildableArtifact] created for a [ArtifactType]
      */
-    private class ArtifactRecord(first : BuildableArtifact) {
+    private class ArtifactRecord {
 
         // A list of all BuildableFiles for the artifact.  Technically, only the last
         // BuildableFiles are needed.  Storing the all BuildableFiles allows better error
         // messages to be generated in the future.
-        var history: MutableList<BuildableArtifact> = mutableListOf(first)
+        var history: MutableList<BuildableArtifact> = mutableListOf()
 
         /** The latest [BuildableArtifact] created for this artifact */
         var last : BuildableArtifact
@@ -77,26 +76,34 @@ class BuildArtifactsHolder(
 
         val size : Int
             get() = history.size
+    }
 
-        fun final() : BuildableArtifact {
-            return object : BuildableArtifact {
-                override val files: Set<File>
-                    get() = last.files
-
-                override fun isEmpty(): Boolean = last.isEmpty()
-                override fun iterator(): Iterator<File> = last.iterator()
-                override fun getBuildDependencies(): TaskDependency = last.buildDependencies
-                override fun get(): FileCollection = last.get()
-            }
-        }
+    private class FinalBuildableArtifact(
+        val artifactType: ArtifactType,
+        val artifacts: BuildArtifactsHolder) : BuildableArtifact {
+        override val files: Set<File>
+            get() = final().files
+        override fun isEmpty(): Boolean = final().isEmpty()
+        override fun iterator(): Iterator<File> = final().iterator()
+        override fun getBuildDependencies(): TaskDependency = final().buildDependencies
+        override fun get(): FileCollection = final().get()
+        private fun final() : BuildableArtifact = artifacts.getArtifactRecord(artifactType).last
     }
 
     /**
      * Returns an appropriate task name for the variant with the given prefix.
      */
     fun getTaskName(prefix : String) : String {
-        return prefix + variantName.capitalize()
+        return prefix + getIdentifier().capitalize()
     }
+
+    /**
+     * Returns a identifier that will uniquely identify this artifacts holder against other holders.
+     * This can be used to create unique folder or provide unique task name for this context.
+     *
+     * @return a unique [String]
+     */
+    abstract fun getIdentifier(): String
 
     /**
      * Returns the current [BuildableArtifact] associated with the artifactType.
@@ -122,7 +129,8 @@ class BuildArtifactsHolder(
      * @return the possibly empty final [BuildableArtifact] for this artifact type.
      */
     fun getFinalArtifactFiles(artifactType: ArtifactType) : BuildableArtifact {
-        return getArtifactRecord(artifactType).final()
+        return finalArtifactsMap.computeIfAbsent(artifactType,
+            { FinalBuildableArtifact(artifactType, this) })
     }
 
     /**
@@ -193,14 +201,8 @@ class BuildArtifactsHolder(
             artifactType: ArtifactType,
             newFiles : Collection<File>,
             task : Task) : BuildableArtifact {
-        val artifactRecord = artifactRecordMap[artifactType]
-        val collection =
-            if (artifactRecord != null) {
-                project.files(newFiles, artifactRecord.last)
-            } else {
-                project.files(newFiles)
-            }.builtBy(task)
-        return _appendArtifact(artifactType, collection)
+        return _appendArtifact(artifactType,
+            createFileCollection(artifactRecordMap[artifactType], newFiles).builtBy(task))
     }
 
     /**
@@ -213,18 +215,19 @@ class BuildArtifactsHolder(
      * @param artifactType [ArtifactType] for the existing files
      * @param existingFiles existing files' [FileCollection] with
      */
-    fun appendArtifact(
-        artifactType: ArtifactType,
-        existingFiles: FileCollection) {
-
-        val artifactRecord = artifactRecordMap[artifactType]
-        val collection =
-            if (artifactRecord != null) {
-                project.files(existingFiles, artifactRecord.last)
-            } else {
-                project.files(existingFiles)
-            }
-        _appendArtifact(artifactType, collection)
+    fun appendArtifact(artifactType: ArtifactType, existingFiles: FileCollection) {
+        _appendArtifact(artifactType,
+            createFileCollection(artifactRecordMap[artifactType], existingFiles))
+    }
+    /**
+     * Append existing BuildableArtifact to a specified artifact type.
+     *
+     * @param artifactType [ArtifactType] for the existing files
+     * @param buildableArtifact existing [BuildableArtifact] holding files and dependencies
+     */
+    fun appendArtifact(artifactType: ArtifactType, buildableArtifact: BuildableArtifact) {
+        _appendArtifact(artifactType,
+            createFileCollection(artifactRecordMap[artifactType], buildableArtifact))
     }
 
     /**
@@ -245,23 +248,25 @@ class BuildArtifactsHolder(
         return output
     }
 
-    private fun _appendArtifact(artifactType: ArtifactType, files: FileCollection) : BuildableArtifact {
+    private fun createFileCollection(artifactRecord: ArtifactRecord?, newFiles: Any) =
+        if (artifactRecord != null) {
+            project.files(newFiles, artifactRecord.last)
+        } else {
+            project.files(newFiles)
+        }
+
+    private fun _appendArtifact(type: ArtifactType, files: FileCollection) : BuildableArtifact {
         val newBuildableArtifact = BuildableArtifactImpl(files, dslScope)
-        createOutput(artifactType, newBuildableArtifact)
+        createOutput(type, newBuildableArtifact)
         return newBuildableArtifact
     }
 
-    private fun createOutput(artifactType: ArtifactType, artifact: BuildableArtifact) : ArtifactRecord {
-        synchronized(artifactRecordMap,  {
-            var output = artifactRecordMap[artifactType]
-            if (output == null) {
-                output = ArtifactRecord(artifact)
-                artifactRecordMap[artifactType] = output
-            } else {
-                output.last = artifact
-            }
+    private fun createOutput(type: ArtifactType, artifact: BuildableArtifact) : ArtifactRecord {
+        synchronized(artifactRecordMap) {
+            val output = artifactRecordMap.computeIfAbsent(type) { ArtifactRecord() }
+            output.last = artifact
             return output
-        })
+        }
     }
 
     private fun getArtifactRecord(artifactType : ArtifactType) : ArtifactRecord {
@@ -281,8 +286,8 @@ class BuildArtifactsHolder(
      * @param filename desired file name.
      */
     internal fun createFile(task: Task, artifactType: ArtifactType, filename: String) =
-            FileUtils.join(artifactType.getOutputDir(rootOutputDir),
-                variantName,
+            FileUtils.join(artifactType.getOutputDir(rootOutputDir()),
+                getIdentifier(),
                 task.name,
                 filename)
 
@@ -297,7 +302,7 @@ class BuildArtifactsHolder(
      */
     internal fun createFile(task: Task, filename : String) =
             FileUtils.join(
-                InternalArtifactType.Kind.INTERMEDIATES.getOutputDir(rootOutputDir),
+                InternalArtifactType.Kind.INTERMEDIATES.getOutputDir(rootOutputDir()),
                 MULTI_TYPES,
                 task.name,
                 filename)

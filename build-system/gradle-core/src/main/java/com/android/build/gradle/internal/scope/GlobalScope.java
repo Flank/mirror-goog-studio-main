@@ -25,7 +25,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.api.dsl.DslScope;
@@ -50,11 +49,8 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-/**
- * A scope containing data for the Android plugin.
- */
-public class GlobalScope extends TaskOutputHolderImpl
-        implements TransformGlobalScope, TaskOutputHolder {
+/** A scope containing data for the Android plugin. */
+public class GlobalScope implements TransformGlobalScope {
 
     @NonNull private final Project project;
     @NonNull private final FilesProvider filesProvider;
@@ -75,6 +71,8 @@ public class GlobalScope extends TaskOutputHolderImpl
     @Nullable private File mockableAndroidJarFile;
 
     @Nullable private ConfigurableFileCollection java8LangSupportJar = null;
+
+    @NonNull private final BuildArtifactsHolder globalArtifacts;
 
     public GlobalScope(
             @NonNull Project project,
@@ -100,7 +98,7 @@ public class GlobalScope extends TaskOutputHolderImpl
         this.optionalCompilationSteps = checkNotNull(projectOptions.getOptionalCompilationSteps());
         this.projectOptions = checkNotNull(projectOptions);
         this.buildCache = buildCache;
-
+        this.globalArtifacts = new GlobalBuildArtifactsHolder(project, this::getBuildDir, dslScope);
     }
 
     @NonNull
@@ -290,18 +288,8 @@ public class GlobalScope extends TaskOutputHolderImpl
                 .getArtifactFiles();
     }
 
-    @Override
-    public ConfigurableFileCollection addTaskOutput(
-            @NonNull ArtifactType outputType, @NonNull Object file, @Nullable String taskName)
-            throws TaskOutputAlreadyRegisteredException {
-        try {
-            return super.addTaskOutput(outputType, file, taskName);
-        } catch (TaskOutputAlreadyRegisteredException e) {
-            throw new RuntimeException(
-                    String.format(
-                            "OutputType '%s' already registered in global scope",
-                            e.getOutputType()),
-                    e);
-        }
+    @NonNull
+    public BuildArtifactsHolder getArtifacts() {
+        return globalArtifacts;
     }
 }

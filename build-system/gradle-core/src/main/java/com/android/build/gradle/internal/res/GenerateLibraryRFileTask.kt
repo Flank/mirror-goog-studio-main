@@ -15,6 +15,8 @@
  */
 package com.android.build.gradle.internal.res
 
+import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -81,7 +83,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
     @get:Input val packageForR get() = packageForRSupplier.get()
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NAME_ONLY) lateinit var platformAttrRTxt: FileCollection
+    @get:PathSensitive(PathSensitivity.NAME_ONLY) lateinit var platformAttrRTxt: BuildableArtifact
         private set
 
     @get:Internal lateinit var applicationIdSupplier: Supplier<String> private set
@@ -97,7 +99,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifestFiles))
                 .outputFile
 
-        val androidAttrSymbol = getAndroidAttrSymbols(platformAttrRTxt.singleFile)
+        val androidAttrSymbol = getAndroidAttrSymbols(platformAttrRTxt.singleFile())
 
         val symbolTable = ResourceDirectoryParser.parseDirectory(
                 inputResourcesDir.singleFile,
@@ -146,9 +148,8 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
             task.variantName = variantScope.fullVariantName
 
-            task.platformAttrRTxt = variantScope
-                    .globalScope
-                    .getOutput(InternalArtifactType.PLATFORM_R_TXT)
+            task.platformAttrRTxt = variantScope.globalScope.artifacts
+                .getFinalArtifactFiles(InternalArtifactType.PLATFORM_R_TXT)
 
             task.applicationIdSupplier = TaskInputHelper.memoize {
                 variantScope.variantData.variantConfiguration.applicationId

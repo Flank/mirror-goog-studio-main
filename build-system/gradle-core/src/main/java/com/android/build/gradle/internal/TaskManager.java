@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_RES;
-import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.FN_SPLIT_LIST;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
@@ -45,8 +44,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.LINKE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MOCKABLE_JAR;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.PLATFORM_R_TXT;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -490,13 +487,7 @@ public abstract class TaskManager {
     public void configureCustomLintChecks() {
         // setup the task that reads the config and put the lint jar in the intermediate folder
         // so that the bundle tasks can copy it, and the inter-project publishing can publish it
-        File lintJar = FileUtils.join(globalScope.getIntermediatesDir(), "lint", FN_LINT_JAR);
-
-        PrepareLintJar copyLintTask =
-                taskFactory.create(new PrepareLintJar.ConfigAction(globalScope, lintJar));
-
-        // publish the lint intermediate file to the global tasks
-        globalScope.addTaskOutput(LINT_JAR, lintJar, copyLintTask.getName());
+        taskFactory.create(new PrepareLintJar.ConfigAction(globalScope));
     }
 
     public void createGlobalLintTask() {
@@ -520,15 +511,9 @@ public abstract class TaskManager {
 
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
-        FileCollection lintJarCollection = globalScope.getOutput(LINT_JAR);
-
-        // FIXME we don't to do this during config, but there's no way right now as we want to publish it.
-        // A work around would be to keep hold of the file in the global scope as well as the
-        // file collection in TaskOutput but then this is dangerous as one could use it without
-        // the task dependency.
-        File lintJar = lintJarCollection.getSingleFile();
+        BuildableArtifact lintJar = globalScope.getArtifacts().getFinalArtifactFiles(LINT_JAR);
         for (VariantScope scope : variants) {
-            scope.addTaskOutput(LINT_JAR, lintJar, PrepareLintJar.NAME);
+            scope.getBuildArtifactsHolder().appendArtifact(InternalArtifactType.LINT_JAR, lintJar);
         }
     }
 
@@ -564,25 +549,6 @@ public abstract class TaskManager {
                 }
             }
         }
-    }
-
-    public void createMockableJarTask() {
-        File mockableJar = globalScope.getMockableAndroidJarFile();
-        createMockableJar =
-                taskFactory.create(
-                        new MockableAndroidJarTask.ConfigAction(globalScope, mockableJar));
-
-        globalScope.addTaskOutput(MOCKABLE_JAR, mockableJar, createMockableJar.getName());
-    }
-
-    public void createAttrFromAndroidJarTask() {
-        File platformRtxt = FileUtils.join(globalScope.getIntermediatesDir(), "attr", "R.txt");
-
-        PlatformAttrExtractorTask task =
-                taskFactory.create(
-                        new PlatformAttrExtractorTask.ConfigAction(globalScope, platformRtxt));
-
-        globalScope.addTaskOutput(PLATFORM_R_TXT, platformRtxt, task.getName());
     }
 
     protected void createDependencyStreams(@NonNull final VariantScope variantScope) {
@@ -1959,8 +1925,9 @@ public abstract class TaskManager {
     }
 
     public void createTopLevelTestTasks(boolean hasFlavors) {
-        createMockableJarTask();
-        createAttrFromAndroidJarTask();
+        createMockableJar =
+                taskFactory.create(new MockableAndroidJarTask.ConfigAction(globalScope));
+        taskFactory.create(new PlatformAttrExtractorTask.ConfigAction(globalScope));
 
         final List<String> reportTasks = Lists.newArrayListWithExpectedSize(2);
 

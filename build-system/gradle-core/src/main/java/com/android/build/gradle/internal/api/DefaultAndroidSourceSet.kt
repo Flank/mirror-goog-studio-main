@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_N
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_WEAR_APP
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
+import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder
 import com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import com.android.builder.model.SourceProvider
 import com.android.utils.FileUtils
@@ -66,11 +67,10 @@ open class DefaultAndroidSourceSet @Inject constructor(
     private val shaders: AndroidSourceDirectorySet
     private val displayName : String = GUtil.toWords(this.name)
     private val buildArtifactsHolder: BuildArtifactsHolder =
-            BuildArtifactsHolder(
+            VariantBuildArtifactsHolder(
                 project,
                 name,
                 FileUtils.join(project.buildDir, FD_INTERMEDIATES, "sources", name),
-                name,
                 dslScope)
 
     internal val buildArtifactsReport

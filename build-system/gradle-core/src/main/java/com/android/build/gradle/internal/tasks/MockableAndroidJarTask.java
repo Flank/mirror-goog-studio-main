@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks;
 
+import static com.android.build.gradle.internal.scope.InternalArtifactType.MOCKABLE_JAR;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.TaskManager;
@@ -24,6 +26,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.builder.testing.MockableJarGenerator;
 import com.android.builder.utils.FileCache;
 import com.android.sdklib.IAndroidTarget;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -100,14 +103,9 @@ public class MockableAndroidJarTask extends DefaultTask {
 
         @NonNull
         private final GlobalScope scope;
-        @NonNull
-        private final File mockableJar;
 
-        public ConfigAction(
-                @NonNull GlobalScope scope,
-                @NonNull File mockableJar) {
+        public ConfigAction(@NonNull GlobalScope scope) {
             this.scope = scope;
-            this.mockableJar = mockableJar;
         }
 
         @NonNull
@@ -136,7 +134,9 @@ public class MockableAndroidJarTask extends DefaultTask {
                                     .getTarget()
                                     .getPath(IAndroidTarget.ANDROID_JAR));
 
-            task.outputFile = mockableJar;
+            task.outputFile = scope.getMockableAndroidJarFile();
+            scope.getArtifacts()
+                    .appendArtifact(MOCKABLE_JAR, ImmutableList.of(task.outputFile), task);
             task.fileCache = scope.getBuildCache();
         }
     }

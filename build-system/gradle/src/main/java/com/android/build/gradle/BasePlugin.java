@@ -783,6 +783,11 @@ public abstract class BasePlugin<E extends BaseExtension2>
         // create the global lint task that depends on all the variants
         taskManager.configureGlobalLintTask(variantManager.getVariantScopes());
 
+        // now publish all variant artifacts.
+        for (VariantScope variantScope : variantManager.getVariantScopes()) {
+            variantManager.publishBuildArtifacts(variantScope);
+        }
+
         // Create and read external native build JSON files depending on what's happening right
         // now.
         //

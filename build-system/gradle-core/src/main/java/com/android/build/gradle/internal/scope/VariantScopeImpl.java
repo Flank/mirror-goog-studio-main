@@ -240,11 +240,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY),
                         projectOptions.get(BooleanOption.ENABLE_SEPARATE_APK_RESOURCES));
         this.buildArtifactsHolder =
-                new BuildArtifactsHolder(
+                new VariantBuildArtifactsHolder(
                         getProject(),
                         getFullVariantName(),
                         globalScope.getBuildDir(),
-                        getVariantConfiguration().getDirName(),
                         globalScope.getDslScope());
 
         validatePostprocessingOptions();

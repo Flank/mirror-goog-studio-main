@@ -116,7 +116,8 @@ open class AndroidZip : Zip() {
                 artifacts.getFinalArtifactFiles(InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI),
                 prependToCopyPath(SdkConstants.FD_JNI)
             )
-            bundle.from(variantScope.globalScope.getOutput(InternalArtifactType.LINT_JAR))
+            bundle.from(variantScope.globalScope.artifacts
+                .getFinalArtifactFiles(InternalArtifactType.LINT_JAR))
             if (artifacts.hasArtifact(InternalArtifactType.ANNOTATIONS_ZIP)) {
                 bundle.from(artifacts.getFinalArtifactFiles(InternalArtifactType.ANNOTATIONS_ZIP))
             }
