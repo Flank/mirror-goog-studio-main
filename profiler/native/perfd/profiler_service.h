@@ -19,10 +19,7 @@
 #include <grpc++/grpc++.h>
 
 #include "perfd/daemon.h"
-#include "perfd/sessions/sessions_manager.h"
 #include "proto/profiler.grpc.pb.h"
-#include "utils/clock.h"
-#include "utils/file_cache.h"
 
 #include <unordered_map>
 
