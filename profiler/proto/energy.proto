@@ -133,6 +133,16 @@ message EnergyEvent {
     // the JobScheduler the application has finished executing. When the system
     // receives this message it will release the wakelock being held.
     JobFinished job_finished = 109;
+    // Location update is requested. With user-granted location permission,
+    // application can start receiving location updates in the form of a
+    // callback or PendingIntent.
+    LocationUpdateRequested location_update_requested = 110;
+    // Location update request is removed. The application stops receiving
+    // location updates for the given callback or PendingIntent.
+    LocationUpdateRemoved location_update_removed = 111;
+    // Location is changed. Application receives the new location in the form of
+    // a callback or extended data contained in a PendingIntent.
+    LocationChanged location_changed = 112;
   }
 }
 
@@ -378,4 +388,66 @@ message JobParameters {
   // String representation of the transient extras which are returned to the
   // application at execution time, but not persisted by the system.
   string transient_extras = 6;
+}
+
+message LocationUpdateRequested {
+  oneof action {
+    // Metadata of the callback whose onLocationChanged() method will be called
+    // for each location update.
+    LocationListener listener = 1;
+    // Metadata of the PendingIntent to be sent for each location update.
+    PendingIntent intent = 2;
+  }
+  // The location request for the updates, e.g. accuracy, interval.
+  LocationRequest request = 3;
+}
+
+message LocationUpdateRemoved {
+  oneof action {
+    // A previously requested listener to remove.
+    LocationListener listener = 1;
+    // A previously requested PendingIntent to remove.
+    PendingIntent intent = 2;
+  }
+}
+
+message LocationChanged {
+  oneof action {
+    // A previously requested listener.
+    LocationListener listener = 1;
+    // A previously requested PendingIntent.
+    PendingIntent intent = 2;
+  }
+}
+
+// Currently contains no metadata but we still need the message to indicate a
+// listener is passed to the location request.
+message LocationListener {
+}
+
+message LocationRequest {
+  // Piority of the location request. This is an abstraction of the accuracy and
+  // power useage defined by two location APIs (criteria in LocationManager and
+  // priority in FusedLocationProviderClient).
+  enum Priority {
+    UNDEFINED_PRIORITY = 0;
+    NO_POWER = 1;
+    LOW_POWER = 2;
+    BALANCED = 3;
+    HIGH_ACCURACY = 4;
+  }
+  // Name of the location provider.
+  // If set through LocationManager, it can be "gps", "network", "passive" or
+  // empty.
+  // If set through FusedLocaitonProviderClient, it will be "fused".
+  string provider = 1;
+  // The desired interval of this request, in milliseconds.
+  int64 interval_ms = 2;
+  // The fastest interval of this request, in milliseconds. In LocationManager
+  // this uses the same value as interval_ms.
+  int64 fastest_interval_ms = 3;
+  // The minimum displacement between location updates in meters.
+  float smallest_displacement_meters = 4;
+  // Prority of the location request.
+  Priority priority = 5;
 }
