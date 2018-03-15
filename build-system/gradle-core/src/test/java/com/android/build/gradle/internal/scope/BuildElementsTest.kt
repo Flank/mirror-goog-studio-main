@@ -145,6 +145,38 @@ class BuildElementsTest {
 
     @Test
     @Throws(IOException::class)
+    fun testElementByType() {
+        val folder = temporaryFolder.newFolder()
+        val outputFile = File(folder, "output.json")
+        FileUtils.write(
+            outputFile,
+            "[{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
+                    + "\"apkInfo\":{\"type\":\"MAIN\",\"splits\":[],\"versionCode\":12},"
+                    + "\"path\":\"/foo/bar/AndroidManifest.xml\","
+                    + "\"properties\":{\"packageId\":\"com.android.tests.basic.debug\","
+                    + "\"split\":\"\"}},"
+                    + "{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
+                    + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                    + "\"value\":\"mdpi\"}],\"versionCode\":12},\"path\":"
+                    + "\"/foo/bar/SplitAware-mdpi-debug-unsigned.apk\",\"properties\":{}},"
+                    + "{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
+                    + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                    + "\"value\":\"xhdpi\"}],\"versionCode\":14},\"path\":"
+                    + "\"/foo/bar/SplitAware-xhdpi-debug-unsigned.apk\",\"properties\":{}},"
+                    + "{\"outputType\":{\"type\":\"MERGED_MANIFESTS\"},"
+                    + "\"apkInfo\":{\"type\":\"SPLIT\",\"splits\":[{\"filterType\":\"DENSITY\","
+                    + "\"value\":\"hdpi\"}],\"versionCode\":13},"
+                    + "\"path\":\"/foo/bar/SplitAware-hdpi-debug-unsigned.apk\",\"properties\""
+                    + ":{}}]")
+
+        val buildElements = ExistingBuildElements.from(MERGED_MANIFESTS, folder)
+        val elementByType = buildElements.elementByType(VariantOutput.OutputType.MAIN)
+        assertThat(elementByType).isNotNull()
+        assertThat(elementByType!!.outputPath.toString()).contains("/foo/bar/AndroidManifest.xml")
+    }
+
+    @Test
+    @Throws(IOException::class)
     fun testNoFilterNoPropertiesLoading() {
         val folder = temporaryFolder.newFolder()
         val outputFile = File(folder, "output.json")
