@@ -394,7 +394,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                     ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, featurePackage);
             if (!buildElements.isEmpty()) {
                 BuildOutput mainBuildOutput =
-                        buildElements.element(variantScope.getOutputScope().getMainSplit());
+                        buildElements.elementByType(VariantOutput.OutputType.MAIN);
                 if (mainBuildOutput != null) {
                     featurePackagesBuilder.add(mainBuildOutput.getOutputFile());
                 } else {
