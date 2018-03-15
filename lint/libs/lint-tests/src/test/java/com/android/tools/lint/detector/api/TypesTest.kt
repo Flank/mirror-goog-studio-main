@@ -66,9 +66,9 @@ class TypesTest : TestCase() {
                     "            ULiteralExpression (value = 42) [42] : PsiType:int\n" +
                     "        UField (name = property1) [@org.jetbrains.annotations.NotNull private final var property1: java.lang.String = \"Default Value\"]\n" +
                     "            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                    "            ULiteralExpression (value = \"Default Value\") [\"Default Value\"]\n" +
+                    "            ULiteralExpression (value = \"Default Value\") [\"Default Value\"] : PsiType:String\n" +
                     "        UAnnotationMethod (name = method) [public fun method() : java.lang.String = \"Hello World\"]\n" +
-                    "            ULiteralExpression (value = \"Hello World\") [\"Hello World\"]\n" +
+                    "            ULiteralExpression (value = \"Hello World\") [\"Hello World\"] : PsiType:String\n" +
                     "        UAnnotationMethod (name = otherMethod) [public final fun otherMethod(@org.jetbrains.annotations.NotNull ok: boolean, @org.jetbrains.annotations.NotNull times: int) : void {...}]\n" +
                     "            UParameter (name = ok) [@org.jetbrains.annotations.NotNull var ok: boolean]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
@@ -80,11 +80,11 @@ class TypesTest : TestCase() {
                     "            UParameter (name = p) [@org.jetbrains.annotations.Nullable var p: java.lang.String]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.Nullable) [@org.jetbrains.annotations.Nullable]\n" +
                     "        UAnnotationMethod (name = getProperty1) [public final fun getProperty1() : java.lang.String = UastEmptyExpression]\n" +
-                    "            ULiteralExpression (value = \"Default Value\") [\"Default Value\"]\n" +
+                    "            ULiteralExpression (value = \"Default Value\") [\"Default Value\"] : PsiType:String\n" +
                     "        UAnnotationMethod (name = Kotlin) [public fun Kotlin(@org.jetbrains.annotations.NotNull property1: java.lang.String, @org.jetbrains.annotations.NotNull arg2: int) {...}]\n" +
                     "            UParameter (name = property1) [@org.jetbrains.annotations.NotNull var property1: java.lang.String = \"Default Value\"]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                    "                ULiteralExpression (value = \"Default Value\") [\"Default Value\"]\n" +
+                    "                ULiteralExpression (value = \"Default Value\") [\"Default Value\"] : PsiType:String\n" +
                     "            UParameter (name = arg2) [@org.jetbrains.annotations.NotNull var arg2: int]\n" +
                     "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                     "            UBlockExpression [{...}]\n" +

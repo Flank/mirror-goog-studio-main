@@ -4988,10 +4988,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "}"))
                 .run()
                 .expect(
-                        "src/test/pkg/JavaForEach.java:8: Error: Call requires API level 24 (current min is 21): java.lang.Iterable#forEach [NewApi]\n"
+                        ""
+                                + "src/test/pkg/JavaForEach.java:8: Error: Call requires API level 24 (current min is 21): java.lang.Iterable#forEach [NewApi]\n"
                                 + "        list.forEach(new Consumer<String>() {\n"
                                 + "             ~~~~~~~\n"
-                                + "1 errors, 0 warnings");
+                                + "src/test/pkg/JavaForEach.java:8: Error: Class requires API level 24 (current min is 21): java.util.function.Consumer [NewApi]\n"
+                                + "        list.forEach(new Consumer<String>() {\n"
+                                + "                         ~~~~~~~~~~~~~~~~\n"
+                                + "2 errors, 0 warnings");
     }
 
     public void testCastsToSelf() {
@@ -5027,7 +5031,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "}\n"))
                 .run()
                 .expect(
-                        "src/test/pkg/Used.java:9: Error: Call requires API level 24 (current min is 15): java.util.Collection#stream [NewApi]\n"
+                        ""
+                                + "src/test/pkg/Used.java:9: Error: Call requires API level 24 (current min is 15): java.util.Collection#stream [NewApi]\n"
                                 + "        return list.stream().map((Function<String, Object>) s -> \n"
                                 + "                    ~~~~~~\n"
                                 + "src/test/pkg/Used.java:9: Error: Call requires API level 24 (current min is 15): java.util.stream.Stream#map [NewApi]\n"
@@ -5051,7 +5056,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/pkg/Used.java:14: Error: Call requires API level 24 (current min is 15): java.util.stream.Stream#map [NewApi]\n"
                                 + "        list.stream().map(new Function<String, Object>() {\n"
                                 + "                      ~~~\n"
-                                + "8 errors, 0 warnings");
+                                + "src/test/pkg/Used.java:14: Error: Class requires API level 24 (current min is 15): java.util.function.Function [NewApi]\n"
+                                + "        list.stream().map(new Function<String, Object>() {\n"
+                                + "                              ~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "9 errors, 0 warnings");
     }
 
     public void testKotlinArgumentsInConstructorDelegation() {

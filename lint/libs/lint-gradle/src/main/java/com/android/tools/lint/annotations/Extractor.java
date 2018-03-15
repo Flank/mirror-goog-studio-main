@@ -123,6 +123,7 @@ import org.jetbrains.uast.UastContext;
 import org.jetbrains.uast.UastEmptyExpression;
 import org.jetbrains.uast.UastVisibility;
 import org.jetbrains.uast.java.JavaUAnnotation;
+import org.jetbrains.uast.java.expressions.JavaUAnnotationCallExpression;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 import org.w3c.dom.Document;
@@ -1812,6 +1813,11 @@ public class Extractor {
                         // That's setting attributes that don't actually exist on the container permission,
                         // but we'll counteract that on the read-annotations side.
                         UAnnotation annotation = (UAnnotation) expression;
+                        attributes = annotation.getAttributeValues();
+                    } else if (expression instanceof JavaUAnnotationCallExpression) {
+                        JavaUAnnotationCallExpression callExpression =
+                                (JavaUAnnotationCallExpression) expression;
+                        UAnnotation annotation = callExpression.getUAnnotation();
                         attributes = annotation.getAttributeValues();
                     } else if (expression instanceof UastEmptyExpression
                             && attributes.get(0).getPsi() instanceof PsiNameValuePair) {

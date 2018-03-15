@@ -266,6 +266,20 @@ open class DefaultJavaEvaluator(
         var i = 0
         val n = Math.min(parameters.size, arguments.size)
         val map = HashMap<UExpression, PsiParameter>(2 * n)
+
+        /* Here is a UAST supported way to compute this, but it doesn't handle
+           varargs well (some unit tests fail showing the particular scenarios)
+        if (call is UCallExpressionEx) {
+            for (index in 0 until parameters.size) {
+                val argument = call.getArgumentForParameter(index) ?: continue
+                val parameter = parameters[index]
+                map[argument] = parameter
+            }
+
+            return map
+        }
+         */
+
         while (j < n) {
             val argument = arguments[i]
             val parameter = parameters[j]

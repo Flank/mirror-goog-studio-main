@@ -176,6 +176,12 @@ public class TestFile {
         return this;
     }
 
+    // This source file is indented: dedent the contents before creating the file
+    public TestFile indented() {
+        contents = kotlin.text.StringsKt.trimIndent(contents);
+        return this;
+    }
+
     public static class JavaTestFile extends LintDetectorTest.TestFile {
         public JavaTestFile() {}
 
