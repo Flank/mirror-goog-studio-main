@@ -196,7 +196,6 @@ open class JavaContext(
      * location range than the entire element; for a class or method for example, it picks
      * the name element (if found). For statement constructs such as a `switch` statement
      * it will highlight the keyword, etc.
-
      *
      *
      * [UClass] is both a [PsiElement] and a [UElement] so this method
@@ -214,7 +213,6 @@ open class JavaContext(
      * location range than the entire element; for a class or method for example, it picks
      * the name element (if found). For statement constructs such as a `switch` statement
      * it will highlight the keyword, etc.
-
      *
      *
      * [UMethod] is both a [PsiElement] and a [UElement] so this method

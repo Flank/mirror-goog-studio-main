@@ -303,6 +303,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
 
         if (scope and RESTRICT_TO_LIBRARY_GROUP != 0) {
+            // TODO: Consult Project.getMavenCoordinates
             val evaluator = context.evaluator
             val thisCoordinates = evaluator.getLibrary(node)
             val methodCoordinates = evaluator.getLibrary(method)
@@ -321,6 +322,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         }
 
         if (scope and RESTRICT_TO_LIBRARY != 0) {
+            // TODO: Consult Project.getMavenCoordinates
             val evaluator = context.evaluator
             val thisCoordinates = evaluator.getLibrary(node)
             val methodCoordinates = evaluator.getLibrary(method)

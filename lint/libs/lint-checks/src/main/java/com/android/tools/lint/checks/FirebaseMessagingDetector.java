@@ -68,7 +68,7 @@ public class FirebaseMessagingDetector extends Detector implements SourceCodeSca
     public FirebaseMessagingDetector() {}
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         mIsOnTokenRefreshDefined = false;
         mGetTokenCallSite = null;
         mGetTokenContext = null;
@@ -101,7 +101,7 @@ public class FirebaseMessagingDetector extends Detector implements SourceCodeSca
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (mGetTokenCallSite != null && !mIsOnTokenRefreshDefined) {
             context.report(
                     MISSING_TOKEN_REFRESH,

@@ -32,6 +32,8 @@ import com.android.SdkConstants.SUPPRESS_LINT
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.annotations.VisibleForTesting
+import com.android.ide.common.repository.GradleCoordinate
+import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.ResourceVisibilityLookup
 import com.android.ide.common.resources.AbstractResourceRepository
 import com.android.ide.common.resources.ResourceItem
@@ -48,11 +50,11 @@ import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.ClassScanner
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.GradleContext
 import com.android.tools.lint.detector.api.GradleScanner
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
-import com.android.tools.lint.detector.api.LintUtils.isAnonymousClass
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.OtherFileScanner
 import com.android.tools.lint.detector.api.Project
@@ -67,6 +69,7 @@ import com.android.tools.lint.detector.api.XmlScanner
 import com.android.tools.lint.detector.api.assertionsEnabled
 import com.android.tools.lint.detector.api.getCommonParent
 import com.android.tools.lint.detector.api.getNextInstruction
+import com.android.tools.lint.detector.api.isAnonymousClass
 import com.android.tools.lint.detector.api.isXmlFile
 import com.android.utils.Pair
 import com.android.utils.SdkUtils.isBitmapFile
@@ -122,6 +125,7 @@ import java.util.HashMap
 import java.util.HashSet
 import java.util.IdentityHashMap
 import java.util.LinkedHashMap
+import java.util.function.Predicate
 import java.util.regex.Pattern
 
 /**
@@ -813,7 +817,8 @@ class LintDriver
         currentProject = project
 
         for (check in applicableDetectors) {
-            check.beforeCheckProject(projectContext)
+            check.beforeCheckRootProject(projectContext)
+            check.beforeCheckEachProject(projectContext)
             if (isCanceled) {
                 return
             }
@@ -830,7 +835,7 @@ class LintDriver
                 currentProject = library
 
                 for (check in applicableDetectors) {
-                    check.beforeCheckLibraryProject(libraryContext)
+                    check.beforeCheckEachProject(libraryContext)
                     if (isCanceled) {
                         return
                     }
@@ -845,7 +850,7 @@ class LintDriver
                 assert(currentProject === library)
 
                 for (check in applicableDetectors) {
-                    check.afterCheckLibraryProject(libraryContext)
+                    check.afterCheckEachProject(libraryContext)
                     if (isCanceled) {
                         return
                     }
@@ -856,7 +861,10 @@ class LintDriver
         currentProject = project
 
         for (check in applicableDetectors) {
-            client.runReadAction(Runnable { check.afterCheckProject(projectContext) })
+            client.runReadAction(Runnable {
+                check.afterCheckEachProject(projectContext)
+                check.afterCheckRootProject(projectContext)
+            })
             if (isCanceled) {
                 return
             }
@@ -1047,6 +1055,23 @@ class LintDriver
         val detectors = scopeDetectors[Scope.GRADLE_FILE]
         if (detectors != null) {
             val files = project.subset ?: project.gradleBuildScripts
+            if (files.isEmpty()) {
+                return
+            }
+            val gradleScanners = ArrayList<GradleScanner>(detectors.size)
+            val customVisitedGradleScanners = ArrayList<GradleScanner>(detectors.size)
+            for (detector in detectors) {
+                if (detector is GradleScanner) {
+                    if (detector.customVisitor) {
+                        customVisitedGradleScanners.add(detector)
+                    } else {
+                        gradleScanners.add(detector)
+                    }
+                }
+            }
+            if (gradleScanners.isEmpty() && customVisitedGradleScanners.isEmpty()) {
+                return
+            }
             for (file in files) {
                 // Gradle Kotlin Script? Use Java parsing mechanism instead
                 if (file.path.endsWith(DOT_KTS)) {
@@ -1061,22 +1086,41 @@ class LintDriver
                             context.setJavaFile(uFile.psi) // needed for getLocation
                             context.uastFile = uFile
                             fireEvent(EventType.SCANNING_FILE, context)
+
+                            val uastVisitor =
+                                UastGradleVisitor(context)
+                            val gradleContext =
+                                GradleContext(uastVisitor, this, project, main, file)
+                            fireEvent(EventType.SCANNING_FILE, context)
                             for (detector in detectors) {
                                 detector.beforeCheckFile(context)
-                                detector.visitBuildScript(context)
+                            }
+
+                            uastVisitor.visitBuildScript(gradleContext, gradleScanners)
+                            for (scanner in customVisitedGradleScanners) {
+                                scanner.visitBuildScript(context)
+                            }
+                            for (detector in detectors) {
                                 detector.afterCheckFile(context)
                             }
+
                             context.setJavaFile(null)
                             context.uastFile = null
                         }
                     })
                     uastParser.dispose()
                 } else {
-                    val context = Context(this, project, main, file)
+                    val gradleVisitor = project.client.getGradleVisitor()
+                    val context = GradleContext(gradleVisitor, this, project, main, file)
                     fireEvent(EventType.SCANNING_FILE, context)
                     for (detector in detectors) {
                         detector.beforeCheckFile(context)
-                        detector.visitBuildScript(context)
+                    }
+                    gradleVisitor.visitBuildScript(context, gradleScanners)
+                    for (scanner in customVisitedGradleScanners) {
+                        scanner.visitBuildScript(context)
+                    }
+                    for (detector in detectors) {
                         detector.afterCheckFile(context)
                     }
                 }
@@ -1902,7 +1946,6 @@ class LintDriver
      */
     private inner class LintClientWrapper(private val delegate: LintClient) :
         LintClient(clientName) {
-
         override fun getMergedManifest(project: Project): Document? =
             delegate.getMergedManifest(project)
 
@@ -2134,6 +2177,19 @@ class LintDriver
 
         override fun closeConnection(connection: URLConnection) =
             delegate.closeConnection(connection)
+
+        override fun getGradleVisitor(): GradleVisitor = delegate.getGradleVisitor()
+
+        override fun getGeneratedResourceFolders(project: Project): List<File> {
+            return delegate.getGeneratedResourceFolders(project)
+        }
+
+        override fun getHighestKnownVersion(
+            coordinate: GradleCoordinate,
+            filter: Predicate<GradleVersion>?
+        ): GradleVersion? {
+            return delegate.getHighestKnownVersion(coordinate, filter)
+        }
     }
 
     /**

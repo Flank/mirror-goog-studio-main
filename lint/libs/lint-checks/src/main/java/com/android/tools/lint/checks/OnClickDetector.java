@@ -93,7 +93,7 @@ public class OnClickDetector extends LayoutDetector implements SourceCodeScanner
     public OnClickDetector() {}
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (names != null && !names.isEmpty() && context.getScope().contains(Scope.JAVA_FILE)) {
             List<String> missing = new ArrayList<>(names.keySet());
             Collections.sort(missing);

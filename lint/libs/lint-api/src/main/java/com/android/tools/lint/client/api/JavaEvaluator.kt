@@ -23,6 +23,7 @@ import com.android.builder.model.JavaLibrary
 import com.android.builder.model.Library
 import com.android.builder.model.MavenCoordinates
 import com.android.tools.lint.detector.api.ClassContext
+import com.android.tools.lint.detector.api.Project
 import com.google.common.collect.Maps
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnonymousClass
@@ -678,6 +679,11 @@ class JavaEvaluator {
     // a UMethod is both a PsiElement and a UElement
     open fun getPackage(node: UMethod): PsiPackage? {
         return getPackage(node as PsiElement)
+    }
+
+    /** Returns the Lint project containing the given element */
+    open fun getProject(element: PsiElement): Project? {
+        return null
     }
 
     /**

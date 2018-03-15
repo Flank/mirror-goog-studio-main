@@ -181,7 +181,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             Project project = context.getProject();
 

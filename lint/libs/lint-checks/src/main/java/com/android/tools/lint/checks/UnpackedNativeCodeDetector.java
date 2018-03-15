@@ -166,7 +166,7 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector
     }
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         mHasNativeLibs = false;
         mApplicationTagHandle = null;
 
@@ -189,7 +189,7 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         // Don't report issues on libraries
         if (context.getProject() == context.getMainProject()
                 && !context.getMainProject().isLibrary()

@@ -207,7 +207,7 @@ public class ButtonDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         int phase = context.getPhase();
         if (phase == 1 && mApplicableResources != null) {
             // We found resources for the string "Cancel"; perform a second pass

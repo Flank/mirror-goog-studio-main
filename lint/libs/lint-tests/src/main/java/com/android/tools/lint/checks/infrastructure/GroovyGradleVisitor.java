@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.lint.gradle;
+
+package com.android.tools.lint.checks.infrastructure;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.GradleDetector;
+import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
-import com.android.tools.lint.detector.api.Implementation;
-import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.GradleContext;
+import com.android.tools.lint.detector.api.GradleScanner;
 import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Scope;
 import com.android.utils.Pair;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,26 +44,29 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.jetbrains.annotations.NotNull;
 
+// Copy of com.android.tools.lint.gradle.GroovyGradleVisitor
+//
+// THIS CODE DUPLICATION IS NOT AN IDEAL SITUATION! But it's here because we don't want
+// a groovy dependency in lint-cli, so instead there's a copy in tests and a copy
+// in the Gradle module.
+//
 /**
  * Implementation of the {@link GradleDetector} using a real Groovy AST, which the Gradle plugin has
  * access to.
  */
-public class GroovyGradleDetector extends GradleDetector {
-    public static final Implementation IMPLEMENTATION =
-            new Implementation(GroovyGradleDetector.class, Scope.GRADLE_SCOPE);
-
+public class GroovyGradleVisitor extends GradleVisitor {
     @Override
-    public void visitBuildScript(@NonNull final Context context) {
+    public void visitBuildScript(
+            @NotNull GradleContext context, @NonNull List<? extends GradleScanner> detectors) {
         try {
-            if (context instanceof JavaContext) {
-                handleGradleKotlinScript((JavaContext) context);
-                return;
-            }
-
-            visitQuietly(context);
+            visitQuietly(context, detectors);
         } catch (Throwable t) {
-            // ignore
+            // Unlike the Gradle version, from tests we want to see this!
+            t.printStackTrace();
+
+            // else: ignore
             // Parsing the build script can involve class loading that we sometimes can't
             // handle. This happens for example when running lint in build-system/tests/api/.
             // This is a lint limitation rather than a user error, so don't complain
@@ -70,7 +74,9 @@ public class GroovyGradleDetector extends GradleDetector {
         }
     }
 
-    private void visitQuietly(@NonNull final Context context) {
+    private static void visitQuietly(
+            @NonNull final GradleContext context,
+            @NonNull final List<? extends GradleScanner> detectors) {
         CharSequence sequence = context.getContents();
         if (sequence == null) {
             return;
@@ -105,60 +111,57 @@ public class GroovyGradleDetector extends GradleDetector {
                                     List<Expression> expressions = ale.getExpressions();
                                     if (expressions.size() == 1
                                             && expressions.get(0) instanceof ClosureExpression) {
-                                        if (isInterestingBlock(parent, parentParent)) {
-                                            ClosureExpression closureExpression =
-                                                    (ClosureExpression) expressions.get(0);
-                                            Statement block = closureExpression.getCode();
-                                            if (block instanceof BlockStatement) {
-                                                BlockStatement bs = (BlockStatement) block;
-                                                for (Statement statement : bs.getStatements()) {
-                                                    if (statement instanceof ExpressionStatement) {
-                                                        ExpressionStatement e =
-                                                                (ExpressionStatement) statement;
-                                                        if (e.getExpression()
-                                                                instanceof MethodCallExpression) {
-                                                            checkDslProperty(
-                                                                    parent,
-                                                                    (MethodCallExpression)
-                                                                            e.getExpression(),
-                                                                    parentParent);
-                                                        }
-                                                    } else if (statement
-                                                            instanceof ReturnStatement) {
-                                                        // Single item in block
-                                                        ReturnStatement e =
-                                                                (ReturnStatement) statement;
-                                                        if (e.getExpression()
-                                                                instanceof MethodCallExpression) {
-                                                            checkDslProperty(
-                                                                    parent,
-                                                                    (MethodCallExpression)
-                                                                            e.getExpression(),
-                                                                    parentParent);
-                                                        }
+                                        ClosureExpression closureExpression =
+                                                (ClosureExpression) expressions.get(0);
+                                        Statement block = closureExpression.getCode();
+                                        if (block instanceof BlockStatement) {
+                                            BlockStatement bs = (BlockStatement) block;
+                                            for (Statement statement : bs.getStatements()) {
+                                                if (statement instanceof ExpressionStatement) {
+                                                    ExpressionStatement e =
+                                                            (ExpressionStatement) statement;
+                                                    if (e.getExpression()
+                                                            instanceof MethodCallExpression) {
+                                                        checkDslProperty(
+                                                                parent,
+                                                                (MethodCallExpression)
+                                                                        e.getExpression(),
+                                                                parentParent,
+                                                                detectors);
+                                                    }
+                                                } else if (statement instanceof ReturnStatement) {
+                                                    // Single item in block
+                                                    ReturnStatement e = (ReturnStatement) statement;
+                                                    if (e.getExpression()
+                                                            instanceof MethodCallExpression) {
+                                                        checkDslProperty(
+                                                                parent,
+                                                                (MethodCallExpression)
+                                                                        e.getExpression(),
+                                                                parentParent,
+                                                                detectors);
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                 } else {
-                                    if (isInterestingStatement(parent, parentParent)) {
-                                        Map<String, String> namedArguments = new HashMap<>();
-                                        List<String> unnamedArguments = new ArrayList<>();
-                                        for (Expression subExpr :
-                                                tupleExpression.getExpressions()) {
-                                            if (subExpr instanceof NamedArgumentListExpression) {
-                                                NamedArgumentListExpression nale =
-                                                        (NamedArgumentListExpression) subExpr;
-                                                for (MapEntryExpression mae :
-                                                        nale.getMapEntryExpressions()) {
-                                                    namedArguments.put(
-                                                            mae.getKeyExpression().getText(),
-                                                            mae.getValueExpression().getText());
-                                                }
+                                    Map<String, String> namedArguments = new HashMap<>();
+                                    List<String> unnamedArguments = new ArrayList<>();
+                                    for (Expression subExpr : tupleExpression.getExpressions()) {
+                                        if (subExpr instanceof NamedArgumentListExpression) {
+                                            NamedArgumentListExpression nale =
+                                                    (NamedArgumentListExpression) subExpr;
+                                            for (MapEntryExpression mae :
+                                                    nale.getMapEntryExpressions()) {
+                                                namedArguments.put(
+                                                        mae.getKeyExpression().getText(),
+                                                        mae.getValueExpression().getText());
                                             }
                                         }
-                                        checkMethodCall(
+                                    }
+                                    for (GradleScanner scanner : detectors) {
+                                        scanner.checkMethodCall(
                                                 context,
                                                 parent,
                                                 parentParent,
@@ -191,11 +194,14 @@ public class GroovyGradleDetector extends GradleDetector {
                     }
 
                     private void checkDslProperty(
-                            String parent, MethodCallExpression c, String parentParent) {
+                            String parent,
+                            MethodCallExpression c,
+                            String parentParent,
+                            @NonNull List<? extends GradleScanner> detectors) {
                         String property = c.getMethodAsString();
-                        if (isInterestingProperty(property, parent, getParentParent())) {
-                            String value = getText(c.getArguments());
-                            checkDslPropertyAssignment(
+                        String value = getText(c.getArguments());
+                        for (GradleScanner scanner : detectors) {
+                            scanner.checkDslPropertyAssignment(
                                     context, property, value, parent, parentParent, c, c);
                         }
                     }
@@ -264,24 +270,15 @@ public class GroovyGradleDetector extends GradleDetector {
     }
 
     @Override
-    protected int getStartOffset(@NonNull Context context, @NonNull Object cookie) {
-        int startOffset = super.getStartOffset(context, cookie);
-        if (startOffset != -1) {
-            return startOffset;
-        }
-
+    public int getStartOffset(@NonNull GradleContext context, @NonNull Object cookie) {
         ASTNode node = (ASTNode) cookie;
         Pair<Integer, Integer> offsets = getOffsets(node, context);
         return offsets.getFirst();
     }
 
+    @NonNull
     @Override
-    protected Location createLocation(@NonNull Context context, @NonNull Object cookie) {
-        Location location = super.createLocation(context, cookie);
-        if (location != null) {
-            return location;
-        }
-
+    public Location createLocation(@NonNull GradleContext context, @NonNull Object cookie) {
         ASTNode node = (ASTNode) cookie;
         Pair<Integer, Integer> offsets = getOffsets(node, context);
         int fromLine = node.getLineNumber() - 1;
@@ -292,5 +289,17 @@ public class GroovyGradleDetector extends GradleDetector {
                 context.file,
                 new DefaultPosition(fromLine, fromColumn, offsets.getFirst()),
                 new DefaultPosition(toLine, toColumn, offsets.getSecond()));
+    }
+
+    @NotNull
+    @Override
+    public Object getPropertyKeyCookie(@NotNull Object cookie) {
+        return cookie;
+    }
+
+    @NotNull
+    @Override
+    public Object getPropertyPairCookie(@NotNull Object cookie) {
+        return cookie;
     }
 }

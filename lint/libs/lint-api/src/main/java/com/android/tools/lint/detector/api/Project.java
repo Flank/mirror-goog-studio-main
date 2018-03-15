@@ -54,6 +54,7 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.Variant;
@@ -118,6 +119,7 @@ public class Project {
     protected AndroidVersion manifestTargetSdk = AndroidVersion.DEFAULT;
 
     protected boolean library;
+    protected boolean externalLibrary;
     protected String name;
     protected String proguardPath;
     protected boolean mergeManifests = true;
@@ -151,6 +153,7 @@ public class Project {
     protected Boolean supportLib;
     protected Boolean appCompat;
     protected GradleVersion gradleVersion;
+    protected MavenCoordinates mavenCoordinates = null;
     private Map<String, String> superClassMap;
     private ResourceVisibilityLookup resourceVisibility;
     private BuildToolInfo buildTools;
@@ -894,6 +897,26 @@ public class Project {
      */
     public boolean isLibrary() {
         return library;
+    }
+
+    /**
+     * Returns true if this project is an external library (typically an AAR library), as opposed to
+     * a local library we have source for
+     *
+     * @return true if this is an external library
+     */
+    public boolean isExternalLibrary() {
+        return externalLibrary;
+    }
+
+    /**
+     * Returns the Maven coordinates of this project, if known.
+     *
+     * @return the maven coordinates, or null
+     */
+    @Nullable
+    public MavenCoordinates getMavenCoordinates() {
+        return mavenCoordinates;
     }
 
     /**

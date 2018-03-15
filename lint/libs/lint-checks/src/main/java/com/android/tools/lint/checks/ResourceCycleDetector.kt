@@ -96,7 +96,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
      */
     private var mChains: MutableMap<ResourceType, MutableList<MutableList<String>>>? = null
 
-    override fun beforeCheckProject(context: Context) {
+    override fun beforeCheckRootProject(context: Context) {
         // In incremental mode, or checking all files (full lint analysis) ? If the latter,
         // we should store state and look for deeper cycles
         if (context.scope.contains(Scope.ALL_RESOURCE_FILES)) {
@@ -372,7 +372,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
         }
     }
 
-    override fun afterCheckProject(context: Context) {
+    override fun afterCheckRootProject(context: Context) {
         // No references? Incremental analysis in a single file only; nothing to do
         val references = this.mReferences ?: return
 

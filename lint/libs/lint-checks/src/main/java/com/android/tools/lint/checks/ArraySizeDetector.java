@@ -105,14 +105,14 @@ public class ArraySizeDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             mFileToArrayCount = ArrayListMultimap.create(30, 5);
         }
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             boolean haveAllResources = context.getScope().contains(Scope.ALL_RESOURCE_FILES);
             if (!haveAllResources) {

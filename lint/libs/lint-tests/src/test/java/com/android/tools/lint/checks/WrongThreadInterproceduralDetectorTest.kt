@@ -193,7 +193,7 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
                     import android.support.annotation.UiThread
                     import android.support.annotation.WorkerThread
 
-                    @Suppress("MemberVisibilityCanPrivate")
+                    @Suppress("MemberVisibilityCanBePrivate")
                     class Test {
 
                       @UiThread fun uiThread() { unannotated() }

@@ -1888,6 +1888,23 @@ fun isKotlin(language: Language?): Boolean {
     return language != null && language.id == "kotlin"
 }
 
+/** Returns true if the given string contains only digits */
+fun isNumberString(s: String?): Boolean {
+    if (s == null || s.isEmpty()) {
+        return false
+    }
+    var i = 0
+    val n = s.length
+    while (i < n) {
+        if (!Character.isDigit(s[i])) {
+            return false
+        }
+        i++
+    }
+
+    return true
+}
+
 // For compatibility reasons
 object LintUtils {
     @Deprecated(

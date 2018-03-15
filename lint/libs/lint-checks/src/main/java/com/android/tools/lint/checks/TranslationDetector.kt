@@ -100,7 +100,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                 ResourceUsageModel.isAnalyticsFile(context.file) ||
                 !context.project.reportIssues
 
-    override fun afterCheckProject(context: Context) {
+    override fun afterCheckRootProject(context: Context) {
         if (context.phase == 2) {
             return
         }

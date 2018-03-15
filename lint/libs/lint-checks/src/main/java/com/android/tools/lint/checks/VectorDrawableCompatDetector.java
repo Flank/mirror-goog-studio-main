@@ -99,7 +99,7 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
     private boolean mUseSupportLibrary;
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         AndroidProject model = context.getProject().getGradleProjectModel();
 
         if (model == null) {

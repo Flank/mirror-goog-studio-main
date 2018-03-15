@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@file:Suppress("MemberVisibilityCanPrivate", "unused")
+@file:Suppress("MemberVisibilityCanBePrivate", "unused")
 
 package com.android.tools.lint.checks
 

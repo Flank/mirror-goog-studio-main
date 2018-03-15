@@ -433,7 +433,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
     public IconDetector() {}
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         launcherIcons = null;
         actionBarIcons = null;
         notificationIcons = null;
@@ -441,17 +441,12 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
     }
 
     @Override
-    public void afterCheckLibraryProject(@NonNull Context context) {
+    public void afterCheckEachProject(@NonNull Context context) {
         if (!context.getProject().getReportIssues()) {
             // If this is a library project not being analyzed, ignore it
             return;
         }
 
-        checkResourceFolder(context, context.getProject());
-    }
-
-    @Override
-    public void afterCheckProject(@NonNull Context context) {
         checkResourceFolder(context, context.getProject());
     }
 

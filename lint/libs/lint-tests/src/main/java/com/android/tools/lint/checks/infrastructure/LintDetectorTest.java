@@ -58,6 +58,7 @@ import com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
+import com.android.tools.lint.client.api.GradleVisitor;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
@@ -764,7 +765,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                         "Circular library dependencies; check your project.properties files carefully");
             }
             getProjectDirs().add(dir);
-            return Project.create(this, dir, referenceDir);
+            Project project = Project.create(this, dir, referenceDir);
+            registerProject(dir, project);
+            return project;
         }
 
         @Override
@@ -838,6 +841,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                     return file;
                 }
             };
+        }
+
+        @NonNull
+        @Override
+        public GradleVisitor getGradleVisitor() {
+            return new GroovyGradleVisitor();
         }
 
         @Override

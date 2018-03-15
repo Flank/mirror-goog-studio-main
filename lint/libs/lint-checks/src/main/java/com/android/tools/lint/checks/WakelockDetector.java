@@ -111,7 +111,7 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
     public WakelockDetector() {}
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (mHasAcquire && !mHasRelease && context.getDriver().getPhase() == 1) {
             // Gather positions of the acquire calls
             context.getDriver().requestRepeat(this, Scope.CLASS_FILE_SCOPE);

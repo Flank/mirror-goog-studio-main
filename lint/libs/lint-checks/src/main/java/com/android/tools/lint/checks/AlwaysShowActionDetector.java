@@ -164,7 +164,7 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements Sou
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (mAlwaysFields != null && !mHasIfRoomRefs) {
             for (Location location : mAlwaysFields) {
                 context.report(

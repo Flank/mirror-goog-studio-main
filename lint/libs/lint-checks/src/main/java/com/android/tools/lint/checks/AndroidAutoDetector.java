@@ -200,7 +200,7 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
     }
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         mIsAutomotiveMediaApp = false;
         mAutomotiveResourceFileName = null;
         mMediaIntentFilterFound = false;

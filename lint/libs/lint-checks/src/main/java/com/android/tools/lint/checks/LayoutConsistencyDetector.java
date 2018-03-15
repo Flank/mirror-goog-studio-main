@@ -212,7 +212,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements SourceC
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         LintDriver driver = context.getDriver();
         if (driver.getPhase() == 1) {
             // First phase: gather all the ids and look for consistency issues.

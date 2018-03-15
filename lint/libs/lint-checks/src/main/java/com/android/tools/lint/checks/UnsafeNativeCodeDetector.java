@@ -119,17 +119,7 @@ public class UnsafeNativeCodeDetector extends Detector implements SourceCodeScan
     // ---- Look for code in resource and asset directories ----
 
     @Override
-    public void afterCheckLibraryProject(@NonNull Context context) {
-        if (!context.getProject().getReportIssues()) {
-            // If this is a library project not being analyzed, ignore it
-            return;
-        }
-
-        checkResourceFolders(context, context.getProject());
-    }
-
-    @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckEachProject(@NonNull Context context) {
         if (!context.getProject().getReportIssues()) {
             // If this is a library project not being analyzed, ignore it
             return;

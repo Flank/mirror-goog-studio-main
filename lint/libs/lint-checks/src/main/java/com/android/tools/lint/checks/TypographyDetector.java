@@ -202,7 +202,7 @@ public class TypographyDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         mCheckDashes = context.isEnabled(DASHES);
         mCheckQuotes = context.isEnabled(QUOTES);
         mCheckFractions = context.isEnabled(FRACTIONS);

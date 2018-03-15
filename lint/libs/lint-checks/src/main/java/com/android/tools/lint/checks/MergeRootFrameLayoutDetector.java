@@ -105,7 +105,7 @@ public class MergeRootFrameLayoutDetector extends LayoutDetector implements Sour
     public MergeRootFrameLayoutDetector() {}
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (mPending != null && mWhitelistedLayouts != null) {
             // Process all the root FrameLayouts that are eligible, and generate
             // suggestions for <merge> replacements for any layouts that are included

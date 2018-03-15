@@ -323,7 +323,7 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         Project mainProject = context.getMainProject();
         if (context.getProject() == mainProject
                 && mHaveClasses

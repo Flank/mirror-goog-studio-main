@@ -32,12 +32,9 @@ import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
-import com.android.tools.lint.checks.GradleDetector;
 import com.android.tools.lint.checks.UnusedResourceDetector;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintBaseline;
-import com.android.tools.lint.detector.api.ApiKt;
-import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.gradle.api.LintExecutionRequest;
 import com.android.tools.lint.gradle.api.VariantInputs;
@@ -350,42 +347,9 @@ public class LintGradleExecution {
 
     private static BuiltinIssueRegistry createIssueRegistry(boolean isAndroid) {
         if (isAndroid) {
-            return new LintGradleIssueRegistry();
+            return new BuiltinIssueRegistry();
         } else {
             return new NonAndroidIssueRegistry();
-        }
-    }
-
-    // Issue registry when Lint is run inside Gradle: we replace the Gradle
-    // detector with a local implementation which directly references Groovy
-    // for parsing. In Studio on the other hand, the implementation is replaced
-    // by a PSI-based check. (This is necessary for now since we don't have a
-    // tool-agnostic API for the Groovy AST and we don't want to add a 6.3MB dependency
-    // on Groovy itself quite yet.
-    private static class LintGradleIssueRegistry extends BuiltinIssueRegistry {
-        private boolean mInitialized;
-
-        public LintGradleIssueRegistry() {}
-
-        @NonNull
-        @Override
-        public List<Issue> getIssues() {
-            List<Issue> issues = super.getIssues();
-            if (!mInitialized) {
-                mInitialized = true;
-                for (Issue issue : issues) {
-                    if (issue.getImplementation().getDetectorClass() == GradleDetector.class) {
-                        issue.setImplementation(GroovyGradleDetector.IMPLEMENTATION);
-                    }
-                }
-            }
-
-            return issues;
-        }
-
-        @Override
-        public int getApi() {
-            return ApiKt.CURRENT_API;
         }
     }
 

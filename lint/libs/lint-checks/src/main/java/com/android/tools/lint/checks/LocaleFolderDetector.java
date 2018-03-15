@@ -385,7 +385,7 @@ public class LocaleFolderDetector extends Detector
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         // Ensure that if a language has multiple scripts, either minSdkVersion >= 21 or
         // at most one folder does not have -v21 among the script options
         if (mBcp47Folders != null

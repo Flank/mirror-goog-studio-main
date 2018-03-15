@@ -111,7 +111,7 @@ public class FontDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         if (mFontLoader == null) {
             mFontLoader = FontLoader.getInstance(context.getClient().getSdkHome());
         }

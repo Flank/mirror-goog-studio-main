@@ -368,7 +368,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (mIncludes == null) {
             return;
         }

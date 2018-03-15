@@ -19,7 +19,7 @@ package com.android.tools.lint.checks
 import com.android.builder.model.AndroidLibrary
 import com.android.builder.model.JavaLibrary
 import com.android.builder.model.Library
-import com.android.tools.lint.checks.GradleDetector.getCompileDependencies
+import com.android.tools.lint.checks.GradleDetector.Companion.getCompileDependencies
 import com.android.tools.lint.detector.api.Project
 import java.util.ArrayDeque
 

@@ -145,7 +145,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
     }
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         mDebugOverridesHandle = null;
     }
 

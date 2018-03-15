@@ -112,15 +112,19 @@ class ByteOrderMarkDetector : ResourceXmlDetector(), SourceCodeScanner, GradleSc
         }
     }
 
+    // XML files: work is done in beforeCheckFile()
     override fun visitDocument(context: XmlContext, document: Document) =
-    // The work is done in beforeCheckFile()
         Unit
 
-    override fun createUastHandler(context: JavaContext): UElementHandler? =
     // Java files: work is done in beforeCheckFile()
+    override fun createUastHandler(context: JavaContext): UElementHandler? =
         null
 
-    override fun run(context: Context) =
     // ProGuard files: work is done in beforeCheckFile()
+    override fun run(context: Context) =
         Unit
+
+    // Gradle: Don't attempt to visit the file
+    override val customVisitor: Boolean
+        get() = true
 }

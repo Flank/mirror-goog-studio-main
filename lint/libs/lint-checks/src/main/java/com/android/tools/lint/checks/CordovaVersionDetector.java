@@ -100,7 +100,7 @@ public class CordovaVersionDetector extends Detector implements ClassScanner {
     private GradleVersion mCordovaVersion;
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         checkAssetsFolder(context);
     }
 

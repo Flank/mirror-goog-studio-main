@@ -140,7 +140,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void beforeCheckProject(@NonNull Context context) {
+    public void beforeCheckRootProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             mFileToIds = new HashMap<>();
             mIncludes = new HashMap<>();
@@ -148,7 +148,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     }
 
     @Override
-    public void afterCheckProject(@NonNull Context context) {
+    public void afterCheckRootProject(@NonNull Context context) {
         if (context.getPhase() == 1) {
             // Look for duplicates
             if (!mIncludes.isEmpty()) {

@@ -22,6 +22,7 @@ kotlin_library(
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
