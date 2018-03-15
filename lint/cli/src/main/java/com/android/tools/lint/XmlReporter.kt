@@ -17,6 +17,7 @@
 package com.android.tools.lint
 
 import com.android.tools.lint.checks.BuiltinIssueRegistry
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.TextFormat.RAW
 import com.android.utils.SdkUtils
@@ -52,6 +53,28 @@ class XmlReporter
 constructor(client: LintCliClient, output: File) : Reporter(client, output) {
     private val writer: Writer = BufferedWriter(Files.newWriter(output, Charsets.UTF_8))
     var isIntendedForBaseline: Boolean = false
+    private var attributes: MutableMap<String, String>? = null
+
+    /** Sets a custom attribute to be written out on the root element of the report */
+    fun setAttribute(name: String, value: String) {
+        val attributes = attributes ?: run {
+            val newMap = mutableMapOf<String, String>()
+            attributes = newMap
+            newMap
+        }
+        attributes[name] = value
+    }
+
+    fun setBaselineAttributes(client: LintClient, variant: String?) {
+        setAttribute("client", LintClient.clientName)
+        val revision = client.getClientRevision()
+        if (revision != null) {
+            setAttribute("version", revision)
+        }
+        if (variant != null) {
+            setAttribute("variant", variant)
+        }
+    }
 
     @Throws(IOException::class)
     override fun write(stats: LintStats, issues: List<Warning>) {
@@ -61,6 +84,11 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
         val revision = client.getClientRevision()
         if (revision != null) {
             writer.write(String.format(" by=\"lint %1\$s\"", revision))
+        }
+        attributes?.let {
+            it.asSequence().sortedBy { it.key }.forEach {
+                writer.write(" ${it.key}=\"${XmlUtils.toXmlAttributeValue(it.value)}\"")
+            }
         }
         writer.write(">\n")
 

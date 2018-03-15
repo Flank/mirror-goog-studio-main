@@ -158,7 +158,7 @@ public abstract class Reporter {
      * @param intendedForBaseline whether this XML report is used to write a baseline file
      * @throws IOException if an error occurs
      */
-    public static Reporter createXmlReporter(
+    public static XmlReporter createXmlReporter(
             @NonNull LintCliClient client, @NonNull File output, boolean intendedForBaseline)
             throws IOException {
         XmlReporter reporter = new XmlReporter(client, output);

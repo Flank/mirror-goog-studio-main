@@ -17,6 +17,8 @@
 package com.android.tools.lint.gradle;
 
 import static com.android.SdkConstants.DOT_XML;
+import static com.android.tools.lint.client.api.LintBaseline.VARIANT_ALL;
+import static com.android.tools.lint.client.api.LintBaseline.VARIANT_FATAL;
 import static com.android.tools.lint.gradle.SyncOptions.createOutputPath;
 import static com.android.tools.lint.gradle.SyncOptions.validateOutputFile;
 
@@ -31,11 +33,11 @@ import com.android.tools.lint.LintStats;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.Warning;
+import com.android.tools.lint.XmlReporter;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.UnusedResourceDetector;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintBaseline;
-import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.gradle.api.LintExecutionRequest;
 import com.android.tools.lint.gradle.api.VariantInputs;
 import com.android.utils.Pair;
@@ -223,7 +225,8 @@ public class LintGradleExecution {
                         variant,
                         variantInputs,
                         descriptor.getBuildTools(),
-                        isAndroid);
+                        isAndroid,
+                        variant != null ? variant.getName() : null);
         boolean fatalOnly = descriptor.isFatalOnly();
         if (fatalOnly) {
             flags.setFatalOnly(true);
@@ -429,10 +432,6 @@ public class LintGradleExecution {
         List<Warning> mergedWarnings = LintGradleClient.merge(warningMap, modelProject);
         LintStats stats = LintStats.Companion.create(mergedWarnings, baselines);
         int errorCount = stats.getErrorCount();
-        int warningCount = stats.getWarningCount();
-        int baselineErrorCount = stats.getBaselineErrorCount();
-        int baselineWarningCount = stats.getBaselineWarningCount();
-        int baselineFixedCount = stats.getBaselineFixedCount();
 
         // We pick the first variant to generate the full report and don't generate if we don't
         // have any variants.
@@ -456,7 +455,8 @@ public class LintGradleExecution {
                             variant,
                             variantInputs,
                             descriptor.getBuildTools(),
-                            true);
+                            true,
+                            isFatalOnly() ? VARIANT_FATAL : VARIANT_ALL);
             syncOptions(
                     lintOptions,
                     client,
@@ -488,49 +488,23 @@ public class LintGradleExecution {
                 if (!ok) {
                     System.err.println("Couldn't create baseline folder " + dir);
                 } else {
-                    Reporter reporter = Reporter.createXmlReporter(client, baselineFile, true);
+                    XmlReporter reporter = Reporter.createXmlReporter(client, baselineFile, true);
+                    reporter.setBaselineAttributes(
+                            client, flags.isFatalOnly() ? VARIANT_FATAL : VARIANT_ALL);
                     reporter.write(stats, mergedWarnings);
                     System.err.println("Created baseline file " + baselineFile);
                     if (LintGradleClient.continueAfterBaseLineCreated()) {
                         return;
                     }
                     System.err.println("(Also breaking build in case this was not intentional.)");
-                    String message =
-                            ""
-                                    + "Created baseline file "
-                                    + baselineFile
-                                    + "\n"
-                                    + "\n"
-                                    + "Also breaking the build in case this was not intentional. If you\n"
-                                    + "deliberately created the baseline file, re-run the build and this\n"
-                                    + "time it should succeed without warnings.\n"
-                                    + "\n"
-                                    + "If not, investigate the baseline path in the lintOptions config\n"
-                                    + "or verify that the baseline file has been checked into version\n"
-                                    + "control.\n"
-                                    + "\n"
-                                    + "You can set the system property lint.baselines.continue=true\n"
-                                    + "if you want to create many missing baselines in one go.";
+                    String message = client.getBaselineCreationMessage(baselineFile);
                     throw new GradleException(message);
                 }
             }
 
-            if (baselineErrorCount > 0 || baselineWarningCount > 0) {
-                System.out.println(
-                        String.format(
-                                "%1$s were filtered out because "
-                                        + "they were listed in the baseline file, %2$s\n",
-                                Lint.describeCounts(
-                                        baselineErrorCount, baselineWarningCount, false, true),
-                                baselineFile));
-            }
-            if (baselineFixedCount > 0) {
-                System.out.println(
-                        String.format(
-                                "%1$d errors/warnings were listed in the "
-                                        + "baseline file (%2$s) but not found in the project; perhaps they have "
-                                        + "been fixed?\n",
-                                baselineFixedCount, baselineFile));
+            LintBaseline firstBaseline = baselines.isEmpty() ? null : baselines.get(0);
+            if (baselineFile != null && firstBaseline != null) {
+                client.emitBaselineDiagnostics(firstBaseline, baselineFile, stats);
             }
 
             if (flags.isSetExitCode() && errorCount > 0) {
