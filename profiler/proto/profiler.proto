@@ -188,7 +188,8 @@ message GetSessionResponse {
 message ImportSessionRequest {
   Session session = 1;
   string session_name = 2;
-  SessionMetaData.SessionType sessionType = 3;
+  int64 start_timestamp_epoch_ms = 3;
+  SessionMetaData.SessionType sessionType = 4;
 }
 
 message ImportSessionResponse {
