@@ -170,7 +170,7 @@ public final class LogCatHeader {
         if (mTimestampInstant == null) {
             builder.append(mTimestamp);
         } else {
-            LogCatLongEpochMessageParser.FORMATTER.formatTo(mTimestampInstant, builder);
+            LogCatLongEpochMessageParser.EPOCH_TIME_FORMATTER.formatTo(mTimestampInstant, builder);
         }
 
         builder.append(": ")

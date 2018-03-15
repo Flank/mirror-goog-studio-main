@@ -29,12 +29,12 @@ import java.util.regex.Pattern;
 
 /** Parses the headers output by adb logcat -v long -v epoch. */
 public final class LogCatLongEpochMessageParser extends LogCatMessageParser {
-    private static final Pattern EPOCH = Pattern.compile("\\d+\\.\\d\\d\\d");
+    public static final Pattern EPOCH_TIME = Pattern.compile("\\d+\\.\\d\\d\\d");
 
     private static final Pattern HEADER =
             Pattern.compile(
                     "^\\[ +("
-                            + EPOCH
+                            + EPOCH_TIME
                             + ") +("
                             + PROCESS_ID
                             + "): *("
@@ -45,7 +45,7 @@ public final class LogCatLongEpochMessageParser extends LogCatMessageParser {
                             + TAG
                             + ") +]$");
 
-    static final DateTimeFormatter FORMATTER =
+    public static final DateTimeFormatter EPOCH_TIME_FORMATTER =
             new DateTimeFormatterBuilder()
                     .appendValue(ChronoField.INSTANT_SECONDS)
                     .appendFraction(ChronoField.MILLI_OF_SECOND, 3, 3, true)
@@ -60,7 +60,7 @@ public final class LogCatLongEpochMessageParser extends LogCatMessageParser {
             return null;
         }
 
-        Instant epoch = FORMATTER.parse(matcher.group(1), Instant::from);
+        Instant timestamp = EPOCH_TIME_FORMATTER.parse(matcher.group(1), Instant::from);
         int processId = parseProcessId(matcher.group(2));
         int threadId = parseThreadId(matcher.group(3));
         LogLevel priority = parsePriority(matcher.group(4));
@@ -73,7 +73,7 @@ public final class LogCatLongEpochMessageParser extends LogCatMessageParser {
                         threadId,
                         getPackageName(device, processId),
                         tag,
-                        epoch);
+                        timestamp);
 
         return mPrevHeader;
     }
