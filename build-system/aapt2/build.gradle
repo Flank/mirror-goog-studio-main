@@ -1,4 +1,6 @@
 apply plugin: 'maven'
+// Only present so gets released in 'release' mode.
+apply plugin: 'signing'
 
 File aaptVersionPropertiesFile = rootProject.file('../prebuilts/tools/common/aapt/aapt2_version.properties')
 Properties aaptVersionProperties = new Properties()
