@@ -5,7 +5,7 @@
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_android_com_java_profilertester_taskcategory_MemoryTaskCategory_AllocateNativeMemoryTask_allocateNativeMemory(
+Java_android_com_java_profilertester_taskcategory_MemoryTaskCategory_allocateNativeMemory(
         JNIEnv *env,
         jobject instance) {
 
@@ -28,4 +28,58 @@ Java_android_com_java_profilertester_taskcategory_MemoryTaskCategory_AllocateNat
         delete[] s[i];
     }
 
+}
+
+// newRef[1,2,3] and freeRef[1,2,3] are here just to provide
+// for nonempty allocation/deallocation call stacks.
+__attribute__((noinline)) jobject newRef3(JNIEnv *env,
+                jobject o)
+{
+    return env->NewGlobalRef(o);
+}
+
+__attribute__((noinline)) jobject newRef2(JNIEnv *env,
+                jobject o)
+{
+    return newRef3(env, o);
+}
+
+__attribute__((noinline)) jobject newRef1(JNIEnv *env,
+             jobject o)
+{
+    return newRef2(env, o);
+}
+
+
+__attribute__((noinline)) void freeRef3(JNIEnv *env, jobject o)
+{
+    env->DeleteGlobalRef(o);
+}
+
+__attribute__((noinline)) void freeRef2(JNIEnv *env, jobject o)
+{
+    freeRef3(env, o);
+}
+
+__attribute__((noinline)) void freeRef1(JNIEnv *env, jobject o)
+{
+    freeRef2(env, o);
+}
+
+extern "C"
+JNIEXPORT jlong JNICALL
+Java_android_com_java_profilertester_taskcategory_MemoryTaskCategory_allocateJniRef(JNIEnv *env,
+                                                                                    jobject instance,
+                                                                                    jobject o) {
+    jobject ref = newRef1(env, o);
+    return reinterpret_cast<jlong>(ref);
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_android_com_java_profilertester_taskcategory_MemoryTaskCategory_freeJniRef(JNIEnv *env,
+                                                                                jobject instance,
+                                                                                jlong refValue) {
+    jobject ref = reinterpret_cast<jobject >(refValue);
+    freeRef1(env, ref);
 }
