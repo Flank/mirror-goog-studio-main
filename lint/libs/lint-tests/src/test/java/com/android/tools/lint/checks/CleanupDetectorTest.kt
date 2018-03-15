@@ -1596,6 +1596,48 @@ class CleanupDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testAndroidKtxSharedPrefs() {
+        // Regression for
+        // 74388337: False "SharedPreferences.edit() without a corresponding commit() call"
+        lint().files(
+            kotlin("""
+                package test.pkg
+
+                import android.content.SharedPreferences
+                import androidx.content.edit
+
+                fun test(sharedPreferences: SharedPreferences, key: String, value: Boolean) {
+                    sharedPreferences.edit {
+                        putBoolean(key, value)
+                    }
+                }
+                """),
+            kotlin(
+                "src/androidx/core/content/SharedPreferences.kt",
+                """
+                    package androidx.core.content
+
+                    import android.annotation.SuppressLint
+                    import android.content.SharedPreferences
+
+                    @SuppressLint("ApplySharedPref")
+                    inline fun SharedPreferences.edit(
+                        commit: Boolean = false,
+                        action: SharedPreferences.Editor.() -> Unit
+                    ) {
+                        val editor = edit()
+                        action(editor)
+                        if (commit) {
+                            editor.commit()
+                        } else {
+                            editor.apply()
+                        }
+                    }
+                    """
+            ).indented()
+        ).run().expectClean()
+    }
+
     private val dialogFragment = java(
         """
         package android.support.v4.app;
