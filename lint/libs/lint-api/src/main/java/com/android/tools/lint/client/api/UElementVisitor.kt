@@ -294,7 +294,7 @@ internal class UElementVisitor constructor(
             }
         } catch (ignore: ProcessCanceledException) {
             // Cancelling inspections in the IDE
-        } catch (e: RuntimeException) {
+        } catch (e: Throwable) {
             // Don't allow lint bugs to take down the whole build. TRY to log this as a
             // lint error instead!
             LintDriver.handleDetectorError(context, context.driver, e)

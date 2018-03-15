@@ -71,7 +71,12 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
-/** XML Utilities */
+/**
+ * XML Utilities.
+ * <p>
+ * For Kotlin usage, many of these are exposed as more convenient extension
+ * methods in {@link DomExtensions}
+ */
 public class XmlUtils {
     public static final String XML_COMMENT_BEGIN = "<!--"; //$NON-NLS-1$
     public static final String XML_COMMENT_END = "-->";    //$NON-NLS-1$
@@ -1064,9 +1069,14 @@ public class XmlUtils {
         }
         Node curr = parent.getFirstChild();
         while (curr != null) {
-            if (curr.getNodeType() == Node.ELEMENT_NODE &&
-                    name.equals(curr.getLocalName())) {
-                return (Element) curr;
+            if (curr.getNodeType() == Node.ELEMENT_NODE) {
+                String currName = curr.getLocalName();
+                if (currName == null) {
+                    currName = curr.getNodeName();
+                }
+                if (name.equals(currName)) {
+                    return (Element) curr;
+                }
             }
 
             curr = curr.getNextSibling();
@@ -1083,9 +1093,14 @@ public class XmlUtils {
         }
         Node curr = node.getNextSibling();
         while (curr != null) {
-            if (curr.getNodeType() == Node.ELEMENT_NODE &&
-                    name.equals(curr.getLocalName())) {
-                return (Element) curr;
+            if (curr.getNodeType() == Node.ELEMENT_NODE) {
+                String currName = curr.getLocalName();
+                if (currName == null) {
+                    currName = curr.getNodeName();
+                }
+                if (name.equals(currName)) {
+                    return (Element) curr;
+                }
             }
 
             curr = curr.getNextSibling();
@@ -1101,9 +1116,14 @@ public class XmlUtils {
         }
         Node curr = node.getPreviousSibling();
         while (curr != null) {
-            if (curr.getNodeType() == Node.ELEMENT_NODE &&
-                    name.equals(curr.getLocalName())) {
-                return (Element) curr;
+            if (curr.getNodeType() == Node.ELEMENT_NODE) {
+                String currName = curr.getLocalName();
+                if (currName == null) {
+                    currName = curr.getNodeName();
+                }
+                if (name.equals(currName)) {
+                    return (Element) curr;
+                }
             }
 
             curr = curr.getPreviousSibling();

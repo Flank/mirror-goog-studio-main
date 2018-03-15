@@ -30,8 +30,11 @@ import com.android.tools.lint.checks.GradleDetector.Companion.BUNDLED_GMS
 import com.android.tools.lint.checks.GradleDetector.Companion.COMPATIBILITY
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPENDENCY
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED
+import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED_LIBRARY
 import com.android.tools.lint.checks.GradleDetector.Companion.DEV_MODE_OBSOLETE
 import com.android.tools.lint.checks.GradleDetector.Companion.DUPLICATE_CLASSES
+import com.android.tools.lint.checks.GradleDetector.Companion.EXPIRED_TARGET_SDK_VERSION
+import com.android.tools.lint.checks.GradleDetector.Companion.EXPIRING_TARGET_SDK_VERSION
 import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_GETTER
 import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_PLUGIN_COMPATIBILITY
 import com.android.tools.lint.checks.GradleDetector.Companion.HIGH_APP_VERSION_CODE
@@ -40,6 +43,7 @@ import com.android.tools.lint.checks.GradleDetector.Companion.NOT_INTERPOLATED
 import com.android.tools.lint.checks.GradleDetector.Companion.PATH
 import com.android.tools.lint.checks.GradleDetector.Companion.PLUS
 import com.android.tools.lint.checks.GradleDetector.Companion.REMOTE_VERSION
+import com.android.tools.lint.checks.GradleDetector.Companion.RISKY_LIBRARY
 import com.android.tools.lint.checks.GradleDetector.Companion.STRING_INTEGER
 import com.android.tools.lint.checks.GradleDetector.Companion.getNamedDependency
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry
@@ -54,6 +58,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import java.io.File
 import java.io.IOException
+import java.util.Calendar
 import java.util.function.Predicate
 
 /**
@@ -134,6 +139,32 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "</com.android.tools.build>"
         )
 
+        // Similarly set up the expected SDK registry network output from dl.google.com to
+        // ensure stable SDK library suggestions in the tests
+        task.networkData(
+            SDK_REGISTRY_URL,
+            """
+            <sdk_metadata>
+             <library groupId="log4j" artifactId="log4j" recommended-version="1.2.17" recommended-version-sha="5af35056b4d257e4b64b9e8069c0746e8b08629f">
+              <versions from="1.2.14" to="1.2.16" status="deprecated" description="Deprecated due to ANR issue">
+               <vulnerability description="Specifics and developer actions go here." cve="CVE-4313" />
+              </versions>
+              <versions from="1.2.4" to="1.2.13" status="insecure" description="Bad security bug CVE-4311" />
+               <vulnerability description="Buffer overflow vulnerability in this version." cve="CVE-4311" />
+              <versions to="1.2.0" status="obsolete" description="Library is obsolete." />
+             </library>
+             <library groupId="com.example.ads.thirdparty" artifactId="example" recommended-version="7.3.1">
+              <versions from="7.1.0" to="7.2.1" status="deprecated" description="Deprecated due to ANR issue">
+               <vulnerability description="Specifics and developer actions go here." />
+              </versions>
+              <versions to="7.0.0" status="deprecated" description="Deprecated due to ANR issue">
+               <vulnerability description="Specifics and developer actions go here." />
+              </versions>
+              </library>
+            </sdk_metadata>
+            """.trimIndent()
+        )
+
         // Also ensure we don't have a stale cache on disk.
         val cacheDir =
             TestLintClient().getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true)
@@ -169,6 +200,16 @@ class GradleDetectorTest : AbstractCheckTest() {
                 }
             }
         task.client(client)
+
+        val cacheDir2 =
+            TestLintClient().getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
+        if (cacheDir2 != null && cacheDir2.isDirectory) {
+            try {
+                FileUtils.deleteDirectoryContents(cacheDir2)
+            } catch (e: IOException) {
+                fail(e.message)
+            }
+        }
 
         return task
     }
@@ -2124,6 +2165,228 @@ class GradleDetectorTest : AbstractCheckTest() {
                 @@ -12 +12
                 -         minSdkVersion(7)
                 +         minSdkVersion(14)
+                """
+            )
+    }
+
+    fun testExpiring() {
+        try {
+            val calendar = Calendar.getInstance()
+            GradleDetector.calendar = calendar
+            calendar.set(Calendar.YEAR, 2018)
+            calendar.set(Calendar.MONTH, 6)
+
+            lint().files(
+                gradle(
+                    "" +
+                            "apply plugin: 'com.android.application'\n" +
+                            "\n" +
+                            "android {\n" +
+                            "    defaultConfig {\n" +
+                            "        targetSdkVersion 17\n" +
+                            "    }\n" +
+                            "}\n"
+                )
+            )
+                .issues(EXPIRED_TARGET_SDK_VERSION, EXPIRING_TARGET_SDK_VERSION)
+                .sdkHome(mockSupportLibraryInstallation)
+                .run()
+                .expect(
+                    """
+                    build.gradle:5: Error: Google Play will soon require that apps target API level 26 or higher. This will be required for new apps in August 2018, and for updates to existing apps in November 2018. [ExpiringTargetSdkVersion]
+                            targetSdkVersion 17
+                            ~~~~~~~~~~~~~~~~~~~
+                    1 errors, 0 warnings
+                    """
+                )
+        } finally {
+            GradleDetector.calendar = null
+        }
+    }
+
+    fun testExpired() {
+        try {
+            val calendar = Calendar.getInstance()
+            GradleDetector.calendar = calendar
+            calendar.set(Calendar.YEAR, 2018)
+            calendar.set(Calendar.MONTH, 10)
+
+            lint().files(
+                gradle(
+                    "" +
+                            "apply plugin: 'com.android.application'\n" +
+                            "\n" +
+                            "android {\n" +
+                            "    defaultConfig {\n" +
+                            "        targetSdkVersion 17\n" +
+                            "    }\n" +
+                            "}\n"
+                )
+            )
+                .issues(EXPIRED_TARGET_SDK_VERSION, EXPIRING_TARGET_SDK_VERSION)
+                .sdkHome(mockSupportLibraryInstallation)
+                .run()
+                .expect(
+                    """
+                    build.gradle:5: Error: Google Play requires that apps target API level 26 or higher.
+                     [ExpiredTargetSdkVersion]
+                            targetSdkVersion 17
+                            ~~~~~~~~~~~~~~~~~~~
+                    1 errors, 0 warnings
+                    """
+                )
+        } finally {
+            GradleDetector.calendar = null
+        }
+    }
+
+    fun testDeprecatedLibrary() {
+        lint().files(
+            gradle(
+                """
+                dependencies {
+                    compile 'log4j:log4j:1.2.18' // OK
+                    compile 'log4j:log4j:1.2.17' // OK
+                    compile 'log4j:log4j:1.2.16' // ERROR
+                    compile 'log4j:log4j:1.2.15' // ERROR
+                    compile 'log4j:log4j:1.2.14' // ERROR
+                    compile 'log4j:log4j:1.2.13' // ERROR
+                    compile 'log4j:log4j:1.2.12' // ERROR
+                    compile 'log4j:log4j:1.2.4'  // ERROR
+                    compile 'log4j:log4j:1.2.3'  // OK (not included in range)
+                    compile 'log4j:log4j:0.5'    // ERROR
+                    compile 'com.example.ads.thirdparty:example:7.3.1' // OK
+                    compile 'com.example.ads.thirdparty:example:8.0.0' // OK
+                    compile 'com.example.ads.thirdparty:example:7.2.2' // OK
+                    compile 'com.example.ads.thirdparty:example:7.2.1' // ERROR
+                    compile 'com.example.ads.thirdparty:example:7.2.0' // ERROR
+                    compile 'com.example.ads.thirdparty:example:7.1.1' // ERROR
+                    compile 'com.example.ads.thirdparty:example:7.1.0' // ERROR
+                    compile 'com.example.ads.thirdparty:example:7.0.5' // OK
+                    compile 'com.example.ads.thirdparty:example:7.0.0' // ERROR
+                    compile 'com.example.ads.thirdparty:example:6.8.5' // ERROR
+                }
+                """
+            ).indented()
+        ).issues(RISKY_LIBRARY, DEPRECATED_LIBRARY, DEPENDENCY).sdkHome(mockSupportLibraryInstallation)
+            .run().expect(
+                """
+                build.gradle:10: Warning: A newer version of log4j:log4j than 1.2.3 is available: 1.2.17 [GradleDependency]
+                    compile 'log4j:log4j:1.2.3'  // OK (not included in range)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:14: Warning: A newer version of com.example.ads.thirdparty:example than 7.2.2 is available: 7.3.1 [GradleDependency]
+                    compile 'com.example.ads.thirdparty:example:7.2.2' // OK
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:19: Warning: A newer version of com.example.ads.thirdparty:example than 7.0.5 is available: 7.3.1 [GradleDependency]
+                    compile 'com.example.ads.thirdparty:example:7.0.5' // OK
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:7: Error: This version is known to be insecure. Details: Bad security bug CVE-4311. Consider switching to recommended version 1.2.17. [RiskyLibrary]
+                    compile 'log4j:log4j:1.2.13' // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:8: Error: This version is known to be insecure. Details: Bad security bug CVE-4311. Consider switching to recommended version 1.2.17. [RiskyLibrary]
+                    compile 'log4j:log4j:1.2.12' // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:9: Error: This version is known to be insecure. Details: Bad security bug CVE-4311. Consider switching to recommended version 1.2.17. [RiskyLibrary]
+                    compile 'log4j:log4j:1.2.4'  // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:4: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 1.2.17. [OutdatedLibrary]
+                    compile 'log4j:log4j:1.2.16' // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:5: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 1.2.17. [OutdatedLibrary]
+                    compile 'log4j:log4j:1.2.15' // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:6: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 1.2.17. [OutdatedLibrary]
+                    compile 'log4j:log4j:1.2.14' // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:11: Error: This version is obsolete. Details: Library is obsolete. Consider switching to recommended version 1.2.17. [OutdatedLibrary]
+                    compile 'log4j:log4j:0.5'    // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:15: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
+                    compile 'com.example.ads.thirdparty:example:7.2.1' // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:16: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
+                    compile 'com.example.ads.thirdparty:example:7.2.0' // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:17: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
+                    compile 'com.example.ads.thirdparty:example:7.1.1' // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:18: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
+                    compile 'com.example.ads.thirdparty:example:7.1.0' // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:20: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
+                    compile 'com.example.ads.thirdparty:example:7.0.0' // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                build.gradle:21: Error: This version is deprecated. Details: Deprecated due to ANR issue. Consider switching to recommended version 7.3.1. [OutdatedLibrary]
+                    compile 'com.example.ads.thirdparty:example:6.8.5' // ERROR
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                13 errors, 3 warnings
+                    """
+            ).expectFixDiffs(
+                """
+                Fix for build.gradle line 10: Change to 1.2.17:
+                @@ -10 +10
+                -     compile 'log4j:log4j:1.2.3'  // OK (not included in range)
+                +     compile 'log4j:log4j:1.2.17'  // OK (not included in range)
+                Fix for build.gradle line 14: Change to 7.3.1:
+                @@ -14 +14
+                -     compile 'com.example.ads.thirdparty:example:7.2.2' // OK
+                +     compile 'com.example.ads.thirdparty:example:7.3.1' // OK
+                Fix for build.gradle line 19: Change to 7.3.1:
+                @@ -19 +19
+                -     compile 'com.example.ads.thirdparty:example:7.0.5' // OK
+                +     compile 'com.example.ads.thirdparty:example:7.3.1' // OK
+                Fix for build.gradle line 7: Change to 1.2.17:
+                @@ -7 +7
+                -     compile 'log4j:log4j:1.2.13' // ERROR
+                +     compile 'log4j:log4j:1.2.17' // ERROR
+                Fix for build.gradle line 8: Change to 1.2.17:
+                @@ -8 +8
+                -     compile 'log4j:log4j:1.2.12' // ERROR
+                +     compile 'log4j:log4j:1.2.17' // ERROR
+                Fix for build.gradle line 9: Change to 1.2.17:
+                @@ -9 +9
+                -     compile 'log4j:log4j:1.2.4'  // ERROR
+                +     compile 'log4j:log4j:1.2.17'  // ERROR
+                Fix for build.gradle line 4: Change to 1.2.17:
+                @@ -4 +4
+                -     compile 'log4j:log4j:1.2.16' // ERROR
+                +     compile 'log4j:log4j:1.2.17' // ERROR
+                Fix for build.gradle line 5: Change to 1.2.17:
+                @@ -5 +5
+                -     compile 'log4j:log4j:1.2.15' // ERROR
+                +     compile 'log4j:log4j:1.2.17' // ERROR
+                Fix for build.gradle line 6: Change to 1.2.17:
+                @@ -6 +6
+                -     compile 'log4j:log4j:1.2.14' // ERROR
+                +     compile 'log4j:log4j:1.2.17' // ERROR
+                Fix for build.gradle line 11: Change to 1.2.17:
+                @@ -11 +11
+                -     compile 'log4j:log4j:0.5'    // ERROR
+                +     compile 'log4j:log4j:1.2.17'    // ERROR
+                Fix for build.gradle line 15: Change to 7.3.1:
+                @@ -15 +15
+                -     compile 'com.example.ads.thirdparty:example:7.2.1' // ERROR
+                +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
+                Fix for build.gradle line 16: Change to 7.3.1:
+                @@ -16 +16
+                -     compile 'com.example.ads.thirdparty:example:7.2.0' // ERROR
+                +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
+                Fix for build.gradle line 17: Change to 7.3.1:
+                @@ -17 +17
+                -     compile 'com.example.ads.thirdparty:example:7.1.1' // ERROR
+                +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
+                Fix for build.gradle line 18: Change to 7.3.1:
+                @@ -18 +18
+                -     compile 'com.example.ads.thirdparty:example:7.1.0' // ERROR
+                +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
+                Fix for build.gradle line 20: Change to 7.3.1:
+                @@ -20 +20
+                -     compile 'com.example.ads.thirdparty:example:7.0.0' // ERROR
+                +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
+                Fix for build.gradle line 21: Change to 7.3.1:
+                @@ -21 +21
+                -     compile 'com.example.ads.thirdparty:example:6.8.5' // ERROR
+                +     compile 'com.example.ads.thirdparty:example:7.3.1' // ERROR
                 """
             )
     }

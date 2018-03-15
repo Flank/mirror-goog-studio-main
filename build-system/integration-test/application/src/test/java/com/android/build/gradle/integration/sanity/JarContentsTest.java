@@ -970,6 +970,7 @@ public class JarContentsTest {
                 "com/android/tools/",
                 "com/android/tools/lint/",
                 "com/android/tools/lint/checks/",
+                "sdks-offline.xml",
                 "NOTICE",
                 "META-INF/MANIFEST.MF",
                 "META-INF/");

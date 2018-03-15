@@ -69,6 +69,7 @@ import java.io.IOException
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 import java.util.ArrayList
+import java.util.Calendar
 import java.util.Collections
 import java.util.HashMap
 import java.util.HashSet
@@ -160,19 +161,62 @@ open class GradleDetector : Detector(), GradleScanner {
             if (property == "targetSdkVersion") {
                 val version = getSdkVersion(value)
                 if (version > 0 && version < context.client.highestKnownApiLevel) {
-                    val message =
-                        "Not targeting the latest versions of Android; compatibility \n" +
-                                "modes apply. Consider testing and updating this version. \n" +
-                                "Consult the android.os.Build.VERSION_CODES javadoc for details."
+                    var warned = false
+                    if (version <= 25) {
+                        val now = calendar ?: Calendar.getInstance()
+                        val year = now.get(Calendar.YEAR)
+                        val month = now.get(Calendar.MONTH)
 
-                    val highest = context.client.highestKnownApiLevel
-                    val label = "Update targetSdkVersion to $highest"
-                    val fix = fix().name(label)
-                        .replace()
-                        .all()
-                        .with(Integer.toString(highest))
-                        .build()
-                    report(context, valueCookie, TARGET_NEWER, message, fix)
+                        // After November 1st 2018, the apps are required to use 26 or higher
+                        if (year > 2018 || month >= 10) {
+                            val message =
+                                "Google Play requires that apps target API level 26 or higher.\n"
+                            val highest = context.client.highestKnownApiLevel
+                            val label = "Update targetSdkVersion to $highest"
+                            val fix = fix().name(label)
+                                .replace()
+                                .all()
+                                .with(Integer.toString(highest))
+                                .build()
+                            report(context, valueCookie, EXPIRED_TARGET_SDK_VERSION, message, fix)
+                            warned = true
+                        } else if (month >= 5 && year == 2018) {
+                            // Start warning about this earlier - in May.
+                            // (Check for 2018 here: no, we don't have a time machine, but let's
+                            // allow developers to go back in time.)
+                            val message = "" +
+                                    "Google Play will soon require that apps target API " +
+                                    "level 26 or higher. This will be required for new apps " +
+                                    "in August 2018, and for updates to existing apps in " +
+                                    "November 2018."
+                            val highest = context.client.highestKnownApiLevel
+                            val label = "Update targetSdkVersion to $highest"
+                            val fix = fix().name(label)
+                                .replace()
+                                .all()
+                                .with(Integer.toString(highest))
+                                .build()
+                            report(context, valueCookie, EXPIRING_TARGET_SDK_VERSION, message, fix)
+                            warned = true
+                        }
+                    }
+
+                    if (!warned) {
+                        val message =
+                            "Not targeting the latest versions of Android; compatibility " +
+                                    "modes apply. Consider testing and updating this version. " +
+                                    "Consult the android.os.Build.VERSION_CODES javadoc for " +
+                                    "details."
+
+                        val highest = context.client.highestKnownApiLevel
+                        val label = "Update targetSdkVersion to $highest"
+                        val fix = fix().name(label)
+                            .replace()
+                            .all()
+                            .with(Integer.toString(highest))
+                            .build()
+                        report(context, valueCookie, TARGET_NEWER, message, fix)
+                    }
                 }
                 if (version > 0) {
                     targetSdkVersion = version
@@ -625,6 +669,45 @@ open class GradleDetector : Detector(), GradleScanner {
                     val fix = fix().name("Delete dependency").replace().all().build()
                     report(context, statementCookie, DUPLICATE_CLASSES, message, fix)
                 }
+            }
+        }
+
+        val sdkRegistry = getDeprecatedLibraryLookup(context.client)
+        val deprecated = sdkRegistry.getVersionInfo(dependency)
+        if (deprecated != null) {
+            val prefix: String
+            val issue: Issue
+            if (deprecated.status == "insecure") {
+                prefix = "This version is known to be insecure."
+                issue = RISKY_LIBRARY
+            } else {
+                prefix = "This version is ${deprecated.status}."
+                issue = DEPRECATED_LIBRARY
+            }
+
+            val suffix: String
+            val fix: LintFix?
+            val recommended = deprecated.recommended
+            if (recommended != null) {
+                suffix = " Consider switching to recommended version $recommended."
+                fix = getUpdateDependencyFix(dependency.revision, recommended)
+            } else {
+                suffix = ""
+                fix = null
+            }
+
+            val separatorDot =
+                if (deprecated.message.isNotEmpty() && !deprecated.message.endsWith("."))
+                    "."
+                else
+                    ""
+
+            val message = "$prefix Details: ${deprecated.message}$separatorDot$suffix"
+            report(context, statementCookie, issue, message, fix)
+        } else {
+            val recommended = sdkRegistry.getRecommendedVersion(dependency)
+            if (recommended != null && (newerVersion == null || recommended > newerVersion)) {
+                newerVersion = recommended
             }
         }
 
@@ -1549,6 +1632,8 @@ open class GradleDetector : Detector(), GradleScanner {
     }
 
     companion object {
+        /** Calendar to use to look up the current time (used by tests to set specific time */
+        var calendar: Calendar? = null
 
         private val IMPLEMENTATION = Implementation(GradleDetector::class.java, Scope.GRADLE_SCOPE)
 
@@ -1860,6 +1945,106 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
+        /** targetSdkVersion about to expiry */
+        @JvmField
+        val EXPIRING_TARGET_SDK_VERSION = Issue.create(
+            id = "ExpiringTargetSdkVersion",
+            briefDescription = "TargetSdkVersion Soon Expiring",
+            explanation = """
+                In the second half of 2018, Google Play will require that new apps and app \
+                updates target API level 26 or higher. This will be required for new apps in \
+                August 2018, and for updates to existing apps in November 2018.
+
+                Configuring your app to target a recent API level ensures that users benefit \
+                from significant security and performance improvements, while still allowing \
+                your app to run on older Android versions (down to the `minSdkVersion`).
+
+                This lint check starts warning you some months **before** these changes go \
+                into effect if your `targetSdkVersion` is 25 or lower. This is intended to \
+                give you a heads up to update your app, since depending on your current \
+                `targetSdkVersion` the work can be nontrivial.
+
+                To update your `targetSdkVersion`, follow the steps from \
+                "Meeting Google Play requirements for target API level",
+                https://developer.android.com/distribute/best-practices/develop/target-sdk.html
+                """,
+            category = Category.COMPLIANCE,
+            priority = 8,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
+        )
+            .addMoreInfo("https://support.google.com/googleplay/android-developer/answer/113469#targetsdk")
+            .addMoreInfo("https://developer.android.com/distribute/best-practices/develop/target-sdk.html")
+
+        /** targetSdkVersion no longer supported */
+        @JvmField
+        val EXPIRED_TARGET_SDK_VERSION = Issue.create(
+            id = "ExpiredTargetSdkVersion",
+            briefDescription = "TargetSdkVersion No Longer Supported",
+            moreInfo = "https://support.google.com/googleplay/android-developer/answer/113469#targetsdk",
+            explanation = """
+                As of the second half of 2018, Google Play requires that new apps and app \
+                updates target API level 26 or higher.
+
+                Configuring your app to target a recent API level ensures that users benefit \
+                from significant security and performance improvements, while still allowing \
+                your app to run on older Android versions (down to the `minSdkVersion`).
+
+                To update your `targetSdkVersion`, follow the steps from \
+                "Meeting Google Play requirements for target API level",
+                https://developer.android.com/distribute/best-practices/develop/target-sdk.html
+                """,
+            category = Category.COMPLIANCE,
+            priority = 8,
+            severity = Severity.FATAL,
+            implementation = IMPLEMENTATION
+        )
+            .addMoreInfo("https://support.google.com/googleplay/android-developer/answer/113469#targetsdk")
+            .addMoreInfo("https://developer.android.com/distribute/best-practices/develop/target-sdk.html")
+
+        /** Using a deprecated library */
+        @JvmField
+        val DEPRECATED_LIBRARY = Issue.create(
+            id = "OutdatedLibrary",
+            briefDescription = "Outdated Library",
+            explanation = """
+                Your app is using an outdated version of a library. This may cause violations \
+                of Google Play policies (see https://play.google.com/about/monetization-ads/ads/) \
+                and/or may affect your app’s visibility on the Play Store.
+
+                Please try updating your app with an updated version of this library, or remove \
+                it from your app.
+                """,
+            category = Category.COMPLIANCE,
+            priority = 8,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
+        )
+
+        /** Using a vulnerable library */
+        @JvmField
+        val RISKY_LIBRARY = Issue.create(
+            id = "RiskyLibrary",
+            briefDescription = "Libraries with Privacy or Security Risks",
+            explanation = """
+                Your app is using a version of a library that has been identified by \
+                the library developer as a potential source of privacy and/or security risks. \
+                This may be a violation of Google Play policies (see \
+                https://play.google.com/about/monetization-ads/ads/) and/or affect your app’s \
+                visibility on the Play Store.
+
+                When available, the individual error messages from lint will include details \
+                about the reasons for this advisory.
+
+                Please try updating your app with an updated version of this library, or remove \
+                it from your app.
+            """,
+            category = Category.SECURITY,
+            priority = 8,
+            severity = Severity.ERROR,
+            implementation = IMPLEMENTATION
+        )
+
         /** The Gradle plugin ID for Android applications */
         const val APP_PLUGIN_ID = "com.android.application"
         /** The Gradle plugin ID for Android libraries */
@@ -2151,6 +2336,7 @@ open class GradleDetector : Detector(), GradleScanner {
         }
 
         private var googleMavenRepository: GoogleMavenRepository? = null
+        private var deprecatedSdkRegistry: DeprecatedSdkRegistry? = null
 
         @VisibleForTesting
         @Suppress("unused")
@@ -2158,6 +2344,7 @@ open class GradleDetector : Detector(), GradleScanner {
         @JvmStatic
         fun cleanUp() {
             googleMavenRepository = null
+            deprecatedSdkRegistry = null
         }
 
         private fun getGoogleMavenRepoVersion(
@@ -2191,6 +2378,33 @@ open class GradleDetector : Detector(), GradleScanner {
                     }
 
                     googleMavenRepository = repository
+                    repository
+                }
+            }
+        }
+
+        private fun getDeprecatedLibraryLookup(client: LintClient): DeprecatedSdkRegistry {
+            return synchronized(GradleDetector::class.java) {
+                deprecatedSdkRegistry ?: run {
+                    val cacheDir = client.getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
+                    val repository = object : DeprecatedSdkRegistry(cacheDir) {
+                        public override fun readUrlData(url: String, timeout: Int): ByteArray? {
+                            try {
+                                return readUrlData(client, url, timeout)
+                            } catch (e: IOException) {
+                                throw RuntimeException(e)
+                            }
+                        }
+
+                        public override fun error(
+                            throwable: Throwable,
+                            message: String?
+                        ) {
+                            client.log(throwable, message)
+                        }
+                    }
+
+                    deprecatedSdkRegistry = repository
                     repository
                 }
             }

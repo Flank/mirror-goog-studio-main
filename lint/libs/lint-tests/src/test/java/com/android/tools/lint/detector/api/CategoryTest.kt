@@ -20,7 +20,6 @@ import com.google.common.base.Joiner
 import com.google.common.collect.Lists
 import junit.framework.TestCase
 import java.lang.reflect.Modifier
-import java.util.Collections
 
 class CategoryTest : TestCase() {
     fun testCompare() {
@@ -35,7 +34,7 @@ class CategoryTest : TestCase() {
             }
         }
 
-        Collections.sort(categories)
+        categories.sort()
 
         assertEquals(
             "" +
@@ -44,6 +43,7 @@ class CategoryTest : TestCase() {
                     "Correctness:Messages\n" +
                     "Correctness:Chrome OS\n" +
                     "Security\n" +
+                    "Compliance\n" +
                     "Performance\n" +
                     "Usability:Typography\n" +
                     "Usability:Icons\n" +

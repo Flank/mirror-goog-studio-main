@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<sdk_metadata>
+  <library  groupId="com.kochava" artifactId="tracker" recommended-version="3.3.1" >
+    <versions from="3.4.0" release-status="beta" />
+    <versions from="3.3.1" status="recommended" />
+  </library>
+  <library  groupId="com.tune" artifactId="tune-marketing-console-sdk" recommended-version="5.2.0" >
+    <versions from="5.2.0" status="recommended" />
+    <versions from="5.1.1" status="deprecated" release-status="release" />
+    <versions from="5.0.0" to="5.0.2" status="deprecated" description="Android SDK v5.0.0 - 5.0.2 incorrectly redacts the action parameter if the profile is privacy protected, which breaks all AA measurement." />
+    <versions from="4.15.2" to="4.16.0" status="deprecated" description="Android SDK 4.15.2 to 4.16.0 incorrectly redacts the action parameter if the profile is protected, which breaks all AA measurement." />
+    <versions from="4.15.1" />
+    <versions from="4.15.0" />
+    <versions from="4.14.0" />
+    <versions from="4.13.0" status="deprecated" description="Tune SDK versions between 4.11.0 and 4.13.0 have an extra BroadcastReceiver that was introduced that caused applications to auto-start the Application node when the receiver was called, even when the application was not running. Tune SDK 4.14.0 and above include a fix to this issue." />
+    <versions from="4.12.1" status="deprecated" description="Tune SDK versions between 4.11.0 and 4.13.0 have an extra BroadcastReceiver that was introduced that caused applications to auto-start the Application node when the receiver was called, even when the application was not running. Tune SDK 4.14.0 and above include a fix to this issue." />
+    <versions from="4.12.0" status="deprecated" description="Tune SDK versions between 4.11.0 and 4.13.0 have an extra BroadcastReceiver that was introduced that caused applications to auto-start the Application node when the receiver was called, even when the application was not running. Tune SDK 4.14.0 and above include a fix to this issue." />
+    <versions from="4.11.1" status="deprecated" description="Tune SDK versions between 4.11.0 and 4.13.0 have an extra BroadcastReceiver that was introduced that caused applications to auto-start the Application node when the receiver was called, even when the application was not running. Tune SDK 4.14.0 and above include a fix to this issue." />
+    <versions from="4.11.0" status="deprecated" description="Tune SDK versions between 4.11.0 and 4.13.0 have an extra BroadcastReceiver that was introduced that caused applications to auto-start the Application node when the receiver was called, even when the application was not running. Tune SDK 4.14.0 and above include a fix to this issue." />
+    <versions from="4.10.2" />
+    <versions from="4.10.1" />
+    <versions from="4.10.0" />
+    <versions from="4.9.0" />
+    <versions from="4.8.0" to="4.8.1" />
+    <versions from="4.0.0" to="4.7.1" status="deprecated" description="Please upgrade to the latest Tune SDK. See https://developers.tune.com/sdk/migrating-to-android-4-8-0-and-above/" />
+    <versions from="3.0.0" to="3.11.4" status="deprecated" description="Please upgrade to the latest Tune SDK. See https://developers.tune.com/sdk/migrating-from-sdk-3-x-x-to-4-x-x/#code-platform-android" />
+    <versions from="0.0.0" to="3.0.0" status="deprecated" />
+  </library>
+</sdk_metadata>
