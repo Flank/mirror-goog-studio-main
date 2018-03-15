@@ -11,16 +11,13 @@ iml_module(
     test_tags = ["manual"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
-    exports = [
-        "//tools:swing-testing/fest-swing/lib/fest-reflect-2.0-SNAPSHOT",
-        "//tools:swing-testing/fest-swing/lib/fest-util-1.3.0-SNAPSHOT",
-    ],
+    exports = ["//tools:swing-testing/fest-swing/lib/fest-reflect-2.0-SNAPSHOT"],
     # do not sort: must match IML order
     deps = [
         "//tools:swing-testing/fest-swing/lib/fest-reflect-2.0-SNAPSHOT",
-        "//tools:swing-testing/fest-swing/lib/fest-util-1.3.0-SNAPSHOT",
         "//tools:swing-testing/fest-swing/lib/annotations-13.0",
         "//tools:swing-testing/fest-swing/lib/fest-assert-1.5.0-SNAPSHOT",
+        "//tools:swing-testing/fest-swing/lib/fest-util-1.3.0-SNAPSHOT",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools:swing-testing/fest-swing/lib/MultithreadedTC-1.01[test]",
