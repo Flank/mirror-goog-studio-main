@@ -21,11 +21,13 @@
 #include "proto/common.pb.h"
 #include "utils/file_reader.h"
 #include "utils/fs/disk_file_system.h"
+#include "utils/log.h"
 #include "utils/procfs_files.h"
 
 using grpc::Status;
 using grpc::StatusCode;
 using profiler::FileReader;
+using profiler::Log;
 using profiler::PathStat;
 using profiler::ProcfsFiles;
 using profiler::proto::CpuCoreConfigResponse;
@@ -39,6 +41,7 @@ bool GetCpuConfig(const string& freq_file, int32_t* frequency_in_khz) {
     *frequency_in_khz = atoi(buffer.c_str());
     return true;
   }
+  Log::D("Could not open CPU config file: %s\n", freq_file.c_str());
   return false;
 }
 
