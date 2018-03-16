@@ -364,7 +364,6 @@ public class ApplicationTaskManager extends TaskManager {
                                 getIncrementalFolder(
                                         variantScope, "InstantRunSliceSplitApkBuilder"),
                                 "aapt-temp"),
-                        globalScope.getProjectOptions().get(OptionalBooleanOption.SERIAL_AAPT2),
                         variantScope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
                         variantScope.getOutput(resourcesWithMainManifest),
                         variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST),
