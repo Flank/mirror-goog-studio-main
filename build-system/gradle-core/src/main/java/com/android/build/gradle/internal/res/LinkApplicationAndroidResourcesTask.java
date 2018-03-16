@@ -648,7 +648,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         protected final VariantScope variantScope;
         protected final Supplier<File> symbolLocation;
         private final File symbolsWithPackageNameOutputFile;
-        @NonNull private final File resPackageOutputFolder;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         private final TaskManager.MergeType sourceArtifactType;
         private final String baseName;
@@ -658,7 +657,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                 @NonNull VariantScope scope,
                 @NonNull Supplier<File> symbolLocation,
                 @NonNull File symbolsWithPackageNameOutputFile,
-                @NonNull File resPackageOutputFolder,
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @NonNull TaskManager.MergeType sourceArtifactType,
                 @NonNull String baseName,
@@ -666,7 +664,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             this.variantScope = scope;
             this.symbolLocation = symbolLocation;
             this.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
-            this.resPackageOutputFolder = resPackageOutputFolder;
             this.generateLegacyMultidexMainDexProguardRules =
                     generateLegacyMultidexMainDexProguardRules;
             this.baseName = baseName;
@@ -698,7 +695,11 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             processResources.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             processResources.setVariantName(config.getFullName());
-            processResources.resPackageOutputFolder = resPackageOutputFolder;
+            processResources.resPackageOutputFolder =
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(
+                                    InternalArtifactType.PROCESSED_RES, processResources, "out");
             processResources.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);
             processResources.aapt2FromMaven =
                     Aapt2MavenUtils.getAapt2FromMavenIfEnabled(variantScope.getGlobalScope());
@@ -823,7 +824,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     public static final class NamespacedConfigAction
             implements TaskConfigAction<LinkApplicationAndroidResourcesTask> {
         protected final VariantScope variantScope;
-        @NonNull private final File resPackageOutputDir;
         @NonNull private final File sourceOutputDir;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         @Nullable private final String baseName;
@@ -831,11 +831,9 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         public NamespacedConfigAction(
                 @NonNull VariantScope scope,
                 @NonNull File sourceOutputDir,
-                @NonNull File resPackageOutputDir,
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @Nullable String baseName) {
             this.variantScope = scope;
-            this.resPackageOutputDir = resPackageOutputDir;
             this.sourceOutputDir = sourceOutputDir;
             this.generateLegacyMultidexMainDexProguardRules =
                     generateLegacyMultidexMainDexProguardRules;
@@ -862,7 +860,10 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             task.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             task.setVariantName(config.getFullName());
-            task.resPackageOutputFolder = resPackageOutputDir;
+            task.resPackageOutputFolder =
+                    variantScope
+                            .getArtifacts()
+                            .appendArtifact(InternalArtifactType.PROCESSED_RES, task, "out");
             task.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);
             task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(variantScope.getGlobalScope());
             task.setEnableAapt2(true);

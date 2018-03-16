@@ -37,7 +37,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Input;
@@ -52,7 +51,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
     private InstantRunBuildContext buildContext;
     private File manifestCheckerDir;
     private BuildableArtifact instantRunManifests;
-    private FileCollection processedRes;
+    private BuildableArtifact processedRes;
     private InternalArtifactType resInputType;
 
     @Input
@@ -66,7 +65,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
     }
 
     @InputFiles
-    FileCollection getProcessedRes() {
+    BuildableArtifact getProcessedRes() {
         return processedRes;
     }
 
@@ -231,7 +230,8 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
                     variantScope.getInstantRunBuildContext().useSeparateApkForResources()
                             ? InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES
                             : InternalArtifactType.PROCESSED_RES;
-            task.processedRes = variantScope.getOutput(task.resInputType);
+            task.processedRes =
+                    variantScope.getArtifacts().getFinalArtifactFiles(task.resInputType);
             task.buildContext = variantScope.getInstantRunBuildContext();
             task.manifestCheckerDir = variantScope.getManifestCheckerDir();
             task.setVariantName(variantScope.getFullVariantName());

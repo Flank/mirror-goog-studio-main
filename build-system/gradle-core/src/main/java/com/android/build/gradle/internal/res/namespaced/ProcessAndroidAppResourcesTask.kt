@@ -102,8 +102,7 @@ open class ProcessAndroidAppResourcesTask
 
     class ConfigAction(
         private val scope: VariantScope,
-        private val rClassSource: File,
-        private val resourceApUnderscore: File
+        private val rClassSource: File
     ) : TaskConfigAction<ProcessAndroidAppResourcesTask> {
 
         override fun getName(): String {
@@ -140,7 +139,11 @@ open class ProcessAndroidAppResourcesTask
                     FileUtils.join(
                             scope.globalScope.intermediatesDir, "res-process-intermediate", scope.variantConfiguration.dirName)
             task.rClassSource = rClassSource
-            task.resourceApUnderscore = resourceApUnderscore
+            task.resourceApUnderscore = scope.artifacts
+                .appendArtifact(
+                    InternalArtifactType.PROCESSED_RES,
+                    task,
+                    "res.apk")
             task.setAndroidBuilder(scope.globalScope.androidBuilder)
             task.aapt2FromMaven = getAapt2FromMaven(scope.globalScope)
         }

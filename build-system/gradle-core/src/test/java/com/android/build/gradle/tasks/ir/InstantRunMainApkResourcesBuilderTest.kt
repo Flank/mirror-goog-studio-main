@@ -65,7 +65,8 @@ open class InstantRunMainApkResourcesBuilderTest {
     @Rule @JvmField
     var manifestFileFolder = TemporaryFolder()
 
-    @Mock private lateinit var resources: FileCollection
+    @Mock private lateinit var resources: BuildableArtifact
+    @Mock private lateinit var fileCollection: FileCollection
     private lateinit var manifestFiles: BuildableArtifact
     @Mock internal lateinit var fileTree: FileTree
     @Mock internal var buildContext: InstantRunBuildContext? = null
@@ -77,7 +78,6 @@ open class InstantRunMainApkResourcesBuilderTest {
     @Mock private lateinit var fileCache: FileCache
     @Mock private lateinit var dslScope: DslScope
     @Mock private lateinit var issueReporter: EvalIssueReporter
-    private val projectOptions = ProjectOptions(ImmutableMap.of())
     private val outputScope = OutputScope()
 
     internal lateinit var project: Project
@@ -103,14 +103,15 @@ open class InstantRunMainApkResourcesBuilderTest {
         `when`(variantScope.globalScope).thenReturn(globalScope)
         `when`(variantScope.outputScope).thenReturn(outputScope)
         `when`(variantScope.artifacts).thenReturn(buildArtifactsHolder)
-        `when`(variantScope.getOutput(InternalArtifactType.MERGED_RES))
+        `when`(buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.MERGED_RES))
                 .thenReturn(resources)
         `when`(dslScope.issueReporter).thenReturn(issueReporter)
-        `when`(resources.asFileTree).thenReturn(fileTree)
+        `when`(resources.get()).thenReturn(fileCollection)
+        `when`(fileCollection.asFileTree).thenReturn(fileTree)
     }
 
     @Test
-    fun tesConfigAction() {
+    fun testConfigAction() {
         task = project.tasks.create("test", InstantRunMainApkResourcesBuilder::class.java)
         val configAction = InstantRunMainApkResourcesBuilder.ConfigAction(
                 variantScope,
@@ -120,7 +121,10 @@ open class InstantRunMainApkResourcesBuilderTest {
         manifestFiles = BuildableArtifactImpl(project.files(), dslScope)
         `when`(buildArtifactsHolder.getFinalArtifactFiles(
             InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS)).thenReturn(manifestFiles)
-        `when`(variantScope.instantRunMainApkResourcesDir).thenReturn(outDir)
+        `when`(buildArtifactsHolder.appendArtifact(
+            InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES,
+            task,
+            "out")).thenReturn(outDir)
 
         configAction.execute(task)
         assertThat(task.resourceFiles).isEqualTo(resources)
@@ -146,7 +150,6 @@ open class InstantRunMainApkResourcesBuilderTest {
                 InternalArtifactType.MERGED_RES)
 
         val outDir = temporaryFolder.newFolder()
-        `when`(variantScope.instantRunMainApkResourcesDir).thenReturn(outDir)
 
         val manifestFile = manifestFileFolder.newFile()
         FileUtils.write(manifestFile,
@@ -166,6 +169,10 @@ open class InstantRunMainApkResourcesBuilderTest {
             project.files(manifestFileFolder.root.listFiles()), dslScope)
         `when`(buildArtifactsHolder.getFinalArtifactFiles(
             InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS)).thenReturn(manifestFiles)
+        `when`(buildArtifactsHolder.appendArtifact(
+            InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES,
+            task,
+            "out")).thenReturn(outDir)
 
         configAction.execute(task)
 

@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
@@ -68,7 +69,7 @@ public class InstantRunDependenciesApkBuilderTest {
     @Mock InstantRunBuildContext buildContext;
     @Mock AndroidBuilder androidBuilder;
     @Mock CoreSigningConfig coreSigningConfig;
-    @Mock FileCollection mainResources;
+    @Mock BuildableArtifact mainResources;
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
     @Mock FileCollection apkList;

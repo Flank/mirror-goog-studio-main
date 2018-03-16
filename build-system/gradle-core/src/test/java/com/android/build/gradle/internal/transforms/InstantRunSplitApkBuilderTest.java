@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
 import com.android.build.VariantOutput;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
@@ -71,7 +72,8 @@ public class InstantRunSplitApkBuilderTest {
     @Mock AndroidBuilder androidBuilder;
     @Mock Aapt aapt;
     @Mock CoreSigningConfig coreSigningConfig;
-    @Mock FileCollection mainResources;
+    @Mock BuildableArtifact mainResources;
+    @Mock FileCollection mainResourcesFiles;
     @Mock FileTree mainResourcesApkFileTree;
 
     @Mock TargetInfo targetInfo;
@@ -96,7 +98,8 @@ public class InstantRunSplitApkBuilderTest {
         when(targetInfo.getBuildTools()).thenReturn(buildTools);
         when(androidBuilder.getTarget()).thenReturn(target);
         when(target.getPath(IAndroidTarget.ANDROID_JAR)).thenReturn("fake android.jar");
-        when(mainResources.getAsFileTree()).thenReturn(mainResourcesApkFileTree);
+        when(mainResources.get()).thenReturn(mainResourcesFiles);
+        when(mainResourcesFiles.getAsFileTree()).thenReturn(mainResourcesApkFileTree);
 
         File apkListFile = apkListDirectory.newFile("apk-list.json");
         FileUtils.write(

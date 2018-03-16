@@ -1015,14 +1015,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 "/manifest-checker/" + variantData.getVariantConfiguration().getDirName());
     }
 
-    @Override
-    @NonNull
-    public File getInstantRunMainApkResourcesDir() {
-        return new File(
-                globalScope.getIntermediatesDir(),
-                "/instant-run-main-apk-res/" + variantData.getVariantConfiguration().getDirName());
-    }
-
     @NonNull
     @Override
     public File getIncrementalRuntimeSupportJar() {

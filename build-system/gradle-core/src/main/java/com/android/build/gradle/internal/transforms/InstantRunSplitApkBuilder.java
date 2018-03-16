@@ -21,6 +21,7 @@ import static java.nio.file.Files.deleteIfExists;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
@@ -84,12 +85,12 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
     // as we only use it to successfully compile the split manifest file. Any change to the
     // manifest that should force regenerating our split manifest is captured by the resource
     // dependency below.
-    @NonNull protected final FileCollection resources;
+    @NonNull protected final BuildableArtifact resources;
     // the resources containing the main manifest, which could be the same as above depending if
     // a separate APK for resources is used or not.
     // we are only interested in manifest binary changes, therefore, it is only needed as a
     // secondary input so we don't repackage all of our slices when only the resources change.
-    @NonNull protected final FileCollection resourcesWithMainManifest;
+    @NonNull protected final BuildableArtifact resourcesWithMainManifest;
 
     @NonNull private final FileCollection apkList;
     @NonNull protected final ApkInfo mainApk;
@@ -106,8 +107,8 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
-            @NonNull FileCollection resources,
-            @NonNull FileCollection resourcesWithMainManifest,
+            @NonNull BuildableArtifact resources,
+            @NonNull BuildableArtifact resourcesWithMainManifest,
             @NonNull FileCollection apkList,
             @NonNull ApkInfo mainApk) {
         this.logger = logger;
@@ -135,6 +136,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             list.add(SecondaryFile.nonIncremental(aapt2FromMaven));
         }
         resourcesWithMainManifest
+                .get()
                 .getAsFileTree()
                 .getFiles()
                 .stream()
@@ -313,7 +315,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull AaptOptions aaptOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull String uniqueName,
-            @NonNull FileCollection imports)
+            @NonNull BuildableArtifact imports)
             throws IOException, ProcessException {
 
         File apkSupportDir = new File(supportDirectory, uniqueName);
@@ -352,7 +354,7 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull File supportDirectory,
             @NonNull AaptOptions aaptOptions,
             @NonNull AndroidBuilder androidBuilder,
-            @Nullable FileCollection imports,
+            @Nullable BuildableArtifact imports,
             @NonNull String uniqueName)
             throws IOException, ProcessException {
 
@@ -365,7 +367,8 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
 
         List<File> importedAPKs =
                 imports != null
-                        ? imports.getAsFileTree()
+                        ? imports.get()
+                                .getAsFileTree()
                                 .getFiles()
                                 .stream()
                                 .filter(file -> file.getName().endsWith(SdkConstants.EXT_RES))

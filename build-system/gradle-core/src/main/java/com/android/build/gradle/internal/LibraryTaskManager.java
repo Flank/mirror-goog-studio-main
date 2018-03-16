@@ -185,7 +185,6 @@ public class LibraryTaskManager extends TaskManager {
                                                     .getVariantData()
                                                     .getVariantConfiguration()
                                                     .getDirName()),
-                            variantScope.getProcessResourcePackageOutputDirectory(),
                             null,
                             // Switch to package where possible so we stop merging resources in
                             // libraries

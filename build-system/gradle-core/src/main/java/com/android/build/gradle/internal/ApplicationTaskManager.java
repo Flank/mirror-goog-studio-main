@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -317,6 +318,8 @@ public class ApplicationTaskManager extends TaskManager {
                         ? InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES
                         : InternalArtifactType.PROCESSED_RES;
 
+        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+
         // create the transforms that will create the dependencies apk.
         InstantRunDependenciesApkBuilder dependenciesApkBuilder =
                 new InstantRunDependenciesApkBuilder(
@@ -333,8 +336,8 @@ public class ApplicationTaskManager extends TaskManager {
                         new File(
                                 variantScope.getIncrementalDir("ir_dep"),
                                 variantScope.getDirName()),
-                        variantScope.getOutput(InternalArtifactType.PROCESSED_RES),
-                        variantScope.getOutput(resourcesWithMainManifest),
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES),
+                        artifacts.getFinalArtifactFiles(resourcesWithMainManifest),
                         variantScope.getOutput(InternalArtifactType.APK_LIST),
                         variantScope.getOutputScope().getMainSplit());
 
@@ -360,8 +363,8 @@ public class ApplicationTaskManager extends TaskManager {
                         DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions()),
                         new File(variantScope.getInstantRunSplitApkOutputFolder(), "slices"),
                         getIncrementalFolder(variantScope, "ir_slices"),
-                        variantScope.getOutput(InternalArtifactType.PROCESSED_RES),
-                        variantScope.getOutput(resourcesWithMainManifest),
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES),
+                        artifacts.getFinalArtifactFiles(resourcesWithMainManifest),
                         variantScope.getOutput(InternalArtifactType.APK_LIST),
                         variantScope.getOutputScope().getMainSplit());
 

@@ -98,7 +98,7 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final FileCollection resourceDir;
     @Nullable private final FileCollection mappingFileSrc;
     @NonNull private final BuildableArtifact mergedManifests;
-    @NonNull private final FileCollection uncompressedResources;
+    @NonNull private final BuildableArtifact uncompressedResources;
 
     @NonNull private final AaptGeneration aaptGeneration;
     @NonNull private final AaptOptions aaptOptions;
@@ -110,7 +110,7 @@ public class ShrinkResourcesTransform extends Transform {
 
     public ShrinkResourcesTransform(
             @NonNull BaseVariantData variantData,
-            @NonNull FileCollection uncompressedResources,
+            @NonNull BuildableArtifact uncompressedResources,
             @NonNull File compressedResources,
             @NonNull AaptGeneration aaptGeneration,
             @NonNull Logger logger) {
@@ -188,7 +188,7 @@ public class ShrinkResourcesTransform extends Transform {
             secondaryFiles.add(SecondaryFile.nonIncremental(mappingFileSrc));
         }
 
-        secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests::get));
+        secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests));
         secondaryFiles.add(SecondaryFile.nonIncremental(uncompressedResources));
 
         return secondaryFiles;

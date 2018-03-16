@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.TaskFactory
 import com.android.build.gradle.internal.aapt.AaptGeneration
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
@@ -28,7 +27,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import java.io.File
-import java.util.LinkedList
 
 /**
  * Responsible for the creation of tasks to build namespaced resources.
@@ -54,7 +52,6 @@ class NamespacedResourcesTaskManager(
      * TODO: Test support, Synthesize non-namespaced output.
      */
     fun createNamespacedResourceTasks(
-            resPackageOutputFolder: File,
             packageOutputType: InternalArtifactType?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
@@ -77,12 +74,10 @@ class NamespacedResourcesTaskManager(
         if (variantScope.type.isTestComponent) {
             if (variantScope.testedVariantData!!.type.isAar) {
                 createNamespacedLibraryTestProcessResourcesTask(
-                    resPackageOutputFolder = resPackageOutputFolder,
                     packageOutputType = packageOutputType
                 )
             } else {
                 createNamespacedAppProcessTask(
-                    resPackageOutputFolder = resPackageOutputFolder,
                     packageOutputType = packageOutputType,
                     baseName = baseName,
                     useAaptToGenerateLegacyMultidexMainDexProguardRules = false
@@ -91,7 +86,6 @@ class NamespacedResourcesTaskManager(
             createCompileRuntimeRClassTask()
         } else if (variantScope.type.isApk) {
             createNamespacedAppProcessTask(
-                resPackageOutputFolder = resPackageOutputFolder,
                 packageOutputType = packageOutputType,
                 baseName = baseName,
                 useAaptToGenerateLegacyMultidexMainDexProguardRules = useAaptToGenerateLegacyMultidexMainDexProguardRules
@@ -145,7 +139,6 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createNamespacedAppProcessTask(
-            resPackageOutputFolder: File,
             packageOutputType: InternalArtifactType?,
             baseName: String,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
@@ -155,49 +148,36 @@ class NamespacedResourcesTaskManager(
                 LinkApplicationAndroidResourcesTask.NamespacedConfigAction(
                         variantScope,
                         runtimeRClassSources,
-                        resPackageOutputFolder,
                         useAaptToGenerateLegacyMultidexMainDexProguardRules,
                         baseName))
-        variantScope.addTaskOutput(
-                InternalArtifactType.PROCESSED_RES,
-                resPackageOutputFolder,
-                process.name)
         variantScope.addTaskOutput(
                 InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
                 runtimeRClassSources,
                 process.name)
         if (packageOutputType != null) {
-            variantScope.addTaskOutput(
-                    packageOutputType,
-                    variantScope.processResourcePackageOutputDirectory,
-                    process.name)
+            variantScope.artifacts.appendArtifact(
+                packageOutputType,
+                variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES))
         }
     }
 
     private fun createNamespacedLibraryTestProcessResourcesTask(
-            resPackageOutputFolder: File,
             packageOutputType: InternalArtifactType?) {
         val runtimeRClassSources = File(globalScope.generatedDir,
                 "source/final-r/" + variantScope.variantConfiguration.dirName)
         val process = taskFactory.create(
                 ProcessAndroidAppResourcesTask.ConfigAction(
                         variantScope,
-                        runtimeRClassSources,
-                    File(resPackageOutputFolder, "res.apk"))
+                        runtimeRClassSources)
         )
-        variantScope.addTaskOutput(
-                InternalArtifactType.PROCESSED_RES,
-                resPackageOutputFolder,
-                process.name)
         variantScope.addTaskOutput(
                 InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
                 runtimeRClassSources,
                 process.name)
         if (packageOutputType != null) {
-            variantScope.addTaskOutput(
-                    packageOutputType,
-                    variantScope.processResourcePackageOutputDirectory,
-                    process.name)
+            variantScope.artifacts.appendArtifact(
+                packageOutputType,
+                variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES))
         }
     }
 

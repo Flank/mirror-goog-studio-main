@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -34,7 +35,6 @@ import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
@@ -46,11 +46,11 @@ public class PackageSplitRes extends AndroidBuilderTask {
 
     private SigningConfig signingConfig;
     private File incrementalDir;
-    public FileCollection processedResources;
+    public BuildableArtifact processedResources;
     public File splitResApkOutputDirectory;
 
     @InputFiles
-    public FileCollection getProcessedResources() {
+    public BuildableArtifact getProcessedResources() {
         return processedResources;
     }
 
@@ -66,7 +66,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
     }
 
     @TaskAction
-    protected void doFullTaskAction() throws IOException {
+    protected void doFullTaskAction() {
 
         ExistingBuildElements.from(
                         InternalArtifactType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
@@ -147,7 +147,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
             final VariantConfiguration config = variantData.getVariantConfiguration();
 
             packageSplitResourcesTask.processedResources =
-                    scope.getOutput(InternalArtifactType.PROCESSED_RES);
+                    scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES);
             packageSplitResourcesTask.signingConfig = config.getSigningConfig();
             packageSplitResourcesTask.splitResApkOutputDirectory = outputDirectory;
             packageSplitResourcesTask.incrementalDir = scope.getIncrementalDir(getName());

@@ -235,9 +235,7 @@ open class LinkAndroidResForBundleTask
         return aaptOptions
     }
 
-    class ConfigAction(
-            private val variantScope: VariantScope,
-            private val bundledResFile: File)
+    class ConfigAction(private val variantScope: VariantScope)
         : TaskConfigAction<LinkAndroidResForBundleTask> {
 
         override fun getName(): String {
@@ -257,7 +255,10 @@ open class LinkAndroidResForBundleTask
 
             processResources.setAndroidBuilder(variantScope.globalScope.androidBuilder)
             processResources.variantName = config.fullName
-            processResources.bundledResFile = bundledResFile
+            processResources.bundledResFile = variantScope.artifacts
+                .appendArtifact(InternalArtifactType.LINKED_RES_FOR_BUNDLE,
+                    processResources,
+                    "bundled-res.ap_")
             processResources.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions)
 
             processResources.incrementalFolder = variantScope.getIncrementalDir(name)

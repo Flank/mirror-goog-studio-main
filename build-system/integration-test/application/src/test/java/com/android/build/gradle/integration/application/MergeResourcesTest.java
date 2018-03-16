@@ -140,8 +140,10 @@ public class MergeResourcesTest {
                         project.getSubproject("app").getTestDir(),
                         "build",
                         "intermediates",
-                        "res",
+                        "processed_res",
                         "debug",
+                        "processDebugResources",
+                        "out",
                         "resources-debug.ap_");
 
         assertThat(apUnderscore).exists();
@@ -203,13 +205,16 @@ public class MergeResourcesTest {
                             "raw_me.raw.flat");
             assertThat(inIntermediate).exists();
         }
-        File apUnderscore = FileUtils.join(
-                project.getSubproject("app").getTestDir(),
-                "build",
-                "intermediates",
-                "res",
-                "debug",
-                "resources-debug.ap_");
+        File apUnderscore =
+                FileUtils.join(
+                        project.getSubproject("app").getTestDir(),
+                        "build",
+                        "intermediates",
+                        "processed_res",
+                        "debug",
+                        "processDebugResources",
+                        "out",
+                        "resources-debug.ap_");
 
         assertThat(apUnderscore).exists();
         try (Zip zip = new Zip(apUnderscore)) {
@@ -269,13 +274,16 @@ public class MergeResourcesTest {
                             "raw_me.raw.flat");
             assertThat(inIntermediate).exists();
         }
-        File apUnderscore = FileUtils.join(
-                project.getSubproject("app").getTestDir(),
-                "build",
-                "intermediates",
-                "res",
-                "debug",
-                "resources-debug.ap_");
+        File apUnderscore =
+                FileUtils.join(
+                        project.getSubproject("app").getTestDir(),
+                        "build",
+                        "intermediates",
+                        "processed_res",
+                        "debug",
+                        "processDebugResources",
+                        "out",
+                        "resources-debug.ap_");
 
         assertThat(apUnderscore).exists();
         try (Apk apk = new Apk(apUnderscore)) {
@@ -339,13 +347,16 @@ public class MergeResourcesTest {
                             "raw_me.raw.flat");
             assertThat(inIntermediate).exists();
         }
-        File apUnderscore = FileUtils.join(
-                project.getSubproject("app").getTestDir(),
-                "build",
-                "intermediates",
-                "res",
-                "debug",
-                "resources-debug.ap_");
+        File apUnderscore =
+                FileUtils.join(
+                        project.getSubproject("app").getTestDir(),
+                        "build",
+                        "intermediates",
+                        "processed_res",
+                        "debug",
+                        "processDebugResources",
+                        "out",
+                        "resources-debug.ap_");
 
         assertThat(apUnderscore).exists();
         try (Apk apk = new Apk(apUnderscore)) {

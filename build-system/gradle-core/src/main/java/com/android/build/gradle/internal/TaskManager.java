@@ -42,7 +42,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATU
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MAIN_APK_RESOURCES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.LINKED_RES_FOR_BUNDLE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
@@ -184,6 +183,7 @@ import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.PreColdSwapTask;
+import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessManifest;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.build.gradle.tasks.RenderscriptCompile;
@@ -1075,7 +1075,6 @@ public abstract class TaskManager {
                 new File(
                         globalScope.getIntermediatesDir(),
                         "symbols/" + scope.getVariantData().getVariantConfiguration().getDirName()),
-                scope.getProcessResourcePackageOutputDirectory(),
                 packageOutputType,
                 MergeType.MERGE,
                 scope.getGlobalScope().getProjectBaseName());
@@ -1088,7 +1087,6 @@ public abstract class TaskManager {
     public void createProcessResTask(
             @NonNull VariantScope scope,
             @NonNull File symbolLocation,
-            @NonNull File resPackageOutputFolder,
             @Nullable InternalArtifactType packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
@@ -1105,7 +1103,6 @@ public abstract class TaskManager {
                 scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
             new NamespacedResourcesTaskManager(globalScope, taskFactory, scope)
                     .createNamespacedResourceTasks(
-                            resPackageOutputFolder,
                             packageOutputType,
                             baseName,
                             useAaptToGenerateLegacyMultidexMainDexProguardRules);
@@ -1114,7 +1111,6 @@ public abstract class TaskManager {
         createNonNamespacedResourceTasks(
                 scope,
                 symbolLocation,
-                resPackageOutputFolder,
                 packageOutputType,
                 mergeType,
                 baseName,
@@ -1124,7 +1120,6 @@ public abstract class TaskManager {
     private void createNonNamespacedResourceTasks(
             @NonNull VariantScope scope,
             @NonNull File symbolDirectory,
-            @NonNull File resPackageOutputFolder,
             InternalArtifactType packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName,
@@ -1136,77 +1131,49 @@ public abstract class TaskManager {
                         "symbol-table-with-package",
                         scope.getVariantConfiguration().getDirName(),
                         "package-aware-r.txt");
-        final String taskName;
+        final ProcessAndroidResources task;
 
         File symbolFile = new File(symbolDirectory, FN_RESOURCE_TEXT);
-
+        BuildArtifactsHolder artifacts = scope.getArtifacts();
         if (mergeType == MergeType.PACKAGE) {
             // Simply generate the R class for a library
-            GenerateLibraryRFileTask task =
+            task =
                     taskFactory.create(
                             new GenerateLibraryRFileTask.ConfigAction(
                                     scope, symbolFile, symbolTableWithPackageName));
-            taskName = task.getName();
-            scope.setProcessResourcesTask(task);
-
         } else {
-            LinkApplicationAndroidResourcesTask processAndroidResources =
+            task =
                     taskFactory.create(
                             createProcessAndroidResourcesConfigAction(
                                     scope,
                                     () -> symbolDirectory,
                                     symbolTableWithPackageName,
-                                    resPackageOutputFolder,
                                     useAaptToGenerateLegacyMultidexMainDexProguardRules,
                                     mergeType,
                                     baseName));
 
-            taskName = processAndroidResources.getName();
-            scope.addTaskOutput(
-                    InternalArtifactType.PROCESSED_RES, resPackageOutputFolder, taskName);
             if (packageOutputType != null) {
-                scope.addTaskOutput(
+                artifacts.appendArtifact(
                         packageOutputType,
-                        resPackageOutputFolder,
-                        processAndroidResources.getName());
+                        artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES));
             }
 
-            scope.setProcessResourcesTask(processAndroidResources);
-
             // create the task that creates the aapt output for the bundle.
-            File resourcesAsProtosFile =
-                    FileUtils.join(
-                            globalScope.getIntermediatesDir(),
-                            "res-bundle",
-                            scope.getVariantConfiguration().getDirName(),
-                            "bundled-res.ap_");
-
-            LinkAndroidResForBundleTask linkResForBundle =
-                    taskFactory.create(
-                            new LinkAndroidResForBundleTask.ConfigAction(
-                                    scope, resourcesAsProtosFile));
-
-            // publish it.
-            scope.addTaskOutput(
-                    LINKED_RES_FOR_BUNDLE, resourcesAsProtosFile, linkResForBundle.getName());
+            taskFactory.create(new LinkAndroidResForBundleTask.ConfigAction(scope));
         }
-        scope.addTaskOutput(InternalArtifactType.SYMBOL_LIST, symbolFile, taskName);
+        scope.setProcessResourcesTask(task);
+        artifacts.appendArtifact(
+                InternalArtifactType.SYMBOL_LIST, ImmutableList.of(symbolFile), task);
 
         // Needed for the IDE
-        scope.getSourceGenTask().dependsOn(taskName);
+        scope.getSourceGenTask().dependsOn(task);
 
         // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
         // process resources for local subprojects.
-        scope.addTaskOutput(
+        artifacts.appendArtifact(
                 InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
-                symbolTableWithPackageName,
-                taskName);
-
-        // Needed for the IDE
-        Task t = project.getTasks().findByName(taskName);
-        if (t != null) {
-            scope.getSourceGenTask().dependsOn(taskName);
-        }
+                ImmutableList.of(symbolTableWithPackageName),
+                task);
     }
 
     protected TaskConfigAction<LinkApplicationAndroidResourcesTask>
@@ -1214,7 +1181,6 @@ public abstract class TaskManager {
                     @NonNull VariantScope scope,
                     @NonNull Supplier<File> symbolLocation,
                     @NonNull File symbolWithPackageName,
-                    @NonNull File resPackageOutputFolder,
                     boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
                     @NonNull MergeType sourceArtifactType,
                     @NonNull String baseName) {
@@ -1227,7 +1193,6 @@ public abstract class TaskManager {
                 scope,
                 symbolLocation,
                 symbolWithPackageName,
-                resPackageOutputFolder,
                 useAaptToGenerateLegacyMultidexMainDexProguardRules,
                 sourceArtifactType,
                 baseName,
@@ -3412,7 +3377,8 @@ public abstract class TaskManager {
         ShrinkResourcesTransform shrinkResTransform =
                 new ShrinkResourcesTransform(
                         scope.getVariantData(),
-                        scope.getOutput(InternalArtifactType.PROCESSED_RES),
+                        scope.getArtifacts()
+                                .getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES),
                         shrinkerOutput,
                         AaptGeneration.fromProjectOptions(projectOptions),
                         logger);
