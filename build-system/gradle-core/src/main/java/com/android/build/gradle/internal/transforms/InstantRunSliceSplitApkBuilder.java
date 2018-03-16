@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.transforms;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
@@ -55,7 +54,6 @@ import org.gradle.api.logging.Logger;
 public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
 
     private final WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
-    private final boolean runSerially;
 
     public InstantRunSliceSplitApkBuilder(
             @NonNull Logger logger,
@@ -69,7 +67,6 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
-            @Nullable Boolean runAapt2Serially,
             @NonNull FileCollection resources,
             @NonNull FileCollection resourcesWithMainManifest,
             @NonNull FileCollection apkList,
@@ -90,10 +87,6 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
                 resourcesWithMainManifest,
                 apkList,
                 mainApk);
-        runSerially = runAapt2Serially == null
-                ? SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
-                : runAapt2Serially;
-
     }
 
     @NonNull
@@ -194,23 +187,15 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             }
         }
 
-        logger.debug("Invoking aapt2 serially : {} ", runSerially);
-
         // now build the APKs in parallel
         splitsToBuild.forEach(
                 split -> {
                     try {
-                        if (runSerially) {
-                            generateSplitApk(mainApk, split);
-                        } else {
-                            executor.execute(() -> generateSplitApk(mainApk, split));
-                        }
+                        executor.execute(() -> generateSplitApk(mainApk, split));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
-        if (!runSerially) {
-            executor.waitForTasksWithQuickFail(true /* cancelRemaining */);
-        }
+        executor.waitForTasksWithQuickFail(true /* cancelRemaining */);
     }
 }

@@ -361,7 +361,6 @@ public class ApplicationTaskManager extends TaskManager {
                         DslAdaptersKt.convert(globalScope.getExtension().getAaptOptions()),
                         new File(variantScope.getInstantRunSplitApkOutputFolder(), "slices"),
                         getIncrementalFolder(variantScope, "ir_slices"),
-                        globalScope.getProjectOptions().get(OptionalBooleanOption.SERIAL_AAPT2),
                         variantScope.getOutput(InternalArtifactType.PROCESSED_RES),
                         variantScope.getOutput(resourcesWithMainManifest),
                         variantScope.getOutput(InternalArtifactType.APK_LIST),

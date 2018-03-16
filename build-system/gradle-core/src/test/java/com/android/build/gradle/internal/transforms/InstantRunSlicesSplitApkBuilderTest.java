@@ -115,7 +115,6 @@ public class InstantRunSlicesSplitApkBuilderTest {
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         supportDirectory.newFolder("instant-run"),
-                        false,
                         mainResources,
                         mainResources,
                         apkList,
