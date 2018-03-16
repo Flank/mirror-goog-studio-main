@@ -174,20 +174,21 @@ vector<ProfilingApp> CpuCache::GetCaptures(int32_t pid, int64_t from,
 
 bool CpuCache::AddTraceContent(int32_t pid, int32_t trace_id,
                                const std::string& trace_content) {
-  auto* found = FindAppCache(pid);
-  if (found == nullptr) return false;
-  found->trace_contents[trace_id] = trace_content;
+  const string& file_name = GetCachedFileName(pid, trace_id);
+  file_cache_->AddChunk(file_name, trace_content);
+  file_cache_->Complete(file_name);
   return true;
 }
 
 bool CpuCache::RetrieveTraceContent(int32_t pid, int32_t trace_id,
                                     string* output) {
-  auto* cache = FindAppCache(pid);
-  if (cache == nullptr) return false;
-  const auto& trace = cache->trace_contents.find(trace_id);
-  if (trace == cache->trace_contents.end()) return false;  // Doesn't exist.
-  *output = cache->trace_contents[trace_id];
-  return true;
+  std::shared_ptr<File> file =
+      file_cache_->GetFile(GetCachedFileName(pid, trace_id));
+  if (file.get() != nullptr) {
+    *output = file->Contents();
+    return true;
+  }
+  return false;
 }
 
 CpuCache::AppCpuCache* CpuCache::FindAppCache(int32_t pid) {
@@ -202,6 +203,12 @@ CpuCache::AppCpuCache* CpuCache::FindAppCache(int32_t pid) {
 int32_t CpuCache::GenerateTraceId() {
   static int32_t trace_id = 0;
   return trace_id++;
+}
+
+string CpuCache::GetCachedFileName(int32_t pid, int32_t trace_id) {
+  std::ostringstream oss;
+  oss << "CpuTraceContent-" << pid << "-" << trace_id << ".trace";
+  return oss.str();
 }
 
 }  // namespace profiler

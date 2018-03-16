@@ -26,6 +26,7 @@
 #include "proto/cpu.grpc.pb.h"
 #include "proto/cpu.pb.h"
 #include "utils/clock.h"
+#include "utils/file_cache.h"
 #include "utils/time_value_buffer.h"
 
 namespace profiler {
@@ -41,8 +42,8 @@ class CpuCache {
 
   // Construct the main CPU cache holder. |capacity| is of every app's every
   // kind of cache (same size for all).
-  explicit CpuCache(int32_t capacity, Clock* clock)
-      : capacity_(capacity), clock_(clock) {}
+  explicit CpuCache(int32_t capacity, Clock* clock, FileCache* file_cache)
+      : capacity_(capacity), clock_(clock), file_cache_(file_cache) {}
 
   // Returns true if successfully allocating a cache for a given pid, or if
   // the cache is already allocated.
@@ -99,8 +100,6 @@ class CpuCache {
     TimeValueBuffer<ThreadsSample> threads_cache;
     CircularBuffer<ProfilingApp> capture_cache;
     ProfilingApp* ongoing_capture;
-    // TODO(b/74448881): Use FileCache to preper cache trace contents.
-    std::map<int32_t, std::string> trace_contents;
 
     AppCpuCache(int32_t pid, int32_t capacity)
         : pid(pid),
@@ -119,11 +118,15 @@ class CpuCache {
   // within a session).
   int32_t GenerateTraceId();
 
+  // Returns a unique, valid file name given the |pid| and |trace_id|.
+  std::string GetCachedFileName(int32_t pid, int32_t trace_id);
+
   // Each app has a set of dedicated caches.
   std::vector<std::unique_ptr<AppCpuCache>> app_caches_;
   // The capacity of every kind of cache.
   int32_t capacity_;
   Clock* clock_;
+  FileCache* file_cache_;
 
   // Map from app package name to the corresponding data of startup profiling.
   std::map<std::string, ProfilingApp> startup_profiling_apps_;
