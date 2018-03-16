@@ -20,12 +20,15 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter;
+import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultBuildType;
 import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.signing.DefaultSigningConfig;
+import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
@@ -168,6 +171,48 @@ public class VariantConfigurationTest {
         File retrievedNavigationFile = Iterables.getOnlyElement(retrievedNavigationFiles);
 
         assertThat(retrievedNavigationFile).isEqualTo(navigationFile);
+    }
+
+    @Test
+    public void testGetMinSdkVersion() {
+
+        ApiVersion minSdkVersion = DefaultApiVersion.create(new Integer(5));
+        mDefaultConfig.setMinSdkVersion(minSdkVersion);
+
+        VariantConfiguration variant = getVariant();
+
+        assertThat(variant.getMinSdkVersion())
+                .isEqualTo(
+                        new AndroidVersion(
+                                minSdkVersion.getApiLevel(), minSdkVersion.getCodename()));
+    }
+
+    @Test
+    public void testGetMinSdkVersionDefault() {
+
+        VariantConfiguration variant = getVariant();
+
+        assertThat(variant.getMinSdkVersion()).isEqualTo(new AndroidVersion(1, null));
+    }
+
+    @Test
+    public void testGetTargetSdkVersion() {
+
+        ApiVersion targetSdkVersion = DefaultApiVersion.create(new Integer(9));
+        mDefaultConfig.setTargetSdkVersion(targetSdkVersion);
+
+        VariantConfiguration variant = getVariant();
+
+        assertThat(variant.getTargetSdkVersion()).isEqualTo(targetSdkVersion);
+    }
+
+    @Test
+    public void testGetTargetSdkVersionDefault() {
+
+        VariantConfiguration variant = getVariant();
+
+        assertThat(variant.getTargetSdkVersion())
+                .isEqualTo(DefaultApiVersion.create(new Integer(-1)));
     }
 
     private VariantConfiguration getVariant() {
