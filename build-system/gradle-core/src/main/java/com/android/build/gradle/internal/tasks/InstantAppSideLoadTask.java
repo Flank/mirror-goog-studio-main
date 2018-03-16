@@ -18,7 +18,9 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
@@ -42,7 +44,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import org.gradle.api.GradleException;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.PathSensitive;
@@ -57,7 +58,7 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
 
     private Supplier<File> adbExe;
 
-    private FileCollection bundleDir;
+    private BuildableArtifact bundleDir;
 
     public InstantAppSideLoadTask() {
         this.getOutputs()
@@ -74,12 +75,13 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
             throw new GradleException("No adb file found.");
         }
 
-        InstantAppOutputScope outputScope = InstantAppOutputScope.load(bundleDir.getSingleFile());
+        InstantAppOutputScope outputScope =
+                InstantAppOutputScope.load(BuildableArtifactUtil.singleFile(bundleDir));
 
         if (outputScope == null) {
             throw new GradleException(
                     "Instant app outputs not found in "
-                            + bundleDir.getSingleFile().getAbsolutePath()
+                            + BuildableArtifactUtil.singleFile(bundleDir).getAbsolutePath()
                             + ".");
         }
 
@@ -156,7 +158,7 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
     @InputFiles
     @NonNull
     @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getBundleDir() {
+    public BuildableArtifact getBundleDir() {
         return bundleDir;
     }
 
@@ -193,7 +195,9 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
                                 SdkInfo info = scope.getGlobalScope().getSdkHandler().getSdkInfo();
                                 return (info == null ? null : info.getAdb());
                             });
-            task.bundleDir = scope.getOutput(InternalArtifactType.INSTANTAPP_BUNDLE);
+            task.bundleDir =
+                    scope.getBuildArtifactsHolder()
+                            .getFinalArtifactFiles(InternalArtifactType.INSTANTAPP_BUNDLE);
         }
     }
 }

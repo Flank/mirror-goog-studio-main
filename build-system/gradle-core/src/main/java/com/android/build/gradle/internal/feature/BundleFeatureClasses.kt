@@ -78,15 +78,15 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
         }
     }
 
-    class ConfigAction(private val scope: VariantScope,
-            private val classesJar: File) : TaskConfigAction<BundleFeatureClasses> {
+    class ConfigAction(private val scope: VariantScope) : TaskConfigAction<BundleFeatureClasses> {
 
         override fun getName() = scope.getTaskName("bundle", "Classes")
 
         override fun getType() = BundleFeatureClasses::class.java
 
         override fun execute(task: BundleFeatureClasses) {
-            task.outputJar = classesJar
+            task.outputJar = scope.buildArtifactsHolder.appendArtifact(
+                InternalArtifactType.FEATURE_CLASSES, task, "classes.jar")
             task.javacClasses =
                     scope.buildArtifactsHolder.getArtifactFiles(InternalArtifactType.JAVAC)
             task.preJavacClasses = scope.variantData.allPreJavacGeneratedBytecode

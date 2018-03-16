@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -24,7 +23,6 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.feature.BundleFeatureClasses;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -34,8 +32,6 @@ import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
-import com.android.utils.FileUtils;
-import java.io.File;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -141,18 +137,6 @@ public class FeatureTaskManager extends ApplicationTaskManager {
     @Override
     protected void postJavacCreation(@NonNull VariantScope scope) {
         // Create the classes artifact for use by dependent features.
-        File classesJar =
-                new File(
-                        globalScope.getBuildDir(),
-                        FileUtils.join(
-                                FD_INTERMEDIATES,
-                                "classes-jar",
-                                scope.getVariantConfiguration().getDirName(),
-                                "classes.jar"));
-
-        BundleFeatureClasses task =
-                taskFactory.create(new BundleFeatureClasses.ConfigAction(scope, classesJar));
-
-        scope.addTaskOutput(InternalArtifactType.FEATURE_CLASSES, classesJar, task.getName());
+        taskFactory.create(new BundleFeatureClasses.ConfigAction(scope));
     }
 }

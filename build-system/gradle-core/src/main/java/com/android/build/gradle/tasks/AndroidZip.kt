@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.LibraryVariantData
 import com.android.build.gradle.internal.variant.TaskContainer
 import com.android.builder.core.BuilderConstants
+import com.google.common.collect.ImmutableList
 import org.gradle.api.Action
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.DuplicatesStrategy
@@ -131,19 +132,11 @@ open class AndroidZip : Zip() {
                     .getFinalArtifactFiles(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
 
-            variantScope.addTaskOutput(
+            variantScope.buildArtifactsHolder.appendArtifact(
                 InternalArtifactType.AAR,
-                Callable {
-                    File(
-                        variantScope.aarLocation,
-                        variantScope
-                            .outputScope
-                            .mainSplit
-                            .outputFileName
-                    )
-                },
-                bundle.name
-            )
+                listOf(File(variantScope.aarLocation,
+                    variantScope.outputScope.mainSplit.outputFileName)),
+                bundle)
 
             libVariantData.packageLibTask = bundle
         }

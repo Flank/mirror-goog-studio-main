@@ -31,6 +31,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.BundleInstantApp;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.Recorder;
+import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.io.File;
 import java.util.Collection;
@@ -81,10 +82,12 @@ public class InstantAppTaskManager extends TaskManager {
                                     new BundleInstantApp.ConfigAction(variantScope, bundleDir));
                     variantScope.getAssembleTask().dependsOn(bundleTask);
                     bundleTask.dependsOn(checkInstantAppLibrariesTask);
-                    variantScope.addTaskOutput(
-                            InternalArtifactType.INSTANTAPP_BUNDLE,
-                            bundleDir,
-                            bundleTask.getName());
+                    variantScope
+                            .getBuildArtifactsHolder()
+                            .appendArtifact(
+                                    InternalArtifactType.INSTANTAPP_BUNDLE,
+                                    ImmutableList.of(variantScope.getApkLocation()),
+                                    bundleTask);
 
                     taskFactory.create(new InstantAppSideLoadTask.ConfigAction(variantScope));
                 });
