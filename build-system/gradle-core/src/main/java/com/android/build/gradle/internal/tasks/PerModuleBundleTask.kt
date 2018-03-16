@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.builder.packaging.JarMerger
+import com.android.builder.packaging.ZipEntryFilter
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
@@ -80,7 +81,6 @@ open class PerModuleBundleTask : AndroidVariantTask() {
     val fileName: String
         get() = fileNameSupplier.get()
 
-
     @TaskAction
     fun zip() {
         FileUtils.cleanOutputDir(outputDir)
@@ -95,32 +95,32 @@ open class PerModuleBundleTask : AndroidVariantTask() {
                 Relocator(FD_ASSETS)
             )
 
-            it.addJar(resFiles.singleFile.toPath(), null,
-                ResRelocator()
-            )
+            it.addJar(resFiles.singleFile.toPath(), null, ResRelocator())
 
             // dex files
-            addHybridFolder(it, dexFiles.files,
-                Relocator(FD_DEX)
-            )
+            addHybridFolder(it, dexFiles.files, Relocator(FD_DEX))
 
             addHybridFolder(it, javaResFiles.files,
-                Relocator("root")
-            )
+                Relocator("root"),
+                ZipEntryFilter.EXCLUDE_CLASSES)
 
-            addHybridFolder(it, nativeLibsFiles.files, null)
+            addHybridFolder(it, nativeLibsFiles.files)
         }
     }
 
-    private fun addHybridFolder(jarMerger: JarMerger, files: Set<File>, relocator: Relocator?) {
+    private fun addHybridFolder(
+        jarMerger: JarMerger,
+        files: Set<File>,
+        relocator: Relocator? = null,
+        fileFilter: ZipEntryFilter? = null ) {
         // in this case the artifact is a folder containing things to add
         // to the zip. These can be file to put directly, jars to copy the content
         // of, or folders
         for (file in files) {
             if (file.isFile) {
                 if (file.name.endsWith(SdkConstants.DOT_JAR)) {
-                    jarMerger.addJar(file.toPath(), null, relocator)
-                } else {
+                    jarMerger.addJar(file.toPath(), fileFilter, relocator)
+                } else if (fileFilter == null || fileFilter.checkEntry(file.name)) {
                     if (relocator != null) {
                         jarMerger.addFile(relocator.relocate(file.name), file.toPath())
                     } else {
@@ -130,7 +130,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
             } else {
                 jarMerger.addDirectory(
                     file.toPath(),
-                    null,
+                    fileFilter,
                     null,
                     relocator)
             }
@@ -151,7 +151,8 @@ open class PerModuleBundleTask : AndroidVariantTask() {
             task.fileNameSupplier = if (variantScope.type.isBaseModule)
                 Supplier { "base.zip"}
             else {
-                val featureName: Supplier<String> = FeatureSetMetadata.getInstance().getFeatureNameSupplierForTask(variantScope, task)
+                val featureName: Supplier<String> = FeatureSetMetadata.getInstance()
+                    .getFeatureNameSupplierForTask(variantScope, task)
                 Supplier { "${featureName.get()}.zip"}
             }
 
@@ -173,7 +174,6 @@ open class PerModuleBundleTask : AndroidVariantTask() {
 private class Relocator(private val prefix: String): JarMerger.Relocator {
     override fun relocate(entryPath: String) = "$prefix/$entryPath"
 }
-
 
 private class ResRelocator : JarMerger.Relocator {
     override fun relocate(entryPath: String) = when(entryPath) {

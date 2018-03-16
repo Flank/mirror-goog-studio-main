@@ -36,6 +36,17 @@ class DynamicAppTest {
             .create()
     }
 
+    private val bundleContent: Array<String> = arrayOf(
+        "/BundleManifest.pb",
+        "/base/dex/classes.dex",
+        "/base/manifest/AndroidManifest.xml",
+        "/base/res/layout/base_layout.xml",
+        "/base/resources.pb",
+        "/feature1/dex/classes.dex",
+        "/feature1/manifest/AndroidManifest.xml",
+        "/feature1/res/layout/feature_layout.xml",
+        "/feature1/resources.pb")
+
     @Test
     @Throws(IOException::class)
     fun testModel() {
@@ -55,7 +66,7 @@ class DynamicAppTest {
     }
 
     @Test
-    fun testBundleFromApp() {
+    fun testBundleDebugFromApp() {
         project.execute("app:bundleDebug")
 
         //TODO: update model with this stuff?
@@ -68,16 +79,7 @@ class DynamicAppTest {
         FileSubject.assertThat(bundleFile).exists()
 
         val zipFile = Zip(bundleFile)
-        Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(
-            "/BundleManifest.pb",
-            "/base/dex/classes.dex",
-            "/base/manifest/AndroidManifest.xml",
-            "/base/res/layout/base_layout.xml",
-            "/base/resources.pb",
-            "/feature1/dex/classes.dex",
-            "/feature1/manifest/AndroidManifest.xml",
-            "/feature1/res/layout/feature_layout.xml",
-            "/feature1/resources.pb")
+        Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(*bundleContent)
 
 
         // also test that the feature manifest contains the feature name.
@@ -90,5 +92,22 @@ class DynamicAppTest {
             "AndroidManifest.xml")
         FileSubject.assertThat(manifestFile).isFile()
         FileSubject.assertThat(manifestFile).contains("android:splitName=\"feature1\"")
+    }
+
+    @Test
+    fun testBundleReleaseFromApp() {
+        project.execute("app:bundleRelease")
+
+        //TODO: update model with this stuff?
+        val bundleFile = FileUtils.join(project.getSubproject("app").buildDir,
+            "outputs",
+            "bundle",
+            "release",
+            "bundleRelease", // FIXME with proper BuildableArtifact based output file path
+            "bundle.aab")
+        FileSubject.assertThat(bundleFile).exists()
+
+        val zipFile = Zip(bundleFile)
+        Truth.assertThat(zipFile.entries.map { it.toString() }).containsExactly(*bundleContent)
     }
 }
