@@ -27,7 +27,7 @@ class DisplayInfoFactoryTest {
     @Test
     fun testV1ViewNodeParsing() {
         val file = getTestFile()
-        val node = LayoutFileData(file).node!!
+        val node = LayoutFileDataParser.parseFromFile(file).node!!
 
         val displayInfo = DisplayInfoFactory.createDisplayInfoFromNode(node)
         assertEquals(1080, displayInfo.width)
@@ -38,7 +38,7 @@ class DisplayInfoFactoryTest {
     @Test
     fun testV2ViewNodeParsing() {
         val file = getTestFileV2()
-        val node = LayoutFileData(file).node!!
+        val node = LayoutFileDataParser.parseFromFile(file).node!!
 
         val displayInfo = DisplayInfoFactory.createDisplayInfoFromNode(node)
         assertEquals(1080, displayInfo.width)

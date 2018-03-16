@@ -16,44 +16,13 @@
 package com.android.layoutinspector.model
 
 import com.android.layoutinspector.LayoutInspectorCaptureOptions
-import com.android.layoutinspector.parser.ViewNodeParser
 import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.IOException
-import java.io.ObjectInputStream
-import javax.imageio.ImageIO
 
-class LayoutFileData @Throws(IOException::class)
-constructor(file: File) {
-    val bufferedImage: BufferedImage?
-    var node: ViewNode? = null
-
-    init {
-        var previewBytes = ByteArray(0)
-        val bytes = ByteArray(file.length().toInt())
-
-        FileInputStream(file).use { stream -> stream.read(bytes) }
-
-        ObjectInputStream(ByteArrayInputStream(bytes)).use { input ->
-            // Parse options
-            val options = LayoutInspectorCaptureOptions()
-            options.parse(input.readUTF())
-
-            // Parse view node
-            val nodeBytes = ByteArray(input.readInt())
-            input.readFully(nodeBytes)
-            node = ViewNodeParser.parse(nodeBytes, options.version)
-            if (node == null) {
-                throw IOException("Error parsing view node")
-            }
-
-            // Preview image
-            previewBytes = ByteArray(input.readInt())
-            input.readFully(previewBytes)
-        }
-
-        bufferedImage = ImageIO.read(ByteArrayInputStream(previewBytes))
-    }
-}
+/**
+ * Data model for a parsed .li file. Create using methods in [com.android.layoutinspector.parser.LayoutFileDataParser]
+ */
+data class LayoutFileData(
+    val bufferedImage: BufferedImage?,
+    val node: ViewNode?,
+    val options: LayoutInspectorCaptureOptions
+)

@@ -15,6 +15,7 @@
  */
 package com.android.layoutinspector.model
 
+import com.android.layoutinspector.parser.LayoutFileDataParser
 import org.junit.Test
 import java.io.IOException
 import kotlin.test.assertEquals
@@ -27,7 +28,7 @@ class LayoutFileDataTest {
         val file = getTestFile()
         assert(file.exists())
 
-        val fileData = LayoutFileData(file)
+        val fileData = LayoutFileDataParser.parseFromFile(file)
 
         assertNotNull(fileData.bufferedImage)
         assertEquals(1920, fileData.bufferedImage!!.height)
@@ -43,7 +44,7 @@ class LayoutFileDataTest {
         val file = getTestFileV2()
         assert(file.exists())
 
-        val fileData = LayoutFileData(file)
+        val fileData = LayoutFileDataParser.parseFromFile(file)
         val node = fileData.node!!
         assertEquals("com.android.internal.policy.PhoneWindow\$DecorView", node.name)
         assertEquals("a63a1d0", node.hash)
