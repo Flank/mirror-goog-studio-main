@@ -168,7 +168,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
       Log::E("Error instrumenting OkHttp2 OkHttpClient");
     }
   } else if (strcmp(name, "android/os/Debug") == 0) {
-    // Instrument startMethodTracing(String tracePath).
+    // Instrument startMethodTracing(String tracePath) at entry.
     slicer::MethodInstrumenter mi_start(dex_ir);
     mi_start.AddTransformation<slicer::EntryHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
@@ -178,9 +178,9 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
       Log::E("Error instrumenting Debug.startMethodTracing(String)");
     }
 
-    // Instrument stopMethodTracing().
+    // Instrument stopMethodTracing() at exit.
     slicer::MethodInstrumenter mi_stop(dex_ir);
-    mi_stop.AddTransformation<slicer::EntryHook>(ir::MethodId(
+    mi_stop.AddTransformation<slicer::ExitHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/cpu/TraceOperationTracker;",
         "onStopMethodTracing"));
     if (!mi_stop.InstrumentMethod(

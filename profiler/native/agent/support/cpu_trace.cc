@@ -103,14 +103,8 @@ void TraceMonitor::SubmitStopEvent(int tid) {
         request.set_pid(pid);
         request.set_thread_id(tid);
         request.set_timestamp(timestamp);
-
-        // Wait 0.2 seconds for the trace to complete.
-        // TODO(b/74449118): Use FileSystemNotifier to properly monitor the
-        // file's close.
-        usleep(200 * 1000);
         string trace_content;
         profiler::FileReader::Read(trace_path_, &trace_content);
-
         request.mutable_stop()->set_trace_id(trace_id_);
         request.mutable_stop()->set_trace_content(trace_content);
         CpuTraceOperationResponse response;
