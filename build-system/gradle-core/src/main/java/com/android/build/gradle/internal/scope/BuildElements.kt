@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.scope
 
+import com.android.build.VariantOutput
 import com.android.ide.common.build.ApkInfo
 import com.android.ide.common.internal.WaitableExecutor
 import com.google.gson.GsonBuilder
@@ -45,6 +46,12 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
             it.apkInfo.type == apkInfo.type
                     && it.apkInfo.filters == apkInfo.filters
                     && it.apkInfo.fullName == apkInfo.fullName
+        }
+    }
+
+    fun elementByType(type: VariantOutput.OutputType) : BuildOutput? {
+        return elements.find {
+            it.apkInfo.type == type
         }
     }
 
