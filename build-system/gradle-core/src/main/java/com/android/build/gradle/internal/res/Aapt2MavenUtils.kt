@@ -155,7 +155,7 @@ private fun getArtifactCollection(configuration: Configuration): FileCollection 
 
 class Aapt2Extractor @Inject constructor() : ArtifactTransform() {
     override fun transform(input: File): MutableList<File> {
-        val outDir = outputDirectory.toPath()
+        val outDir = outputDirectory.toPath().resolve(input.nameWithoutExtension)
         Files.createDirectories(outDir)
         ZipInputStream(input.inputStream().buffered()).use { zipInputStream ->
             while (true) {
