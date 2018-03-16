@@ -2187,10 +2187,13 @@ public abstract class TaskManager {
         if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()
                 && type.isApk()
                 && !type.isForTesting()) {
+            boolean addDependencies = !type.isFeatureSplit();
             for (String jar : getAdvancedProfilingTransforms(projectOptions)) {
                 if (jar != null) {
                     transformManager.addTransform(
-                            taskFactory, variantScope, new CustomClassTransform(jar));
+                            taskFactory,
+                            variantScope,
+                            new CustomClassTransform(jar, addDependencies));
                 }
             }
         }
