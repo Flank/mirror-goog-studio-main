@@ -88,7 +88,7 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
             task.outputJar = scope.buildArtifactsHolder.appendArtifact(
                 InternalArtifactType.FEATURE_CLASSES, task, "classes.jar")
             task.javacClasses =
-                    scope.buildArtifactsHolder.getArtifactFiles(InternalArtifactType.JAVAC)
+                    scope.artifacts.getArtifactFiles(InternalArtifactType.JAVAC)
             task.preJavacClasses = scope.variantData.allPreJavacGeneratedBytecode
             task.postJavacClasses = scope.variantData.allPostJavacGeneratedBytecode
             val globalScope = scope.globalScope

@@ -337,8 +337,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         try {
             return super.getOutput(outputType);
         } catch (MissingTaskOutputException e) {
-            if (getBuildArtifactsHolder().hasArtifact(outputType)) {
-                return getBuildArtifactsHolder().getFinalArtifactFiles(outputType).get();
+            if (getArtifacts().hasArtifact(outputType)) {
+                return getArtifacts().getFinalArtifactFiles(outputType).get();
             }
             throw new RuntimeException(
                     String.format(
@@ -942,12 +942,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             BaseVariantData tested = getTestedVariantData();
             if (tested != null
                     && tested.getScope()
-                            .getBuildArtifactsHolder()
+                            .getArtifacts()
                             .hasArtifact(
                                     InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
                 BuildableArtifact rJar =
                         tested.getScope()
-                                .getBuildArtifactsHolder()
+                                .getArtifacts()
                                 .getFinalArtifactFiles(
                                         InternalArtifactType
                                                 .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
@@ -1038,7 +1038,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public BuildArtifactsHolder getBuildArtifactsHolder() {
+    public BuildArtifactsHolder getArtifacts() {
         return buildArtifactsHolder;
     }
 

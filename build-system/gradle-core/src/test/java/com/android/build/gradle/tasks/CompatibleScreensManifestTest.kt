@@ -72,7 +72,7 @@ class CompatibleScreensManifestTest {
         `when`(scope.fullVariantName).thenReturn("fullVariantName")
         `when`(scope.variantConfiguration).thenReturn(variantConfiguration)
         `when`(scope.outputScope).thenReturn(outputScope)
-        `when`(scope.buildArtifactsHolder).thenReturn(buildArtifactsHolder)
+        `when`(scope.artifacts).thenReturn(buildArtifactsHolder)
         `when`(buildArtifactsHolder.appendArtifact(
                         InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, task))
             .thenReturn(temporaryFolder.root)

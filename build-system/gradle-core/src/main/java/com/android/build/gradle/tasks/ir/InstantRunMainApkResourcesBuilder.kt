@@ -135,7 +135,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
             task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
 
             task.resourceFiles = variantScope.getOutput(taskInputType)
-            task.manifestFiles = variantScope.buildArtifactsHolder
+            task.manifestFiles = variantScope.artifacts
                 .getFinalArtifactFiles(INSTANT_RUN_MERGED_MANIFESTS)
             task.outputDirectory = variantScope.instantRunMainApkResourcesDir
             task.aaptGeneration = AaptGeneration.fromProjectOptions(

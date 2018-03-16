@@ -427,7 +427,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
             }
 
             mergeAssetsTask.setOutputDir(
-                    scope.getBuildArtifactsHolder()
+                    scope.getArtifacts()
                             .appendArtifact(outputArtifactType, mergeAssetsTask, "out"));
         }
     }

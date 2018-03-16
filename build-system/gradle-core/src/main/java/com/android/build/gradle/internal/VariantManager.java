@@ -542,7 +542,7 @@ public class VariantManager implements VariantModel {
 
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs. */
     public void publishBuildArtifacts(VariantScope variantScope) {
-        BuildArtifactsHolder buildArtifactsHolder = variantScope.getBuildArtifactsHolder();
+        BuildArtifactsHolder buildArtifactsHolder = variantScope.getArtifacts();
         for (PublishingSpecs.OutputSpec outputSpec :
                 variantScope.getPublishingSpec().getOutputs()) {
             com.android.build.api.artifact.ArtifactType buildArtifactType =

@@ -55,7 +55,7 @@ open class AndroidZip : Zip() {
         override fun execute(bundle: AndroidZip) {
             val libVariantData = variantScope.variantData as LibraryVariantData
 
-            val artifacts = variantScope.buildArtifactsHolder
+            val artifacts = variantScope.artifacts
 
             libVariantData.addTask(TaskContainer.TaskKind.PACKAGE_ANDROID_ARTIFACT, bundle)
 
@@ -75,7 +75,7 @@ open class AndroidZip : Zip() {
             bundle.archiveNameSupplier = { variantScope.outputScope.mainSplit.outputFileName }
             bundle.extension = BuilderConstants.EXT_LIB_ARCHIVE
             bundle.from(
-                variantScope.buildArtifactsHolder.getArtifactFiles(
+                variantScope.artifacts.getArtifactFiles(
                     InternalArtifactType.AIDL_PARCELABLE
                 ),
                 prependToCopyPath(SdkConstants.FD_AIDL)
@@ -128,7 +128,7 @@ open class AndroidZip : Zip() {
                 prependToCopyPath(SdkConstants.LIBS_FOLDER)
             )
             bundle.from(
-                variantScope.buildArtifactsHolder
+                variantScope.artifacts
                     .getFinalArtifactFiles(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
 

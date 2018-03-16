@@ -350,7 +350,7 @@ public class LibraryTaskManager extends TaskManager {
                                 transformManager.addTransform(
                                         taskFactory, variantScope, intermediateTransform);
 
-                        BuildArtifactsHolder artifacts = variantScope.getBuildArtifactsHolder();
+                        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
                         intermediateTransformTask.ifPresent(
                                 t -> {
                                     // publish the intermediate classes.jar
@@ -388,7 +388,7 @@ public class LibraryTaskManager extends TaskManager {
                                 t -> {
                                     // publish the jni folder as intermediate
                                     variantScope
-                                            .getBuildArtifactsHolder()
+                                            .getArtifacts()
                                             .appendArtifact(
                                                     InternalArtifactType.LIBRARY_JNI,
                                                     ImmutableList.of(intermediateJniLibsFolder),
@@ -437,13 +437,13 @@ public class LibraryTaskManager extends TaskManager {
                         libraryJarTransformTask.ifPresent(
                                 t -> {
                                     variantScope
-                                            .getBuildArtifactsHolder()
+                                            .getArtifacts()
                                             .appendArtifact(
                                                     InternalArtifactType.AAR_MAIN_JAR,
                                                     ImmutableList.of(classesJar),
                                                     t);
                                     variantScope
-                                            .getBuildArtifactsHolder()
+                                            .getArtifacts()
                                             .appendArtifact(
                                                     InternalArtifactType.AAR_LIBS_DIRECTORY,
                                                     ImmutableList.of(libsDirectory),
@@ -467,7 +467,7 @@ public class LibraryTaskManager extends TaskManager {
                         jniPackagingTask.ifPresent(
                                 t ->
                                         variantScope
-                                                .getBuildArtifactsHolder()
+                                                .getArtifacts()
                                                 .appendArtifact(
                                                         InternalArtifactType
                                                                 .LIBRARY_AND_LOCAL_JARS_JNI,
@@ -562,7 +562,7 @@ public class LibraryTaskManager extends TaskManager {
 
         mergeResourceTask.setPublicFile(
                 variantScope
-                        .getBuildArtifactsHolder()
+                        .getArtifacts()
                         .appendArtifact(
                                 InternalArtifactType.PUBLIC_RES, mergeResourceTask, FN_PUBLIC_TXT));
     }
@@ -572,7 +572,7 @@ public class LibraryTaskManager extends TaskManager {
         // create an anchor collection for usage inside the same module (unit tests basically)
         ConfigurableFileCollection fileCollection =
                 scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
-        fileCollection.from(scope.getBuildArtifactsHolder().getArtifactFiles(JAVAC));
+        fileCollection.from(scope.getArtifacts().getArtifactFiles(JAVAC));
         fileCollection.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
         fileCollection.from(scope.getVariantData().getAllPostJavacGeneratedBytecode());
     }

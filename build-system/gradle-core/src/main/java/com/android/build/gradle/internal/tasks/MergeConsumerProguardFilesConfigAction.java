@@ -57,7 +57,7 @@ public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<
         mergeProguardFiles.setVariantName(variantScope.getVariantConfiguration().getFullName());
         mergeProguardFiles.setOutputFile(
                 variantScope
-                        .getBuildArtifactsHolder()
+                        .getArtifacts()
                         .appendArtifact(
                                 InternalArtifactType.CONSUMER_PROGUARD_FILE,
                                 mergeProguardFiles,

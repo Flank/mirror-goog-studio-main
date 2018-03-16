@@ -338,7 +338,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             processTestManifestTask.setManifestOutputDirectory(
-                    scope.getBuildArtifactsHolder()
+                    scope.getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.MERGED_MANIFESTS,
                                     processTestManifestTask,

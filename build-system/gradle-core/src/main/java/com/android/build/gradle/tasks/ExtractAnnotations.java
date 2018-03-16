@@ -321,7 +321,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             // publish intermediate annotation data
             task.setOutput(
                     variantScope
-                            .getBuildArtifactsHolder()
+                            .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.ANNOTATIONS_ZIP,
                                     task,
@@ -330,7 +330,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
             task.typedefFile =
                     variantScope
-                            .getBuildArtifactsHolder()
+                            .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE,
                                     task,

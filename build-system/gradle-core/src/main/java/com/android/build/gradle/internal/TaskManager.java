@@ -513,7 +513,7 @@ public abstract class TaskManager {
         // but for the artifact publishing.
         BuildableArtifact lintJar = globalScope.getArtifacts().getFinalArtifactFiles(LINT_JAR);
         for (VariantScope scope : variants) {
-            scope.getBuildArtifactsHolder().appendArtifact(InternalArtifactType.LINT_JAR, lintJar);
+            scope.getArtifacts().appendArtifact(InternalArtifactType.LINT_JAR, lintJar);
         }
     }
 
@@ -769,7 +769,7 @@ public abstract class TaskManager {
                         new ProcessTestManifest.ConfigAction(
                                 scope,
                                 testedScope
-                                        .getBuildArtifactsHolder()
+                                        .getArtifacts()
                                         .getFinalArtifactFiles(MERGED_MANIFESTS)));
 
         if (scope.getCheckManifestTask() != null) {
@@ -1469,7 +1469,7 @@ public abstract class TaskManager {
      */
     public void addJavacClassesStream(VariantScope scope) {
         FileCollection javaOutputs =
-                ((BuildableArtifactImpl) scope.getBuildArtifactsHolder().getArtifactFiles(JAVAC))
+                ((BuildableArtifactImpl) scope.getArtifacts().getArtifactFiles(JAVAC))
                         .getFileCollection();
         Preconditions.checkNotNull(javaOutputs);
         // create separate streams for the output of JAVAC and for the pre/post javac
@@ -2592,9 +2592,7 @@ public abstract class TaskManager {
                         recorder);
 
         BuildableArtifact instantRunMergedManifests =
-                variantScope
-                        .getBuildArtifactsHolder()
-                        .getFinalArtifactFiles(INSTANT_RUN_MERGED_MANIFESTS);
+                variantScope.getArtifacts().getFinalArtifactFiles(INSTANT_RUN_MERGED_MANIFESTS);
 
         variantScope.setInstantRunTaskManager(instantRunTaskManager);
         AndroidVersion minSdkForDx = variantScope.getMinSdkVersion();
@@ -2847,7 +2845,7 @@ public abstract class TaskManager {
                     scope.getOutput(InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
                             .getSingleFile();
             File baseFeatureInfoFolder = null;
-            BuildArtifactsHolder buildArtifactsHolder = scope.getBuildArtifactsHolder();
+            BuildArtifactsHolder buildArtifactsHolder = scope.getArtifacts();
             if (buildArtifactsHolder.hasArtifact(
                     InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO)) {
                 baseFeatureInfoFolder =
@@ -2933,7 +2931,7 @@ public abstract class TaskManager {
                 variantScope.getVariantData().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
 
         BuildableArtifact manifests =
-                variantScope.getBuildArtifactsHolder().getFinalArtifactFiles(manifestType);
+                variantScope.getArtifacts().getFinalArtifactFiles(manifestType);
         // this is where the final APKs will be located.
         File finalApkLocation = variantScope.getApkLocation();
         // if we are not dealing with possible splits, we can generate in the final folder
@@ -3714,14 +3712,14 @@ public abstract class TaskManager {
             if (variantType.isBaseModule()) {
                 kaptTask.getInputs()
                         .file(
-                                scope.getBuildArtifactsHolder()
+                                scope.getArtifacts()
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType
                                                         .FEATURE_DATA_BINDING_BASE_FEATURE_INFO));
             } else {
                 kaptTask.getInputs()
                         .file(
-                                scope.getBuildArtifactsHolder()
+                                scope.getArtifacts()
                                         .getFinalArtifactFiles(
                                                 InternalArtifactType
                                                         .FEATURE_DATA_BINDING_FEATURE_INFO));

@@ -116,7 +116,7 @@ open class ProcessAndroidAppResourcesTask
 
         override fun execute(task: ProcessAndroidAppResourcesTask) {
             task.variantName = scope.fullVariantName
-            val buildArtifactsHolder = scope.buildArtifactsHolder
+            val buildArtifactsHolder = scope.artifacts
             task.manifestFileDirectory =
                     if (buildArtifactsHolder.hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)) {
                         buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)

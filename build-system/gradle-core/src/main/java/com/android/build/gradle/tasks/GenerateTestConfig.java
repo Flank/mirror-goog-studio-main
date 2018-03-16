@@ -181,10 +181,9 @@ public class GenerateTestConfig extends DefaultTask {
             task.dependsOn(task.resourcesDirectory);
             task.manifests =
                     testedScope
-                            .getBuildArtifactsHolder()
+                            .getArtifacts()
                             .getFinalArtifactFiles(InternalArtifactType.MERGED_MANIFESTS);
-            task.assets =
-                    testedScope.getBuildArtifactsHolder().getFinalArtifactFiles(MERGED_ASSETS);
+            task.assets = testedScope.getArtifacts().getFinalArtifactFiles(MERGED_ASSETS);
             task.dependsOn(task.assets);
             task.mainApkInfo = testedScope.getOutputScope().getMainSplit();
             task.sdkHome =

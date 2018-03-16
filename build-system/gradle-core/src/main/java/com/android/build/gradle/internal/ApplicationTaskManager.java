@@ -52,7 +52,6 @@ import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBui
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
-import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
@@ -386,8 +385,7 @@ public class ApplicationTaskManager extends TaskManager {
 
     @Override
     protected void postJavacCreation(@NonNull VariantScope scope) {
-        final BuildableArtifact javacOutput =
-                scope.getBuildArtifactsHolder().getArtifactFiles(JAVAC);
+        final BuildableArtifact javacOutput = scope.getArtifacts().getArtifactFiles(JAVAC);
         final FileCollection preJavacGeneratedBytecode =
                 scope.getVariantData().getAllPreJavacGeneratedBytecode();
         final FileCollection postJavacGeneratedBytecode =
@@ -411,7 +409,7 @@ public class ApplicationTaskManager extends TaskManager {
                     @Override
                     public void execute(@NonNull Jar task) {
                         File outputFile =
-                                scope.getBuildArtifactsHolder()
+                                scope.getArtifacts()
                                         .appendArtifact(
                                                 InternalArtifactType.APP_CLASSES,
                                                 task,

@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.builder.core.VariantType
 import java.io.File
 import java.io.IOException
 import java.util.function.Supplier
@@ -92,7 +91,7 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
             }
 
             // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
-            task.outputFile = variantScope.buildArtifactsHolder.appendArtifact(
+            task.outputFile = variantScope.artifacts.appendArtifact(
                 InternalArtifactType.FEATURE_APPLICATION_ID_DECLARATION,
                 task,
                 ApplicationId.PERSISTED_FILE_NAME
@@ -104,7 +103,7 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
                 )
             } else {
                 //if this is the base application, publish the feature to the metadata config
-                variantScope.buildArtifactsHolder.appendArtifact(
+                variantScope.artifacts.appendArtifact(
                     InternalArtifactType.METADATA_APP_ID_DECLARATION,
                     listOf(task.outputFile),
                     task

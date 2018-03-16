@@ -31,7 +31,6 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
@@ -156,7 +155,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
                 Supplier { "${featureName.get()}.zip"}
             }
 
-            task.outputDir = variantScope.buildArtifactsHolder.appendArtifact(
+            task.outputDir = variantScope.artifacts.appendArtifact(
                 InternalArtifactType.MODULE_BUNDLE, task)
 
             task.assetsFiles = variantScope.getOutput(InternalArtifactType.MERGED_ASSETS)

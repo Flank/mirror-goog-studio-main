@@ -922,7 +922,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packageAndroidArtifact.javaResourceFiles = getJavaResources();
 
             packageAndroidArtifact.assets =
-                    variantScope.getBuildArtifactsHolder().getFinalArtifactFiles(MERGED_ASSETS);
+                    variantScope.getArtifacts().getFinalArtifactFiles(MERGED_ASSETS);
             packageAndroidArtifact.setAbiFilters(variantConfiguration.getSupportedAbis());
             packageAndroidArtifact.setJniDebugBuild(
                     variantConfiguration.getBuildType().isJniDebuggable());

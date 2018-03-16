@@ -160,12 +160,12 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
             if (variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
-                task.rClassOutputJar = variantScope.buildArtifactsHolder
+                task.rClassOutputJar = variantScope.artifacts
                     .appendArtifact(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
                         task,
                         "R.jar")
             } else {
-                task.sourceOutputDirectory = variantScope.buildArtifactsHolder
+                task.sourceOutputDirectory = variantScope.artifacts
                     .appendArtifact(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES, task)
             }
             task.textSymbolOutputFile = symbolFile
@@ -179,7 +179,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
             }
 
-            task.manifestFiles = variantScope.buildArtifactsHolder.getFinalArtifactFiles(
+            task.manifestFiles = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.MERGED_MANIFESTS)
 
             task.inputResourcesDir = variantScope.getOutput(InternalArtifactType.PACKAGED_RES)

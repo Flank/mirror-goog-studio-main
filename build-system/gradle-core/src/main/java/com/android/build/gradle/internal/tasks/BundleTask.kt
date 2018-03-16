@@ -104,9 +104,9 @@ open class BundleTask : AndroidVariantTask() {
             task.variantName = scope.fullVariantName
 
             // FIXME we need to improve the location of this.
-            task.bundleFile = scope.buildArtifactsHolder.appendArtifact(InternalArtifactType.BUNDLE, task, "bundle.aab")
+            task.bundleFile = scope.artifacts.appendArtifact(InternalArtifactType.BUNDLE, task, "bundle.aab")
 
-            task.baseModuleZip = scope.buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
+            task.baseModuleZip = scope.artifacts.getFinalArtifactFiles(InternalArtifactType.MODULE_BUNDLE)
 
             task.featureZips = scope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,

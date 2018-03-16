@@ -151,7 +151,7 @@ open class CompatibleScreensManifest : AndroidVariantTask() {
             csmTask.outputScope = scope.outputScope
             csmTask.variantName = scope.fullVariantName
             csmTask.screenSizes = screenSizes
-            csmTask.outputFolder = scope.buildArtifactsHolder
+            csmTask.outputFolder = scope.artifacts
                 .appendArtifact(COMPATIBLE_SCREEN_MANIFEST, csmTask)
 
             val config = scope.variantConfiguration

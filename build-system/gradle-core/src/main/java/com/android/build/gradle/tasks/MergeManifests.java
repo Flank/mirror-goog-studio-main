@@ -488,7 +488,7 @@ public class MergeManifests extends ManifestProcessorTask {
                 processManifestTask.microApkManifest = project.files(
                         variantScope.getMicroApkManifestFile());
             }
-            BuildArtifactsHolder buildArtifactsHolder = variantScope.getBuildArtifactsHolder();
+            BuildArtifactsHolder buildArtifactsHolder = variantScope.getArtifacts();
             processManifestTask.compatibleScreensManifest =
                     buildArtifactsHolder.getFinalArtifactFiles(
                             InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST);
@@ -558,7 +558,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
             // set outputs.
             variantScope
-                    .getBuildArtifactsHolder()
+                    .getArtifacts()
                     .appendArtifact(
                             InternalArtifactType.MANIFEST_MERGE_REPORT,
                             ImmutableList.of(reportFile),

@@ -167,9 +167,9 @@ open class CompileSourceSetResources
         override fun getType() = CompileSourceSetResources::class.java
         override fun execute(task: CompileSourceSetResources) {
             task.inputDirectories = inputDirectories
-            task.outputDirectory = variantScope.buildArtifactsHolder
+            task.outputDirectory = variantScope.artifacts
                 .appendArtifact(InternalArtifactType.RES_COMPILED_FLAT_FILES, task)
-            task.partialRDirectory = variantScope.buildArtifactsHolder
+            task.partialRDirectory = variantScope.artifacts
                 .appendArtifact(InternalArtifactType.PARTIAL_R_FILES, task)
             task.variantName = variantScope.fullVariantName
             task.isPngCrunching = variantScope.isCrunchPngs

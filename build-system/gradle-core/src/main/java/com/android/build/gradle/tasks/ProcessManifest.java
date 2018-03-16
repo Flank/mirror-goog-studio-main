@@ -277,14 +277,14 @@ public class ProcessManifest extends ManifestProcessorTask {
             processManifest.maxSdkVersion = TaskInputHelper.memoize(mergedFlavor::getMaxSdkVersion);
 
             processManifest.setManifestOutputDirectory(
-                    scope.getBuildArtifactsHolder()
+                    scope.getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.MERGED_MANIFESTS,
                                     processManifest,
                                     "merged"));
 
             processManifest.setAaptFriendlyManifestOutputDirectory(
-                    scope.getBuildArtifactsHolder()
+                    scope.getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
                                     processManifest,
@@ -312,7 +312,7 @@ public class ProcessManifest extends ManifestProcessorTask {
                                     + "-report.txt");
 
             processManifest.setReportFile(reportFile);
-            scope.getBuildArtifactsHolder()
+            scope.getArtifacts()
                     .appendArtifact(
                             InternalArtifactType.MANIFEST_MERGE_REPORT,
                             ImmutableList.of(reportFile),

@@ -74,7 +74,7 @@ open class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
         override fun getType() = DataBindingExportFeatureApplicationIdsTask::class.java
 
         override fun execute(task: DataBindingExportFeatureApplicationIdsTask) {
-            task.packageListOutFolder = variantScope.buildArtifactsHolder
+            task.packageListOutFolder = variantScope.artifacts
                 .appendArtifact(InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO, task)
             task.featureDeclarations = variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,

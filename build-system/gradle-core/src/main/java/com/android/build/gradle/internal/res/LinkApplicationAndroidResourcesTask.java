@@ -737,7 +737,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
             processResources.setSourceOutputDir(
                     variantScope
-                            .getBuildArtifactsHolder()
+                            .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
                                     processResources,
@@ -764,7 +764,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             boolean aaptFriendlyManifestsFilePresent =
                     variantScope
-                            .getBuildArtifactsHolder()
+                            .getArtifacts()
                             .hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
             processResources.taskInputType =
                     aaptFriendlyManifestsFilePresent
@@ -774,7 +774,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                     : InternalArtifactType.MERGED_MANIFESTS;
             processResources.setManifestFiles(
                     variantScope
-                            .getBuildArtifactsHolder()
+                            .getArtifacts()
                             .getFinalArtifactFiles(processResources.taskInputType));
 
             processResources.inputResourcesDir =
@@ -896,7 +896,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             boolean aaptFriendlyManifestsFilePresent =
                     variantScope
-                            .getBuildArtifactsHolder()
+                            .getArtifacts()
                             .hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS);
             task.taskInputType =
                     aaptFriendlyManifestsFilePresent
@@ -905,9 +905,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                     ? InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS
                                     : InternalArtifactType.MERGED_MANIFESTS;
             task.setManifestFiles(
-                    variantScope
-                            .getBuildArtifactsHolder()
-                            .getFinalArtifactFiles(task.taskInputType));
+                    variantScope.getArtifacts().getFinalArtifactFiles(task.taskInputType));
 
             List<FileCollection> dependencies = new ArrayList<>(2);
             dependencies.add(variantScope.getOutput(InternalArtifactType.RES_STATIC_LIBRARY));

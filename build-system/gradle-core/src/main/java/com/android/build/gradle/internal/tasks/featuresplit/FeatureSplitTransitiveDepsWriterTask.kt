@@ -77,7 +77,7 @@ open class FeatureSplitTransitiveDepsWriterTask : AndroidVariantTask() {
 
         override fun execute(task: FeatureSplitTransitiveDepsWriterTask) {
             task.variantName = variantScope.fullVariantName
-            task.outputFile = variantScope.buildArtifactsHolder
+            task.outputFile = variantScope.artifacts
                 .appendArtifact(InternalArtifactType.FEATURE_TRANSITIVE_DEPS,
                     task,
                     "deps.txt")

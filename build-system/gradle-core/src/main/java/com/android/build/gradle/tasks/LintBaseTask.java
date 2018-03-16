@@ -164,7 +164,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
                     dependencyLintJarCollection =
                             variantScope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, LINT));
 
-            BuildArtifactsHolder buildArtifactsHolder = variantScope.getBuildArtifactsHolder();
+            BuildArtifactsHolder buildArtifactsHolder = variantScope.getArtifacts();
             if (buildArtifactsHolder.hasArtifact(MERGED_MANIFESTS)) {
                 mergedManifest = buildArtifactsHolder.getFinalArtifactFiles(MERGED_MANIFESTS);
             } else if (buildArtifactsHolder.hasArtifact(LIBRARY_MANIFEST)) {

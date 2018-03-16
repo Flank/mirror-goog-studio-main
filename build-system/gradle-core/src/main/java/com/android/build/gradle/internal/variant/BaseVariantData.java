@@ -687,10 +687,10 @@ public abstract class BaseVariantData implements TaskContainer {
             }
 
             // then all the generated src folders.
-            if (scope.getBuildArtifactsHolder()
+            if (scope.getArtifacts()
                     .hasArtifact(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES)) {
                 BuildableArtifact rClassSource =
-                        scope.getBuildArtifactsHolder()
+                        scope.getArtifacts()
                                 .getFinalArtifactFiles(
                                         InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
                 sourceSets.add(

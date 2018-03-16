@@ -26,13 +26,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
-import com.google.common.collect.ImmutableMap
-import com.google.common.collect.Lists
-import org.gradle.api.Task
-import org.gradle.internal.resolve.result.BuildableArtifactResolveResult
 import java.io.File
 import java.util.LinkedList
-import java.util.Stack
 
 /**
  * Responsible for the creation of tasks to build namespaced resources.
@@ -107,7 +102,7 @@ class NamespacedResourcesTaskManager(
         val task = taskFactory.create(
                 GenerateNamespacedLibraryRFilesTask.ConfigAction(
                         variantScope,
-                        variantScope.buildArtifactsHolder.getFinalArtifactFiles(
+                        variantScope.artifacts.getFinalArtifactFiles(
                             InternalArtifactType.PARTIAL_R_FILES),
                         rClassJarFile,
                         resIdsFile))

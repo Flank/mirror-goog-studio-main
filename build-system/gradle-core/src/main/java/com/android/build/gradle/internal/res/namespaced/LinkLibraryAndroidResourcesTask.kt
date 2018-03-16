@@ -111,7 +111,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(private val worke
         override fun execute(task: LinkLibraryAndroidResourcesTask) {
             task.variantName = scope.fullVariantName
             task.manifestFile = scope.getOutput(InternalArtifactType.STATIC_LIBRARY_MANIFEST)
-            task.inputResourcesDirectories = scope.buildArtifactsHolder
+            task.inputResourcesDirectories = scope.artifacts
                 .getFinalArtifactFiles(InternalArtifactType.RES_COMPILED_FLAT_FILES)
             task.libraryDependencies =
                     scope.getArtifactFileCollection(
