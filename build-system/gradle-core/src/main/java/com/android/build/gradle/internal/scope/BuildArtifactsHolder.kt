@@ -185,7 +185,8 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
-     * Append output to the specified artifactType.
+     * Append output to the specified artifactType. The [newFiles] will be added after any
+     * existing content.
      *
      * After invoking this method, [getArtifactFiles] will return a [BuildableArtifact] that
      * contains both the new files and the original files.
@@ -206,7 +207,8 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
-     * Append existing files to a specified artifact type.
+     * Append existing files to a specified artifact type. The [existingFiles] will be added after
+     * any existing content.
      *
      * This should only be called when files already exists during configuration time (which usually
      * is the case with source directory files) or when dependency information is embedded inside
@@ -220,7 +222,8 @@ abstract class BuildArtifactsHolder(
             createFileCollection(artifactRecordMap[artifactType], existingFiles))
     }
     /**
-     * Append existing BuildableArtifact to a specified artifact type.
+     * Append existing BuildableArtifact to a specified artifact type. The new content will be added
+     * after any existing content.
      *
      * @param artifactType [ArtifactType] for the existing files
      * @param buildableArtifact existing [BuildableArtifact] holding files and dependencies
@@ -231,7 +234,8 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
-     * Append a new file or folder to a specified artifact type.
+     * Append a new file or folder to a specified artifact type. The new content will be added
+     * after any existing content.
      *
      * @param artifactType [ArtifactType] the new file or folder will be classified under.
      * @param task [Task] producing the file or folder.
@@ -250,7 +254,7 @@ abstract class BuildArtifactsHolder(
 
     private fun createFileCollection(artifactRecord: ArtifactRecord?, newFiles: Any) =
         if (artifactRecord != null) {
-            project.files(newFiles, artifactRecord.last)
+            project.files(artifactRecord.last, newFiles)
         } else {
             project.files(newFiles)
         }

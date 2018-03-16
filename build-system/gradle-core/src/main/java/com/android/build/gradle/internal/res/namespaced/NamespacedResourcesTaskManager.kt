@@ -192,13 +192,8 @@ class NamespacedResourcesTaskManager(
     }
 
     private fun createCompileResourcesTask() {
-
-        // reverse the list as it comes in natural order of importance but BuildableArtifact will
-        // chain them in reverse order (append means the new folder is before the existing one).
-        val reversedResources : LinkedList<Map.Entry<String, BuildableArtifact>> = LinkedList()
-        variantScope.variantData.androidResources.forEach { reversedResources.addFirst(it) }
-
-        for((sourceSetName, artifacts) in reversedResources) {
+        
+        for((sourceSetName, artifacts) in variantScope.variantData.androidResources) {
             val name = "compile${sourceSetName.capitalize()}" +
                     "ResourcesFor${variantScope.fullVariantName.capitalize()}"
             // TODO : figure out when we need explicit task dependency and potentially remove it.
