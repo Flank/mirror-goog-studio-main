@@ -58,8 +58,12 @@ public class LocationTest {
 
     @After
     public void tearDown() throws Exception {
-        myGrpc.endSession(mySession.getSessionId());
-        myPerfDriver.tearDown();
+        if (myPerfDriver != null) {
+            if (mySession != null) {
+                myGrpc.endSession(mySession.getSessionId());
+            }
+            myPerfDriver.tearDown();
+        }
     }
 
     @Test

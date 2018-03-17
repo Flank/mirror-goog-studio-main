@@ -57,65 +57,17 @@ public class AlarmTest {
 
     @After
     public void tearDown() throws Exception {
-        myGrpc.endSession(mySession.getSessionId());
-        myPerfDriver.tearDown();
+        if (myPerfDriver != null) {
+            if (mySession != null) {
+                myGrpc.endSession(mySession.getSessionId());
+            }
+            myPerfDriver.tearDown();
+        }
     }
 
     @Test
-    public void testSetIntentAlarm() throws Exception {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "setIntentAlarm");
-        assertThat(myAndroidDriver.waitForInput("INTENT ALARM SET")).isTrue();
-
-        EnergyEventsResponse response =
-                TestUtils.waitForAndReturn(
-                        () -> myStubWrapper.getAllEnergyEvents(mySession),
-                        resp -> resp.getEventsCount() == 1);
-        assertThat(response.getEventsCount()).isEqualTo(1);
-
-        EnergyEvent energyEvent = response.getEvents(0);
-        assertThat(energyEvent.getTimestamp()).isGreaterThan(0L);
-        assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
-        assertThat(energyEvent.getEventId()).isGreaterThan(0);
-        assertThat(energyEvent.getIsTerminal()).isFalse();
-        assertThat(energyEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
-        assertThat(energyEvent.getAlarmSet().getType()).isEqualTo(Type.RTC);
-        assertThat(energyEvent.getAlarmSet().getTriggerMs()).isEqualTo(1000);
-        assertThat(energyEvent.getAlarmSet().getWindowMs()).isEqualTo(-1);
-        assertThat(energyEvent.getAlarmSet().getIntervalMs()).isEqualTo(0);
-        assertThat(energyEvent.getAlarmSet().getSetActionCase()).isEqualTo(SetActionCase.OPERATION);
-        assertThat(energyEvent.getAlarmSet().getOperation().getCreatorPackage())
-                .isEqualTo("com.example");
-        assertThat(energyEvent.getAlarmSet().getOperation().getCreatorUid()).isEqualTo(1);
-    }
-
-    @Test
-    public void testSetListenerAlarm() throws Exception {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "setListenerAlarm");
-        assertThat(myAndroidDriver.waitForInput("LISTENER ALARM SET")).isTrue();
-
-        EnergyEventsResponse response =
-                TestUtils.waitForAndReturn(
-                        () -> myStubWrapper.getAllEnergyEvents(mySession),
-                        resp -> resp.getEventsCount() == 1);
-        assertThat(response.getEventsCount()).isEqualTo(1);
-
-        EnergyEvent energyEvent = response.getEvents(0);
-        assertThat(energyEvent.getTimestamp()).isGreaterThan(0L);
-        assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
-        assertThat(energyEvent.getEventId()).isGreaterThan(0);
-        assertThat(energyEvent.getIsTerminal()).isFalse();
-        assertThat(energyEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
-        assertThat(energyEvent.getAlarmSet().getType()).isEqualTo(Type.RTC_WAKEUP);
-        assertThat(energyEvent.getAlarmSet().getTriggerMs()).isEqualTo(2000);
-        assertThat(energyEvent.getAlarmSet().getWindowMs()).isEqualTo(-1);
-        assertThat(energyEvent.getAlarmSet().getIntervalMs()).isEqualTo(0);
-        assertThat(energyEvent.getAlarmSet().getSetActionCase()).isEqualTo(SetActionCase.LISTENER);
-        assertThat(energyEvent.getAlarmSet().getListener().getTag()).isEqualTo("foo");
-    }
-
-    @Test
-    public void testCancelIntentAlarm() throws Exception {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "cancelIntentAlarm");
+    public void testSetAndCancelIntentAlarm() throws Exception {
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "setAndCancelIntentAlarm");
         assertThat(myAndroidDriver.waitForInput("INTENT ALARM CANCELLED")).isTrue();
 
         EnergyEventsResponse response =
@@ -125,10 +77,19 @@ public class AlarmTest {
         assertThat(response.getEventsCount()).isEqualTo(2);
 
         EnergyEvent setEvent = response.getEvents(0);
+        assertThat(setEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(setEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(setEvent.getEventId()).isGreaterThan(0);
         assertThat(setEvent.getIsTerminal()).isFalse();
         assertThat(setEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
+        assertThat(setEvent.getAlarmSet().getType()).isEqualTo(Type.RTC);
+        assertThat(setEvent.getAlarmSet().getTriggerMs()).isEqualTo(1000);
+        assertThat(setEvent.getAlarmSet().getWindowMs()).isEqualTo(-1);
+        assertThat(setEvent.getAlarmSet().getIntervalMs()).isEqualTo(0);
         assertThat(setEvent.getAlarmSet().getSetActionCase()).isEqualTo(SetActionCase.OPERATION);
+        assertThat(setEvent.getAlarmSet().getOperation().getCreatorPackage())
+                .isEqualTo("com.example");
+        assertThat(setEvent.getAlarmSet().getOperation().getCreatorUid()).isEqualTo(1);
 
         EnergyEvent cancelEvent = response.getEvents(1);
         assertThat(cancelEvent.getTimestamp()).isGreaterThan(0L);
@@ -139,13 +100,13 @@ public class AlarmTest {
         assertThat(cancelEvent.getAlarmCancelled().getCancelActionCase())
                 .isEqualTo(CancelActionCase.OPERATION);
         assertThat(cancelEvent.getAlarmCancelled().getOperation().getCreatorPackage())
-                .isEqualTo("foo.bar");
-        assertThat(cancelEvent.getAlarmCancelled().getOperation().getCreatorUid()).isEqualTo(2);
+                .isEqualTo("com.example");
+        assertThat(cancelEvent.getAlarmCancelled().getOperation().getCreatorUid()).isEqualTo(1);
     }
 
     @Test
-    public void testCancelListenerAlarm() throws Exception {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "cancelListenerAlarm");
+    public void testSetAndCancelListenerAlarm() throws Exception {
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "setAndCancelListenerAlarm");
         assertThat(myAndroidDriver.waitForInput("LISTENER ALARM CANCELLED")).isTrue();
 
         EnergyEventsResponse response =
@@ -155,11 +116,17 @@ public class AlarmTest {
         assertThat(response.getEventsCount()).isEqualTo(2);
 
         EnergyEvent setEvent = response.getEvents(0);
+        assertThat(setEvent.getTimestamp()).isGreaterThan(0L);
+        assertThat(setEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(setEvent.getEventId()).isGreaterThan(0);
         assertThat(setEvent.getIsTerminal()).isFalse();
         assertThat(setEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
+        assertThat(setEvent.getAlarmSet().getType()).isEqualTo(Type.RTC_WAKEUP);
+        assertThat(setEvent.getAlarmSet().getTriggerMs()).isEqualTo(2000);
+        assertThat(setEvent.getAlarmSet().getWindowMs()).isEqualTo(-1);
+        assertThat(setEvent.getAlarmSet().getIntervalMs()).isEqualTo(0);
         assertThat(setEvent.getAlarmSet().getSetActionCase()).isEqualTo(SetActionCase.LISTENER);
-        assertThat(setEvent.getAlarmSet().getListener().getTag()).isEqualTo("bar");
+        assertThat(setEvent.getAlarmSet().getListener().getTag()).isEqualTo("foo");
 
         EnergyEvent cancelEvent = response.getEvents(1);
         assertThat(cancelEvent.getEventId()).isEqualTo(setEvent.getEventId());
@@ -167,11 +134,11 @@ public class AlarmTest {
         assertThat(cancelEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_CANCELLED);
         assertThat(cancelEvent.getAlarmCancelled().getCancelActionCase())
                 .isEqualTo(CancelActionCase.LISTENER);
-        assertThat(cancelEvent.getAlarmCancelled().getListener().getTag()).isEqualTo("bar");
+        assertThat(cancelEvent.getAlarmCancelled().getListener().getTag()).isEqualTo("foo");
     }
 
     @Test
-    public void testFireListenerAlarm() throws Exception {
+    public void testSetAndFireListenerAlarm() throws Exception {
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "fireListenerAlarm");
         assertThat(myAndroidDriver.waitForInput("LISTENER ALARM FIRED")).isTrue();
 
@@ -188,12 +155,12 @@ public class AlarmTest {
         assertThat(setEvent.getAlarmSet().getSetActionCase()).isEqualTo(SetActionCase.LISTENER);
         String tag = setEvent.getAlarmSet().getListener().getTag();
 
-        EnergyEvent cancelEvent = response.getEvents(1);
-        assertThat(cancelEvent.getEventId()).isEqualTo(setEvent.getEventId());
-        assertThat(cancelEvent.getIsTerminal()).isTrue();
-        assertThat(cancelEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_FIRED);
-        assertThat(cancelEvent.getAlarmFired().getFireActionCase())
+        EnergyEvent fireEvent = response.getEvents(1);
+        assertThat(fireEvent.getEventId()).isEqualTo(setEvent.getEventId());
+        assertThat(fireEvent.getIsTerminal()).isTrue();
+        assertThat(fireEvent.getMetadataCase()).isEqualTo(MetadataCase.ALARM_FIRED);
+        assertThat(fireEvent.getAlarmFired().getFireActionCase())
                 .isEqualTo(FireActionCase.LISTENER);
-        assertThat(cancelEvent.getAlarmFired().getListener().getTag()).isEqualTo(tag);
+        assertThat(fireEvent.getAlarmFired().getListener().getTag()).isEqualTo(tag);
     }
 }

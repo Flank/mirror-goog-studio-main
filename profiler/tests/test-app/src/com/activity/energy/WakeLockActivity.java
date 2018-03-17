@@ -24,13 +24,6 @@ public class WakeLockActivity extends PerfdTestActivity {
         super("WakeLock Activity");
     }
 
-    public void runAcquire() throws Exception {
-        PowerManager.WakeLock wakeLock = getPowerManager().newWakeLock(0x30000006, "Foo");
-        wakeLock.setHeld(true);
-        wakeLock.acquire();
-        System.out.println("WAKE LOCK ACQUIRED");
-    }
-
     public void runAcquireAndRelease() throws Exception {
         PowerManager.WakeLock wakeLock = getPowerManager().newWakeLock(0x00000001, "Bar");
         wakeLock.setHeld(true);

@@ -27,41 +27,22 @@ public class AlarmActivity extends PerfdTestActivity {
         super("Alarm Activity");
     }
 
-    public void setIntentAlarm() {
-        getAlarmManager().set(0x1, 1000, new PendingIntent("com.example", 1));
-        System.out.println("INTENT ALARM SET");
-    }
-
-    public void setListenerAlarm() {
-        getAlarmManager()
-                .set(
-                        0x0,
-                        2000,
-                        "foo",
-                        new OnAlarmListener() {
-                            @Override
-                            public void onAlarm() {}
-                        },
-                        new Handler());
-        System.out.println("LISTENER ALARM SET");
-    }
-
-    public void cancelIntentAlarm() {
+    public void setAndCancelIntentAlarm() {
         AlarmManager alarmManager = getAlarmManager();
-        PendingIntent pendingIntent = new PendingIntent("foo.bar", 2);
-        alarmManager.set(0x0, 1000, pendingIntent);
+        PendingIntent pendingIntent = new PendingIntent("com.example", 1);
+        alarmManager.set(0x1, 1000, pendingIntent);
         alarmManager.cancel(pendingIntent);
         System.out.println("INTENT ALARM CANCELLED");
     }
 
-    public void cancelListenerAlarm() {
+    public void setAndCancelListenerAlarm() {
         AlarmManager alarmManager = getAlarmManager();
         OnAlarmListener listener =
                 new OnAlarmListener() {
                     @Override
                     public void onAlarm() {}
                 };
-        alarmManager.set(0x0, 1000, "bar", listener, new Handler());
+        alarmManager.set(0x0, 2000, "foo", listener, new Handler());
         alarmManager.cancel(listener);
         System.out.println("LISTENER ALARM CANCELLED");
     }

@@ -26,7 +26,6 @@ import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent.MetadataCase;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
-import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.CreationFlag;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.Level;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockReleased.ReleaseFlag;
 import com.android.tools.profiler.proto.Profiler.BytesRequest;
@@ -57,43 +56,16 @@ public class WakeLockTest {
 
     @After
     public void tearDown() throws Exception {
-        myGrpc.endSession(mySession.getSessionId());
-        myPerfDriver.tearDown();
+        if (myPerfDriver != null) {
+            if (mySession != null) {
+                myGrpc.endSession(mySession.getSessionId());
+            }
+            myPerfDriver.tearDown();
+        }
     }
 
     @Test
-    public void testAcquire() throws Exception {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runAcquire");
-        assertThat(myAndroidDriver.waitForInput("WAKE LOCK ACQUIRED")).isTrue();
-
-        EnergyEventsResponse response =
-                TestUtils.waitForAndReturn(
-                        () -> myStubWrapper.getAllEnergyEvents(mySession),
-                        resp -> resp.getEventsCount() == 1);
-        assertThat(response.getEventsCount()).isEqualTo(1);
-
-        final EnergyEvent energyEvent = response.getEvents(0);
-        assertThat(energyEvent.getTimestamp()).isGreaterThan(0L);
-        assertThat(energyEvent.getPid()).isEqualTo(mySession.getPid());
-        assertThat(energyEvent.getEventId()).isGreaterThan(0);
-        assertThat(energyEvent.getIsTerminal()).isFalse();
-        assertThat(energyEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
-        assertThat(energyEvent.getWakeLockAcquired().getLevel())
-                .isEqualTo(Level.SCREEN_DIM_WAKE_LOCK);
-        assertThat(energyEvent.getWakeLockAcquired().getFlagsList())
-                .containsExactly(CreationFlag.ACQUIRE_CAUSES_WAKEUP, CreationFlag.ON_AFTER_RELEASE);
-        assertThat(energyEvent.getWakeLockAcquired().getTag()).isEqualTo("Foo");
-        assertThat(energyEvent.getWakeLockAcquired().getTimeout()).isEqualTo(0);
-
-        String traceId = energyEvent.getTraceId();
-        assertThat(energyEvent.getTraceId()).isNotEmpty();
-        BytesRequest stackRequest = BytesRequest.newBuilder().setId(traceId).build();
-        String stack = myGrpc.getProfilerStub().getBytes(stackRequest).getContents().toStringUtf8();
-        assertThat(stack).contains(ACTIVITY_CLASS);
-    }
-
-    @Test
-    public void testRelease() throws Exception {
+    public void testAcquireAndRelease() throws Exception {
         myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runAcquireAndRelease");
         assertThat(myAndroidDriver.waitForInput("WAKE LOCK RELEASED")).isTrue();
 
