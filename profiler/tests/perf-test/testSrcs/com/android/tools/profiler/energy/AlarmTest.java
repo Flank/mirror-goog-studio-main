@@ -102,6 +102,11 @@ public class AlarmTest {
         assertThat(cancelEvent.getAlarmCancelled().getOperation().getCreatorPackage())
                 .isEqualTo("com.example");
         assertThat(cancelEvent.getAlarmCancelled().getOperation().getCreatorUid()).isEqualTo(1);
+
+        String setStack = TestUtils.getBytes(myGrpc, setEvent.getTraceId());
+        assertThat(setStack).contains("set");
+        String cancelStack = TestUtils.getBytes(myGrpc, cancelEvent.getTraceId());
+        assertThat(cancelStack).contains("cancel");
     }
 
     @Test
@@ -135,6 +140,11 @@ public class AlarmTest {
         assertThat(cancelEvent.getAlarmCancelled().getCancelActionCase())
                 .isEqualTo(CancelActionCase.LISTENER);
         assertThat(cancelEvent.getAlarmCancelled().getListener().getTag()).isEqualTo("foo");
+
+        String setStack = TestUtils.getBytes(myGrpc, setEvent.getTraceId());
+        assertThat(setStack).contains("set");
+        String cancelStack = TestUtils.getBytes(myGrpc, cancelEvent.getTraceId());
+        assertThat(cancelStack).contains("cancel");
     }
 
     @Test

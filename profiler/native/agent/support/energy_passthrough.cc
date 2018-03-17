@@ -504,7 +504,7 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobFinished(
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListenerLocationUpdateRequested(
     JNIEnv* env, jclass clazz, jint event_id, jstring provider, jlong interval,
-    jfloat min_distance, jint accuracy, jint power_req) {
+    jfloat min_distance, jint accuracy, jint power_req, jstring stack) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
@@ -517,14 +517,15 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListen
   request->set_fastest_interval_ms(interval);
   request->set_smallest_displacement_meters(min_distance);
   request->set_priority(GetPriority(accuracy, power_req, provider_str.get()));
-  SubmitEnergyEvent(energy_event);
+  JStringWrapper stack_string(env, stack);
+  SubmitEnergyEvent(energy_event, stack_string.get());
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntentLocationUpdateRequested(
     JNIEnv* env, jclass clazz, jint event_id, jstring provider, jlong interval,
     jfloat min_distance, jint accuracy, jint power_req, jstring creator_package,
-    jint creator_uid) {
+    jint creator_uid, jstring stack) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
@@ -541,24 +542,26 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntent
   request->set_fastest_interval_ms(interval);
   request->set_smallest_displacement_meters(min_distance);
   request->set_priority(GetPriority(accuracy, power_req, provider_str.get()));
-  SubmitEnergyEvent(energy_event);
+  JStringWrapper stack_string(env, stack);
+  SubmitEnergyEvent(energy_event, stack_string.get());
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListenerLocationUpdateRemoved(
-    JNIEnv* env, jclass clazz, jint event_id) {
+    JNIEnv* env, jclass clazz, jint event_id, jstring stack) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
   energy_event.set_is_terminal(true);
   energy_event.mutable_location_update_removed()->mutable_listener();
-  SubmitEnergyEvent(energy_event);
+  JStringWrapper stack_string(env, stack);
+  SubmitEnergyEvent(energy_event, stack_string.get());
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntentLocationUpdateRemoved(
     JNIEnv* env, jclass clazz, jint event_id, jstring creator_package,
-    jint creator_uid) {
+    jint creator_uid, jstring stack) {
   EnergyEvent energy_event;
   energy_event.set_pid(getpid());
   energy_event.set_event_id(event_id);
@@ -568,7 +571,8 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntent
   JStringWrapper creator_package_str(env, creator_package);
   intent->set_creator_package(creator_package_str.get());
   intent->set_creator_uid(creator_uid);
-  SubmitEnergyEvent(energy_event);
+  JStringWrapper stack_string(env, stack);
+  SubmitEnergyEvent(energy_event, stack_string.get());
 }
 
 JNIEXPORT void JNICALL

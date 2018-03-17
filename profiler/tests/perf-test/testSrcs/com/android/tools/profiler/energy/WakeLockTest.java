@@ -28,7 +28,6 @@ import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent.MetadataCase;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.Level;
 import com.android.tools.profiler.proto.EnergyProfiler.WakeLockReleased.ReleaseFlag;
-import com.android.tools.profiler.proto.Profiler.BytesRequest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -96,10 +95,7 @@ public class WakeLockTest {
         assertThat(releasedEvent.getWakeLockReleased().getFlagsList())
                 .containsExactly(ReleaseFlag.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
 
-        String traceId = releasedEvent.getTraceId();
-        assertThat(releasedEvent.getTraceId()).isNotEmpty();
-        BytesRequest stackRequest = BytesRequest.newBuilder().setId(traceId).build();
-        String stack = myGrpc.getProfilerStub().getBytes(stackRequest).getContents().toStringUtf8();
+        String stack = TestUtils.getBytes(myGrpc, releasedEvent.getTraceId());
         assertThat(stack).contains(ACTIVITY_CLASS);
     }
 }

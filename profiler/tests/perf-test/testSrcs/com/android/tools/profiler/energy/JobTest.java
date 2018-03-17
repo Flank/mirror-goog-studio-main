@@ -142,6 +142,11 @@ public class JobTest {
         assertThat(params.getIsOverrideDeadlineExpired()).isTrue();
         assertThat(params.getTriggeredContentAuthoritiesList()).containsExactly("foo@example.com");
         assertThat(params.getTriggeredContentUrisList()).containsExactly("com.example");
+
+        String scheduleStack = TestUtils.getBytes(myGrpc, scheduleEvent.getTraceId());
+        assertThat(scheduleStack).contains("schedule");
+        String finishStack = TestUtils.getBytes(myGrpc, finishEvent.getTraceId());
+        assertThat(finishStack).contains("Finish");
     }
 
     @Test

@@ -110,6 +110,11 @@ public class LocationTest {
         assertThat(removeEvent.getMetadataCase()).isEqualTo(MetadataCase.LOCATION_UPDATE_REMOVED);
         assertThat(removeEvent.getLocationUpdateRemoved().getActionCase())
                 .isEqualTo(LocationUpdateRemoved.ActionCase.LISTENER);
+
+        String requestStack = TestUtils.getBytes(myGrpc, requestEvent.getTraceId());
+        assertThat(requestStack).contains("request");
+        String removeStack = TestUtils.getBytes(myGrpc, removeEvent.getTraceId());
+        assertThat(removeStack).contains("remove");
     }
 
     @Test
@@ -147,5 +152,10 @@ public class LocationTest {
         assertThat(removeEvent.getMetadataCase()).isEqualTo(MetadataCase.LOCATION_UPDATE_REMOVED);
         assertThat(removeEvent.getLocationUpdateRemoved().getActionCase())
                 .isEqualTo(LocationUpdateRemoved.ActionCase.INTENT);
+
+        String requestStack = TestUtils.getBytes(myGrpc, requestEvent.getTraceId());
+        assertThat(requestStack).contains("request");
+        String removeStack = TestUtils.getBytes(myGrpc, removeEvent.getTraceId());
+        assertThat(removeStack).contains("remove");
     }
 }

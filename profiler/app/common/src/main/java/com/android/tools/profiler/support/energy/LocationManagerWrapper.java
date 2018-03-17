@@ -22,6 +22,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Looper;
+import com.android.tools.profiler.support.util.StackTrace;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -121,7 +122,8 @@ public final class LocationManagerWrapper {
                     minTime,
                     minDistance,
                     accuracy,
-                    powerReq);
+                    powerReq,
+                    StackTrace.getStackTrace());
         } else if (intent != null) {
             if (!intentIdMap.containsKey(intent)) {
                 intentIdMap.put(intent, EventIdGenerator.nextId());
@@ -134,7 +136,8 @@ public final class LocationManagerWrapper {
                     accuracy,
                     powerReq,
                     intent.getCreatorPackage(),
-                    intent.getCreatorUid());
+                    intent.getCreatorUid(),
+                    StackTrace.getStackTrace());
         }
     }
 
@@ -180,14 +183,18 @@ public final class LocationManagerWrapper {
     public static void wrapRemoveUpdates(
             LocationManager locationManager, LocationListener listener) {
         if (listenerIdMap.containsKey(listener)) {
-            sendListenerLocationUpdateRemoved(listenerIdMap.get(listener));
+            sendListenerLocationUpdateRemoved(
+                    listenerIdMap.get(listener), StackTrace.getStackTrace());
         }
     }
 
     public static void wrapRemoveUpdates(LocationManager locationManager, PendingIntent intent) {
         if (intentIdMap.containsKey(intent)) {
             sendIntentLocationUpdateRemoved(
-                    intentIdMap.get(intent), intent.getCreatorPackage(), intent.getCreatorUid());
+                    intentIdMap.get(intent),
+                    intent.getCreatorPackage(),
+                    intent.getCreatorUid(),
+                    StackTrace.getStackTrace());
         }
     }
 
@@ -211,7 +218,8 @@ public final class LocationManagerWrapper {
             long minTime,
             float minDistance,
             int accuracy,
-            int powerReq);
+            int powerReq,
+            String stack);
 
     private static native void sendIntentLocationUpdateRequested(
             int eventId,
@@ -221,12 +229,13 @@ public final class LocationManagerWrapper {
             int accuracy,
             int powerReq,
             String creatorPackage,
-            int creatorUid);
+            int creatorUid,
+            String stack);
 
-    private static native void sendListenerLocationUpdateRemoved(int eventId);
+    private static native void sendListenerLocationUpdateRemoved(int eventId, String stack);
 
     private static native void sendIntentLocationUpdateRemoved(
-            int eventId, String creatorPackage, int creatorUid);
+            int eventId, String creatorPackage, int creatorUid, String stack);
 
     private static native void sendListenerLocationChanged(int eventId);
 }

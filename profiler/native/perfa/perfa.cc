@@ -511,17 +511,19 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
                   "Ljava/lang/String;ZLjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
-        "sendListenerLocationUpdateRequested", "(ILjava/lang/String;JFII)V");
+        "sendListenerLocationUpdateRequested",
+        "(ILjava/lang/String;JFIILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendIntentLocationUpdateRequested",
-        "(ILjava/lang/String;JFIILjava/lang/String;I)V");
+        "(ILjava/lang/String;JFIILjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
-        "sendListenerLocationUpdateRemoved", "(I)V");
+        "sendListenerLocationUpdateRemoved", "(ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
-        "sendIntentLocationUpdateRemoved", "(ILjava/lang/String;I)V");
+        "sendIntentLocationUpdateRemoved",
+        "(ILjava/lang/String;ILjava/lang/String;)V");
     BindJNIMethod(
         jni, "com/android/tools/profiler/support/energy/LocationManagerWrapper",
         "sendListenerLocationChanged", "(I)V");
