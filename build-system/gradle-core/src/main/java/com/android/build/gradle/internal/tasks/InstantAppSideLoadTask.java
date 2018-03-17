@@ -196,7 +196,7 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
                                 return (info == null ? null : info.getAdb());
                             });
             task.bundleDir =
-                    scope.getBuildArtifactsHolder()
+                    scope.getArtifacts()
                             .getFinalArtifactFiles(InternalArtifactType.INSTANTAPP_BUNDLE);
         }
     }

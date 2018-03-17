@@ -295,7 +295,7 @@ public class ProcessManifest extends ManifestProcessorTask {
                             processManifest.getManifestOutputDirectory(),
                             SdkConstants.FN_ANDROID_MANIFEST_XML);
 
-            scope.getBuildArtifactsHolder()
+            scope.getArtifacts()
                     .appendArtifact(
                             InternalArtifactType.LIBRARY_MANIFEST,
                             ImmutableList.of(processManifest.manifestOutputFile),

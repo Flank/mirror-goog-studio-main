@@ -85,7 +85,7 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
         override fun getType() = BundleFeatureClasses::class.java
 
         override fun execute(task: BundleFeatureClasses) {
-            task.outputJar = scope.buildArtifactsHolder.appendArtifact(
+            task.outputJar = scope.artifacts.appendArtifact(
                 InternalArtifactType.FEATURE_CLASSES, task, "classes.jar")
             task.javacClasses =
                     scope.artifacts.getArtifactFiles(InternalArtifactType.JAVAC)

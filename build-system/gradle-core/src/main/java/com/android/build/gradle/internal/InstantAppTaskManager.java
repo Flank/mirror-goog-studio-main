@@ -83,7 +83,7 @@ public class InstantAppTaskManager extends TaskManager {
                     variantScope.getAssembleTask().dependsOn(bundleTask);
                     bundleTask.dependsOn(checkInstantAppLibrariesTask);
                     variantScope
-                            .getBuildArtifactsHolder()
+                            .getArtifacts()
                             .appendArtifact(
                                     InternalArtifactType.INSTANTAPP_BUNDLE,
                                     ImmutableList.of(variantScope.getApkLocation()),

@@ -132,7 +132,7 @@ open class AndroidZip : Zip() {
                     .getFinalArtifactFiles(InternalArtifactType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS))
 
-            variantScope.buildArtifactsHolder.appendArtifact(
+            variantScope.artifacts.appendArtifact(
                 InternalArtifactType.AAR,
                 listOf(File(variantScope.aarLocation,
                     variantScope.outputScope.mainSplit.outputFileName)),
