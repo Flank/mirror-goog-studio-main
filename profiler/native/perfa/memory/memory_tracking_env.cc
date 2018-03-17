@@ -80,6 +80,7 @@ namespace profiler {
 using proto::AllocationStack;
 using proto::BatchAllocationSample;
 using proto::EncodedAllocationStack;
+using proto::ThreadInfo;
 
 // STL container memory tracking for Debug only.
 std::atomic<long> g_max_used[kMemTagCount];
@@ -256,14 +257,6 @@ void MemoryTrackingEnv::AfterGlobalRefCreated(jobject prototype, jobject gref) {
 
 void MemoryTrackingEnv::BeforeGlobalRefDeleted(jobject gref) {
   PublishJNIGlobalRefEvent(gref, JNIGlobalReferenceEvent::DELETE_GLOBAL_REF);
-}
-
-void MemoryTrackingEnv::AfterGlobalWeakRefCreated(jobject prototype,
-                                                  jweak gref) {
-  // no-op for now
-}
-void MemoryTrackingEnv::BeforeGlobalWeakRefDeleted(jweak gref) {
-  // no-op for now
 }
 
 /**
@@ -676,6 +669,25 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
   }
 }
 
+int32_t MemoryTrackingEnv::ObtainThreadId(
+    const std::string& thread_name, int64_t timestamp,
+    google::protobuf::RepeatedPtrField<profiler::proto::ThreadInfo>* threads) {
+  // Lookup thread id by name
+  auto thread_result = thread_id_map_.emplace(
+      std::make_pair(thread_name, thread_id_map_.size() + 1));
+
+  const int32_t thread_id = thread_result.first->second;
+  if (thread_result.second) {
+    // New thread. Create and send the mapping along the sample.
+    proto::ThreadInfo* ti = threads->Add();
+    ti->set_thread_id(thread_id);
+    ti->set_thread_name(thread_name);
+    ti->set_timestamp(timestamp);
+  }
+
+  return thread_id;
+}
+
 // Drain allocation_event_queue_ and send events to perfd
 void MemoryTrackingEnv::DrainAllocationEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
   std::lock_guard<std::mutex> lock(tracking_data_mutex_);
@@ -700,18 +712,11 @@ void MemoryTrackingEnv::DrainAllocationEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
         int stack_size = alloc_data->method_ids_size();
         assert(stack_size == alloc_data->location_ids_size());
 
-        // Encode thread data.
-        auto thread_result = thread_id_map_.emplace(std::make_pair(
-            alloc_data->thread_name(), thread_id_map_.size() + 1));
-        if (thread_result.second) {
-          // New thread. Create and send the mapping along the sample.
-          proto::ThreadInfo* ti = sample.add_thread_infos();
-          ti->set_timestamp(event->timestamp());
-          ti->set_thread_id(thread_result.first->second);
-          ti->set_thread_name(thread_result.first->first);
-        }
         // Switch to storing the thread id in the allocation event.
-        alloc_data->set_thread_id(thread_result.first->second);
+        auto thread_id =
+            ObtainThreadId(alloc_data->thread_name(), event->timestamp(),
+                           sample.mutable_thread_infos());
+        alloc_data->set_thread_id(thread_id);
         alloc_data->clear_thread_name();
 
         // Store and encode the stack into trie.
@@ -830,7 +835,11 @@ void MemoryTrackingEnv::DrainJNIRefEvents(jvmtiEnv* jvmti, JNIEnv* jni) {
     event->CopyFrom(queued_data.front());
     queued_data.pop_front();
 
-    // TODO: populate thread ID here.
+    // Switch to storing the thread id in the allocation event.
+    auto thread_id = ObtainThreadId(event->thread_name(), event->timestamp(),
+                                    batch.mutable_thread_infos());
+    event->set_thread_id(thread_id);
+    event->clear_thread_name();
 
     if (batch.events_size() >= kDataBatchSize) {
       FillJniEventsModuleMap(&batch);

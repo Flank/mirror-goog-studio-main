@@ -553,6 +553,7 @@ message BatchJNIGlobalRefEvent {
   int64 timestamp = 2;
   repeated JNIGlobalReferenceEvent events = 3;
   MemoryMap memory_map = 4;
+  repeated ThreadInfo thread_infos = 5;
 }
 
 // Proto format for handling O+ allocation data.

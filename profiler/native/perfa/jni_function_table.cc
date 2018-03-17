@@ -46,23 +46,6 @@ static void DeleteGlobalRef(JNIEnv *env, jobject gref) {
   g_original_native_table->DeleteGlobalRef(env, gref);
 }
 
-static jweak NewWeakGlobalRef(JNIEnv *env, jobject obj) {
-  auto result = g_original_native_table->NewWeakGlobalRef(env, obj);
-  GlobalRefListener *gref_listener = g_gref_listener;
-  if (gref_listener != nullptr) {
-    gref_listener->AfterGlobalWeakRefCreated(obj, result);
-  }
-  return result;
-}
-
-static void DeleteWeakGlobalRef(JNIEnv *env, jweak ref) {
-  GlobalRefListener *gref_listener = g_gref_listener;
-  if (gref_listener != nullptr) {
-    gref_listener->BeforeGlobalWeakRefDeleted(ref);
-  }
-  g_original_native_table->DeleteWeakGlobalRef(env, ref);
-}
-
 }  // namespace jni_wrappers
 
 bool RegisterJniTableListener(jvmtiEnv *jvmti_env,
@@ -95,8 +78,6 @@ bool RegisterJniTableListener(jvmtiEnv *jvmti_env,
   if (gref_listener != nullptr) {
     new_native_table.NewGlobalRef = jni_wrappers::NewGlobalRef;
     new_native_table.DeleteGlobalRef = jni_wrappers::DeleteGlobalRef;
-    new_native_table.NewWeakGlobalRef = jni_wrappers::NewWeakGlobalRef;
-    new_native_table.DeleteWeakGlobalRef = jni_wrappers::DeleteWeakGlobalRef;
   }
 
   g_gref_listener = gref_listener;

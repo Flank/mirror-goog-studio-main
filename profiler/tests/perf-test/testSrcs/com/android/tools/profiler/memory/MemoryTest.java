@@ -22,6 +22,7 @@ import com.android.tools.profiler.*;
 import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.MemoryProfiler.*;
 import com.android.tools.profiler.proto.Profiler.*;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import org.junit.After;
@@ -98,6 +99,7 @@ public class MemoryTest {
         int deallocationsReported = 0;
         int maxLoopCount = allocationCount * 100;
         HashSet<Integer> tags = new HashSet<Integer>();
+        HashMap<Integer, String> idToThreadName = new HashMap<Integer, String>();
 
         // Aborts if we loop too many times and somehow didn't get
         // back the alloc/dealloc data in time. This way the test won't timeout
@@ -129,10 +131,17 @@ public class MemoryTest {
             // MemTestEntity were created. At the same time keeping track of
             // tags.
             for (BatchAllocationSample sample : jvmtiData.getAllocationSamplesList()) {
+                for (ThreadInfo ti : sample.getThreadInfosList()) {
+                    assertThat(ti.getThreadId()).isGreaterThan(0);
+                    idToThreadName.put(ti.getThreadId(), ti.getThreadName());
+                }
+
                 assertThat(sample.getTimestamp()).isGreaterThan(startTime);
                 for (AllocationEvent event : sample.getEventsList()) {
                     if (event.getEventCase() == AllocationEvent.EventCase.ALLOC_DATA) {
                         AllocationEvent.Allocation alloc = event.getAllocData();
+                        assertThat(alloc.getThreadId()).isGreaterThan(0);
+                        assertThat(idToThreadName.containsKey(alloc.getThreadId())).isTrue();
                         if (alloc.getClassTag() == memTestEntityId) {
                             allocationsReported++;
                             System.out.printf("Alloc recorded: tag=%d\n", alloc.getTag());

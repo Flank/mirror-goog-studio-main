@@ -94,9 +94,6 @@ class MemoryTrackingEnv : public GlobalRefListener {
   void AfterGlobalRefCreated(jobject prototype, jobject gref) override;
   void BeforeGlobalRefDeleted(jobject gref) override;
 
-  void AfterGlobalWeakRefCreated(jobject prototype, jweak gref) override;
-  void BeforeGlobalWeakRefDeleted(jweak gref) override;
-
  private:
   // POD for encoding the method/instruction location data into trie.
   struct FrameInfo {
@@ -183,6 +180,11 @@ class MemoryTrackingEnv : public GlobalRefListener {
   // Populates thread name associated with a given JNI thead handle;
   void FillThreadName(jvmtiEnv* jvmti, JNIEnv* jni, jthread thead,
                       std::string* thread_name);
+
+  // Lookup a thread id by a thread name and create a new enty if needed.
+  int32_t ObtainThreadId(
+      const std::string& thread_name, int64_t timestamp,
+      google::protobuf::RepeatedPtrField<proto::ThreadInfo>* threads);
 
   void FillJniEventsModuleMap(BatchJNIGlobalRefEvent* batch);
 
